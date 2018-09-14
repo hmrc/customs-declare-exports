@@ -21,7 +21,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
 
 class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec {
-  val uri = "/handleResponse"
+  val uri = "/save-submission-response"
   val fakeRequest = FakeRequest("POST", uri)
 
   "POST /handleResponse" should {
