@@ -4,8 +4,6 @@ import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import uk.gov.hmrc.{SbtAutoBuildPlugin, SbtArtifactory}
 import uk.gov.hmrc.versioning.SbtGitVersioning
 
-
-
 val appName = "customs-declare-exports"
 
 lazy val microservice = Project(appName, file("."))

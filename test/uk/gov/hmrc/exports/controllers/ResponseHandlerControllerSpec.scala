@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customsdeclareexports.controllers
+package uk.gov.hmrc.exports.controllers
 
-import play.api.http.Status
 import play.api.test.FakeRequest
-import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
+import play.api.test.Helpers._
+import uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
 
-class ResponseHandlerControllerSpec extends UnitSpec with WithFakeApplication{
-
-  val fakeRequest = FakeRequest("POST", "/handleResponse")
+class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec {
+  val uri = "/save-submission-response"
+  val fakeRequest = FakeRequest("POST", uri)
 
   "POST /handleResponse" should {
     "return 200" in {
-      val controller = new ResponseHandlerController()
-      val result = controller.handleResponse()(fakeRequest)
 
-      status(result) shouldBe Status.OK
+      val result = route(app, fakeRequest)
+
+      result.map(status(_) must be (OK))
     }
   }
 }

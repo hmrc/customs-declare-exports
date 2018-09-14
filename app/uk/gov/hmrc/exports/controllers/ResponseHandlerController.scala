@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customsdeclareexports.controllers
+package uk.gov.hmrc.exports.controllers
 
 import javax.inject.Singleton
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, Controller}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.Future
 
 @Singleton()
-class ResponseHandlerController extends BaseController {
+class ResponseHandlerController extends Controller {
 
-  def handleResponse(): Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok("Handle response"))
+  def saveSubmissionResponse(): Action[AnyContent] = Action.async { implicit request =>
+    Future.successful(Ok("Submission response saved"))
   }
 }
