@@ -51,6 +51,10 @@ import scala.reflect.ClassTag
 
 trait CustomsExportsBaseSpec extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar with ScalaFutures {
 
+  val testAuthAction = mock[AuthActionImpl]
+  lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
+
+
   def injector: Injector = app.injector
 
   val cfg: CSRFConfig = injector.instanceOf[CSRFConfigProvider].get
@@ -64,10 +68,6 @@ trait CustomsExportsBaseSpec extends PlaySpec with GuiceOneAppPerSuite with Mock
   def authenticate: AuthActionImpl = injector.instanceOf[AuthActionImpl]
 
   def wsClient: WSClient = injector.instanceOf[WSClient]
-
-  val testAuthAction = mock[AuthActionImpl]
-
-  lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
   override lazy val app: Application = GuiceApplicationBuilder()
     .overrides(bind[AuthConnector].to(mockAuthConnector), bind[AuthAction].to(testAuthAction)).build()
