@@ -82,7 +82,8 @@ trait CustomsExportsBaseSpec extends PlaySpec with GuiceOneAppPerSuite with Mock
 
   implicit val ec: ExecutionContext = Implicits.defaultContext
 
-  protected def component[T: ClassTag]: T = app.injector.instanceOf[T]
+  implicit lazy val patience: PatienceConfig = PatienceConfig(timeout = 5.seconds, interval = 50.milliseconds) // be more patient than the default
+
 
   protected def postRequest(uri: String, body: JsValue, headers: Map[String, String] = Map.empty): FakeRequest[AnyContentAsJson] = {
     val session: Map[String, String] = Map(
@@ -132,9 +133,6 @@ trait CustomsExportsBaseSpec extends PlaySpec with GuiceOneAppPerSuite with Mock
       Enrolment("HMRC-CUS-ORG",List(EnrolmentIdentifier("EORINumber", eori)),"Activated",None)
     ))
   )
-
-  implicit lazy val patience: PatienceConfig = PatienceConfig(timeout = 5.seconds, interval = 50.milliseconds) // be more patient than the default
-
 
   protected def randomString(length: Int): String = Random.alphanumeric.take(length).mkString
 
