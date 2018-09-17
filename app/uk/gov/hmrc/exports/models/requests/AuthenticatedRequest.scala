@@ -14,22 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.controllers
+package uk.gov.hmrc.exports.models.requests
 
-import play.api.test.FakeRequest
-import play.api.test.Helpers._
-import uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
+import play.api.mvc.{Request, WrappedRequest}
+import uk.gov.hmrc.exports.models.SignedInUser
 
-class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec {
-  val uri = "/save-submission-response"
-  val fakeRequest = FakeRequest("POST", uri)
-
-  "POST /handleResponse" should {
-    "return 200" in {
-      authorizedUser()
-      val result = route(app, fakeRequest)
-
-      result.map(status(_) must be (OK))
-    }
-  }
-}
+case class AuthenticatedRequest[A] (request: Request[A], user: SignedInUser) extends WrappedRequest[A](request)
