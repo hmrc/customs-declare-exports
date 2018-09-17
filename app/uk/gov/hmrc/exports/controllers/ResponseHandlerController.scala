@@ -16,16 +16,18 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import javax.inject.Singleton
-import play.api.mvc.{Action, AnyContent, Controller}
+import javax.inject.{Inject, Singleton}
+import play.api.mvc.{Action, AnyContent}
+import uk.gov.hmrc.exports.config.AppConfig
+import uk.gov.hmrc.exports.controllers.actions.AuthAction
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.Future
 
 @Singleton()
-class ResponseHandlerController extends Controller {
+class ResponseHandlerController @Inject()(appConfig: AppConfig, authenticate: AuthAction) extends BaseController {
 
-  def saveSubmissionResponse(): Action[AnyContent] = Action.async { implicit request =>
+  def saveSubmissionResponse(): Action[AnyContent] = authenticate.async { implicit request =>
     Future.successful(Ok("Submission response saved"))
   }
 }

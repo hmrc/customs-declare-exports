@@ -14,22 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.controllers
+package uk.gov.hmrc.exports.models
 
-import play.api.test.FakeRequest
-import play.api.test.Helpers._
-import uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import uk.gov.hmrc.auth.core.retrieve.{Credentials, Name}
 
-class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec {
-  val uri = "/save-submission-response"
-  val fakeRequest = FakeRequest("POST", uri)
-
-  "POST /handleResponse" should {
-    "return 200" in {
-      authorizedUser()
-      val result = route(app, fakeRequest)
-
-      result.map(status(_) must be (OK))
-    }
-  }
-}
+case class SignedInUser(
+  credentials: Credentials,
+  name: Name,
+  email: Option[String],
+  eori: String,
+  externalId: String,
+  internalId: Option[String],
+  affinityGroup: Option[AffinityGroup],
+  enrolments: Enrolments
+)
