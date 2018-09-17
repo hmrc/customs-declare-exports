@@ -29,12 +29,18 @@ import play.api.test.FakeRequest
 import play.filters.csrf.CSRF.Token
 import play.filters.csrf.{CSRFConfig, CSRFConfigProvider, CSRFFilter}
 import uk.gov.hmrc.http.SessionKeys
+import scala.concurrent.duration._
+
+
+import scala.reflect.ClassTag
+import scala.util.Random
 
 trait CustomsExportsBaseSpec extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar with ScalaFutures {
 
   def injector: Injector = app.injector
 
   val cfg: CSRFConfig = injector.instanceOf[CSRFConfigProvider].get
+  protected def component[T: ClassTag]: T = app.injector.instanceOf[T]
 
   val token = injector.instanceOf[CSRFFilter].tokenProvider.generateToken
 
@@ -52,4 +58,10 @@ trait CustomsExportsBaseSpec extends PlaySpec with GuiceOneAppPerSuite with Mock
       .withSession(session.toSeq: _*).copyFakeRequest(tags = tags)
       .withJsonBody(body)
   }
+
+  implicit lazy val patience: PatienceConfig = PatienceConfig(timeout = 5.seconds, interval = 50.milliseconds) // be more patient than the default
+
+
+  protected def randomString(length: Int): String = Random.alphanumeric.take(length).mkString
+
 }
