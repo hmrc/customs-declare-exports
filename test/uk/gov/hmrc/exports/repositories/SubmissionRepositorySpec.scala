@@ -22,21 +22,20 @@ import org.scalatest.BeforeAndAfterEach
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SubmissionRepositoryTest extends CustomsExportsBaseSpec with BeforeAndAfterEach {
-
-
+class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach {
+  
   override protected def afterEach(): Unit = {
     super.afterEach()
     repositories.foreach { repo =>
       repo.removeAll()
     }
   }
+
   val repo = component[SubmissionRepository]
 
    val repositories: Seq[ReactiveRepository[_, _]] = Seq(repo)
 
   "repo" should {
-
     "save declaration with EORI and timestamp" in {
       /*
       The first time an declaration is submitted, we save it with the user's EORI, their LRN (if provided)
@@ -77,7 +76,5 @@ class SubmissionRepositoryTest extends CustomsExportsBaseSpec with BeforeAndAfte
       gotAgain.get.lrn must be(lrn)
       gotAgain.get.mrn must be(Some(mrn))
     }
-
   }
-
 }

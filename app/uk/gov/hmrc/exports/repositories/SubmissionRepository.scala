@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.repositories
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsString, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.{mongoEntity, objectIdFormats}
@@ -39,26 +40,28 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
 
   def findByEori(eori: String): Future[Seq[Submission]] = find("eori" -> JsString(eori))
 
-  def getByConversationId(conversationId: String): Future[Option[Submission]] = find("conversationId" -> JsString(conversationId)).map(_.headOption)
+  def getByConversationId(conversationId: String): Future[Option[Submission]] =
+    find("conversationId" -> JsString(conversationId)).map(_.headOption)
 
-  def getByEoriAndMrn(eori: String, mrn: String): Future[Option[Submission]] = find("eori" -> JsString(eori), "mrn" -> JsString(mrn)).map(_.headOption)
+  def getByEoriAndMrn(eori: String, mrn: String): Future[Option[Submission]] =
+    find("eori" -> JsString(eori), "mrn" -> JsString(mrn)).map(_.headOption)
 
   override def isInsertion(newRecordId: BSONObjectID, oldRecord: Submission): Boolean = newRecordId.equals(oldRecord.id)
 
-  def save(submission:Submission) = insert(submission)
+  def save(submission:Submission): Future[WriteResult] = insert(submission)
 }
 
-case class Submission(eori: String,
-                      conversationId: String,
-                      lrn: Option[String] = None,
-                      mrn: Option[String] = None,
-                      submittedTimestamp: Long = System.currentTimeMillis(),
-                      id: BSONObjectID = BSONObjectID.generate())
+case class Submission(
+  eori: String,
+  conversationId: String,
+  lrn: Option[String] = None,
+  mrn: Option[String] = None,
+  submittedTimestamp: Long = System.currentTimeMillis(),
+  id: BSONObjectID = BSONObjectID.generate()
+)
 
 object Submission {
-
   implicit val formats = mongoEntity {
     Json.format[Submission]
   }
-
 }

@@ -95,8 +95,3 @@ trait CustomsExportsBaseSpec extends PlaySpec
   protected def randomString(length: Int): String = Random.alphanumeric.take(length).mkString
 
 }
-
-
-trait ExportRequests {
-
-}
