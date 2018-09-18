@@ -18,25 +18,64 @@ package uk.gov.hmrc.exports.base
 
 import java.util.UUID
 
+import akka.stream.Materializer
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.inject.Injector
+import play.api.Application
+import play.api.i18n.MessagesApi
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.inject.{Injector, bind}
+import play.api.libs.concurrent.Execution.Implicits
 import play.api.libs.json.JsValue
+import play.api.libs.ws.WSClient
 import play.api.mvc.AnyContentAsJson
 import play.api.test.FakeRequest
 import play.filters.csrf.CSRF.Token
 import play.filters.csrf.{CSRFConfig, CSRFConfigProvider, CSRFFilter}
-import uk.gov.hmrc.http.SessionKeys
+import uk.gov.hmrc.auth.core._
 
-trait CustomsExportsBaseSpec extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar with ScalaFutures {
+import uk.gov.hmrc.exports.config.AppConfig
+import uk.gov.hmrc.exports.controllers.actions.{AuthAction, AuthActionImpl}
+import uk.gov.hmrc.http.SessionKeys
+import scala.concurrent.duration._
+
+import scala.util.Random
+
+import scala.concurrent.ExecutionContext
+import scala.reflect.ClassTag
+
+trait CustomsExportsBaseSpec extends PlaySpec
+  with GuiceOneAppPerSuite with MockitoSugar
+  with ScalaFutures with AuthTestSupport {
+
+  val testAuthAction = mock[AuthActionImpl]
 
   def injector: Injector = app.injector
 
   val cfg: CSRFConfig = injector.instanceOf[CSRFConfigProvider].get
 
+  protected def component[T: ClassTag]: T = app.injector.instanceOf[T]
+
   val token = injector.instanceOf[CSRFFilter].tokenProvider.generateToken
+
+  def appConfig: AppConfig = injector.instanceOf[AppConfig]
+
+  def messagesApi: MessagesApi = injector.instanceOf[MessagesApi]
+
+  def authenticate: AuthActionImpl = injector.instanceOf[AuthActionImpl]
+
+  def wsClient: WSClient = injector.instanceOf[WSClient]
+
+  override lazy val app: Application = GuiceApplicationBuilder()
+    .overrides(bind[AuthConnector].to(mockAuthConnector), bind[AuthAction].to(testAuthAction)).build()
+
+  implicit val mat: Materializer = app.materializer
+
+  implicit val ec: ExecutionContext = Implicits.defaultContext
+
+  implicit lazy val patience: PatienceConfig = PatienceConfig(timeout = 5.seconds, interval = 50.milliseconds) // be more patient than the default
 
   protected def postRequest(uri: String, body: JsValue, headers: Map[String, String] = Map.empty): FakeRequest[AnyContentAsJson] = {
     val session: Map[String, String] = Map(
@@ -52,4 +91,7 @@ trait CustomsExportsBaseSpec extends PlaySpec with GuiceOneAppPerSuite with Mock
       .withSession(session.toSeq: _*).copyFakeRequest(tags = tags)
       .withJsonBody(body)
   }
+
+  protected def randomString(length: Int): String = Random.alphanumeric.take(length).mkString
+
 }

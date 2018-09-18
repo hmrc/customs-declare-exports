@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.controllers
+package uk.gov.hmrc.exports.config
 
-import play.api.test.FakeRequest
-import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
 
-class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec {
-  val uri = "/save-submission-response"
-  val fakeRequest = FakeRequest("POST", uri)
+class AppConfigSpec extends CustomsExportsBaseSpec {
+  val config = app.injector.instanceOf[AppConfig]
 
-  "POST /handleResponse" should {
-    "return 200" in {
-      authorizedUser()
-      val result = route(app, fakeRequest)
+  "The config" should {
+    "have auth url" in {
+      config.authUrl must be ("http://localhost:8500")
+    }
 
-      result.map(status(_) must be (OK))
+    "have login url" in {
+      config.loginUrl must be ("http://localhost:9949/auth-login-stub/gg-sign-in")
     }
   }
 }
