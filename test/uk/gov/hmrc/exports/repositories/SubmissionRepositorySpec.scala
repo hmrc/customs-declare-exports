@@ -16,13 +16,15 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
+import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, SubmissionData}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import org.scalatest.BeforeAndAfterEach
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SubmissionRepositoryTest extends CustomsExportsBaseSpec with BeforeAndAfterEach {
+class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with SubmissionData{
 
 
   override protected def afterEach(): Unit = {
@@ -31,6 +33,8 @@ class SubmissionRepositoryTest extends CustomsExportsBaseSpec with BeforeAndAfte
       repo.removeAll()
     }
   }
+
+  override lazy val app: Application = GuiceApplicationBuilder().build()
   val repo = component[SubmissionRepository]
 
    val repositories: Seq[ReactiveRepository[_, _]] = Seq(repo)
@@ -38,19 +42,7 @@ class SubmissionRepositoryTest extends CustomsExportsBaseSpec with BeforeAndAfte
   "repo" should {
 
     "save declaration with EORI and timestamp" in {
-      /*
-      The first time an declaration is submitted, we save it with the user's EORI, their LRN (if provided)
-      and the conversation ID we received from the customs-declarations API response, generating a timestamp to record
-      when this occurred.
-       */
-      val eori = randomString(8)
-      val lrn = Some(randomString(70))
-      val mrn = randomString(16)
-      val conversationId = randomString(80)
-
-      val before = System.currentTimeMillis()
-      val submission = Submission(eori, conversationId, lrn, Some(mrn))
-      repo.insert(submission).futureValue.ok must be(true)
+      repo.save(submission).futureValue must be(true)
 
       // we can now display a list of all the declarations belonging to the current user, searching by EORI
       val found = repo.findByEori(eori).futureValue

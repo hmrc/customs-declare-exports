@@ -17,17 +17,28 @@
 package uk.gov.hmrc.exports.controllers
 
 import javax.inject.{Inject, Singleton}
-import play.api.mvc.{Action, AnyContent}
+import play.api.Logger
+import play.api.mvc.Action
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.controllers.actions.AuthAction
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.exports.repositories.SubmissionRepository
+import uk.gov.hmrc.exports.models.Submission
 
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 
 @Singleton()
-class ResponseHandlerController @Inject()(appConfig: AppConfig, authenticate: AuthAction) extends BaseController {
+class ResponseHandlerController @Inject()(appConfig: AppConfig, authenticate: AuthAction,
+                                          submissionRepository: SubmissionRepository) extends BaseController {
 
-  def saveSubmissionResponse(): Action[AnyContent] = authenticate.async { implicit request =>
-    Future.successful(Ok("Submission response saved"))
+  def saveSubmissionResponse(): Action[Submission] = authenticate.async(parse.json[Submission]) { implicit request =>
+    submissionRepository.save(request.body).map(res =>
+      if(res) {Logger.debug("data saved to DB")
+        Ok("Submission response saved")}
+      else {Logger.error("error  saving submission data to DB")
+        InternalServerError("failed saving submission")}
+    )
   }
+
 }

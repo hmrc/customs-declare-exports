@@ -16,20 +16,30 @@
 
 package uk.gov.hmrc.exports.controllers
 
+import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
+import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, SubmissionData}
+import uk.gov.hmrc.exports.models.Submission
 
-class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec {
+
+class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec with SubmissionData {
   val uri = "/save-submission-response"
-  val fakeRequest = FakeRequest("POST", uri)
+  val jsonBody = Json.toJson[Submission](submission)
+  println(jsonBody)
+  val fakeRequest = FakeRequest("POST", uri).withBody((jsonBody))
 
-  "POST /handleResponse" should {
+  "POST /save-submission-response" should {
     "return 200" in {
       authorizedUser()
-      val result = route(app, fakeRequest)
+      withSubmissionSaved(true)
+      val result = route(app, fakeRequest).get
 
-      result.map(status(_) must be (OK))
+      status(result) must be (OK)
+      withSubmissionSaved(false)
+      val fialedResult = route(app, fakeRequest).get
+
+      status(fialedResult) must be (INTERNAL_SERVER_ERROR)
     }
   }
 }
