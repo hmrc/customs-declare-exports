@@ -49,7 +49,6 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
       found.length must be(1)
       found.head.eori must be(eori)
       found.head.conversationId must be(conversationId)
-      found.head.lrn must be(lrn)
       found.head.mrn must be(Some(mrn))
 
       // a timestamp has been generated representing "creation time" of case class instance
@@ -59,14 +58,12 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
       val got = repo.getByConversationId(conversationId).futureValue
       got.get.eori must be(eori)
       got.get.conversationId must be(conversationId)
-      got.get.lrn must be(lrn)
       got.get.mrn must be(Some(mrn))
 
       // or we can retrieve it by eori and MRN
       val gotAgain = repo.getByEoriAndMrn(eori, mrn).futureValue
       gotAgain.get.eori must be(eori)
       gotAgain.get.conversationId must be(conversationId)
-      gotAgain.get.lrn must be(lrn)
       gotAgain.get.mrn must be(Some(mrn))
     }
 

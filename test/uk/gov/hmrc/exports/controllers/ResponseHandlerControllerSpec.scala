@@ -20,13 +20,12 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, SubmissionData}
-import uk.gov.hmrc.exports.models.Submission
+import uk.gov.hmrc.exports.models.SubmissionResponse
 
 
 class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec with SubmissionData {
   val uri = "/save-submission-response"
-  val jsonBody = Json.toJson[Submission](submission)
-  println(jsonBody)
+  val jsonBody = Json.toJson[SubmissionResponse](submissionResponse)
   val fakeRequest = FakeRequest("POST", uri).withBody((jsonBody))
 
   "POST /save-submission-response" should {
@@ -37,9 +36,9 @@ class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec with Submissi
 
       status(result) must be (OK)
       withSubmissionSaved(false)
-      val fialedResult = route(app, fakeRequest).get
+      val failedResult = route(app, fakeRequest).get
 
-      status(fialedResult) must be (INTERNAL_SERVER_ERROR)
+      status(failedResult) must be (INTERNAL_SERVER_ERROR)
     }
   }
 }

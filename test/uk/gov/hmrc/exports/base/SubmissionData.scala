@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.base
 
-import uk.gov.hmrc.exports.models.Submission
+import uk.gov.hmrc.exports.models.{Submission, SubmissionResponse}
 
 import scala.util.Random
 
@@ -32,7 +32,10 @@ when this occurred.
   val conversationId = randomString(80)
 
   val before = System.currentTimeMillis()
-  val submission = Submission(eori, conversationId, lrn, Some(mrn))
+  val submission = Submission(eori, conversationId, Some(mrn))
+
+  val submissionResponse = SubmissionResponse(eori, conversationId, Some(mrn))
+
 
   protected def randomString(length: Int): String = Random.alphanumeric.take(length).mkString
 

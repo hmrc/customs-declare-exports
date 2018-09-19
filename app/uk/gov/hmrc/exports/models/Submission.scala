@@ -18,12 +18,11 @@ package uk.gov.hmrc.exports.models
 
 import play.api.libs.json.Json
 import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.mongoEntity
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
+import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.mongoEntity
 
   case class Submission(eori: String,
                         conversationId: String,
-                        lrn: Option[String] = None,
                         mrn: Option[String] = None,
                         submittedTimestamp: Long = System.currentTimeMillis(),
                         id: BSONObjectID = BSONObjectID.generate())
@@ -34,4 +33,18 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
     implicit val formats = mongoEntity {
       Json.format[Submission]
     }
+
+}
+
+case class SubmissionResponse(eori: String,
+                              conversationId: String,
+                              mrn: Option[String] = None)
+object SubmissionResponse {
+  implicit val formats = Json.format[SubmissionResponse]
+}
+
+case class ExportsResponse(status: Int, message:String)
+
+object ExportsResponse {
+  implicit val formats = Json.format[ExportsResponse]
 }

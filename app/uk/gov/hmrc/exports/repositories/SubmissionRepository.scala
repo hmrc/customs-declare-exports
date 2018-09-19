@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.repositories
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.JsString
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
