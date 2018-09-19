@@ -17,19 +17,21 @@
 package uk.gov.hmrc.exports.repositories
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsString, Json}
+import play.api.Logger
+import play.api.libs.json.JsString
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.{mongoEntity, objectIdFormats}
+import uk.gov.hmrc.exports.models.Submission
+import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 import uk.gov.hmrc.mongo.{AtomicUpdate, ReactiveRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: ExecutionContext)
-  extends ReactiveRepository[Submission, BSONObjectID]("submissions", mc.mongoConnector.db, Submission.formats, objectIdFormats)
+  extends ReactiveRepository[Submission, BSONObjectID]("submissions", mc.mongoConnector.db,
+    Submission.formats, objectIdFormats)
     with AtomicUpdate[Submission] {
 
   override def indexes: Seq[Index] = Seq(
@@ -40,28 +42,17 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
 
   def findByEori(eori: String): Future[Seq[Submission]] = find("eori" -> JsString(eori))
 
-  def getByConversationId(conversationId: String): Future[Option[Submission]] =
-    find("conversationId" -> JsString(conversationId)).map(_.headOption)
+  def getByConversationId(conversationId: String): Future[Option[Submission]] = find("conversationId" -> JsString(conversationId)).map(_.headOption)
 
-  def getByEoriAndMrn(eori: String, mrn: String): Future[Option[Submission]] =
-    find("eori" -> JsString(eori), "mrn" -> JsString(mrn)).map(_.headOption)
+  def getByEoriAndMrn(eori: String, mrn: String): Future[Option[Submission]] = find("eori" -> JsString(eori), "mrn" -> JsString(mrn)).map(_.headOption)
 
   override def isInsertion(newRecordId: BSONObjectID, oldRecord: Submission): Boolean = newRecordId.equals(oldRecord.id)
 
-  def save(submission:Submission): Future[WriteResult] = insert(submission)
+  def save(submission: Submission) = insert(submission).map(res =>
+    if (res.ok) res.ok
+    else {Logger.error("errors in inserting Submission result" + res.writeErrors.mkString("--"))
+      res.ok
+    })
 }
 
-case class Submission(
-  eori: String,
-  conversationId: String,
-  lrn: Option[String] = None,
-  mrn: Option[String] = None,
-  submittedTimestamp: Long = System.currentTimeMillis(),
-  id: BSONObjectID = BSONObjectID.generate()
-)
 
-object Submission {
-  implicit val formats = mongoEntity {
-    Json.format[Submission]
-  }
-}

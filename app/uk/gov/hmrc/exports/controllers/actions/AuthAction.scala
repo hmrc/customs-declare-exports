@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.controllers.actions
 
 import com.google.inject.{ImplementedBy, Inject}
 import play.api.mvc.{ActionBuilder, ActionFunction, Request, Result}
-import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.{NoActiveSession, _}
 import uk.gov.hmrc.auth.core.retrieve.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.exports.config.AppConfig

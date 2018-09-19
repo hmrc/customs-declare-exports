@@ -20,17 +20,29 @@ import org.mockito.{ArgumentMatcher, ArgumentMatchers}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
+import play.api.mvc.{Request, Result}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.Retrievals.credentials
 import uk.gov.hmrc.exports.models.SignedInUser
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Name, ~}
+import uk.gov.hmrc.exports.controllers.actions.AuthAction
+import uk.gov.hmrc.exports.models.requests.AuthenticatedRequest
+
 import scala.concurrent.Future
 
 trait AuthTestSupport extends MockitoSugar {
 
   lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
+  class TestAuthAction extends AuthAction {
+    override def invokeBlock[A](request: Request[A], block: (AuthenticatedRequest[A]) => Future[Result]): Future[Result] =
+      block(AuthenticatedRequest(request,newUser("1234","id1")))
+  }
+
+
+  val testAuthAction = new TestAuthAction
+
 
   val enrolment: Predicate = Enrolment("HMRC-CUS-ORG")
 
@@ -70,3 +82,4 @@ trait AuthTestSupport extends MockitoSugar {
     ))
   )
 }
+

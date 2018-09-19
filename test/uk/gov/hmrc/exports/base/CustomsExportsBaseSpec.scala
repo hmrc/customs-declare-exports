@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.base
 import java.util.UUID
 
 import akka.stream.Materializer
+import org.mockito.ArgumentMatchers.any
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
@@ -35,22 +36,22 @@ import play.api.test.FakeRequest
 import play.filters.csrf.CSRF.Token
 import play.filters.csrf.{CSRFConfig, CSRFConfigProvider, CSRFFilter}
 import uk.gov.hmrc.auth.core._
-
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.controllers.actions.{AuthAction, AuthActionImpl}
+import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.http.SessionKeys
+import org.mockito.Mockito.when
+
+
 import scala.concurrent.duration._
-
-import scala.util.Random
-
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 trait CustomsExportsBaseSpec extends PlaySpec
   with GuiceOneAppPerSuite with MockitoSugar
-  with ScalaFutures with AuthTestSupport {
+  with ScalaFutures  with AuthTestSupport{
 
-  val testAuthAction = mock[AuthActionImpl]
+  val mockSubmissionRepository = mock[SubmissionRepository]
 
   def injector: Injector = app.injector
 
@@ -69,7 +70,8 @@ trait CustomsExportsBaseSpec extends PlaySpec
   def wsClient: WSClient = injector.instanceOf[WSClient]
 
   override lazy val app: Application = GuiceApplicationBuilder()
-    .overrides(bind[AuthConnector].to(mockAuthConnector), bind[AuthAction].to(testAuthAction)).build()
+    .overrides(bind[AuthConnector].to(mockAuthConnector), bind[AuthAction].to(testAuthAction),
+      bind[SubmissionRepository].to(mockSubmissionRepository)).build()
 
   implicit val mat: Materializer = app.materializer
 
@@ -92,6 +94,7 @@ trait CustomsExportsBaseSpec extends PlaySpec
       .withJsonBody(body)
   }
 
-  protected def randomString(length: Int): String = Random.alphanumeric.take(length).mkString
+  protected def withSubmissionSaved(ok:Boolean) =
+    when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(ok))
 
 }
