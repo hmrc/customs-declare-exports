@@ -29,18 +29,23 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 
 @Singleton()
-class ResponseHandlerController @Inject()(appConfig: AppConfig,
-                                          submissionRepository: SubmissionRepository) extends BaseController {
+class ResponseHandlerController @Inject()(
+  appConfig: AppConfig,
+  submissionRepository: SubmissionRepository
+) extends BaseController {
 
-  def saveSubmissionResponse(): Action[SubmissionResponse] = Action.async(parse.json[SubmissionResponse]){
-    implicit request =>
-    val body = request.body
-    submissionRepository.save(Submission(body.eori,body.conversationId,body.mrn)).map(res =>
-      if(res) {Logger.debug("data saved to DB")
-        Ok(Json.toJson(ExportsResponse(200,"Submission response saved")))}
-      else {Logger.error("error  saving submission data to DB")
-        InternalServerError("failed saving submission")}
-    )
-  }
+  def saveSubmissionResponse(): Action[SubmissionResponse] =
+    Action.async(parse.json[SubmissionResponse]){ implicit request =>
+      val body = request.body
+      submissionRepository.save(Submission(body.eori,body.conversationId,body.mrn)).map(res =>
+        if(res) {
+          Logger.debug("data saved to DB")
+          Ok(Json.toJson(ExportsResponse(OK,"Submission response saved")))
+        } else {
+          Logger.error("error  saving submission data to DB")
+          InternalServerError("failed saving submission")
+        }
+      )
+    }
 
 }

@@ -21,18 +21,18 @@ import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.mongoEntity
 
-  case class Submission(eori: String,
-                        conversationId: String,
-                        mrn: Option[String] = None,
-                        submittedTimestamp: Long = System.currentTimeMillis(),
-                        id: BSONObjectID = BSONObjectID.generate())
+case class Submission(eori: String,
+                      conversationId: String,
+                      mrn: Option[String] = None,
+                      submittedTimestamp: Long = System.currentTimeMillis(),
+                      id: BSONObjectID = BSONObjectID.generate())
 
-  object Submission {
-    implicit val objectIdformats = ReactiveMongoFormats.objectIdFormats
+object Submission {
+  implicit val objectIdformats = ReactiveMongoFormats.objectIdFormats
 
-    implicit val formats = mongoEntity {
-      Json.format[Submission]
-    }
+  implicit val formats = mongoEntity {
+    Json.format[Submission]
+  }
 
 }
 
