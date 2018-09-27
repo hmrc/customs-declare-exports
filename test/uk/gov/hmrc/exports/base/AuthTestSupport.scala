@@ -16,32 +16,22 @@
 
 package uk.gov.hmrc.exports.base
 
-import org.mockito.{ArgumentMatcher, ArgumentMatchers}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
+import org.mockito.{ArgumentMatcher, ArgumentMatchers}
 import org.scalatest.mockito.MockitoSugar
-import play.api.mvc.{Request, Result}
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.retrieve.Retrievals.credentials
-import uk.gov.hmrc.exports.models.SignedInUser
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.Retrievals._
+import uk.gov.hmrc.auth.core.retrieve.Retrievals.{credentials, _}
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Name, ~}
-import uk.gov.hmrc.exports.controllers.actions.AuthAction
-import uk.gov.hmrc.exports.models.requests.AuthenticatedRequest
+import uk.gov.hmrc.exports.controllers.actions.ExportController
+import uk.gov.hmrc.exports.models.SignedInUser
 
 import scala.concurrent.Future
 
 trait AuthTestSupport extends MockitoSugar {
 
   lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
-  class TestAuthAction extends AuthAction {
-    override def invokeBlock[A](request: Request[A], block: (AuthenticatedRequest[A]) => Future[Result]): Future[Result] =
-      block(AuthenticatedRequest(request,newUser("1234","id1")))
-  }
-
-
-  val testAuthAction = new TestAuthAction
 
 
   val enrolment: Predicate = Enrolment("HMRC-CUS-ORG")
@@ -51,19 +41,32 @@ trait AuthTestSupport extends MockitoSugar {
       p == enrolment && user.enrolments.getEnrolment("HMRC-CUS-ORG").isDefined
   }
 
-  def authorizedUser(user: SignedInUser = newUser("12345", "external1")): Unit = {
+
+  def withAuthorizedUser(user: SignedInUser = newUser("12345", "external1")): Unit = {
+
     when(
       mockAuthConnector.authorise(
         ArgumentMatchers.argThat(cdsEnrollmentMatcher(user)),
-        ArgumentMatchers.eq(credentials and name and email and affinityGroup and internalId and allEnrolments)
+        ArgumentMatchers.eq( allEnrolments)
       )(
         any(), any()
       )
     ).thenReturn(
-      Future.successful(new ~(new ~(
-        new ~(new ~(new ~(user.credentials, user.name), user.email), user.affinityGroup),
-        user.internalId
-      ), user.enrolments))
+      Future.successful(user.enrolments)
+    )
+  }
+
+  def userWithoutEori(user: SignedInUser = newUser("12345", "external1")): Unit = {
+
+    when(
+      mockAuthConnector.authorise(
+        ArgumentMatchers.argThat(cdsEnrollmentMatcher(user)),
+        ArgumentMatchers.eq( allEnrolments)
+      )(
+        any(), any()
+      )
+    ).thenReturn(
+      Future.successful(Enrolments(Set()))
     )
   }
 

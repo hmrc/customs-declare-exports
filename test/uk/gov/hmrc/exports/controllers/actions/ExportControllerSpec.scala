@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.controllers
+package uk.gov.hmrc.exports.controllers.actions
 
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
@@ -23,22 +23,37 @@ import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, SubmissionData}
 import uk.gov.hmrc.exports.models.SubmissionResponse
 
 
-class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec with SubmissionData {
+class ExportControllerSpec extends CustomsExportsBaseSpec with SubmissionData{
   val uri = "/save-submission-response"
   val jsonBody = Json.toJson[SubmissionResponse](submissionResponse)
   val fakeRequest = FakeRequest("POST", uri).withBody((jsonBody))
+  "Auth Action" should {
+    "return InsufficientEnrolments when EORI number is missing" in {
+      userWithoutEori()
 
-  "POST /save-submission-response" should {
-    "return 200" in {
+      val result = route(app, fakeRequest).get
+
+      status(result) must be (UNAUTHORIZED)
+    }
+
+    "return a success  when a valid request with Enrollmenrts" in {
       withAuthorizedUser()
       withSubmissionSaved(true)
+
       val result = route(app, fakeRequest).get
 
       status(result) must be (OK)
-      withSubmissionSaved(false)
-      val failedResult = route(app, fakeRequest).get
-
-      status(failedResult) must be (INTERNAL_SERVER_ERROR)
     }
+
+    "return an Internal Server Error when there is a problem with the service" in {
+      withAuthorizedUser()
+      withSubmissionSaved(false)
+
+      val result = route(app, fakeRequest).get
+
+      status(result) must be (INTERNAL_SERVER_ERROR)
+    }
+
   }
-}
+
+  }

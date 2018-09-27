@@ -20,6 +20,7 @@ import java.util.UUID
 
 import akka.stream.Materializer
 import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
@@ -37,11 +38,8 @@ import play.filters.csrf.CSRF.Token
 import play.filters.csrf.{CSRFConfig, CSRFConfigProvider, CSRFFilter}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.controllers.actions.{AuthAction, AuthActionImpl}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.http.SessionKeys
-import org.mockito.Mockito.when
-
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -65,12 +63,10 @@ trait CustomsExportsBaseSpec extends PlaySpec
 
   def messagesApi: MessagesApi = injector.instanceOf[MessagesApi]
 
-  def authenticate: AuthActionImpl = injector.instanceOf[AuthActionImpl]
-
   def wsClient: WSClient = injector.instanceOf[WSClient]
 
   override lazy val app: Application = GuiceApplicationBuilder()
-    .overrides(bind[AuthConnector].to(mockAuthConnector), bind[AuthAction].to(testAuthAction),
+    .overrides(bind[AuthConnector].to(mockAuthConnector),
       bind[SubmissionRepository].to(mockSubmissionRepository)).build()
 
   implicit val mat: Materializer = app.materializer
