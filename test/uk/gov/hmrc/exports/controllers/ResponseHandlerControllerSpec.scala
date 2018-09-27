@@ -30,7 +30,7 @@ class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec with Submissi
 
   "POST /save-submission-response" should {
     "return 200" in {
-      authorizedUser()
+      withAuthorizedUser()
       withSubmissionSaved(true)
       val result = route(app, fakeRequest).get
 
