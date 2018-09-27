@@ -56,6 +56,20 @@ trait AuthTestSupport extends MockitoSugar {
     )
   }
 
+  def userWithoutEori(user: SignedInUser = newUser("12345", "external1")): Unit = {
+
+    when(
+      mockAuthConnector.authorise(
+        ArgumentMatchers.argThat(cdsEnrollmentMatcher(user)),
+        ArgumentMatchers.eq( allEnrolments)
+      )(
+        any(), any()
+      )
+    ).thenReturn(
+      Future.successful(Enrolments(Set()))
+    )
+  }
+
   def newUser(eori: String, externalId: String): SignedInUser = SignedInUser(
     Credentials("2345235235", "GovernmentGateway"),
     Name(Some("Aldo"), Some("Rain")),

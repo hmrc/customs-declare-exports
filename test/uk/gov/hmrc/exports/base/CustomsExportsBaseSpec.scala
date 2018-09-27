@@ -38,7 +38,6 @@ import play.filters.csrf.CSRF.Token
 import play.filters.csrf.{CSRFConfig, CSRFConfigProvider, CSRFFilter}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.controllers.actions.ExportController
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.http.SessionKeys
 
