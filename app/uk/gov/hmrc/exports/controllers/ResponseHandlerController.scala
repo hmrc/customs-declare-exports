@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.Json
-import play.api.mvc.{Action, Request}
+import play.api.mvc.{Action, Request, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.controllers.actions.ExportController
@@ -28,22 +28,21 @@ import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-
-@Singleton()
+@Singleton
 class ResponseHandlerController @Inject()(
   appConfig: AppConfig,
   submissionRepository: SubmissionRepository,
-   authConnector: AuthConnector
+  authConnector: AuthConnector
 ) extends ExportController(authConnector) {
 
   def saveSubmissionResponse(): Action[SubmissionResponse] =
     Action.async(parse.json[SubmissionResponse]){ implicit request =>
-
       authorizedWithEnrolment[SubmissionResponse](_ => processRequest)
     }
 
-  def processRequest()(implicit request: Request[SubmissionResponse] , hc:HeaderCarrier) = {
+  def processRequest()(implicit request: Request[SubmissionResponse] , hc:HeaderCarrier): Future[Result] = {
     val body = request.body
     submissionRepository.save(Submission(body.eori,body.conversationId,body.mrn)).map(res =>
       if(res) {
@@ -55,5 +54,4 @@ class ResponseHandlerController @Inject()(
       }
     )
   }
-
 }
