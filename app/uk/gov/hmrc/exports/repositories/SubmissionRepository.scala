@@ -42,9 +42,11 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
 
   def findByEori(eori: String): Future[Seq[Submission]] = find("eori" -> JsString(eori))
 
-  def getByConversationId(conversationId: String): Future[Option[Submission]] = find("conversationId" -> JsString(conversationId)).map(_.headOption)
+  def getByConversationId(conversationId: String): Future[Option[Submission]] =
+    find("conversationId" -> JsString(conversationId)).map(_.headOption)
 
-  def getByEoriAndMrn(eori: String, mrn: String): Future[Option[Submission]] = find("eori" -> JsString(eori), "mrn" -> JsString(mrn)).map(_.headOption)
+  def getByEoriAndMrn(eori: String, mrn: String): Future[Option[Submission]] =
+    find("eori" -> JsString(eori), "mrn" -> JsString(mrn)).map(_.headOption)
 
   override def isInsertion(newRecordId: BSONObjectID, oldRecord: Submission): Boolean = newRecordId.equals(oldRecord.id)
 

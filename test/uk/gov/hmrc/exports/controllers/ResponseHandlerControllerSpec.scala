@@ -22,19 +22,22 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, SubmissionData}
 import uk.gov.hmrc.exports.models.SubmissionResponse
 
-
 class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec with SubmissionData {
   val uri = "/save-submission-response"
   val jsonBody = Json.toJson[SubmissionResponse](submissionResponse)
   val fakeRequest = FakeRequest("POST", uri).withBody((jsonBody))
 
   "POST /save-submission-response" should {
-    "return 200" in {
+    "return 200 when submission has been saved" in {
       withAuthorizedUser()
       withSubmissionSaved(true)
       val result = route(app, fakeRequest).get
 
       status(result) must be (OK)
+    }
+
+    "return 500 when something goes wrong" in {
+      withAuthorizedUser()
       withSubmissionSaved(false)
       val failedResult = route(app, fakeRequest).get
 

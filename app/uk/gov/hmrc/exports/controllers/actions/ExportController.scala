@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.exports.controllers.actions
 
-import com.google.inject.Inject
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -28,32 +27,32 @@ import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ExportController @Inject()(val authConnector: AuthConnector)
+class ExportController @Inject()(override val authConnector: AuthConnector)
                                 (implicit ec: ExecutionContext) extends BaseController with AuthorisedFunctions {
 
   def authorizedWithEnrolment[A](callback: (Request[A]) => Future[Result])
-                                (implicit request: Request[A]): Future[Result] = {
-    authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments)  {enrolments =>
+                                (implicit request: Request[A]): Future[Result] =
+    authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments) {enrolments =>
       if(!hasEnrolment(enrolments))
         callback(request)
       else throw InsufficientEnrolments()
     } recoverWith {
       handleFailure
     }
-  }
 
-  private def hasEnrolment(allEnrolments:Enrolments) = allEnrolments.getEnrolment("HMRC-CUS-ORG").flatMap(_.getIdentifier("EORINumber")).isEmpty
+  private def hasEnrolment(allEnrolments:Enrolments): Boolean =
+    allEnrolments.getEnrolment("HMRC-CUS-ORG").flatMap(_.getIdentifier("EORINumber")).isEmpty
 
-  def handleFailure(implicit request: Request[_]): PartialFunction[Throwable, Future[Result]] = PartialFunction[Throwable, Future[Result]] {
-    case _: InsufficientEnrolments =>
-      Logger.warn(s"Unauthorised access for ${request.uri}")
-      Future.successful(Unauthorized(Json.toJson("Unauthorized for exports")))
-    case _: AuthorisationException =>
-      Logger.warn(s"Unauthorised Exception for ${request.uri}")
+  def handleFailure(implicit request: Request[_]): PartialFunction[Throwable, Future[Result]] =
+    PartialFunction[Throwable, Future[Result]] {
+      case _: InsufficientEnrolments =>
+        Logger.warn(s"Unauthorised access for ${request.uri}")
+        Future.successful(Unauthorized(Json.toJson("Unauthorized for exports")))
+      case _: AuthorisationException =>
+        Logger.warn(s"Unauthorised Exception for ${request.uri}")
 
-      Future.successful(Unauthorized(Json.toJson("Unauthorized for exports")))
-    case _ =>
-      Future.successful(InternalServerError(Json.toJson("InternalServerError")))
-  }
-
+        Future.successful(Unauthorized(Json.toJson("Unauthorized for exports")))
+      case _ =>
+        Future.successful(InternalServerError(Json.toJson("InternalServerError")))
+    }
 }

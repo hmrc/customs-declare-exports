@@ -47,7 +47,7 @@ import scala.reflect.ClassTag
 
 trait CustomsExportsBaseSpec extends PlaySpec
   with GuiceOneAppPerSuite with MockitoSugar
-  with ScalaFutures  with AuthTestSupport{
+  with ScalaFutures  with AuthTestSupport {
 
   val mockSubmissionRepository = mock[SubmissionRepository]
 
@@ -57,7 +57,7 @@ trait CustomsExportsBaseSpec extends PlaySpec
 
   protected def component[T: ClassTag]: T = app.injector.instanceOf[T]
 
-  val token = injector.instanceOf[CSRFFilter].tokenProvider.generateToken
+  val token: String = injector.instanceOf[CSRFFilter].tokenProvider.generateToken
 
   def appConfig: AppConfig = injector.instanceOf[AppConfig]
 
@@ -65,25 +65,31 @@ trait CustomsExportsBaseSpec extends PlaySpec
 
   def wsClient: WSClient = injector.instanceOf[WSClient]
 
-  override lazy val app: Application = GuiceApplicationBuilder()
-    .overrides(bind[AuthConnector].to(mockAuthConnector),
-      bind[SubmissionRepository].to(mockSubmissionRepository)).build()
+  override lazy val app: Application =
+    GuiceApplicationBuilder()
+      .overrides(
+        bind[AuthConnector].to(mockAuthConnector),
+        bind[SubmissionRepository].to(mockSubmissionRepository)
+      ).build()
 
   implicit val mat: Materializer = app.materializer
 
   implicit val ec: ExecutionContext = Implicits.defaultContext
 
-  implicit lazy val patience: PatienceConfig = PatienceConfig(timeout = 5.seconds, interval = 50.milliseconds) // be more patient than the default
+  implicit lazy val patience: PatienceConfig =
+    PatienceConfig(timeout = 5.seconds, interval = 50.milliseconds) // be more patient than the default
 
   protected def postRequest(uri: String, body: JsValue, headers: Map[String, String] = Map.empty): FakeRequest[AnyContentAsJson] = {
     val session: Map[String, String] = Map(
       SessionKeys.sessionId -> s"session-${UUID.randomUUID()}",
       SessionKeys.userId -> "Int-ba17b467-90f3-42b6-9570-73be7b78eb2b"
     )
+
     val tags = Map(
       Token.NameRequestTag -> cfg.tokenName,
       Token.RequestTag -> token
     )
+
     FakeRequest("POST", uri)
       .withHeaders((Map(cfg.headerName -> token) ++ headers).toSeq: _*)
       .withSession(session.toSeq: _*).copyFakeRequest(tags = tags)
@@ -92,5 +98,4 @@ trait CustomsExportsBaseSpec extends PlaySpec
 
   protected def withSubmissionSaved(ok:Boolean) =
     when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(ok))
-
 }

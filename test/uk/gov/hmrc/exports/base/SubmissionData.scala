@@ -36,8 +36,5 @@ when this occurred.
 
   val submissionResponse = SubmissionResponse(eori, conversationId, Some(mrn))
 
-
   protected def randomString(length: Int): String = Random.alphanumeric.take(length).mkString
-
-
 }

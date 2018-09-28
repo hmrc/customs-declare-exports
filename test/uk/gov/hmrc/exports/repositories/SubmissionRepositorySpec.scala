@@ -26,7 +26,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with SubmissionData{
 
-
   override protected def afterEach(): Unit = {
     super.afterEach()
     repositories.foreach { repo =>
@@ -40,7 +39,6 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
    val repositories: Seq[ReactiveRepository[_, _]] = Seq(repo)
 
   "repo" should {
-
     "save declaration with EORI and timestamp" in {
       repo.save(submission).futureValue must be(true)
 
@@ -66,7 +64,5 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
       gotAgain.get.conversationId must be(conversationId)
       gotAgain.get.mrn must be(Some(mrn))
     }
-
   }
-
 }

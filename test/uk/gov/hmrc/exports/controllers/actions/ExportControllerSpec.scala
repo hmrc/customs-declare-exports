@@ -22,11 +22,11 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, SubmissionData}
 import uk.gov.hmrc.exports.models.SubmissionResponse
 
-
-class ExportControllerSpec extends CustomsExportsBaseSpec with SubmissionData{
+class ExportControllerSpec extends CustomsExportsBaseSpec with SubmissionData {
   val uri = "/save-submission-response"
   val jsonBody = Json.toJson[SubmissionResponse](submissionResponse)
   val fakeRequest = FakeRequest("POST", uri).withBody((jsonBody))
+
   "Auth Action" should {
     "return InsufficientEnrolments when EORI number is missing" in {
       userWithoutEori()
@@ -36,7 +36,7 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with SubmissionData{
       status(result) must be (UNAUTHORIZED)
     }
 
-    "return a success  when a valid request with Enrollmenrts" in {
+    "return a success  when a valid request with Enrollments" in {
       withAuthorizedUser()
       withSubmissionSaved(true)
 
@@ -53,7 +53,5 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with SubmissionData{
 
       status(result) must be (INTERNAL_SERVER_ERROR)
     }
-
   }
-
-  }
+}

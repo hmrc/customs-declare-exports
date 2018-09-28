@@ -22,9 +22,8 @@ import org.mockito.{ArgumentMatcher, ArgumentMatchers}
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.Retrievals.{credentials, _}
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Name, ~}
-import uk.gov.hmrc.exports.controllers.actions.ExportController
+import uk.gov.hmrc.auth.core.retrieve.Retrievals._
+import uk.gov.hmrc.auth.core.retrieve.{Credentials, Name}
 import uk.gov.hmrc.exports.models.SignedInUser
 
 import scala.concurrent.Future
@@ -32,7 +31,6 @@ import scala.concurrent.Future
 trait AuthTestSupport extends MockitoSugar {
 
   lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
-
 
   val enrolment: Predicate = Enrolment("HMRC-CUS-ORG")
 
@@ -42,8 +40,7 @@ trait AuthTestSupport extends MockitoSugar {
   }
 
 
-  def withAuthorizedUser(user: SignedInUser = newUser("12345", "external1")): Unit = {
-
+  def withAuthorizedUser(user: SignedInUser = newUser("12345", "external1")): Unit =
     when(
       mockAuthConnector.authorise(
         ArgumentMatchers.argThat(cdsEnrollmentMatcher(user)),
@@ -54,10 +51,8 @@ trait AuthTestSupport extends MockitoSugar {
     ).thenReturn(
       Future.successful(user.enrolments)
     )
-  }
 
-  def userWithoutEori(user: SignedInUser = newUser("12345", "external1")): Unit = {
-
+  def userWithoutEori(user: SignedInUser = newUser("12345", "external1")): Unit =
     when(
       mockAuthConnector.authorise(
         ArgumentMatchers.argThat(cdsEnrollmentMatcher(user)),
@@ -68,7 +63,6 @@ trait AuthTestSupport extends MockitoSugar {
     ).thenReturn(
       Future.successful(Enrolments(Set()))
     )
-  }
 
   def newUser(eori: String, externalId: String): SignedInUser = SignedInUser(
     Credentials("2345235235", "GovernmentGateway"),
