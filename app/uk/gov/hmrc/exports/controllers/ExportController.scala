@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.controllers.actions
+package uk.gov.hmrc.exports.controllers
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
@@ -52,7 +52,8 @@ class ExportController @Inject()(override val authConnector: AuthConnector)
         Logger.warn(s"Unauthorised Exception for ${request.uri}")
 
         Future.successful(Unauthorized(Json.toJson("Unauthorized for exports")))
-      case _ =>
+      case ex :Throwable =>
+        Logger.error("Internal server error is " + ex.getMessage)
         Future.successful(InternalServerError(Json.toJson("InternalServerError")))
     }
 }

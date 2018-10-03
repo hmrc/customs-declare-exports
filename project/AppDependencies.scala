@@ -8,7 +8,9 @@ object AppDependencies {
   val compile = Seq(
     "uk.gov.hmrc" %% "play-reactivemongo" % "6.2.0",
     ws,
-    "uk.gov.hmrc" %% "bootstrap-play-25" % "3.3.0"
+    "uk.gov.hmrc" %% "bootstrap-play-25" % "3.3.0",
+    "uk.gov.hmrc" %% "wco-dec" % "0.9.0"
+
   )
 
   def test(scope: String = "test") = Seq(
@@ -19,5 +21,6 @@ object AppDependencies {
 
     "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
     "org.mockito" % "mockito-core" % "2.13.0" % "test"
+    
   )
 }
