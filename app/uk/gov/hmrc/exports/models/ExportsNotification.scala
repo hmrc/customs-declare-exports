@@ -20,17 +20,11 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.wco.dec._
 
 case class ExportsNotification(wcoDataModelVersionCode: Option[String] = None, // max 6 chars
-
                                wcoTypeName: Option[String] = None, // no constraint
-
                                responsibleCountryCode: Option[String] = None, // max 2 chars - ISO 3166-1 alpha2 code
-
                                responsibleAgencyName: Option[String] = None, // max 70 chars
-
                                agencyAssignedCustomizationCode: Option[String] = None, // max 6 chars
-
                                agencyAssignedCustomizationVersionCode: Option[String] = None, // max 3 chars
-
                                response: Seq[Response] = Seq.empty)
 
 object ExportsNotification {
@@ -47,8 +41,6 @@ object ExportsNotification {
     implicit val responseCommunicationFormats = Json.format[ResponseCommunication]
     implicit val responseObligationGuaranteeFormats = Json.format[ResponseObligationGuarantee]
     implicit val responseStatusFormats = Json.format[ResponseStatus]
-
-
     implicit val responseAdditionalInformationFormats = Json.format[ResponseAdditionalInformation]
     implicit val responseAmendmentFormats = Json.format[ResponseAmendment]
     implicit val responseAppealOfficeFormats = Json.format[ResponseAppealOffice]
@@ -63,3 +55,14 @@ object ExportsNotification {
     implicit val exportsNotificationFormats = Json.format[ExportsNotification]
 
 }
+
+case class NotificationApiHeaders(accept: String, contentType: String, clientId: String, badgeId: Option[String])
+
+case class NotifyResponse(code:String,message:String) {
+    def toXml() = <errorResponse><code>{code}</code><message>{message}</message></errorResponse>
+}
+
+ object NotAcceptableResponse extends NotifyResponse("ACCEPT_HEADER_INVALID","Missing or invalid Accept header")
+
+ object HeaderMissingErrorResponse extends NotifyResponse("INTERNAL_SERVER_ERROR",
+    "ClientId or ConversationId or EORI is missing in the request headers")

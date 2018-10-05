@@ -18,11 +18,13 @@ package uk.gov.hmrc.exports.controllers
 
 import com.google.inject.Singleton
 import javax.inject.Inject
+import play.api.Logger
+import play.api.http.HeaderNames
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, Request}
+import play.api.mvc.{Action, AnyContent, Request, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.ExportsNotification
+import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.wco.dec._
 
@@ -31,33 +33,52 @@ import scala.concurrent.Future
 import scala.xml.NodeSeq
 
 
-
-
 @Singleton
-class NotificationsController @Inject()( appConfig: AppConfig,
-                                         authConnector: AuthConnector
+class NotificationsController @Inject()(appConfig: AppConfig,
+                                        authConnector: AuthConnector
                                        ) extends ExportController(authConnector) {
 
-
+  //TODO request needs to be streamed based on the performance results
   def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) {
     implicit request =>
-      authorizedWithEnrolment[NodeSeq](_ => save)
+      validateHeaders() { headers: NotificationApiHeaders => save(headers) }
 
   }
 
-  private def save()(implicit request: Request[NodeSeq], hc: HeaderCarrier) = {
-    val metadata  = MetaData.fromXml(request.body.toString)
-    ExportsNotification(metadata.wcoDataModelVersionCode,
-      metadata.wcoTypeName,metadata.responsibleCountryCode,
+
+  private def validateHeaders()(process: NotificationApiHeaders => Future[Result])(implicit request: Request[NodeSeq], hc: HeaderCarrier): Future[Result] = {
+    val accept = request.headers.get(HeaderNames.ACCEPT)
+    val contentType = request.headers.get(HeaderNames.CONTENT_TYPE)
+    val clientId = request.headers.get("X-CDS-Client-ID")
+    val conversationId = request.headers.get("X-Conversation-ID")
+    val eori = request.headers.get("X-EORI-Identifier")
+    val badgeIdentifier = request.headers.get("X-Badge-Identifier")
+    //TODO authorisation header validation
+    if (accept.isEmpty) {
+      Future.successful(NotAcceptable(NotAcceptableResponse.toXml))
+    } else if (contentType.isEmpty) {
+      Future.successful(UnsupportedMediaType)
+    } else if (clientId.isEmpty || conversationId.isEmpty || eori.isEmpty) {
+      Future.successful(InternalServerError(HeaderMissingErrorResponse.toXml))
+    } else
+      process(NotificationApiHeaders(accept.get, contentType.get, clientId.get, badgeIdentifier))
+  }
+
+
+  private def save(headers: NotificationApiHeaders)(implicit request: Request[NodeSeq], hc: HeaderCarrier) = {
+    val metadata = MetaData.fromXml(request.body.toString)
+    val notification = ExportsNotification(metadata.wcoDataModelVersionCode,
+      metadata.wcoTypeName, metadata.responsibleCountryCode,
       metadata.responsibleAgencyName,
       metadata.agencyAssignedCustomizationCode,
       metadata.agencyAssignedCustomizationVersionCode,
       metadata.response)
-    Future.successful(Ok("Saved Notification successfully"))
+    Logger.debug("\033[34m Notification is " + notification + "\033[0m")
+    Future.successful(Accepted)
   }
 
 
-
+  //TODO response should be streamed or paginated depending on the no if requests.
   def getNotifications(lrn: String, mrn: String, eori: String): Action[AnyContent] = Action.async {
     implicit request =>
 
@@ -66,8 +87,8 @@ class NotificationsController @Inject()( appConfig: AppConfig,
 
 
   private def getNotifications() = {
-    Seq(ExportsNotification(  wcoTypeName = Some("RES"),
-      response = Seq(Response(functionCode = 123,functionalReferenceId = Some("123")))))
+    Seq(ExportsNotification(wcoTypeName = Some("RES"),
+      response = Seq(Response(functionCode = 123, functionalReferenceId = Some("123")))))
 
   }
 }
