@@ -38,7 +38,8 @@ import play.filters.csrf.CSRF.Token
 import play.filters.csrf.{CSRFConfig, CSRFConfigProvider, CSRFFilter}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.repositories.SubmissionRepository
+import uk.gov.hmrc.exports.models.ExportsNotification
+import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.http.SessionKeys
 
 import scala.concurrent.duration._
@@ -47,9 +48,10 @@ import scala.reflect.ClassTag
 
 trait CustomsExportsBaseSpec extends PlaySpec
   with GuiceOneAppPerSuite with MockitoSugar
-  with ScalaFutures  with AuthTestSupport {
+  with ScalaFutures with AuthTestSupport {
 
   val mockSubmissionRepository = mock[SubmissionRepository]
+  val mockNotificationsRepository = mock[NotificationsRepository]
 
   def injector: Injector = app.injector
 
@@ -69,7 +71,8 @@ trait CustomsExportsBaseSpec extends PlaySpec
     GuiceApplicationBuilder()
       .overrides(
         bind[AuthConnector].to(mockAuthConnector),
-        bind[SubmissionRepository].to(mockSubmissionRepository)
+        bind[SubmissionRepository].to(mockSubmissionRepository),
+        bind[NotificationsRepository].to(mockNotificationsRepository)
       ).build()
 
   implicit val mat: Materializer = app.materializer
@@ -96,6 +99,12 @@ trait CustomsExportsBaseSpec extends PlaySpec
       .withJsonBody(body)
   }
 
-  protected def withSubmissionSaved(ok:Boolean) =
+  protected def withSubmissionSaved(ok: Boolean) =
     when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(ok))
+
+  protected def withNotificationSaved(ok: Boolean) =
+    when(mockNotificationsRepository.save(any())).thenReturn(Future.successful(ok))
+
+  protected def haveNotifications(notifications: Seq[ExportsNotification]) =
+    when(mockNotificationsRepository.findByEori(any())).thenReturn(Future.successful(notifications))
 }

@@ -4,5 +4,5 @@ POST        /save-submission-response        uk.gov.hmrc.exports.controllers.Res
 
 POST       /customs-declare-exports/notify    uk.gov.hmrc.exports.controllers.NotificationsController.saveNotification()
 
-GET       /customs-declare-exports/notifications/:lrn/:mrn/:eori   uk.gov.hmrc.exports.controllers.NotificationsController.getNotifications(lrn:String,mrn:String,eori:String)
+GET       /customs-declare-exports/notifications/:eori   uk.gov.hmrc.exports.controllers.NotificationsController.getNotifications(eori:String)
 

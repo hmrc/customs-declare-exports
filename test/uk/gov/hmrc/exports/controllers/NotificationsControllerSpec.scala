@@ -21,13 +21,13 @@ import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
-import uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
+import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
 
-class NotificationsControllerSpec extends CustomsExportsBaseSpec {
+class NotificationsControllerSpec extends CustomsExportsBaseSpec  with ExportsTestData {
 
   val uri = "/customs-declare-exports/notify"
 
-  val getNotificationUri = "/customs-declare-exports/notifications/lrn1/mrn1/eori1"
+  val getNotificationUri = "/customs-declare-exports/notifications/eori1"
   val validXML = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
     <wstxns1:Response xmlns:wstxns1="urn:wco:datamodel:WCO:RES-DMS:2"></wstxns1:Response>
   </MetaData>
@@ -49,9 +49,15 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec {
 
     "successfully accept Notification" in {
       val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*) withXmlBody (validXML)).get
+      withNotificationSaved(true)
       status(result) must be(ACCEPTED)
     }
 
+    "failed to save Notification" in {
+      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*) withXmlBody (validXML)).get
+      withNotificationSaved(false)
+      status(result) must be(INTERNAL_SERVER_ERROR)
+    }
     "500 response if no eori header in Notification" in {
       val result = route(app, FakeRequest(POST, uri).withHeaders(noEoriHeaders.toSeq: _*) withXmlBody (validXML)).get
       status(result) must be(INTERNAL_SERVER_ERROR)
@@ -59,8 +65,10 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec {
       ("<errorResponse><code>INTERNAL_SERVER_ERROR</code><message>" +
         "ClientId or ConversationId or EORI is missing in the request headers</message></errorResponse>")
     }
+
     "get Notifications" in {
       withAuthorizedUser()
+      haveNotifications(Seq(notification))
       val result = route(app, FakeRequest(GET, getNotificationUri)).get
       status(result) must be(OK)
     }

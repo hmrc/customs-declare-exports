@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.controllers
 
 import com.google.inject.Singleton
 import javax.inject.Inject
+import org.joda.time.DateTime
 import play.api.Logger
 import play.api.http.HeaderNames
 import play.api.libs.json.Json
@@ -25,6 +26,7 @@ import play.api.mvc.{Action, AnyContent, Request, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.exports.repositories.NotificationsRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.wco.dec._
 
@@ -35,18 +37,24 @@ import scala.xml.NodeSeq
 
 @Singleton
 class NotificationsController @Inject()(appConfig: AppConfig,
-                                        authConnector: AuthConnector
+                                        authConnector: AuthConnector,
+                                        notificationsRepository: NotificationsRepository
                                        ) extends ExportController(authConnector) {
 
   //TODO request needs to be streamed based on the performance results
   def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) {
     implicit request =>
-      validateHeaders() { headers: NotificationApiHeaders => save(headers) }
-
+      validateHeaders() { headers: NotificationApiHeaders =>   save(getNotificationFromRequest(headers)) }
   }
 
+  //TODO response should be streamed or paginated depending on the no if requests.
+  def getNotifications(eori: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      authorizedWithEnrolment[AnyContent]( _ => findByEori(eori))
+  }
 
-  private def validateHeaders()(process: NotificationApiHeaders => Future[Result])(implicit request: Request[NodeSeq], hc: HeaderCarrier): Future[Result] = {
+  private def validateHeaders()(process: NotificationApiHeaders => Future[Result])(
+    implicit request: Request[NodeSeq], hc: HeaderCarrier): Future[Result] = {
     val accept = request.headers.get(HeaderNames.ACCEPT)
     val contentType = request.headers.get(HeaderNames.CONTENT_TYPE)
     val clientId = request.headers.get("X-CDS-Client-ID")
@@ -61,35 +69,34 @@ class NotificationsController @Inject()(appConfig: AppConfig,
     } else if (clientId.isEmpty || conversationId.isEmpty || eori.isEmpty) {
       Future.successful(InternalServerError(HeaderMissingErrorResponse.toXml))
     } else
-      process(NotificationApiHeaders(accept.get, contentType.get, clientId.get, badgeIdentifier))
+      process(NotificationApiHeaders(accept.get, contentType.get, clientId.get, badgeIdentifier,conversationId.get,eori.get))
   }
 
-
-  private def save(headers: NotificationApiHeaders)(implicit request: Request[NodeSeq], hc: HeaderCarrier) = {
+  private def getNotificationFromRequest(headers: NotificationApiHeaders)(implicit request: Request[NodeSeq], hc: HeaderCarrier)= {
     val metadata = MetaData.fromXml(request.body.toString)
-    val notification = ExportsNotification(metadata.wcoDataModelVersionCode,
-      metadata.wcoTypeName, metadata.responsibleCountryCode,
-      metadata.responsibleAgencyName,
-      metadata.agencyAssignedCustomizationCode,
-      metadata.agencyAssignedCustomizationVersionCode,
+
+    val notification = ExportsNotification(DateTime.now,
+      headers.conversationId,
+      headers.eori,
+      headers.badgeId,
+      DeclarationMetadata(metadata.wcoDataModelVersionCode,
+        metadata.wcoTypeName, metadata.responsibleCountryCode,
+        metadata.responsibleAgencyName,
+        metadata.agencyAssignedCustomizationCode,
+        metadata.agencyAssignedCustomizationVersionCode),
       metadata.response)
     Logger.debug("\033[34m Notification is " + notification + "\033[0m")
-    Future.successful(Accepted)
+    notification
   }
 
+  private def save(notification: ExportsNotification)(implicit hc: HeaderCarrier) =
+    notificationsRepository.save(notification).map(result=> result match {
+      case true =>     Accepted
+      case _ =>     InternalServerError(NotificationFailedErrorResponse.toXml)
+    })
 
-  //TODO response should be streamed or paginated depending on the no if requests.
-  def getNotifications(lrn: String, mrn: String, eori: String): Action[AnyContent] = Action.async {
-    implicit request =>
+  private def findByEori(eori:String)(implicit hc:HeaderCarrier) =
+    notificationsRepository.findByEori(eori).map(res=> Ok(Json.toJson(res)))
 
-      Future.successful(Ok(Json.toJson(getNotifications)))
-  }
-
-
-  private def getNotifications() = {
-    Seq(ExportsNotification(wcoTypeName = Some("RES"),
-      response = Seq(Response(functionCode = 123, functionalReferenceId = Some("123")))))
-
-  }
 }
 

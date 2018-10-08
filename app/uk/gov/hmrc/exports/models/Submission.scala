@@ -26,13 +26,15 @@ case class Submission(
   conversationId: String,
   mrn: Option[String] = None,
   submittedTimestamp: Long = System.currentTimeMillis(),
-  id: BSONObjectID = BSONObjectID.generate()
+  id: BSONObjectID = BSONObjectID.generate(),
+                     notifications:Seq[ExportsNotification] = Seq.empty
 )
 
 object Submission {
-  implicit val objectIdformats = ReactiveMongoFormats.objectIdFormats
-
+  implicit val objectIdFormats = ReactiveMongoFormats.objectIdFormats
+  implicit  val responseFormats =     ExportsNotification.responseFormats
   implicit val formats = mongoEntity {
+    Json.format[ExportsNotification]
     Json.format[Submission]
   }
 }
