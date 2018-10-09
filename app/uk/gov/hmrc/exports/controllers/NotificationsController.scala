@@ -90,13 +90,13 @@ class NotificationsController @Inject()(
     notification
   }
 
-  private def save(notification: ExportsNotification)(implicit hc: HeaderCarrier) =
+  private def save(notification: ExportsNotification)(implicit hc: HeaderCarrier): Future[Result] =
     notificationsRepository.save(notification).map(_ match {
       case true => Accepted
       case _    => InternalServerError(NotificationFailedErrorResponse.toXml)
     })
 
-  private def findByEori(eori:String)(implicit hc:HeaderCarrier) =
+  private def findByEori(eori:String)(implicit hc:HeaderCarrier): Future[Result] =
     notificationsRepository.findByEori(eori).map(res => Ok(Json.toJson(res)))
 }
 
