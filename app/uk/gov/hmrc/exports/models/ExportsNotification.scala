@@ -20,13 +20,16 @@ import org.joda.time.DateTime
 import play.api.libs.json.Json
 import uk.gov.hmrc.wco.dec._
 
-case class DeclarationMetadata(wcoDataModelVersionCode: Option[String] = None, // max 6 chars
-                               wcoTypeName: Option[String] = None, // no constraint
-                               responsibleCountryCode: Option[String] = None, // max 2 chars - ISO 3166-1 alpha2 code
-                               responsibleAgencyName: Option[String] = None, // max 70 chars
-                               agencyAssignedCustomizationCode: Option[String] = None, // max 6 chars
-                               agencyAssignedCustomizationVersionCode: Option[String] = None // max 3 chars
-                              )
+import scala.xml.Elem
+
+case class DeclarationMetadata(
+  wcoDataModelVersionCode: Option[String] = None, // max 6 chars
+  wcoTypeName: Option[String] = None, // no constraint
+  responsibleCountryCode: Option[String] = None, // max 2 chars - ISO 3166-1 alpha2 code
+  responsibleAgencyName: Option[String] = None, // max 70 chars
+  agencyAssignedCustomizationCode: Option[String] = None, // max 6 chars
+  agencyAssignedCustomizationVersionCode: Option[String] = None // max 3 chars
+)
 
 object DeclarationMetadata {
   implicit val declarationMetadataFormats = Json.format[DeclarationMetadata]
@@ -55,26 +58,33 @@ object ExportsNotification {
   implicit val responsePaymentFormats = Json.format[ResponsePayment]
   implicit val responseDutyTaxFee = Json.format[ResponseDutyTaxFee]
   implicit val responseDeclarationFormats = Json.format[ResponseDeclaration]
-
   implicit val responseFormats = Json.format[Response]
   implicit val declarationMetadataFormats = Json.format[DeclarationMetadata]
-
   implicit val exportsNotificationFormats = Json.format[ExportsNotification]
 
 }
 
-case class ExportsNotification(dateTimeReceived: DateTime = DateTime.now(),
-                               conversationId: String,
-                               eori: String,
-                               badgeId: Option[String] = None,
-                               metadata: DeclarationMetadata,
-                               response: Seq[Response] = Seq.empty)
+case class ExportsNotification(
+  dateTimeReceived: DateTime = DateTime.now(),
+  conversationId: String,
+  eori: String,
+  badgeId: Option[String] = None,
+  metadata: DeclarationMetadata,
+  response: Seq[Response] = Seq.empty
+)
 
 
-case class NotificationApiHeaders(accept: String, contentType: String, clientId: String, badgeId: Option[String], conversationId: String, eori: String)
+case class NotificationApiHeaders(
+  accept: String,
+  contentType: String,
+  clientId: String,
+  badgeId: Option[String],
+  conversationId: String,
+  eori: String
+)
 
 case class NotifyResponse(code: String, message: String) {
-  def toXml() = <errorResponse>
+  def toXml(): Elem = <errorResponse>
     <code>
       {code}
     </code> <message>
@@ -83,7 +93,8 @@ case class NotifyResponse(code: String, message: String) {
   </errorResponse>
 }
 
-object NotAcceptableResponse extends NotifyResponse("ACCEPT_HEADER_INVALID", "Missing or invalid Accept header")
+object NotAcceptableResponse extends NotifyResponse("ACCEPT_HEADER_INVALID",
+  "Missing or invalid Accept header")
 
 object HeaderMissingErrorResponse extends NotifyResponse("INTERNAL_SERVER_ERROR",
   "ClientId or ConversationId or EORI is missing in the request headers")

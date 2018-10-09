@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.controllers
 
-
 import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
 import play.api.test.Helpers._
@@ -32,34 +31,41 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec  with ExportsTe
     <wstxns1:Response xmlns:wstxns1="urn:wco:datamodel:WCO:RES-DMS:2"></wstxns1:Response>
   </MetaData>
 
-  val validHeaders = Map("X-CDS-Client-ID" -> "1234",
+  val validHeaders = Map(
+    "X-CDS-Client-ID" -> "1234",
     "X-Conversation-ID" -> "XConv1",
     "X-EORI-Identifier" -> "eori1",
     HeaderNames.ACCEPT -> s"application/vnd.hmrc.${2.0}+xml",
     HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
-    "X-Badge-Identifier" -> "badgeIdentifier1")
+    "X-Badge-Identifier" -> "badgeIdentifier1"
+  )
 
-  val noEoriHeaders = Map("X-CDS-Client-ID" -> "1234",
+  val noEoriHeaders = Map(
+    "X-CDS-Client-ID" -> "1234",
     "X-Conversation-ID" -> "XConv1",
     HeaderNames.ACCEPT -> s"application/vnd.hmrc.${2.0}+xml",
     HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
-    "X-Badge-Identifier" -> "badgeIdentifier1")
+    "X-Badge-Identifier" -> "badgeIdentifier1"
+  )
 
   "NotificationsControllerSpec" should {
 
     "successfully accept Notification" in {
       val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*) withXmlBody (validXML)).get
       withNotificationSaved(true)
+
       status(result) must be(ACCEPTED)
     }
 
     "failed to save Notification" in {
       val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*) withXmlBody (validXML)).get
       withNotificationSaved(false)
+
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
     "500 response if no eori header in Notification" in {
       val result = route(app, FakeRequest(POST, uri).withHeaders(noEoriHeaders.toSeq: _*) withXmlBody (validXML)).get
+
       status(result) must be(INTERNAL_SERVER_ERROR)
       Helpers.contentAsString(result) must be
       ("<errorResponse><code>INTERNAL_SERVER_ERROR</code><message>" +
@@ -70,6 +76,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec  with ExportsTe
       withAuthorizedUser()
       haveNotifications(Seq(notification))
       val result = route(app, FakeRequest(GET, getNotificationUri)).get
+
       status(result) must be(OK)
     }
   }

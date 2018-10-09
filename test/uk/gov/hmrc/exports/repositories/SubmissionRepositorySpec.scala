@@ -38,7 +38,7 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
 
    val repositories: Seq[ReactiveRepository[_, _]] = Seq(repo)
 
-  "rSubmissionRepository" should {
+  "SubmissionRepository" should {
     "save declaration with EORI and timestamp" in {
       repo.save(submission).futureValue must be(true)
 

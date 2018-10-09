@@ -36,7 +36,7 @@ class NotificationsRepositorySpec extends CustomsExportsBaseSpec with BeforeAndA
   override lazy val app: Application = GuiceApplicationBuilder().build()
   val repo = component[NotificationsRepository]
 
-   val repositories: Seq[ReactiveRepository[_, _]] = Seq(repo)
+  val repositories: Seq[ReactiveRepository[_, _]] = Seq(repo)
 
   "NotificationsRepository" should {
     "save notification with EORI, conversationID AND timestamp" in {

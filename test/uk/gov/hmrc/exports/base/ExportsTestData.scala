@@ -26,10 +26,11 @@ import scala.util.Random
 
 trait ExportsTestData {
   /*
-The first time an declaration is submitted, we save it with the user's EORI, their LRN (if provided)
-and the conversation ID we received from the customs-declarations API response, generating a timestamp to record
-when this occurred.
- */
+    The first time an declaration is submitted, we save it with the user's EORI, their LRN (if provided)
+    and the conversation ID we received from the customs-declarations API response, generating a timestamp to record
+    when this occurred.
+  */
+
   val eori = randomString(8)
   val lrn = Some(randomString(70))
   val mrn = randomString(16)

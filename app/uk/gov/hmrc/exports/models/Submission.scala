@@ -27,7 +27,7 @@ case class Submission(
   mrn: Option[String] = None,
   submittedTimestamp: Long = System.currentTimeMillis(),
   id: BSONObjectID = BSONObjectID.generate(),
-                     notifications:Seq[ExportsNotification] = Seq.empty
+  notifications:Seq[ExportsNotification] = Seq.empty
 )
 
 object Submission {

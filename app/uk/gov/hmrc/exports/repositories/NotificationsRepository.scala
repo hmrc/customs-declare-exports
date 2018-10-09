@@ -31,12 +31,12 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class NotificationsRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: ExecutionContext)
   extends ReactiveRepository[ExportsNotification, BSONObjectID]("exportNotifications", mc.mongoConnector.db,
-    ExportsNotification.exportsNotificationFormats, objectIdFormats)
-{
+    ExportsNotification.exportsNotificationFormats, objectIdFormats) {
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
-    Index(Seq("conversationId" -> IndexType.Ascending), unique = true, name = Some("conversationIdIdx")))
+    Index(Seq("conversationId" -> IndexType.Ascending), unique = true, name = Some("conversationIdIdx"))
+  )
 
   def findByEori(eori: String): Future[Seq[ExportsNotification]] = find("eori" -> JsString(eori))
 
@@ -46,9 +46,10 @@ class NotificationsRepository @Inject()(implicit mc: ReactiveMongoComponent, ec:
   def getByEoriAndConversationId(eori: String, conversationId: String): Future[Option[ExportsNotification]] =
     find("eori" -> JsString(eori), "conversationId" -> JsString(conversationId)).map(_.headOption)
 
-  def save(exportsNotification: ExportsNotification) = insert(exportsNotification).map(res =>
+  def save(exportsNotification: ExportsNotification): Future[Boolean] = insert(exportsNotification).map(res =>
     if (res.ok) res.ok
-    else {Logger.error("errors in inserting Notification result" + res.writeErrors.mkString("--"))
+    else {
+      Logger.error("errors in inserting Notification result" + res.writeErrors.mkString("--"))
       res.ok
     })
 }

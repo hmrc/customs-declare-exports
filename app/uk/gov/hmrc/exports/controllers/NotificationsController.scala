@@ -34,43 +34,42 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.xml.NodeSeq
 
-
 @Singleton
-class NotificationsController @Inject()(appConfig: AppConfig,
-                                        authConnector: AuthConnector,
-                                        notificationsRepository: NotificationsRepository
-                                       ) extends ExportController(authConnector) {
+class NotificationsController @Inject()(
+  appConfig: AppConfig,
+  authConnector: AuthConnector,
+  notificationsRepository: NotificationsRepository
+) extends ExportController(authConnector) {
 
   //TODO request needs to be streamed based on the performance results
-  def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) {
-    implicit request =>
-      validateHeaders() { headers: NotificationApiHeaders =>   save(getNotificationFromRequest(headers)) }
+  def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
+    validateHeaders() { headers: NotificationApiHeaders => save(getNotificationFromRequest(headers)) }
   }
 
   //TODO response should be streamed or paginated depending on the no if requests.
-  def getNotifications(eori: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authorizedWithEnrolment[AnyContent]( _ => findByEori(eori))
+  def getNotifications(eori: String): Action[AnyContent] = Action.async { implicit request =>
+    authorizedWithEnrolment[AnyContent]( _ => findByEori(eori))
   }
 
   private def validateHeaders()(process: NotificationApiHeaders => Future[Result])(
     implicit request: Request[NodeSeq], hc: HeaderCarrier): Future[Result] = {
-    val accept = request.headers.get(HeaderNames.ACCEPT)
-    val contentType = request.headers.get(HeaderNames.CONTENT_TYPE)
-    val clientId = request.headers.get("X-CDS-Client-ID")
-    val conversationId = request.headers.get("X-Conversation-ID")
-    val eori = request.headers.get("X-EORI-Identifier")
-    val badgeIdentifier = request.headers.get("X-Badge-Identifier")
-    //TODO authorisation header validation
-    if (accept.isEmpty) {
-      Future.successful(NotAcceptable(NotAcceptableResponse.toXml))
-    } else if (contentType.isEmpty) {
-      Future.successful(UnsupportedMediaType)
-    } else if (clientId.isEmpty || conversationId.isEmpty || eori.isEmpty) {
-      Future.successful(InternalServerError(HeaderMissingErrorResponse.toXml))
-    } else
-      process(NotificationApiHeaders(accept.get, contentType.get, clientId.get, badgeIdentifier,conversationId.get,eori.get))
-  }
+      val accept = request.headers.get(HeaderNames.ACCEPT)
+      val contentType = request.headers.get(HeaderNames.CONTENT_TYPE)
+      val clientId = request.headers.get("X-CDS-Client-ID")
+      val conversationId = request.headers.get("X-Conversation-ID")
+      val eori = request.headers.get("X-EORI-Identifier")
+      val badgeIdentifier = request.headers.get("X-Badge-Identifier")
+
+      //TODO authorisation header validation
+      if (accept.isEmpty) {
+        Future.successful(NotAcceptable(NotAcceptableResponse.toXml))
+      } else if (contentType.isEmpty) {
+        Future.successful(UnsupportedMediaType)
+      } else if (clientId.isEmpty || conversationId.isEmpty || eori.isEmpty) {
+        Future.successful(InternalServerError(HeaderMissingErrorResponse.toXml))
+      } else
+        process(NotificationApiHeaders(accept.get, contentType.get, clientId.get, badgeIdentifier,conversationId.get,eori.get))
+    }
 
   private def getNotificationFromRequest(headers: NotificationApiHeaders)(implicit request: Request[NodeSeq], hc: HeaderCarrier)= {
     val metadata = MetaData.fromXml(request.body.toString)
@@ -85,18 +84,19 @@ class NotificationsController @Inject()(appConfig: AppConfig,
         metadata.agencyAssignedCustomizationCode,
         metadata.agencyAssignedCustomizationVersionCode),
       metadata.response)
+
     Logger.debug("\033[34m Notification is " + notification + "\033[0m")
+
     notification
   }
 
   private def save(notification: ExportsNotification)(implicit hc: HeaderCarrier) =
-    notificationsRepository.save(notification).map(result=> result match {
-      case true =>     Accepted
-      case _ =>     InternalServerError(NotificationFailedErrorResponse.toXml)
+    notificationsRepository.save(notification).map(_ match {
+      case true => Accepted
+      case _    => InternalServerError(NotificationFailedErrorResponse.toXml)
     })
 
   private def findByEori(eori:String)(implicit hc:HeaderCarrier) =
-    notificationsRepository.findByEori(eori).map(res=> Ok(Json.toJson(res)))
-
+    notificationsRepository.findByEori(eori).map(res => Ok(Json.toJson(res)))
 }
 
