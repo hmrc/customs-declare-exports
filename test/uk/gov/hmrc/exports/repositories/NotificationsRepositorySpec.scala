@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
-import uk.gov.hmrc.mongo.ReactiveRepository
 import org.scalatest.BeforeAndAfterEach
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
+import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with ExportsTestData{
+class NotificationsRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with ExportsTestData{
 
   override protected def afterEach(): Unit = {
     super.afterEach()
@@ -34,35 +34,31 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
   }
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
-  val repo = component[SubmissionRepository]
+  val repo = component[NotificationsRepository]
 
-   val repositories: Seq[ReactiveRepository[_, _]] = Seq(repo)
+  val repositories: Seq[ReactiveRepository[_, _]] = Seq(repo)
 
-  "SubmissionRepository" should {
-    "save declaration with EORI and timestamp" in {
-      repo.save(submission).futureValue must be(true)
+  "NotificationsRepository" should {
+    "save notification with EORI, conversationID AND timestamp" in {
+      repo.save(notification).futureValue must be(true)
 
       // we can now display a list of all the declarations belonging to the current user, searching by EORI
       val found = repo.findByEori(eori).futureValue
       found.length must be(1)
       found.head.eori must be(eori)
       found.head.conversationId must be(conversationId)
-      found.head.mrn must be(Some(mrn))
 
-      // a timestamp has been generated representing "creation time" of case class instance
-      found.head.submittedTimestamp must (be >= before).and(be <= System.currentTimeMillis())
+      found.head.dateTimeReceived must be (now)
 
       // we can also retrieve the submission individually by conversation ID
       val got = repo.getByConversationId(conversationId).futureValue
       got.get.eori must be(eori)
       got.get.conversationId must be(conversationId)
-      got.get.mrn must be(Some(mrn))
 
       // or we can retrieve it by eori and MRN
-      val gotAgain = repo.getByEoriAndMrn(eori, mrn).futureValue
+      val gotAgain = repo.getByEoriAndConversationId(eori, conversationId).futureValue
       gotAgain.get.eori must be(eori)
       gotAgain.get.conversationId must be(conversationId)
-      gotAgain.get.mrn must be(Some(mrn))
     }
   }
 }

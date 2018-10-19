@@ -22,7 +22,6 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, Request, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.controllers.actions.ExportController
 import uk.gov.hmrc.exports.models.{ExportsResponse, Submission, SubmissionResponse}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.http.HeaderCarrier

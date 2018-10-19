@@ -19,10 +19,10 @@ package uk.gov.hmrc.exports.controllers.actions
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, SubmissionData}
+import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
 import uk.gov.hmrc.exports.models.SubmissionResponse
 
-class ExportControllerSpec extends CustomsExportsBaseSpec with SubmissionData {
+class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
   val uri = "/save-submission-response"
   val jsonBody = Json.toJson[SubmissionResponse](submissionResponse)
   val fakeRequest = FakeRequest("POST", uri).withBody((jsonBody))
