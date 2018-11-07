@@ -22,38 +22,32 @@ import play.api.libs.json.JsString
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.exports.models.Submission
+import uk.gov.hmrc.exports.models.MovementNotification
+import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
-import uk.gov.hmrc.mongo.{AtomicUpdate, ReactiveRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: ExecutionContext)
-  extends ReactiveRepository[Submission, BSONObjectID]("submissions", mc.mongoConnector.db,
-    Submission.formats, objectIdFormats)
-    with AtomicUpdate[Submission] {
+class MovementNotificationsRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: ExecutionContext)
+  extends ReactiveRepository[MovementNotification, BSONObjectID]("movementNotifications",
+    mc.mongoConnector.db, MovementNotification.format, objectIdFormats) {
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
-    Index(Seq("conversationId" -> IndexType.Ascending), unique = true, name = Some("conversationIdIdx")),
-    Index(Seq("mrn" -> IndexType.Ascending), name = Some("mrnIdx"))
+    Index(Seq("conversationId" -> IndexType.Ascending), unique = true, name = Some("conversationIdIdx"))
   )
 
-  def findByEori(eori: String): Future[Seq[Submission]] = find("eori" -> JsString(eori))
+  def findByEori(eori: String): Future[Seq[MovementNotification]] = find("eori" -> JsString(eori))
 
-  def getByConversationId(conversationId: String): Future[Option[Submission]] =
+  def getByConversationId(conversationId: String): Future[Option[MovementNotification]] =
     find("conversationId" -> JsString(conversationId)).map(_.headOption)
 
-  def getByEoriAndMrn(eori: String, mrn: String): Future[Option[Submission]] =
-    find("eori" -> JsString(eori), "mrn" -> JsString(mrn)).map(_.headOption)
+  def getByEoriAndConversationId(eori: String, conversationId: String): Future[Option[MovementNotification]] =
+    find("eori" -> JsString(eori), "conversationId" -> JsString(conversationId)).map(_.headOption)
 
-  override def isInsertion(newRecordId: BSONObjectID, oldRecord: Submission): Boolean = newRecordId.equals(oldRecord.id)
-
-  def save(submission: Submission) = insert(submission).map{ res =>
-    if (!res.ok) Logger.error("Error during inserting submission result " + res.writeErrors.mkString("--"))
+  def save(movementNotification: MovementNotification): Future[Boolean] = insert(movementNotification).map { res =>
+    if (!res.ok) Logger.error("Error during inserting movement notification " + res.writeErrors.mkString("--"))
     res.ok
   }
 }
-
-

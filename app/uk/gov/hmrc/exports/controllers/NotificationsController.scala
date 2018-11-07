@@ -26,7 +26,7 @@ import play.api.mvc.{Action, AnyContent, Request, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.repositories.NotificationsRepository
+import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, NotificationsRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.wco.dec._
 
@@ -38,7 +38,8 @@ import scala.xml.NodeSeq
 class NotificationsController @Inject()(
   appConfig: AppConfig,
   authConnector: AuthConnector,
-  notificationsRepository: NotificationsRepository
+  notificationsRepository: NotificationsRepository,
+  movementNotificationsRepository: MovementNotificationsRepository
 ) extends ExportController(authConnector) {
 
   //TODO request needs to be streamed based on the performance results
@@ -48,30 +49,34 @@ class NotificationsController @Inject()(
 
   //TODO response should be streamed or paginated depending on the no if requests.
   def getNotifications(eori: String): Action[AnyContent] = Action.async { implicit request =>
-    authorizedWithEnrolment[AnyContent]( _ => findByEori(eori))
+    authorizedWithEnrolment[AnyContent](_ => findByEori(eori))
+  }
+
+  def saveMovement(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
+    validateHeaders() { headers: NotificationApiHeaders => saveMovement(getMovementNotificationFromRequest(headers)) }
   }
 
   private def validateHeaders()(process: NotificationApiHeaders => Future[Result])(
     implicit request: Request[NodeSeq], hc: HeaderCarrier): Future[Result] = {
-      val accept = request.headers.get(HeaderNames.ACCEPT)
-      val contentType = request.headers.get(HeaderNames.CONTENT_TYPE)
-      val clientId = request.headers.get("X-CDS-Client-ID")
-      val conversationId = request.headers.get("X-Conversation-ID")
-      val eori = request.headers.get("X-EORI-Identifier")
-      val badgeIdentifier = request.headers.get("X-Badge-Identifier")
+    val accept = request.headers.get(HeaderNames.ACCEPT)
+    val contentType = request.headers.get(HeaderNames.CONTENT_TYPE)
+    val clientId = request.headers.get("X-CDS-Client-ID")
+    val conversationId = request.headers.get("X-Conversation-ID")
+    val eori = request.headers.get("X-EORI-Identifier")
+    val badgeIdentifier = request.headers.get("X-Badge-Identifier")
 
-      //TODO authorisation header validation
-      if (accept.isEmpty) {
-        Future.successful(NotAcceptable(NotAcceptableResponse.toXml))
-      } else if (contentType.isEmpty) {
-        Future.successful(UnsupportedMediaType)
-      } else if (clientId.isEmpty || conversationId.isEmpty || eori.isEmpty) {
-        Future.successful(InternalServerError(HeaderMissingErrorResponse.toXml))
-      } else
-        process(NotificationApiHeaders(accept.get, contentType.get, clientId.get, badgeIdentifier,conversationId.get,eori.get))
-    }
+    //TODO authorisation header validation
+    if (accept.isEmpty) {
+      Future.successful(NotAcceptable(NotAcceptableResponse.toXml))
+    } else if (contentType.isEmpty) {
+      Future.successful(UnsupportedMediaType)
+    } else if (clientId.isEmpty || conversationId.isEmpty || eori.isEmpty) {
+      Future.successful(InternalServerError(HeaderMissingErrorResponse.toXml))
+    } else
+      process(NotificationApiHeaders(accept.get, contentType.get, clientId.get, badgeIdentifier, conversationId.get, eori.get))
+  }
 
-  private def getNotificationFromRequest(headers: NotificationApiHeaders)(implicit request: Request[NodeSeq], hc: HeaderCarrier)= {
+  private def getNotificationFromRequest(headers: NotificationApiHeaders)(implicit request: Request[NodeSeq], hc: HeaderCarrier) = {
     val metadata = MetaData.fromXml(request.body.toString)
 
     val notification = ExportsNotification(DateTime.now,
@@ -93,10 +98,25 @@ class NotificationsController @Inject()(
   private def save(notification: ExportsNotification)(implicit hc: HeaderCarrier): Future[Result] =
     notificationsRepository.save(notification).map(_ match {
       case true => Accepted
-      case _    => InternalServerError(NotificationFailedErrorResponse.toXml)
+      case _ => InternalServerError(NotificationFailedErrorResponse.toXml)
     })
 
-  private def findByEori(eori:String)(implicit hc:HeaderCarrier): Future[Result] =
+  private def findByEori(eori: String)(implicit hc: HeaderCarrier): Future[Result] =
     notificationsRepository.findByEori(eori).map(res => Ok(Json.toJson(res)))
+
+  private def saveMovement(notification: MovementNotification)(implicit hc: HeaderCarrier): Future[Result] =
+    movementNotificationsRepository.save(notification).map(_ match {
+      case true => Accepted
+      case _ => InternalServerError(NotificationFailedErrorResponse.toXml)
+    })
+
+  private def getMovementNotificationFromRequest(
+    headers: NotificationApiHeaders
+  )(implicit request: Request[NodeSeq], hc: HeaderCarrier): MovementNotification =
+    MovementNotification(
+      conversationId = headers.conversationId,
+      eori = headers.eori,
+      movementResponse = InventoryLinkingMovementResponse.fromXml(request.body.toString)
+    )
 }
 

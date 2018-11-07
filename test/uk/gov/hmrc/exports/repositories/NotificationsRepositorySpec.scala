@@ -24,7 +24,7 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class NotificationsRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with ExportsTestData{
+class NotificationsRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with ExportsTestData {
 
   override protected def afterEach(): Unit = {
     super.afterEach()
@@ -34,6 +34,7 @@ class NotificationsRepositorySpec extends CustomsExportsBaseSpec with BeforeAndA
   }
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
+
   val repo = component[NotificationsRepository]
 
   val repositories: Seq[ReactiveRepository[_, _]] = Seq(repo)

@@ -8,7 +8,7 @@ object AppDependencies {
     "uk.gov.hmrc" %% "play-reactivemongo" % "6.2.0",
     ws,
     "uk.gov.hmrc" %% "bootstrap-play-25" % "3.3.0",
-    "uk.gov.hmrc" %% "wco-dec" % "0.13.0"
+    "uk.gov.hmrc" %% "wco-dec" % "0.16.0-SNAPSHOT"
   )
 
   def test(scope: String = "test") = Seq(
