@@ -25,11 +25,16 @@ import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
 class NotificationsControllerSpec extends CustomsExportsBaseSpec  with ExportsTestData {
 
   val uri = "/customs-declare-exports/notify"
+  val movementUri = "/customs-declare-exports/notifyMovement"
 
   val getNotificationUri = "/customs-declare-exports/notifications/eori1"
   val validXML = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
     <wstxns1:Response xmlns:wstxns1="urn:wco:datamodel:WCO:RES-DMS:2"></wstxns1:Response>
   </MetaData>
+
+  val movementXml = <inventoryLinkingMovementRequest xmlns="http://gov.uk/customs/inventoryLinking/v1">
+    <messageCode>EAL</messageCode>
+  </inventoryLinkingMovementRequest>
 
   val validHeaders = Map(
     "X-CDS-Client-ID" -> "1234",
@@ -51,24 +56,25 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec  with ExportsTe
   "NotificationsControllerSpec" should {
 
     "successfully accept Notification" in {
-      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*) withXmlBody (validXML)).get
+      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
       withNotificationSaved(true)
 
-      status(result) must be(ACCEPTED)
+      status(result) must be (ACCEPTED)
     }
 
     "failed to save Notification" in {
-      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*) withXmlBody (validXML)).get
+      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
       withNotificationSaved(false)
 
-      status(result) must be(INTERNAL_SERVER_ERROR)
+      status(result) must be (INTERNAL_SERVER_ERROR)
     }
+
     "500 response if no eori header in Notification" in {
-      val result = route(app, FakeRequest(POST, uri).withHeaders(noEoriHeaders.toSeq: _*) withXmlBody (validXML)).get
+      val result = route(app, FakeRequest(POST, uri).withHeaders(noEoriHeaders.toSeq: _*).withXmlBody(validXML)).get
 
       status(result) must be(INTERNAL_SERVER_ERROR)
-      Helpers.contentAsString(result) must be
-      ("<errorResponse><code>INTERNAL_SERVER_ERROR</code><message>" +
+      contentAsString(result) must be
+        ("<errorResponse><code>INTERNAL_SERVER_ERROR</code><message>" +
         "ClientId or ConversationId or EORI is missing in the request headers</message></errorResponse>")
     }
 
@@ -77,7 +83,30 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec  with ExportsTe
       haveNotifications(Seq(notification))
       val result = route(app, FakeRequest(GET, getNotificationUri)).get
 
-      status(result) must be(OK)
+      status(result) must be (OK)
+    }
+
+    "successfully saved movement notification" in {
+      val result = route(app, FakeRequest(POST, movementUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(movementXml)).get
+      withMovementNotificationSaved(true)
+
+      status(result) must be (ACCEPTED)
+    }
+
+    "failed to save movement notification" in {
+      val result = route(app, FakeRequest(POST, movementUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(movementXml)).get
+      withMovementNotificationSaved(false)
+
+      status(result) must be (INTERNAL_SERVER_ERROR)
+    }
+
+    "500 response if no eori header in movement notification" in {
+      val result = route(app, FakeRequest(POST, movementUri).withHeaders(noEoriHeaders.toSeq: _*).withXmlBody(movementXml)).get
+
+      status(result) must be (INTERNAL_SERVER_ERROR)
+      contentAsString(result) must be
+        ("<errorResponse><code>INTERNAL_SERVER_ERROR</code><message>" +
+        "ClientId or ConversationId or EORI is missing in the request headers</message></errorResponse>")
     }
   }
 }

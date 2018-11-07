@@ -35,6 +35,7 @@ object DeclarationMetadata {
   implicit val declarationMetadataFormats = Json.format[DeclarationMetadata]
 }
 
+// TODO Refactor to DeclarationNotification
 object ExportsNotification {
   implicit val measureFormats = Json.format[Measure]
   implicit val amountFormats = Json.format[Amount]
@@ -64,6 +65,7 @@ object ExportsNotification {
 
 }
 
+// TODO Refactor to DeclarationNotification
 case class ExportsNotification(
   dateTimeReceived: DateTime = DateTime.now(),
   conversationId: String,

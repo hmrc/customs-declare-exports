@@ -24,7 +24,7 @@ import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.exports.models.ExportsNotification
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
-import uk.gov.hmrc.mongo.{ReactiveRepository}
+import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -46,12 +46,8 @@ class NotificationsRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec:
   def getByEoriAndConversationId(eori: String, conversationId: String): Future[Option[ExportsNotification]] =
     find("eori" -> JsString(eori), "conversationId" -> JsString(conversationId)).map(_.headOption)
 
-  def save(exportsNotification: ExportsNotification): Future[Boolean] = insert(exportsNotification).map(res =>
-    if (res.ok) res.ok
-    else {
-      Logger.error("errors in inserting Notification result" + res.writeErrors.mkString("--"))
-      res.ok
-    })
+  def save(exportsNotification: ExportsNotification): Future[Boolean] = insert(exportsNotification).map{ res =>
+    if (!res.ok) Logger.error("Errors during inserting export notification " + res.writeErrors.mkString("--"))
+    res.ok
+  }
 }
-
-

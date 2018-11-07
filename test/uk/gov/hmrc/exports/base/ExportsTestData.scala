@@ -19,8 +19,8 @@ package uk.gov.hmrc.exports.base
 import java.util.UUID
 
 import org.joda.time.DateTime
-import uk.gov.hmrc.exports.models.{DeclarationMetadata, ExportsNotification, Submission, SubmissionResponse}
-import uk.gov.hmrc.wco.dec.Response
+import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.wco.dec.{InventoryLinkingMovementResponse, Response}
 
 import scala.util.Random
 
@@ -42,7 +42,9 @@ trait ExportsTestData {
   val response1 = Seq(Response(functionCode = Random.nextInt(), functionalReferenceId = Some("123")))
   val response2 = Seq(Response(functionCode = Random.nextInt(), functionalReferenceId = Some("456")))
 
-  val notification = ExportsNotification(now,conversationId,eori,None, DeclarationMetadata(),response1)
+  val notification = ExportsNotification(now, conversationId, eori, None, DeclarationMetadata(), response1)
+  val movementNotification =
+    MovementNotification(now, conversationId, eori, movementResponse = InventoryLinkingMovementResponse("EAA"))
   val submissionResponse = SubmissionResponse(eori, conversationId, Some(mrn))
 
   protected def randomString(length: Int): String = Random.alphanumeric.take(length).mkString
