@@ -42,7 +42,7 @@ trait ExportsTestData {
   val response1 = Seq(Response(functionCode = Random.nextInt(), functionalReferenceId = Some("123")))
   val response2 = Seq(Response(functionCode = Random.nextInt(), functionalReferenceId = Some("456")))
 
-  val notification = ExportsNotification(now, conversationId, eori, None, DeclarationMetadata(), response1)
+  val notification = DeclarationNotification(now, conversationId, eori, None, DeclarationMetadata(), response1)
   val movementNotification =
     MovementNotification(now, conversationId, eori, movementResponse = InventoryLinkingMovementResponse("EAA"))
   val submissionResponse = SubmissionResponse(eori, conversationId, Some(mrn))

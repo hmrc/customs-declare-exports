@@ -38,7 +38,7 @@ import play.filters.csrf.CSRF.Token
 import play.filters.csrf.{CSRFConfig, CSRFConfigProvider, CSRFFilter}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.ExportsNotification
+import uk.gov.hmrc.exports.models.DeclarationNotification
 import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.http.SessionKeys
 
@@ -107,7 +107,7 @@ trait CustomsExportsBaseSpec extends PlaySpec
   protected def withNotificationSaved(ok: Boolean) =
     when(mockNotificationsRepository.save(any())).thenReturn(Future.successful(ok))
 
-  protected def haveNotifications(notifications: Seq[ExportsNotification]) =
+  protected def haveNotifications(notifications: Seq[DeclarationNotification]) =
     when(mockNotificationsRepository.findByEori(any())).thenReturn(Future.successful(notifications))
 
   protected def withMovementNotificationSaved(ok: Boolean) =

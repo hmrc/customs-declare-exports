@@ -79,7 +79,7 @@ class NotificationsController @Inject()(
   private def getNotificationFromRequest(headers: NotificationApiHeaders)(implicit request: Request[NodeSeq], hc: HeaderCarrier) = {
     val metadata = MetaData.fromXml(request.body.toString)
 
-    val notification = ExportsNotification(DateTime.now,
+    val notification = DeclarationNotification(DateTime.now,
       headers.conversationId,
       headers.eori,
       headers.badgeId,
@@ -95,7 +95,7 @@ class NotificationsController @Inject()(
     notification
   }
 
-  private def save(notification: ExportsNotification)(implicit hc: HeaderCarrier): Future[Result] =
+  private def save(notification: DeclarationNotification)(implicit hc: HeaderCarrier): Future[Result] =
     notificationsRepository.save(notification).map(_ match {
       case true => Accepted
       case _    => InternalServerError(NotificationFailedErrorResponse.toXml)
