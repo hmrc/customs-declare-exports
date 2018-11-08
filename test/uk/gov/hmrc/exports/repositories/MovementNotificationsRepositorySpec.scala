@@ -22,9 +22,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
 import uk.gov.hmrc.mongo.ReactiveRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
-class NotificationsRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with ExportsTestData {
+class MovementNotificationsRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with ExportsTestData {
 
   override protected def afterEach(): Unit = {
     super.afterEach()
@@ -35,13 +33,13 @@ class NotificationsRepositorySpec extends CustomsExportsBaseSpec with BeforeAndA
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
 
-  val repo = component[NotificationsRepository]
+  val repo = component[MovementNotificationsRepository]
 
   val repositories: Seq[ReactiveRepository[_, _]] = Seq(repo)
 
-  "NotificationsRepository" should {
-    "save notification with eori, conversationId and timestamp" in {
-      repo.save(notification).futureValue must be (true)
+  "Movement notifications repository" should {
+    "save notification with EORI, conversationID and timestamp" in {
+      repo.save(movementNotification).futureValue must be (true)
 
       // we can now display a list of all the declarations belonging to the current user, searching by EORI
       val found = repo.findByEori(eori).futureValue

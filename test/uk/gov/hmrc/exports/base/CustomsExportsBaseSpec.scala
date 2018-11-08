@@ -38,8 +38,8 @@ import play.filters.csrf.CSRF.Token
 import play.filters.csrf.{CSRFConfig, CSRFConfigProvider, CSRFFilter}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.ExportsNotification
-import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.models.DeclarationNotification
+import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.http.SessionKeys
 
 import scala.concurrent.duration._
@@ -52,6 +52,7 @@ trait CustomsExportsBaseSpec extends PlaySpec
 
   val mockSubmissionRepository = mock[SubmissionRepository]
   val mockNotificationsRepository = mock[NotificationsRepository]
+  val mockMovementNotificationsRepository = mock[MovementNotificationsRepository]
 
   def injector: Injector = app.injector
 
@@ -72,7 +73,8 @@ trait CustomsExportsBaseSpec extends PlaySpec
       .overrides(
         bind[AuthConnector].to(mockAuthConnector),
         bind[SubmissionRepository].to(mockSubmissionRepository),
-        bind[NotificationsRepository].to(mockNotificationsRepository)
+        bind[NotificationsRepository].to(mockNotificationsRepository),
+        bind[MovementNotificationsRepository].to(mockMovementNotificationsRepository)
       ).build()
 
   implicit val mat: Materializer = app.materializer
@@ -105,6 +107,9 @@ trait CustomsExportsBaseSpec extends PlaySpec
   protected def withNotificationSaved(ok: Boolean) =
     when(mockNotificationsRepository.save(any())).thenReturn(Future.successful(ok))
 
-  protected def haveNotifications(notifications: Seq[ExportsNotification]) =
+  protected def haveNotifications(notifications: Seq[DeclarationNotification]) =
     when(mockNotificationsRepository.findByEori(any())).thenReturn(Future.successful(notifications))
+
+  protected def withMovementNotificationSaved(ok: Boolean) =
+    when(mockMovementNotificationsRepository.save(any())).thenReturn(Future.successful(ok))
 }

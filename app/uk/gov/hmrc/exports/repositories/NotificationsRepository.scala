@@ -22,36 +22,32 @@ import play.api.libs.json.JsString
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.exports.models.ExportsNotification
+import uk.gov.hmrc.exports.models.DeclarationNotification
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
-import uk.gov.hmrc.mongo.{ReactiveRepository}
+import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class NotificationsRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: ExecutionContext)
-  extends ReactiveRepository[ExportsNotification, BSONObjectID]("exportNotifications", mc.mongoConnector.db,
-    ExportsNotification.exportsNotificationFormats, objectIdFormats) {
+  extends ReactiveRepository[DeclarationNotification, BSONObjectID]("exportNotifications", mc.mongoConnector.db,
+    DeclarationNotification.exportsNotificationFormats, objectIdFormats) {
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
     Index(Seq("conversationId" -> IndexType.Ascending), unique = true, name = Some("conversationIdIdx"))
   )
 
-  def findByEori(eori: String): Future[Seq[ExportsNotification]] = find("eori" -> JsString(eori))
+  def findByEori(eori: String): Future[Seq[DeclarationNotification]] = find("eori" -> JsString(eori))
 
-  def getByConversationId(conversationId: String): Future[Option[ExportsNotification]] =
+  def getByConversationId(conversationId: String): Future[Option[DeclarationNotification]] =
     find("conversationId" -> JsString(conversationId)).map(_.headOption)
 
-  def getByEoriAndConversationId(eori: String, conversationId: String): Future[Option[ExportsNotification]] =
+  def getByEoriAndConversationId(eori: String, conversationId: String): Future[Option[DeclarationNotification]] =
     find("eori" -> JsString(eori), "conversationId" -> JsString(conversationId)).map(_.headOption)
 
-  def save(exportsNotification: ExportsNotification): Future[Boolean] = insert(exportsNotification).map(res =>
-    if (res.ok) res.ok
-    else {
-      Logger.error("errors in inserting Notification result" + res.writeErrors.mkString("--"))
-      res.ok
-    })
+  def save(exportsNotification: DeclarationNotification): Future[Boolean] = insert(exportsNotification).map{ res =>
+    if (!res.ok) Logger.error("Errors during inserting export notification " + res.writeErrors.mkString("--"))
+    res.ok
+  }
 }
-
-
