@@ -50,7 +50,7 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
 
   override def isInsertion(newRecordId: BSONObjectID, oldRecord: Submission): Boolean = newRecordId.equals(oldRecord.id)
 
-  def save(submission: Submission) = insert(submission).map{ res =>
+  def save(submission: Submission): Future[Boolean] = insert(submission).map { res =>
     if (!res.ok) Logger.error("Error during inserting submission result " + res.writeErrors.mkString("--"))
     res.ok
   }

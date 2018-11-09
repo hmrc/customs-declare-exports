@@ -24,7 +24,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with ExportsTestData{
+class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with ExportsTestData {
 
   override protected def afterEach(): Unit = {
     super.afterEach()
@@ -36,7 +36,7 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
   override lazy val app: Application = GuiceApplicationBuilder().build()
   val repo = component[SubmissionRepository]
 
-   val repositories: Seq[ReactiveRepository[_, _]] = Seq(repo)
+  val repositories: Seq[ReactiveRepository[_, _]] = Seq(repo)
 
   "SubmissionRepository" should {
     "save declaration with EORI and timestamp" in {

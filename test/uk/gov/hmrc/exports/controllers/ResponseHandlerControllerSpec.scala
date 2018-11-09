@@ -33,7 +33,7 @@ class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec with ExportsT
       withSubmissionSaved(true)
       val result = route(app, fakeRequest).get
 
-      status(result) must be (OK)
+      status(result) must be(OK)
     }
 
     "return 500 when something goes wrong" in {
@@ -41,7 +41,7 @@ class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec with ExportsT
       withSubmissionSaved(false)
       val failedResult = route(app, fakeRequest).get
 
-      status(failedResult) must be (INTERNAL_SERVER_ERROR)
+      status(failedResult) must be(INTERNAL_SERVER_ERROR)
     }
   }
 }

@@ -33,7 +33,7 @@ case class Submission(
 
 object Submission {
   implicit val objectIdFormats = ReactiveMongoFormats.objectIdFormats
-  implicit  val responseFormats =     DeclarationNotification.responseFormats
+  implicit val responseFormats = DeclarationNotification.responseFormats
   implicit val formats = mongoEntity {
     Json.format[DeclarationNotification]
     Json.format[Submission]
@@ -46,7 +46,7 @@ object SubmissionResponse {
   implicit val formats = Json.format[SubmissionResponse]
 }
 
-case class ExportsResponse(status: Int, message:String)
+case class ExportsResponse(status: Int, message: String)
 
 object ExportsResponse {
   implicit val formats = Json.format[ExportsResponse]

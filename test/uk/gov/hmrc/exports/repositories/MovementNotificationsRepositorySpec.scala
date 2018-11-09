@@ -39,7 +39,7 @@ class MovementNotificationsRepositorySpec extends CustomsExportsBaseSpec with Be
 
   "Movement notifications repository" should {
     "save notification with EORI, conversationID and timestamp" in {
-      repo.save(movementNotification).futureValue must be (true)
+      repo.save(movementNotification).futureValue must be(true)
 
       // we can now display a list of all the declarations belonging to the current user, searching by EORI
       val found = repo.findByEori(eori).futureValue
@@ -47,7 +47,7 @@ class MovementNotificationsRepositorySpec extends CustomsExportsBaseSpec with Be
       found.head.eori must be(eori)
       found.head.conversationId must be(conversationId)
 
-      found.head.dateTimeReceived must be (now)
+      found.head.dateTimeReceived must be(now)
 
       // we can also retrieve the submission individually by conversation Id
       val got = repo.getByConversationId(conversationId).futureValue

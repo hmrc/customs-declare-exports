@@ -46,7 +46,7 @@ class NotificationsRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec:
   def getByEoriAndConversationId(eori: String, conversationId: String): Future[Option[DeclarationNotification]] =
     find("eori" -> JsString(eori), "conversationId" -> JsString(conversationId)).map(_.headOption)
 
-  def save(exportsNotification: DeclarationNotification): Future[Boolean] = insert(exportsNotification).map{ res =>
+  def save(exportsNotification: DeclarationNotification): Future[Boolean] = insert(exportsNotification).map { res =>
     if (!res.ok) Logger.error("Errors during inserting export notification " + res.writeErrors.mkString("--"))
     res.ok
   }

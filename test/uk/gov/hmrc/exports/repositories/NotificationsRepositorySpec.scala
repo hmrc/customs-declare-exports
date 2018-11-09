@@ -41,7 +41,7 @@ class NotificationsRepositorySpec extends CustomsExportsBaseSpec with BeforeAndA
 
   "NotificationsRepository" should {
     "save notification with eori, conversationId and timestamp" in {
-      repo.save(notification).futureValue must be (true)
+      repo.save(notification).futureValue must be(true)
 
       // we can now display a list of all the declarations belonging to the current user, searching by EORI
       val found = repo.findByEori(eori).futureValue
@@ -49,7 +49,7 @@ class NotificationsRepositorySpec extends CustomsExportsBaseSpec with BeforeAndA
       found.head.eori must be(eori)
       found.head.conversationId must be(conversationId)
 
-      found.head.dateTimeReceived must be (now)
+      found.head.dateTimeReceived must be(now)
 
       // we can also retrieve the submission individually by conversation Id
       val got = repo.getByConversationId(conversationId).futureValue

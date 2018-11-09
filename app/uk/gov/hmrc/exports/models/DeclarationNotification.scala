@@ -61,7 +61,6 @@ object DeclarationNotification {
   implicit val responseFormats = Json.format[Response]
   implicit val declarationMetadataFormats = Json.format[DeclarationMetadata]
   implicit val exportsNotificationFormats = Json.format[DeclarationNotification]
-
 }
 
 case class DeclarationNotification(
@@ -72,7 +71,6 @@ case class DeclarationNotification(
   metadata: DeclarationMetadata,
   response: Seq[Response] = Seq.empty
 )
-
 
 case class NotificationApiHeaders(
   accept: String,
@@ -93,11 +91,11 @@ case class NotifyResponse(code: String, message: String) {
   </errorResponse>
 }
 
-object NotAcceptableResponse extends NotifyResponse("ACCEPT_HEADER_INVALID",
-  "Missing or invalid Accept header")
+object NotAcceptableResponse
+  extends NotifyResponse("ACCEPT_HEADER_INVALID", "Missing or invalid Accept header")
 
 object HeaderMissingErrorResponse extends NotifyResponse("INTERNAL_SERVER_ERROR",
   "ClientId or ConversationId or EORI is missing in the request headers")
 
-object NotificationFailedErrorResponse extends  NotifyResponse("INTERNAL_SERVER_ERROR",
-  "Failed to save notifications")
+object NotificationFailedErrorResponse
+  extends NotifyResponse("INTERNAL_SERVER_ERROR", "Failed to save notifications")
