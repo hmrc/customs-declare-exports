@@ -104,6 +104,9 @@ trait CustomsExportsBaseSpec extends PlaySpec
   protected def withSubmissionSaved(ok: Boolean) =
     when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(ok))
 
+  protected def withSubmissionUpdated(ok: Boolean) =
+    when(mockSubmissionRepository.updateSubmission(any())).thenReturn(Future.successful(ok))
+
   protected def withNotificationSaved(ok: Boolean) =
     when(mockNotificationsRepository.save(any())).thenReturn(Future.successful(ok))
 

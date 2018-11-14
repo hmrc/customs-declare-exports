@@ -22,20 +22,19 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.mongoEntity
 
 case class Submission(
-  eori: String,
-  conversationId: String,
-  mrn: Option[String] = None,
-  submittedTimestamp: Long = System.currentTimeMillis(),
-  id: BSONObjectID = BSONObjectID.generate(),
-  arrivalConversationId: Option[String] = None,
-  departureConversationId: Option[String] = None
-)
+                       eori: String,
+                       conversationId: String,
+                       mrn: Option[String] = None,
+                       submittedTimestamp: Long = System.currentTimeMillis(),
+                       id: BSONObjectID = BSONObjectID.generate(),
+                       arrivalConversationId: Option[String] = None,
+                       departureConversationId: Option[String] = None,
+                       status: Option[String] = Some("Pending")
+                     )
 
 object Submission {
   implicit val objectIdFormats = ReactiveMongoFormats.objectIdFormats
-  implicit  val responseFormats =     DeclarationNotification.responseFormats
   implicit val formats = mongoEntity {
-    Json.format[DeclarationNotification]
     Json.format[Submission]
   }
 }
@@ -46,7 +45,7 @@ object SubmissionResponse {
   implicit val formats = Json.format[SubmissionResponse]
 }
 
-case class ExportsResponse(status: Int, message:String)
+case class ExportsResponse(status: Int, message: String)
 
 object ExportsResponse {
   implicit val formats = Json.format[ExportsResponse]

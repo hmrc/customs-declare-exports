@@ -20,12 +20,18 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
-import uk.gov.hmrc.exports.models.SubmissionResponse
+import uk.gov.hmrc.exports.models.{Submission, SubmissionResponse}
 
-class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
-  val uri = "/save-submission-response"
+class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
+  val saveUri = "/save-submission-response"
+  val updateUri = "/update-submission"
+
   val jsonBody = Json.toJson[SubmissionResponse](submissionResponse)
-  val fakeRequest = FakeRequest("POST", uri).withBody((jsonBody))
+  val fakeRequest = FakeRequest("POST", saveUri).withBody((jsonBody))
+
+  val submissionJson = Json.toJson[Submission](submission)
+
+  val updateSubmissionRequest = FakeRequest("POST", updateUri).withBody(submissionJson)
 
   "POST /save-submission-response" should {
     "return 200 when submission has been saved" in {
@@ -33,7 +39,7 @@ class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec with ExportsT
       withSubmissionSaved(true)
       val result = route(app, fakeRequest).get
 
-      status(result) must be (OK)
+      status(result) must be(OK)
     }
 
     "return 500 when something goes wrong" in {
@@ -41,7 +47,25 @@ class ResponseHandlerControllerSpec extends CustomsExportsBaseSpec with ExportsT
       withSubmissionSaved(false)
       val failedResult = route(app, fakeRequest).get
 
-      status(failedResult) must be (INTERNAL_SERVER_ERROR)
+      status(failedResult) must be(INTERNAL_SERVER_ERROR)
+    }
+  }
+
+  "POST /update-submission" should {
+    "return 200 when submission has been updated" in {
+      withAuthorizedUser()
+      withSubmissionUpdated(true)
+      val result = route(app, updateSubmissionRequest).get
+
+      status(result) must be(OK)
+    }
+
+    "return 500 when something goes wrong" in {
+      withAuthorizedUser()
+      withSubmissionUpdated(false)
+      val failedResult = route(app, updateSubmissionRequest).get
+
+      status(failedResult) must be(INTERNAL_SERVER_ERROR)
     }
   }
 }
