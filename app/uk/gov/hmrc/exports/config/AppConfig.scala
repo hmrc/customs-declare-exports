@@ -22,10 +22,11 @@ import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.config.{AppName, ServicesConfig}
 
 @Singleton
-class AppConfig @Inject() (override val runModeConfiguration: Configuration, val environment: Environment)
+class AppConfig @Inject()(override val runModeConfiguration: Configuration, val environment: Environment)
   extends ServicesConfig with AppName {
 
   override protected def mode: Mode = environment.mode
+
   override protected def appNameConfiguration: Configuration = runModeConfiguration
 
   private def loadConfig(key: String): String =

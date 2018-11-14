@@ -44,7 +44,7 @@ trait AuthTestSupport extends MockitoSugar {
     when(
       mockAuthConnector.authorise(
         ArgumentMatchers.argThat(cdsEnrollmentMatcher(user)),
-        ArgumentMatchers.eq( allEnrolments)
+        ArgumentMatchers.eq(allEnrolments)
       )(
         any(), any()
       )
@@ -56,7 +56,7 @@ trait AuthTestSupport extends MockitoSugar {
     when(
       mockAuthConnector.authorise(
         ArgumentMatchers.argThat(cdsEnrollmentMatcher(user)),
-        ArgumentMatchers.eq( allEnrolments)
+        ArgumentMatchers.eq(allEnrolments)
       )(
         any(), any()
       )

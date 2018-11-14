@@ -22,15 +22,15 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.mongoEntity
 
 case class Submission(
-                       eori: String,
-                       conversationId: String,
-                       mrn: Option[String] = None,
-                       submittedTimestamp: Long = System.currentTimeMillis(),
-                       id: BSONObjectID = BSONObjectID.generate(),
-                       arrivalConversationId: Option[String] = None,
-                       departureConversationId: Option[String] = None,
-                       status: Option[String] = Some("Pending")
-                     )
+  eori: String,
+  conversationId: String,
+  mrn: Option[String] = None,
+  submittedTimestamp: Long = System.currentTimeMillis(),
+  id: BSONObjectID = BSONObjectID.generate(),
+  arrivalConversationId: Option[String] = None,
+  departureConversationId: Option[String] = None,
+  status: Option[String] = Some("Pending")
+)
 
 object Submission {
   implicit val objectIdFormats = ReactiveMongoFormats.objectIdFormats

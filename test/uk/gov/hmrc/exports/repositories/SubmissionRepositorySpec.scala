@@ -16,11 +16,10 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
-import uk.gov.hmrc.mongo.ReactiveRepository
 import org.scalatest.BeforeAndAfterEach
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -28,15 +27,12 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
 
   override protected def afterEach(): Unit = {
     super.afterEach()
-    repositories.foreach { repo =>
-      repo.removeAll()
-    }
+    repo.removeAll()
   }
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
   val repo = component[SubmissionRepository]
 
-  val repositories: Seq[ReactiveRepository[_, _]] = Seq(repo)
 
   "SubmissionRepository" should {
     "save declaration with EORI and timestamp" in {

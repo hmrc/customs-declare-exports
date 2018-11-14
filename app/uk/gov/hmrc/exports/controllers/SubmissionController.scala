@@ -31,10 +31,10 @@ import scala.concurrent.Future
 
 @Singleton
 class SubmissionController @Inject()(
-                                      appConfig: AppConfig,
-                                      submissionRepository: SubmissionRepository,
-                                      authConnector: AuthConnector
-                                    ) extends ExportController(authConnector) {
+  appConfig: AppConfig,
+  submissionRepository: SubmissionRepository,
+  authConnector: AuthConnector
+) extends ExportController(authConnector) {
 
   def saveSubmissionResponse(): Action[SubmissionResponse] =
     Action.async(parse.json[SubmissionResponse]) { implicit request =>
@@ -54,20 +54,18 @@ class SubmissionController @Inject()(
     )
   }
 
-  def updateSubmission(): Action[Submission] =
-    Action.async(parse.json[Submission]) { implicit request =>
-      authorizedWithEnrolment[Submission] { _ =>
-        val body = request.body
-        submissionRepository.updateSubmission(body).map(res =>
-          if (res) {
-            Logger.debug("data updated in DB for conversationID")
-            Ok(Json.toJson(ExportsResponse(OK, "Submission response saved")))
-          } else {
-            Logger.error("error  saving submission data to DB")
-            InternalServerError("failed saving submission")
-          }
-        )
+  def updateSubmission(): Action[Submission] = Action.async(parse.json[Submission]) { implicit request =>
+    authorizedWithEnrolment[Submission] { _ =>
+      val body = request.body
+      submissionRepository.updateSubmission(body).map { res =>
+        if (res) {
+          Logger.debug("data updated in DB for conversationID")
+          Ok(Json.toJson(ExportsResponse(OK, "Submission response saved")))
+        } else {
+          Logger.error("error  saving submission data to DB")
+          InternalServerError("failed saving submission")
+        }
       }
     }
-
+  }
 }

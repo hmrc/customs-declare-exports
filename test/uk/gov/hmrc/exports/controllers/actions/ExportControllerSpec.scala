@@ -33,7 +33,7 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
 
       val result = route(app, fakeRequest).get
 
-      status(result) must be (UNAUTHORIZED)
+      status(result) must be(UNAUTHORIZED)
     }
 
     "return a success  when a valid request with Enrollments" in {
@@ -42,7 +42,7 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
 
       val result = route(app, fakeRequest).get
 
-      status(result) must be (OK)
+      status(result) must be(OK)
     }
 
     "return an Internal Server Error when there is a problem with the service" in {
@@ -51,7 +51,7 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
 
       val result = route(app, fakeRequest).get
 
-      status(result) must be (INTERNAL_SERVER_ERROR)
+      status(result) must be(INTERNAL_SERVER_ERROR)
     }
   }
 }

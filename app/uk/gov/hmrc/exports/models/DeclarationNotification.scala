@@ -99,5 +99,5 @@ object NotAcceptableResponse extends NotifyResponse("ACCEPT_HEADER_INVALID",
 object HeaderMissingErrorResponse extends NotifyResponse("INTERNAL_SERVER_ERROR",
   "ClientId or ConversationId or EORI is missing in the request headers")
 
-object NotificationFailedErrorResponse extends  NotifyResponse("INTERNAL_SERVER_ERROR",
+object NotificationFailedErrorResponse extends NotifyResponse("INTERNAL_SERVER_ERROR",
   "Failed to save notifications")
