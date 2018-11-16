@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.Json
-import play.api.mvc.{Action, Request, Result}
+import play.api.mvc.{Action, AnyContent, Request, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.{ExportsResponse, Submission, SubmissionResponse}
@@ -66,6 +66,12 @@ class SubmissionController @Inject()(
           InternalServerError("failed saving submission")
         }
       }
+    }
+  }
+
+  def getSubmission(conversationId:String) : Action[AnyContent] = Action.async { implicit request =>
+    authorizedWithEnrolment[AnyContent]{ _ =>
+       submissionRepository.getByConversationId(conversationId).map( submission => Ok(Json.toJson(submission)))
     }
   }
 }

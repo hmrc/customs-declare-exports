@@ -27,8 +27,6 @@ case class Submission(
   mrn: Option[String] = None,
   submittedTimestamp: Long = System.currentTimeMillis(),
   id: BSONObjectID = BSONObjectID.generate(),
-  arrivalConversationId: Option[String] = None,
-  departureConversationId: Option[String] = None,
   status: Option[String] = Some("Pending")
 )
 

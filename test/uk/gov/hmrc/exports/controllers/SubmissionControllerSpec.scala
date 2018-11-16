@@ -68,4 +68,23 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       status(failedResult) must be(INTERNAL_SERVER_ERROR)
     }
   }
+
+  "GET /submission" should {
+    "return 200 with submission response body" in {
+      withAuthorizedUser()
+      getSubmission(Some(submission))
+      val result = route(app, FakeRequest("GET", "/submission/1234")).get
+      status(result) must be(OK)
+      contentAsJson(result) must be (submissionJson)
+    }
+
+    "return 200 without submission responswe" in {
+      withAuthorizedUser()
+      getSubmission(None)
+
+      val result = route(app, FakeRequest("GET", "/submission/1234")).get
+
+      status(result) must be(OK)
+    }
+  }
 }

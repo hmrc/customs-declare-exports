@@ -9,3 +9,5 @@ GET       /customs-declare-exports/notifications/:eori      uk.gov.hmrc.exports.
 POST      /customs-declare-exports/notifyMovement           uk.gov.hmrc.exports.controllers.NotificationsController.saveMovement()
 
 POST      /update-submission                                uk.gov.hmrc.exports.controllers.SubmissionController.updateSubmission()
+
+GET     /submission/:conversationId                         uk.gov.hmrc.exports.controllers.SubmissionController.getSubmission(conversationId:String)

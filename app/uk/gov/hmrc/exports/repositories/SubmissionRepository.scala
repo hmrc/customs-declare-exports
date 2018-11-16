@@ -60,10 +60,7 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
 
     val modifier = BSONDocument("$set" ->
       BSONDocument("mrn" -> submission.mrn,
-        "status" -> submission.status,
-        "arrivalConversationId" -> submission.arrivalConversationId,
-        "departureConversationId" -> submission.departureConversationId))
-
+        "status" -> submission.status))
     atomicUpdate(finder, modifier).map(res => res.get.writeResult.ok)
   }
 
