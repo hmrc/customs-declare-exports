@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.Json
-import play.api.mvc.{Action, Request, Result}
+import play.api.mvc.{Action, AnyContent, Request, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.{ExportsResponse, Submission, SubmissionResponse}
@@ -30,27 +30,48 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class ResponseHandlerController @Inject()(
+class SubmissionController @Inject()(
   appConfig: AppConfig,
   submissionRepository: SubmissionRepository,
   authConnector: AuthConnector
 ) extends ExportController(authConnector) {
 
   def saveSubmissionResponse(): Action[SubmissionResponse] =
-    Action.async(parse.json[SubmissionResponse]){ implicit request =>
+    Action.async(parse.json[SubmissionResponse]) { implicit request =>
       authorizedWithEnrolment[SubmissionResponse](_ => processRequest)
     }
 
-  def processRequest()(implicit request: Request[SubmissionResponse] , hc:HeaderCarrier): Future[Result] = {
+  def processRequest()(implicit request: Request[SubmissionResponse], hc: HeaderCarrier): Future[Result] = {
     val body = request.body
-    submissionRepository.save(Submission(body.eori,body.conversationId,body.mrn)).map(res =>
-      if(res) {
+    submissionRepository.save(Submission(body.eori, body.conversationId, body.mrn)).map(res =>
+      if (res) {
         Logger.debug("data saved to DB")
-        Ok(Json.toJson(ExportsResponse(OK,"Submission response saved")))
+        Ok(Json.toJson(ExportsResponse(OK, "Submission response saved")))
       } else {
         Logger.error("error  saving submission data to DB")
         InternalServerError("failed saving submission")
       }
     )
+  }
+
+  def updateSubmission(): Action[Submission] = Action.async(parse.json[Submission]) { implicit request =>
+    authorizedWithEnrolment[Submission] { _ =>
+      val body = request.body
+      submissionRepository.updateSubmission(body).map { res =>
+        if (res) {
+          Logger.debug("data updated in DB for conversationID")
+          Ok(Json.toJson(ExportsResponse(OK, "Submission response saved")))
+        } else {
+          Logger.error("error  saving submission data to DB")
+          InternalServerError("failed saving submission")
+        }
+      }
+    }
+  }
+
+  def getSubmission(conversationId:String) : Action[AnyContent] = Action.async { implicit request =>
+    authorizedWithEnrolment[AnyContent]{ _ =>
+       submissionRepository.getByConversationId(conversationId).map( submission => Ok(Json.toJson(submission)))
+    }
   }
 }

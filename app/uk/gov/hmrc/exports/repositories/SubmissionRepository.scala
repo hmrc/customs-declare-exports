@@ -21,7 +21,7 @@ import play.api.Logger
 import play.api.libs.json.JsString
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.BSONObjectID
+import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import uk.gov.hmrc.exports.models.Submission
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 import uk.gov.hmrc.mongo.{AtomicUpdate, ReactiveRepository}
@@ -37,7 +37,7 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
   override def indexes: Seq[Index] = Seq(
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
     Index(Seq("conversationId" -> IndexType.Ascending), unique = true, name = Some("conversationIdIdx")),
-    Index(Seq("mrn" -> IndexType.Ascending), name = Some("mrnIdx"))
+    Index(Seq("mrn" -> IndexType.Ascending), unique = true, name = Some("mrnIdx"))
   )
 
   def findByEori(eori: String): Future[Seq[Submission]] = find("eori" -> JsString(eori))
@@ -50,10 +50,20 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
 
   override def isInsertion(newRecordId: BSONObjectID, oldRecord: Submission): Boolean = newRecordId.equals(oldRecord.id)
 
-  def save(submission: Submission) = insert(submission).map{ res =>
+  def save(submission: Submission) = insert(submission).map { res =>
     if (!res.ok) Logger.error("Error during inserting submission result " + res.writeErrors.mkString("--"))
     res.ok
   }
+
+  def updateSubmission(submission: Submission) = {
+    val finder = BSONDocument("_id" -> submission.id, "conversationId" -> submission.conversationId)
+
+    val modifier = BSONDocument("$set" ->
+      BSONDocument("mrn" -> submission.mrn,
+        "status" -> submission.status))
+    atomicUpdate(finder, modifier).map(res => res.get.writeResult.ok)
+  }
+
 }
 
 

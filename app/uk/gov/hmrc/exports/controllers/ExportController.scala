@@ -32,15 +32,15 @@ class ExportController @Inject()(override val authConnector: AuthConnector)
 
   def authorizedWithEnrolment[A](callback: (Request[A]) => Future[Result])
                                 (implicit request: Request[A]): Future[Result] =
-    authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments) {enrolments =>
-      if(!hasEnrolment(enrolments))
+    authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments) { enrolments =>
+      if (!hasEnrolment(enrolments))
         callback(request)
       else throw InsufficientEnrolments()
     } recoverWith {
       handleFailure
     }
 
-  private def hasEnrolment(allEnrolments:Enrolments): Boolean =
+  private def hasEnrolment(allEnrolments: Enrolments): Boolean =
     allEnrolments.getEnrolment("HMRC-CUS-ORG").flatMap(_.getIdentifier("EORINumber")).isEmpty
 
   def handleFailure(implicit request: Request[_]): PartialFunction[Throwable, Future[Result]] =
@@ -52,7 +52,7 @@ class ExportController @Inject()(override val authConnector: AuthConnector)
         Logger.warn(s"Unauthorised Exception for ${request.uri}")
 
         Future.successful(Unauthorized(Json.toJson("Unauthorized for exports")))
-      case ex :Throwable =>
+      case ex: Throwable =>
         Logger.error("Internal server error is " + ex.getMessage)
         Future.successful(InternalServerError(Json.toJson("InternalServerError")))
     }

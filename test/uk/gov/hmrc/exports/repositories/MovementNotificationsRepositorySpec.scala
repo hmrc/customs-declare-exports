@@ -20,26 +20,21 @@ import org.scalatest.BeforeAndAfterEach
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
-import uk.gov.hmrc.mongo.ReactiveRepository
 
 class MovementNotificationsRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with ExportsTestData {
 
   override protected def afterEach(): Unit = {
     super.afterEach()
-    repositories.foreach { repo =>
-      repo.removeAll()
-    }
+    repo.removeAll()
   }
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
 
   val repo = component[MovementNotificationsRepository]
 
-  val repositories: Seq[ReactiveRepository[_, _]] = Seq(repo)
-
   "Movement notifications repository" should {
     "save notification with EORI, conversationID and timestamp" in {
-      repo.save(movementNotification).futureValue must be (true)
+      repo.save(movementNotification).futureValue must be(true)
 
       // we can now display a list of all the declarations belonging to the current user, searching by EORI
       val found = repo.findByEori(eori).futureValue
@@ -47,7 +42,7 @@ class MovementNotificationsRepositorySpec extends CustomsExportsBaseSpec with Be
       found.head.eori must be(eori)
       found.head.conversationId must be(conversationId)
 
-      found.head.dateTimeReceived must be (now)
+      found.head.dateTimeReceived must be(now)
 
       // we can also retrieve the submission individually by conversation Id
       val got = repo.getByConversationId(conversationId).futureValue

@@ -23,11 +23,11 @@ class AppConfigSpec extends CustomsExportsBaseSpec {
 
   "The config" should {
     "have auth url" in {
-      config.authUrl must be ("http://localhost:8500")
+      config.authUrl must be("http://localhost:8500")
     }
 
     "have login url" in {
-      config.loginUrl must be ("http://localhost:9949/auth-login-stub/gg-sign-in")
+      config.loginUrl must be("http://localhost:9949/auth-login-stub/gg-sign-in")
     }
   }
 }

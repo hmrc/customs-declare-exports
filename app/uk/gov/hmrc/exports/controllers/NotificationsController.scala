@@ -56,25 +56,25 @@ class NotificationsController @Inject()(
     validateHeaders() { headers: NotificationApiHeaders => saveMovement(getMovementNotificationFromRequest(headers)) }
   }
 
-  private def validateHeaders()(process: NotificationApiHeaders => Future[Result])(
-    implicit request: Request[NodeSeq], hc: HeaderCarrier): Future[Result] = {
-      val accept = request.headers.get(HeaderNames.ACCEPT)
-      val contentType = request.headers.get(HeaderNames.CONTENT_TYPE)
-      val clientId = request.headers.get("X-CDS-Client-ID")
-      val conversationId = request.headers.get("X-Conversation-ID")
-      val eori = request.headers.get("X-EORI-Identifier")
-      val badgeIdentifier = request.headers.get("X-Badge-Identifier")
+  private def validateHeaders()(process: NotificationApiHeaders => Future[Result])
+                               (implicit request: Request[NodeSeq], hc: HeaderCarrier): Future[Result] = {
+    val accept = request.headers.get(HeaderNames.ACCEPT)
+    val contentType = request.headers.get(HeaderNames.CONTENT_TYPE)
+    val clientId = request.headers.get("X-CDS-Client-ID")
+    val conversationId = request.headers.get("X-Conversation-ID")
+    val eori = request.headers.get("X-EORI-Identifier")
+    val badgeIdentifier = request.headers.get("X-Badge-Identifier")
 
-      //TODO authorisation header validation
-      if (accept.isEmpty) {
-        Future.successful(NotAcceptable(NotAcceptableResponse.toXml))
-      } else if (contentType.isEmpty) {
-        Future.successful(UnsupportedMediaType)
-      } else if (clientId.isEmpty || conversationId.isEmpty || eori.isEmpty) {
-        Future.successful(InternalServerError(HeaderMissingErrorResponse.toXml))
-      } else
-        process(NotificationApiHeaders(accept.get, contentType.get, clientId.get, badgeIdentifier, conversationId.get, eori.get))
-    }
+    //TODO authorisation header validation
+    if (accept.isEmpty) {
+      Future.successful(NotAcceptable(NotAcceptableResponse.toXml))
+    } else if (contentType.isEmpty) {
+      Future.successful(UnsupportedMediaType)
+    } else if (clientId.isEmpty || conversationId.isEmpty || eori.isEmpty) {
+      Future.successful(InternalServerError(HeaderMissingErrorResponse.toXml))
+    } else
+      process(NotificationApiHeaders(accept.get, contentType.get, clientId.get, badgeIdentifier, conversationId.get, eori.get))
+  }
 
   private def getNotificationFromRequest(headers: NotificationApiHeaders)(implicit request: Request[NodeSeq], hc: HeaderCarrier) = {
     val metadata = MetaData.fromXml(request.body.toString)
@@ -98,7 +98,7 @@ class NotificationsController @Inject()(
   private def save(notification: DeclarationNotification)(implicit hc: HeaderCarrier): Future[Result] =
     notificationsRepository.save(notification).map(_ match {
       case true => Accepted
-      case _    => InternalServerError(NotificationFailedErrorResponse.toXml)
+      case _ => InternalServerError(NotificationFailedErrorResponse.toXml)
     })
 
   private def findByEori(eori: String)(implicit hc: HeaderCarrier): Future[Result] =
@@ -107,7 +107,7 @@ class NotificationsController @Inject()(
   private def saveMovement(notification: MovementNotification)(implicit hc: HeaderCarrier): Future[Result] =
     movementNotificationsRepository.save(notification).map(_ match {
       case true => Accepted
-      case _    => InternalServerError(NotificationFailedErrorResponse.toXml)
+      case _ => InternalServerError(NotificationFailedErrorResponse.toXml)
     })
 
   private def getMovementNotificationFromRequest(

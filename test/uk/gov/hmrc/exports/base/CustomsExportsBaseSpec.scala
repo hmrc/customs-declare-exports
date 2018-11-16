@@ -38,7 +38,7 @@ import play.filters.csrf.CSRF.Token
 import play.filters.csrf.{CSRFConfig, CSRFConfigProvider, CSRFFilter}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.DeclarationNotification
+import uk.gov.hmrc.exports.models.{DeclarationNotification, Submission}
 import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.http.SessionKeys
 
@@ -101,8 +101,15 @@ trait CustomsExportsBaseSpec extends PlaySpec
       .withJsonBody(body)
   }
 
-  protected def withSubmissionSaved(ok: Boolean) =
+  protected def withSubmissionSaved(ok: Boolean) = {
     when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(ok))
+  }
+  protected def getSubmission(submission:Option[Submission]) =
+    when(mockSubmissionRepository.getByConversationId(any())).thenReturn(Future.successful(submission))
+
+
+  protected def withSubmissionUpdated(ok: Boolean) =
+    when(mockSubmissionRepository.updateSubmission(any())).thenReturn(Future.successful(ok))
 
   protected def withNotificationSaved(ok: Boolean) =
     when(mockNotificationsRepository.save(any())).thenReturn(Future.successful(ok))
