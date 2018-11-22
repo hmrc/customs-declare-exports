@@ -104,7 +104,8 @@ class NotificationsController @Inject()(
     notificationsRepository.save(notification).map(_ match {
       case true => metrics.incrementCounter(notificationMetric)
         Accepted
-      case _ => InternalServerError(NotificationFailedErrorResponse.toXml)
+      case _ => metrics.incrementCounter(notificationMetric)
+        InternalServerError(NotificationFailedErrorResponse.toXml)
     })
 
   private def findByEori(eori: String)(implicit hc: HeaderCarrier): Future[Result] =
