@@ -38,6 +38,7 @@ import play.filters.csrf.CSRF.Token
 import play.filters.csrf.{CSRFConfig, CSRFConfigProvider, CSRFFilter}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.exports.config.AppConfig
+import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models.{DeclarationNotification, Submission}
 import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.http.SessionKeys
@@ -53,6 +54,7 @@ trait CustomsExportsBaseSpec extends PlaySpec
   val mockSubmissionRepository = mock[SubmissionRepository]
   val mockNotificationsRepository = mock[NotificationsRepository]
   val mockMovementNotificationsRepository = mock[MovementNotificationsRepository]
+  val mockMNetrics = mock[ExportsMetrics]
 
   def injector: Injector = app.injector
 
@@ -74,7 +76,8 @@ trait CustomsExportsBaseSpec extends PlaySpec
         bind[AuthConnector].to(mockAuthConnector),
         bind[SubmissionRepository].to(mockSubmissionRepository),
         bind[NotificationsRepository].to(mockNotificationsRepository),
-        bind[MovementNotificationsRepository].to(mockMovementNotificationsRepository)
+        bind[MovementNotificationsRepository].to(mockMovementNotificationsRepository),
+        bind[ExportsMetrics].to(mockMNetrics)
       ).build()
 
   implicit val mat: Materializer = app.materializer
