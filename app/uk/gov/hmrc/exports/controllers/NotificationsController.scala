@@ -58,6 +58,7 @@ class NotificationsController @Inject()(
   }
 
   def saveMovement(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
+    metrics.startTimer(movementMetric)
     validateHeaders() { headers: NotificationApiHeaders => saveMovement(getMovementNotificationFromRequest(headers)) }
   }
 
@@ -113,8 +114,10 @@ class NotificationsController @Inject()(
 
   private def saveMovement(notification: MovementNotification)(implicit hc: HeaderCarrier): Future[Result] =
     movementNotificationsRepository.save(notification).map(_ match {
-      case true => Accepted
-      case _ => InternalServerError(NotificationFailedErrorResponse.toXml)
+      case true => metrics.incrementCounter(movementMetric)
+        Accepted
+      case _ => metrics.incrementCounter(movementMetric)
+        InternalServerError(NotificationFailedErrorResponse.toXml)
     })
 
   private def getMovementNotificationFromRequest(
