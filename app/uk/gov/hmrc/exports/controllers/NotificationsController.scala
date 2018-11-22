@@ -25,6 +25,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, Request, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
+import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, NotificationsRepository}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -33,26 +34,31 @@ import uk.gov.hmrc.wco.dec._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.xml.NodeSeq
+import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
+
 
 @Singleton
 class NotificationsController @Inject()(
   appConfig: AppConfig,
   authConnector: AuthConnector,
   notificationsRepository: NotificationsRepository,
-  movementNotificationsRepository: MovementNotificationsRepository
+  movementNotificationsRepository: MovementNotificationsRepository,
+  metrics:ExportsMetrics
 ) extends ExportController(authConnector) {
 
-  //TODO request needs to be streamed based on the performance results
   def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
-    validateHeaders() { headers: NotificationApiHeaders => save(getNotificationFromRequest(headers)) }
+    validateHeaders() {
+          metrics.startTimer(notificationMetric)
+      headers: NotificationApiHeaders => save(getNotificationFromRequest(headers)) }
   }
 
-  //TODO response should be streamed or paginated depending on the no if requests.
+  //TODO response should be streamed or paginated depending on the no of notifications.
   def getNotifications(eori: String): Action[AnyContent] = Action.async { implicit request =>
     authorizedWithEnrolment[AnyContent](_ => findByEori(eori))
   }
 
   def saveMovement(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
+    metrics.startTimer(movementMetric)
     validateHeaders() { headers: NotificationApiHeaders => saveMovement(getMovementNotificationFromRequest(headers)) }
   }
 
@@ -97,8 +103,10 @@ class NotificationsController @Inject()(
 
   private def save(notification: DeclarationNotification)(implicit hc: HeaderCarrier): Future[Result] =
     notificationsRepository.save(notification).map(_ match {
-      case true => Accepted
-      case _ => InternalServerError(NotificationFailedErrorResponse.toXml)
+      case true => metrics.incrementCounter(notificationMetric)
+        Accepted
+      case _ => metrics.incrementCounter(notificationMetric)
+        InternalServerError(NotificationFailedErrorResponse.toXml)
     })
 
   private def findByEori(eori: String)(implicit hc: HeaderCarrier): Future[Result] =
@@ -106,8 +114,10 @@ class NotificationsController @Inject()(
 
   private def saveMovement(notification: MovementNotification)(implicit hc: HeaderCarrier): Future[Result] =
     movementNotificationsRepository.save(notification).map(_ match {
-      case true => Accepted
-      case _ => InternalServerError(NotificationFailedErrorResponse.toXml)
+      case true => metrics.incrementCounter(movementMetric)
+        Accepted
+      case _ => metrics.incrementCounter(movementMetric)
+        InternalServerError(NotificationFailedErrorResponse.toXml)
     })
 
   private def getMovementNotificationFromRequest(
