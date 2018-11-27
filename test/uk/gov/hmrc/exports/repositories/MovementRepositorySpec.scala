@@ -48,16 +48,16 @@ class MovementRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterE
       found.head.submittedTimestamp must (be >= before).and(be <= System.currentTimeMillis())
 
       // we can also retrieve the movement individually by conversation ID
-      val got = repo.getByConversationId(conversationId).futureValue
-      got.get.eori must be(eori)
-      got.get.conversationId must be(conversationId)
-      got.get.ducr must be(ducr)
+      val gotMovement = repo.getByConversationId(conversationId).futureValue.get
+      gotMovement.eori must be(eori)
+      gotMovement.conversationId must be(conversationId)
+      gotMovement.ducr must be(ducr)
 
       // or we can retrieve it by eori and MRN
-      val gotAgain = repo.getByEoriAndDucr(eori, ducr).futureValue
-      gotAgain.get.eori must be(eori)
-      gotAgain.get.conversationId must be(conversationId)
-      gotAgain.get.ducr must be (ducr)
+      val gotAgain = repo.getByEoriAndDucr(eori, ducr).futureValue.get
+      gotAgain.eori must be(eori)
+      gotAgain.conversationId must be(conversationId)
+      gotAgain.ducr must be (ducr)
 
       // update status test
       val movement1 = repo.getByConversationId(conversationId).futureValue

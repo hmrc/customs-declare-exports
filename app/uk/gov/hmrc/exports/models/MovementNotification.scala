@@ -24,12 +24,12 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.mongoEntity
 import uk.gov.hmrc.wco.dec.{EntryStatus, GoodsItem, InventoryLinkingMovementResponse, UcrBlock}
 
 case class MovementNotification(
-                                 dateTimeReceived: DateTime = DateTime.now(),
-                                 conversationId: String,
-                                 eori: String,
-                                 badgeId: Option[String] = None,
-                                 movementResponse: InventoryLinkingMovementResponse
-                               )
+  dateTimeReceived: DateTime = DateTime.now(),
+  conversationId: String,
+  eori: String,
+  badgeId: Option[String] = None,
+  movementResponse: InventoryLinkingMovementResponse
+)
 
 object MovementNotification {
   implicit val ucrFormat = Json.format[UcrBlock]
@@ -40,13 +40,13 @@ object MovementNotification {
 }
 
 case class MovementSubmissions(eori: String,
-                               conversationId: String,
-                               ducr: String,
-                               mucr: Option[String] = None,
-                               movementType :String,
-                               id: BSONObjectID = BSONObjectID.generate(),
-                               submittedTimestamp: Long = System.currentTimeMillis(),
-                               status: Option[String] = Some("Pending"))
+  conversationId: String,
+  ducr: String,
+  mucr: Option[String] = None,
+  movementType: String,
+  id: BSONObjectID = BSONObjectID.generate(),
+  submittedTimestamp: Long = System.currentTimeMillis(),
+  status: Option[String] = Some("Pending"))
 
 object MovementSubmissions {
   implicit val objectIdFormats = ReactiveMongoFormats.objectIdFormats
@@ -56,11 +56,12 @@ object MovementSubmissions {
 }
 
 case class MovementResponse(eori: String,
-                               conversationId: String,
-                               ducr: String,
-                               mucr: Option[String] = None,
-                               movementType :String,
-                               status: Option[String] = Some("Pending"))
+  conversationId: String,
+  ducr: String,
+  mucr: Option[String] = None,
+  movementType: String,
+  status: Option[String] = Some("Pending"))
+
 object MovementResponse {
-  val format = Json.format[MovementResponse]
+  implicit val format = Json.format[MovementResponse]
 }

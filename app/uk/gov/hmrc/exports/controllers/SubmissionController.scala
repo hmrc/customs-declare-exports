@@ -43,13 +43,14 @@ class SubmissionController @Inject()(
     }
 
   def saveMovementSubmission(): Action[MovementResponse] =
-    Action.async(parse.json[MovementResponse](MovementResponse.format)) { implicit request =>
+    Action.async(parse.json[MovementResponse]) { implicit request =>
       authorizedWithEnrolment[MovementResponse](_ => processSave)
     }
 
   private def processSave()(implicit request: Request[MovementResponse], hc: HeaderCarrier): Future[Result] = {
     val body = request.body
-    movementsRepository.save(MovementSubmissions(body.eori, body.conversationId, body.ducr,body.mucr,body.movementType)).map(res =>
+    movementsRepository.save(MovementSubmissions(body.eori, body.conversationId,
+      body.ducr, body.mucr, body.movementType)).map(res =>
       if (res) {
         Logger.debug("data saved to DB")
         Ok(Json.toJson(ExportsResponse(OK, "Submission response saved")))
@@ -88,14 +89,14 @@ class SubmissionController @Inject()(
     }
   }
 
-  def getSubmission(conversationId:String) : Action[AnyContent] = Action.async { implicit request =>
-    authorizedWithEnrolment[AnyContent]{ _ =>
-       submissionRepository.getByConversationId(conversationId).map( submission => Ok(Json.toJson(submission)))
+  def getSubmission(conversationId: String): Action[AnyContent] = Action.async { implicit request =>
+    authorizedWithEnrolment[AnyContent] { _ =>
+      submissionRepository.getByConversationId(conversationId).map(submission => Ok(Json.toJson(submission)))
     }
   }
 
-  def getMovements(eori:String) : Action[AnyContent] = Action.async { implicit request =>
-    authorizedWithEnrolment[AnyContent]{ _ =>
+  def getMovements(eori: String): Action[AnyContent] = Action.async { implicit request =>
+    authorizedWithEnrolment[AnyContent] { _ =>
       movementsRepository.findByEori(eori).map(movements => Ok(Json.toJson(movements)))
     }
   }

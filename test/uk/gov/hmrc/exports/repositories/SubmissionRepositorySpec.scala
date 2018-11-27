@@ -49,16 +49,16 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
       found.head.submittedTimestamp must (be >= before).and(be <= System.currentTimeMillis())
 
       // we can also retrieve the submission individually by conversation ID
-      val got = repo.getByConversationId(conversationId).futureValue
-      got.get.eori must be(eori)
-      got.get.conversationId must be(conversationId)
-      got.get.mrn must be(Some(mrn))
+      val got = repo.getByConversationId(conversationId).futureValue.get
+      got.eori must be(eori)
+      got.conversationId must be(conversationId)
+      got.mrn must be(Some(mrn))
 
       // or we can retrieve it by eori and MRN
-      val gotAgain = repo.getByEoriAndMrn(eori, mrn).futureValue
-      gotAgain.get.eori must be(eori)
-      gotAgain.get.conversationId must be(conversationId)
-      gotAgain.get.mrn must be(Some(mrn))
+      val gotAgain = repo.getByEoriAndMrn(eori, mrn).futureValue.get
+      gotAgain.eori must be(eori)
+      gotAgain.conversationId must be(conversationId)
+      gotAgain.mrn must be(Some(mrn))
 
       // update status test
       val submission1 = repo.getByConversationId(conversationId).futureValue
