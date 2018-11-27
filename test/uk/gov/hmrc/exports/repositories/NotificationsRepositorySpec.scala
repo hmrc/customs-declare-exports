@@ -47,9 +47,9 @@ class NotificationsRepositorySpec extends CustomsExportsBaseSpec with BeforeAndA
       found.head.dateTimeReceived must be(now)
 
       // we can also retrieve the submission individually by conversation Id
-      val got = repo.getByConversationId(conversationId).futureValue
-      got.get.eori must be(eori)
-      got.get.conversationId must be(conversationId)
+      val got = repo.getByConversationId(conversationId).futureValue.get
+      got.eori must be(eori)
+      got.conversationId must be(conversationId)
 
       // or we can retrieve it by eori and conversationId
       val gotAgain = repo.getByEoriAndConversationId(eori, conversationId).futureValue

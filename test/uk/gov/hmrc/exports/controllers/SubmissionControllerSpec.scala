@@ -20,7 +20,7 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
-import uk.gov.hmrc.exports.models.{Submission, SubmissionResponse}
+import uk.gov.hmrc.exports.models.{MovementSubmissions, Submission, SubmissionResponse}
 
 class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
   val saveUri = "/save-submission-response"
@@ -36,7 +36,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
   "POST /save-submission-response" should {
     "return 200 when submission has been saved" in {
       withAuthorizedUser()
-      withSubmissionSaved(true)
+      withDataSaved(true)
       val result = route(app, fakeRequest).get
 
       status(result) must be(OK)
@@ -44,7 +44,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
     "return 500 when something goes wrong" in {
       withAuthorizedUser()
-      withSubmissionSaved(false)
+      withDataSaved(false)
       val failedResult = route(app, fakeRequest).get
 
       status(failedResult) must be(INTERNAL_SERVER_ERROR)
@@ -78,7 +78,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       contentAsJson(result) must be (submissionJson)
     }
 
-    "return 200 without submission responswe" in {
+    "return 200 without submission response" in {
       withAuthorizedUser()
       getSubmission(None)
 
@@ -87,4 +87,38 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       status(result) must be(OK)
     }
   }
+
+  "POST /save-movement-submission" should {
+    "return 200 when movement has been saved" in {
+      withAuthorizedUser()
+      withDataSaved(true)
+      val result = route(app, fakeRequest).get
+      status(result) must be(OK)
+    }
+
+    "return 500 when something goes wrong" in {
+      withAuthorizedUser()
+      withDataSaved(false)
+      val failedResult = route(app, fakeRequest).get
+      status(failedResult) must be(INTERNAL_SERVER_ERROR)
+    }
+  }
+
+  "GET /movements/:eori" should {
+    "return 200 with movements as response body" in {
+      withAuthorizedUser()
+      withMovements(Seq(movement))
+      val result = route(app, FakeRequest("GET", "/movements/1234")).get
+      status(result) must be(OK)
+      contentAsJson(result) must be (Json.toJson(Seq(movement)))
+    }
+
+    "return 200 without empty response" in {
+      withAuthorizedUser()
+      withMovements(Seq.empty)
+      val result = route(app, FakeRequest("GET", "/submission/1234")).get
+      status(result) must be(OK)
+    }
+  }
+
 }

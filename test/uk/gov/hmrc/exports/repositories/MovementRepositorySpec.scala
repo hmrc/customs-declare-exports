@@ -23,7 +23,7 @@ import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with ExportsTestData {
+class MovementRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with ExportsTestData {
 
   override protected def afterEach(): Unit = {
     super.afterEach()
@@ -31,44 +31,43 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
   }
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
-  val repo = component[SubmissionRepository]
+  val repo = component[MovementsRepository]
 
+  "MovementsRepository" should {
+    "save movement with EORI, DUCR and timestamp" in {
+      repo.save(movement).futureValue must be(true)
 
-  "SubmissionRepository" should {
-    "save declaration with EORI and timestamp" in {
-      repo.save(submission).futureValue must be(true)
-
-      // we can now display a list of all the declarations belonging to the current user, searching by EORI
+      // we can now display a list of all the movements belonging to the current user, searching by EORI
       val found = repo.findByEori(eori).futureValue
       found.length must be(1)
       found.head.eori must be(eori)
       found.head.conversationId must be(conversationId)
-      found.head.mrn must be(Some(mrn))
+      found.head.ducr must be(ducr)
 
       // a timestamp has been generated representing "creation time" of case class instance
       found.head.submittedTimestamp must (be >= before).and(be <= System.currentTimeMillis())
 
-      // we can also retrieve the submission individually by conversation ID
-      val got = repo.getByConversationId(conversationId).futureValue.get
-      got.eori must be(eori)
-      got.conversationId must be(conversationId)
-      got.mrn must be(Some(mrn))
+      // we can also retrieve the movement individually by conversation ID
+      val gotMovement = repo.getByConversationId(conversationId).futureValue.get
+      gotMovement.eori must be(eori)
+      gotMovement.conversationId must be(conversationId)
+      gotMovement.ducr must be(ducr)
 
       // or we can retrieve it by eori and MRN
-      val gotAgain = repo.getByEoriAndMrn(eori, mrn).futureValue.get
+      val gotAgain = repo.getByEoriAndDucr(eori, ducr).futureValue.get
       gotAgain.eori must be(eori)
       gotAgain.conversationId must be(conversationId)
-      gotAgain.mrn must be(Some(mrn))
+      gotAgain.ducr must be (ducr)
 
       // update status test
-      val submission1 = repo.getByConversationId(conversationId).futureValue
+      val movement1 = repo.getByConversationId(conversationId).futureValue
 
-      val updatedSubmission = submission1.get.copy(status = Some("Accepted"))
-      val updateStatusResult = repo.updateSubmission(updatedSubmission).futureValue
+      val updatedMovement = movement1.get.copy(status = Some("Accepted"))
+      val updateStatusResult = repo.updateMovementStatus(updatedMovement).futureValue
       updateStatusResult must be(true)
-      val newSubmission = repo.getByConversationId(conversationId).futureValue
+      val newMovement = repo.getByConversationId(conversationId).futureValue
 
-      newSubmission.get must be(updatedSubmission)
+      newMovement.get must be(updatedMovement)
     }
   }
 }

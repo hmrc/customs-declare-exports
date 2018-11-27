@@ -38,7 +38,7 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
 
     "return a success  when a valid request with Enrollments" in {
       withAuthorizedUser()
-      withSubmissionSaved(true)
+      withDataSaved(true)
 
       val result = route(app, fakeRequest).get
 
@@ -47,7 +47,7 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
 
     "return an Internal Server Error when there is a problem with the service" in {
       withAuthorizedUser()
-      withSubmissionSaved(false)
+      withDataSaved(false)
 
       val result = route(app, fakeRequest).get
 
