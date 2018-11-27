@@ -41,6 +41,9 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models.{DeclarationNotification, MovementSubmissions, Submission}
 import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, MovementsRepository, NotificationsRepository, SubmissionRepository}
+
+import uk.gov.hmrc.exports.models.{DeclarationNotification, Submission}
+import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.http.SessionKeys
 
 import scala.concurrent.duration._
@@ -117,7 +120,7 @@ trait CustomsExportsBaseSpec extends PlaySpec
   protected def withMovements(movements:Seq[MovementSubmissions]) =
     when(mockMovementsRepository.findByEori(any())).thenReturn(Future.successful(movements))
 
-  protected def withSubmissionUpdated(ok: Boolean) =
+    protected def withSubmissionUpdated(ok: Boolean) =
     when(mockSubmissionRepository.updateSubmission(any())).thenReturn(Future.successful(ok))
 
   protected def withNotificationSaved(ok: Boolean) =
