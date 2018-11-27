@@ -39,8 +39,8 @@ import play.filters.csrf.{CSRFConfig, CSRFConfigProvider, CSRFFilter}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
-import uk.gov.hmrc.exports.models.{DeclarationNotification, Submission}
-import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, NotificationsRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.models.{DeclarationNotification, MovementSubmissions, Submission}
+import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, MovementsRepository, NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.http.SessionKeys
 
 import scala.concurrent.duration._
@@ -54,6 +54,7 @@ trait CustomsExportsBaseSpec extends PlaySpec
   val mockSubmissionRepository = mock[SubmissionRepository]
   val mockNotificationsRepository = mock[NotificationsRepository]
   val mockMovementNotificationsRepository = mock[MovementNotificationsRepository]
+  val mockMovementsRepository = mock[MovementsRepository]
   val mockMNetrics = mock[ExportsMetrics]
 
   def injector: Injector = app.injector
@@ -77,6 +78,7 @@ trait CustomsExportsBaseSpec extends PlaySpec
         bind[SubmissionRepository].to(mockSubmissionRepository),
         bind[NotificationsRepository].to(mockNotificationsRepository),
         bind[MovementNotificationsRepository].to(mockMovementNotificationsRepository),
+        bind[MovementsRepository].to(mockMovementsRepository),
         bind[ExportsMetrics].to(mockMNetrics)
       ).build()
 
@@ -104,12 +106,16 @@ trait CustomsExportsBaseSpec extends PlaySpec
       .withJsonBody(body)
   }
 
-  protected def withSubmissionSaved(ok: Boolean) = {
+  protected def withDataSaved(ok: Boolean) = {
     when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(ok))
+    when(mockMovementsRepository.save(any())).thenReturn(Future.successful(ok))
   }
+
   protected def getSubmission(submission:Option[Submission]) =
     when(mockSubmissionRepository.getByConversationId(any())).thenReturn(Future.successful(submission))
 
+  protected def withMovements(movements:Seq[MovementSubmissions]) =
+    when(mockMovementsRepository.findByEori(any())).thenReturn(Future.successful(movements))
 
   protected def withSubmissionUpdated(ok: Boolean) =
     when(mockSubmissionRepository.updateSubmission(any())).thenReturn(Future.successful(ok))

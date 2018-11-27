@@ -35,9 +35,11 @@ trait ExportsTestData {
   val lrn = Some(randomString(70))
   val mrn = randomString(16)
   val conversationId = UUID.randomUUID.toString
+  val ducr = randomString(16)
 
   val before = System.currentTimeMillis()
   val submission = Submission(eori, conversationId, Some(mrn))
+  val movement = MovementSubmissions(eori,conversationId,ducr,None,"Arrival")
   val now = DateTime.now
   val response1 = Seq(Response(functionCode = Random.nextInt(), functionalReferenceId = Some("123")))
   val response2 = Seq(Response(functionCode = Random.nextInt(), functionalReferenceId = Some("456")))
