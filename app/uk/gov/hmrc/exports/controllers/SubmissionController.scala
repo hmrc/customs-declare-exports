@@ -52,11 +52,11 @@ class SubmissionController @Inject()(
     movementsRepository.save(MovementSubmissions(body.eori, body.conversationId,
       body.ducr, body.mucr, body.movementType)).map(res =>
       if (res) {
-        Logger.debug("data saved to DB")
-        Ok(Json.toJson(ExportsResponse(OK, "Submission response saved")))
+        Logger.debug("movement submission data saved to DB")
+        Ok(Json.toJson(ExportsResponse(OK, "Movement Submission saved")))
       } else {
-        Logger.error("error  saving submission data to DB")
-        InternalServerError("failed saving submission")
+        Logger.error("error  saving movement submission data to DB")
+        InternalServerError("failed saving movement submission")
       }
     )
   }
@@ -65,7 +65,7 @@ class SubmissionController @Inject()(
     val body = request.body
     submissionRepository.save(Submission(body.eori, body.conversationId, body.mrn)).map(res =>
       if (res) {
-        Logger.debug("data saved to DB")
+        Logger.debug("submission data saved to DB")
         Ok(Json.toJson(ExportsResponse(OK, "Submission response saved")))
       } else {
         Logger.error("error  saving submission data to DB")
@@ -80,10 +80,10 @@ class SubmissionController @Inject()(
       submissionRepository.updateSubmission(body).map { res =>
         if (res) {
           Logger.debug("data updated in DB for conversationID")
-          Ok(Json.toJson(ExportsResponse(OK, "Submission response saved")))
+          Ok(Json.toJson(ExportsResponse(OK, "Submission response updated")))
         } else {
-          Logger.error("error  saving submission data to DB")
-          InternalServerError("failed saving submission")
+          Logger.error("error updating submission data to DB")
+          InternalServerError("failed updating submission")
         }
       }
     }
