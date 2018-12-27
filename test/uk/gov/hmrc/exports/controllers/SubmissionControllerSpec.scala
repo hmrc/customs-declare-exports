@@ -27,9 +27,11 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
   val updateUri = "/update-submission"
 
   val jsonBody = Json.toJson[SubmissionResponse](submissionResponse)
+
   val fakeRequest = FakeRequest("POST", saveUri).withBody((jsonBody))
 
   val submissionJson = Json.toJson[Submission](submission)
+  val jsonSeqSubmission = Json.toJson[Seq[Submission]](seqSubmissions)
 
   val updateSubmissionRequest = FakeRequest("POST", updateUri).withBody(submissionJson)
 
@@ -37,6 +39,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     "return 200 when submission has been saved" in {
       withAuthorizedUser()
       withDataSaved(true)
+
       val result = route(app, fakeRequest).get
 
       status(result) must be(OK)
@@ -45,6 +48,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     "return 500 when something goes wrong" in {
       withAuthorizedUser()
       withDataSaved(false)
+
       val failedResult = route(app, fakeRequest).get
 
       status(failedResult) must be(INTERNAL_SERVER_ERROR)
@@ -55,6 +59,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     "return 200 when submission has been updated" in {
       withAuthorizedUser()
       withSubmissionUpdated(true)
+
       val result = route(app, updateSubmissionRequest).get
 
       status(result) must be(OK)
@@ -63,6 +68,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     "return 500 when something goes wrong" in {
       withAuthorizedUser()
       withSubmissionUpdated(false)
+
       val failedResult = route(app, updateSubmissionRequest).get
 
       status(failedResult) must be(INTERNAL_SERVER_ERROR)
@@ -73,7 +79,9 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     "return 200 with submission response body" in {
       withAuthorizedUser()
       getSubmission(Some(submission))
+
       val result = route(app, FakeRequest("GET", "/submission/1234")).get
+
       status(result) must be(OK)
       contentAsJson(result) must be (submissionJson)
     }
@@ -92,14 +100,18 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     "return 200 when movement has been saved" in {
       withAuthorizedUser()
       withDataSaved(true)
+
       val result = route(app, fakeRequest).get
+
       status(result) must be(OK)
     }
 
     "return 500 when something goes wrong" in {
       withAuthorizedUser()
       withDataSaved(false)
+
       val failedResult = route(app, fakeRequest).get
+
       status(failedResult) must be(INTERNAL_SERVER_ERROR)
     }
   }
@@ -108,7 +120,9 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     "return 200 with movements as response body" in {
       withAuthorizedUser()
       withMovements(Seq(movement))
-      val result = route(app, FakeRequest("GET", "/movements/1234")).get
+
+      val result = route(app, FakeRequest("GET", "/movements")).get
+
       status(result) must be(OK)
       contentAsJson(result) must be (Json.toJson(Seq(movement)))
     }
@@ -116,9 +130,31 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     "return 200 without empty response" in {
       withAuthorizedUser()
       withMovements(Seq.empty)
-      val result = route(app, FakeRequest("GET", "/submission/1234")).get
+
+      val result = route(app, FakeRequest("GET", "/movements")).get
+
       status(result) must be(OK)
     }
   }
 
+  "GET submissions using eori number" should {
+    "return 200 with submission response body" in {
+      withAuthorizedUser()
+      withSubmissions(seqSubmissions)
+
+      val result = route(app, FakeRequest("GET", "/submissions")).get
+
+      status(result) must be(OK)
+      contentAsJson(result) must be(jsonSeqSubmission)
+    }
+
+    "return 200 withtout submission response" in {
+      withAuthorizedUser()
+      withSubmissions(Seq.empty)
+
+      val result = route(app, FakeRequest("GET", "/submissions")).get
+
+      status(result) must be(OK)
+    }
+  }
 }

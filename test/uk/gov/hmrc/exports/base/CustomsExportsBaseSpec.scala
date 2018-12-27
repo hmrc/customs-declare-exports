@@ -114,14 +114,17 @@ trait CustomsExportsBaseSpec extends PlaySpec
     when(mockMovementsRepository.save(any())).thenReturn(Future.successful(ok))
   }
 
-  protected def getSubmission(submission:Option[Submission]) =
+  protected def getSubmission(submission: Option[Submission]) =
     when(mockSubmissionRepository.getByConversationId(any())).thenReturn(Future.successful(submission))
 
-  protected def withMovements(movements:Seq[MovementSubmissions]) =
+  protected def withMovements(movements: Seq[MovementSubmissions]) =
     when(mockMovementsRepository.findByEori(any())).thenReturn(Future.successful(movements))
 
-    protected def withSubmissionUpdated(ok: Boolean) =
+  protected def withSubmissionUpdated(ok: Boolean) =
     when(mockSubmissionRepository.updateSubmission(any())).thenReturn(Future.successful(ok))
+
+  protected def withSubmissions(submissions: Seq[Submission]) =
+    when(mockSubmissionRepository.findByEori(any())).thenReturn(Future.successful(submissions))
 
   protected def withNotificationSaved(ok: Boolean) =
     when(mockNotificationsRepository.save(any())).thenReturn(Future.successful(ok))
