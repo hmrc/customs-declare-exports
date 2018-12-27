@@ -4,14 +4,16 @@ POST      /save-submission-response                         uk.gov.hmrc.exports.
 
 POST      /customs-declare-exports/notify                   uk.gov.hmrc.exports.controllers.NotificationsController.saveNotification()
 
-GET       /customs-declare-exports/notifications/:eori      uk.gov.hmrc.exports.controllers.NotificationsController.getNotifications(eori:String)
+GET       /customs-declare-exports/notifications/:eori      uk.gov.hmrc.exports.controllers.NotificationsController.getNotifications(eori: String)
 
 POST      /customs-declare-exports/notifyMovement           uk.gov.hmrc.exports.controllers.NotificationsController.saveMovement()
 
 POST      /update-submission                                uk.gov.hmrc.exports.controllers.SubmissionController.updateSubmission()
 
-GET     /submission/:conversationId                         uk.gov.hmrc.exports.controllers.SubmissionController.getSubmission(conversationId:String)
+GET       /submission/:conversationId                       uk.gov.hmrc.exports.controllers.SubmissionController.getSubmission(conversationId: String)
 
-POST    /save-movement-submission                         uk.gov.hmrc.exports.controllers.SubmissionController.saveMovementSubmission()
+POST      /save-movement-submission                         uk.gov.hmrc.exports.controllers.SubmissionController.saveMovementSubmission()
 
-GET     /movements/:eori                         uk.gov.hmrc.exports.controllers.SubmissionController.getMovements(eori:String)
+GET       /movements/:eori                                  uk.gov.hmrc.exports.controllers.SubmissionController.getMovements(eori: String)
+
+GET       /submissions                                      uk.gov.hmrc.exports.controllers.SubmissionController.getSubmissionsByEori()

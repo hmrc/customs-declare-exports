@@ -91,13 +91,25 @@ class SubmissionController @Inject()(
 
   def getSubmission(conversationId: String): Action[AnyContent] = Action.async { implicit request =>
     authorizedWithEnrolment[AnyContent] { _ =>
-      submissionRepository.getByConversationId(conversationId).map(submission => Ok(Json.toJson(submission)))
+      submissionRepository.getByConversationId(conversationId).map { submission =>
+        Ok(Json.toJson(submission))
+      }
     }
   }
 
   def getMovements(eori: String): Action[AnyContent] = Action.async { implicit request =>
     authorizedWithEnrolment[AnyContent] { _ =>
-      movementsRepository.findByEori(eori).map(movements => Ok(Json.toJson(movements)))
+      movementsRepository.findByEori(eori).map { movements =>
+        Ok(Json.toJson(movements))
+      }
+    }
+  }
+
+  def getSubmissionsByEori(): Action[AnyContent] = Action.async { implicit request =>
+    authorizedWithEori[AnyContent] { authorizedRequest =>
+      submissionRepository.findByEori(authorizedRequest.loggedUserEori).map { submission =>
+        Ok(Json.toJson(submission))
+      }
     }
   }
 }
