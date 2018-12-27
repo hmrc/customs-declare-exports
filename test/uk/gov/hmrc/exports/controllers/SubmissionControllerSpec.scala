@@ -121,7 +121,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       withAuthorizedUser()
       withMovements(Seq(movement))
 
-      val result = route(app, FakeRequest("GET", "/movements/1234")).get
+      val result = route(app, FakeRequest("GET", "/movements")).get
 
       status(result) must be(OK)
       contentAsJson(result) must be (Json.toJson(Seq(movement)))
@@ -131,7 +131,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       withAuthorizedUser()
       withMovements(Seq.empty)
 
-      val result = route(app, FakeRequest("GET", "/submission/1234")).get
+      val result = route(app, FakeRequest("GET", "/movements")).get
 
       status(result) must be(OK)
     }

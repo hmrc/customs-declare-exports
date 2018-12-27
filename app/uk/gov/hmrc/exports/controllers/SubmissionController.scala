@@ -97,9 +97,9 @@ class SubmissionController @Inject()(
     }
   }
 
-  def getMovements(eori: String): Action[AnyContent] = Action.async { implicit request =>
-    authorizedWithEnrolment[AnyContent] { _ =>
-      movementsRepository.findByEori(eori).map { movements =>
+  def getMovements(): Action[AnyContent] = Action.async { implicit request =>
+    authorizedWithEori[AnyContent] { authorizedRequest =>
+      movementsRepository.findByEori(authorizedRequest.loggedUserEori).map { movements =>
         Ok(Json.toJson(movements))
       }
     }
