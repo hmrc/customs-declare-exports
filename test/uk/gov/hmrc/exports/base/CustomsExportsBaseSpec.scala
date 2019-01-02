@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.inject.{Injector, bind}
+import play.api.inject.{bind, Injector}
 import play.api.libs.concurrent.Execution.Implicits
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSClient
@@ -40,7 +40,12 @@ import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models.{DeclarationNotification, MovementSubmissions, Submission}
-import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, MovementsRepository, NotificationsRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{
+  MovementNotificationsRepository,
+  MovementsRepository,
+  NotificationsRepository,
+  SubmissionRepository
+}
 
 import uk.gov.hmrc.exports.models.{DeclarationNotification, Submission}
 import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, NotificationsRepository, SubmissionRepository}
@@ -50,9 +55,8 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
-trait CustomsExportsBaseSpec extends PlaySpec
-  with GuiceOneAppPerSuite with MockitoSugar
-  with ScalaFutures with AuthTestSupport {
+trait CustomsExportsBaseSpec
+    extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar with ScalaFutures with AuthTestSupport {
 
   val mockSubmissionRepository = mock[SubmissionRepository]
   val mockNotificationsRepository = mock[NotificationsRepository]
@@ -83,7 +87,8 @@ trait CustomsExportsBaseSpec extends PlaySpec
         bind[MovementNotificationsRepository].to(mockMovementNotificationsRepository),
         bind[MovementsRepository].to(mockMovementsRepository),
         bind[ExportsMetrics].to(mockMNetrics)
-      ).build()
+      )
+      .build()
 
   implicit val mat: Materializer = app.materializer
 
@@ -92,20 +97,22 @@ trait CustomsExportsBaseSpec extends PlaySpec
   implicit lazy val patience: PatienceConfig =
     PatienceConfig(timeout = 5.seconds, interval = 50.milliseconds) // be more patient than the default
 
-  protected def postRequest(uri: String, body: JsValue, headers: Map[String, String] = Map.empty): FakeRequest[AnyContentAsJson] = {
+  protected def postRequest(
+    uri: String,
+    body: JsValue,
+    headers: Map[String, String] = Map.empty
+  ): FakeRequest[AnyContentAsJson] = {
     val session: Map[String, String] = Map(
       SessionKeys.sessionId -> s"session-${UUID.randomUUID()}",
       SessionKeys.userId -> "Int-ba17b467-90f3-42b6-9570-73be7b78eb2b"
     )
 
-    val tags = Map(
-      Token.NameRequestTag -> cfg.tokenName,
-      Token.RequestTag -> token
-    )
+    val tags = Map(Token.NameRequestTag -> cfg.tokenName, Token.RequestTag -> token)
 
     FakeRequest("POST", uri)
       .withHeaders((Map(cfg.headerName -> token) ++ headers).toSeq: _*)
-      .withSession(session.toSeq: _*).copyFakeRequest(tags = tags)
+      .withSession(session.toSeq: _*)
+      .copyFakeRequest(tags = tags)
       .withJsonBody(body)
   }
 
@@ -125,6 +132,9 @@ trait CustomsExportsBaseSpec extends PlaySpec
 
   protected def withSubmissions(submissions: Seq[Submission]) =
     when(mockSubmissionRepository.findByEori(any())).thenReturn(Future.successful(submissions))
+
+  protected def withNotification(notification: Option[DeclarationNotification]) =
+    when(mockNotificationsRepository.getByConversationId(any())).thenReturn(Future.successful(notification))
 
   protected def withNotificationSaved(ok: Boolean) =
     when(mockNotificationsRepository.save(any())).thenReturn(Future.successful(ok))

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ trait ExportsTestData {
     The first time an declaration is submitted, we save it with the user's EORI, their LRN (if provided)
     and the conversation ID we received from the customs-declarations API response, generating a timestamp to record
     when this occurred.
-  */
+   */
 
   val eori = randomString(8)
   val lrn = Some(randomString(70))
@@ -38,8 +38,10 @@ trait ExportsTestData {
   val ducr = randomString(16)
 
   val before = System.currentTimeMillis()
-  val submission = Submission(eori, conversationId, Some(mrn))
+  val submission = Submission(eori, conversationId, ducr, Some(mrn))
+  val submissionData = SubmissionData.buildSubmissionData(submission, 0)
   val seqSubmissions = Seq(submission)
+  val seqSubmissionData = Seq(submissionData)
   val movement = MovementSubmissions(eori, conversationId, ducr, None, "Arrival")
   val now = DateTime.now
   val response1 = Seq(Response(functionCode = Random.nextInt(), functionalReferenceId = Some("123")))
@@ -48,7 +50,7 @@ trait ExportsTestData {
   val notification = DeclarationNotification(now, conversationId, eori, None, DeclarationMetadata(), response1)
   val movementNotification =
     MovementNotification(now, conversationId, eori, movementResponse = InventoryLinkingMovementResponse("EAA"))
-  val submissionResponse = SubmissionResponse(eori, conversationId, Some(mrn))
+  val submissionResponse = SubmissionResponse(eori, conversationId, ducr, Some(mrn))
 
   protected def randomString(length: Int): String = Random.alphanumeric.take(length).mkString
 }

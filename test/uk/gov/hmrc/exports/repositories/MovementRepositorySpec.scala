@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ class MovementRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterE
       val gotAgain = repo.getByEoriAndDucr(eori, ducr).futureValue.get
       gotAgain.eori must be(eori)
       gotAgain.conversationId must be(conversationId)
-      gotAgain.ducr must be (ducr)
+      gotAgain.ducr must be(ducr)
 
       // update status test
       val movement1 = repo.getByConversationId(conversationId).futureValue

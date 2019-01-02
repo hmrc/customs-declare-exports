@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class MovementNotificationsRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: ExecutionContext)
-  extends ReactiveRepository[MovementNotification, BSONObjectID]("movementNotifications",
-    mc.mongoConnector.db, MovementNotification.format, objectIdFormats) {
+    extends ReactiveRepository[MovementNotification, BSONObjectID](
+      "movementNotifications",
+      mc.mongoConnector.db,
+      MovementNotification.format,
+      objectIdFormats
+    ) {
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),

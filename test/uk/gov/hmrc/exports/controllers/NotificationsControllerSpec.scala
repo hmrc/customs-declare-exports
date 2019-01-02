@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,21 +87,24 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
     }
 
     "successfully saved movement notification" in {
-      val result = route(app, FakeRequest(POST, movementUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(movementXml)).get
+      val result =
+        route(app, FakeRequest(POST, movementUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(movementXml)).get
       withMovementNotificationSaved(true)
 
       status(result) must be(ACCEPTED)
     }
 
     "failed to save movement notification" in {
-      val result = route(app, FakeRequest(POST, movementUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(movementXml)).get
+      val result =
+        route(app, FakeRequest(POST, movementUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(movementXml)).get
       withMovementNotificationSaved(false)
 
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
 
     "500 response if no eori header in movement notification" in {
-      val result = route(app, FakeRequest(POST, movementUri).withHeaders(noEoriHeaders.toSeq: _*).withXmlBody(movementXml)).get
+      val result =
+        route(app, FakeRequest(POST, movementUri).withHeaders(noEoriHeaders.toSeq: _*).withXmlBody(movementXml)).get
 
       status(result) must be(INTERNAL_SERVER_ERROR)
       contentAsString(result) must be

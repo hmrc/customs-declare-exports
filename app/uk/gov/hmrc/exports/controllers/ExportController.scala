@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,12 @@ import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ExportController @Inject()(override val authConnector: AuthConnector)
-  (implicit ec: ExecutionContext) extends BaseController with AuthorisedFunctions {
+class ExportController @Inject()(override val authConnector: AuthConnector)(implicit ec: ExecutionContext)
+    extends BaseController with AuthorisedFunctions {
 
-  def authorizedWithEnrolment[A](callback: (Request[A]) => Future[Result])
-    (implicit request: Request[A]): Future[Result] =
+  def authorizedWithEnrolment[A](
+    callback: (Request[A]) => Future[Result]
+  )(implicit request: Request[A]): Future[Result] =
     authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments) { enrolments =>
       if (!hasEnrolment(enrolments))
         callback(request)
@@ -57,8 +58,9 @@ class ExportController @Inject()(override val authConnector: AuthConnector)
         Future.successful(InternalServerError(Json.toJson("InternalServerError")))
     }
 
-  def authorizedWithEori[A](callback: (AuthorizedRequest[A] => Future[Result]))
-    (implicit request: Request[A]): Future[Result] =
+  def authorizedWithEori[A](
+    callback: (AuthorizedRequest[A] => Future[Result])
+  )(implicit request: Request[A]): Future[Result] =
     authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments) { enrolments =>
       val eori = enrolments.getEnrolment("HMRC-CUS-ORG").flatMap(_.getIdentifier("EORINumber"))
       if (!eori.isEmpty) callback(AuthorizedRequest(request, eori.get.value))

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,7 +73,6 @@ case class DeclarationNotification(
   response: Seq[Response] = Seq.empty
 )
 
-
 case class NotificationApiHeaders(
   accept: String,
   contentType: String,
@@ -93,11 +92,12 @@ case class NotifyResponse(code: String, message: String) {
   </errorResponse>
 }
 
-object NotAcceptableResponse extends NotifyResponse("ACCEPT_HEADER_INVALID",
-  "Missing or invalid Accept header")
+object NotAcceptableResponse extends NotifyResponse("ACCEPT_HEADER_INVALID", "Missing or invalid Accept header")
 
-object HeaderMissingErrorResponse extends NotifyResponse("INTERNAL_SERVER_ERROR",
-  "ClientId or ConversationId or EORI is missing in the request headers")
+object HeaderMissingErrorResponse
+    extends NotifyResponse(
+      "INTERNAL_SERVER_ERROR",
+      "ClientId or ConversationId or EORI is missing in the request headers"
+    )
 
-object NotificationFailedErrorResponse extends NotifyResponse("INTERNAL_SERVER_ERROR",
-  "Failed to save notifications")
+object NotificationFailedErrorResponse extends NotifyResponse("INTERNAL_SERVER_ERROR", "Failed to save notifications")

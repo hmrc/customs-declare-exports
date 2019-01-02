@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,15 @@ import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 @Singleton
 class ExportsMetrics @Inject()(metrics: Metrics) {
 
+  private val timers = Map(
+    notificationMetric -> metrics.defaultRegistry.timer(s"$notificationMetric.timer"),
+    movementMetric -> metrics.defaultRegistry.timer(s"$movementMetric.timer")
+  )
 
-  private val timers = Map (notificationMetric ->  metrics.defaultRegistry.timer(s"$notificationMetric.timer"),
-    movementMetric -> metrics.defaultRegistry.timer(s"$movementMetric.timer"))
-
-  private val counters = Map (notificationMetric ->  metrics.defaultRegistry.counter(s"$notificationMetric.counter"),
-    movementMetric -> metrics.defaultRegistry.counter(s"$movementMetric.counter"))
+  private val counters = Map(
+    notificationMetric -> metrics.defaultRegistry.counter(s"$notificationMetric.counter"),
+    movementMetric -> metrics.defaultRegistry.counter(s"$movementMetric.counter")
+  )
 
   def startTimer(feature: String): Context = timers(feature).time()
 
