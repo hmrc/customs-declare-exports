@@ -57,7 +57,7 @@ class MovementRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterE
       val gotAgain = repo.getByEoriAndDucr(eori, ducr).futureValue.get
       gotAgain.eori must be(eori)
       gotAgain.conversationId must be(conversationId)
-      gotAgain.ducr must be (ducr)
+      gotAgain.ducr must be(ducr)
 
       // update status test
       val movement1 = repo.getByConversationId(conversationId).futureValue

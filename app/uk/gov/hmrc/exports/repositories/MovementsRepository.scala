@@ -30,9 +30,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class MovementsRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: ExecutionContext)
-  extends ReactiveRepository[MovementSubmissions, BSONObjectID]("movements", mc.mongoConnector.db,
-    MovementSubmissions.formats, objectIdFormats)
-    with AtomicUpdate[MovementSubmissions] {
+    extends ReactiveRepository[MovementSubmissions, BSONObjectID](
+      "movements",
+      mc.mongoConnector.db,
+      MovementSubmissions.formats,
+      objectIdFormats
+    ) with AtomicUpdate[MovementSubmissions] {
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
@@ -48,7 +51,8 @@ class MovementsRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Exe
   def getByEoriAndDucr(eori: String, ducr: String): Future[Option[MovementSubmissions]] =
     find("eori" -> JsString(eori), "ducr" -> JsString(ducr)).map(_.headOption)
 
-  override def isInsertion(newRecordId: BSONObjectID, oldRecord: MovementSubmissions): Boolean = newRecordId.equals(oldRecord.id)
+  override def isInsertion(newRecordId: BSONObjectID, oldRecord: MovementSubmissions): Boolean =
+    newRecordId.equals(oldRecord.id)
 
   def save(movementSubmission: MovementSubmissions) = insert(movementSubmission).map { res =>
     if (!res.ok) Logger.error("Error during inserting movement result " + res.writeErrors.mkString("--"))
@@ -63,5 +67,3 @@ class MovementsRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Exe
   }
 
 }
-
-

@@ -33,7 +33,6 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
   override lazy val app: Application = GuiceApplicationBuilder().build()
   val repo = component[SubmissionRepository]
 
-
   "SubmissionRepository" should {
     "save declaration with EORI and timestamp" in {
       repo.save(submission).futureValue must be(true)

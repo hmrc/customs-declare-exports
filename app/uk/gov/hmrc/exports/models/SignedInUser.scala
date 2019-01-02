@@ -19,7 +19,6 @@ package uk.gov.hmrc.exports.models
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Name}
 import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 
-
 case class SignedInUser(
   credentials: Credentials,
   name: Name,

@@ -83,7 +83,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       val result = route(app, FakeRequest("GET", "/submission/1234")).get
 
       status(result) must be(OK)
-      contentAsJson(result) must be (submissionJson)
+      contentAsJson(result) must be(submissionJson)
     }
 
     "return 200 without submission response" in {
@@ -124,7 +124,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       val result = route(app, FakeRequest("GET", "/movements")).get
 
       status(result) must be(OK)
-      contentAsJson(result) must be (Json.toJson(Seq(movement)))
+      contentAsJson(result) must be(Json.toJson(Seq(movement)))
     }
 
     "return 200 without empty response" in {

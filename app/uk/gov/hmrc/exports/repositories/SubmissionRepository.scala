@@ -30,9 +30,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: ExecutionContext)
-  extends ReactiveRepository[Submission, BSONObjectID]("submissions", mc.mongoConnector.db,
-    Submission.formats, objectIdFormats)
-    with AtomicUpdate[Submission] {
+    extends ReactiveRepository[Submission, BSONObjectID](
+      "submissions",
+      mc.mongoConnector.db,
+      Submission.formats,
+      objectIdFormats
+    ) with AtomicUpdate[Submission] {
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
@@ -58,12 +61,11 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
   def updateSubmission(submission: Submission) = {
     val finder = BSONDocument("_id" -> submission.id, "conversationId" -> submission.conversationId)
 
-    val modifier = BSONDocument("$set" ->
-      BSONDocument("mrn" -> submission.mrn,
-        "status" -> submission.status))
+    val modifier = BSONDocument(
+      "$set" ->
+        BSONDocument("mrn" -> submission.mrn, "status" -> submission.status)
+    )
     atomicUpdate(finder, modifier).map(res => res.get.writeResult.ok)
   }
 
 }
-
-

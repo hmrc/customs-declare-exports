@@ -50,29 +50,34 @@ class SubmissionController @Inject()(
 
   private def processSave()(implicit request: Request[MovementResponse], hc: HeaderCarrier): Future[Result] = {
     val body = request.body
-    movementsRepository.save(MovementSubmissions(body.eori, body.conversationId,
-      body.ducr, body.mucr, body.movementType)).map(res =>
-      if (res) {
-        Logger.debug("movement submission data saved to DB")
-        Ok(Json.toJson(ExportsResponse(OK, "Movement Submission saved")))
-      } else {
-        Logger.error("error  saving movement submission data to DB")
-        InternalServerError("failed saving movement submission")
-      }
-    )
+    movementsRepository
+      .save(MovementSubmissions(body.eori, body.conversationId, body.ducr, body.mucr, body.movementType))
+      .map(
+        res =>
+          if (res) {
+            Logger.debug("movement submission data saved to DB")
+            Ok(Json.toJson(ExportsResponse(OK, "Movement Submission saved")))
+          } else {
+            Logger.error("error  saving movement submission data to DB")
+            InternalServerError("failed saving movement submission")
+        }
+      )
   }
 
   private def processRequest()(implicit request: Request[SubmissionResponse], hc: HeaderCarrier): Future[Result] = {
     val body = request.body
-    submissionRepository.save(Submission(body.eori, body.conversationId, body.ducr, body.mrn)).map(res =>
-      if (res) {
-        Logger.debug("submission data saved to DB")
-        Ok(Json.toJson(ExportsResponse(OK, "Submission response saved")))
-      } else {
-        Logger.error("error  saving submission data to DB")
-        InternalServerError("failed saving submission")
-      }
-    )
+    submissionRepository
+      .save(Submission(body.eori, body.conversationId, body.ducr, body.mrn))
+      .map(
+        res =>
+          if (res) {
+            Logger.debug("submission data saved to DB")
+            Ok(Json.toJson(ExportsResponse(OK, "Submission response saved")))
+          } else {
+            Logger.error("error  saving submission data to DB")
+            InternalServerError("failed saving submission")
+        }
+      )
   }
 
   def updateSubmission(): Action[Submission] = Action.async(parse.json[Submission]) { implicit request =>
@@ -125,6 +130,6 @@ class SubmissionController @Inject()(
   private def notificationHelper(conversationId: String): Future[Int] =
     notificationsRepository.getByConversationId(conversationId).map {
       case Some(notification) => notification.response.length
-      case None => 0
+      case None               => 0
     }
 }

@@ -30,8 +30,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class MovementNotificationsRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: ExecutionContext)
-  extends ReactiveRepository[MovementNotification, BSONObjectID]("movementNotifications",
-    mc.mongoConnector.db, MovementNotification.format, objectIdFormats) {
+    extends ReactiveRepository[MovementNotification, BSONObjectID](
+      "movementNotifications",
+      mc.mongoConnector.db,
+      MovementNotification.format,
+      objectIdFormats
+    ) {
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),

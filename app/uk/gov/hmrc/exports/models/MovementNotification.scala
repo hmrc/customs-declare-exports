@@ -39,14 +39,16 @@ object MovementNotification {
   implicit val format = Json.format[MovementNotification]
 }
 
-case class MovementSubmissions(eori: String,
+case class MovementSubmissions(
+  eori: String,
   conversationId: String,
   ducr: String,
   mucr: Option[String] = None,
   movementType: String,
   id: BSONObjectID = BSONObjectID.generate(),
   submittedTimestamp: Long = System.currentTimeMillis(),
-  status: Option[String] = Some("Pending"))
+  status: Option[String] = Some("Pending")
+)
 
 object MovementSubmissions {
   implicit val objectIdFormats = ReactiveMongoFormats.objectIdFormats
@@ -55,12 +57,14 @@ object MovementSubmissions {
   }
 }
 
-case class MovementResponse(eori: String,
+case class MovementResponse(
+  eori: String,
   conversationId: String,
   ducr: String,
   mucr: Option[String] = None,
   movementType: String,
-  status: Option[String] = Some("Pending"))
+  status: Option[String] = Some("Pending")
+)
 
 object MovementResponse {
   implicit val format = Json.format[MovementResponse]
