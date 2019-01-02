@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -125,6 +125,9 @@ trait CustomsExportsBaseSpec extends PlaySpec
 
   protected def withSubmissions(submissions: Seq[Submission]) =
     when(mockSubmissionRepository.findByEori(any())).thenReturn(Future.successful(submissions))
+
+  protected def withNotification(notification: Option[DeclarationNotification]) =
+    when(mockNotificationsRepository.getByConversationId(any())).thenReturn(Future.successful(notification))
 
   protected def withNotificationSaved(ok: Boolean) =
     when(mockNotificationsRepository.save(any())).thenReturn(Future.successful(ok))

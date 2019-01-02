@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
-import uk.gov.hmrc.exports.models.{MovementSubmissions, Submission, SubmissionResponse}
+import uk.gov.hmrc.exports.models.{MovementSubmissions, Submission, SubmissionData, SubmissionResponse}
 
 class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
   val saveUri = "/save-submission-response"
@@ -31,7 +31,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
   val fakeRequest = FakeRequest("POST", saveUri).withBody((jsonBody))
 
   val submissionJson = Json.toJson[Submission](submission)
-  val jsonSeqSubmission = Json.toJson[Seq[Submission]](seqSubmissions)
+  val jsonSeqSubmission = Json.toJson[Seq[SubmissionData]](seqSubmissionData)
 
   val updateSubmissionRequest = FakeRequest("POST", updateUri).withBody(submissionJson)
 
@@ -141,6 +141,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     "return 200 with submission response body" in {
       withAuthorizedUser()
       withSubmissions(seqSubmissions)
+      withNotification(None)
 
       val result = route(app, FakeRequest("GET", "/submissions")).get
 
@@ -148,9 +149,10 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       contentAsJson(result) must be(jsonSeqSubmission)
     }
 
-    "return 200 withtout submission response" in {
+    "return 200 without submission response" in {
       withAuthorizedUser()
       withSubmissions(Seq.empty)
+      withNotification(None)
 
       val result = route(app, FakeRequest("GET", "/submissions")).get
 

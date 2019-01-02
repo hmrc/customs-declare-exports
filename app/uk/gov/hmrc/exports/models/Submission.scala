@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,9 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.mongoEntity
 case class Submission(
   eori: String,
   conversationId: String,
+  ducr: String,
   mrn: Option[String] = None,
+  lrn: Option[String] = None,
   submittedTimestamp: Long = System.currentTimeMillis(),
   id: BSONObjectID = BSONObjectID.generate(),
   status: Option[String] = Some("Pending")
@@ -37,7 +39,34 @@ object Submission {
   }
 }
 
-case class SubmissionResponse(eori: String, conversationId: String, mrn: Option[String] = None)
+case class SubmissionData(
+  eori: String,
+  conversationId: String,
+  ducr: String,
+  mrn: Option[String],
+  lrn: Option[String],
+  submittedTimestamp: Long,
+  status: String,
+  noOfNotifications: Int
+)
+
+object SubmissionData {
+  implicit val format = Json.format[SubmissionData]
+
+  def buildSubmissionData(submission: Submission, noOfNotifications: Int): SubmissionData =
+    SubmissionData(
+      eori = submission.eori,
+      conversationId = submission.conversationId,
+      ducr = submission.ducr,
+      mrn = submission.mrn,
+      lrn = submission.lrn,
+      submittedTimestamp = submission.submittedTimestamp,
+      status = submission.status.getOrElse(""),
+      noOfNotifications = noOfNotifications
+    )
+}
+
+case class SubmissionResponse(eori: String, conversationId: String, ducr: String, mrn: Option[String] = None)
 
 object SubmissionResponse {
   implicit val formats = Json.format[SubmissionResponse]
