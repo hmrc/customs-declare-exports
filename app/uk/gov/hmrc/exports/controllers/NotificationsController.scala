@@ -35,6 +35,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.xml.NodeSeq
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
+
 @Singleton
 class NotificationsController @Inject()(
   appConfig: AppConfig,
@@ -55,6 +56,12 @@ class NotificationsController @Inject()(
   //TODO response should be streamed or paginated depending on the no of notifications.
   def getNotifications(eori: String): Action[AnyContent] = Action.async { implicit request =>
     authorizedWithEnrolment[AnyContent](_ => findByEori(eori))
+  }
+
+  def getSubmissionNotifications(conversationId: String): Action[AnyContent] = Action.async { implicit request =>
+    authorizedWithEori[AnyContent] { authorizedRequest =>
+      findByEoriAndConversationId(authorizedRequest.loggedUserEori, conversationId)
+    }
   }
 
   def saveMovement(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
@@ -127,6 +134,16 @@ class NotificationsController @Inject()(
 
   private def findByEori(eori: String)(implicit hc: HeaderCarrier): Future[Result] =
     notificationsRepository.findByEori(eori).map(res => Ok(Json.toJson(res)))
+
+  private def findByEoriAndConversationId(eori: String, conversationId: String)(
+    implicit hc: HeaderCarrier
+  ): Future[Result] =
+    notificationsRepository.getByEoriAndConversationId(eori, conversationId).map { res =>
+      res match {
+        case Some(notification) => Ok(Json.toJson(notification))
+        case None               => NoContent
+      }
+    }
 
   private def saveMovement(notification: MovementNotification)(implicit hc: HeaderCarrier): Future[Result] =
     movementNotificationsRepository
