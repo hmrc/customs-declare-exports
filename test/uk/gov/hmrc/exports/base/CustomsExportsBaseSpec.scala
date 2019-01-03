@@ -136,6 +136,10 @@ trait CustomsExportsBaseSpec
   protected def withNotification(notification: Option[DeclarationNotification]) =
     when(mockNotificationsRepository.getByConversationId(any())).thenReturn(Future.successful(notification))
 
+  protected def withSubmissionNotification(notification: Option[DeclarationNotification]) =
+    when(mockNotificationsRepository.getByEoriAndConversationId(any(), any()))
+      .thenReturn(Future.successful(notification))
+
   protected def withNotificationSaved(ok: Boolean) =
     when(mockNotificationsRepository.save(any())).thenReturn(Future.successful(ok))
 

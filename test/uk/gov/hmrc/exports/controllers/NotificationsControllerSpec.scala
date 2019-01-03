@@ -21,11 +21,13 @@ import play.api.mvc.Codec
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
+import uk.gov.hmrc.exports.models.{DeclarationMetadata, DeclarationNotification}
 
 class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
 
   val uri = "/customs-declare-exports/notify"
   val movementUri = "/customs-declare-exports/notifyMovement"
+  val submissionNotificationUri = "/customs-declare-exports/submission-notifications/1234"
 
   val getNotificationUri = "/customs-declare-exports/notifications/eori1"
   val validXML = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
@@ -53,18 +55,22 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
     "X-Badge-Identifier" -> "badgeIdentifier1"
   )
 
-  "NotificationsControllerSpec" should {
+  val submissionNotification =
+    DeclarationNotification(conversationId = "1234", eori = "eori", metadata = DeclarationMetadata())
 
+  "NotificationsControllerSpec" should {
     "successfully accept Notification" in {
-      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
       withNotificationSaved(true)
+
+      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
 
       status(result) must be(ACCEPTED)
     }
 
     "failed to save Notification" in {
-      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
       withNotificationSaved(false)
+
+      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
 
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
@@ -81,23 +87,26 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
     "get Notifications" in {
       withAuthorizedUser()
       haveNotifications(Seq(notification))
+
       val result = route(app, FakeRequest(GET, getNotificationUri)).get
 
       status(result) must be(OK)
     }
 
     "successfully saved movement notification" in {
+      withMovementNotificationSaved(true)
+
       val result =
         route(app, FakeRequest(POST, movementUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(movementXml)).get
-      withMovementNotificationSaved(true)
 
       status(result) must be(ACCEPTED)
     }
 
     "failed to save movement notification" in {
+      withMovementNotificationSaved(false)
+
       val result =
         route(app, FakeRequest(POST, movementUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(movementXml)).get
-      withMovementNotificationSaved(false)
 
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
@@ -110,6 +119,24 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       contentAsString(result) must be
       ("<errorResponse><code>INTERNAL_SERVER_ERROR</code><message>" +
         "ClientId or ConversationId or EORI is missing in the request headers</message></errorResponse>")
+    }
+
+    "return 200 status and notifications relates with specific submission" in {
+      withAuthorizedUser()
+      withSubmissionNotification(Some(submissionNotification))
+
+      val result = route(app, FakeRequest(GET, submissionNotificationUri).withHeaders(validHeaders.toSeq: _*)).get
+
+      status(result) must be(OK)
+    }
+
+    "return 204 when there is no notifications related with submission" in {
+      withAuthorizedUser()
+      withSubmissionNotification(None)
+
+      val result = route(app, FakeRequest(GET, submissionNotificationUri).withHeaders(validHeaders.toSeq: _*)).get
+
+      status(result) must be(NO_CONTENT)
     }
   }
 }

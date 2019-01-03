@@ -1,19 +1,21 @@
 # microservice specific routes
 
-POST      /save-submission-response                         uk.gov.hmrc.exports.controllers.SubmissionController.saveSubmissionResponse()
+POST      /save-submission-response                                             uk.gov.hmrc.exports.controllers.SubmissionController.saveSubmissionResponse()
 
-POST      /customs-declare-exports/notify                   uk.gov.hmrc.exports.controllers.NotificationsController.saveNotification()
+POST      /customs-declare-exports/notify                                       uk.gov.hmrc.exports.controllers.NotificationsController.saveNotification()
 
-GET       /customs-declare-exports/notifications/:eori      uk.gov.hmrc.exports.controllers.NotificationsController.getNotifications(eori: String)
+GET       /customs-declare-exports/notifications/:eori                          uk.gov.hmrc.exports.controllers.NotificationsController.getNotifications(eori: String)
 
-POST      /customs-declare-exports/notifyMovement           uk.gov.hmrc.exports.controllers.NotificationsController.saveMovement()
+GET       /customs-declare-exports/submission-notifications/:conversationId     uk.gov.hmrc.exports.controllers.NotificationsController.getSubmissionNotifications(conversationId: String)
 
-POST      /update-submission                                uk.gov.hmrc.exports.controllers.SubmissionController.updateSubmission()
+POST      /customs-declare-exports/notifyMovement                               uk.gov.hmrc.exports.controllers.NotificationsController.saveMovement()
 
-GET       /submission/:conversationId                       uk.gov.hmrc.exports.controllers.SubmissionController.getSubmission(conversationId: String)
+POST      /update-submission                                                    uk.gov.hmrc.exports.controllers.SubmissionController.updateSubmission()
 
-POST      /save-movement-submission                         uk.gov.hmrc.exports.controllers.SubmissionController.saveMovementSubmission()
+GET       /submission/:conversationId                                           uk.gov.hmrc.exports.controllers.SubmissionController.getSubmission(conversationId: String)
 
-GET       /movements                                        uk.gov.hmrc.exports.controllers.SubmissionController.getMovements()
+POST      /save-movement-submission                                             uk.gov.hmrc.exports.controllers.SubmissionController.saveMovementSubmission()
 
-GET       /submissions                                      uk.gov.hmrc.exports.controllers.SubmissionController.getSubmissionsByEori()
+GET       /movements                                                            uk.gov.hmrc.exports.controllers.SubmissionController.getMovements()
+
+GET       /submissions                                                          uk.gov.hmrc.exports.controllers.SubmissionController.getSubmissionsByEori()
