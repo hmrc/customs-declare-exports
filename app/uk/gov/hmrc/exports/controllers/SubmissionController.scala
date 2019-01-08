@@ -67,7 +67,7 @@ class SubmissionController @Inject()(
   private def processRequest()(implicit request: Request[SubmissionResponse], hc: HeaderCarrier): Future[Result] = {
     val body = request.body
     submissionRepository
-      .save(Submission(body.eori, body.conversationId, body.ducr, body.mrn))
+      .save(Submission(body.eori, body.conversationId, body.ducr, body.lrn, body.mrn))
       .map(
         res =>
           if (res) {
