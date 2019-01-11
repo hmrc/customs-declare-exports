@@ -51,7 +51,10 @@ class MovementNotificationsRepository @Inject()(mc: ReactiveMongoComponent)(impl
     find("eori" -> JsString(eori), "conversationId" -> JsString(conversationId)).map(_.headOption)
 
   def save(movementNotification: MovementNotification): Future[Boolean] = insert(movementNotification).map { res =>
-    if (!res.ok) Logger.error("Error during inserting movement notification " + res.writeErrors.mkString("--"))
+    if (!res.ok)
+    // $COVERAGE-OFF$Trivial
+      Logger.error("Error during inserting movement notification " + res.writeErrors.mkString("--"))
+    // $COVERAGE-ON$
     res.ok
   }
 }

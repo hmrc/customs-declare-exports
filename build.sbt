@@ -24,3 +24,19 @@ lazy val microservice = Project(appName, file("."))
     addTestReportOption(IntegrationTest, "int-test-reports")
   )
   .settings(resolvers += Resolver.jcenterRepo)
+  .settings(scoverageSettings)
+
+lazy val scoverageSettings: Seq[Setting[_]] = Seq(
+  coverageExcludedPackages := List(
+    "<empty>"
+    ,"Reverse.*"
+    ,"domain\\..*"
+    ,"models\\..*"
+    ,"metrics\\..*"
+    ,".*(BuildInfo|Routes|Options).*"
+  ).mkString(";"),
+  coverageMinimum := 70,
+  coverageFailOnMinimum := true,
+  coverageHighlighting := true,
+  parallelExecution in Test := false
+)
