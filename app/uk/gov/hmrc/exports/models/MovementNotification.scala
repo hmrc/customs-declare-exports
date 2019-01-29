@@ -21,7 +21,8 @@ import play.api.libs.json.Json
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.mongoEntity
-import uk.gov.hmrc.wco.dec.{EntryStatus, GoodsItem, InventoryLinkingMovementResponse, UcrBlock}
+import uk.gov.hmrc.wco.dec.inventorylinking.common.{EntryStatus, GoodsItem, UcrBlock}
+import uk.gov.hmrc.wco.dec.inventorylinking.movement.response.InventoryLinkingMovementResponse
 
 case class MovementNotification(
   dateTimeReceived: DateTime = DateTime.now(),
