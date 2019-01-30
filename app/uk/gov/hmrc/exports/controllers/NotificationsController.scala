@@ -29,12 +29,13 @@ import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, NotificationsRepository}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.wco.dec._
+import uk.gov.hmrc.wco.dec.inventorylinking.movement.response.InventoryLinkingMovementResponse
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.xml.NodeSeq
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
+import uk.gov.hmrc.wco.dec._
 
 @Singleton
 class NotificationsController @Inject()(
@@ -54,8 +55,8 @@ class NotificationsController @Inject()(
   }
 
   //TODO response should be streamed or paginated depending on the no of notifications.
-  def getNotifications(eori: String): Action[AnyContent] = Action.async { implicit request =>
-    authorizedWithEnrolment[AnyContent](_ => findByEori(eori))
+  def getNotifications(): Action[AnyContent] = Action.async { implicit request =>
+    authorizedWithEori[AnyContent](request => findByEori(request.loggedUserEori))
   }
 
   def getSubmissionNotifications(conversationId: String): Action[AnyContent] = Action.async { implicit request =>
@@ -96,7 +97,7 @@ class NotificationsController @Inject()(
 
   private def getNotificationFromRequest(
     headers: NotificationApiHeaders
-  )(implicit request: Request[NodeSeq], hc: HeaderCarrier) = {
+  )(implicit request: Request[NodeSeq], hc: HeaderCarrier): DeclarationNotification = {
     val metadata = MetaData.fromXml(request.body.toString)
 
     val notification = DeclarationNotification(
@@ -132,7 +133,7 @@ class NotificationsController @Inject()(
           InternalServerError(NotificationFailedErrorResponse.toXml)
       })
 
-  private def findByEori(eori: String)(implicit hc: HeaderCarrier): Future[Result] =
+  private def findByEori(eori: String): Future[Result] =
     notificationsRepository.findByEori(eori).map(res => Ok(Json.toJson(res)))
 
   private def findByEoriAndConversationId(eori: String, conversationId: String)(

@@ -31,19 +31,20 @@ import scala.concurrent.{ExecutionContext, Future}
 class ExportController @Inject()(override val authConnector: AuthConnector)(implicit ec: ExecutionContext)
     extends BaseController with AuthorisedFunctions {
 
-  def authorizedWithEnrolment[A](
-    callback: (Request[A]) => Future[Result]
+  def authorizedWithEori[A](
+    callback: (AuthorizedRequest[A] => Future[Result])
   )(implicit request: Request[A]): Future[Result] =
     authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments) { enrolments =>
-      if (!hasEnrolment(enrolments))
-        callback(request)
-      else throw InsufficientEnrolments()
+      getEoriFromEnrolments(enrolments) match {
+        case Some(eori) if eori.nonEmpty => callback(AuthorizedRequest(request, eori))
+        case _                           => throw InsufficientEnrolments()
+      }
     } recoverWith {
       handleFailure
     }
 
-  private def hasEnrolment(allEnrolments: Enrolments): Boolean =
-    allEnrolments.getEnrolment("HMRC-CUS-ORG").flatMap(_.getIdentifier("EORINumber")).isEmpty
+  private def getEoriFromEnrolments(enrolments: Enrolments): Option[String] =
+    enrolments.getEnrolment("HMRC-CUS-ORG").flatMap(_.getIdentifier("EORINumber")).map(_.value)
 
   def handleFailure(implicit request: Request[_]): PartialFunction[Throwable, Future[Result]] =
     PartialFunction[Throwable, Future[Result]] {
@@ -57,16 +58,4 @@ class ExportController @Inject()(override val authConnector: AuthConnector)(impl
         Logger.error("Internal server error is " + ex.getMessage)
         Future.successful(InternalServerError(Json.toJson("InternalServerError")))
     }
-
-  def authorizedWithEori[A](
-    callback: (AuthorizedRequest[A] => Future[Result])
-  )(implicit request: Request[A]): Future[Result] =
-    authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments) { enrolments =>
-      val eori = enrolments.getEnrolment("HMRC-CUS-ORG").flatMap(_.getIdentifier("EORINumber"))
-      if (!eori.isEmpty) callback(AuthorizedRequest(request, eori.get.value))
-      else throw InsufficientEnrolments()
-    } recoverWith {
-      handleFailure
-    }
-
 }

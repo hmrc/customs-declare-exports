@@ -29,7 +29,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
   val movementUri = "/customs-declare-exports/notifyMovement"
   val submissionNotificationUri = "/customs-declare-exports/submission-notifications/1234"
 
-  val getNotificationUri = "/customs-declare-exports/notifications/eori1"
+  val getNotificationUri = "/customs-declare-exports/notifications"
   val validXML = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
     <wstxns1:Response xmlns:wstxns1="urn:wco:datamodel:WCO:RES-DMS:2"></wstxns1:Response>
   </MetaData>

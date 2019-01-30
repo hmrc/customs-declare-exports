@@ -40,12 +40,12 @@ class SubmissionController @Inject()(
 
   def saveSubmissionResponse(): Action[SubmissionResponse] =
     Action.async(parse.json[SubmissionResponse]) { implicit request =>
-      authorizedWithEnrolment[SubmissionResponse](_ => processRequest)
+      authorizedWithEori[SubmissionResponse](_ => processRequest)
     }
 
   def saveMovementSubmission(): Action[MovementResponse] =
     Action.async(parse.json[MovementResponse]) { implicit request =>
-      authorizedWithEnrolment[MovementResponse](_ => processSave)
+      authorizedWithEori[MovementResponse](_ => processSave)
     }
 
   private def processSave()(implicit request: Request[MovementResponse], hc: HeaderCarrier): Future[Result] = {
@@ -81,7 +81,7 @@ class SubmissionController @Inject()(
   }
 
   def updateSubmission(): Action[Submission] = Action.async(parse.json[Submission]) { implicit request =>
-    authorizedWithEnrolment[Submission] { _ =>
+    authorizedWithEori[Submission] { _ =>
       val body = request.body
       submissionRepository.updateSubmission(body).map { res =>
         if (res) {
@@ -96,7 +96,7 @@ class SubmissionController @Inject()(
   }
 
   def getSubmission(conversationId: String): Action[AnyContent] = Action.async { implicit request =>
-    authorizedWithEnrolment[AnyContent] { _ =>
+    authorizedWithEori[AnyContent] { _ =>
       submissionRepository.getByConversationId(conversationId).map { submission =>
         Ok(Json.toJson(submission))
       }
@@ -132,4 +132,13 @@ class SubmissionController @Inject()(
       case Some(notification) => notification.response.length
       case None               => 0
     }
+
+  def cancelDeclaration(): Action[CancellationRequest] = Action.async(parse.json[CancellationRequest]) {
+    implicit request =>
+      authorizedWithEori[CancellationRequest] { authorizedRequest =>
+        submissionRepository
+          .cancelDeclaration(authorizedRequest.loggedUserEori, request.body.mrn)
+          .map(res => Ok(Json.toJson(res)))
+      }
+  }
 }

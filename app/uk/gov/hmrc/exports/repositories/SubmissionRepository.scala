@@ -53,22 +53,30 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
 
   override def isInsertion(newRecordId: BSONObjectID, oldRecord: Submission): Boolean = newRecordId.equals(oldRecord.id)
 
-  def save(submission: Submission) = insert(submission).map { res =>
-    if (!res.ok)
-    // $COVERAGE-OFF$Trivial
-      Logger.error("Error during inserting submission result " + res.writeErrors.mkString("--"))
-    // $COVERAGE-ON$
+  def save(submission: Submission): Future[Boolean] = insert(submission).map { res =>
+    if (!res.ok) Logger.error("Error during inserting submission result " + res.writeErrors.mkString("--"))
     res.ok
   }
 
-  def updateSubmission(submission: Submission) = {
+  def updateSubmission(submission: Submission): Future[Boolean] = {
     val finder = BSONDocument("_id" -> submission.id, "conversationId" -> submission.conversationId)
 
-    val modifier = BSONDocument(
-      "$set" ->
-        BSONDocument("mrn" -> submission.mrn, "status" -> submission.status)
-    )
-    atomicUpdate(finder, modifier).map(res => res.get.writeResult.ok)
+    val modifier = BSONDocument("$set" -> BSONDocument("mrn" -> submission.mrn, "status" -> submission.status))
+
+    atomicUpdate(finder, modifier).map {
+      case Some(result) => result.writeResult.ok
+      case _            => false
+    }
   }
 
+  def cancelDeclaration(eori: String, mrn: String): Future[Boolean] = {
+    val finder = BSONDocument("eori" -> eori, "mrn" -> mrn)
+
+    val modifier = BSONDocument("$set" -> BSONDocument("status" -> "Cancellation requested"))
+
+    atomicUpdate(finder, modifier).map {
+      case Some(result) => result.writeResult.ok
+      case _            => false
+    }
+  }
 }

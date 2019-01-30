@@ -20,7 +20,8 @@ import java.util.UUID
 
 import org.joda.time.DateTime
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.wco.dec.{InventoryLinkingMovementResponse, Response}
+import uk.gov.hmrc.wco.dec.inventorylinking.movement.response.InventoryLinkingMovementResponse
+import uk.gov.hmrc.wco.dec.Response
 
 import scala.util.Random
 

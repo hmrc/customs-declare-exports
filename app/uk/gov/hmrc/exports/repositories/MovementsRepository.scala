@@ -56,7 +56,7 @@ class MovementsRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Exe
 
   def save(movementSubmission: MovementSubmissions) = insert(movementSubmission).map { res =>
     if (!res.ok)
-    // $COVERAGE-OFF$Trivial
+      // $COVERAGE-OFF$Trivial
       Logger.error("Error during inserting movement result " + res.writeErrors.mkString("--"))
     // $COVERAGE-ON$
     res.ok
