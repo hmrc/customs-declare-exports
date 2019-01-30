@@ -52,7 +52,7 @@ class MovementNotificationsRepository @Inject()(mc: ReactiveMongoComponent)(impl
 
   def save(movementNotification: MovementNotification): Future[Boolean] = insert(movementNotification).map { res =>
     if (!res.ok)
-    // $COVERAGE-OFF$Trivial
+      // $COVERAGE-OFF$Trivial
       Logger.error("Error during inserting movement notification " + res.writeErrors.mkString("--"))
     // $COVERAGE-ON$
     res.ok

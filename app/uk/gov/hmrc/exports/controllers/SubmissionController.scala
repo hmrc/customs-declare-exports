@@ -97,14 +97,16 @@ class SubmissionController @Inject()(
 
   def getSubmission(conversationId: String): Action[AnyContent] = Action.async { implicit request =>
     authorizedWithEori[AnyContent] { _ =>
-      submissionRepository.getByConversationId(conversationId).map { submission => Ok(Json.toJson(submission))
+      submissionRepository.getByConversationId(conversationId).map { submission =>
+        Ok(Json.toJson(submission))
       }
     }
   }
 
   def getMovements(): Action[AnyContent] = Action.async { implicit request =>
     authorizedWithEori[AnyContent] { authorizedRequest =>
-      movementsRepository.findByEori(authorizedRequest.loggedUserEori).map { movements => Ok(Json.toJson(movements))
+      movementsRepository.findByEori(authorizedRequest.loggedUserEori).map { movements =>
+        Ok(Json.toJson(movements))
       }
     }
   }
@@ -131,11 +133,12 @@ class SubmissionController @Inject()(
       case None               => 0
     }
 
-  def cancelDeclaration(): Action[CancellationRequest] = Action.async(parse.json[CancellationRequest]) { implicit request =>
-    authorizedWithEori[CancellationRequest] { authorizedRequest =>
-      submissionRepository
-        .cancelDeclaration(authorizedRequest.loggedUserEori, request.body.mrn)
-        .map(res => Ok(Json.toJson(res)))
-    }
+  def cancelDeclaration(): Action[CancellationRequest] = Action.async(parse.json[CancellationRequest]) {
+    implicit request =>
+      authorizedWithEori[CancellationRequest] { authorizedRequest =>
+        submissionRepository
+          .cancelDeclaration(authorizedRequest.loggedUserEori, request.body.mrn)
+          .map(res => Ok(Json.toJson(res)))
+      }
   }
 }

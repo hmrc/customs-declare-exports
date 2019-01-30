@@ -35,12 +35,16 @@ class ExportController @Inject()(override val authConnector: AuthConnector)(impl
     callback: (AuthorizedRequest[A] => Future[Result])
   )(implicit request: Request[A]): Future[Result] =
     authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments) { enrolments =>
-      val eori = enrolments.getEnrolment("HMRC-CUS-ORG").flatMap(_.getIdentifier("EORINumber"))
-      if (!eori.isEmpty) callback(AuthorizedRequest(request, eori.get.value))
-      else throw InsufficientEnrolments()
+      getEoriFromEnrolments(enrolments) match {
+        case Some(eori) if eori.nonEmpty => callback(AuthorizedRequest(request, eori))
+        case _                           => throw InsufficientEnrolments()
+      }
     } recoverWith {
       handleFailure
     }
+
+  private def getEoriFromEnrolments(enrolments: Enrolments): Option[String] =
+    enrolments.getEnrolment("HMRC-CUS-ORG").flatMap(_.getIdentifier("EORINumber")).map(_.value)
 
   def handleFailure(implicit request: Request[_]): PartialFunction[Throwable, Future[Result]] =
     PartialFunction[Throwable, Future[Result]] {

@@ -52,7 +52,7 @@ class NotificationsRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec:
 
   def save(exportsNotification: DeclarationNotification): Future[Boolean] = insert(exportsNotification).map { res =>
     if (!res.ok)
-    // $COVERAGE-OFF$Trivial
+      // $COVERAGE-OFF$Trivial
       Logger.error("Errors during inserting export notification " + res.writeErrors.mkString("--"))
     // $COVERAGE-ON$
     res.ok

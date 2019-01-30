@@ -66,7 +66,13 @@ object SubmissionData {
     )
 }
 
-case class SubmissionResponse(eori: String, conversationId: String, ducr: String, lrn: Option[String] = None, mrn: Option[String] = None)
+case class SubmissionResponse(
+  eori: String,
+  conversationId: String,
+  ducr: String,
+  lrn: Option[String] = None,
+  mrn: Option[String] = None
+)
 
 object SubmissionResponse {
   implicit val formats = Json.format[SubmissionResponse]
