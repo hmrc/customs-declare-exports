@@ -16,19 +16,23 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
-import uk.gov.hmrc.exports.models.{MovementSubmissions, Submission, SubmissionData, SubmissionResponse}
+import uk.gov.hmrc.exports.models._
 
 class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
   val saveUri = "/save-submission-response"
   val updateUri = "/update-submission"
+  val cancelUri = "/cancel-declaration"
 
   val jsonBody = Json.toJson[SubmissionResponse](submissionResponse)
 
-  val fakeRequest = FakeRequest("POST", saveUri).withBody((jsonBody))
+  val fakeRequest = FakeRequest("POST", saveUri).withBody(jsonBody)
+
+  val faceCancellationRequest =
+    FakeRequest("POST", cancelUri).withBody(Json.toJson[CancellationRequest](CancellationRequest("mrn")))
 
   val submissionJson = Json.toJson[Submission](submission)
   val jsonSeqSubmission = Json.toJson[Seq[SubmissionData]](seqSubmissionData)
@@ -157,6 +161,44 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       val result = route(app, FakeRequest("GET", "/submissions")).get
 
       status(result) must be(OK)
+    }
+  }
+
+  "POST cancel declaration" should {
+    "return CancellationRequested" when {
+      "there is an existing declaration" in {
+        withAuthorizedUser()
+        withCancellationRequest(CancellationRequested)
+
+        val result = route(app, faceCancellationRequest).get
+
+        status(result) must be(OK)
+        contentAsJson(result) must be(Json.toJson[CancellationStatus](CancellationRequested))
+      }
+    }
+
+    "return CancellationRequestExists" when {
+      "there is an existing cancellation request" in {
+        withAuthorizedUser()
+        withCancellationRequest(CancellationRequestExists)
+
+        val result = route(app, faceCancellationRequest).get
+
+        status(result) must be(OK)
+        contentAsJson(result) must be(Json.toJson[CancellationStatus](CancellationRequestExists))
+      }
+    }
+
+    "return MissingDeclaration" when {
+      "there is no declaration" in {
+        withAuthorizedUser()
+        withCancellationRequest(MissingDeclaration)
+
+        val result = route(app, faceCancellationRequest).get
+
+        status(result) must be(OK)
+        contentAsJson(result) must be(Json.toJson[CancellationStatus](MissingDeclaration))
+      }
     }
   }
 }

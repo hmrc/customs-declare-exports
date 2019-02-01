@@ -22,7 +22,7 @@ import play.api.libs.json.JsString
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
-import uk.gov.hmrc.exports.models.Submission
+import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 import uk.gov.hmrc.mongo.{AtomicUpdate, ReactiveRepository}
 
@@ -69,14 +69,20 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
     }
   }
 
-  def cancelDeclaration(eori: String, mrn: String): Future[Boolean] = {
+  def cancelDeclaration(eori: String, mrn: String): Future[CancellationStatus] = {
     val finder = BSONDocument("eori" -> eori, "mrn" -> mrn)
 
     val modifier = BSONDocument("$set" -> BSONDocument("status" -> "Cancellation requested"))
 
-    atomicUpdate(finder, modifier).map {
-      case Some(result) => result.writeResult.ok
-      case _            => false
+    find("eori" -> JsString(eori), "mrn" -> JsString(mrn)).map(_.headOption) flatMap {
+      case Some(submission) if submission.status == Some("Cancellation requested") =>
+        Future.successful(CancellationRequestExists)
+      case Some(_) =>
+        atomicUpdate(finder, modifier).map {
+          case Some(result) if result.writeResult.ok => CancellationRequested
+          case _                                     => MissingDeclaration
+        }
+      case _ => Future.successful(MissingDeclaration)
     }
   }
 }
