@@ -16,58 +16,92 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import org.scalatest.BeforeAndAfterEach
+import org.scalatest.BeforeAndAfterAll
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
+import uk.gov.hmrc.exports.models.{CancellationRequestExists, CancellationRequested, MissingDeclaration, Submission}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with ExportsTestData {
-
-  override protected def afterEach(): Unit = {
-    super.afterEach()
-    repo.removeAll()
-  }
+class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterAll with ExportsTestData {
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
   val repo = component[SubmissionRepository]
 
-  "SubmissionRepository" should {
-    "save declaration with EORI and timestamp" in {
-      repo.save(submission).futureValue must be(true)
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    repo.removeAll()
+  }
 
-      // we can now display a list of all the declarations belonging to the current user, searching by EORI
-      val found = repo.findByEori(eori).futureValue
+  override def afterAll(): Unit  = {
+    super.afterAll()
+    repo.removeAll()
+  }
+
+
+  "SubmissionRepository" should {
+    "save submission" in {
+      repo.save(submission).futureValue must be(true)
+    }
+
+    "find submission by eori" in {
+       val found = repo.findByEori(eori).futureValue
+
       found.length must be(1)
       found.head.eori must be(eori)
       found.head.conversationId must be(conversationId)
       found.head.mrn must be(Some(mrn))
+      found.head.lrn must be(lrn)
+      found.head.ducr must be(ducr)
+    }
 
-      // a timestamp has been generated representing "creation time" of case class instance
-      found.head.submittedTimestamp must (be >= before).and(be <= System.currentTimeMillis())
+    "get by conversationId" in {
+      val found = repo.getByConversationId(conversationId).futureValue.get
 
-      // we can also retrieve the submission individually by conversation ID
-      val got = repo.getByConversationId(conversationId).futureValue.get
-      got.eori must be(eori)
-      got.conversationId must be(conversationId)
-      got.mrn must be(Some(mrn))
+      found.eori must be(eori)
+      found.conversationId must be(conversationId)
+      found.mrn must be(Some(mrn))
+      found.lrn must be(lrn)
+      found.ducr must be(ducr)
+    }
 
-      // or we can retrieve it by eori and MRN
-      val gotAgain = repo.getByEoriAndMrn(eori, mrn).futureValue.get
-      gotAgain.eori must be(eori)
-      gotAgain.conversationId must be(conversationId)
-      gotAgain.mrn must be(Some(mrn))
+    "get by eori and mrn" in {
+      val found = repo.getByEoriAndMrn(eori, mrn).futureValue.get
 
-      // update status test
-      val submission1 = repo.getByConversationId(conversationId).futureValue
+      found.eori must be(eori)
+      found.conversationId must be(conversationId)
+      found.mrn must be(Some(mrn))
+      found.lrn must be(lrn)
+      found.ducr must be(ducr)
+    }
 
-      val updatedSubmission = submission1.get.copy(status = Some("Accepted"))
-      val updateStatusResult = repo.updateSubmission(updatedSubmission).futureValue
-      updateStatusResult must be(true)
-      val newSubmission = repo.getByConversationId(conversationId).futureValue
+    "update submission" in {
+      val submissionToUpdate = Submission("eori", "conversationId", "ducr", Some("lrn"), Some("mrn"))
 
-      newSubmission.get must be(updatedSubmission)
+      repo.save(submissionToUpdate).futureValue must be(true)
+
+      val oldFound = repo.getByConversationId("conversationId").futureValue.get
+
+      oldFound.mrn must be(Some("mrn"))
+      oldFound.status must be(Some("Pending"))
+
+      val updatedSubmission = oldFound.copy(mrn = Some("newMrn"), status = Some("status"))
+
+      repo.updateSubmission(updatedSubmission).futureValue must be(true)
+
+      val newFound = repo.getByConversationId("conversationId").futureValue.get
+
+      newFound.mrn must be(Some("newMrn"))
+      newFound.status must be(Some("status"))
+    }
+
+    "cancel declaration" in {
+      repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequested)
+
+      repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequestExists)
+
+      repo.cancelDeclaration("incorrect", "incorrect").futureValue must be(MissingDeclaration)
     }
   }
 }
