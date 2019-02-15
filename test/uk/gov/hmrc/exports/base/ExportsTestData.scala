@@ -45,8 +45,12 @@ trait ExportsTestData {
   val seqSubmissionData = Seq(submissionData)
   val movement = MovementSubmissions(eori, conversationId, ducr, None, "Arrival")
   val now = DateTime.now
-  val response1 = Seq(Response(functionCode = Random.nextInt(), functionalReferenceId = Some("123")))
-  val response2 = Seq(Response(functionCode = Random.nextInt(), functionalReferenceId = Some("456")))
+
+  private lazy val responseFunctionCodes: Seq[String] = Seq("01", "02", "03", "05", "06", "07", "08", "09", "10", "11", "16", "17", "18")
+  protected def randomResponseFunctionCode: String = responseFunctionCodes(Random.nextInt(responseFunctionCodes.length))
+
+  val response1 = Seq(Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("123")))
+  val response2 = Seq(Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("456")))
 
   val notification = DeclarationNotification(now, conversationId, eori, None, DeclarationMetadata(), response1)
   val movementNotification =
