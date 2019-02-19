@@ -67,7 +67,7 @@ class SubmissionController @Inject()(
   private def processRequest()(implicit request: Request[SubmissionResponse], hc: HeaderCarrier): Future[Result] = {
     val body = request.body
     submissionRepository
-      .save(Submission(body.eori, body.conversationId, body.ducr, body.lrn, body.mrn))
+      .save(Submission(body.eori, body.conversationId, body.ducr, body.lrn, body.mrn, status = body.status))
       .map(
         res =>
           if (res) {
@@ -128,10 +128,7 @@ class SubmissionController @Inject()(
     submissionRepository.findByEori(eori)
 
   private def notificationHelper(conversationId: String): Future[Int] =
-    notificationsRepository.getByConversationId(conversationId).map {
-      case Some(notification) => notification.response.length
-      case None               => 0
-    }
+    notificationsRepository.getByConversationId(conversationId).map(_.length)
 
   def cancelDeclaration(): Action[CancellationRequest] = Action.async(parse.json[CancellationRequest]) {
     implicit request =>

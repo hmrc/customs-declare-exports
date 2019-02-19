@@ -39,7 +39,7 @@ trait ExportsTestData {
   val ducr = randomString(16)
 
   val before = System.currentTimeMillis()
-  val submission = Submission(eori, conversationId, ducr, lrn, Some(mrn))
+  val submission = Submission(eori, conversationId, ducr, lrn, Some(mrn), status = "01")
   val submissionData = SubmissionData.buildSubmissionData(submission, 0)
   val seqSubmissions = Seq(submission)
   val seqSubmissionData = Seq(submissionData)
@@ -55,7 +55,7 @@ trait ExportsTestData {
   val notification = DeclarationNotification(now, conversationId, eori, None, DeclarationMetadata(), response1)
   val movementNotification =
     MovementNotification(now, conversationId, eori, movementResponse = InventoryLinkingMovementResponse("EAA"))
-  val submissionResponse = SubmissionResponse(eori, conversationId, ducr, lrn, Some(mrn))
+  val submissionResponse = SubmissionResponse(eori, conversationId, ducr, lrn, Some(mrn), status = "01")
 
   protected def randomString(length: Int): String = Random.alphanumeric.take(length).mkString
 }

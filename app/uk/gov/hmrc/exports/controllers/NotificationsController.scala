@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.controllers
 
 import com.google.inject.Singleton
 import javax.inject.Inject
-import org.joda.time.DateTime
+import org.joda.time.{DateTime, DateTimeComparator}
 import play.api.Logger
 import play.api.http.HeaderNames
 import play.api.libs.json.Json
@@ -27,7 +27,7 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, NotificationsRepository}
+import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.wco.dec.inventorylinking.movement.response.InventoryLinkingMovementResponse
 
@@ -43,14 +43,14 @@ class NotificationsController @Inject()(
   authConnector: AuthConnector,
   notificationsRepository: NotificationsRepository,
   movementNotificationsRepository: MovementNotificationsRepository,
-  metrics: ExportsMetrics
+  metrics: ExportsMetrics,
+  submissionRepository: SubmissionRepository
 ) extends ExportController(authConnector) {
 
   def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
     validateHeaders() {
       metrics.startTimer(notificationMetric)
-      headers: NotificationApiHeaders =>
-        save(getNotificationFromRequest(headers))
+      headers: NotificationApiHeaders => save(getNotificationFromRequest(headers))
     }
   }
 
@@ -67,8 +67,7 @@ class NotificationsController @Inject()(
 
   def saveMovement(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
     metrics.startTimer(movementMetric)
-    validateHeaders() { headers: NotificationApiHeaders =>
-      saveMovement(getMovementNotificationFromRequest(headers))
+    validateHeaders() { headers: NotificationApiHeaders => saveMovement(getMovementNotificationFromRequest(headers))
     }
   }
 
@@ -121,17 +120,38 @@ class NotificationsController @Inject()(
     notification
   }
 
-  private def save(notification: DeclarationNotification)(implicit hc: HeaderCarrier): Future[Result] =
-    notificationsRepository
-      .save(notification)
-      .map(_ match {
-        case true =>
-          metrics.incrementCounter(notificationMetric)
-          Accepted
-        case _ =>
-          metrics.incrementCounter(notificationMetric)
-          InternalServerError(NotificationFailedErrorResponse.toXml)
-      })
+  private def save(notification: DeclarationNotification)(implicit hc: HeaderCarrier): Future[Result] = {
+    val eori = notification.eori
+    val convId = notification.conversationId
+
+    for {
+      oldNotification <- notificationsRepository.getByEoriAndConversationId(eori, convId)
+        .map(_.sortWith((a, b) => b.dateTimeReceived.isAfter(a.dateTimeReceived)).headOption.map(_.dateTimeReceived))
+      notificationSaved <- notificationsRepository.save(notification)
+      _ <- oldNotification match {
+        case Some(date) => if(notification.dateTimeReceived.isAfter(date)) submissionRepository.updateStatus(
+          notification.eori,
+          notification.conversationId,
+          buildStatus(notification.response)
+        ) else Future.successful(false)
+        case _ => Future.successful(false)
+      }
+    } yield if(notificationSaved) {
+        metrics.incrementCounter(notificationMetric)
+        Accepted
+      } else {
+        metrics.incrementCounter(notificationMetric)
+        InternalServerError(NotificationFailedErrorResponse.toXml)
+      }
+  }
+
+  private def buildStatus(responses: Seq[Response]): Option[String] =
+    responses.map { response =>
+      (response.functionCode, response.status.flatMap(_.nameCode).headOption) match {
+        case ("11", Some(nameCode)) if nameCode == "39" || nameCode == "41" => s"11$nameCode"
+        case _ => response.functionCode
+      }
+    }.headOption
 
   private def findByEori(eori: String): Future[Result] =
     notificationsRepository.findByEori(eori).map(res => Ok(Json.toJson(res)))
@@ -139,12 +159,7 @@ class NotificationsController @Inject()(
   private def findByEoriAndConversationId(eori: String, conversationId: String)(
     implicit hc: HeaderCarrier
   ): Future[Result] =
-    notificationsRepository.getByEoriAndConversationId(eori, conversationId).map { res =>
-      res match {
-        case Some(notification) => Ok(Json.toJson(notification))
-        case None               => NoContent
-      }
-    }
+    notificationsRepository.getByEoriAndConversationId(eori, conversationId).map(res => Ok(Json.toJson(res)))
 
   private def saveMovement(notification: MovementNotification)(implicit hc: HeaderCarrier): Future[Result] =
     movementNotificationsRepository
