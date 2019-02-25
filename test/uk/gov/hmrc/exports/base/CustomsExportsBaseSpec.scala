@@ -127,15 +127,18 @@ trait CustomsExportsBaseSpec
   protected def withSubmissions(submissions: Seq[Submission]) =
     when(mockSubmissionRepository.findByEori(any())).thenReturn(Future.successful(submissions))
 
-  protected def withNotification(notification: Option[DeclarationNotification]) =
-    when(mockNotificationsRepository.getByConversationId(any())).thenReturn(Future.successful(notification))
+  protected def withNotification(notifications: Seq[DeclarationNotification]) =
+    when(mockNotificationsRepository.getByConversationId(any())).thenReturn(Future.successful(notifications))
 
-  protected def withSubmissionNotification(notification: Option[DeclarationNotification]) =
+  protected def withSubmissionNotification(notifications: Seq[DeclarationNotification]) =
     when(mockNotificationsRepository.getByEoriAndConversationId(any(), any()))
-      .thenReturn(Future.successful(notification))
+      .thenReturn(Future.successful(notifications))
 
-  protected def withNotificationSaved(ok: Boolean) =
+  protected def withNotificationSaved(ok: Boolean) = {
     when(mockNotificationsRepository.save(any())).thenReturn(Future.successful(ok))
+
+    when(mockSubmissionRepository.updateStatus(any(), any(), any())).thenReturn(Future.successful(ok))
+  }
 
   protected def haveNotifications(notifications: Seq[DeclarationNotification]) =
     when(mockNotificationsRepository.findByEori(any())).thenReturn(Future.successful(notifications))

@@ -39,16 +39,16 @@ class NotificationsRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec:
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
-    Index(Seq("conversationId" -> IndexType.Ascending), unique = true, name = Some("conversationIdIdx"))
+    Index(Seq("conversationId" -> IndexType.Ascending), name = Some("conversationIdIdx"))
   )
 
   def findByEori(eori: String): Future[Seq[DeclarationNotification]] = find("eori" -> JsString(eori))
 
-  def getByConversationId(conversationId: String): Future[Option[DeclarationNotification]] =
-    find("conversationId" -> JsString(conversationId)).map(_.headOption)
+  def getByConversationId(conversationId: String): Future[Seq[DeclarationNotification]] =
+    find("conversationId" -> JsString(conversationId))
 
-  def getByEoriAndConversationId(eori: String, conversationId: String): Future[Option[DeclarationNotification]] =
-    find("eori" -> JsString(eori), "conversationId" -> JsString(conversationId)).map(_.headOption)
+  def getByEoriAndConversationId(eori: String, conversationId: String): Future[Seq[DeclarationNotification]] =
+    find("eori" -> JsString(eori), "conversationId" -> JsString(conversationId))
 
   def save(exportsNotification: DeclarationNotification): Future[Boolean] = insert(exportsNotification).map { res =>
     if (!res.ok)

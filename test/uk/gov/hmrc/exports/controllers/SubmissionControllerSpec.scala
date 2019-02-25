@@ -145,7 +145,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     "return 200 with submission response body" in {
       withAuthorizedUser()
       withSubmissions(seqSubmissions)
-      withNotification(None)
+      withNotification(Seq.empty)
 
       val result = route(app, FakeRequest("GET", "/submissions")).get
 
@@ -156,7 +156,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     "return 200 without submission response" in {
       withAuthorizedUser()
       withSubmissions(Seq.empty)
-      withNotification(None)
+      withNotification(Seq.empty)
 
       val result = route(app, FakeRequest("GET", "/submissions")).get
 

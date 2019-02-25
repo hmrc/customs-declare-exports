@@ -29,7 +29,8 @@ case class Submission(
   mrn: Option[String] = None,
   submittedTimestamp: Long = System.currentTimeMillis(),
   id: BSONObjectID = BSONObjectID.generate(),
-  status: Option[String] = Some("Pending")
+  status: String,
+  isCancellationRequested: Boolean = false
 )
 
 object Submission {
@@ -47,7 +48,8 @@ case class SubmissionData(
   mrn: Option[String],
   submittedTimestamp: Long,
   status: String,
-  noOfNotifications: Int
+  noOfNotifications: Int,
+  isCancellationRequested: Boolean
 )
 
 object SubmissionData {
@@ -61,8 +63,9 @@ object SubmissionData {
       lrn = submission.lrn,
       mrn = submission.mrn,
       submittedTimestamp = submission.submittedTimestamp,
-      status = submission.status.getOrElse(""),
-      noOfNotifications = noOfNotifications
+      status = submission.status,
+      noOfNotifications = noOfNotifications,
+      isCancellationRequested = submission.isCancellationRequested
     )
 }
 
@@ -71,7 +74,8 @@ case class SubmissionResponse(
   conversationId: String,
   ducr: String,
   lrn: Option[String] = None,
-  mrn: Option[String] = None
+  mrn: Option[String] = None,
+  status: String
 )
 
 object SubmissionResponse {

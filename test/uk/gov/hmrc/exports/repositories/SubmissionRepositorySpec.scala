@@ -77,23 +77,23 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
     }
 
     "update submission" in {
-      val submissionToUpdate = Submission("eori", "conversationId", "ducr", Some("lrn"), Some("mrn"))
+      val submissionToUpdate = Submission("eori", "conversationId", "ducr", Some("lrn"), Some("mrn"), status = "01")
 
       repo.save(submissionToUpdate).futureValue must be(true)
 
       val oldFound = repo.getByConversationId("conversationId").futureValue.get
 
       oldFound.mrn must be(Some("mrn"))
-      oldFound.status must be(Some("Pending"))
+      oldFound.status must be("01")
 
-      val updatedSubmission = oldFound.copy(mrn = Some("newMrn"), status = Some("status"))
+      val updatedSubmission = oldFound.copy(mrn = Some("newMrn"), status = "02")
 
       repo.updateSubmission(updatedSubmission).futureValue must be(true)
 
       val newFound = repo.getByConversationId("conversationId").futureValue.get
 
       newFound.mrn must be(Some("newMrn"))
-      newFound.status must be(Some("status"))
+      newFound.status must be("02")
     }
 
     "cancel declaration" in {

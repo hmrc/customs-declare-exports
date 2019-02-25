@@ -61,6 +61,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
   "NotificationsControllerSpec" should {
     "successfully accept Notification" in {
       withNotificationSaved(true)
+      withSubmissionNotification(Seq.empty)
 
       val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
 
@@ -69,6 +70,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
 
     "failed to save Notification" in {
       withNotificationSaved(false)
+      withSubmissionNotification(Seq.empty)
 
       val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
 
@@ -123,7 +125,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
 
     "return 200 status and notifications relates with specific submission" in {
       withAuthorizedUser()
-      withSubmissionNotification(Some(submissionNotification))
+      withSubmissionNotification(Seq(submissionNotification))
 
       val result = route(app, FakeRequest(GET, submissionNotificationUri).withHeaders(validHeaders.toSeq: _*)).get
 
@@ -132,11 +134,11 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
 
     "return 204 when there is no notifications related with submission" in {
       withAuthorizedUser()
-      withSubmissionNotification(None)
+      withSubmissionNotification(Seq.empty)
 
       val result = route(app, FakeRequest(GET, submissionNotificationUri).withHeaders(validHeaders.toSeq: _*)).get
 
-      status(result) must be(NO_CONTENT)
+      status(result) must be(OK)
     }
   }
 }

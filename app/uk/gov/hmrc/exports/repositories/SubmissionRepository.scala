@@ -69,13 +69,24 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
     }
   }
 
+  def updateStatus(eori: String, convId: String, status: Option[String]): Future[Boolean] = {
+    val finder = BSONDocument("eori" -> eori, "conversationId" -> convId)
+
+    val modifier = if(status.isDefined) BSONDocument("$set" -> BSONDocument("status" -> status.get)) else BSONDocument()
+
+    atomicUpdate(finder, modifier).map {
+      case Some(result) => result.writeResult.ok
+      case _            => false
+    }
+  }
+
   def cancelDeclaration(eori: String, mrn: String): Future[CancellationStatus] = {
     val finder = BSONDocument("eori" -> eori, "mrn" -> mrn)
 
-    val modifier = BSONDocument("$set" -> BSONDocument("status" -> "Cancellation requested"))
+    val modifier = BSONDocument("$set" -> BSONDocument("isCancellationRequested" -> true))
 
     find("eori" -> JsString(eori), "mrn" -> JsString(mrn)).map(_.headOption) flatMap {
-      case Some(submission) if submission.status == Some("Cancellation requested") =>
+      case Some(submission) if submission.isCancellationRequested =>
         Future.successful(CancellationRequestExists)
       case Some(_) =>
         atomicUpdate(finder, modifier).map {
