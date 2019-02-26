@@ -28,7 +28,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.inject.{Injector, bind}
+import play.api.inject.{bind, Injector}
 import play.api.libs.concurrent.Execution.Implicits
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSClient
@@ -41,7 +41,12 @@ import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, MovementsRepository, NotificationsRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{
+  MovementNotificationsRepository,
+  MovementsRepository,
+  NotificationsRepository,
+  SubmissionRepository
+}
 import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.http.SessionKeys
 
@@ -139,7 +144,6 @@ trait CustomsExportsBaseSpec
 
     when(mockSubmissionRepository.updateStatus(any(), any(), any())).thenReturn(Future.successful(ok))
   }
-
   protected def haveNotifications(notifications: Seq[DeclarationNotification]) =
     when(mockNotificationsRepository.findByEori(any())).thenReturn(Future.successful(notifications))
 

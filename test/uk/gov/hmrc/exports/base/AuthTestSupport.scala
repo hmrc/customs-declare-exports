@@ -33,13 +33,14 @@ trait AuthTestSupport extends MockitoSugar {
   lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
   val enrolment: Predicate = Enrolment("HMRC-CUS-ORG")
+  val userEori = "12345"
 
   def cdsEnrollmentMatcher(user: SignedInUser): ArgumentMatcher[Predicate] = new ArgumentMatcher[Predicate] {
     override def matches(p: Predicate): Boolean =
       p == enrolment && user.enrolments.getEnrolment("HMRC-CUS-ORG").isDefined
   }
 
-  def withAuthorizedUser(user: SignedInUser = newUser("12345", "external1")): Unit =
+  def withAuthorizedUser(user: SignedInUser = newUser(userEori, "external1")): Unit =
     when(
       mockAuthConnector.authorise(
         ArgumentMatchers.argThat(cdsEnrollmentMatcher(user)),
@@ -47,7 +48,7 @@ trait AuthTestSupport extends MockitoSugar {
       )(any(), any())
     ).thenReturn(Future.successful(user.enrolments))
 
-  def userWithoutEori(user: SignedInUser = newUser("12345", "external1")): Unit =
+  def userWithoutEori(user: SignedInUser = newUser(userEori, "external1")): Unit =
     when(
       mockAuthConnector.authorise(
         ArgumentMatchers.argThat(cdsEnrollmentMatcher(user)),

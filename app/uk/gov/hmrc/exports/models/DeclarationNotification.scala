@@ -71,7 +71,17 @@ case class DeclarationNotification(
   badgeId: Option[String] = None,
   metadata: DeclarationMetadata,
   response: Seq[Response] = Seq.empty
-)
+) {
+  def isOlderThan(notification: DeclarationNotification): Boolean = {
+    val firstDateOpt = response.flatMap(_.issueDateTime.map(_.dateTimeString.time)).headOption
+    val secondDateOpt = notification.response.flatMap(_.issueDateTime.map(_.dateTimeString.time)).headOption
+
+    (firstDateOpt, secondDateOpt) match {
+      case (Some(firstDate), Some(secondDate)) => firstDate.isAfter(secondDate)
+      case _                                   => false
+    }
+  }
+}
 
 case class NotificationApiHeaders(
   accept: String,

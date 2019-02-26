@@ -114,8 +114,10 @@ class SubmissionController @Inject()(
   def getSubmissionsByEori(): Action[AnyContent] = Action.async { implicit request =>
     authorizedWithEori[AnyContent] { authorizedRequest =>
       for {
-        submissions <- submissionHelper(authorizedRequest.loggedUserEori)
-        notifications <- Future.sequence(submissions.map(submission => notificationHelper(submission.conversationId)))
+        submissions <- findSubmissions(authorizedRequest.loggedUserEori)
+        notifications <- Future.sequence(
+          submissions.map(submission => getNumerOfNotifications(submission.conversationId))
+        )
       } yield {
         val result = submissions.zip(notifications).map((SubmissionData.buildSubmissionData _).tupled)
 
@@ -124,10 +126,10 @@ class SubmissionController @Inject()(
     }
   }
 
-  private def submissionHelper(eori: String): Future[Seq[Submission]] =
+  private def findSubmissions(eori: String): Future[Seq[Submission]] =
     submissionRepository.findByEori(eori)
 
-  private def notificationHelper(conversationId: String): Future[Int] =
+  private def getNumerOfNotifications(conversationId: String): Future[Int] =
     notificationsRepository.getByConversationId(conversationId).map(_.length)
 
   def cancelDeclaration(): Action[CancellationRequest] = Action.async(parse.json[CancellationRequest]) {
