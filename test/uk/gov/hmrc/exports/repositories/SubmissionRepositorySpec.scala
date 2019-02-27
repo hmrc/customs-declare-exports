@@ -32,21 +32,19 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
   override def beforeAll(): Unit = {
     super.beforeAll()
     repo.removeAll()
+
+    repo.save(submission).futureValue
   }
 
-  override def afterAll(): Unit  = {
+  override def afterAll(): Unit = {
     super.afterAll()
     repo.removeAll()
   }
 
-
   "SubmissionRepository" should {
-    "save submission" in {
-      repo.save(submission).futureValue must be(true)
-    }
 
     "find submission by eori" in {
-       val found = repo.findByEori(eori).futureValue
+      val found = repo.findByEori(eori).futureValue
 
       found.length must be(1)
       found.head.eori must be(eori)

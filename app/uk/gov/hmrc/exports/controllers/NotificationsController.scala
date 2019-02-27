@@ -48,9 +48,9 @@ class NotificationsController @Inject()(
 ) extends ExportController(authConnector) {
 
   def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
-    validateHeaders() {
-      metrics.startTimer(notificationMetric)
-      headers: NotificationApiHeaders => save(getNotificationFromRequest(headers))
+    metrics.startTimer(notificationMetric)
+    validateHeaders() { headers: NotificationApiHeaders =>
+      save(getNotificationFromRequest(headers))
     }
   }
 
@@ -67,7 +67,8 @@ class NotificationsController @Inject()(
 
   def saveMovement(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
     metrics.startTimer(movementMetric)
-    validateHeaders() { headers: NotificationApiHeaders => saveMovement(getMovementNotificationFromRequest(headers))
+    validateHeaders() { headers: NotificationApiHeaders =>
+      saveMovement(getMovementNotificationFromRequest(headers))
     }
   }
 
@@ -125,18 +126,20 @@ class NotificationsController @Inject()(
     val convId = notification.conversationId
 
     for {
-      oldNotification <- notificationsRepository.getByEoriAndConversationId(eori, convId)
-        .map(_.sortWith((a, b) => b.dateTimeReceived.isAfter(a.dateTimeReceived)).headOption.map(_.dateTimeReceived))
+      oldNotification <- notificationsRepository
+        .getByEoriAndConversationId(eori, convId)
+        .map(_.sortWith((a, b) => a.isOlderThan(b)).headOption)
       notificationSaved <- notificationsRepository.save(notification)
-      _ <- oldNotification match {
-        case Some(date) => if(notification.dateTimeReceived.isAfter(date)) submissionRepository.updateStatus(
+      shouldBeUpdated = oldNotification.forall(notification.isOlderThan(_))
+      _ <- if (shouldBeUpdated)
+        submissionRepository.updateStatus(
           notification.eori,
           notification.conversationId,
           buildStatus(notification.response)
-        ) else Future.successful(false)
-        case _ => Future.successful(false)
-      }
-    } yield if(notificationSaved) {
+        )
+      else Future.successful(false)
+    } yield
+      if (notificationSaved) {
         metrics.incrementCounter(notificationMetric)
         Accepted
       } else {
@@ -149,7 +152,7 @@ class NotificationsController @Inject()(
     responses.map { response =>
       (response.functionCode, response.status.flatMap(_.nameCode).headOption) match {
         case ("11", Some(nameCode)) if nameCode == "39" || nameCode == "41" => s"11$nameCode"
-        case _ => response.functionCode
+        case _                                                              => response.functionCode
       }
     }.headOption
 

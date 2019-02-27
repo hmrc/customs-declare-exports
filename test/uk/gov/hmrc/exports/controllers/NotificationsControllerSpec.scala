@@ -16,12 +16,14 @@
 
 package uk.gov.hmrc.exports.controllers
 
+import org.mockito.Mockito.{reset, times, verify}
 import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
 import uk.gov.hmrc.exports.models.{DeclarationMetadata, DeclarationNotification}
+import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 
 class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
 
@@ -30,6 +32,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
   val submissionNotificationUri = "/customs-declare-exports/submission-notifications/1234"
 
   val getNotificationUri = "/customs-declare-exports/notifications"
+  val postNotificationUri = "/customs-declare-exports/notify"
   val validXML = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
     <wstxns1:Response xmlns:wstxns1="urn:wco:datamodel:WCO:RES-DMS:2"></wstxns1:Response>
   </MetaData>
@@ -139,6 +142,90 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       val result = route(app, FakeRequest(GET, submissionNotificationUri).withHeaders(validHeaders.toSeq: _*)).get
 
       status(result) must be(OK)
+    }
+  }
+
+  val notificationXML =
+    <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2"
+                xmlns:response="urn:wco:datamodel:WCO:RES-DMS:2"
+                xmlns:responseDs="urn:wco:datamodel:WCO:Response_DS:DMS:2">
+        <WCODataModelVersionCode>02</WCODataModelVersionCode>
+        <WCOTypeName>RES</WCOTypeName>
+        <response:Response>
+          <response:FunctionCode>02</response:FunctionCode>
+          <response:FunctionalReferenceID>1234555</response:FunctionalReferenceID>
+          <response:IssueDateTime>
+            <responseDs:DateTimeString formatCode="304">20190226085021Z</responseDs:DateTimeString>
+          </response:IssueDateTime>
+        </response:Response>
+        <response:Declaration></response:Declaration>
+      </MetaData>
+
+  val olderNotification = DeclarationNotification(
+    conversationId = "convId",
+    eori = "eori",
+    metadata = DeclarationMetadata(),
+    response = Seq(
+      Response(functionCode = "02", issueDateTime = Some(ResponseDateTimeElement(DateTimeString("102", "20190224"))))
+    )
+  )
+
+  val newerNotification = DeclarationNotification(
+    conversationId = "convId",
+    eori = "eori",
+    metadata = DeclarationMetadata(),
+    response = Seq(
+      Response(functionCode = "02", issueDateTime = Some(ResponseDateTimeElement(DateTimeString("102", "20190227"))))
+    )
+  )
+
+  "saving notification" should {
+    "update submission status when there are no notifications" in {
+      reset(mockSubmissionRepository)
+      withAuthorizedUser()
+      withSubmissionNotification(Seq.empty)
+      withNotificationSaved(true)
+
+      val result =
+        route(
+          app,
+          FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(notificationXML)
+        ).get
+
+      status(result) must be(ACCEPTED)
+      verify(mockSubmissionRepository, times(1)).updateStatus("eori1", "XConv1", Some("02"))
+    }
+
+    "update submission status when notification is older than exist one" in {
+      reset(mockSubmissionRepository)
+      withAuthorizedUser()
+      withSubmissionNotification(Seq(olderNotification))
+      withNotificationSaved(true)
+
+      val result =
+        route(
+          app,
+          FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(notificationXML)
+        ).get
+
+      status(result) must be(ACCEPTED)
+      verify(mockSubmissionRepository, times(1)).updateStatus("eori1", "XConv1", Some("02"))
+    }
+
+    "not update submission when notification than exist is older than new one" in {
+      reset(mockSubmissionRepository)
+      withAuthorizedUser()
+      withSubmissionNotification(Seq(newerNotification))
+      withNotificationSaved(true)
+
+      val result =
+        route(
+          app,
+          FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(notificationXML)
+        ).get
+
+      status(result) must be(ACCEPTED)
+      verify(mockSubmissionRepository, times(0)).updateStatus("eori1", "XConv1", Some("02"))
     }
   }
 }

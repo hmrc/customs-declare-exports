@@ -72,7 +72,8 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
   def updateStatus(eori: String, convId: String, status: Option[String]): Future[Boolean] = {
     val finder = BSONDocument("eori" -> eori, "conversationId" -> convId)
 
-    val modifier = if(status.isDefined) BSONDocument("$set" -> BSONDocument("status" -> status.get)) else BSONDocument()
+    val modifier =
+      if (status.isDefined) BSONDocument("$set" -> BSONDocument("status" -> status.get)) else BSONDocument()
 
     atomicUpdate(finder, modifier).map {
       case Some(result) => result.writeResult.ok
