@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import org.scalatest.BeforeAndAfterEach
+import org.scalatest.BeforeAndAfter
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
@@ -24,18 +24,17 @@ import uk.gov.hmrc.exports.models.{CancellationRequestExists, CancellationReques
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach {
+class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfter {
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
   val repo = component[SubmissionRepository]
 
-  override protected def beforeEach() {
-
+  before {
     repo.removeAll()
     repo.save(submission).futureValue
   }
 
-  override protected def afterEach() {
+  after {
     repo.removeAll()
   }
 
