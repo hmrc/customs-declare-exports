@@ -21,12 +21,13 @@ import uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
 class AppConfigSpec extends CustomsExportsBaseSpec {
   val config = app.injector.instanceOf[AppConfig]
 
-  "The config" should {
-    "have auth url" in {
+  "The app config" should {
+
+    "have proper auth URL" in {
       config.authUrl must be("http://localhost:8500")
     }
 
-    "have login url" in {
+    "have proper login URL" in {
       config.loginUrl must be("http://localhost:9949/auth-login-stub/gg-sign-in")
     }
   }

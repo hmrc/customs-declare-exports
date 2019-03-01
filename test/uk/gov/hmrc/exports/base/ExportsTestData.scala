@@ -33,7 +33,7 @@ trait ExportsTestData {
    */
 
   val eori = randomString(8)
-  val lrn = Some(randomString(70))
+  val lrn = Some(randomString(22))
   val mrn = randomString(16)
   val conversationId = UUID.randomUUID.toString
   val ducr = randomString(16)

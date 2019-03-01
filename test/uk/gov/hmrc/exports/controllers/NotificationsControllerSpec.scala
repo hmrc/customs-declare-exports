@@ -61,35 +61,9 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
   val submissionNotification =
     DeclarationNotification(conversationId = "1234", eori = "eori", metadata = DeclarationMetadata())
 
-  "NotificationsControllerSpec" should {
-    "successfully accept Notification" in {
-      withNotificationSaved(true)
-      withSubmissionNotification(Seq.empty)
+  "Notifications controller" should {
 
-      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
-
-      status(result) must be(ACCEPTED)
-    }
-
-    "failed to save Notification" in {
-      withNotificationSaved(false)
-      withSubmissionNotification(Seq.empty)
-
-      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
-
-      status(result) must be(INTERNAL_SERVER_ERROR)
-    }
-
-    "500 response if no eori header in Notification" in {
-      val result = route(app, FakeRequest(POST, uri).withHeaders(noEoriHeaders.toSeq: _*).withXmlBody(validXML)).get
-
-      status(result) must be(INTERNAL_SERVER_ERROR)
-      contentAsString(result) must be
-      ("<errorResponse><code>INTERNAL_SERVER_ERROR</code><message>" +
-        "ClientId or ConversationId or EORI is missing in the request headers</message></errorResponse>")
-    }
-
-    "get Notifications" in {
+    "return 200 status when it successfully get notifications" in {
       withAuthorizedUser()
       haveNotifications(Seq(notification))
 
@@ -98,7 +72,34 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       status(result) must be(OK)
     }
 
-    "successfully saved movement notification" in {
+    "return 202 status when it successfully save notification" in {
+      withNotificationSaved(true)
+      withSubmissionNotification(Seq.empty)
+
+      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
+
+      status(result) must be(ACCEPTED)
+    }
+
+    "return 500 status if it fail to save notification" in {
+      withNotificationSaved(false)
+      withSubmissionNotification(Seq.empty)
+
+      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
+
+      status(result) must be(INTERNAL_SERVER_ERROR)
+    }
+
+    "return 500 status if there is no EORI number in notification header" in {
+      val result = route(app, FakeRequest(POST, uri).withHeaders(noEoriHeaders.toSeq: _*).withXmlBody(validXML)).get
+
+      status(result) must be(INTERNAL_SERVER_ERROR)
+      contentAsString(result) must be
+      "<errorResponse><code>INTERNAL_SERVER_ERROR</code><message>" +
+        "ClientId or ConversationId or EORI is missing in the request headers</message></errorResponse>"
+    }
+
+    "return 202 status when it successfully save movement notification" in {
       withMovementNotificationSaved(true)
 
       val result =
@@ -107,7 +108,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       status(result) must be(ACCEPTED)
     }
 
-    "failed to save movement notification" in {
+    "return 500 status if fail to save movement notification" in {
       withMovementNotificationSaved(false)
 
       val result =
@@ -116,17 +117,17 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
 
-    "500 response if no eori header in movement notification" in {
+    "return 500 status if there is no EORI number in movement notification header" in {
       val result =
         route(app, FakeRequest(POST, movementUri).withHeaders(noEoriHeaders.toSeq: _*).withXmlBody(movementXml)).get
 
       status(result) must be(INTERNAL_SERVER_ERROR)
       contentAsString(result) must be
-      ("<errorResponse><code>INTERNAL_SERVER_ERROR</code><message>" +
-        "ClientId or ConversationId or EORI is missing in the request headers</message></errorResponse>")
+      "<errorResponse><code>INTERNAL_SERVER_ERROR</code><message>" +
+        "ClientId or ConversationId or EORI is missing in the request headers</message></errorResponse>"
     }
 
-    "return 200 status and notifications relates with specific submission" in {
+    "return 200 status when there are notifications connected to specific submission" in {
       withAuthorizedUser()
       withSubmissionNotification(Seq(submissionNotification))
 
@@ -135,7 +136,8 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       status(result) must be(OK)
     }
 
-    "return 204 when there is no notifications related with submission" in {
+    // TODO: invalid description or test return value as OK is 200
+    "return 204 status when there are no notifications connected to specific submission" in {
       withAuthorizedUser()
       withSubmissionNotification(Seq.empty)
 
@@ -179,8 +181,9 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
     )
   )
 
-  "saving notification" should {
-    "update submission status when there are no notifications" in {
+  "Saving notification" should {
+
+    "update submission status when there are no existing notifications" in {
       reset(mockSubmissionRepository)
       withAuthorizedUser()
       withSubmissionNotification(Seq.empty)
@@ -196,7 +199,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       verify(mockSubmissionRepository, times(1)).updateStatus("eori1", "XConv1", Some("02"))
     }
 
-    "update submission status when notification is older than exist one" in {
+    "update submission status when the existing notification is older than incoming one" in {
       reset(mockSubmissionRepository)
       withAuthorizedUser()
       withSubmissionNotification(Seq(olderNotification))
@@ -212,7 +215,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       verify(mockSubmissionRepository, times(1)).updateStatus("eori1", "XConv1", Some("02"))
     }
 
-    "not update submission when notification than exist is older than new one" in {
+    "not update submission when notification that exist is newer than incoming one" in {
       reset(mockSubmissionRepository)
       withAuthorizedUser()
       withSubmissionNotification(Seq(newerNotification))
@@ -227,5 +230,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       status(result) must be(ACCEPTED)
       verify(mockSubmissionRepository, times(0)).updateStatus("eori1", "XConv1", Some("02"))
     }
+
+    // TODO: decide on corner case - time change 1 hour forward, 1 hour backward, what is the risk ?
   }
 }

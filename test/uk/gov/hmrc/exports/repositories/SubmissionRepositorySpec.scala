@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import org.scalatest.BeforeAndAfterAll
+import org.scalatest.BeforeAndAfterEach
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
@@ -24,26 +24,24 @@ import uk.gov.hmrc.exports.models.{CancellationRequestExists, CancellationReques
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterAll with ExportsTestData {
+class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach {
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
   val repo = component[SubmissionRepository]
 
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-    repo.removeAll()
+  override protected def beforeEach() {
 
+    repo.removeAll()
     repo.save(submission).futureValue
   }
 
-  override def afterAll(): Unit = {
-    super.afterAll()
+  override protected def afterEach() {
     repo.removeAll()
   }
 
-  "SubmissionRepository" should {
+  "Submission repository" should {
 
-    "find submission by eori" in {
+    "be able to get submission by eori" in {
       val found = repo.findByEori(eori).futureValue
 
       found.length must be(1)
@@ -54,7 +52,7 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
       found.head.ducr must be(ducr)
     }
 
-    "get by conversationId" in {
+    "be able to get submission by conversationId" in {
       val found = repo.getByConversationId(conversationId).futureValue.get
 
       found.eori must be(eori)
@@ -64,7 +62,7 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
       found.ducr must be(ducr)
     }
 
-    "get by eori and mrn" in {
+    "be able to get submission by eori and mrn" in {
       val found = repo.getByEoriAndMrn(eori, mrn).futureValue.get
 
       found.eori must be(eori)
@@ -74,7 +72,7 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
       found.ducr must be(ducr)
     }
 
-    "update submission" in {
+    "be able to update submission" in {
       val submissionToUpdate = Submission("eori", "conversationId", "ducr", Some("lrn"), Some("mrn"), status = "01")
 
       repo.save(submissionToUpdate).futureValue must be(true)
@@ -94,7 +92,8 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
       newFound.status must be("02")
     }
 
-    "cancel declaration" in {
+    //TODO: add return status when declaration is actually cancelled
+    "be able to cancel declaration" in {
       repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequested)
 
       repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequestExists)

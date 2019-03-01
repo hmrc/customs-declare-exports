@@ -23,7 +23,7 @@ import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class NotificationsRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with ExportsTestData {
+class NotificationsRepositorySpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach {
 
   override protected def afterEach(): Unit = {
     super.afterEach()
@@ -34,7 +34,8 @@ class NotificationsRepositorySpec extends CustomsExportsBaseSpec with BeforeAndA
 
   val repo = component[NotificationsRepository]
 
-  "NotificationsRepository" should {
+  // TODO: possibly split the tests, as it is too high level
+  "Notifications repository" should {
     "save notification with eori, conversationId and timestamp" in {
       repo.save(notification).futureValue must be(true)
 

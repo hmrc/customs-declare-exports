@@ -39,133 +39,148 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
   val updateSubmissionRequest = FakeRequest("POST", updateUri).withBody(submissionJson)
 
-  "POST /save-submission-response" should {
-    "return 200 when submission has been saved" in {
-      withAuthorizedUser()
-      withDataSaved(true)
+  "Actions for submission" when {
 
-      val result = route(app, fakeRequest).get
+    "POST to /save-submission-response" should {
 
-      status(result) must be(OK)
+      "return 200 status when submission has been saved" in {
+        withAuthorizedUser()
+        withDataSaved(true)
+
+        val result = route(app, fakeRequest).get
+
+        status(result) must be(OK)
+      }
+
+      "return 500 status when something goes wrong" in {
+        withAuthorizedUser()
+        withDataSaved(false)
+
+        val failedResult = route(app, fakeRequest).get
+
+        status(failedResult) must be(INTERNAL_SERVER_ERROR)
+      }
     }
 
-    "return 500 when something goes wrong" in {
-      withAuthorizedUser()
-      withDataSaved(false)
+    "POST to /update-submission" should {
 
-      val failedResult = route(app, fakeRequest).get
+      "return 200 status when submission has been updated" in {
+        withAuthorizedUser()
+        withSubmissionUpdated(true)
 
-      status(failedResult) must be(INTERNAL_SERVER_ERROR)
+        val result = route(app, updateSubmissionRequest).get
+
+        status(result) must be(OK)
+      }
+
+      "return 500 status when something goes wrong" in {
+        withAuthorizedUser()
+        withSubmissionUpdated(false)
+
+        val failedResult = route(app, updateSubmissionRequest).get
+
+        status(failedResult) must be(INTERNAL_SERVER_ERROR)
+      }
+    }
+
+    "GET from /submission" should {
+
+      "return 200 status with submission response body" in {
+        withAuthorizedUser()
+        getSubmission(Some(submission))
+
+        val result = route(app, FakeRequest("GET", "/submission/1234")).get
+
+        status(result) must be(OK)
+        contentAsJson(result) must be(submissionJson)
+      }
+
+      // TODO: 204 is safe response
+      "return 200 status without submission response" in {
+        withAuthorizedUser()
+        getSubmission(None)
+
+        val result = route(app, FakeRequest("GET", "/submission/1234")).get
+
+        status(result) must be(OK)
+      }
+    }
+
+    "POST to /save-movement-submission" should {
+
+      "return 200 status when movement has been saved" in {
+        withAuthorizedUser()
+        withDataSaved(true)
+
+        val result = route(app, fakeRequest).get
+
+        status(result) must be(OK)
+      }
+
+      "return 500 status when something goes wrong" in {
+        withAuthorizedUser()
+        withDataSaved(false)
+
+        val failedResult = route(app, fakeRequest).get
+
+        status(failedResult) must be(INTERNAL_SERVER_ERROR)
+      }
+    }
+
+    "GET from /movements/:eori" should {
+
+      "return 200 status with movements as response body" in {
+        withAuthorizedUser()
+        withMovements(Seq(movement))
+
+        val result = route(app, FakeRequest("GET", "/movements")).get
+
+        status(result) must be(OK)
+        contentAsJson(result) must be(Json.toJson(Seq(movement)))
+      }
+
+      // TODO: 204 is safe response
+      "return 200 status without empty response" in {
+        withAuthorizedUser()
+        withMovements(Seq.empty)
+
+        val result = route(app, FakeRequest("GET", "/movements")).get
+
+        status(result) must be(OK)
+      }
+    }
+
+    "GET submissions using EORI number" should {
+
+      "return 200 status with submission response body" in {
+        withAuthorizedUser()
+        withSubmissions(seqSubmissions)
+        withNotification(Seq.empty)
+
+        val result = route(app, FakeRequest("GET", "/submissions")).get
+
+        status(result) must be(OK)
+        contentAsJson(result) must be(jsonSeqSubmission)
+      }
+
+      // TODO: 204 is safe response
+      "return 200 status without submission response" in {
+        withAuthorizedUser()
+        withSubmissions(Seq.empty)
+        withNotification(Seq.empty)
+
+        val result = route(app, FakeRequest("GET", "/submissions")).get
+
+        status(result) must be(OK)
+      }
     }
   }
 
-  "POST /update-submission" should {
-    "return 200 when submission has been updated" in {
-      withAuthorizedUser()
-      withSubmissionUpdated(true)
-
-      val result = route(app, updateSubmissionRequest).get
-
-      status(result) must be(OK)
-    }
-
-    "return 500 when something goes wrong" in {
-      withAuthorizedUser()
-      withSubmissionUpdated(false)
-
-      val failedResult = route(app, updateSubmissionRequest).get
-
-      status(failedResult) must be(INTERNAL_SERVER_ERROR)
-    }
-  }
-
-  "GET /submission" should {
-    "return 200 with submission response body" in {
-      withAuthorizedUser()
-      getSubmission(Some(submission))
-
-      val result = route(app, FakeRequest("GET", "/submission/1234")).get
-
-      status(result) must be(OK)
-      contentAsJson(result) must be(submissionJson)
-    }
-
-    "return 200 without submission response" in {
-      withAuthorizedUser()
-      getSubmission(None)
-
-      val result = route(app, FakeRequest("GET", "/submission/1234")).get
-
-      status(result) must be(OK)
-    }
-  }
-
-  "POST /save-movement-submission" should {
-    "return 200 when movement has been saved" in {
-      withAuthorizedUser()
-      withDataSaved(true)
-
-      val result = route(app, fakeRequest).get
-
-      status(result) must be(OK)
-    }
-
-    "return 500 when something goes wrong" in {
-      withAuthorizedUser()
-      withDataSaved(false)
-
-      val failedResult = route(app, fakeRequest).get
-
-      status(failedResult) must be(INTERNAL_SERVER_ERROR)
-    }
-  }
-
-  "GET /movements/:eori" should {
-    "return 200 with movements as response body" in {
-      withAuthorizedUser()
-      withMovements(Seq(movement))
-
-      val result = route(app, FakeRequest("GET", "/movements")).get
-
-      status(result) must be(OK)
-      contentAsJson(result) must be(Json.toJson(Seq(movement)))
-    }
-
-    "return 200 without empty response" in {
-      withAuthorizedUser()
-      withMovements(Seq.empty)
-
-      val result = route(app, FakeRequest("GET", "/movements")).get
-
-      status(result) must be(OK)
-    }
-  }
-
-  "GET submissions using eori number" should {
-    "return 200 with submission response body" in {
-      withAuthorizedUser()
-      withSubmissions(seqSubmissions)
-      withNotification(Seq.empty)
-
-      val result = route(app, FakeRequest("GET", "/submissions")).get
-
-      status(result) must be(OK)
-      contentAsJson(result) must be(jsonSeqSubmission)
-    }
-
-    "return 200 without submission response" in {
-      withAuthorizedUser()
-      withSubmissions(Seq.empty)
-      withNotification(Seq.empty)
-
-      val result = route(app, FakeRequest("GET", "/submissions")).get
-
-      status(result) must be(OK)
-    }
-  }
-
+  //TODO: add return status when declaration is cancelled
   "POST cancel declaration" should {
+
     "return CancellationRequested" when {
+
       "there is an existing declaration" in {
         withAuthorizedUser()
         withCancellationRequest(CancellationRequested)
@@ -178,7 +193,8 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     }
 
     "return CancellationRequestExists" when {
-      "there is an existing cancellation request" in {
+
+      "there is an declaration with existing cancellation request" in {
         withAuthorizedUser()
         withCancellationRequest(CancellationRequestExists)
 
@@ -190,7 +206,8 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     }
 
     "return MissingDeclaration" when {
-      "there is no declaration" in {
+
+      "there is no existing declaration" in {
         withAuthorizedUser()
         withCancellationRequest(MissingDeclaration)
 

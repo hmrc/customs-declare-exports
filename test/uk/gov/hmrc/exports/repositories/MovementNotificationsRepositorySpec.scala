@@ -21,7 +21,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
 
-class MovementNotificationsRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with ExportsTestData {
+class MovementNotificationsRepositorySpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach {
 
   override protected def afterEach(): Unit = {
     super.afterEach()
@@ -32,6 +32,7 @@ class MovementNotificationsRepositorySpec extends CustomsExportsBaseSpec with Be
 
   val repo = component[MovementNotificationsRepository]
 
+  // TODO: possibly split the tests, as it is too high level
   "Movement notifications repository" should {
     "save notification with EORI, conversationID and timestamp" in {
       repo.save(movementNotification).futureValue must be(true)
