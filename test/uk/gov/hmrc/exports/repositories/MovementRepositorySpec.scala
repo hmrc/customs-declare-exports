@@ -23,7 +23,7 @@ import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MovementRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach with ExportsTestData {
+class MovementRepositorySpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach {
 
   override protected def afterEach(): Unit = {
     super.afterEach()
@@ -33,7 +33,8 @@ class MovementRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterE
   override lazy val app: Application = GuiceApplicationBuilder().build()
   val repo = component[MovementsRepository]
 
-  "MovementsRepository" should {
+  // TODO: possibly split the tests, as it is too high level
+  "Movements repository" should {
     "save movement with EORI, DUCR and timestamp" in {
       repo.save(movement).futureValue must be(true)
 

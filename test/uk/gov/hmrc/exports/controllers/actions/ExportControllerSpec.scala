@@ -28,7 +28,8 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
   val fakeRequest = FakeRequest("POST", uri).withBody((jsonBody))
 
   "Auth Action" should {
-    "return InsufficientEnrolments when EORI number is missing" in {
+
+    "return 401 status when EORI number is missing from request" in {
       userWithoutEori()
 
       val result = route(app, fakeRequest).get
@@ -36,7 +37,7 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
       status(result) must be(UNAUTHORIZED)
     }
 
-    "return a success  when a valid request with Enrollments" in {
+    "return 200 status when a valid request with Enrollments is processed" in {
       withAuthorizedUser()
       withDataSaved(true)
 
@@ -45,7 +46,7 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
       status(result) must be(OK)
     }
 
-    "return an Internal Server Error when there is a problem with the service" in {
+    "return 500 status when there is a problem with the service" in {
       withAuthorizedUser()
       withDataSaved(false)
 
