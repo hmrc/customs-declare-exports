@@ -49,30 +49,29 @@ class NotificationsController @Inject()(
 
   def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
     metrics.startTimer(notificationMetric)
-    validateHeaders() { headers: NotificationApiHeaders =>
-      save(getNotificationFromRequest(headers))
-    }
+    validateHeaders(getNotificationFromRequest _ andThen save _)
   }
 
   //TODO response should be streamed or paginated depending on the no of notifications.
   def getNotifications(): Action[AnyContent] = Action.async { implicit request =>
-    authorizedWithEori[AnyContent](request => findByEori(request.loggedUserEori))
+    authorizedWithEori[AnyContent]{ request =>
+      notificationsRepository.findByEori(request.loggedUserEori).map(res => Ok(Json.toJson(res)))
+    }
   }
 
   def getSubmissionNotifications(conversationId: String): Action[AnyContent] = Action.async { implicit request =>
     authorizedWithEori[AnyContent] { authorizedRequest =>
-      findByEoriAndConversationId(authorizedRequest.loggedUserEori, conversationId)
+      notificationsRepository.getByEoriAndConversationId(authorizedRequest.loggedUserEori, conversationId)
+        .map(res => Ok(Json.toJson(res)))
     }
   }
 
   def saveMovement(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
     metrics.startTimer(movementMetric)
-    validateHeaders() { headers: NotificationApiHeaders =>
-      saveMovement(getMovementNotificationFromRequest(headers))
-    }
+    validateHeaders(getMovementNotificationFromRequest _ andThen saveMovement _)
   }
 
-  private def validateHeaders()(
+  private def validateHeaders(
     process: NotificationApiHeaders => Future[Result]
   )(implicit request: Request[NodeSeq], hc: HeaderCarrier): Future[Result] = {
     val accept = request.headers.get(HeaderNames.ACCEPT)
@@ -116,7 +115,7 @@ class NotificationsController @Inject()(
       metadata.response
     )
 
-    Logger.debug("\033[34m Notification is " + notification + "\033[0m")
+    Logger.debug("\u001b[34m Notification is " + notification + "\u001b[0m")
 
     notification
   }
@@ -155,14 +154,6 @@ class NotificationsController @Inject()(
         case _                                                              => response.functionCode
       }
     }.headOption
-
-  private def findByEori(eori: String): Future[Result] =
-    notificationsRepository.findByEori(eori).map(res => Ok(Json.toJson(res)))
-
-  private def findByEoriAndConversationId(eori: String, conversationId: String)(
-    implicit hc: HeaderCarrier
-  ): Future[Result] =
-    notificationsRepository.getByEoriAndConversationId(eori, conversationId).map(res => Ok(Json.toJson(res)))
 
   private def saveMovement(notification: MovementNotification)(implicit hc: HeaderCarrier): Future[Result] =
     movementNotificationsRepository
