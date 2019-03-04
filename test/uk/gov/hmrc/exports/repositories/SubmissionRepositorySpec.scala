@@ -30,7 +30,7 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
   val repo = component[SubmissionRepository]
 
   before {
-    repo.removeAll()
+    repo.removeAll().futureValue
     repo.save(submission).futureValue
   }
 
