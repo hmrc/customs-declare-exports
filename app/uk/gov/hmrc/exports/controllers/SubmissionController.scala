@@ -19,39 +19,68 @@ package uk.gov.hmrc.exports.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, Request, Result}
+import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.repositories.{MovementsRepository, NotificationsRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{
+  MovementsRepository,
+  NotificationsRepository,
+  SubmissionRepository
+}
+import uk.gov.hmrc.exports.services.ExportsService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.xml.NodeSeq
 
 @Singleton
 class SubmissionController @Inject()(
-  appConfig: AppConfig,
-  submissionRepository: SubmissionRepository,
-  movementsRepository: MovementsRepository,
-  authConnector: AuthConnector,
-  notificationsRepository: NotificationsRepository
+    appConfig: AppConfig,
+    submissionRepository: SubmissionRepository,
+    movementsRepository: MovementsRepository,
+    authConnector: AuthConnector,
+    exportsService: ExportsService,
+    headerValidator: HeaderValidator,
+    notificationsRepository: NotificationsRepository
 ) extends ExportController(authConnector) {
 
-  def saveSubmissionResponse(): Action[SubmissionResponse] =
-    Action.async(parse.json[SubmissionResponse]) { implicit request =>
-      authorizedWithEori[SubmissionResponse](_ => processRequest)
+  private def xmlOrEmptyBody: BodyParser[AnyContent] =
+    BodyParser(rq =>
+      parse.tolerantXml(rq).map {
+        case Right(xml) => Right(AnyContentAsXml(xml))
+        case _          => Left(ErrorResponse.ErrorInvalidPayload.XmlResult)
+    })
+
+  def submitDeclaration(): Action[AnyContent] =
+    authorisedAction(bodyParser = xmlOrEmptyBody) { implicit request =>
+      implicit val headers: Map[String, String] = request.headers.toSimpleMap
+      processSubmissionRequest
+    }
+
+  def cancelDeclaration(): Action[AnyContent] =
+    authorisedAction(bodyParser = xmlOrEmptyBody) { implicit request =>
+      implicit val headers: Map[String, String] = request.headers.toSimpleMap
+      processCancelationRequest
     }
 
   def saveMovementSubmission(): Action[MovementResponse] =
-    Action.async(parse.json[MovementResponse]) { implicit request =>
-      authorizedWithEori[MovementResponse](_ => processSave)
+    authorisedAction(parse.json[MovementResponse]) { implicit request =>
+      processSave
     }
 
-  private def processSave()(implicit request: Request[MovementResponse], hc: HeaderCarrier): Future[Result] = {
+  private def processSave()(
+      implicit request: AuthorizedSubmissionRequest[MovementResponse],
+      hc: HeaderCarrier): Future[Result] = {
     val body = request.body
     movementsRepository
-      .save(MovementSubmissions(body.eori, body.conversationId, body.ducr, body.mucr, body.movementType))
+      .save(
+        MovementSubmissions(request.eori.value,
+                            body.conversationId,
+                            body.ducr,
+                            body.mucr,
+                            body.movementType))
       .map(
         res =>
           if (res) {
@@ -64,24 +93,61 @@ class SubmissionController @Inject()(
       )
   }
 
-  private def processRequest()(implicit request: Request[SubmissionResponse], hc: HeaderCarrier): Future[Result] = {
-    val body = request.body
-    submissionRepository
-      .save(Submission(body.eori, body.conversationId, body.ducr, body.lrn, body.mrn, status = body.status))
-      .map(
-        res =>
-          if (res) {
-            Logger.debug("submission data saved to DB")
-            Ok(Json.toJson(ExportsResponse(OK, "Submission response saved")))
-          } else {
-            Logger.error("error  saving submission data to DB")
-            InternalServerError("failed saving submission")
+  private def processSubmissionRequest()(
+      implicit request: AuthorizedSubmissionRequest[AnyContent],
+      hc: HeaderCarrier,
+      headers: Map[String, String]): Future[Result] = {
+    headerValidator.validateAndExtractSubmissionHeaders match {
+      case Right(vhr) =>
+        request.body.asXml match {
+          case Some(xml) =>
+            handleDeclarationSubmit(request.eori.value,
+                                    vhr.localReferenceNumber.value,
+                                    vhr.ducr.value,
+                                    xml).recoverWith {
+              case e: Exception =>
+                Logger.error(s"problem calling declaration api ${e.getMessage}")
+                Future.successful(
+                  ErrorResponse.ErrorInternalServerError.XmlResult)
+            }
+          case None =>
+            Logger.error("body is not xml")
+            Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)
         }
-      )
+      case Left(_) =>
+        Logger.error("Invalid Headers found")
+        Future.successful(ErrorResponse.ErrorGenericBadRequest.XmlResult)
+    }
   }
 
-  def updateSubmission(): Action[Submission] = Action.async(parse.json[Submission]) { implicit request =>
-    authorizedWithEori[Submission] { _ =>
+  private def processCancelationRequest()(
+    implicit request: AuthorizedSubmissionRequest[AnyContent],
+    hc: HeaderCarrier,
+    headers: Map[String, String]): Future[Result] = {
+    headerValidator.validateAndExtractCancellationHeaders match {
+      case Right(vhr) =>
+        request.body.asXml match {
+          case Some(xml) =>
+            handleDeclarationCancelation(request.eori.value,
+              vhr.mrn.value,
+              xml).recoverWith {
+              case e: Exception =>
+                Logger.error(s"problem calling declaration api ${e.getMessage}")
+                Future.successful(
+                  ErrorResponse.ErrorInternalServerError.XmlResult)
+            }
+          case None =>
+            Logger.error("body is not xml")
+            Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)
+        }
+      case Left(_) =>
+        Logger.error("Invalid Headers found")
+        Future.successful(ErrorResponse.ErrorGenericBadRequest.XmlResult)
+    }
+  }
+
+  def updateSubmission(): Action[Submission] =
+    authorisedAction(parse.json[Submission]) { implicit request =>
       val body = request.body
       submissionRepository.updateSubmission(body).map { res =>
         if (res) {
@@ -93,38 +159,39 @@ class SubmissionController @Inject()(
         }
       }
     }
-  }
 
-  def getSubmission(conversationId: String): Action[AnyContent] = Action.async { implicit request =>
-    authorizedWithEori[AnyContent] { _ =>
-      submissionRepository.getByConversationId(conversationId).map { submission =>
-        Ok(Json.toJson(submission))
+  def getSubmission(conversationId: String): Action[AnyContent] =
+    authorisedAction(BodyParsers.parse.default) { implicit request =>
+      submissionRepository.getByConversationId(conversationId).map {
+        submission =>
+          Ok(Json.toJson(submission))
       }
     }
-  }
 
-  def getMovements(): Action[AnyContent] = Action.async { implicit request =>
-    authorizedWithEori[AnyContent] { authorizedRequest =>
-      movementsRepository.findByEori(authorizedRequest.loggedUserEori).map { movements =>
-        Ok(Json.toJson(movements))
+  def getMovements: Action[AnyContent] =
+    authorisedAction(BodyParsers.parse.default) { implicit authorizedRequest =>
+      movementsRepository.findByEori(authorizedRequest.eori.value).map {
+        movements =>
+          Ok(Json.toJson(movements))
       }
     }
-  }
 
-  def getSubmissionsByEori(): Action[AnyContent] = Action.async { implicit request =>
-    authorizedWithEori[AnyContent] { authorizedRequest =>
+  def getSubmissionsByEori: Action[AnyContent] =
+    authorisedAction(BodyParsers.parse.default) { implicit authorizedRequest =>
       for {
-        submissions <- findSubmissions(authorizedRequest.loggedUserEori)
+        submissions <- findSubmissions(authorizedRequest.eori.value)
         notifications <- Future.sequence(
-          submissions.map(submission => getNumerOfNotifications(submission.conversationId))
+          submissions.map(submission =>
+            getNumerOfNotifications(submission.conversationId))
         )
       } yield {
-        val result = submissions.zip(notifications).map((SubmissionData.buildSubmissionData _).tupled)
+        val result = submissions
+          .zip(notifications)
+          .map((SubmissionData.buildSubmissionData _).tupled)
 
         Ok(Json.toJson(result))
       }
     }
-  }
 
   private def findSubmissions(eori: String): Future[Seq[Submission]] =
     submissionRepository.findByEori(eori)
@@ -132,12 +199,22 @@ class SubmissionController @Inject()(
   private def getNumerOfNotifications(conversationId: String): Future[Int] =
     notificationsRepository.getByConversationId(conversationId).map(_.length)
 
-  def cancelDeclaration(): Action[CancellationRequest] = Action.async(parse.json[CancellationRequest]) {
-    implicit request =>
-      authorizedWithEori[CancellationRequest] { authorizedRequest =>
-        submissionRepository
-          .cancelDeclaration(authorizedRequest.loggedUserEori, request.body.mrn)
-          .map(res => Ok(Json.toJson(res)))
+
+  private def handleDeclarationSubmit(
+                                       eori: String,
+                                       lrn: String,
+                                       ducr: String,
+                                       xml: NodeSeq)(implicit hc: HeaderCarrier): Future[Result] = {
+    exportsService.handleSubmission(eori, ducr, lrn, xml)
+  }
+
+  private def handleDeclarationCancelation(
+      eori: String,
+      mrn: String,
+      xml: NodeSeq)(implicit hc: HeaderCarrier): Future[Result] = {
+      exportsService.handleCancellation(eori, mrn, xml).map {
+        case Right(cancellationStatus) => Ok(Json.toJson(cancellationStatus))
+        case Left(value) => value
       }
   }
 }

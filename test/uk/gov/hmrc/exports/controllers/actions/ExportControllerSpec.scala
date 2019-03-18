@@ -16,23 +16,29 @@
 
 package uk.gov.hmrc.exports.controllers.actions
 
-import play.api.libs.json.Json
+import play.api.http.ContentTypes
+import play.api.mvc.Codec
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
-import uk.gov.hmrc.exports.models.SubmissionResponse
+import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
 
 class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
-  val uri = "/save-submission-response"
-  val jsonBody = Json.toJson[SubmissionResponse](submissionResponse)
-  val fakeRequest = FakeRequest("POST", uri).withBody((jsonBody))
+  val uri = "/declaration"
+  val xmlBody: String =  randomSubmitDeclaration.toXml
+  val fakeXmlRequest: FakeRequest[String] = FakeRequest("POST", uri).withBody(xmlBody)
+  val fakeXmlRequestWithHeaders: FakeRequest[String] = fakeXmlRequest
+    .withHeaders(CustomsHeaderNames.XLrnHeaderName -> declarantLrnValue,
+    CustomsHeaderNames.XDucrHeaderName -> declarantDucrValue,
+    AUTHORIZATION -> dummyToken,
+    CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8))
 
   "Auth Action" should {
 
     "return 401 status when EORI number is missing from request" in {
       userWithoutEori()
 
-      val result = route(app, fakeRequest).get
+      val result = route(app, fakeXmlRequestWithHeaders).get
 
       status(result) must be(UNAUTHORIZED)
     }
@@ -41,16 +47,16 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
       withAuthorizedUser()
       withDataSaved(true)
 
-      val result = route(app, fakeRequest).get
+      val result = route(app, fakeXmlRequestWithHeaders).get
 
-      status(result) must be(OK)
+      status(result) must be(ACCEPTED)
     }
 
     "return 500 status when there is a problem with the service" in {
       withAuthorizedUser()
       withDataSaved(false)
 
-      val result = route(app, fakeRequest).get
+      val result = route(app, fakeXmlRequestWithHeaders).get
 
       status(result) must be(INTERNAL_SERVER_ERROR)
     }

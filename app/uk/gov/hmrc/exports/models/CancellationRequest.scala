@@ -18,12 +18,6 @@ package uk.gov.hmrc.exports.models
 
 import play.api.libs.json.{JsValue, Json}
 
-case class CancellationRequest(mrn: String)
-
-object CancellationRequest {
-  implicit val format = Json.format[CancellationRequest]
-}
-
 sealed trait CancellationStatus
 
 case object CancellationRequestExists extends CancellationStatus
@@ -36,9 +30,13 @@ object CancellationStatus {
 
   def unapply(status: CancellationStatus): Option[(String, JsValue)] = {
     val (prod: Product, sub) = status match {
-      case CancellationRequestExists => (CancellationRequestExists, Json.toJson(CancellationRequestExists.toString))
-      case CancellationRequested     => (CancellationRequested, Json.toJson(CancellationRequested.toString))
-      case MissingDeclaration        => (MissingDeclaration, Json.toJson(MissingDeclaration.toString))
+      case CancellationRequestExists =>
+        (CancellationRequestExists,
+         Json.toJson(CancellationRequestExists.toString))
+      case CancellationRequested =>
+        (CancellationRequested, Json.toJson(CancellationRequested.toString))
+      case MissingDeclaration =>
+        (MissingDeclaration, Json.toJson(MissingDeclaration.toString))
     }
     Some(prod.productPrefix -> sub)
   }

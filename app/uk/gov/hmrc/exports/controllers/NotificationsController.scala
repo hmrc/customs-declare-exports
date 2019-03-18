@@ -18,61 +18,70 @@ package uk.gov.hmrc.exports.controllers
 
 import com.google.inject.Singleton
 import javax.inject.Inject
-import org.joda.time.{DateTime, DateTimeComparator}
+import org.joda.time.DateTime
 import play.api.Logger
 import play.api.http.HeaderNames
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, Request, Result}
+import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
+import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, NotificationsRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{
+  MovementNotificationsRepository,
+  NotificationsRepository,
+  SubmissionRepository
+}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.wco.dec._
 import uk.gov.hmrc.wco.dec.inventorylinking.movement.response.InventoryLinkingMovementResponse
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.xml.NodeSeq
-import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
-import uk.gov.hmrc.wco.dec._
 
 @Singleton
 class NotificationsController @Inject()(
-  appConfig: AppConfig,
-  authConnector: AuthConnector,
-  notificationsRepository: NotificationsRepository,
-  movementNotificationsRepository: MovementNotificationsRepository,
-  metrics: ExportsMetrics,
-  submissionRepository: SubmissionRepository
+    appConfig: AppConfig,
+    authConnector: AuthConnector,
+    notificationsRepository: NotificationsRepository,
+    movementNotificationsRepository: MovementNotificationsRepository,
+    metrics: ExportsMetrics,
+    submissionRepository: SubmissionRepository
 ) extends ExportController(authConnector) {
 
-  def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
-    metrics.startTimer(notificationMetric)
-    validateHeaders(getNotificationFromRequest _ andThen save _)
+  def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) {
+    implicit request =>
+      metrics.startTimer(notificationMetric)
+      validateHeaders(getNotificationFromRequest _ andThen save _)
   }
 
   //TODO response should be streamed or paginated depending on the no of notifications.
-  def getNotifications(): Action[AnyContent] = Action.async { implicit request =>
-    authorizedWithEori[AnyContent]{ request =>
-      notificationsRepository.findByEori(request.loggedUserEori).map(res => Ok(Json.toJson(res)))
-    }
-  }
-
-  def getSubmissionNotifications(conversationId: String): Action[AnyContent] = Action.async { implicit request =>
-    authorizedWithEori[AnyContent] { authorizedRequest =>
-      notificationsRepository.getByEoriAndConversationId(authorizedRequest.loggedUserEori, conversationId)
+  def getNotifications: Action[AnyContent] =
+    authorisedAction(BodyParsers.parse.default) { request =>
+      notificationsRepository
+        .findByEori(request.eori.value)
         .map(res => Ok(Json.toJson(res)))
     }
-  }
 
-  def saveMovement(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
-    metrics.startTimer(movementMetric)
-    validateHeaders(getMovementNotificationFromRequest _ andThen saveMovement _)
+  def getSubmissionNotifications(conversationId: String): Action[AnyContent] =
+    authorisedAction(BodyParsers.parse.default) { implicit authorizedRequest =>
+      notificationsRepository
+        .getByEoriAndConversationId(authorizedRequest.eori.value,
+                                    conversationId)
+        .map(res => Ok(Json.toJson(res)))
+    }
+
+  def saveMovement(): Action[NodeSeq] = Action.async(parse.xml) {
+    implicit request =>
+      metrics.startTimer(movementMetric)
+      validateHeaders(
+        getMovementNotificationFromRequest _ andThen saveMovement _)
   }
 
   private def validateHeaders(
-    process: NotificationApiHeaders => Future[Result]
+      process: NotificationApiHeaders => Future[Result]
   )(implicit request: Request[NodeSeq], hc: HeaderCarrier): Future[Result] = {
     val accept = request.headers.get(HeaderNames.ACCEPT)
     val contentType = request.headers.get(HeaderNames.CONTENT_TYPE)
@@ -83,20 +92,26 @@ class NotificationsController @Inject()(
 
     //TODO authorisation header validation
     if (accept.isEmpty) {
-      Future.successful(NotAcceptable(NotAcceptableResponse.toXml))
+      Future.successful(NotAcceptable(NotAcceptableResponse.toXml()))
     } else if (contentType.isEmpty) {
       Future.successful(UnsupportedMediaType)
     } else if (clientId.isEmpty || conversationId.isEmpty || eori.isEmpty) {
-      Future.successful(InternalServerError(HeaderMissingErrorResponse.toXml))
+      Future.successful(InternalServerError(HeaderMissingErrorResponse.toXml()))
     } else
       process(
-        NotificationApiHeaders(accept.get, contentType.get, clientId.get, badgeIdentifier, conversationId.get, eori.get)
+        NotificationApiHeaders(accept.get,
+                               contentType.get,
+                               clientId.get,
+                               badgeIdentifier,
+                               conversationId.get,
+                               eori.get)
       )
   }
 
   private def getNotificationFromRequest(
-    headers: NotificationApiHeaders
-  )(implicit request: Request[NodeSeq], hc: HeaderCarrier): DeclarationNotification = {
+      headers: NotificationApiHeaders
+  )(implicit request: Request[NodeSeq],
+    hc: HeaderCarrier): DeclarationNotification = {
     val metadata = MetaData.fromXml(request.body.toString)
 
     val notification = DeclarationNotification(
@@ -120,7 +135,8 @@ class NotificationsController @Inject()(
     notification
   }
 
-  private def save(notification: DeclarationNotification)(implicit hc: HeaderCarrier): Future[Result] = {
+  private def save(notification: DeclarationNotification)(
+      implicit hc: HeaderCarrier): Future[Result] = {
     val eori = notification.eori
     val convId = notification.conversationId
 
@@ -129,7 +145,7 @@ class NotificationsController @Inject()(
         .getByEoriAndConversationId(eori, convId)
         .map(_.sortWith((a, b) => a.isOlderThan(b)).headOption)
       notificationSaved <- notificationsRepository.save(notification)
-      shouldBeUpdated = oldNotification.forall(notification.isOlderThan(_))
+      shouldBeUpdated = oldNotification.forall(notification.isOlderThan)
       _ <- if (shouldBeUpdated)
         submissionRepository.updateStatus(
           notification.eori,
@@ -143,36 +159,40 @@ class NotificationsController @Inject()(
         Accepted
       } else {
         metrics.incrementCounter(notificationMetric)
-        InternalServerError(NotificationFailedErrorResponse.toXml)
+        InternalServerError(NotificationFailedErrorResponse.toXml())
       }
   }
 
   private def buildStatus(responses: Seq[Response]): Option[String] =
     responses.map { response =>
       (response.functionCode, response.status.flatMap(_.nameCode).headOption) match {
-        case ("11", Some(nameCode)) if nameCode == "39" || nameCode == "41" => s"11$nameCode"
-        case _                                                              => response.functionCode
+        case ("11", Some(nameCode)) if nameCode == "39" || nameCode == "41" =>
+          s"11$nameCode"
+        case _ => response.functionCode
       }
     }.headOption
 
-  private def saveMovement(notification: MovementNotification)(implicit hc: HeaderCarrier): Future[Result] =
+  private def saveMovement(notification: MovementNotification)(
+      implicit hc: HeaderCarrier): Future[Result] =
     movementNotificationsRepository
       .save(notification)
-      .map(_ match {
+      .map {
         case true =>
           metrics.incrementCounter(movementMetric)
           Accepted
         case _ =>
           metrics.incrementCounter(movementMetric)
-          InternalServerError(NotificationFailedErrorResponse.toXml)
-      })
+          InternalServerError(NotificationFailedErrorResponse.toXml())
+      }
 
   private def getMovementNotificationFromRequest(
-    headers: NotificationApiHeaders
-  )(implicit request: Request[NodeSeq], hc: HeaderCarrier): MovementNotification =
+      headers: NotificationApiHeaders
+  )(implicit request: Request[NodeSeq],
+    hc: HeaderCarrier): MovementNotification =
     MovementNotification(
       conversationId = headers.conversationId,
       eori = headers.eori,
-      movementResponse = InventoryLinkingMovementResponse.fromXml(request.body.toString)
+      movementResponse =
+        InventoryLinkingMovementResponse.fromXml(request.body.toString)
     )
 }

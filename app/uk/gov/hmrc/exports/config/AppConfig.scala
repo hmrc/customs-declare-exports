@@ -22,16 +22,38 @@ import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.config.{AppName, ServicesConfig}
 
 @Singleton
-class AppConfig @Inject()(override val runModeConfiguration: Configuration, val environment: Environment)
-    extends ServicesConfig with AppName {
+class AppConfig @Inject()(override val runModeConfiguration: Configuration,
+                          val environment: Environment)
+    extends ServicesConfig
+    with AppName {
 
   override protected def mode: Mode = environment.mode
 
-  override protected def appNameConfiguration: Configuration = runModeConfiguration
+  override protected def appNameConfiguration: Configuration =
+    runModeConfiguration
 
   private def loadConfig(key: String): String =
-    runModeConfiguration.getString(key).getOrElse(throw new Exception(s"Missing configuration key: $key"))
+    runModeConfiguration
+      .getString(key)
+      .getOrElse(throw new Exception(s"Missing configuration key: $key"))
 
-  lazy val authUrl = baseUrl("auth")
-  lazy val loginUrl = loadConfig("urls.login")
+  lazy val authUrl: String = baseUrl("auth")
+  lazy val loginUrl: String = loadConfig("urls.login")
+
+  lazy val customsDeclarationsBaseUrl: String = baseUrl("customs-declarations")
+
+  lazy val customsDeclarationsApiVersion: String = getString(
+    "microservice.services.customs-declarations.api-version")
+
+  lazy val submitDeclarationUri: String = getString(
+    "microservice.services.customs-declarations.submit-uri")
+
+  lazy val cancelDeclarationUri: String = getString(
+    "microservice.services.customs-declarations.cancel-uri")
+
+  lazy val notificationBearerToken: String = getString(
+    "microservice.services.customs-declarations.bearer-token")
+
+  lazy val developerHubClientId: String =
+    getString("microservice.services.customs-declarations.client-id")
 }
