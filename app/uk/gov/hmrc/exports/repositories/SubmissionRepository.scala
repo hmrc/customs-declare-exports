@@ -20,6 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.JsString
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import uk.gov.hmrc.exports.models._
@@ -29,21 +30,28 @@ import uk.gov.hmrc.mongo.{AtomicUpdate, ReactiveRepository}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: ExecutionContext)
+class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent,
+                                     ec: ExecutionContext)
     extends ReactiveRepository[Submission, BSONObjectID](
       "submissions",
       mc.mongoConnector.db,
       Submission.formats,
       objectIdFormats
-    ) with AtomicUpdate[Submission] {
+    )
+    with AtomicUpdate[Submission] {
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
-    Index(Seq("conversationId" -> IndexType.Ascending), unique = true, name = Some("conversationIdIdx")),
-    Index(Seq("mrn" -> IndexType.Ascending), unique = true, name = Some("mrnIdx"))
+    Index(Seq("conversationId" -> IndexType.Ascending),
+          unique = true,
+          name = Some("conversationIdIdx")),
+    Index(Seq("mrn" -> IndexType.Ascending),
+          unique = true,
+          name = Some("mrnIdx"))
   )
 
-  def findByEori(eori: String): Future[Seq[Submission]] = find("eori" -> JsString(eori))
+  def findByEori(eori: String): Future[Seq[Submission]] =
+    find("eori" -> JsString(eori))
 
   def getByConversationId(conversationId: String): Future[Option[Submission]] =
     find("conversationId" -> JsString(conversationId)).map(_.headOption)
@@ -51,17 +59,20 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
   def getByEoriAndMrn(eori: String, mrn: String): Future[Option[Submission]] =
     find("eori" -> JsString(eori), "mrn" -> JsString(mrn)).map(_.headOption)
 
-  override def isInsertion(newRecordId: BSONObjectID, oldRecord: Submission): Boolean = newRecordId.equals(oldRecord.id)
+  override def isInsertion(newRecordId: BSONObjectID,
+                           oldRecord: Submission): Boolean =
+    newRecordId.equals(oldRecord.id)
 
-  def save(submission: Submission): Future[Boolean] = insert(submission).map { res =>
-    if (!res.ok) Logger.error("Error during inserting submission result " + res.writeErrors.mkString("--"))
-    res.ok
-  }
+  def save(submission: Submission): Future[Boolean] =
+    insert(submission).map(wr => wr.ok)
 
   def updateSubmission(submission: Submission): Future[Boolean] = {
-    val finder = BSONDocument("_id" -> submission.id, "conversationId" -> submission.conversationId)
+    val finder = BSONDocument("_id" -> submission.id,
+                              "conversationId" -> submission.conversationId)
 
-    val modifier = BSONDocument("$set" -> BSONDocument("mrn" -> submission.mrn, "status" -> submission.status))
+    val modifier = BSONDocument(
+      "$set" -> BSONDocument("mrn" -> submission.mrn,
+                             "status" -> submission.status))
 
     atomicUpdate(finder, modifier).map {
       case Some(result) => result.writeResult.ok
@@ -69,11 +80,15 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
     }
   }
 
-  def updateStatus(eori: String, convId: String, status: Option[String]): Future[Boolean] = {
+  def updateStatus(eori: String,
+                   convId: String,
+                   status: Option[String]): Future[Boolean] = {
     val finder = BSONDocument("eori" -> eori, "conversationId" -> convId)
 
     val modifier =
-      if (status.isDefined) BSONDocument("$set" -> BSONDocument("status" -> status.get)) else BSONDocument()
+      if (status.isDefined)
+        BSONDocument("$set" -> BSONDocument("status" -> status.get))
+      else BSONDocument()
 
     atomicUpdate(finder, modifier).map {
       case Some(result) => result.writeResult.ok
@@ -81,12 +96,15 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
     }
   }
 
-  def cancelDeclaration(eori: String, mrn: String): Future[CancellationStatus] = {
+  def cancelDeclaration(eori: String,
+                        mrn: String): Future[CancellationStatus] = {
     val finder = BSONDocument("eori" -> eori, "mrn" -> mrn)
 
-    val modifier = BSONDocument("$set" -> BSONDocument("isCancellationRequested" -> true))
+    val modifier = BSONDocument(
+      "$set" -> BSONDocument("status" -> RequestedCancellation.toString,"isCancellationRequested" -> true))
 
-    find("eori" -> JsString(eori), "mrn" -> JsString(mrn)).map(_.headOption) flatMap {
+    find("eori" -> JsString(eori), "mrn" -> JsString(mrn))
+      .map(_.headOption) flatMap {
       case Some(submission) if submission.isCancellationRequested =>
         Future.successful(CancellationRequestExists)
       case Some(_) =>

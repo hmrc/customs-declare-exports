@@ -18,44 +18,60 @@ package uk.gov.hmrc.exports.controllers
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.Retrievals._
-import uk.gov.hmrc.exports.models.AuthorizedRequest
+import uk.gov.hmrc.exports.models.{AuthorizedSubmissionRequest, Eori, ErrorResponse}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ExportController @Inject()(override val authConnector: AuthConnector)(implicit ec: ExecutionContext)
-    extends BaseController with AuthorisedFunctions {
+class ExportController @Inject()(override val authConnector: AuthConnector)(
+    implicit ec: ExecutionContext)
+    extends BaseController
+    with AuthorisedFunctions {
 
-  def authorizedWithEori[A](
-    callback: (AuthorizedRequest[A] => Future[Result])
-  )(implicit request: Request[A]): Future[Result] =
-    authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments) { enrolments =>
-      getEoriFromEnrolments(enrolments) match {
-        case Some(eori) if eori.nonEmpty => callback(AuthorizedRequest(request, eori))
-        case _                           => throw InsufficientEnrolments()
-      }
-    } recoverWith {
-      handleFailure
-    }
+  private def hasEnrolment(
+      allEnrolments: Enrolments): Option[EnrolmentIdentifier] =
+    allEnrolments
+      .getEnrolment("HMRC-CUS-ORG")
+      .flatMap(_.getIdentifier("EORINumber"))
 
-  private def getEoriFromEnrolments(enrolments: Enrolments): Option[String] =
-    enrolments.getEnrolment("HMRC-CUS-ORG").flatMap(_.getIdentifier("EORINumber")).map(_.value)
-
-  def handleFailure(implicit request: Request[_]): PartialFunction[Throwable, Future[Result]] =
-    PartialFunction[Throwable, Future[Result]] {
+  def authorisedWithEori[A](implicit hc: HeaderCarrier, request: Request[A])
+    : Future[Either[ErrorResponse, AuthorizedSubmissionRequest[A]]] = {
+    authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments) {
+      enrolments =>
+        hasEnrolment(enrolments) match {
+          case Some(eori) =>
+            Future.successful(
+              Right(AuthorizedSubmissionRequest(Eori(eori.value), request)))
+          case _ => Future.successful(Left(ErrorResponse.ErrorUnauthorized))
+        }
+    } recover {
       case _: InsufficientEnrolments =>
         Logger.warn(s"Unauthorised access for ${request.uri}")
-        Future.successful(Unauthorized(Json.toJson("Unauthorized for exports")))
-      case _: AuthorisationException =>
-        Logger.warn(s"Unauthorised Exception for ${request.uri}")
-        Future.successful(Unauthorized(Json.toJson("Unauthorized for exports")))
+        Left(ErrorResponse.errorUnauthorized("Unauthorized for imports"))
+      case e: AuthorisationException =>
+        Logger.warn(s"Unauthorised Exception for ${request.uri} ${e.reason}")
+        Left(ErrorResponse.errorUnauthorized("Unauthorized for imports"))
       case ex: Throwable =>
         Logger.error("Internal server error is " + ex.getMessage)
-        Future.successful(InternalServerError(Json.toJson("InternalServerError")))
+        Left(ErrorResponse.ErrorInternalServerError)
     }
+  }
+  def authorisedAction[A](bodyParser: BodyParser[A])(
+      body: AuthorizedSubmissionRequest[A] => Future[Result]): Action[A] =
+    Action.async(bodyParser) { implicit request =>
+      authorisedWithEori.flatMap {
+        case Right(authorisedRequest) =>
+          Logger.info(s"Authorised request for ${authorisedRequest.eori.value}")
+          body(authorisedRequest)
+        case Left(error) =>
+          Logger.error("Problems with Authorisation")
+          Future.successful(error.XmlResult)
+      }
+    }
+
 }

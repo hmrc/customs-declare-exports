@@ -29,7 +29,8 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class NotificationsRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: ExecutionContext)
+class NotificationsRepository @Inject()(mc: ReactiveMongoComponent)(
+    implicit ec: ExecutionContext)
     extends ReactiveRepository[DeclarationNotification, BSONObjectID](
       "exportNotifications",
       mc.mongoConnector.db,
@@ -39,22 +40,30 @@ class NotificationsRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec:
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
-    Index(Seq("conversationId" -> IndexType.Ascending), name = Some("conversationIdIdx"))
+    Index(Seq("conversationId" -> IndexType.Ascending),
+          name = Some("conversationIdIdx"))
   )
 
-  def findByEori(eori: String): Future[Seq[DeclarationNotification]] = find("eori" -> JsString(eori))
+  def findByEori(eori: String): Future[Seq[DeclarationNotification]] =
+    find("eori" -> JsString(eori))
 
-  def getByConversationId(conversationId: String): Future[Seq[DeclarationNotification]] =
+  def getByConversationId(
+      conversationId: String): Future[Seq[DeclarationNotification]] =
     find("conversationId" -> JsString(conversationId))
 
-  def getByEoriAndConversationId(eori: String, conversationId: String): Future[Seq[DeclarationNotification]] =
+  def getByEoriAndConversationId(
+      eori: String,
+      conversationId: String): Future[Seq[DeclarationNotification]] =
     find("eori" -> JsString(eori), "conversationId" -> JsString(conversationId))
 
-  def save(exportsNotification: DeclarationNotification): Future[Boolean] = insert(exportsNotification).map { res =>
-    if (!res.ok)
-      // $COVERAGE-OFF$Trivial
-      Logger.error("Errors during inserting export notification " + res.writeErrors.mkString("--"))
-    // $COVERAGE-ON$
-    res.ok
-  }
+  def save(exportsNotification: DeclarationNotification): Future[Boolean] =
+    insert(exportsNotification).map { res =>
+      if (!res.ok)
+        // $COVERAGE-OFF$Trivial
+        Logger.error(
+          "Errors during inserting export notification " + res.writeErrors
+            .mkString("--"))
+      // $COVERAGE-ON$
+      res.ok
+    }
 }

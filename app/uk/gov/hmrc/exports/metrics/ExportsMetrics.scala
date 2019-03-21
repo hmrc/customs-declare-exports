@@ -26,13 +26,16 @@ import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 class ExportsMetrics @Inject()(metrics: Metrics) {
 
   private val timers = Map(
-    notificationMetric -> metrics.defaultRegistry.timer(s"$notificationMetric.timer"),
+    notificationMetric -> metrics.defaultRegistry.timer(
+      s"$notificationMetric.timer"),
     movementMetric -> metrics.defaultRegistry.timer(s"$movementMetric.timer")
   )
 
   private val counters = Map(
-    notificationMetric -> metrics.defaultRegistry.counter(s"$notificationMetric.counter"),
-    movementMetric -> metrics.defaultRegistry.counter(s"$movementMetric.counter")
+    notificationMetric -> metrics.defaultRegistry.counter(
+      s"$notificationMetric.counter"),
+    movementMetric -> metrics.defaultRegistry.counter(
+      s"$movementMetric.counter")
   )
 
   def startTimer(feature: String): Context = timers(feature).time()
