@@ -41,7 +41,7 @@ trait ExportsTestData {
   val lrn: Option[String] = Some(randomString(22))
   val mrn: String = randomString(16)
   val mucr: String = randomString(16)
-  val conversationId: String = UUID.randomUUID.toString
+  val conversationId: String = "b1c09f1b-7c94-4e90-b754-7c5c71c44e11"
   val ducr: String = randomString(16)
 
   val before: Long = System.currentTimeMillis()
@@ -59,6 +59,7 @@ trait ExportsTestData {
   val Valid_X_EORI_IDENTIFIER_HEADER: (String, String) = XEoriIdentifierHeaderName -> declarantEoriValue
   val Valid_LRN_HEADER: (String, String) = XLrnHeaderName -> declarantLrnValue
   val Valid_AUTHORIZATION_HEADER: (String, String) = HeaderNames.AUTHORIZATION -> dummyToken
+  val VALID_CONVERSATIONID_HEADER = XConversationIdName -> conversationId
   val VALID_DUCR_HEADER: (String, String) = XDucrHeaderName -> declarantDucrValue
   val VALID_MRN_HEADER: (String, String) = XMrnHeaderName -> declarantMrnValue
   val now: DateTime = DateTime.now
@@ -70,7 +71,7 @@ trait ExportsTestData {
   val response1: Seq[Response] = Seq(Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("123")))
   val response2: Seq[Response] = Seq(Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("456")))
 
-  val notification = DeclarationNotification(now, conversationId, eori, None, DeclarationMetadata(), response1)
+  val notification = DeclarationNotification(now, conversationId, eori, DeclarationMetadata(), response1)
   val movementNotification =
     MovementNotification(now, conversationId, eori, movementResponse = InventoryLinkingMovementResponse("EAA"))
   val submissionResponse = SubmissionResponse(eori, conversationId, ducr, lrn, Some(mrn), status = "01")
@@ -80,6 +81,7 @@ trait ExportsTestData {
   val ValidHeaders: Map[String, String] = Map(
     contentTypeHeader,
     Valid_AUTHORIZATION_HEADER,
+    VALID_CONVERSATIONID_HEADER,
     Valid_X_EORI_IDENTIFIER_HEADER,
     Valid_LRN_HEADER,
     VALID_DUCR_HEADER,

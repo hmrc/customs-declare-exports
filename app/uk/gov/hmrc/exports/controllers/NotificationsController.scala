@@ -39,12 +39,14 @@ import uk.gov.hmrc.wco.dec.inventorylinking.movement.response.InventoryLinkingMo
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 import scala.xml.NodeSeq
 
 @Singleton
 class NotificationsController @Inject()(
     appConfig: AppConfig,
     authConnector: AuthConnector,
+    headerValidator: HeaderValidator,
     notificationsRepository: NotificationsRepository,
     movementNotificationsRepository: MovementNotificationsRepository,
     metrics: ExportsMetrics,
@@ -54,7 +56,17 @@ class NotificationsController @Inject()(
   def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) {
     implicit request =>
       metrics.startTimer(notificationMetric)
-      validateHeaders(getNotificationFromRequest _ andThen save _)
+      headerValidator
+        .validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
+        case Right(extractedHeaders) =>
+          getNotificationFromRequest(extractedHeaders)
+            .fold(
+              Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)) {
+              save(_)
+            }
+        case Left(errorResponse) => Future.successful(errorResponse.XmlResult)
+      }
+
   }
 
   //TODO response should be streamed or paginated depending on the no of notifications.
@@ -76,63 +88,51 @@ class NotificationsController @Inject()(
   def saveMovement(): Action[NodeSeq] = Action.async(parse.xml) {
     implicit request =>
       metrics.startTimer(movementMetric)
-      validateHeaders(
-        getMovementNotificationFromRequest _ andThen saveMovement _)
-  }
-
-  private def validateHeaders(
-      process: NotificationApiHeaders => Future[Result]
-  )(implicit request: Request[NodeSeq], hc: HeaderCarrier): Future[Result] = {
-    val accept = request.headers.get(HeaderNames.ACCEPT)
-    val contentType = request.headers.get(HeaderNames.CONTENT_TYPE)
-    val clientId = request.headers.get("X-CDS-Client-ID")
-    val conversationId = request.headers.get("X-Conversation-ID")
-    val eori = request.headers.get("X-EORI-Identifier")
-    val badgeIdentifier = request.headers.get("X-Badge-Identifier")
-
-    //TODO authorisation header validation
-    if (accept.isEmpty) {
-      Future.successful(NotAcceptable(NotAcceptableResponse.toXml()))
-    } else if (contentType.isEmpty) {
-      Future.successful(UnsupportedMediaType)
-    } else if (clientId.isEmpty || conversationId.isEmpty || eori.isEmpty) {
-      Future.successful(InternalServerError(HeaderMissingErrorResponse.toXml()))
-    } else
-      process(
-        NotificationApiHeaders(accept.get,
-                               contentType.get,
-                               clientId.get,
-                               badgeIdentifier,
-                               conversationId.get,
-                               eori.get)
-      )
+      headerValidator
+        .validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
+        case Right(extractedHeaders) =>
+          getMovementNotificationFromRequest(extractedHeaders)
+            .fold(
+              Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)) {
+              saveMovement(_)
+            }
+        case Left(errorResponse) => Future.successful(errorResponse.XmlResult)
+      }
   }
 
   private def getNotificationFromRequest(
-      headers: NotificationApiHeaders
-  )(implicit request: Request[NodeSeq],
-    hc: HeaderCarrier): DeclarationNotification = {
-    val metadata = MetaData.fromXml(request.body.toString)
+      vhnar: ValidatedHeadersNotificationApiRequest
+  )(implicit request: Request[NodeSeq]): Option[DeclarationNotification] = {
 
-    val notification = DeclarationNotification(
-      DateTime.now,
-      headers.conversationId,
-      headers.eori,
-      headers.badgeId,
-      DeclarationMetadata(
-        metadata.wcoDataModelVersionCode,
-        metadata.wcoTypeName,
-        metadata.responsibleCountryCode,
-        metadata.responsibleAgencyName,
-        metadata.agencyAssignedCustomizationCode,
-        metadata.agencyAssignedCustomizationVersionCode
-      ),
-      metadata.response
-    )
+    val parseXmlResult = Try[MetaData] {
+      MetaData.fromXml(request.body.toString)
+    }
 
-    Logger.debug("\u001b[34m Notification is " + notification + "\u001b[0m")
+    parseXmlResult match {
+      case Success(metaData) =>
+        val notification = DeclarationNotification(
+          DateTime.now,
+          vhnar.conversationId.value,
+          vhnar.eori.value,
+          DeclarationMetadata(
+            metaData.wcoDataModelVersionCode,
+            metaData.wcoTypeName,
+            metaData.responsibleCountryCode,
+            metaData.responsibleAgencyName,
+            metaData.agencyAssignedCustomizationCode,
+            metaData.agencyAssignedCustomizationVersionCode
+          ),
+          metaData.response
+        )
 
-    notification
+        Logger.debug("\u001b[34m Notification is " + notification + "\u001b[0m")
+
+        Some(notification)
+      case Failure(ex) =>
+        Logger.error("problem parsing Notification", ex)
+        None
+    }
+
   }
 
   private def save(notification: DeclarationNotification)(
@@ -186,13 +186,26 @@ class NotificationsController @Inject()(
       }
 
   private def getMovementNotificationFromRequest(
-      headers: NotificationApiHeaders
+      vhnar: ValidatedHeadersNotificationApiRequest
   )(implicit request: Request[NodeSeq],
-    hc: HeaderCarrier): MovementNotification =
-    MovementNotification(
-      conversationId = headers.conversationId,
-      eori = headers.eori,
-      movementResponse =
-        InventoryLinkingMovementResponse.fromXml(request.body.toString)
-    )
+    hc: HeaderCarrier): Option[MovementNotification] = {
+    val parseResult = Try[InventoryLinkingMovementResponse] {
+      InventoryLinkingMovementResponse.fromXml(request.body.toString)
+    }
+    parseResult match {
+      case Success(response) => {
+        val notification = MovementNotification(
+          conversationId = vhnar.conversationId.value,
+          eori = vhnar.eori.value,
+          movementResponse = response
+        )
+        Some(notification)
+      }
+      case Failure(ex) => {
+        Logger.error("error parsing movementNotification", ex)
+        None
+      }
+    }
+
+  }
 }
