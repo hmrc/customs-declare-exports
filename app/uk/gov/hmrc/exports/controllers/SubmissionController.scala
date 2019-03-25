@@ -23,11 +23,7 @@ import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.repositories.{
-  MovementsRepository,
-  NotificationsRepository,
-  SubmissionRepository
-}
+import uk.gov.hmrc.exports.repositories.{MovementsRepository, NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.ExportsService
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -37,21 +33,23 @@ import scala.xml.NodeSeq
 
 @Singleton
 class SubmissionController @Inject()(
-    appConfig: AppConfig,
-    submissionRepository: SubmissionRepository,
-    movementsRepository: MovementsRepository,
-    authConnector: AuthConnector,
-    exportsService: ExportsService,
-    headerValidator: HeaderValidator,
-    notificationsRepository: NotificationsRepository
+  appConfig: AppConfig,
+  submissionRepository: SubmissionRepository,
+  movementsRepository: MovementsRepository,
+  authConnector: AuthConnector,
+  exportsService: ExportsService,
+  headerValidator: HeaderValidator,
+  notificationsRepository: NotificationsRepository
 ) extends ExportController(authConnector) {
 
   private def xmlOrEmptyBody: BodyParser[AnyContent] =
-    BodyParser(rq =>
-      parse.tolerantXml(rq).map {
-        case Right(xml) => Right(AnyContentAsXml(xml))
-        case _          => Left(ErrorResponse.ErrorInvalidPayload.XmlResult)
-    })
+    BodyParser(
+      rq =>
+        parse.tolerantXml(rq).map {
+          case Right(xml) => Right(AnyContentAsXml(xml))
+          case _          => Left(ErrorResponse.ErrorInvalidPayload.XmlResult)
+      }
+    )
 
   def submitDeclaration(): Action[AnyContent] =
     authorisedAction(bodyParser = xmlOrEmptyBody) { implicit request =>
@@ -71,16 +69,12 @@ class SubmissionController @Inject()(
     }
 
   private def processSave()(
-      implicit request: AuthorizedSubmissionRequest[MovementResponse],
-      hc: HeaderCarrier): Future[Result] = {
+    implicit request: AuthorizedSubmissionRequest[MovementResponse],
+    hc: HeaderCarrier
+  ): Future[Result] = {
     val body = request.body
     movementsRepository
-      .save(
-        MovementSubmissions(request.eori.value,
-                            body.conversationId,
-                            body.ducr,
-                            body.mucr,
-                            body.movementType))
+      .save(MovementSubmissions(request.eori.value, body.conversationId, body.ducr, body.mucr, body.movementType))
       .map(
         res =>
           if (res) {
@@ -94,21 +88,18 @@ class SubmissionController @Inject()(
   }
 
   private def processSubmissionRequest()(
-      implicit request: AuthorizedSubmissionRequest[AnyContent],
-      hc: HeaderCarrier,
-      headers: Map[String, String]): Future[Result] = {
+    implicit request: AuthorizedSubmissionRequest[AnyContent],
+    hc: HeaderCarrier,
+    headers: Map[String, String]
+  ): Future[Result] =
     headerValidator.validateAndExtractSubmissionHeaders match {
       case Right(vhr) =>
         request.body.asXml match {
           case Some(xml) =>
-            handleDeclarationSubmit(request.eori.value,
-                                    vhr.localReferenceNumber.value,
-                                    vhr.ducr.value,
-                                    xml).recoverWith {
+            handleDeclarationSubmit(request.eori.value, vhr.localReferenceNumber.value, vhr.ducr.value, xml).recoverWith {
               case e: Exception =>
                 Logger.error(s"problem calling declaration api ${e.getMessage}")
-                Future.successful(
-                  ErrorResponse.ErrorInternalServerError.XmlResult)
+                Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
             }
           case None =>
             Logger.error("body is not xml")
@@ -118,23 +109,20 @@ class SubmissionController @Inject()(
         Logger.error("Invalid Headers found")
         Future.successful(ErrorResponse.ErrorGenericBadRequest.XmlResult)
     }
-  }
 
   private def processCancelationRequest()(
-      implicit request: AuthorizedSubmissionRequest[AnyContent],
-      hc: HeaderCarrier,
-      headers: Map[String, String]): Future[Result] = {
-      headerValidator.validateAndExtractCancellationHeaders(headers) match {
+    implicit request: AuthorizedSubmissionRequest[AnyContent],
+    hc: HeaderCarrier,
+    headers: Map[String, String]
+  ): Future[Result] =
+    headerValidator.validateAndExtractCancellationHeaders(headers) match {
       case Right(vhr) =>
         request.body.asXml match {
           case Some(xml) =>
-            handleDeclarationCancelation(request.eori.value,
-              vhr.mrn.value,
-              xml).recoverWith {
+            handleDeclarationCancelation(request.eori.value, vhr.mrn.value, xml).recoverWith {
               case e: Exception =>
                 Logger.error(s"problem calling declaration api ${e.getMessage}")
-                Future.successful(
-                  ErrorResponse.ErrorInternalServerError.XmlResult)
+                Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
             }
           case None =>
             Logger.error("body is not xml")
@@ -144,7 +132,6 @@ class SubmissionController @Inject()(
         Logger.error("Invalid Headers found")
         Future.successful(ErrorResponse.ErrorGenericBadRequest.XmlResult)
     }
-  }
 
   def updateSubmission(): Action[Submission] =
     authorisedAction(parse.json[Submission]) { implicit request =>
@@ -162,17 +149,15 @@ class SubmissionController @Inject()(
 
   def getSubmission(conversationId: String): Action[AnyContent] =
     authorisedAction(BodyParsers.parse.default) { implicit request =>
-      submissionRepository.getByConversationId(conversationId).map {
-        submission =>
-          Ok(Json.toJson(submission))
+      submissionRepository.getByConversationId(conversationId).map { submission =>
+        Ok(Json.toJson(submission))
       }
     }
 
   def getMovements: Action[AnyContent] =
     authorisedAction(BodyParsers.parse.default) { implicit authorizedRequest =>
-      movementsRepository.findByEori(authorizedRequest.eori.value).map {
-        movements =>
-          Ok(Json.toJson(movements))
+      movementsRepository.findByEori(authorizedRequest.eori.value).map { movements =>
+        Ok(Json.toJson(movements))
       }
     }
 
@@ -181,8 +166,7 @@ class SubmissionController @Inject()(
       for {
         submissions <- findSubmissions(authorizedRequest.eori.value)
         notifications <- Future.sequence(
-          submissions.map(submission =>
-            getNumerOfNotifications(submission.conversationId))
+          submissions.map(submission => getNumerOfNotifications(submission.conversationId))
         )
       } yield {
         val result = submissions
@@ -199,22 +183,16 @@ class SubmissionController @Inject()(
   private def getNumerOfNotifications(conversationId: String): Future[Int] =
     notificationsRepository.getByConversationId(conversationId).map(_.length)
 
-
-  private def handleDeclarationSubmit(
-                                       eori: String,
-                                       lrn: String,
-                                       ducr: String,
-                                       xml: NodeSeq)(implicit hc: HeaderCarrier): Future[Result] = {
+  private def handleDeclarationSubmit(eori: String, lrn: String, ducr: String, xml: NodeSeq)(
+    implicit hc: HeaderCarrier
+  ): Future[Result] =
     exportsService.handleSubmission(eori, ducr, lrn, xml)
-  }
 
-  private def handleDeclarationCancelation(
-      eori: String,
-      mrn: String,
-      xml: NodeSeq)(implicit hc: HeaderCarrier): Future[Result] = {
-      exportsService.handleCancellation(eori, mrn, xml).map {
-        case Right(cancellationStatus) => Ok(Json.toJson(cancellationStatus))
-        case Left(value) => value
-      }
-  }
+  private def handleDeclarationCancelation(eori: String, mrn: String, xml: NodeSeq)(
+    implicit hc: HeaderCarrier
+  ): Future[Result] =
+    exportsService.handleCancellation(eori, mrn, xml).map {
+      case Right(cancellationStatus) => Ok(Json.toJson(cancellationStatus))
+      case Left(value)               => value
+    }
 }

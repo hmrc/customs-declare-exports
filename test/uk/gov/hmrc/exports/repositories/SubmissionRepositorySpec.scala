@@ -16,26 +16,28 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import org.scalatest.BeforeAndAfter
+import org.scalatest.BeforeAndAfterEach
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
 import uk.gov.hmrc.exports.models.{CancellationRequestExists, CancellationRequested, MissingDeclaration, Submission}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfter {
+class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach {
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
   val repo = component[SubmissionRepository]
 
-  before {
-    repo.removeAll().futureValue
+  override def beforeEach(): Unit = {
+    super.beforeEach()
     repo.save(submission).futureValue
   }
 
-  after {
-    repo.removeAll()
+  override def afterEach(): Unit = {
+    super.afterEach()
+    repo.removeAll().futureValue
   }
 
   "Submission repository" should {
@@ -91,6 +93,12 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
       newFound.status must be("02")
     }
 
+    "not update when old submission not exist" in {
+      val submissionToUpdate = Submission("654321", "654321", "ducr", Some("lrn"), Some("mrn"), status = "01")
+
+      repo.updateSubmission(submissionToUpdate).futureValue must be(false)
+    }
+
     //TODO: add return status when declaration is actually cancelled
     "be able to cancel declaration" in {
       repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequested)
@@ -98,6 +106,14 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
       repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequestExists)
 
       repo.cancelDeclaration("incorrect", "incorrect").futureValue must be(MissingDeclaration)
+    }
+
+    "update status for existing submission" in {
+      repo.updateStatus(eori, conversationId, Some("NewStatus")).futureValue must be(true)
+    }
+
+    "update status without new status for existing submission" in {
+      repo.updateStatus(eori, conversationId, None).futureValue must be(false)
     }
   }
 }

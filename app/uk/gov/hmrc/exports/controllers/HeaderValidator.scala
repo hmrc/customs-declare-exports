@@ -24,33 +24,25 @@ import uk.gov.hmrc.exports.models._
 @Singleton
 class HeaderValidator {
 
-  def extractLrnHeader(headers: Map[String, String]): Option[String] = {
+  def extractLrnHeader(headers: Map[String, String]): Option[String] =
     extractHeader(CustomsHeaderNames.XLrnHeaderName, headers)
-  }
 
-  def extractDucrHeader(headers: Map[String, String]): Option[String] = {
+  def extractDucrHeader(headers: Map[String, String]): Option[String] =
     extractHeader(CustomsHeaderNames.XDucrHeaderName, headers)
-  }
 
-  def extractMrnHeader(headers: Map[String, String]): Option[String] = {
+  def extractMrnHeader(headers: Map[String, String]): Option[String] =
     extractHeader(CustomsHeaderNames.XMrnHeaderName, headers)
-  }
 
-  def extractAuthTokenHeader(headers: Map[String, String]): Option[String] = {
+  def extractAuthTokenHeader(headers: Map[String, String]): Option[String] =
     extractHeader(HeaderNames.AUTHORIZATION, headers)
-  }
 
-  def extractConversationIdHeader(
-                                   headers: Map[String, String]): Option[String] = {
+  def extractConversationIdHeader(headers: Map[String, String]): Option[String] =
     extractHeader(CustomsHeaderNames.XConversationIdName, headers)
-  }
 
-  def extractEoriHeader(headers: Map[String, String]): Option[String] = {
+  def extractEoriHeader(headers: Map[String, String]): Option[String] =
     extractHeader(CustomsHeaderNames.XEoriIdentifierHeaderName, headers)
-  }
 
-  private def extractHeader(headerName: String,
-                            headers: Map[String, String]): Option[String] =
+  private def extractHeader(headerName: String, headers: Map[String, String]): Option[String] =
     headers.get(headerName) match {
       case Some(header) if !header.isEmpty => Some(header)
       case _ =>
@@ -58,13 +50,13 @@ class HeaderValidator {
         None
     }
 
-  def validateAndExtractSubmissionHeaders(implicit headers: Map[String, String])
-  : Either[ErrorResponse, ValidatedHeadersSubmissionRequest] = {
+  def validateAndExtractSubmissionHeaders(
+    implicit headers: Map[String, String]
+  ): Either[ErrorResponse, ValidatedHeadersSubmissionRequest] = {
     val result = for {
       lrn <- extractLrnHeader(headers)
       ducr <- extractDucrHeader(headers)
-    } yield
-      ValidatedHeadersSubmissionRequest(LocalReferenceNumber(lrn), Ducr(ducr))
+    } yield ValidatedHeadersSubmissionRequest(LocalReferenceNumber(lrn), Ducr(ducr))
     result match {
       case Some(vhr) =>
         Right(vhr)
@@ -75,8 +67,9 @@ class HeaderValidator {
     }
   }
 
-  def validateAndExtractCancellationHeaders(headers: Map[String, String])
-  : Either[ErrorResponse, ValidatedHeadersCancellationRequest] = {
+  def validateAndExtractCancellationHeaders(
+    headers: Map[String, String]
+  ): Either[ErrorResponse, ValidatedHeadersCancellationRequest] = {
     val result = for {
       mrn <- extractMrnHeader(headers)
     } yield ValidatedHeadersCancellationRequest(Mrn(mrn))
@@ -90,16 +83,14 @@ class HeaderValidator {
     }
   }
 
-  def validateAndExtractNotificationHeaders(headers: Map[String, String])
-  : Either[ErrorResponse, ValidatedHeadersNotificationApiRequest] = {
+  def validateAndExtractNotificationHeaders(
+    headers: Map[String, String]
+  ): Either[ErrorResponse, ValidatedHeadersNotificationApiRequest] = {
     val result = for {
       eori <- extractEoriHeader(headers)
       authToken <- extractAuthTokenHeader(headers)
       conversationId <- extractConversationIdHeader(headers)
-    } yield
-      ValidatedHeadersNotificationApiRequest(AuthToken(authToken),
-        ConversationId(conversationId),
-        Eori(eori))
+    } yield ValidatedHeadersNotificationApiRequest(AuthToken(authToken), ConversationId(conversationId), Eori(eori))
     result match {
       case Some(vhnar) => Right(vhnar)
       case _ => {

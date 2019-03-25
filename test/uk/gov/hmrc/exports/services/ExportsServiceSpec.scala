@@ -32,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.{Elem, NodeSeq}
 
-class ExportsServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures{
+class ExportsServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures {
 
   trait SetUp {
     val mockDeclarationConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
@@ -43,97 +43,112 @@ class ExportsServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures{
 
   "ExportService" should {
     "handle submission" should {
-      "call Connector, persist submission and return conversationId" in new SetUp(){
+      "call Connector, persist submission and return conversationId" in new SetUp() {
         val eori = ""
         val lrn = "LRN123456"
         val ducr = "DUCR456456"
-        val conversationId =  "123456789"
+        val conversationId = "123456789"
         val xmlNode: Elem = <someXml></someXml>
-        when(mockDeclarationConnector.submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext]))
-          .thenReturn(Future.successful(CustomsDeclarationsResponse(ACCEPTED, Some(conversationId))))
+        when(
+          mockDeclarationConnector
+            .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
+        ).thenReturn(Future.successful(CustomsDeclarationsResponse(ACCEPTED, Some(conversationId))))
         when(mockSubmissionRepo.save(any[Submission])).thenReturn(Future.successful(true))
         val result: Result = await(testObj.handleSubmission(eori, ducr, lrn, xmlNode))
 
         status(result) shouldBe ACCEPTED
 
-        verify(mockDeclarationConnector, times(1)).submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
+        verify(mockDeclarationConnector, times(1))
+          .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
         verify(mockSubmissionRepo, times(1)).save(any[Submission])
       }
 
-      "return internal server error when no conversation ID is returned from the connector" in new SetUp(){
+      "return internal server error when no conversation ID is returned from the connector" in new SetUp() {
         val eori = ""
         val lrn = "LRN123456"
         val ducr = "DUCR456456"
-        val conversationId =  "123456789"
+        val conversationId = "123456789"
         val xmlNode: Elem = <someXml></someXml>
-        when(mockDeclarationConnector.submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext]))
-          .thenReturn(Future.successful(CustomsDeclarationsResponse(ACCEPTED,None)))
+        when(
+          mockDeclarationConnector
+            .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
+        ).thenReturn(Future.successful(CustomsDeclarationsResponse(ACCEPTED, None)))
 
         when(mockSubmissionRepo.save(any[Submission])).thenReturn(Future.successful(false))
         val result: Result = await(testObj.handleSubmission(eori, ducr, lrn, xmlNode))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
 
-        verify(mockDeclarationConnector, times(1)).submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
+        verify(mockDeclarationConnector, times(1))
+          .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
         verifyZeroInteractions(mockSubmissionRepo)
       }
 
-      "call Connector, and return internal server Error when persist submission fails" in new SetUp(){
+      "call Connector, and return internal server Error when persist submission fails" in new SetUp() {
         val eori = ""
         val lrn = "LRN123456"
         val ducr = "DUCR456456"
-        val conversationId =  "123456789"
+        val conversationId = "123456789"
         val xmlNode: Elem = <someXml></someXml>
-        when(mockDeclarationConnector.submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext]))
-          .thenReturn(Future.successful(CustomsDeclarationsResponse(ACCEPTED, Some(conversationId))))
+        when(
+          mockDeclarationConnector
+            .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
+        ).thenReturn(Future.successful(CustomsDeclarationsResponse(ACCEPTED, Some(conversationId))))
 
         when(mockSubmissionRepo.save(any[Submission])).thenReturn(Future.successful(false))
         val result: Result = await(testObj.handleSubmission(eori, ducr, lrn, xmlNode))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
 
-        verify(mockDeclarationConnector, times(1)).submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
+        verify(mockDeclarationConnector, times(1))
+          .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
         verify(mockSubmissionRepo, times(1)).save(any[Submission])
       }
     }
 
     "handle Cancellation" should {
-      "call Connector, persist cancellation and return conversationId" in new SetUp(){
+      "call Connector, persist cancellation and return conversationId" in new SetUp() {
         val eori = "GB1767676678"
         val mrn = "DUCR456456"
-        val conversationId =  "123456789"
+        val conversationId = "123456789"
         val xmlNode: Elem = <someXml></someXml>
-        when(mockDeclarationConnector.submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext]))
-          .thenReturn(Future.successful(CustomsDeclarationsResponse(ACCEPTED, Some(conversationId))))
+        when(
+          mockDeclarationConnector
+            .submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
+        ).thenReturn(Future.successful(CustomsDeclarationsResponse(ACCEPTED, Some(conversationId))))
 
-        when(mockSubmissionRepo.cancelDeclaration(any[String], any[String])).thenReturn(Future.successful(CancellationRequested))
+        when(mockSubmissionRepo.cancelDeclaration(any[String], any[String]))
+          .thenReturn(Future.successful(CancellationRequested))
         val result = testObj.handleCancellation(eori, mrn, xmlNode).futureValue
 
         result shouldBe Right(CancellationRequested)
 
-        verify(mockDeclarationConnector, times(1)).submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
+        verify(mockDeclarationConnector, times(1))
+          .submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
         verify(mockSubmissionRepo, times(1)).cancelDeclaration(any[String], any[String])
       }
 
       "return Internal Server error when connector fails" in new SetUp() {
         val eori = "GB1767676678"
         val mrn = "DUCR456456"
-        val conversationId =  "123456789"
+        val conversationId = "123456789"
         val xmlNode: Elem = <someXml></someXml>
-        when(mockDeclarationConnector.submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext]))
-          .thenReturn(Future.successful(CustomsDeclarationsResponse(BAD_REQUEST, None)))
+        when(
+          mockDeclarationConnector
+            .submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
+        ).thenReturn(Future.successful(CustomsDeclarationsResponse(BAD_REQUEST, None)))
 
-         val result = testObj.handleCancellation(eori, mrn, xmlNode).futureValue
+        val result = testObj.handleCancellation(eori, mrn, xmlNode).futureValue
 
         status(result.left.get) shouldBe INTERNAL_SERVER_ERROR
 
-        verify(mockDeclarationConnector, times(1)).submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
+        verify(mockDeclarationConnector, times(1))
+          .submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
         verifyZeroInteractions(mockSubmissionRepo)
       }
 
     }
 
   }
-
 
 }

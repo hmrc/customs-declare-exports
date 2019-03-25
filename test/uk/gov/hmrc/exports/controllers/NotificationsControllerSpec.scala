@@ -59,6 +59,22 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
     "X-Badge-Identifier" -> "badgeIdentifier1"
   )
 
+  val noAcceptHeader = Map(
+    "X-CDS-Client-ID" -> "1234",
+    "X-Conversation-ID" -> "XConv1",
+    HeaderNames.ACCEPT -> "",
+    HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
+    "X-Badge-Identifier" -> "badgeIdentifier1"
+  )
+
+  val noContentTypeHeader = Map(
+    "X-CDS-Client-ID" -> "1234",
+    "X-Conversation-ID" -> "XConv1",
+    HeaderNames.ACCEPT -> s"application/vnd.hmrc.${2.0}+xml",
+    HeaderNames.CONTENT_TYPE -> "",
+    "X-Badge-Identifier" -> "badgeIdentifier1"
+  )
+
   val submissionNotification =
     DeclarationNotification(conversationId = "1234", eori = "eori", metadata = DeclarationMetadata())
 
@@ -230,6 +246,15 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
 
       status(result) must be(ACCEPTED)
       verify(mockSubmissionRepository, times(0)).updateStatus("eori1", "XConv1", Some("02"))
+    }
+
+    "return UnsupportedMediaType if Content Type header is empty" in {
+      val result = route(
+        app,
+        FakeRequest(POST, postNotificationUri).withHeaders(noContentTypeHeader.toSeq: _*).withXmlBody(notificationXML)
+      ).get
+
+      status(result) must be(UNSUPPORTED_MEDIA_TYPE)
     }
 
     // TODO: decide on corner case - time change 1 hour forward, 1 hour backward, what is the risk ?

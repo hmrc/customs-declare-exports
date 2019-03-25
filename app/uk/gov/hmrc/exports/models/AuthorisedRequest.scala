@@ -50,21 +50,12 @@ case class ConversationId(value: String) extends AnyVal
 case class AuthToken(value: String) extends AnyVal
 
 case class AuthorizedSubmissionRequest[A](eori: Eori, request: Request[A])
-    extends WrappedRequest[A](request)
-    with HasEori
+    extends WrappedRequest[A](request) with HasEori
 
-case class ValidatedHeadersSubmissionRequest(
-    localReferenceNumber: LocalReferenceNumber,
-    ducr: Ducr)
-    extends HasLocalReferenceNumber
-    with HasDucr
+case class ValidatedHeadersSubmissionRequest(localReferenceNumber: LocalReferenceNumber, ducr: Ducr)
+    extends HasLocalReferenceNumber with HasDucr
 
 case class ValidatedHeadersCancellationRequest(mrn: Mrn) extends HasMrn
 
-case class ValidatedHeadersNotificationApiRequest(
-    authToken: AuthToken,
-    conversationId: ConversationId,
-    eori: Eori
-) extends HasEori
-    with HasConversationId
-    with HasAuthToken
+case class ValidatedHeadersNotificationApiRequest(authToken: AuthToken, conversationId: ConversationId, eori: Eori)
+    extends HasEori with HasConversationId with HasAuthToken

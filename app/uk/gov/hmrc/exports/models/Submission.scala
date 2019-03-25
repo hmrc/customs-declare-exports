@@ -22,15 +22,15 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.mongoEntity
 
 case class Submission(
-    eori: String,
-    conversationId: String,
-    ducr: String,
-    lrn: Option[String] = None,
-    mrn: Option[String] = None,
-    submittedTimestamp: Long = System.currentTimeMillis(),
-    id: BSONObjectID = BSONObjectID.generate(),
-    status: String,
-    isCancellationRequested: Boolean = false
+  eori: String,
+  conversationId: String,
+  ducr: String,
+  lrn: Option[String] = None,
+  mrn: Option[String] = None,
+  submittedTimestamp: Long = System.currentTimeMillis(),
+  id: BSONObjectID = BSONObjectID.generate(),
+  status: String,
+  isCancellationRequested: Boolean = false
 )
 
 object Submission {
@@ -41,22 +41,21 @@ object Submission {
 }
 
 case class SubmissionData(
-    eori: String,
-    conversationId: String,
-    ducr: String,
-    lrn: Option[String],
-    mrn: Option[String],
-    submittedTimestamp: Long,
-    status: String,
-    noOfNotifications: Int,
-    isCancellationRequested: Boolean
+  eori: String,
+  conversationId: String,
+  ducr: String,
+  lrn: Option[String],
+  mrn: Option[String],
+  submittedTimestamp: Long,
+  status: String,
+  noOfNotifications: Int,
+  isCancellationRequested: Boolean
 )
 
 object SubmissionData {
   implicit val format = Json.format[SubmissionData]
 
-  def buildSubmissionData(submission: Submission,
-                          noOfNotifications: Int): SubmissionData =
+  def buildSubmissionData(submission: Submission, noOfNotifications: Int): SubmissionData =
     SubmissionData(
       eori = submission.eori,
       conversationId = submission.conversationId,
@@ -71,12 +70,12 @@ object SubmissionData {
 }
 
 case class SubmissionResponse(
-    eori: String,
-    conversationId: String,
-    ducr: String,
-    lrn: Option[String] = None,
-    mrn: Option[String] = None,
-    status: String
+  eori: String,
+  conversationId: String,
+  ducr: String,
+  lrn: Option[String] = None,
+  mrn: Option[String] = None,
+  status: String
 )
 
 object SubmissionResponse {

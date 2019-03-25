@@ -31,58 +31,53 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
 
 @Singleton
-class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig,
-                                             httpClient: HttpClient) {
+class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: HttpClient) {
 
-  def submitDeclaration(eori: String, xml: NodeSeq)(
-      implicit hc: HeaderCarrier,
-      ec: ExecutionContext): Future[CustomsDeclarationsResponse] =
+  def submitDeclaration(
+    eori: String,
+    xml: NodeSeq
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[CustomsDeclarationsResponse] =
     postMetaData(eori, appConfig.submitDeclarationUri, xml).map { res =>
       Logger.debug(s"CUSTOMS_DECLARATIONS response is  --> ${res.toString}")
       res
     }
 
-  def submitCancellation(eori: String, xml: NodeSeq)(
-      implicit hc: HeaderCarrier,
-      ec: ExecutionContext): Future[CustomsDeclarationsResponse] =
+  def submitCancellation(
+    eori: String,
+    xml: NodeSeq
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[CustomsDeclarationsResponse] =
     postMetaData(eori, appConfig.cancelDeclarationUri, xml).map { res =>
-      Logger.debug(
-        s"CUSTOMS_DECLARATIONS cancellation response is  --> ${res.toString}")
+      Logger.debug(s"CUSTOMS_DECLARATIONS cancellation response is  --> ${res.toString}")
       res
     }
 
   private def postMetaData(eori: String, uri: String, xml: NodeSeq)(
-      implicit hc: HeaderCarrier,
-      ec: ExecutionContext
+    implicit hc: HeaderCarrier,
+    ec: ExecutionContext
   ): Future[CustomsDeclarationsResponse] =
     post(eori, uri, xml.toString())
 
   //noinspection ConvertExpressionToSAM
-  private implicit val responseReader: HttpReads[CustomsDeclarationsResponse] =
-    new HttpReads[CustomsDeclarationsResponse] {
-      override def read(method: String,
-                        url: String,
-                        response: HttpResponse): CustomsDeclarationsResponse =
-        CustomsDeclarationsResponse(response.status,
-                                    response.header("X-Conversation-ID"))
-    }
+  val responseReader: HttpReads[CustomsDeclarationsResponse] = new HttpReads[CustomsDeclarationsResponse] {
+    override def read(method: String, url: String, response: HttpResponse): CustomsDeclarationsResponse =
+      CustomsDeclarationsResponse(response.status, response.header("X-Conversation-ID"))
+  }
 
   private[connectors] def post(eori: String, uri: String, body: String)(
-      implicit hc: HeaderCarrier,
-      ec: ExecutionContext
+    implicit hc: HeaderCarrier,
+    ec: ExecutionContext
   ): Future[CustomsDeclarationsResponse] = {
     Logger.debug(s"CUSTOMS_DECLARATIONS request payload is -> $body")
     httpClient
       .POSTString[CustomsDeclarationsResponse](
         s"${appConfig.customsDeclarationsBaseUrl}$uri",
         body,
-        headers = headers(eori))(responseReader, hc, ec)
+        headers = headers(eori)
+      )(responseReader, hc, ec)
       .recover {
         case error: Throwable =>
-          Logger.error(
-            s"Error to check development environment ${error.toString}")
-          Logger.error(
-            s"Error to check development environment (GET MESSAGE) ${error.getMessage}")
+          Logger.error(s"Error to check development environment ${error.toString}")
+          Logger.error(s"Error to check development environment (GET MESSAGE) ${error.getMessage}")
           CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, None)
       }
   }

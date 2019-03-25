@@ -20,13 +20,15 @@ import java.util.UUID
 
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.mockito.MockitoSugar
+import org.scalatest.PrivateMethodTester.PrivateMethod
+import org.scalatest.PrivateMethodTester._
+import play.api.Mode.Mode
 import play.api.{Configuration, Environment, Mode}
-
 import uk.gov.hmrc.play.test.UnitSpec
 
 class AppConfigSpec extends UnitSpec with MockitoSugar {
-  private val validAppConfig: Config = ConfigFactory.parseString(
-    """
+  private val validAppConfig: Config =
+    ConfigFactory.parseString("""
       |urls.login="http://localhost:9949/auth-login-stub/gg-sign-in"
       |microservice.services.auth.host=localhostauth
       |microservice.services.auth.port=9988
@@ -39,20 +41,23 @@ class AppConfigSpec extends UnitSpec with MockitoSugar {
     """.stripMargin)
 
   private val emptyAppConfig: Config = ConfigFactory.parseString("")
-
   private val validServicesConfiguration = Configuration(validAppConfig)
   private val emptyServicesConfiguration = Configuration(emptyAppConfig)
 
+  val environment = Environment.simple()
 
-  private def customsConfigService(conf: Configuration) =
-    new AppConfig(runModeConfiguration = conf,  mock[Environment]) {
-      override val mode: Mode.Value = play.api.Mode.Test
-    }
+  val mode = PrivateMethod[Mode]('mode)
+
+  val appNameConfiguration = PrivateMethod[Configuration]('appNameConfiguration)
+
+  private def appConfig(conf: Configuration) = new AppConfig(conf, environment)
 
   "AppConfig" should {
     "return config as object model when configuration is valid" in {
-      val configService: AppConfig = customsConfigService(validServicesConfiguration)
+      val configService: AppConfig = appConfig(validServicesConfiguration)
 
+      configService invokePrivate mode() shouldBe environment.mode
+      configService invokePrivate appNameConfiguration() shouldBe validServicesConfiguration
       configService.authUrl shouldBe "http://localhostauth:9988"
       configService.loginUrl shouldBe "http://localhost:9949/auth-login-stub/gg-sign-in"
       configService.customsDeclarationsApiVersion shouldBe "1.0"
@@ -63,7 +68,7 @@ class AppConfigSpec extends UnitSpec with MockitoSugar {
     }
 
     "throw an exception when mandatory configuration is invalid" in {
-      val configService: AppConfig = customsConfigService(emptyServicesConfiguration)
+      val configService: AppConfig = appConfig(emptyServicesConfiguration)
 
       val caught: RuntimeException = intercept[RuntimeException](configService.authUrl)
       caught.getMessage shouldBe "Could not find config auth.host"
@@ -92,12 +97,12 @@ class AppConfigSpec extends UnitSpec with MockitoSugar {
       val clientId = UUID.randomUUID.toString
 
       "return the configured value when explicitly set" in {
-        val configService: AppConfig = customsConfigService(Configuration("appName" -> appName, "microservice.services.customs-declarations.client-id" -> clientId))
+        val configService: AppConfig = appConfig(
+          Configuration("appName" -> appName, "microservice.services.customs-declarations.client-id" -> clientId)
+        )
 
         configService.developerHubClientId shouldBe clientId
       }
-
     }
   }
-
 }

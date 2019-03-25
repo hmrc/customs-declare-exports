@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 
-class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestData{
+class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestData {
 
   trait SetUp {
     val validator = new HeaderValidator
@@ -106,10 +106,8 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
         val result: Either[ErrorResponse, ValidatedHeadersSubmissionRequest] =
           validator.validateAndExtractSubmissionHeaders(ValidHeaders)
         result should be(
-          Right(
-            ValidatedHeadersSubmissionRequest(
-              LocalReferenceNumber(declarantLrnValue),
-              Ducr(declarantDucrValue))))
+          Right(ValidatedHeadersSubmissionRequest(LocalReferenceNumber(declarantLrnValue), Ducr(declarantDucrValue)))
+        )
       }
 
       "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {
@@ -127,8 +125,7 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
 
         val result: Either[ErrorResponse, ValidatedHeadersCancellationRequest] =
           validator.validateAndExtractCancellationHeaders(ValidHeaders)
-        result should be(
-          Right(ValidatedHeadersCancellationRequest(Mrn(declarantMrnValue))))
+        result should be(Right(ValidatedHeadersCancellationRequest(Mrn(declarantMrnValue))))
       }
 
       "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {
@@ -144,18 +141,21 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
       "return Right of validatedHeaderResponse when validateHeaders is called on valid headers" in new SetUp {
         implicit val hc: HeaderCarrier = mock[HeaderCarrier]
 
-        val result
-          : Either[ErrorResponse, ValidatedHeadersNotificationApiRequest] =
+        val result: Either[ErrorResponse, ValidatedHeadersNotificationApiRequest] =
           validator.validateAndExtractNotificationHeaders(ValidHeaders)
-        result should be(Right(
-          ValidatedHeadersNotificationApiRequest(AuthToken(dummyToken),
-                                                 ConversationId(conversationId),
-                                                 Eori(declarantEoriValue))))
+        result should be(
+          Right(
+            ValidatedHeadersNotificationApiRequest(
+              AuthToken(dummyToken),
+              ConversationId(conversationId),
+              Eori(declarantEoriValue)
+            )
+          )
+        )
       }
 
       "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {
-        val result
-          : Either[ErrorResponse, ValidatedHeadersNotificationApiRequest] =
+        val result: Either[ErrorResponse, ValidatedHeadersNotificationApiRequest] =
           validator.validateAndExtractNotificationHeaders(Map.empty)
         result should be(Left(ErrorResponse.ErrorInvalidPayload))
       }

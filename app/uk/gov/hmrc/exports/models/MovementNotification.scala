@@ -21,19 +21,15 @@ import play.api.libs.json.Json
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.mongoEntity
-import uk.gov.hmrc.wco.dec.inventorylinking.common.{
-  EntryStatus,
-  GoodsItem,
-  UcrBlock
-}
+import uk.gov.hmrc.wco.dec.inventorylinking.common.{EntryStatus, GoodsItem, UcrBlock}
 import uk.gov.hmrc.wco.dec.inventorylinking.movement.response.InventoryLinkingMovementResponse
 
 case class MovementNotification(
-    dateTimeReceived: DateTime = DateTime.now(),
-    conversationId: String,
-    eori: String,
-    badgeId: Option[String] = None,
-    movementResponse: InventoryLinkingMovementResponse
+  dateTimeReceived: DateTime = DateTime.now(),
+  conversationId: String,
+  eori: String,
+  badgeId: Option[String] = None,
+  movementResponse: InventoryLinkingMovementResponse
 )
 
 object MovementNotification {
@@ -46,14 +42,14 @@ object MovementNotification {
 }
 
 case class MovementSubmissions(
-    eori: String,
-    conversationId: String,
-    ducr: String,
-    mucr: Option[String] = None,
-    movementType: String,
-    id: BSONObjectID = BSONObjectID.generate(),
-    submittedTimestamp: Long = System.currentTimeMillis(),
-    status: Option[String] = Some("Pending")
+  eori: String,
+  conversationId: String,
+  ducr: String,
+  mucr: Option[String] = None,
+  movementType: String,
+  id: BSONObjectID = BSONObjectID.generate(),
+  submittedTimestamp: Long = System.currentTimeMillis(),
+  status: Option[String] = Some("Pending")
 )
 
 object MovementSubmissions {
@@ -64,12 +60,12 @@ object MovementSubmissions {
 }
 
 case class MovementResponse(
-    eori: String,
-    conversationId: String,
-    ducr: String,
-    mucr: Option[String] = None,
-    movementType: String,
-    status: Option[String] = Some("Pending")
+  eori: String,
+  conversationId: String,
+  ducr: String,
+  mucr: Option[String] = None,
+  movementType: String,
+  status: Option[String] = Some("Pending")
 )
 
 object MovementResponse {

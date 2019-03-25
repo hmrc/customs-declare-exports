@@ -28,41 +28,39 @@ import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ExportController @Inject()(override val authConnector: AuthConnector)(
-    implicit ec: ExecutionContext)
-    extends BaseController
-    with AuthorisedFunctions {
+class ExportController @Inject()(override val authConnector: AuthConnector)(implicit ec: ExecutionContext)
+    extends BaseController with AuthorisedFunctions {
 
-  private def hasEnrolment(
-      allEnrolments: Enrolments): Option[EnrolmentIdentifier] =
+  private def hasEnrolment(allEnrolments: Enrolments): Option[EnrolmentIdentifier] =
     allEnrolments
       .getEnrolment("HMRC-CUS-ORG")
       .flatMap(_.getIdentifier("EORINumber"))
 
-  def authorisedWithEori[A](implicit hc: HeaderCarrier, request: Request[A])
-    : Future[Either[ErrorResponse, AuthorizedSubmissionRequest[A]]] = {
-    authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments) {
-      enrolments =>
-        hasEnrolment(enrolments) match {
-          case Some(eori) =>
-            Future.successful(
-              Right(AuthorizedSubmissionRequest(Eori(eori.value), request)))
-          case _ => Future.successful(Left(ErrorResponse.ErrorUnauthorized))
-        }
+  def authorisedWithEori[A](
+    implicit hc: HeaderCarrier,
+    request: Request[A]
+  ): Future[Either[ErrorResponse, AuthorizedSubmissionRequest[A]]] =
+    authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments) { enrolments =>
+      hasEnrolment(enrolments) match {
+        case Some(eori) =>
+          Future.successful(Right(AuthorizedSubmissionRequest(Eori(eori.value), request)))
+        case _ => Future.successful(Left(ErrorResponse.ErrorUnauthorized))
+      }
     } recover {
       case _: InsufficientEnrolments =>
         Logger.warn(s"Unauthorised access for ${request.uri}")
-        Left(ErrorResponse.errorUnauthorized("Unauthorized for imports"))
+        Left(ErrorResponse.errorUnauthorized("Unauthorized for exports"))
       case e: AuthorisationException =>
         Logger.warn(s"Unauthorised Exception for ${request.uri} ${e.reason}")
-        Left(ErrorResponse.errorUnauthorized("Unauthorized for imports"))
+        Left(ErrorResponse.errorUnauthorized("Unauthorized for exports"))
       case ex: Throwable =>
         Logger.error("Internal server error is " + ex.getMessage)
         Left(ErrorResponse.ErrorInternalServerError)
     }
-  }
-  def authorisedAction[A](bodyParser: BodyParser[A])(
-      body: AuthorizedSubmissionRequest[A] => Future[Result]): Action[A] =
+
+  def authorisedAction[A](
+    bodyParser: BodyParser[A]
+  )(body: AuthorizedSubmissionRequest[A] => Future[Result]): Action[A] =
     Action.async(bodyParser) { implicit request =>
       authorisedWithEori.flatMap {
         case Right(authorisedRequest) =>
@@ -73,5 +71,4 @@ class ExportController @Inject()(override val authConnector: AuthConnector)(
           Future.successful(error.XmlResult)
       }
     }
-
 }
