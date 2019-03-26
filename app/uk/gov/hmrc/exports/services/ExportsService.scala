@@ -37,7 +37,7 @@ class ExportsService @Inject()(
   submissionRepository: SubmissionRepository
 ) {
 
-  def handleSubmission(eori: String, ducr: String, lrn: String, xml: NodeSeq)(
+  def handleSubmission(eori: String, ducr: Option[String], lrn: String, xml: NodeSeq)(
     implicit hc: HeaderCarrier
   ): Future[Result] =
     customsDeclarationsConnector
@@ -64,7 +64,7 @@ class ExportsService @Inject()(
   private def persistSubmission(
     eori: String,
     conversationId: String,
-    ducr: String,
+    ducr: Option[String],
     lrn: String,
     status: String
   ): Future[Result] =

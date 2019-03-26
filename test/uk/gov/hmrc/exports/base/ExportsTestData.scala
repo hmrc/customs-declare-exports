@@ -37,7 +37,8 @@ trait ExportsTestData {
     when this occurred.
    */
 
-  val eori: String = randomString(8)
+  val eori: String = "GB167676"
+  val randomEori: String = randomString(8)
   val lrn: Option[String] = Some(randomString(22))
   val mrn: String = randomString(16)
   val mucr: String = randomString(16)
@@ -45,7 +46,7 @@ trait ExportsTestData {
   val ducr: String = randomString(16)
 
   val before: Long = System.currentTimeMillis()
-  val submission: Submission = Submission(eori, conversationId, ducr, lrn, Some(mrn), status = "01")
+  val submission: Submission = Submission(eori, conversationId, Some(ducr), lrn, Some(mrn), status = "01")
   val submissionData: SubmissionData = SubmissionData.buildSubmissionData(submission, 0)
   val seqSubmissions: Seq[Submission] = Seq(submission)
   val seqSubmissionData: Seq[SubmissionData] = Seq(submissionData)
@@ -60,7 +61,7 @@ trait ExportsTestData {
   val Valid_X_EORI_IDENTIFIER_HEADER: (String, String) = XEoriIdentifierHeaderName -> declarantEoriValue
   val Valid_LRN_HEADER: (String, String) = XLrnHeaderName -> declarantLrnValue
   val Valid_AUTHORIZATION_HEADER: (String, String) = HeaderNames.AUTHORIZATION -> dummyToken
-  val VALID_CONVERSATIONID_HEADER = XConversationIdName -> conversationId
+  val VALID_CONVERSATIONID_HEADER: (String, String) = XConversationIdName -> conversationId
   val VALID_DUCR_HEADER: (String, String) = XDucrHeaderName -> declarantDucrValue
   val VALID_MRN_HEADER: (String, String) = XMrnHeaderName -> declarantMrnValue
   val now: DateTime = DateTime.now
@@ -79,7 +80,7 @@ trait ExportsTestData {
   val notification = DeclarationNotification(now, conversationId, eori, DeclarationMetadata(), response1)
   val movementNotification =
     MovementNotification(now, conversationId, eori, movementResponse = InventoryLinkingMovementResponse("EAA"))
-  val submissionResponse = SubmissionResponse(eori, conversationId, ducr, lrn, Some(mrn), status = "01")
+  val submissionResponse = SubmissionResponse(eori, conversationId, Some(ducr), lrn, Some(mrn), status = "01")
   val submissionMovementResponse =
     MovementResponse(eori, conversationId, ducr, Some(mucr), "Arrival", Some(GoodsHaveExitedTheCommunity.toString()))
 

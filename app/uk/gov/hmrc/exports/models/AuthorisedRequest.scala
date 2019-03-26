@@ -38,9 +38,6 @@ trait HasMrn {
   val mrn: Mrn
 }
 
-trait HasDucr {
-  val ducr: Ducr
-}
 
 case class LocalReferenceNumber(value: String) extends AnyVal
 case class Ducr(value: String) extends AnyVal
@@ -52,8 +49,8 @@ case class AuthToken(value: String) extends AnyVal
 case class AuthorizedSubmissionRequest[A](eori: Eori, request: Request[A])
     extends WrappedRequest[A](request) with HasEori
 
-case class ValidatedHeadersSubmissionRequest(localReferenceNumber: LocalReferenceNumber, ducr: Ducr)
-    extends HasLocalReferenceNumber with HasDucr
+case class ValidatedHeadersSubmissionRequest(localReferenceNumber: LocalReferenceNumber, ducr: Option[String])
+    extends HasLocalReferenceNumber
 
 case class ValidatedHeadersCancellationRequest(mrn: Mrn) extends HasMrn
 

@@ -38,7 +38,7 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
 
     "return ducr from header when extract is called and header is present" in new SetUp {
       val extractedDucr: Option[String] =
-        validator.extractDucrHeader(ValidHeaders)
+        validator.extractOptionalDucrHeader(ValidHeaders)
       extractedDucr shouldBe Some(declarantDucrValue)
     }
 
@@ -72,7 +72,7 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
     }
 
     "return None from header when extract is called and DUCR header not present" in new SetUp {
-      val extractedDucr: Option[String] = validator.extractDucrHeader(Map.empty)
+      val extractedDucr: Option[String] = validator.extractOptionalDucrHeader(Map.empty)
       extractedDucr shouldBe None
     }
 
@@ -106,7 +106,7 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
         val result: Either[ErrorResponse, ValidatedHeadersSubmissionRequest] =
           validator.validateAndExtractSubmissionHeaders(ValidHeaders)
         result should be(
-          Right(ValidatedHeadersSubmissionRequest(LocalReferenceNumber(declarantLrnValue), Ducr(declarantDucrValue)))
+          Right(ValidatedHeadersSubmissionRequest(LocalReferenceNumber(declarantLrnValue), Some(declarantDucrValue)))
         )
       }
 

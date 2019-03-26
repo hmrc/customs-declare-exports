@@ -24,7 +24,7 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.mongoEntity
 case class Submission(
   eori: String,
   conversationId: String,
-  ducr: String,
+  ducr: Option[String] = None,
   lrn: Option[String] = None,
   mrn: Option[String] = None,
   submittedTimestamp: Long = System.currentTimeMillis(),
@@ -43,7 +43,7 @@ object Submission {
 case class SubmissionData(
   eori: String,
   conversationId: String,
-  ducr: String,
+  ducr: Option[String],
   lrn: Option[String],
   mrn: Option[String],
   submittedTimestamp: Long,
@@ -72,7 +72,7 @@ object SubmissionData {
 case class SubmissionResponse(
   eori: String,
   conversationId: String,
-  ducr: String,
+  ducr: Option[String] = None,
   lrn: Option[String] = None,
   mrn: Option[String] = None,
   status: String

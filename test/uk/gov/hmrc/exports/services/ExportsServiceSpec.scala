@@ -43,66 +43,52 @@ class ExportsServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures {
 
   "ExportService" should {
     "handle submission" should {
-      "call Connector, persist submission and return conversationId" in new SetUp() {
-        val eori = ""
-        val lrn = "LRN123456"
-        val ducr = "DUCR456456"
+      "call Connector, persist submission and return conversationId when ducr provided" in new SetUp() {
         val conversationId = "123456789"
-        val xmlNode: Elem = <someXml></someXml>
-        when(
-          mockDeclarationConnector
-            .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
-        ).thenReturn(Future.successful(CustomsDeclarationsResponse(ACCEPTED, Some(conversationId))))
-        when(mockSubmissionRepo.save(any[Submission])).thenReturn(Future.successful(true))
-        val result: Result = await(testObj.handleSubmission(eori, ducr, lrn, xmlNode))
-
-        status(result) shouldBe ACCEPTED
-
-        verify(mockDeclarationConnector, times(1))
-          .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
-        verify(mockSubmissionRepo, times(1)).save(any[Submission])
+        testSubmissionScenarios(ducr = Some("DUCR456456"),
+          returnedConversationId = Some(conversationId),
+          expectedRepoResult = true,
+          expectedHttpStatus = ACCEPTED)
       }
 
-      "return internal server error when no conversation ID is returned from the connector" in new SetUp() {
-        val eori = ""
-        val lrn = "LRN123456"
-        val ducr = "DUCR456456"
+      "call Connector, persist submission and return conversationId when ducr missing" in new SetUp() {
         val conversationId = "123456789"
-        val xmlNode: Elem = <someXml></someXml>
-        when(
-          mockDeclarationConnector
-            .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
-        ).thenReturn(Future.successful(CustomsDeclarationsResponse(ACCEPTED, None)))
-
-        when(mockSubmissionRepo.save(any[Submission])).thenReturn(Future.successful(false))
-        val result: Result = await(testObj.handleSubmission(eori, ducr, lrn, xmlNode))
-
-        status(result) shouldBe INTERNAL_SERVER_ERROR
-
-        verify(mockDeclarationConnector, times(1))
-          .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
-        verifyZeroInteractions(mockSubmissionRepo)
+        testSubmissionScenarios(ducr = None,
+          returnedConversationId = Some(conversationId),
+          expectedRepoResult = true,
+          expectedHttpStatus = ACCEPTED)
       }
 
-      "call Connector, and return internal server Error when persist submission fails" in new SetUp() {
-        val eori = ""
-        val lrn = "LRN123456"
-        val ducr = "DUCR456456"
+      "return internal server error when no conversation ID is returned from the connector when ducr provided" in new SetUp() {
+        testSubmissionScenarios(ducr = Some("DUCR456456"),
+          returnedConversationId = None,
+          expectedRepoResult = false,
+          expectedHttpStatus = INTERNAL_SERVER_ERROR)
+      }
+
+      "return internal server error when no conversation ID is returned from the connector when ducr missing" in new SetUp() {
+        testSubmissionScenarios(ducr = None,
+          returnedConversationId = None,
+          expectedRepoResult = false,
+          expectedHttpStatus = INTERNAL_SERVER_ERROR)
+      }
+
+      "call Connector, and return internal server Error when persist submission fails when ducr provided" in new SetUp() {
+
         val conversationId = "123456789"
-        val xmlNode: Elem = <someXml></someXml>
-        when(
-          mockDeclarationConnector
-            .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
-        ).thenReturn(Future.successful(CustomsDeclarationsResponse(ACCEPTED, Some(conversationId))))
+        testSubmissionScenarios(ducr = Some("DUCR456456"),
+          returnedConversationId = Some(conversationId),
+          expectedRepoResult = false,
+          expectedHttpStatus = INTERNAL_SERVER_ERROR)
+      }
 
-        when(mockSubmissionRepo.save(any[Submission])).thenReturn(Future.successful(false))
-        val result: Result = await(testObj.handleSubmission(eori, ducr, lrn, xmlNode))
+      "call Connector, and return internal server Error when persist submission fails when ducr missing" in new SetUp() {
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
-
-        verify(mockDeclarationConnector, times(1))
-          .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
-        verify(mockSubmissionRepo, times(1)).save(any[Submission])
+        val conversationId = "123456789"
+        testSubmissionScenarios(ducr = None,
+          returnedConversationId = Some(conversationId),
+          expectedRepoResult = false,
+          expectedHttpStatus = INTERNAL_SERVER_ERROR)
       }
     }
 
@@ -149,6 +135,30 @@ class ExportsServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures {
 
     }
 
+  }
+  private def testSubmissionScenarios(ducr: Option[String],
+                                      returnedConversationId: Option[String],
+                                      expectedRepoResult: Boolean,
+                                      expectedHttpStatus: Int) = new SetUp(){
+    val eori = ""
+    val lrn = "LRN123456"
+    val xmlNode: Elem = <someXml></someXml>
+    when(
+      mockDeclarationConnector
+        .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
+    ).thenReturn(Future.successful(CustomsDeclarationsResponse(ACCEPTED, returnedConversationId)))
+    when(mockSubmissionRepo.save(any[Submission])).thenReturn(Future.successful(expectedRepoResult))
+    val result: Result = await(testObj.handleSubmission(eori, ducr, lrn, xmlNode))
+
+    status(result) shouldBe expectedHttpStatus
+
+    verify(mockDeclarationConnector, times(1))
+      .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
+    if(returnedConversationId.isDefined) {
+      verify(mockSubmissionRepo, times(1)).save(any[Submission])
+    }else{
+      verifyZeroInteractions(mockSubmissionRepo)
+    }
   }
 
 }

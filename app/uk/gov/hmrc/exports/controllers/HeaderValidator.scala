@@ -27,8 +27,8 @@ class HeaderValidator {
   def extractLrnHeader(headers: Map[String, String]): Option[String] =
     extractHeader(CustomsHeaderNames.XLrnHeaderName, headers)
 
-  def extractDucrHeader(headers: Map[String, String]): Option[String] =
-    extractHeader(CustomsHeaderNames.XDucrHeaderName, headers)
+  def extractOptionalDucrHeader(headers: Map[String, String]): Option[String] =
+    headers.get(CustomsHeaderNames.XDucrHeaderName)
 
   def extractMrnHeader(headers: Map[String, String]): Option[String] =
     extractHeader(CustomsHeaderNames.XMrnHeaderName, headers)
@@ -55,8 +55,7 @@ class HeaderValidator {
   ): Either[ErrorResponse, ValidatedHeadersSubmissionRequest] = {
     val result = for {
       lrn <- extractLrnHeader(headers)
-      ducr <- extractDucrHeader(headers)
-    } yield ValidatedHeadersSubmissionRequest(LocalReferenceNumber(lrn), Ducr(ducr))
+    } yield ValidatedHeadersSubmissionRequest(LocalReferenceNumber(lrn), extractOptionalDucrHeader(headers))
     result match {
       case Some(vhr) =>
         Right(vhr)
