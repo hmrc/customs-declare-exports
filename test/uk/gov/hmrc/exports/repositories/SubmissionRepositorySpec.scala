@@ -19,7 +19,6 @@ package uk.gov.hmrc.exports.repositories
 import org.scalatest.BeforeAndAfterEach
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
 import uk.gov.hmrc.exports.models.{CancellationRequestExists, CancellationRequested, MissingDeclaration, Submission}
 
@@ -28,7 +27,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach {
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
-  val repo = component[SubmissionRepository]
+  val repo: SubmissionRepository = component[SubmissionRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -50,7 +49,7 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
       found.head.conversationId must be(conversationId)
       found.head.mrn must be(Some(mrn))
       found.head.lrn must be(lrn)
-      found.head.ducr must be(ducr)
+      found.head.ducr must be(Some(ducr))
     }
 
     "be able to get submission by conversationId" in {
@@ -60,7 +59,7 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
       found.conversationId must be(conversationId)
       found.mrn must be(Some(mrn))
       found.lrn must be(lrn)
-      found.ducr must be(ducr)
+      found.ducr must be(Some(ducr))
     }
 
     "be able to get submission by eori and mrn" in {
@@ -70,11 +69,11 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
       found.conversationId must be(conversationId)
       found.mrn must be(Some(mrn))
       found.lrn must be(lrn)
-      found.ducr must be(ducr)
+      found.ducr must be(Some(ducr))
     }
 
     "be able to update submission" in {
-      val submissionToUpdate = Submission("eori", "conversationId", "ducr", Some("lrn"), Some("mrn"), status = "01")
+      val submissionToUpdate = Submission("eori", "conversationId", Some("ducr"), Some("lrn"), Some("mrn"), status = "01")
 
       repo.save(submissionToUpdate).futureValue must be(true)
 
@@ -94,7 +93,7 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
     }
 
     "not update when old submission not exist" in {
-      val submissionToUpdate = Submission("654321", "654321", "ducr", Some("lrn"), Some("mrn"), status = "01")
+      val submissionToUpdate = Submission("654321", "654321", Some("ducr"), Some("lrn"), Some("mrn"), status = "01")
 
       repo.updateSubmission(submissionToUpdate).futureValue must be(false)
     }

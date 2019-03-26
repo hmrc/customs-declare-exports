@@ -96,7 +96,7 @@ class SubmissionController @Inject()(
       case Right(vhr) =>
         request.body.asXml match {
           case Some(xml) =>
-            handleDeclarationSubmit(request.eori.value, vhr.localReferenceNumber.value, vhr.ducr.value, xml).recoverWith {
+            handleDeclarationSubmit(request.eori.value, vhr.localReferenceNumber.value, vhr.ducr, xml).recoverWith {
               case e: Exception =>
                 Logger.error(s"problem calling declaration api ${e.getMessage}")
                 Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
@@ -183,7 +183,7 @@ class SubmissionController @Inject()(
   private def getNumerOfNotifications(conversationId: String): Future[Int] =
     notificationsRepository.getByConversationId(conversationId).map(_.length)
 
-  private def handleDeclarationSubmit(eori: String, lrn: String, ducr: String, xml: NodeSeq)(
+  private def handleDeclarationSubmit(eori: String, lrn: String, ducr: Option[String], xml: NodeSeq)(
     implicit hc: HeaderCarrier
   ): Future[Result] =
     exportsService.handleSubmission(eori, ducr, lrn, xml)
