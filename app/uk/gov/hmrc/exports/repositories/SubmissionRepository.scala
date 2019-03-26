@@ -30,24 +30,18 @@ import uk.gov.hmrc.mongo.{AtomicUpdate, ReactiveRepository}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent,
-                                     ec: ExecutionContext)
+class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: ExecutionContext)
     extends ReactiveRepository[Submission, BSONObjectID](
       "submissions",
       mc.mongoConnector.db,
       Submission.formats,
       objectIdFormats
-    )
-    with AtomicUpdate[Submission] {
+    ) with AtomicUpdate[Submission] {
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
-    Index(Seq("conversationId" -> IndexType.Ascending),
-          unique = true,
-          name = Some("conversationIdIdx")),
-    Index(Seq("mrn" -> IndexType.Ascending),
-          unique = true,
-          name = Some("mrnIdx"))
+    Index(Seq("conversationId" -> IndexType.Ascending), unique = true, name = Some("conversationIdIdx")),
+    Index(Seq("mrn" -> IndexType.Ascending), unique = true, name = Some("mrnIdx"))
   )
 
   def findByEori(eori: String): Future[Seq[Submission]] =
@@ -59,20 +53,16 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent,
   def getByEoriAndMrn(eori: String, mrn: String): Future[Option[Submission]] =
     find("eori" -> JsString(eori), "mrn" -> JsString(mrn)).map(_.headOption)
 
-  override def isInsertion(newRecordId: BSONObjectID,
-                           oldRecord: Submission): Boolean =
+  override def isInsertion(newRecordId: BSONObjectID, oldRecord: Submission): Boolean =
     newRecordId.equals(oldRecord.id)
 
   def save(submission: Submission): Future[Boolean] =
     insert(submission).map(wr => wr.ok)
 
   def updateSubmission(submission: Submission): Future[Boolean] = {
-    val finder = BSONDocument("_id" -> submission.id,
-                              "conversationId" -> submission.conversationId)
+    val finder = BSONDocument("_id" -> submission.id, "conversationId" -> submission.conversationId)
 
-    val modifier = BSONDocument(
-      "$set" -> BSONDocument("mrn" -> submission.mrn,
-                             "status" -> submission.status))
+    val modifier = BSONDocument("$set" -> BSONDocument("mrn" -> submission.mrn, "status" -> submission.status))
 
     atomicUpdate(finder, modifier).map {
       case Some(result) => result.writeResult.ok
@@ -80,28 +70,23 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent,
     }
   }
 
-  def updateStatus(eori: String,
-                   convId: String,
-                   status: Option[String]): Future[Boolean] = {
-    val finder = BSONDocument("eori" -> eori, "conversationId" -> convId)
+  def updateStatus(eori: String, convId: String, status: Option[String]): Future[Boolean] =
+    if (status.isDefined) {
+      val finder = BSONDocument("eori" -> eori, "conversationId" -> convId)
+      val modifier = BSONDocument("$set" -> BSONDocument("status" -> status.get))
 
-    val modifier =
-      if (status.isDefined)
-        BSONDocument("$set" -> BSONDocument("status" -> status.get))
-      else BSONDocument()
+      atomicUpdate(finder, modifier).map {
+        case Some(result) => result.writeResult.ok
+        case _            => false
+      }
+    } else Future.successful(false)
 
-    atomicUpdate(finder, modifier).map {
-      case Some(result) => result.writeResult.ok
-      case _            => false
-    }
-  }
-
-  def cancelDeclaration(eori: String,
-                        mrn: String): Future[CancellationStatus] = {
+  def cancelDeclaration(eori: String, mrn: String): Future[CancellationStatus] = {
     val finder = BSONDocument("eori" -> eori, "mrn" -> mrn)
 
     val modifier = BSONDocument(
-      "$set" -> BSONDocument("status" -> RequestedCancellation.toString,"isCancellationRequested" -> true))
+      "$set" -> BSONDocument("status" -> RequestedCancellation.toString, "isCancellationRequested" -> true)
+    )
 
     find("eori" -> JsString(eori), "mrn" -> JsString(mrn))
       .map(_.headOption) flatMap {

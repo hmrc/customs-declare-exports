@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.connectors
 
-
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import play.api.http.Status
+import play.api.test.Helpers._
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
 import uk.gov.hmrc.http._
@@ -31,7 +31,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.Elem
 
-class CustomsDeclarationsConnectorTest extends UnitSpec with MockitoSugar {
+class CustomsDeclarationsConnectorSpec extends UnitSpec with MockitoSugar {
 
   val testConversationId = "12345789"
 
@@ -40,22 +40,24 @@ class CustomsDeclarationsConnectorTest extends UnitSpec with MockitoSugar {
     val appConfig: AppConfig = mock[AppConfig]
     val httpClient: HttpClient = mock[HttpClient]
 
-    val testObj = new CustomsDeclarationsConnector(appConfig,
-      httpClient: HttpClient)
+    val testObj = new CustomsDeclarationsConnector(appConfig, httpClient: HttpClient)
 
     implicit val hc: HeaderCarrier = mock[HeaderCarrier]
 
-    val responseHeaders: Map[String, Seq[String]] = Map("X-Conversation-ID" -> Seq("123456"))
+    val conversationId = "123456"
+    val responseHeaders: Map[String, Seq[String]] = Map("X-Conversation-ID" -> Seq(conversationId))
 
-    val mockHttpResponse: CustomsDeclarationsResponse = CustomsDeclarationsResponse(Status.ACCEPTED, Some(testConversationId))
+    val mockHttpResponse: CustomsDeclarationsResponse =
+      CustomsDeclarationsResponse(Status.ACCEPTED, Some(testConversationId))
 
-
-    when(httpClient.POSTString(anyString, anyString, any[Seq[(String, String)]])(
-      any[HttpReads[CustomsDeclarationsResponse]](), any[HeaderCarrier](), any[ExecutionContext]))
-      .thenReturn(mockHttpResponse)
-
+    when(
+      httpClient.POSTString(anyString, anyString, any[Seq[(String, String)]])(
+        any[HttpReads[CustomsDeclarationsResponse]](),
+        any[HeaderCarrier](),
+        any[ExecutionContext]
+      )
+    ).thenReturn(mockHttpResponse)
   }
-
 
   "CustomsDeclarationsConnector" should {
 
@@ -65,9 +67,7 @@ class CustomsDeclarationsConnectorTest extends UnitSpec with MockitoSugar {
 
       val result: CustomsDeclarationsResponse = await(testObj.submitDeclaration(eori, xmlPayload))
       result.conversationId shouldBe Some(testConversationId)
-
     }
-
 
     "cancelDeclaration" in new SetUp() {
       val eori = "GB123456"
@@ -75,9 +75,13 @@ class CustomsDeclarationsConnectorTest extends UnitSpec with MockitoSugar {
 
       val result: CustomsDeclarationsResponse = await(testObj.submitCancellation(eori, xmlPayload))
       result.conversationId shouldBe Some(testConversationId)
+    }
 
+    "correctly read a response from HttpResponse" in new SetUp() {
+      val httpResponse = HttpResponse(ACCEPTED, responseHeaders = responseHeaders)
+
+      testObj.responseReader.read("", "", httpResponse) shouldBe
+        CustomsDeclarationsResponse(ACCEPTED, Some(conversationId))
     }
   }
-
-
 }

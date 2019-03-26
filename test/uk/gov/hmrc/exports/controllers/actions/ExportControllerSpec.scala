@@ -20,20 +20,25 @@ import play.api.http.ContentTypes
 import play.api.mvc.Codec
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import play.api.mvc.Results.InternalServerError
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
 import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
 
 class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
   val uri = "/declaration"
-  val xmlBody: String =  randomSubmitDeclaration.toXml
+  val xmlBody: String = randomSubmitDeclaration.toXml
   val fakeXmlRequest: FakeRequest[String] = FakeRequest("POST", uri).withBody(xmlBody)
-  val fakeXmlRequestWithHeaders: FakeRequest[String] = fakeXmlRequest
-    .withHeaders(CustomsHeaderNames.XLrnHeaderName -> declarantLrnValue,
-    CustomsHeaderNames.XDucrHeaderName -> declarantDucrValue,
-    AUTHORIZATION -> dummyToken,
-    CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8))
+  val fakeXmlRequestWithHeaders: FakeRequest[String] =
+    fakeXmlRequest
+      .withHeaders(
+        CustomsHeaderNames.XLrnHeaderName -> declarantLrnValue,
+        CustomsHeaderNames.XDucrHeaderName -> declarantDucrValue,
+        AUTHORIZATION -> dummyToken,
+        CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
+      )
 
-  "Auth Action" should {
+  "Export Controller" should {
 
     "return 401 status when EORI number is missing from request" in {
       userWithoutEori()
@@ -57,6 +62,30 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
       withDataSaved(false)
 
       val result = route(app, fakeXmlRequestWithHeaders).get
+
+      status(result) must be(INTERNAL_SERVER_ERROR)
+    }
+
+    "handle InsufficientEnrolments error" in {
+      unauthorizedUser(InsufficientEnrolments())
+
+      val result = route(app, fakeXmlRequest).get
+
+      status(result) must be(UNAUTHORIZED)
+    }
+
+    "handle AuthorisationException error" in {
+      unauthorizedUser(InsufficientConfidenceLevel())
+
+      val result = route(app, fakeXmlRequest).get
+
+      status(result) must be(UNAUTHORIZED)
+    }
+
+    "handle rest of errors as InternalServerError" in {
+      unauthorizedUser(new IllegalArgumentException())
+
+      val result = route(app, fakeXmlRequest).get
 
       status(result) must be(INTERNAL_SERVER_ERROR)
     }

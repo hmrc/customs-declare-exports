@@ -24,6 +24,8 @@ class ExportStatusSpec extends WordSpec with MustMatchers {
 
   "Reads for status" should {
     "correctly read a value for every scenario" in {
+      ExportStatus.StatusFormat.reads(JsString("Pending")) must be(JsSuccess(Pending))
+      ExportStatus.StatusFormat.reads(JsString("Cancellation Requested")) must be(JsSuccess(RequestedCancellation))
       ExportStatus.StatusFormat.reads(JsString("01")) must be(JsSuccess(Accepted))
       ExportStatus.StatusFormat.reads(JsString("02")) must be(JsSuccess(Received))
       ExportStatus.StatusFormat.reads(JsString("03")) must be(JsSuccess(Rejected))
@@ -43,6 +45,8 @@ class ExportStatusSpec extends WordSpec with MustMatchers {
     }
 
     "correctly write a value for every scenario" in {
+      Json.toJson(Pending) must be(JsString("Pending"))
+      Json.toJson(RequestedCancellation) must be(JsString("Cancellation Requested"))
       Json.toJson(Accepted) must be(JsString("01"))
       Json.toJson(Received) must be(JsString("02"))
       Json.toJson(Rejected) must be(JsString("03"))
@@ -152,6 +156,20 @@ class ExportStatusSpec extends WordSpec with MustMatchers {
       val unknownStatusResponse = Response("20")
 
       ExportStatus.retrieveFromResponse(unknownStatusResponse) must be(UnknownExportStatus)
+    }
+  }
+
+  "Exports Statuses" should {
+    "return a correct status as String" in {
+      UndergoingPhysicalCheck.toString must be("Undergoing Physical Check")
+      AdditionalDocumentsRequired.toString must be("Additional Documents Required")
+      RequestedCancellation.toString must be("Cancellation Requested")
+      CustomsPositionGranted.toString must be("Customs Position Granted")
+      CustomsPositionDenied.toString must be("Customs Position Denied")
+      GoodsHaveExitedTheCommunity.toString must be("Goods Have Exited The Community")
+      DeclarationHandledExternally.toString must be("Declaration Handled Externally")
+      AwaitingExitResults.toString must be("Awaiting Exit Results")
+      UnknownExportStatus.toString must be("Unknown status")
     }
   }
 }

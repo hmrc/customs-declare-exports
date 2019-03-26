@@ -28,11 +28,7 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.repositories.{
-  MovementNotificationsRepository,
-  NotificationsRepository,
-  SubmissionRepository
-}
+import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.wco.dec._
 import uk.gov.hmrc.wco.dec.inventorylinking.movement.response.InventoryLinkingMovementResponse
@@ -44,28 +40,26 @@ import scala.xml.NodeSeq
 
 @Singleton
 class NotificationsController @Inject()(
-    appConfig: AppConfig,
-    authConnector: AuthConnector,
-    headerValidator: HeaderValidator,
-    notificationsRepository: NotificationsRepository,
-    movementNotificationsRepository: MovementNotificationsRepository,
-    metrics: ExportsMetrics,
-    submissionRepository: SubmissionRepository
+  appConfig: AppConfig,
+  authConnector: AuthConnector,
+  headerValidator: HeaderValidator,
+  notificationsRepository: NotificationsRepository,
+  movementNotificationsRepository: MovementNotificationsRepository,
+  metrics: ExportsMetrics,
+  submissionRepository: SubmissionRepository
 ) extends ExportController(authConnector) {
 
-  def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) {
-    implicit request =>
-      metrics.startTimer(notificationMetric)
-      headerValidator
-        .validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
-        case Right(extractedHeaders) =>
-          getNotificationFromRequest(extractedHeaders)
-            .fold(
-              Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)) {
-              save(_)
-            }
-        case Left(errorResponse) => Future.successful(errorResponse.XmlResult)
-      }
+  def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
+    metrics.startTimer(notificationMetric)
+    headerValidator
+      .validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
+      case Right(extractedHeaders) =>
+        getNotificationFromRequest(extractedHeaders)
+          .fold(Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)) {
+            save(_)
+          }
+      case Left(errorResponse) => Future.successful(errorResponse.XmlResult)
+    }
 
   }
 
@@ -80,28 +74,25 @@ class NotificationsController @Inject()(
   def getSubmissionNotifications(conversationId: String): Action[AnyContent] =
     authorisedAction(BodyParsers.parse.default) { implicit authorizedRequest =>
       notificationsRepository
-        .getByEoriAndConversationId(authorizedRequest.eori.value,
-                                    conversationId)
+        .getByEoriAndConversationId(authorizedRequest.eori.value, conversationId)
         .map(res => Ok(Json.toJson(res)))
     }
 
-  def saveMovement(): Action[NodeSeq] = Action.async(parse.xml) {
-    implicit request =>
-      metrics.startTimer(movementMetric)
-      headerValidator
-        .validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
-        case Right(extractedHeaders) =>
-          getMovementNotificationFromRequest(extractedHeaders)
-            .fold(
-              Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)) {
-              saveMovement(_)
-            }
-        case Left(errorResponse) => Future.successful(errorResponse.XmlResult)
-      }
+  def saveMovement(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
+    metrics.startTimer(movementMetric)
+    headerValidator
+      .validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
+      case Right(extractedHeaders) =>
+        getMovementNotificationFromRequest(extractedHeaders)
+          .fold(Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)) {
+            saveMovement(_)
+          }
+      case Left(errorResponse) => Future.successful(errorResponse.XmlResult)
+    }
   }
 
   private def getNotificationFromRequest(
-      vhnar: ValidatedHeadersNotificationApiRequest
+    vhnar: ValidatedHeadersNotificationApiRequest
   )(implicit request: Request[NodeSeq]): Option[DeclarationNotification] = {
 
     val parseXmlResult = Try[MetaData] {
@@ -135,8 +126,7 @@ class NotificationsController @Inject()(
 
   }
 
-  private def save(notification: DeclarationNotification)(
-      implicit hc: HeaderCarrier): Future[Result] = {
+  private def save(notification: DeclarationNotification)(implicit hc: HeaderCarrier): Future[Result] = {
     val eori = notification.eori
     val convId = notification.conversationId
 
@@ -172,8 +162,7 @@ class NotificationsController @Inject()(
       }
     }.headOption
 
-  private def saveMovement(notification: MovementNotification)(
-      implicit hc: HeaderCarrier): Future[Result] =
+  private def saveMovement(notification: MovementNotification)(implicit hc: HeaderCarrier): Future[Result] =
     movementNotificationsRepository
       .save(notification)
       .map {
@@ -186,9 +175,8 @@ class NotificationsController @Inject()(
       }
 
   private def getMovementNotificationFromRequest(
-      vhnar: ValidatedHeadersNotificationApiRequest
-  )(implicit request: Request[NodeSeq],
-    hc: HeaderCarrier): Option[MovementNotification] = {
+    vhnar: ValidatedHeadersNotificationApiRequest
+  )(implicit request: Request[NodeSeq], hc: HeaderCarrier): Option[MovementNotification] = {
     val parseResult = Try[InventoryLinkingMovementResponse] {
       InventoryLinkingMovementResponse.fromXml(request.body.toString)
     }

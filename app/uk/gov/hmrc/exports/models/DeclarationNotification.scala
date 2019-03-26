@@ -23,12 +23,12 @@ import uk.gov.hmrc.wco.dec._
 import scala.xml.Elem
 
 case class DeclarationMetadata(
-    wcoDataModelVersionCode: Option[String] = None, // max 6 chars
-    wcoTypeName: Option[String] = None, // no constraint
-    responsibleCountryCode: Option[String] = None, // max 2 chars - ISO 3166-1 alpha2 code
-    responsibleAgencyName: Option[String] = None, // max 70 chars
-    agencyAssignedCustomizationCode: Option[String] = None, // max 6 chars
-    agencyAssignedCustomizationVersionCode: Option[String] = None // max 3 chars
+  wcoDataModelVersionCode: Option[String] = None, // max 6 chars
+  wcoTypeName: Option[String] = None, // no constraint
+  responsibleCountryCode: Option[String] = None, // max 2 chars - ISO 3166-1 alpha2 code
+  responsibleAgencyName: Option[String] = None, // max 70 chars
+  agencyAssignedCustomizationCode: Option[String] = None, // max 6 chars
+  agencyAssignedCustomizationVersionCode: Option[String] = None // max 3 chars
 )
 
 object DeclarationMetadata {
@@ -71,11 +71,11 @@ object DeclarationNotification {
 }
 
 case class DeclarationNotification(
-    dateTimeReceived: DateTime = DateTime.now(),
-    conversationId: String,
-    eori: String,
-    metadata: DeclarationMetadata,
-    response: Seq[Response] = Seq.empty
+  dateTimeReceived: DateTime = DateTime.now(),
+  conversationId: String,
+  eori: String,
+  metadata: DeclarationMetadata,
+  response: Seq[Response] = Seq.empty
 ) {
   def isOlderThan(notification: DeclarationNotification): Boolean = {
     val firstDateOpt =
@@ -101,9 +101,7 @@ case class NotifyResponse(code: String, message: String) {
   </errorResponse>
 }
 
-object NotAcceptableResponse
-    extends NotifyResponse("ACCEPT_HEADER_INVALID",
-                           "Missing or invalid Accept header")
+object NotAcceptableResponse extends NotifyResponse("ACCEPT_HEADER_INVALID", "Missing or invalid Accept header")
 
 object HeaderMissingErrorResponse
     extends NotifyResponse(
@@ -111,6 +109,4 @@ object HeaderMissingErrorResponse
       "ClientId or ConversationId or EORI is missing in the request headers"
     )
 
-object NotificationFailedErrorResponse
-    extends NotifyResponse("INTERNAL_SERVER_ERROR",
-                           "Failed to save notifications")
+object NotificationFailedErrorResponse extends NotifyResponse("INTERNAL_SERVER_ERROR", "Failed to save notifications")

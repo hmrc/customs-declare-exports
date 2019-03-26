@@ -30,7 +30,7 @@ import play.api.Application
 import play.api.http.Status
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.inject.{Injector, bind}
+import play.api.inject.{bind, Injector}
 import play.api.libs.concurrent.Execution.Implicits
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSClient
@@ -44,7 +44,12 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, MovementsRepository, NotificationsRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{
+  MovementNotificationsRepository,
+  MovementsRepository,
+  NotificationsRepository,
+  SubmissionRepository
+}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 
 import scala.concurrent.duration._
@@ -53,7 +58,7 @@ import scala.reflect.ClassTag
 import scala.xml.NodeSeq
 
 trait CustomsExportsBaseSpec
-    extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar with ScalaFutures  with AuthTestSupport {
+    extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar with ScalaFutures with AuthTestSupport {
 
   val mockSubmissionRepository: SubmissionRepository = mock[SubmissionRepository]
   val mockNotificationsRepository: NotificationsRepository = mock[NotificationsRepository]
@@ -118,8 +123,10 @@ trait CustomsExportsBaseSpec
   }
 
   protected def withDataSaved(ok: Boolean): OngoingStubbing[Future[Boolean]] = {
-    when(mockDeclarationsApiConnector.submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier],any[ExecutionContext]))
-      .thenReturn(Future.successful(CustomsDeclarationsResponse(OK, Some(randomConversationId))))
+    when(
+      mockDeclarationsApiConnector
+        .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
+    ).thenReturn(Future.successful(CustomsDeclarationsResponse(OK, Some(randomConversationId))))
     when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(ok))
     when(mockMovementsRepository.save(any())).thenReturn(Future.successful(ok))
   }
@@ -136,10 +143,14 @@ trait CustomsExportsBaseSpec
   protected def withSubmissions(submissions: Seq[Submission]): OngoingStubbing[Future[Seq[Submission]]] =
     when(mockSubmissionRepository.findByEori(any())).thenReturn(Future.successful(submissions))
 
-  protected def withNotification(notifications: Seq[DeclarationNotification]): OngoingStubbing[Future[Seq[DeclarationNotification]]] =
+  protected def withNotification(
+    notifications: Seq[DeclarationNotification]
+  ): OngoingStubbing[Future[Seq[DeclarationNotification]]] =
     when(mockNotificationsRepository.getByConversationId(any())).thenReturn(Future.successful(notifications))
 
-  protected def withSubmissionNotification(notifications: Seq[DeclarationNotification]): OngoingStubbing[Future[Seq[DeclarationNotification]]] =
+  protected def withSubmissionNotification(
+    notifications: Seq[DeclarationNotification]
+  ): OngoingStubbing[Future[Seq[DeclarationNotification]]] =
     when(mockNotificationsRepository.getByEoriAndConversationId(any(), any()))
       .thenReturn(Future.successful(notifications))
 
@@ -147,16 +158,23 @@ trait CustomsExportsBaseSpec
     when(mockNotificationsRepository.save(any())).thenReturn(Future.successful(ok))
     when(mockSubmissionRepository.updateStatus(any(), any(), any())).thenReturn(Future.successful(ok))
   }
-  protected def haveNotifications(notifications: Seq[DeclarationNotification]): OngoingStubbing[Future[Seq[DeclarationNotification]]] =
+  protected def haveNotifications(
+    notifications: Seq[DeclarationNotification]
+  ): OngoingStubbing[Future[Seq[DeclarationNotification]]] =
     when(mockNotificationsRepository.findByEori(any())).thenReturn(Future.successful(notifications))
 
   protected def withMovementNotificationSaved(ok: Boolean): OngoingStubbing[Future[Boolean]] =
     when(mockMovementNotificationsRepository.save(any())).thenReturn(Future.successful(ok))
 
-  protected def withCancellationRequest(status: CancellationStatus, apiStatus: Int): OngoingStubbing[Future[CustomsDeclarationsResponse]] = {
+  protected def withCancellationRequest(
+    status: CancellationStatus,
+    apiStatus: Int
+  ): OngoingStubbing[Future[CustomsDeclarationsResponse]] = {
     when(mockSubmissionRepository.cancelDeclaration(any(), any())).thenReturn(Future.successful(status))
-    when(mockDeclarationsApiConnector.submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(Future.successful(CustomsDeclarationsResponse(apiStatus, Some(UUID.randomUUID().toString))))
+    when(
+      mockDeclarationsApiConnector
+        .submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
+    ).thenReturn(Future.successful(CustomsDeclarationsResponse(apiStatus, Some(UUID.randomUUID().toString))))
   }
 
 }

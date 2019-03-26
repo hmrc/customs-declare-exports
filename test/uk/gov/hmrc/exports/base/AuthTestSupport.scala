@@ -48,6 +48,9 @@ trait AuthTestSupport extends MockitoSugar {
       )(any(), any())
     ).thenReturn(Future.successful(user.enrolments))
 
+  def unauthorizedUser(error: Throwable): Unit =
+    when(mockAuthConnector.authorise(any(), any())(any(), any())).thenReturn(Future.failed(error))
+
   def userWithoutEori(user: SignedInUser = newUser("", externalId = "external1")): Unit =
     when(
       mockAuthConnector.authorise(

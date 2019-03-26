@@ -49,7 +49,8 @@ trait ExportsTestData {
   val submissionData: SubmissionData = SubmissionData.buildSubmissionData(submission, 0)
   val seqSubmissions: Seq[Submission] = Seq(submission)
   val seqSubmissionData: Seq[SubmissionData] = Seq(submissionData)
-  val dummyToken: String = "Bearer BXQ3/Treo4kQCZvVcCqKPlwxRN4RA9Mb5RF8fFxOuwG5WSg+S+Rsp9Nq998Fgg0HeNLXL7NGwEAIzwM6vuA6YYhRQnTRFaBhrp+1w+kVW8g1qHGLYO48QPWuxdM87VMCZqxnCuDoNxVn76vwfgtpNj0+NwfzXV2Zc12L2QGgF9H9KwIkeIPK/mMlBESjue4V]"
+  val dummyToken: String =
+    "Bearer BXQ3/Treo4kQCZvVcCqKPlwxRN4RA9Mb5RF8fFxOuwG5WSg+S+Rsp9Nq998Fgg0HeNLXL7NGwEAIzwM6vuA6YYhRQnTRFaBhrp+1w+kVW8g1qHGLYO48QPWuxdM87VMCZqxnCuDoNxVn76vwfgtpNj0+NwfzXV2Zc12L2QGgF9H9KwIkeIPK/mMlBESjue4V]"
   val declarantEoriValue: String = "ZZ123456789000"
   val declarantLrnValue: String = "MyLrnValue1234"
   val declarantDucrValue: String = "MyDucrValue1234"
@@ -68,15 +69,19 @@ trait ExportsTestData {
     Seq("01", "02", "03", "05", "06", "07", "08", "09", "10", "11", "16", "17", "18")
   protected def randomResponseFunctionCode: String = responseFunctionCodes(Random.nextInt(responseFunctionCodes.length))
 
-  val response1: Seq[Response] = Seq(Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("123")))
-  val response2: Seq[Response] = Seq(Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("456")))
+  val response1: Seq[Response] = Seq(
+    Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("123"))
+  )
+  val response2: Seq[Response] = Seq(
+    Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("456"))
+  )
 
   val notification = DeclarationNotification(now, conversationId, eori, DeclarationMetadata(), response1)
   val movementNotification =
     MovementNotification(now, conversationId, eori, movementResponse = InventoryLinkingMovementResponse("EAA"))
   val submissionResponse = SubmissionResponse(eori, conversationId, ducr, lrn, Some(mrn), status = "01")
-  val submissionMovementResponse = MovementResponse(eori, conversationId, ducr, Some(mucr), "Arrival", Some(GoodsHaveExitedTheCommunity.toString()))
-
+  val submissionMovementResponse =
+    MovementResponse(eori, conversationId, ducr, Some(mucr), "Arrival", Some(GoodsHaveExitedTheCommunity.toString()))
 
   val ValidHeaders: Map[String, String] = Map(
     contentTypeHeader,
@@ -88,9 +93,8 @@ trait ExportsTestData {
     VALID_MRN_HEADER
   )
 
-  def randomSubmitDeclaration: MetaData = MetaData(declaration = Option(WcoDeclaration(
-    functionalReferenceId = Some(randomString(35))
-  )))
+  def randomSubmitDeclaration: MetaData =
+    MetaData(declaration = Option(WcoDeclaration(functionalReferenceId = Some(randomString(35)))))
 
   protected def randomString(length: Int): String = Random.alphanumeric.take(length).mkString
 }

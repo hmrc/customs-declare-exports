@@ -33,36 +33,34 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
   val jsonBody: JsValue = Json.toJson[MovementResponse](submissionMovementResponse)
   val fakeRequest: FakeRequest[JsValue] = FakeRequest("POST", saveMovementUri).withBody(jsonBody)
 
-  val xmlBody: String =  randomSubmitDeclaration.toXml
+  val xmlBody: String = randomSubmitDeclaration.toXml
   val fakeSubmitXmlRequest: FakeRequest[String] = FakeRequest("POST", submitUri).withBody(xmlBody)
   val fakeSubmitXmlRequestWithHeaders: FakeRequest[String] = fakeSubmitXmlRequest
-    .withHeaders(CustomsHeaderNames.XLrnHeaderName -> declarantLrnValue,
+    .withHeaders(
+      CustomsHeaderNames.XLrnHeaderName -> declarantLrnValue,
       CustomsHeaderNames.XDucrHeaderName -> declarantDucrValue,
       AUTHORIZATION -> dummyToken,
-      CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8))
+      CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
+    )
 
   val fakeSubmitXmlRequestWithMissingHeaders: FakeRequest[String] = fakeSubmitXmlRequest
-    .withHeaders(
-      AUTHORIZATION -> dummyToken,
-      CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8))
-
-
+    .withHeaders(AUTHORIZATION -> dummyToken, CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8))
 
   def fakeRequestWithPayload(uri: String, payload: String): FakeRequest[String] =
     FakeRequest("POST", uri).withBody(payload)
 
   val validCancelHeaders = CustomsHeaderNames.XMrnHeaderName -> declarantMrnValue
-    AUTHORIZATION -> dummyToken
-    CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
+  AUTHORIZATION -> dummyToken
+  CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
 
   def fakeCancellationRequest(payload: String): FakeRequest[String] = fakeRequestWithPayload(cancelUri, payload)
 
-  def fakeCancelRequestWithHeaders(payload: String): FakeRequest[String] = fakeCancellationRequest(payload)
-    .withHeaders(validCancelHeaders)
+  def fakeCancelRequestWithHeaders(payload: String): FakeRequest[String] =
+    fakeCancellationRequest(payload)
+      .withHeaders(validCancelHeaders)
 
   val fakeCancelXmlRequestWithMissingHeaders: FakeRequest[String] = fakeCancellationRequest("<someXml></someXml>")
-    .withHeaders(AUTHORIZATION -> dummyToken,
-      CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8))
+    .withHeaders(AUTHORIZATION -> dummyToken, CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8))
   val submissionJson: JsValue = Json.toJson[Submission](submission)
   val jsonSeqSubmission: JsValue = Json.toJson[Seq[SubmissionData]](seqSubmissionData)
 
@@ -89,8 +87,6 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
         status(result) must be(BAD_REQUEST)
       }
-
-
 
       "return 500 status when something goes wrong" in {
         withAuthorizedUser()
@@ -254,7 +250,6 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
         status(result) must be(OK)
         contentAsJson(result) must be(Json.toJson[CancellationStatus](CancellationRequested))
       }
-
 
     }
 

@@ -33,22 +33,26 @@ import scala.xml.NodeSeq
 
 @Singleton
 class ExportsService @Inject()(
-                                customsDeclarationsConnector: CustomsDeclarationsConnector,
-                                submissionRepository: SubmissionRepository) {
+  customsDeclarationsConnector: CustomsDeclarationsConnector,
+  submissionRepository: SubmissionRepository
+) {
 
   def handleSubmission(eori: String, ducr: String, lrn: String, xml: NodeSeq)(
-    implicit hc: HeaderCarrier): Future[Result] =
+    implicit hc: HeaderCarrier
+  ): Future[Result] =
     customsDeclarationsConnector
       .submitDeclaration(eori, xml)
-      .flatMap(response =>
-        response.conversationId.fold(Future.successful(
-          InternalServerError("No conversation Id Returned"))) {
-          conversationId =>
-            persistSubmission(eori, conversationId, ducr, lrn, Pending.toString)
-        })
+      .flatMap(
+        response =>
+          response.conversationId.fold(Future.successful(InternalServerError("No conversation Id Returned"))) {
+            conversationId =>
+              persistSubmission(eori, conversationId, ducr, lrn, Pending.toString)
+        }
+      )
 
-  def handleCancellation(eori: String, mrn: String, xml: NodeSeq)
-                        (implicit hc: HeaderCarrier): Future[Either[Result, CancellationStatus]] =
+  def handleCancellation(eori: String, mrn: String, xml: NodeSeq)(
+    implicit hc: HeaderCarrier
+  ): Future[Either[Result, CancellationStatus]] =
     customsDeclarationsConnector
       .submitCancellation(eori, xml)
       .flatMap {
@@ -57,19 +61,15 @@ class ExportsService @Inject()(
         case _ => Future.successful(Left(InternalServerError("")))
       }
 
-  private def persistSubmission(eori: String,
-                                conversationId: String,
-                                ducr: String,
-                                lrn: String,
-                                status: String): Future[Result] = {
+  private def persistSubmission(
+    eori: String,
+    conversationId: String,
+    ducr: String,
+    lrn: String,
+    status: String
+  ): Future[Result] =
     submissionRepository
-      .save(
-        Submission(eori,
-          conversationId,
-          ducr,
-          Some(lrn),
-          None,
-          status = status))
+      .save(Submission(eori, conversationId, ducr, Some(lrn), None, status = status))
       .map(
         res =>
           if (res) {
@@ -78,7 +78,6 @@ class ExportsService @Inject()(
           } else {
             Logger.error("error  saving submission data to DB")
             InternalServerError("failed saving submission")
-          }
+        }
       )
-  }
 }

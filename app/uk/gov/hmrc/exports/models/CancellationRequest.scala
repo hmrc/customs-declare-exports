@@ -31,8 +31,7 @@ object CancellationStatus {
   def unapply(status: CancellationStatus): Option[(String, JsValue)] = {
     val (prod: Product, sub) = status match {
       case CancellationRequestExists =>
-        (CancellationRequestExists,
-         Json.toJson(CancellationRequestExists.toString))
+        (CancellationRequestExists, Json.toJson(CancellationRequestExists.toString))
       case CancellationRequested =>
         (CancellationRequested, Json.toJson(CancellationRequested.toString))
       case MissingDeclaration =>
