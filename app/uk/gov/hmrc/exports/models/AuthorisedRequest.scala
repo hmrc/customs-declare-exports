@@ -26,6 +26,14 @@ trait HasEori {
   val eori: Eori
 }
 
+trait HasConversationId {
+  val conversationId: ConversationId
+}
+
+trait HasAuthToken {
+  val authToken: AuthToken
+}
+
 trait HasMrn {
   val mrn: Mrn
 }
@@ -38,6 +46,8 @@ case class LocalReferenceNumber(value: String) extends AnyVal
 case class Ducr(value: String) extends AnyVal
 case class Mrn(value: String) extends AnyVal
 case class Eori(value: String) extends AnyVal
+case class ConversationId(value: String) extends AnyVal
+case class AuthToken(value: String) extends AnyVal
 
 case class AuthorizedSubmissionRequest[A](eori: Eori, request: Request[A])
     extends WrappedRequest[A](request)
@@ -50,3 +60,11 @@ case class ValidatedHeadersSubmissionRequest(
     with HasDucr
 
 case class ValidatedHeadersCancellationRequest(mrn: Mrn) extends HasMrn
+
+case class ValidatedHeadersNotificationApiRequest(
+    authToken: AuthToken,
+    conversationId: ConversationId,
+    eori: Eori
+) extends HasEori
+    with HasConversationId
+    with HasAuthToken

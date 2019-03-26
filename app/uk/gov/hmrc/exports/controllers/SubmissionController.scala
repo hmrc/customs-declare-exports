@@ -121,10 +121,10 @@ class SubmissionController @Inject()(
   }
 
   private def processCancelationRequest()(
-    implicit request: AuthorizedSubmissionRequest[AnyContent],
-    hc: HeaderCarrier,
-    headers: Map[String, String]): Future[Result] = {
-    headerValidator.validateAndExtractCancellationHeaders match {
+      implicit request: AuthorizedSubmissionRequest[AnyContent],
+      hc: HeaderCarrier,
+      headers: Map[String, String]): Future[Result] = {
+      headerValidator.validateAndExtractCancellationHeaders(headers) match {
       case Right(vhr) =>
         request.body.asXml match {
           case Some(xml) =>

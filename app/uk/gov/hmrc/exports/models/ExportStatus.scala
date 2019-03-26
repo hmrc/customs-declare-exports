@@ -26,22 +26,23 @@ object ExportStatus {
   implicit object StatusFormat extends Format[ExportStatus] {
     def reads(status: JsValue): JsResult[ExportStatus] = status match {
       case JsString("Pending") => JsSuccess(Pending)
-      case JsString("Cancellation Requested") => JsSuccess(RequestedCancellation)
-      case JsString("01")      => JsSuccess(Accepted)
-      case JsString("02")      => JsSuccess(Received)
-      case JsString("03")      => JsSuccess(Rejected)
-      case JsString("05")      => JsSuccess(UndergoingPhysicalCheck)
-      case JsString("06")      => JsSuccess(AdditionalDocumentsRequired)
-      case JsString("07")      => JsSuccess(Amended)
-      case JsString("08")      => JsSuccess(Released)
-      case JsString("09")      => JsSuccess(Cleared)
-      case JsString("10")      => JsSuccess(Cancelled)
-      case JsString("1139")    => JsSuccess(CustomsPositionGranted)
-      case JsString("1141")    => JsSuccess(CustomsPositionDenied)
-      case JsString("16")      => JsSuccess(GoodsHaveExitedTheCommunity)
-      case JsString("17")      => JsSuccess(DeclarationHandledExternally)
-      case JsString("18")      => JsSuccess(AwaitingExitResults)
-      case _                   => JsSuccess(UnknownExportStatus)
+      case JsString("Cancellation Requested") =>
+        JsSuccess(RequestedCancellation)
+      case JsString("01")   => JsSuccess(Accepted)
+      case JsString("02")   => JsSuccess(Received)
+      case JsString("03")   => JsSuccess(Rejected)
+      case JsString("05")   => JsSuccess(UndergoingPhysicalCheck)
+      case JsString("06")   => JsSuccess(AdditionalDocumentsRequired)
+      case JsString("07")   => JsSuccess(Amended)
+      case JsString("08")   => JsSuccess(Released)
+      case JsString("09")   => JsSuccess(Cleared)
+      case JsString("10")   => JsSuccess(Cancelled)
+      case JsString("1139") => JsSuccess(CustomsPositionGranted)
+      case JsString("1141") => JsSuccess(CustomsPositionDenied)
+      case JsString("16")   => JsSuccess(GoodsHaveExitedTheCommunity)
+      case JsString("17")   => JsSuccess(DeclarationHandledExternally)
+      case JsString("18")   => JsSuccess(AwaitingExitResults)
+      case _                => JsSuccess(UnknownExportStatus)
     }
 
     def writes(status: ExportStatus): JsValue = status match {
@@ -67,17 +68,17 @@ object ExportStatus {
 
   def retrieveFromResponse(response: Response): ExportStatus =
     response.functionCode match {
-      case "Pending" => Pending
+      case "Pending"                => Pending
       case "Cancellation Requested" => RequestedCancellation
-      case "01"      => Accepted
-      case "02"      => Received
-      case "03"      => Rejected
-      case "05"      => UndergoingPhysicalCheck
-      case "06"      => AdditionalDocumentsRequired
-      case "07"      => Amended
-      case "08"      => Released
-      case "09"      => Cleared
-      case "10"      => Cancelled
+      case "01"                     => Accepted
+      case "02"                     => Received
+      case "03"                     => Rejected
+      case "05"                     => UndergoingPhysicalCheck
+      case "06"                     => AdditionalDocumentsRequired
+      case "07"                     => Amended
+      case "08"                     => Released
+      case "09"                     => Cleared
+      case "10"                     => Cancelled
       case "11"
           if response.status.headOption.flatMap(_.nameCode).contains("39") =>
         CustomsPositionGranted

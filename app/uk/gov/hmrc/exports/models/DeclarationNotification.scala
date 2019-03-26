@@ -74,7 +74,6 @@ case class DeclarationNotification(
     dateTimeReceived: DateTime = DateTime.now(),
     conversationId: String,
     eori: String,
-    badgeId: Option[String] = None,
     metadata: DeclarationMetadata,
     response: Seq[Response] = Seq.empty
 ) {
@@ -91,15 +90,6 @@ case class DeclarationNotification(
     }
   }
 }
-
-case class NotificationApiHeaders(
-    accept: String,
-    contentType: String,
-    clientId: String,
-    badgeId: Option[String],
-    conversationId: String,
-    eori: String
-)
 
 case class NotifyResponse(code: String, message: String) {
   def toXml(): Elem = <errorResponse>

@@ -43,16 +43,17 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
 
   val validHeaders = Map(
     "X-CDS-Client-ID" -> "1234",
-    "X-Conversation-ID" -> "XConv1",
+    CustomsHeaderNames.XConversationIdName -> "XConv1",
+    CustomsHeaderNames.Authorization -> dummyToken,
     "X-EORI-Identifier" -> "eori1",
     HeaderNames.ACCEPT -> s"application/vnd.hmrc.${2.0}+xml",
-    HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
-    "X-Badge-Identifier" -> "badgeIdentifier1"
+    HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
   )
 
   val noEoriHeaders = Map(
     "X-CDS-Client-ID" -> "1234",
-    "X-Conversation-ID" -> "XConv1",
+    CustomsHeaderNames.XConversationIdName -> "XConv1",
+    CustomsHeaderNames.Authorization -> dummyToken,
     HeaderNames.ACCEPT -> s"application/vnd.hmrc.${2.0}+xml",
     HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
     "X-Badge-Identifier" -> "badgeIdentifier1"
@@ -93,7 +94,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
     "return 500 status if there is no EORI number in notification header" in {
       val result = route(app, FakeRequest(POST, uri).withHeaders(noEoriHeaders.toSeq: _*).withXmlBody(validXML)).get
 
-      status(result) must be(INTERNAL_SERVER_ERROR)
+      status(result) must be(BAD_REQUEST)
       contentAsString(result) must be
       "<errorResponse><code>INTERNAL_SERVER_ERROR</code><message>" +
         "ClientId or ConversationId or EORI is missing in the request headers</message></errorResponse>"
@@ -121,7 +122,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       val result =
         route(app, FakeRequest(POST, movementUri).withHeaders(noEoriHeaders.toSeq: _*).withXmlBody(movementXml)).get
 
-      status(result) must be(INTERNAL_SERVER_ERROR)
+      status(result) must be(BAD_REQUEST)
       contentAsString(result) must be
       "<errorResponse><code>INTERNAL_SERVER_ERROR</code><message>" +
         "ClientId or ConversationId or EORI is missing in the request headers</message></errorResponse>"

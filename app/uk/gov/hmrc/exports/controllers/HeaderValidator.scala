@@ -17,25 +17,49 @@
 package uk.gov.hmrc.exports.controllers
 
 import javax.inject.Singleton
+import play.api.Logger
+import play.api.http.HeaderNames
 import uk.gov.hmrc.exports.models._
+
 @Singleton
 class HeaderValidator {
 
   def extractLrnHeader(headers: Map[String, String]): Option[String] = {
-    headers.get(CustomsHeaderNames.XLrnHeaderName)
+    extractHeader(CustomsHeaderNames.XLrnHeaderName, headers)
   }
 
   def extractDucrHeader(headers: Map[String, String]): Option[String] = {
-    headers.get(CustomsHeaderNames.XDucrHeaderName)
+    extractHeader(CustomsHeaderNames.XDucrHeaderName, headers)
   }
 
   def extractMrnHeader(headers: Map[String, String]): Option[String] = {
-    headers.get(CustomsHeaderNames.XMrnHeaderName)
+    extractHeader(CustomsHeaderNames.XMrnHeaderName, headers)
   }
 
+  def extractAuthTokenHeader(headers: Map[String, String]): Option[String] = {
+    extractHeader(HeaderNames.AUTHORIZATION, headers)
+  }
+
+  def extractConversationIdHeader(
+                                   headers: Map[String, String]): Option[String] = {
+    extractHeader(CustomsHeaderNames.XConversationIdName, headers)
+  }
+
+  def extractEoriHeader(headers: Map[String, String]): Option[String] = {
+    extractHeader(CustomsHeaderNames.XEoriIdentifierHeaderName, headers)
+  }
+
+  private def extractHeader(headerName: String,
+                            headers: Map[String, String]): Option[String] =
+    headers.get(headerName) match {
+      case Some(header) if !header.isEmpty => Some(header)
+      case _ =>
+        Logger.error(s"Error Extracting $headerName")
+        None
+    }
 
   def validateAndExtractSubmissionHeaders(implicit headers: Map[String, String])
-    : Either[ErrorResponse, ValidatedHeadersSubmissionRequest] = {
+  : Either[ErrorResponse, ValidatedHeadersSubmissionRequest] = {
     val result = for {
       lrn <- extractLrnHeader(headers)
       ducr <- extractDucrHeader(headers)
@@ -44,22 +68,44 @@ class HeaderValidator {
     result match {
       case Some(vhr) =>
         Right(vhr)
-      case _ =>
-        Left(ErrorResponse.ErrorInternalServerError)
+      case None => {
+        Logger.debug("Error validating and extracting headers")
+        Left(ErrorResponse.ErrorInvalidPayload)
+      }
     }
   }
 
-  def validateAndExtractCancellationHeaders(implicit headers: Map[String, String])
+  def validateAndExtractCancellationHeaders(headers: Map[String, String])
   : Either[ErrorResponse, ValidatedHeadersCancellationRequest] = {
     val result = for {
       mrn <- extractMrnHeader(headers)
-    } yield
-      ValidatedHeadersCancellationRequest(Mrn(mrn))
+    } yield ValidatedHeadersCancellationRequest(Mrn(mrn))
     result match {
       case Some(vhr) =>
         Right(vhr)
-      case _ =>
-        Left(ErrorResponse.ErrorInternalServerError)
+      case _ => {
+        Logger.debug("Error validating and extracting headers")
+        Left(ErrorResponse.ErrorInvalidPayload)
+      }
+    }
+  }
+
+  def validateAndExtractNotificationHeaders(headers: Map[String, String])
+  : Either[ErrorResponse, ValidatedHeadersNotificationApiRequest] = {
+    val result = for {
+      eori <- extractEoriHeader(headers)
+      authToken <- extractAuthTokenHeader(headers)
+      conversationId <- extractConversationIdHeader(headers)
+    } yield
+      ValidatedHeadersNotificationApiRequest(AuthToken(authToken),
+        ConversationId(conversationId),
+        Eori(eori))
+    result match {
+      case Some(vhnar) => Right(vhnar)
+      case _ => {
+        Logger.debug("Error validating and extracting headers")
+        Left(ErrorResponse.ErrorInvalidPayload)
+      }
     }
   }
 }
