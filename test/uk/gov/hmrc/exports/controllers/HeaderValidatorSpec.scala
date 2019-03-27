@@ -136,16 +136,16 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
 
     }
 
-    "validateNotificationHeaders" should {
+    "validateAndExtractMovementNotificationHeaders" should {
 
-      "return Right of validatedHeaderResponse when validateHeaders is called on valid headers" in new SetUp {
+      "return Right of MovementNotificationApiRequest when validateHeaders is called on valid headers" in new SetUp {
         implicit val hc: HeaderCarrier = mock[HeaderCarrier]
 
-        val result: Either[ErrorResponse, ValidatedHeadersNotificationApiRequest] =
-          validator.validateAndExtractNotificationHeaders(ValidHeaders)
+        val result: Either[ErrorResponse, MovementNotificationApiRequest] =
+          validator.validateAndExtractMovementNotificationHeaders(ValidHeaders)
         result should be(
           Right(
-            ValidatedHeadersNotificationApiRequest(
+            MovementNotificationApiRequest(
               AuthToken(dummyToken),
               ConversationId(conversationId),
               Eori(declarantEoriValue)
@@ -155,12 +155,38 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
       }
 
       "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {
-        val result: Either[ErrorResponse, ValidatedHeadersNotificationApiRequest] =
-          validator.validateAndExtractNotificationHeaders(Map.empty)
+        val result: Either[ErrorResponse, MovementNotificationApiRequest] =
+          validator.validateAndExtractMovementNotificationHeaders(Map.empty)
         result should be(Left(ErrorResponse.ErrorInvalidPayload))
       }
 
     }
-  }
 
+
+
+    "validateAndExtractSubmissionNotificationHeaders" should {
+
+      "return Right of SubmissionNotificationApiRequest when validateHeaders is called on valid headers" in new SetUp {
+        implicit val hc: HeaderCarrier = mock[HeaderCarrier]
+
+        val result: Either[ErrorResponse, SubmissionNotificationApiRequest] =
+          validator.validateAndExtractSubmissionNotificationHeaders(ValidHeaders)
+        result should be(
+          Right(
+            SubmissionNotificationApiRequest(
+              AuthToken(dummyToken),
+              ConversationId(conversationId)
+            )
+          )
+        )
+      }
+
+      "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {
+        val result: Either[ErrorResponse, SubmissionNotificationApiRequest] =
+          validator.validateAndExtractSubmissionNotificationHeaders(Map.empty)
+        result should be(Left(ErrorResponse.ErrorInvalidPayload))
+      }
+
+    }
+}
 }

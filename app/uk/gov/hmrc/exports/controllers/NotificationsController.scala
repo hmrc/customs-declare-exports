@@ -51,9 +51,9 @@ class NotificationsController @Inject()(
   def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
     metrics.startTimer(notificationMetric)
     headerValidator
-      .validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
+      .validateAndExtractSubmissionNotificationHeaders(request.headers.toSimpleMap) match {
       case Right(extractedHeaders) =>
-        getNotificationFromRequest(extractedHeaders).flatMap(
+        getSubmissionNotificationFromRequest(extractedHeaders).flatMap(
           result =>
             result.fold(Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)) {
               save(_)
@@ -81,7 +81,7 @@ class NotificationsController @Inject()(
   def saveMovement(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
     metrics.startTimer(movementMetric)
     headerValidator
-      .validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
+      .validateAndExtractMovementNotificationHeaders(request.headers.toSimpleMap) match {
       case Right(extractedHeaders) =>
         getMovementNotificationFromRequest(extractedHeaders)
           .fold(Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)) {
@@ -91,8 +91,8 @@ class NotificationsController @Inject()(
     }
   }
 
-  private def getNotificationFromRequest(
-    vhnar: ValidatedHeadersNotificationApiRequest
+  private def getSubmissionNotificationFromRequest(
+    vhnar: SubmissionNotificationApiRequest
   )(implicit request: Request[NodeSeq]): Future[Option[DeclarationNotification]] =
     submissionRepository
       .getByConversationId(vhnar.conversationId.value)
@@ -188,7 +188,7 @@ class NotificationsController @Inject()(
       }
 
   private def getMovementNotificationFromRequest(
-    vhnar: ValidatedHeadersNotificationApiRequest
+    vhnar: MovementNotificationApiRequest
   )(implicit request: Request[NodeSeq], hc: HeaderCarrier): Option[MovementNotification] = {
     val parseResult = Try[InventoryLinkingMovementResponse] {
       InventoryLinkingMovementResponse.fromXml(request.body.toString)
