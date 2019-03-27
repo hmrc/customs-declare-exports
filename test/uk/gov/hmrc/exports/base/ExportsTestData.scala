@@ -40,7 +40,7 @@ trait ExportsTestData {
   val eori: String = "GB167676"
   val randomEori: String = randomString(8)
   val lrn: Option[String] = Some(randomString(22))
-  val mrn: String = randomString(16)
+  val mrn: String = "MRN87878797"
   val mucr: String = randomString(16)
   val conversationId: String = "b1c09f1b-7c94-4e90-b754-7c5c71c44e11"
   val ducr: String = randomString(16)
@@ -77,7 +77,7 @@ trait ExportsTestData {
     Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("456"))
   )
 
-  val notification = DeclarationNotification(now, conversationId, eori, DeclarationMetadata(), response1)
+  val notification = DeclarationNotification(now, conversationId, mrn, eori, DeclarationMetadata(), response1)
   val movementNotification =
     MovementNotification(now, conversationId, eori, movementResponse = InventoryLinkingMovementResponse("EAA"))
   val submissionResponse = SubmissionResponse(eori, conversationId, Some(ducr), lrn, Some(mrn), status = "01")

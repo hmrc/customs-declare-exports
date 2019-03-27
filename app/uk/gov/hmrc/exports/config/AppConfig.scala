@@ -27,7 +27,8 @@ class AppConfig @Inject()(override val runModeConfiguration: Configuration, val 
 
   override protected def mode: Mode = environment.mode
 
-  override protected def appNameConfiguration: Configuration = runModeConfiguration
+  override protected def appNameConfiguration: Configuration =
+    runModeConfiguration
 
   private def loadConfig(key: String): String =
     runModeConfiguration

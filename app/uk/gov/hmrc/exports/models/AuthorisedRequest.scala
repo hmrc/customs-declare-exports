@@ -38,7 +38,6 @@ trait HasMrn {
   val mrn: Mrn
 }
 
-
 case class LocalReferenceNumber(value: String) extends AnyVal
 case class Ducr(value: String) extends AnyVal
 case class Mrn(value: String) extends AnyVal

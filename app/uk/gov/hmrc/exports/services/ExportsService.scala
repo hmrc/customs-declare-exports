@@ -57,7 +57,9 @@ class ExportsService @Inject()(
       .submitCancellation(eori, xml)
       .flatMap {
         case CustomsDeclarationsResponse(ACCEPTED, Some(_)) =>
-          submissionRepository.cancelDeclaration(eori, mrn).map(cancellationStatus => Right(cancellationStatus))
+          submissionRepository
+            .cancelDeclaration(eori, mrn)
+            .map(cancellationStatus => Right(cancellationStatus))
         case _ => Future.successful(Left(InternalServerError("")))
       }
 

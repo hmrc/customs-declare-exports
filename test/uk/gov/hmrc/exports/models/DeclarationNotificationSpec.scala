@@ -25,6 +25,7 @@ class DeclarationNotificationSpec extends WordSpec with MustMatchers {
   val earlierNotification = DeclarationNotification(
     conversationId = "12345",
     eori = "12345",
+    mrn = "12345",
     metadata = DeclarationMetadata(),
     response = Seq(earlierResponse)
   )
@@ -35,6 +36,7 @@ class DeclarationNotificationSpec extends WordSpec with MustMatchers {
   val olderNotification = DeclarationNotification(
     conversationId = "12345",
     eori = "12345",
+    mrn = "12345",
     metadata = DeclarationMetadata(),
     response = Seq(olderResponse)
   )
@@ -42,6 +44,7 @@ class DeclarationNotificationSpec extends WordSpec with MustMatchers {
   val notificationWithoutResponse = DeclarationNotification(
     conversationId = "12345",
     eori = "12345",
+    mrn = "12345",
     metadata = DeclarationMetadata(),
     response = Seq.empty
   )

@@ -107,12 +107,12 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
       repo.cancelDeclaration("incorrect", "incorrect").futureValue must be(MissingDeclaration)
     }
 
-    "update status for existing submission" in {
-      repo.updateStatus(eori, conversationId, Some("NewStatus")).futureValue must be(true)
+    "update mrn and status for existing submission" in {
+      repo.updateMrnAndStatus(eori, conversationId, mrn, Some("NewStatus")).futureValue must be(true)
     }
 
-    "update status without new status for existing submission" in {
-      repo.updateStatus(eori, conversationId, None).futureValue must be(false)
+    "update mrn and status without new status for existing submission" in {
+      repo.updateMrnAndStatus(eori, conversationId, mrn,  None).futureValue must be(false)
     }
   }
 }

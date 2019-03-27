@@ -20,7 +20,6 @@ import com.google.inject.Singleton
 import javax.inject.Inject
 import org.joda.time.DateTime
 import play.api.Logger
-import play.api.http.HeaderNames
 import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -54,13 +53,14 @@ class NotificationsController @Inject()(
     headerValidator
       .validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
       case Right(extractedHeaders) =>
-        getNotificationFromRequest(extractedHeaders)
-          .fold(Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)) {
-            save(_)
+        getNotificationFromRequest(extractedHeaders).flatMap(
+          result =>
+            result.fold(Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)) {
+              save(_)
           }
+        )
       case Left(errorResponse) => Future.successful(errorResponse.XmlResult)
     }
-
   }
 
   //TODO response should be streamed or paginated depending on the no of notifications.
@@ -93,18 +93,31 @@ class NotificationsController @Inject()(
 
   private def getNotificationFromRequest(
     vhnar: ValidatedHeadersNotificationApiRequest
-  )(implicit request: Request[NodeSeq]): Option[DeclarationNotification] = {
+  )(implicit request: Request[NodeSeq]): Future[Option[DeclarationNotification]] =
+    submissionRepository
+      .getByConversationId(vhnar.conversationId.value)
+      .map(mayBeSubmission => {
+        mayBeSubmission.flatMap { submission =>
+          handleXmlParseToNotification(request.body.toString, vhnar.conversationId.value, submission.eori)
+        }
+      })
 
+  private def handleXmlParseToNotification(xmlString: String, conversationId: String, eori: String) = {
     val parseXmlResult = Try[MetaData] {
-      MetaData.fromXml(request.body.toString)
+      MetaData.fromXml(xmlString)
     }
 
     parseXmlResult match {
       case Success(metaData) =>
+        val mrn = metaData.declaration.flatMap(_.functionalReferenceId)
+        if (mrn.isEmpty) {
+          Logger.error("Unable to determine MRN")
+        }
         val notification = DeclarationNotification(
           DateTime.now,
-          vhnar.conversationId.value,
-          vhnar.eori.value,
+          conversationId,
+          mrn.getOrElse("UNKNOWN"),
+          eori,
           DeclarationMetadata(
             metaData.wcoDataModelVersionCode,
             metaData.wcoTypeName,
@@ -123,7 +136,6 @@ class NotificationsController @Inject()(
         Logger.error("problem parsing Notification", ex)
         None
     }
-
   }
 
   private def save(notification: DeclarationNotification)(implicit hc: HeaderCarrier): Future[Result] = {
@@ -137,9 +149,10 @@ class NotificationsController @Inject()(
       notificationSaved <- notificationsRepository.save(notification)
       shouldBeUpdated = oldNotification.forall(notification.isOlderThan)
       _ <- if (shouldBeUpdated)
-        submissionRepository.updateStatus(
+        submissionRepository.updateMrnAndStatus(
           notification.eori,
           notification.conversationId,
+          notification.mrn,
           buildStatus(notification.response)
         )
       else Future.successful(false)
@@ -181,18 +194,16 @@ class NotificationsController @Inject()(
       InventoryLinkingMovementResponse.fromXml(request.body.toString)
     }
     parseResult match {
-      case Success(response) => {
+      case Success(response) =>
         val notification = MovementNotification(
           conversationId = vhnar.conversationId.value,
           eori = vhnar.eori.value,
           movementResponse = response
         )
         Some(notification)
-      }
-      case Failure(ex) => {
+      case Failure(ex) =>
         Logger.error("error parsing movementNotification", ex)
         None
-      }
     }
 
   }

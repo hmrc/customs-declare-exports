@@ -16,67 +16,22 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import org.mockito.Mockito.{reset, times, verify}
-import play.api.http.{ContentTypes, HeaderNames}
-import play.api.mvc.Codec
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.{reset, times, verify, when}
+import org.scalatest.BeforeAndAfterEach
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
 import uk.gov.hmrc.exports.models.{DeclarationMetadata, DeclarationNotification}
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 
-class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
+import scala.concurrent.Future
 
-  val uri = "/customs-declare-exports/notify"
-  val movementUri = "/customs-declare-exports/notifyMovement"
-  val submissionNotificationUri = "/customs-declare-exports/submission-notifications/1234"
+class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach with NotificationTestData{
 
-  val getNotificationUri = "/customs-declare-exports/notifications"
-  val postNotificationUri = "/customs-declare-exports/notify"
-  val validXML = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
-    <wstxns1:Response xmlns:wstxns1="urn:wco:datamodel:WCO:RES-DMS:2"></wstxns1:Response>
-  </MetaData>
-
-  val movementXml = <inventoryLinkingMovementRequest xmlns="http://gov.uk/customs/inventoryLinking/v1">
-    <messageCode>EAL</messageCode>
-  </inventoryLinkingMovementRequest>
-
-  val validHeaders = Map(
-    "X-CDS-Client-ID" -> "1234",
-    CustomsHeaderNames.XConversationIdName -> "XConv1",
-    CustomsHeaderNames.Authorization -> dummyToken,
-    "X-EORI-Identifier" -> "eori1",
-    HeaderNames.ACCEPT -> s"application/vnd.hmrc.${2.0}+xml",
-    HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
-  )
-
-  val noEoriHeaders = Map(
-    "X-CDS-Client-ID" -> "1234",
-    CustomsHeaderNames.XConversationIdName -> "XConv1",
-    CustomsHeaderNames.Authorization -> dummyToken,
-    HeaderNames.ACCEPT -> s"application/vnd.hmrc.${2.0}+xml",
-    HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
-    "X-Badge-Identifier" -> "badgeIdentifier1"
-  )
-
-  val noAcceptHeader = Map(
-    "X-CDS-Client-ID" -> "1234",
-    "X-Conversation-ID" -> "XConv1",
-    HeaderNames.ACCEPT -> "",
-    HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
-    "X-Badge-Identifier" -> "badgeIdentifier1"
-  )
-
-  val noContentTypeHeader = Map(
-    "X-CDS-Client-ID" -> "1234",
-    "X-Conversation-ID" -> "XConv1",
-    HeaderNames.ACCEPT -> s"application/vnd.hmrc.${2.0}+xml",
-    HeaderNames.CONTENT_TYPE -> "",
-    "X-Badge-Identifier" -> "badgeIdentifier1"
-  )
-
-  val submissionNotification =
-    DeclarationNotification(conversationId = "1234", eori = "eori", metadata = DeclarationMetadata())
+  override def beforeEach: Unit = {
+    reset(mockSubmissionRepository, mockNotificationsRepository)
+  }
 
   "Notifications controller" should {
 
@@ -90,6 +45,8 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
     }
 
     "return 202 status when it successfully save notification" in {
+      when(mockSubmissionRepository.getByConversationId(any[String])).thenReturn(Future.successful(Some(submission)))
+
       withNotificationSaved(true)
       withSubmissionNotification(Seq.empty)
 
@@ -98,7 +55,17 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       status(result) must be(ACCEPTED)
     }
 
+    "return 202 status when it unable to find submission for conversationID" in {
+      when(mockSubmissionRepository.getByConversationId(any[String])).thenReturn(Future.successful(None))
+
+      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
+
+      status(result) must be(BAD_REQUEST)
+    }
+
     "return 500 status if it fail to save notification" in {
+      when(mockSubmissionRepository.getByConversationId(any[String])).thenReturn(Future.successful(Some(submission)))
+
       withNotificationSaved(false)
       withSubmissionNotification(Seq.empty)
 
@@ -108,6 +75,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
     }
 
     "return 500 status if there is no EORI number in notification header" in {
+
       val result = route(app, FakeRequest(POST, uri).withHeaders(noEoriHeaders.toSeq: _*).withXmlBody(validXML)).get
 
       status(result) must be(BAD_REQUEST)
@@ -177,12 +145,15 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
             <responseDs:DateTimeString formatCode="304">20190226085021Z</responseDs:DateTimeString>
           </response:IssueDateTime>
         </response:Response>
-        <response:Declaration></response:Declaration>
+        <response:Declaration>
+          <response:FunctionalReferenceID>MRN87878797</response:FunctionalReferenceID>
+        </response:Declaration>
       </MetaData>
 
   val olderNotification = DeclarationNotification(
     conversationId = "convId",
     eori = "eori",
+    mrn = mrn,
     metadata = DeclarationMetadata(),
     response = Seq(
       Response(functionCode = "02", issueDateTime = Some(ResponseDateTimeElement(DateTimeString("102", "20190224"))))
@@ -192,6 +163,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
   val newerNotification = DeclarationNotification(
     conversationId = "convId",
     eori = "eori",
+    mrn = mrn,
     metadata = DeclarationMetadata(),
     response = Seq(
       Response(functionCode = "02", issueDateTime = Some(ResponseDateTimeElement(DateTimeString("102", "20190227"))))
@@ -201,7 +173,8 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
   "Saving notification" should {
 
     "update submission status when there are no existing notifications" in {
-      reset(mockSubmissionRepository)
+      when(mockSubmissionRepository.getByConversationId(any[String])).thenReturn(Future.successful(Some(submission)))
+
       withAuthorizedUser()
       withSubmissionNotification(Seq.empty)
       withNotificationSaved(true)
@@ -213,11 +186,12 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
         ).get
 
       status(result) must be(ACCEPTED)
-      verify(mockSubmissionRepository, times(1)).updateStatus("eori1", "XConv1", Some("02"))
+      verify(mockSubmissionRepository, times(1)).updateMrnAndStatus("GB167676", "XConv1", mrn, Some("02"))
     }
 
     "update submission status when the existing notification is older than incoming one" in {
-      reset(mockSubmissionRepository)
+      when(mockSubmissionRepository.getByConversationId(any[String])).thenReturn(Future.successful(Some(submission)))
+
       withAuthorizedUser()
       withSubmissionNotification(Seq(olderNotification))
       withNotificationSaved(true)
@@ -229,11 +203,12 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
         ).get
 
       status(result) must be(ACCEPTED)
-      verify(mockSubmissionRepository, times(1)).updateStatus("eori1", "XConv1", Some("02"))
+      verify(mockSubmissionRepository, times(1)).updateMrnAndStatus("GB167676", "XConv1", mrn, Some("02"))
     }
 
     "not update submission when notification that exist is newer than incoming one" in {
-      reset(mockSubmissionRepository)
+      when(mockSubmissionRepository.getByConversationId(any[String])).thenReturn(Future.successful(Some(submission)))
+
       withAuthorizedUser()
       withSubmissionNotification(Seq(newerNotification))
       withNotificationSaved(true)
@@ -245,7 +220,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
         ).get
 
       status(result) must be(ACCEPTED)
-      verify(mockSubmissionRepository, times(0)).updateStatus("eori1", "XConv1", Some("02"))
+      verify(mockSubmissionRepository, times(0)).updateMrnAndStatus("eori1", "XConv1", mrn, Some("02"))
     }
 
     "return UnsupportedMediaType if Content Type header is empty" in {
