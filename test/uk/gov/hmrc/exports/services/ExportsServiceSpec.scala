@@ -105,7 +105,7 @@ class ExportsServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures {
 
         when(mockSubmissionRepo.cancelDeclaration(any[String], any[String]))
           .thenReturn(Future.successful(CancellationRequested))
-        val result = testObj.handleCancellation(eori, mrn, xmlNode).futureValue
+        val result: Either[Result, CancellationStatus] = testObj.handleCancellation(eori, mrn, xmlNode).futureValue
 
         result shouldBe Right(CancellationRequested)
 
@@ -124,7 +124,7 @@ class ExportsServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures {
             .submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
         ).thenReturn(Future.successful(CustomsDeclarationsResponse(BAD_REQUEST, None)))
 
-        val result = testObj.handleCancellation(eori, mrn, xmlNode).futureValue
+        val result: Either[Result, CancellationStatus] = testObj.handleCancellation(eori, mrn, xmlNode).futureValue
 
         status(result.left.get) shouldBe INTERNAL_SERVER_ERROR
 

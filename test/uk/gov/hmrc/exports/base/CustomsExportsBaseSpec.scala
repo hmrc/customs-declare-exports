@@ -156,7 +156,7 @@ trait CustomsExportsBaseSpec
 
   protected def withNotificationSaved(ok: Boolean): OngoingStubbing[Future[Boolean]] = {
     when(mockNotificationsRepository.save(any())).thenReturn(Future.successful(ok))
-    when(mockSubmissionRepository.updateStatus(any(), any(), any())).thenReturn(Future.successful(ok))
+    when(mockSubmissionRepository.updateMrnAndStatus(any(), any(), any(), any())).thenReturn(Future.successful(ok))
   }
   protected def haveNotifications(
     notifications: Seq[DeclarationNotification]

@@ -1,7 +1,4 @@
-.*
-
 !.gitignore
-
 .cache
 /.classpath
 db

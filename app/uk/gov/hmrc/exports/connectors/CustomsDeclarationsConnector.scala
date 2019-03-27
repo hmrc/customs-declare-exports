@@ -58,10 +58,11 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
     post(eori, uri, xml.toString())
 
   //noinspection ConvertExpressionToSAM
-  val responseReader: HttpReads[CustomsDeclarationsResponse] = new HttpReads[CustomsDeclarationsResponse] {
-    override def read(method: String, url: String, response: HttpResponse): CustomsDeclarationsResponse =
-      CustomsDeclarationsResponse(response.status, response.header("X-Conversation-ID"))
-  }
+  val responseReader: HttpReads[CustomsDeclarationsResponse] =
+    new HttpReads[CustomsDeclarationsResponse] {
+      override def read(method: String, url: String, response: HttpResponse): CustomsDeclarationsResponse =
+        CustomsDeclarationsResponse(response.status, response.header("X-Conversation-ID"))
+    }
 
   private[connectors] def post(eori: String, uri: String, body: String)(
     implicit hc: HeaderCarrier,

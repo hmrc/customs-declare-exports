@@ -73,6 +73,7 @@ object DeclarationNotification {
 case class DeclarationNotification(
   dateTimeReceived: DateTime = DateTime.now(),
   conversationId: String,
+  mrn: String,
   eori: String,
   metadata: DeclarationMetadata,
   response: Seq[Response] = Seq.empty
