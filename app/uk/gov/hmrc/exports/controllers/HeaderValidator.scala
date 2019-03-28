@@ -57,12 +57,10 @@ class HeaderValidator {
       lrn <- extractLrnHeader(headers)
     } yield ValidatedHeadersSubmissionRequest(LocalReferenceNumber(lrn), extractOptionalDucrHeader(headers))
     result match {
-      case Some(vhr) =>
-        Right(vhr)
-      case None => {
+      case Some(request) => Right(request)
+      case None =>
         Logger.debug("Error validating and extracting headers")
         Left(ErrorResponse.ErrorInvalidPayload)
-      }
     }
   }
 
@@ -73,29 +71,41 @@ class HeaderValidator {
       mrn <- extractMrnHeader(headers)
     } yield ValidatedHeadersCancellationRequest(Mrn(mrn))
     result match {
-      case Some(vhr) =>
-        Right(vhr)
-      case _ => {
+      case Some(request) => Right(request)
+      case _ =>
         Logger.debug("Error validating and extracting headers")
         Left(ErrorResponse.ErrorInvalidPayload)
-      }
     }
   }
 
-  def validateAndExtractNotificationHeaders(
+  def validateAndExtractMovementNotificationHeaders(
     headers: Map[String, String]
-  ): Either[ErrorResponse, ValidatedHeadersNotificationApiRequest] = {
+  ): Either[ErrorResponse, MovementNotificationApiRequest] = {
     val result = for {
       eori <- extractEoriHeader(headers)
       authToken <- extractAuthTokenHeader(headers)
       conversationId <- extractConversationIdHeader(headers)
-    } yield ValidatedHeadersNotificationApiRequest(AuthToken(authToken), ConversationId(conversationId), Eori(eori))
+    } yield MovementNotificationApiRequest(AuthToken(authToken), ConversationId(conversationId), Eori(eori))
     result match {
-      case Some(vhnar) => Right(vhnar)
-      case _ => {
+      case Some(request) => Right(request)
+      case _ =>
         Logger.debug("Error validating and extracting headers")
         Left(ErrorResponse.ErrorInvalidPayload)
-      }
+    }
+  }
+
+  def validateAndExtractSubmissionNotificationHeaders(
+    headers: Map[String, String]
+  ): Either[ErrorResponse, SubmissionNotificationApiRequest] = {
+    val result = for {
+      authToken <- extractAuthTokenHeader(headers)
+      conversationId <- extractConversationIdHeader(headers)
+    } yield SubmissionNotificationApiRequest(AuthToken(authToken), ConversationId(conversationId))
+    result match {
+      case Some(request) => Right(request)
+      case _ =>
+        Logger.debug("Error validating and extracting headers")
+        Left(ErrorResponse.ErrorInvalidPayload)
     }
   }
 }

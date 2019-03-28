@@ -74,16 +74,6 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
 
-    "return 500 status if there is no EORI number in notification header" in {
-
-      val result = route(app, FakeRequest(POST, uri).withHeaders(noEoriHeaders.toSeq: _*).withXmlBody(validXML)).get
-
-      status(result) must be(BAD_REQUEST)
-      contentAsString(result) must be
-      "<errorResponse><code>INTERNAL_SERVER_ERROR</code><message>" +
-        "ClientId or ConversationId or EORI is missing in the request headers</message></errorResponse>"
-    }
-
     "return 202 status when it successfully save movement notification" in {
       withMovementNotificationSaved(true)
 
