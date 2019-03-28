@@ -18,15 +18,15 @@ package uk.gov.hmrc.exports.base
 
 import java.util.UUID
 
-import org.joda.time.DateTime
+import org.joda.time.{DateTime, DateTimeZone}
+import org.joda.time.format.DateTimeFormat
 import play.api.http.{ContentTypes, HeaderNames}
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.mvc.Codec
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.wco.dec.inventorylinking.movement.response.InventoryLinkingMovementResponse
-import uk.gov.hmrc.wco.dec.{MetaData, Response}
+import uk.gov.hmrc.wco.dec.{DateTimeString, MetaData, Response, ResponseDateTimeElement, Declaration => WcoDeclaration}
 import uk.gov.hmrc.exports.controllers.CustomsHeaderNames._
-import uk.gov.hmrc.wco.dec.{Declaration => WcoDeclaration, MetaData, Response}
 
 import scala.util.Random
 
@@ -64,17 +64,20 @@ trait ExportsTestData {
   val VALID_CONVERSATIONID_HEADER: (String, String) = XConversationIdName -> conversationId
   val VALID_DUCR_HEADER: (String, String) = XDucrHeaderName -> declarantDucrValue
   val VALID_MRN_HEADER: (String, String) = XMrnHeaderName -> declarantMrnValue
-  val now: DateTime = DateTime.now
+  val now: DateTime = DateTime.now.withZone(DateTimeZone.UTC)
 
   private lazy val responseFunctionCodes: Seq[String] =
     Seq("01", "02", "03", "05", "06", "07", "08", "09", "10", "11", "16", "17", "18")
   protected def randomResponseFunctionCode: String = responseFunctionCodes(Random.nextInt(responseFunctionCodes.length))
 
+  val dtfOut = DateTimeFormat.forPattern("yyyyMMddHHmmss")
+  def dateTimeElement(dateTimeVal : DateTime) = Some(ResponseDateTimeElement(DateTimeString("102", dateTimeVal.toString("yyyyMMdd"))))
+
   val response1: Seq[Response] = Seq(
-    Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("123"))
-  )
+    Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("123"), issueDateTime = dateTimeElement(now.minusHours(6))))
+
   val response2: Seq[Response] = Seq(
-    Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("456"))
+    Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("456"),  issueDateTime = dateTimeElement(now.minusHours(5)))
   )
 
   val notification = DeclarationNotification(now, conversationId, mrn, eori, DeclarationMetadata(), response1)

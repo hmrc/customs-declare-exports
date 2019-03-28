@@ -43,7 +43,7 @@ class MovementNotificationsRepositorySpec extends CustomsExportsBaseSpec with Ex
       found.head.eori must be(eori)
       found.head.conversationId must be(conversationId)
 
-      found.head.dateTimeReceived must be(now)
+      found.head.dateTimeReceived.compareTo(now) must be(0)
 
       // we can also retrieve the submission individually by conversation Id
       val got = repo.getByConversationId(conversationId).futureValue.get

@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.exports.controllers
 
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{reset, times, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
-import uk.gov.hmrc.exports.models.{DeclarationMetadata, DeclarationNotification}
+import uk.gov.hmrc.exports.models.{DeclarationMetadata, DeclarationNotification, Submission}
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 
 import scala.concurrent.Future
@@ -47,12 +48,31 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
     "return 202 status when it successfully save notification" in {
       when(mockSubmissionRepository.getByConversationId(any[String])).thenReturn(Future.successful(Some(submission)))
 
+
       withNotificationSaved(true)
       withSubmissionNotification(Seq.empty)
 
       val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
 
       status(result) must be(ACCEPTED)
+    }
+
+    "handle reject notification correctly and Mrn parsed" in {
+      val notificationMRN = "19GB3FG7C5D8FFGV00"
+      when(mockSubmissionRepository.getByConversationId(any[String])).thenReturn(Future.successful(Some(submission)))
+      withSubmissionNotification(Seq(notification))
+      withNotificationSaved(true)
+
+      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(exampleRejectNotification(notificationMRN))).get
+
+      status(result) must be(ACCEPTED)
+
+      val mrnCaptor: ArgumentCaptor[String] = ArgumentCaptor.forClass(classOf[String])
+
+     verify(mockSubmissionRepository).updateMrnAndStatus(any[String], any[String], mrnCaptor.capture(), any[Option[String]])
+
+      mrnCaptor.getValue must be(notificationMRN)
+
     }
 
     "return 202 status when it unable to find submission for conversationID" in {
@@ -122,24 +142,6 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
     }
   }
 
-  val notificationXML =
-    <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2"
-                xmlns:response="urn:wco:datamodel:WCO:RES-DMS:2"
-                xmlns:responseDs="urn:wco:datamodel:WCO:Response_DS:DMS:2">
-        <WCODataModelVersionCode>02</WCODataModelVersionCode>
-        <WCOTypeName>RES</WCOTypeName>
-        <response:Response>
-          <response:FunctionCode>02</response:FunctionCode>
-          <response:FunctionalReferenceID>1234555</response:FunctionalReferenceID>
-          <response:IssueDateTime>
-            <responseDs:DateTimeString formatCode="304">20190226085021Z</responseDs:DateTimeString>
-          </response:IssueDateTime>
-        </response:Response>
-        <response:Declaration>
-          <response:FunctionalReferenceID>MRN87878797</response:FunctionalReferenceID>
-        </response:Declaration>
-      </MetaData>
-
   val olderNotification = DeclarationNotification(
     conversationId = "convId",
     eori = "eori",
@@ -172,7 +174,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       val result =
         route(
           app,
-          FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(notificationXML)
+          FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(notificationXML(mrn))
         ).get
 
       status(result) must be(ACCEPTED)
@@ -189,7 +191,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       val result =
         route(
           app,
-          FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(notificationXML)
+          FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(notificationXML(mrn))
         ).get
 
       status(result) must be(ACCEPTED)
@@ -206,7 +208,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       val result =
         route(
           app,
-          FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(notificationXML)
+          FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(notificationXML(mrn))
         ).get
 
       status(result) must be(ACCEPTED)
@@ -216,7 +218,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
     "return UnsupportedMediaType if Content Type header is empty" in {
       val result = route(
         app,
-        FakeRequest(POST, postNotificationUri).withHeaders(noContentTypeHeader.toSeq: _*).withXmlBody(notificationXML)
+        FakeRequest(POST, postNotificationUri).withHeaders(noContentTypeHeader.toSeq: _*).withXmlBody(notificationXML(mrn))
       ).get
 
       status(result) must be(UNSUPPORTED_MEDIA_TYPE)

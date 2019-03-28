@@ -109,7 +109,7 @@ class NotificationsController @Inject()(
 
     parseXmlResult match {
       case Success(metaData) =>
-        val mrn = metaData.declaration.flatMap(_.functionalReferenceId)
+        val mrn = metaData.response.headOption.flatMap(_.declaration.flatMap(_.id))
         if (mrn.isEmpty) {
           Logger.error("Unable to determine MRN")
         }
