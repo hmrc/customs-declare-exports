@@ -42,6 +42,63 @@ trait NotificationTestData {
     <messageCode>EAL</messageCode>
   </inventoryLinkingMovementRequest>
 
+  def notificationXML(mrn: String) =
+    <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+      <WCODataModelVersionCode>02</WCODataModelVersionCode>
+      <WCOTypeName>RES</WCOTypeName>
+      <Response>
+        <FunctionCode>02</FunctionCode>
+        <FunctionalReferenceID>1234555</FunctionalReferenceID>
+        <IssueDateTime>
+          <DateTimeString formatCode="304">20190226085021Z</DateTimeString>
+        </IssueDateTime>
+        <Declaration>
+          <ID>{mrn}</ID>
+        </Declaration>
+      </Response>
+    </MetaData>
+
+  def exampleRejectNotification(mrn: String) = <MetaData>
+    <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
+    <WCOTypeName>RES</WCOTypeName>
+    <ResponsibleCountryCode/>
+    <ResponsibleAgencyName/>
+    <AgencyAssignedCustomizationCode/>
+    <AgencyAssignedCustomizationVersionCode/>
+    <Response>
+      <FunctionCode>03</FunctionCode>
+      <FunctionalReferenceID>6be6c6f61f0346748016b823eeda669d</FunctionalReferenceID>
+      <IssueDateTime>
+        <DateTimeString formatCode="304">20190328092916Z</DateTimeString>
+      </IssueDateTime>
+      <Error>
+        <ValidationCode>CDS12050</ValidationCode>
+        <Pointer>
+          <DocumentSectionCode>42A</DocumentSectionCode>
+        </Pointer>
+        <Pointer>
+          <DocumentSectionCode>67A</DocumentSectionCode>
+        </Pointer>
+        <Pointer>
+          <SequenceNumeric>1</SequenceNumeric>
+          <DocumentSectionCode>68A</DocumentSectionCode>
+        </Pointer>
+        <Pointer>
+          <DocumentSectionCode>70A</DocumentSectionCode>
+          <TagID>166</TagID>
+        </Pointer>
+      </Error>
+      <Declaration>
+        <FunctionalReferenceID>NotificationTest</FunctionalReferenceID>
+        <ID>{mrn}</ID>
+        <RejectionDateTime>
+          <DateTimeString formatCode="304">20190328092916Z</DateTimeString>
+        </RejectionDateTime>
+        <VersionID>1</VersionID>
+      </Declaration>
+    </Response>
+  </MetaData>
+
   val validHeaders: Map[String, String] = Map(
     "X-CDS-Client-ID" -> "1234",
     CustomsHeaderNames.XConversationIdName -> "XConv1",
@@ -61,11 +118,11 @@ trait NotificationTestData {
   )
 
   val noAcceptHeader: Map[String, String] = Map(
-    "X-CDS-Client-ID" -> "1234",
-    "X-Conversation-ID" -> "XConv1",
-    HeaderNames.ACCEPT -> "",
-    HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
-    "X-Badge-Identifier" -> "badgeIdentifier1"
+  "X-CDS-Client-ID" -> "1234",
+  "X-Conversation-ID" -> "XConv1",
+  HeaderNames.ACCEPT -> "",
+  HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
+  "X-Badge-Identifier" -> "badgeIdentifier1"
   )
 
   val noContentTypeHeader: Map[String, String] = Map(
@@ -77,5 +134,5 @@ trait NotificationTestData {
   )
 
   val submissionNotification =
-    DeclarationNotification(conversationId = "1234", eori = "eori", mrn = "mrn", metadata = DeclarationMetadata())
-}
+  DeclarationNotification(conversationId = "1234", eori = "eori", mrn = "mrn", metadata = DeclarationMetadata())
+  }
