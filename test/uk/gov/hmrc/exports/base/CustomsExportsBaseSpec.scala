@@ -27,7 +27,6 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
-import play.api.http.Status
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.inject.{bind, Injector}
@@ -45,8 +44,6 @@ import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.repositories.{
-  MovementNotificationsRepository,
-  MovementsRepository,
   NotificationsRepository,
   SubmissionRepository
 }
@@ -62,9 +59,7 @@ trait CustomsExportsBaseSpec
 
   val mockSubmissionRepository: SubmissionRepository = mock[SubmissionRepository]
   val mockNotificationsRepository: NotificationsRepository = mock[NotificationsRepository]
-  val mockMovementNotificationsRepository: MovementNotificationsRepository = mock[MovementNotificationsRepository]
   val mockDeclarationsApiConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
-  val mockMovementsRepository: MovementsRepository = mock[MovementsRepository]
   val mockMetrics: ExportsMetrics = mock[ExportsMetrics]
 
   def injector: Injector = app.injector
@@ -89,8 +84,6 @@ trait CustomsExportsBaseSpec
         bind[AuthConnector].to(mockAuthConnector),
         bind[SubmissionRepository].to(mockSubmissionRepository),
         bind[NotificationsRepository].to(mockNotificationsRepository),
-        bind[MovementNotificationsRepository].to(mockMovementNotificationsRepository),
-        bind[MovementsRepository].to(mockMovementsRepository),
         bind[CustomsDeclarationsConnector].to(mockDeclarationsApiConnector),
         bind[ExportsMetrics].to(mockMetrics)
       )
@@ -128,14 +121,11 @@ trait CustomsExportsBaseSpec
         .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
     ).thenReturn(Future.successful(CustomsDeclarationsResponse(OK, Some(randomConversationId))))
     when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(ok))
-    when(mockMovementsRepository.save(any())).thenReturn(Future.successful(ok))
   }
 
   protected def getSubmission(submission: Option[Submission]): OngoingStubbing[Future[Option[Submission]]] =
     when(mockSubmissionRepository.getByConversationId(any())).thenReturn(Future.successful(submission))
 
-  protected def withMovements(movements: Seq[MovementSubmissions]): OngoingStubbing[Future[Seq[MovementSubmissions]]] =
-    when(mockMovementsRepository.findByEori(any())).thenReturn(Future.successful(movements))
 
   protected def withSubmissionUpdated(ok: Boolean): OngoingStubbing[Future[Boolean]] =
     when(mockSubmissionRepository.updateSubmission(any())).thenReturn(Future.successful(ok))
@@ -162,9 +152,6 @@ trait CustomsExportsBaseSpec
     notifications: Seq[DeclarationNotification]
   ): OngoingStubbing[Future[Seq[DeclarationNotification]]] =
     when(mockNotificationsRepository.findByEori(any())).thenReturn(Future.successful(notifications))
-
-  protected def withMovementNotificationSaved(ok: Boolean): OngoingStubbing[Future[Boolean]] =
-    when(mockMovementNotificationsRepository.save(any())).thenReturn(Future.successful(ok))
 
   protected def withCancellationRequest(
     status: CancellationStatus,

@@ -26,12 +26,9 @@ import uk.gov.hmrc.exports.models._
 
 class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
   val submitUri = "/declaration"
-  val saveMovementUri = "/save-movement-submission"
   val updateUri = "/update-submission"
   val cancelUri = "/cancel-declaration"
 
-  val jsonBody: JsValue = Json.toJson[MovementResponse](submissionMovementResponse)
-  val fakeRequest: FakeRequest[JsValue] = FakeRequest("POST", saveMovementUri).withBody(jsonBody)
 
   val xmlBody: String = randomSubmitDeclaration.toXml
   val fakeSubmitXmlRequest: FakeRequest[String] = FakeRequest("POST", submitUri).withBody(xmlBody)
@@ -137,50 +134,6 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
         getSubmission(None)
 
         val result = route(app, FakeRequest("GET", "/submission/1234")).get
-
-        status(result) must be(OK)
-      }
-    }
-
-    "POST to /save-movement-submission" should {
-
-      "return 200 status when movement has been saved" in {
-        withAuthorizedUser()
-        withDataSaved(true)
-
-        val result = route(app, fakeRequest).get
-
-        status(result) must be(OK)
-      }
-
-      "return 500 status when something goes wrong" in {
-        withAuthorizedUser()
-        withDataSaved(false)
-
-        val failedResult = route(app, fakeRequest).get
-
-        status(failedResult) must be(INTERNAL_SERVER_ERROR)
-      }
-    }
-
-    "GET from /movements/:eori" should {
-
-      "return 200 status with movements as response body" in {
-        withAuthorizedUser()
-        withMovements(Seq(movement))
-
-        val result = route(app, FakeRequest("GET", "/movements")).get
-
-        status(result) must be(OK)
-        contentAsJson(result) must be(Json.toJson(Seq(movement)))
-      }
-
-      // TODO: 204 is safe response
-      "return 200 status without empty response" in {
-        withAuthorizedUser()
-        withMovements(Seq.empty)
-
-        val result = route(app, FakeRequest("GET", "/movements")).get
 
         status(result) must be(OK)
       }

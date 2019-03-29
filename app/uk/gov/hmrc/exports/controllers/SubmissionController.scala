@@ -23,7 +23,7 @@ import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.repositories.{MovementsRepository, NotificationsRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.ExportsService
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -35,7 +35,6 @@ import scala.xml.NodeSeq
 class SubmissionController @Inject()(
   appConfig: AppConfig,
   submissionRepository: SubmissionRepository,
-  movementsRepository: MovementsRepository,
   authConnector: AuthConnector,
   exportsService: ExportsService,
   headerValidator: HeaderValidator,
@@ -62,30 +61,6 @@ class SubmissionController @Inject()(
       implicit val headers: Map[String, String] = request.headers.toSimpleMap
       processCancelationRequest
     }
-
-  def saveMovementSubmission(): Action[MovementResponse] =
-    authorisedAction(parse.json[MovementResponse]) { implicit request =>
-      processSave
-    }
-
-  private def processSave()(
-    implicit request: AuthorizedSubmissionRequest[MovementResponse],
-    hc: HeaderCarrier
-  ): Future[Result] = {
-    val body = request.body
-    movementsRepository
-      .save(MovementSubmissions(request.eori.value, body.conversationId, body.ducr, body.mucr, body.movementType))
-      .map(
-        res =>
-          if (res) {
-            Logger.debug("movement submission data saved to DB")
-            Ok(Json.toJson(ExportsResponse(OK, "Movement Submission saved")))
-          } else {
-            Logger.error("error  saving movement submission data to DB")
-            InternalServerError("failed saving movement submission")
-        }
-      )
-  }
 
   private def processSubmissionRequest()(
     implicit request: AuthorizedSubmissionRequest[AnyContent],
@@ -151,13 +126,6 @@ class SubmissionController @Inject()(
     authorisedAction(BodyParsers.parse.default) { implicit request =>
       submissionRepository.getByConversationId(conversationId).map { submission =>
         Ok(Json.toJson(submission))
-      }
-    }
-
-  def getMovements: Action[AnyContent] =
-    authorisedAction(BodyParsers.parse.default) { implicit authorizedRequest =>
-      movementsRepository.findByEori(authorizedRequest.eori.value).map { movements =>
-        Ok(Json.toJson(movements))
       }
     }
 

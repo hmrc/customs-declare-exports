@@ -27,10 +27,9 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.repositories.{MovementNotificationsRepository, NotificationsRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.wco.dec._
-import uk.gov.hmrc.wco.dec.inventorylinking.movement.response.InventoryLinkingMovementResponse
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -43,7 +42,6 @@ class NotificationsController @Inject()(
   authConnector: AuthConnector,
   headerValidator: HeaderValidator,
   notificationsRepository: NotificationsRepository,
-  movementNotificationsRepository: MovementNotificationsRepository,
   metrics: ExportsMetrics,
   submissionRepository: SubmissionRepository
 ) extends ExportController(authConnector) {
@@ -78,18 +76,6 @@ class NotificationsController @Inject()(
         .map(res => Ok(Json.toJson(res)))
     }
 
-  def saveMovement(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
-    metrics.startTimer(movementMetric)
-    headerValidator
-      .validateAndExtractMovementNotificationHeaders(request.headers.toSimpleMap) match {
-      case Right(extractedHeaders) =>
-        getMovementNotificationFromRequest(extractedHeaders)
-          .fold(Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)) {
-            saveMovement(_)
-          }
-      case Left(errorResponse) => Future.successful(errorResponse.XmlResult)
-    }
-  }
 
   private def getSubmissionNotificationFromRequest(
     vhnar: SubmissionNotificationApiRequest
@@ -175,36 +161,5 @@ class NotificationsController @Inject()(
       }
     }.headOption
 
-  private def saveMovement(notification: MovementNotification)(implicit hc: HeaderCarrier): Future[Result] =
-    movementNotificationsRepository
-      .save(notification)
-      .map {
-        case true =>
-          metrics.incrementCounter(movementMetric)
-          Accepted
-        case _ =>
-          metrics.incrementCounter(movementMetric)
-          InternalServerError(NotificationFailedErrorResponse.toXml())
-      }
 
-  private def getMovementNotificationFromRequest(
-    vhnar: MovementNotificationApiRequest
-  )(implicit request: Request[NodeSeq], hc: HeaderCarrier): Option[MovementNotification] = {
-    val parseResult = Try[InventoryLinkingMovementResponse] {
-      InventoryLinkingMovementResponse.fromXml(request.body.toString)
-    }
-    parseResult match {
-      case Success(response) =>
-        val notification = MovementNotification(
-          conversationId = vhnar.conversationId.value,
-          eori = vhnar.eori.value,
-          movementResponse = response
-        )
-        Some(notification)
-      case Failure(ex) =>
-        Logger.error("error parsing movementNotification", ex)
-        None
-    }
-
-  }
 }
