@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.exports.controllers
 
+import org.joda.time.DateTimeZone
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{reset, times, verify, when}
@@ -63,7 +64,7 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       withSubmissionNotification(Seq(notification))
       withNotificationSaved(true)
 
-      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(exampleRejectNotification(notificationMRN))).get
+      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(exampleRejectNotification(notificationMRN, now.withZone(DateTimeZone.UTC).toString("yyyyMMddHHmmssZ")))).get
 
       status(result) must be(ACCEPTED)
 

@@ -44,9 +44,17 @@ class ExportsService @Inject()(
       .submitDeclaration(eori, xml)
       .flatMap(
         response =>
-          response.conversationId.fold(Future.successful(InternalServerError("No conversation Id Returned"))) {
-            conversationId =>
-              persistSubmission(eori, conversationId, ducr, lrn, Pending.toString)
+          response.status match {
+            case ACCEPTED =>
+              response.conversationId.fold({
+                Logger.info(s"No ConversationID returned for submission with Eori: $eori")
+                Future.successful(InternalServerError("No conversation Id Returned"))
+              }) { conversationId =>
+                persistSubmission(eori, conversationId, ducr, lrn, Pending.toString)
+              }
+            case _ =>
+              Logger.info(s"Non Accepted status ${response.status} returned by Customs Declaration Service for Eori: $eori")
+              Future.successful(InternalServerError("Non Accepted status returned by Customs Declaration Service"))
         }
       )
 
@@ -78,7 +86,7 @@ class ExportsService @Inject()(
             Logger.debug("submission data saved to DB")
             play.api.mvc.Results.Accepted(Json.toJson(ExportsResponse(ACCEPTED, "Submission response saved")))
           } else {
-            Logger.error("error  saving submission data to DB")
+            Logger.error(s"error  saving submission data to DB for conversationID:$conversationId")
             InternalServerError("failed saving submission")
         }
       )

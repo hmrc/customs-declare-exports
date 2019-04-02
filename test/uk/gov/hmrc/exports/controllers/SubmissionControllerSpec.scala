@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.exports.controllers
 
+import org.scalatest.BeforeAndAfterEach
+import org.mockito.Mockito.reset
 import play.api.http.{ContentTypes, Status}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Codec
@@ -24,7 +26,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
 import uk.gov.hmrc.exports.models._
 
-class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
+class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach{
   val submitUri = "/declaration"
   val saveMovementUri = "/save-movement-submission"
   val updateUri = "/update-submission"
@@ -66,12 +68,18 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
   val updateSubmissionRequest: FakeRequest[JsValue] = FakeRequest("POST", updateUri).withBody(submissionJson)
 
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    reset(mockDeclarationsApiConnector, mockSubmissionRepository)
+  }
+
   "Actions for submission" when {
 
     "POST to /declaration" should {
 
       "return 200 status when submission has been saved" in {
         withAuthorizedUser()
+        withCustomsDeclarationSubmission(ACCEPTED)
         withDataSaved(true)
 
         val result = route(app, fakeSubmitXmlRequestWithHeaders).get
@@ -88,9 +96,19 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
         status(result) must be(BAD_REQUEST)
       }
 
-      "return 500 status when something goes wrong" in {
+      "return 500 status when something goes wrong in persisting data" in {
         withAuthorizedUser()
+        withCustomsDeclarationSubmission(ACCEPTED)
         withDataSaved(false)
+
+        val failedResult = route(app, fakeSubmitXmlRequestWithHeaders).get
+
+        status(failedResult) must be(INTERNAL_SERVER_ERROR)
+      }
+
+      "return 500 status when something goes wrong in submission to dec api" in {
+        withAuthorizedUser()
+        withCustomsDeclarationSubmission(BAD_REQUEST)
 
         val failedResult = route(app, fakeSubmitXmlRequestWithHeaders).get
 

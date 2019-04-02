@@ -58,7 +58,7 @@ trait NotificationTestData {
       </Response>
     </MetaData>
 
-  def exampleRejectNotification(mrn: String) = <MetaData>
+  def exampleRejectNotification(mrn: String, dateTime: String) = <MetaData>
     <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
     <WCOTypeName>RES</WCOTypeName>
     <ResponsibleCountryCode/>
@@ -69,7 +69,7 @@ trait NotificationTestData {
       <FunctionCode>03</FunctionCode>
       <FunctionalReferenceID>6be6c6f61f0346748016b823eeda669d</FunctionalReferenceID>
       <IssueDateTime>
-        <DateTimeString formatCode="304">20190328092916Z</DateTimeString>
+        <DateTimeString formatCode="304">{dateTime}</DateTimeString>
       </IssueDateTime>
       <Error>
         <ValidationCode>CDS12050</ValidationCode>

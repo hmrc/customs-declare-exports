@@ -17,8 +17,9 @@
 package uk.gov.hmrc.exports.services
 
 import org.scalatest.mockito.MockitoSugar
-import org.mockito.Mockito.{times, verify, verifyZeroInteractions, when}
+import org.mockito.Mockito.{times, verify, verifyZeroInteractions, when, reset}
 import org.mockito.ArgumentMatchers.any
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
 import play.api.http.Status._
 import play.api.mvc.Result
@@ -32,13 +33,18 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.{Elem, NodeSeq}
 
-class ExportsServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures {
+class ExportsServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures with BeforeAndAfterEach{
+
+  val mockDeclarationConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
+  val mockSubmissionRepo: SubmissionRepository = mock[SubmissionRepository]
 
   trait SetUp {
-    val mockDeclarationConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
-    val mockSubmissionRepo: SubmissionRepository = mock[SubmissionRepository]
     val testObj = new ExportsService(mockDeclarationConnector, mockSubmissionRepo)
     implicit val hc: HeaderCarrier = mock[HeaderCarrier]
+  }
+
+  override def beforeEach(): Unit ={
+    reset(mockDeclarationConnector, mockSubmissionRepo)
   }
 
   "ExportService" should {

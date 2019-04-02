@@ -50,6 +50,7 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
 
     "return 200 status when a valid request with Enrollments is processed" in {
       withAuthorizedUser()
+      withCustomsDeclarationSubmission(ACCEPTED)
       withDataSaved(true)
 
       val result = route(app, fakeXmlRequestWithHeaders).get
@@ -57,9 +58,19 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
       status(result) must be(ACCEPTED)
     }
 
-    "return 500 status when there is a problem with the service" in {
+    "return 500 status when there is a problem with the service during persisting the submission" in {
       withAuthorizedUser()
+      withCustomsDeclarationSubmission(ACCEPTED)
       withDataSaved(false)
+
+      val result = route(app, fakeXmlRequestWithHeaders).get
+
+      status(result) must be(INTERNAL_SERVER_ERROR)
+    }
+
+    "return 500 status when there is a problem with the service during submission" in {
+      withAuthorizedUser()
+      withCustomsDeclarationSubmission(ACCEPTED)
 
       val result = route(app, fakeXmlRequestWithHeaders).get
 
