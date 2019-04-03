@@ -122,11 +122,15 @@ trait CustomsExportsBaseSpec
       .withJsonBody(body)
   }
 
-  protected def withDataSaved(ok: Boolean): OngoingStubbing[Future[Boolean]] = {
+  protected def withCustomsDeclarationSubmission(returnedStatus: Int): Unit ={
     when(
       mockDeclarationsApiConnector
         .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
-    ).thenReturn(Future.successful(CustomsDeclarationsResponse(OK, Some(randomConversationId))))
+    ).thenReturn(Future.successful(CustomsDeclarationsResponse(returnedStatus, Some(randomConversationId))))
+  }
+
+  protected def withDataSaved(ok: Boolean): OngoingStubbing[Future[Boolean]] = {
+
     when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(ok))
     when(mockMovementsRepository.save(any())).thenReturn(Future.successful(ok))
   }
