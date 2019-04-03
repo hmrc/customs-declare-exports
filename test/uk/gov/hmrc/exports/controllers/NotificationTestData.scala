@@ -29,7 +29,6 @@ trait NotificationTestData {
 
 
   val uri = "/customs-declare-exports/notify"
-  val movementUri = "/customs-declare-exports/notifyMovement"
   val submissionNotificationUri = "/customs-declare-exports/submission-notifications/1234"
 
   val getNotificationUri = "/customs-declare-exports/notifications"

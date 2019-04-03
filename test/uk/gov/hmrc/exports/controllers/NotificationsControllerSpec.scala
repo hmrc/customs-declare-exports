@@ -24,7 +24,7 @@ import org.scalatest.BeforeAndAfterEach
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
-import uk.gov.hmrc.exports.models.{DeclarationMetadata, DeclarationNotification, Submission}
+import uk.gov.hmrc.exports.models.{DeclarationMetadata, DeclarationNotification}
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 
 import scala.concurrent.Future
@@ -93,34 +93,6 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
 
       status(result) must be(INTERNAL_SERVER_ERROR)
-    }
-
-    "return 202 status when it successfully save movement notification" in {
-      withMovementNotificationSaved(true)
-
-      val result =
-        route(app, FakeRequest(POST, movementUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(movementXml)).get
-
-      status(result) must be(ACCEPTED)
-    }
-
-    "return 500 status if fail to save movement notification" in {
-      withMovementNotificationSaved(false)
-
-      val result =
-        route(app, FakeRequest(POST, movementUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(movementXml)).get
-
-      status(result) must be(INTERNAL_SERVER_ERROR)
-    }
-
-    "return 500 status if there is no EORI number in movement notification header" in {
-      val result =
-        route(app, FakeRequest(POST, movementUri).withHeaders(noEoriHeaders.toSeq: _*).withXmlBody(movementXml)).get
-
-      status(result) must be(BAD_REQUEST)
-      contentAsString(result) must be
-      "<errorResponse><code>INTERNAL_SERVER_ERROR</code><message>" +
-        "ClientId or ConversationId or EORI is missing in the request headers</message></errorResponse>"
     }
 
     "return 200 status when there are notifications connected to specific submission" in {

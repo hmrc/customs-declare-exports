@@ -16,17 +16,14 @@
 
 package uk.gov.hmrc.exports.base
 
-import java.util.UUID
-
 import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
-import play.api.http.{ContentTypes, HeaderNames}
 import play.api.http.HeaderNames.CONTENT_TYPE
+import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
-import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.wco.dec.inventorylinking.movement.response.InventoryLinkingMovementResponse
-import uk.gov.hmrc.wco.dec.{DateTimeString, MetaData, Response, ResponseDateTimeElement, Declaration => WcoDeclaration}
 import uk.gov.hmrc.exports.controllers.CustomsHeaderNames._
+import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.wco.dec.{DateTimeString, MetaData, Response, ResponseDateTimeElement, Declaration => WcoDeclaration}
 
 import scala.util.Random
 
@@ -56,7 +53,7 @@ trait ExportsTestData {
   val declarantLrnValue: String = "MyLrnValue1234"
   val declarantDucrValue: String = "MyDucrValue1234"
   val declarantMrnValue: String = "MyMucrValue1234"
-  val movement: MovementSubmissions = MovementSubmissions(eori, conversationId, ducr, None, "Arrival")
+
   val contentTypeHeader: (String, String) = CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
   val Valid_X_EORI_IDENTIFIER_HEADER: (String, String) = XEoriIdentifierHeaderName -> declarantEoriValue
   val Valid_LRN_HEADER: (String, String) = XLrnHeaderName -> declarantLrnValue
@@ -74,18 +71,14 @@ trait ExportsTestData {
   def dateTimeElement(dateTimeVal : DateTime) = Some(ResponseDateTimeElement(DateTimeString("102", dateTimeVal.toString("yyyyMMdd"))))
 
   val response1: Seq[Response] = Seq(
-    Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("123"), issueDateTime = dateTimeElement(now.minusHours(6))))
+    Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("123"), issueDateTime = dateTimeElement(DateTime.parse("2019-02-05T10:11:12.123"))))
 
   val response2: Seq[Response] = Seq(
     Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("456"),  issueDateTime = dateTimeElement(now.minusHours(5)))
   )
 
   val notification = DeclarationNotification(now, conversationId, mrn, eori, DeclarationMetadata(), response1)
-  val movementNotification =
-    MovementNotification(now, conversationId, eori, movementResponse = InventoryLinkingMovementResponse("EAA"))
   val submissionResponse = SubmissionResponse(eori, conversationId, Some(ducr), lrn, Some(mrn), status = "01")
-  val submissionMovementResponse =
-    MovementResponse(eori, conversationId, ducr, Some(mucr), "Arrival", Some(GoodsHaveExitedTheCommunity.toString()))
 
   val ValidHeaders: Map[String, String] = Map(
     contentTypeHeader,
