@@ -24,16 +24,17 @@ import org.scalatest.BeforeAndAfterEach
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
+import uk.gov.hmrc.exports.metrics.MetricIdentifiers
 import uk.gov.hmrc.exports.models.{DeclarationMetadata, DeclarationNotification}
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 
 import scala.concurrent.Future
 
-class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach with NotificationTestData{
+class NotificationsControllerSpec
+    extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach with NotificationTestData {
 
-  override def beforeEach: Unit = {
+  override def beforeEach: Unit =
     reset(mockSubmissionRepository, mockNotificationsRepository)
-  }
 
   "Notifications controller" should {
 
@@ -49,7 +50,6 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
     "return 202 status when it successfully save notification" in {
       when(mockSubmissionRepository.getByConversationId(any[String])).thenReturn(Future.successful(Some(submission)))
 
-
       withNotificationSaved(true)
       withSubmissionNotification(Seq.empty)
 
@@ -64,13 +64,25 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       withSubmissionNotification(Seq(notification))
       withNotificationSaved(true)
 
-      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(exampleRejectNotification(notificationMRN, now.withZone(DateTimeZone.UTC).toString("yyyyMMddHHmmssZ")))).get
+      val result = route(
+        app,
+        FakeRequest(POST, uri)
+          .withHeaders(validHeaders.toSeq: _*)
+          .withXmlBody(
+            exampleRejectNotification(notificationMRN, now.withZone(DateTimeZone.UTC).toString("yyyyMMddHHmmssZ"))
+          )
+      ).get
 
       status(result) must be(ACCEPTED)
 
       val mrnCaptor: ArgumentCaptor[String] = ArgumentCaptor.forClass(classOf[String])
 
-     verify(mockSubmissionRepository).updateMrnAndStatus(any[String], any[String], mrnCaptor.capture(), any[Option[String]])
+      verify(mockSubmissionRepository).updateMrnAndStatus(
+        any[String],
+        any[String],
+        mrnCaptor.capture(),
+        any[Option[String]]
+      )
 
       mrnCaptor.getValue must be(notificationMRN)
 
@@ -112,6 +124,23 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
       val result = route(app, FakeRequest(GET, submissionNotificationUri).withHeaders(validHeaders.toSeq: _*)).get
 
       status(result) must be(OK)
+    }
+
+    "record notification timing and increase the Success Counter when response is OK" in {
+
+      val timer = metrics.timers(MetricIdentifiers.notificationMetric).getCount
+      val counter = metrics.counters(MetricIdentifiers.notificationMetric).getCount
+      when(mockSubmissionRepository.getByConversationId(any[String])).thenReturn(Future.successful(Some(submission)))
+
+      withNotificationSaved(true)
+      withSubmissionNotification(Seq.empty)
+
+      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
+
+      status(result) must be(ACCEPTED)
+
+      metrics.timers(MetricIdentifiers.notificationMetric).getCount mustBe timer + 1
+      metrics.counters(MetricIdentifiers.notificationMetric).getCount mustBe counter + 1
     }
   }
 
@@ -191,7 +220,9 @@ class NotificationsControllerSpec extends CustomsExportsBaseSpec with ExportsTes
     "return UnsupportedMediaType if Content Type header is empty" in {
       val result = route(
         app,
-        FakeRequest(POST, postNotificationUri).withHeaders(noContentTypeHeader.toSeq: _*).withXmlBody(notificationXML(mrn))
+        FakeRequest(POST, postNotificationUri)
+          .withHeaders(noContentTypeHeader.toSeq: _*)
+          .withXmlBody(notificationXML(mrn))
       ).get
 
       status(result) must be(UNSUPPORTED_MEDIA_TYPE)

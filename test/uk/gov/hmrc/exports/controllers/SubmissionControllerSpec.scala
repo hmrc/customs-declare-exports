@@ -26,11 +26,10 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{CustomsExportsBaseSpec, ExportsTestData}
 import uk.gov.hmrc.exports.models._
 
-class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach{
+class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach {
   val submitUri = "/declaration"
   val updateUri = "/update-submission"
   val cancelUri = "/cancel-declaration"
-
 
   val xmlBody: String = randomSubmitDeclaration.toXml
   val fakeSubmitXmlRequest: FakeRequest[String] = FakeRequest("POST", submitUri).withBody(xmlBody)

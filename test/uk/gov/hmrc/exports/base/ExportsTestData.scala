@@ -68,13 +68,23 @@ trait ExportsTestData {
   protected def randomResponseFunctionCode: String = responseFunctionCodes(Random.nextInt(responseFunctionCodes.length))
 
   val dtfOut = DateTimeFormat.forPattern("yyyyMMddHHmmss")
-  def dateTimeElement(dateTimeVal : DateTime) = Some(ResponseDateTimeElement(DateTimeString("102", dateTimeVal.toString("yyyyMMdd"))))
+  def dateTimeElement(dateTimeVal: DateTime) =
+    Some(ResponseDateTimeElement(DateTimeString("102", dateTimeVal.toString("yyyyMMdd"))))
 
   val response1: Seq[Response] = Seq(
-    Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("123"), issueDateTime = dateTimeElement(DateTime.parse("2019-02-05T10:11:12.123"))))
+    Response(
+      functionCode = randomResponseFunctionCode,
+      functionalReferenceId = Some("123"),
+      issueDateTime = dateTimeElement(DateTime.parse("2019-02-05T10:11:12.123"))
+    )
+  )
 
   val response2: Seq[Response] = Seq(
-    Response(functionCode = randomResponseFunctionCode, functionalReferenceId = Some("456"),  issueDateTime = dateTimeElement(now.minusHours(5)))
+    Response(
+      functionCode = randomResponseFunctionCode,
+      functionalReferenceId = Some("456"),
+      issueDateTime = dateTimeElement(now.minusHours(5))
+    )
   )
 
   val notification = DeclarationNotification(now, conversationId, mrn, eori, DeclarationMetadata(), response1)

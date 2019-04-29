@@ -162,8 +162,6 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
 
     }
 
-
-
     "validateAndExtractSubmissionNotificationHeaders" should {
 
       "return Right of SubmissionNotificationApiRequest when validateHeaders is called on valid headers" in new SetUp {
@@ -171,14 +169,7 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
 
         val result: Either[ErrorResponse, SubmissionNotificationApiRequest] =
           validator.validateAndExtractSubmissionNotificationHeaders(ValidHeaders)
-        result should be(
-          Right(
-            SubmissionNotificationApiRequest(
-              AuthToken(dummyToken),
-              ConversationId(conversationId)
-            )
-          )
-        )
+        result should be(Right(SubmissionNotificationApiRequest(AuthToken(dummyToken), ConversationId(conversationId))))
       }
 
       "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {
@@ -188,5 +179,5 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
       }
 
     }
-}
+  }
 }
