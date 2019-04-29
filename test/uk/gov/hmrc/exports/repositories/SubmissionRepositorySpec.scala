@@ -73,7 +73,8 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
     }
 
     "be able to update submission" in {
-      val submissionToUpdate = Submission("eori", "conversationId", Some("ducr"), Some("lrn"), Some("mrn"), status = "01")
+      val submissionToUpdate =
+        Submission("eori", "conversationId", Some("ducr"), Some("lrn"), Some("mrn"), status = "01")
 
       repo.save(submissionToUpdate).futureValue must be(true)
 
@@ -112,7 +113,7 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
     }
 
     "update mrn and status without new status for existing submission" in {
-      repo.updateMrnAndStatus(eori, conversationId, mrn,  None).futureValue must be(false)
+      repo.updateMrnAndStatus(eori, conversationId, mrn, None).futureValue must be(false)
     }
   }
 }

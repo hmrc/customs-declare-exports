@@ -53,7 +53,8 @@ class ExportsService @Inject()(
                 persistSubmission(eori, conversationId, ducr, lrn, Pending.toString)
               }
             case _ =>
-              Logger.info(s"Non Accepted status ${response.status} returned by Customs Declaration Service for Eori: $eori")
+              Logger
+                .info(s"Non Accepted status ${response.status} returned by Customs Declaration Service for Eori: $eori")
               Future.successful(InternalServerError("Non Accepted status returned by Customs Declaration Service"))
         }
       )

@@ -43,10 +43,7 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.repositories.{
-  NotificationsRepository,
-  SubmissionRepository
-}
+import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 
 import scala.concurrent.duration._
@@ -60,7 +57,6 @@ trait CustomsExportsBaseSpec
   val mockSubmissionRepository: SubmissionRepository = mock[SubmissionRepository]
   val mockNotificationsRepository: NotificationsRepository = mock[NotificationsRepository]
   val mockDeclarationsApiConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
-  val mockMetrics: ExportsMetrics = mock[ExportsMetrics]
 
   def injector: Injector = app.injector
 
@@ -74,6 +70,8 @@ trait CustomsExportsBaseSpec
 
   def appConfig: AppConfig = injector.instanceOf[AppConfig]
 
+  val metrics: ExportsMetrics = injector.instanceOf[ExportsMetrics]
+
   def messagesApi: MessagesApi = injector.instanceOf[MessagesApi]
 
   def wsClient: WSClient = injector.instanceOf[WSClient]
@@ -84,8 +82,7 @@ trait CustomsExportsBaseSpec
         bind[AuthConnector].to(mockAuthConnector),
         bind[SubmissionRepository].to(mockSubmissionRepository),
         bind[NotificationsRepository].to(mockNotificationsRepository),
-        bind[CustomsDeclarationsConnector].to(mockDeclarationsApiConnector),
-        bind[ExportsMetrics].to(mockMetrics)
+        bind[CustomsDeclarationsConnector].to(mockDeclarationsApiConnector)
       )
       .build()
 
@@ -115,21 +112,17 @@ trait CustomsExportsBaseSpec
       .withJsonBody(body)
   }
 
-  protected def withCustomsDeclarationSubmission(returnedStatus: Int): Unit ={
+  protected def withCustomsDeclarationSubmission(returnedStatus: Int): Unit =
     when(
       mockDeclarationsApiConnector
         .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
     ).thenReturn(Future.successful(CustomsDeclarationsResponse(returnedStatus, Some(randomConversationId))))
-  }
 
-  protected def withDataSaved(ok: Boolean): OngoingStubbing[Future[Boolean]] = {
-
+  protected def withDataSaved(ok: Boolean): OngoingStubbing[Future[Boolean]] =
     when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(ok))
-  }
 
   protected def getSubmission(submission: Option[Submission]): OngoingStubbing[Future[Option[Submission]]] =
     when(mockSubmissionRepository.getByConversationId(any())).thenReturn(Future.successful(submission))
-
 
   protected def withSubmissionUpdated(ok: Boolean): OngoingStubbing[Future[Boolean]] =
     when(mockSubmissionRepository.updateSubmission(any())).thenReturn(Future.successful(ok))

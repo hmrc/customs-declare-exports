@@ -47,14 +47,18 @@ class NotificationsController @Inject()(
 ) extends ExportController(authConnector) {
 
   def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
-    metrics.startTimer(notificationMetric)
+    val timer = metrics.startTimer(notificationMetric)
     headerValidator
       .validateAndExtractSubmissionNotificationHeaders(request.headers.toSimpleMap) match {
       case Right(extractedHeaders) =>
         getSubmissionNotificationFromRequest(extractedHeaders).flatMap(
           result =>
             result.fold(Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)) {
-              save(_)
+              save(_).map { res =>
+                timer.stop()
+                res
+              }
+
           }
         )
       case Left(errorResponse) => Future.successful(errorResponse.XmlResult)
@@ -75,7 +79,6 @@ class NotificationsController @Inject()(
         .getByEoriAndConversationId(authorizedRequest.eori.value, conversationId)
         .map(res => Ok(Json.toJson(res)))
     }
-
 
   private def getSubmissionNotificationFromRequest(
     vhnar: SubmissionNotificationApiRequest
@@ -160,6 +163,5 @@ class NotificationsController @Inject()(
         case _ => response.functionCode
       }
     }.headOption
-
 
 }

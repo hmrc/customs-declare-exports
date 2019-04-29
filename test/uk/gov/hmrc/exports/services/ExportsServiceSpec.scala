@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services
 
 import org.scalatest.mockito.MockitoSugar
-import org.mockito.Mockito.{times, verify, verifyZeroInteractions, when, reset}
+import org.mockito.Mockito.{reset, times, verify, verifyZeroInteractions, when}
 import org.mockito.ArgumentMatchers.any
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
@@ -33,7 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.{Elem, NodeSeq}
 
-class ExportsServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures with BeforeAndAfterEach{
+class ExportsServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures with BeforeAndAfterEach {
 
   val mockDeclarationConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
   val mockSubmissionRepo: SubmissionRepository = mock[SubmissionRepository]
@@ -43,58 +43,69 @@ class ExportsServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wi
     implicit val hc: HeaderCarrier = mock[HeaderCarrier]
   }
 
-  override def beforeEach(): Unit ={
+  override def beforeEach(): Unit =
     reset(mockDeclarationConnector, mockSubmissionRepo)
-  }
 
   "ExportService" should {
     "handle submission" should {
       "call Connector, persist submission and return conversationId when ducr provided" in new SetUp() {
         val conversationId = "123456789"
-        testSubmissionScenarios(ducr = Some("DUCR456456"),
+        testSubmissionScenarios(
+          ducr = Some("DUCR456456"),
           returnedConversationId = Some(conversationId),
           expectedRepoResult = true,
-          expectedHttpStatus = ACCEPTED)
+          expectedHttpStatus = ACCEPTED
+        )
       }
 
       "call Connector, persist submission and return conversationId when ducr missing" in new SetUp() {
         val conversationId = "123456789"
-        testSubmissionScenarios(ducr = None,
+        testSubmissionScenarios(
+          ducr = None,
           returnedConversationId = Some(conversationId),
           expectedRepoResult = true,
-          expectedHttpStatus = ACCEPTED)
+          expectedHttpStatus = ACCEPTED
+        )
       }
 
       "return internal server error when no conversation ID is returned from the connector when ducr provided" in new SetUp() {
-        testSubmissionScenarios(ducr = Some("DUCR456456"),
+        testSubmissionScenarios(
+          ducr = Some("DUCR456456"),
           returnedConversationId = None,
           expectedRepoResult = false,
-          expectedHttpStatus = INTERNAL_SERVER_ERROR)
+          expectedHttpStatus = INTERNAL_SERVER_ERROR
+        )
       }
 
       "return internal server error when no conversation ID is returned from the connector when ducr missing" in new SetUp() {
-        testSubmissionScenarios(ducr = None,
+        testSubmissionScenarios(
+          ducr = None,
           returnedConversationId = None,
           expectedRepoResult = false,
-          expectedHttpStatus = INTERNAL_SERVER_ERROR)
+          expectedHttpStatus = INTERNAL_SERVER_ERROR
+        )
       }
 
       "call Connector, and return internal server Error when persist submission fails when ducr provided" in new SetUp() {
 
         val conversationId = "123456789"
-        testSubmissionScenarios(ducr = Some("DUCR456456"),
+        testSubmissionScenarios(
+          ducr = Some("DUCR456456"),
           returnedConversationId = Some(conversationId),
           expectedRepoResult = false,
-          expectedHttpStatus = INTERNAL_SERVER_ERROR)
+          expectedHttpStatus = INTERNAL_SERVER_ERROR
+        )
       }
 
       "call Connector, and return internal server Error when persist submission fails when ducr missing" in new SetUp() {
 
         val conversationId = "123456789"
-        testSubmissionScenarios(ducr = None,
+        testSubmissionScenarios(
+          ducr = None,
           returnedConversationId = Some(conversationId),
           expectedRepoResult = false,
-          expectedHttpStatus = INTERNAL_SERVER_ERROR)
+          expectedHttpStatus = INTERNAL_SERVER_ERROR
+        )
       }
     }
 
@@ -142,10 +153,12 @@ class ExportsServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wi
     }
 
   }
-  private def testSubmissionScenarios(ducr: Option[String],
-                                      returnedConversationId: Option[String],
-                                      expectedRepoResult: Boolean,
-                                      expectedHttpStatus: Int) = new SetUp(){
+  private def testSubmissionScenarios(
+    ducr: Option[String],
+    returnedConversationId: Option[String],
+    expectedRepoResult: Boolean,
+    expectedHttpStatus: Int
+  ) = new SetUp() {
     val eori = ""
     val lrn = "LRN123456"
     val xmlNode: Elem = <someXml></someXml>
@@ -160,9 +173,9 @@ class ExportsServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures wi
 
     verify(mockDeclarationConnector, times(1))
       .submitDeclaration(any[String], any[NodeSeq])(any[HeaderCarrier], any[ExecutionContext])
-    if(returnedConversationId.isDefined) {
+    if (returnedConversationId.isDefined) {
       verify(mockSubmissionRepo, times(1)).save(any[Submission])
-    }else{
+    } else {
       verifyZeroInteractions(mockSubmissionRepo)
     }
   }

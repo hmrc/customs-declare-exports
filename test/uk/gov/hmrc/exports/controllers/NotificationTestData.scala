@@ -27,7 +27,6 @@ trait NotificationTestData {
     "Bearer BXQ3/Treo4kQCZvVcCqKPlwxRN4RA9Mb5RF8fFxOuwG5WSg+S+Rsp9Nq998Fgg0HeNLXL7NGwEAIzwM6vuA6YYhRQnTRFa" +
       "Bhrp+1w+kVW8g1qHGLYO48QPWuxdM87VMCZqxnCuDoNxVn76vwfgtpNj0+NwfzXV2Zc12L2QGgF9H9KwIkeIPK/mMlBESjue4V]"
 
-
   val uri = "/customs-declare-exports/notify"
   val submissionNotificationUri = "/customs-declare-exports/submission-notifications/1234"
 
@@ -117,11 +116,11 @@ trait NotificationTestData {
   )
 
   val noAcceptHeader: Map[String, String] = Map(
-  "X-CDS-Client-ID" -> "1234",
-  "X-Conversation-ID" -> "XConv1",
-  HeaderNames.ACCEPT -> "",
-  HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
-  "X-Badge-Identifier" -> "badgeIdentifier1"
+    "X-CDS-Client-ID" -> "1234",
+    "X-Conversation-ID" -> "XConv1",
+    HeaderNames.ACCEPT -> "",
+    HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
+    "X-Badge-Identifier" -> "badgeIdentifier1"
   )
 
   val noContentTypeHeader: Map[String, String] = Map(
@@ -133,5 +132,5 @@ trait NotificationTestData {
   )
 
   val submissionNotification =
-  DeclarationNotification(conversationId = "1234", eori = "eori", mrn = "mrn", metadata = DeclarationMetadata())
-  }
+    DeclarationNotification(conversationId = "1234", eori = "eori", mrn = "mrn", metadata = DeclarationMetadata())
+}
