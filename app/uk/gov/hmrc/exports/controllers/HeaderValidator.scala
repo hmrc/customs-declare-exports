@@ -24,6 +24,8 @@ import uk.gov.hmrc.exports.models._
 @Singleton
 class HeaderValidator {
 
+  private val logger = Logger(this.getClass)
+
   def extractLrnHeader(headers: Map[String, String]): Option[String] =
     extractHeader(CustomsHeaderNames.XLrnHeaderName, headers)
 
@@ -46,20 +48,21 @@ class HeaderValidator {
     headers.get(headerName) match {
       case Some(header) if !header.isEmpty => Some(header)
       case _ =>
-        Logger.error(s"Error Extracting $headerName")
+        logger.error(s"Error Extracting $headerName")
         None
     }
 
   def validateAndExtractSubmissionHeaders(
-    implicit headers: Map[String, String]
+    headers: Map[String, String]
   ): Either[ErrorResponse, ValidatedHeadersSubmissionRequest] = {
     val result = for {
       lrn <- extractLrnHeader(headers)
     } yield ValidatedHeadersSubmissionRequest(LocalReferenceNumber(lrn), extractOptionalDucrHeader(headers))
+
     result match {
       case Some(request) => Right(request)
       case None =>
-        Logger.debug("Error validating and extracting headers")
+        logger.error("Error during validating and extracting submission headers")
         Left(ErrorResponse.ErrorInvalidPayload)
     }
   }
@@ -70,10 +73,11 @@ class HeaderValidator {
     val result = for {
       mrn <- extractMrnHeader(headers)
     } yield ValidatedHeadersCancellationRequest(Mrn(mrn))
+
     result match {
       case Some(request) => Right(request)
       case _ =>
-        Logger.debug("Error validating and extracting headers")
+        logger.error("Error during validating and extracting cancellation headers")
         Left(ErrorResponse.ErrorInvalidPayload)
     }
   }
@@ -86,10 +90,11 @@ class HeaderValidator {
       authToken <- extractAuthTokenHeader(headers)
       conversationId <- extractConversationIdHeader(headers)
     } yield MovementNotificationApiRequest(AuthToken(authToken), ConversationId(conversationId), Eori(eori))
+
     result match {
       case Some(request) => Right(request)
       case _ =>
-        Logger.debug("Error validating and extracting headers")
+        logger.error("Error during validating and extracting movement headers")
         Left(ErrorResponse.ErrorInvalidPayload)
     }
   }
@@ -101,10 +106,11 @@ class HeaderValidator {
       authToken <- extractAuthTokenHeader(headers)
       conversationId <- extractConversationIdHeader(headers)
     } yield SubmissionNotificationApiRequest(AuthToken(authToken), ConversationId(conversationId))
+
     result match {
       case Some(request) => Right(request)
       case _ =>
-        Logger.debug("Error validating and extracting headers")
+        logger.error("Error during validating and extracting submission notifications headers")
         Left(ErrorResponse.ErrorInvalidPayload)
     }
   }

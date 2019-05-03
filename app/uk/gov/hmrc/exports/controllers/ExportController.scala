@@ -31,6 +31,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class ExportController @Inject()(override val authConnector: AuthConnector)(implicit ec: ExecutionContext)
     extends BaseController with AuthorisedFunctions {
 
+  private val logger = Logger(this.getClass())
+
   private def hasEnrolment(allEnrolments: Enrolments): Option[EnrolmentIdentifier] =
     allEnrolments
       .getEnrolment("HMRC-CUS-ORG")
@@ -42,19 +44,20 @@ class ExportController @Inject()(override val authConnector: AuthConnector)(impl
   ): Future[Either[ErrorResponse, AuthorizedSubmissionRequest[A]]] =
     authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments) { enrolments =>
       hasEnrolment(enrolments) match {
-        case Some(eori) =>
-          Future.successful(Right(AuthorizedSubmissionRequest(Eori(eori.value), request)))
-        case _ => Future.successful(Left(ErrorResponse.ErrorUnauthorized))
+        case Some(eori) => Future.successful(Right(AuthorizedSubmissionRequest(Eori(eori.value), request)))
+        case _ =>
+          logger.error("Unauthorised access. User without eori.")
+          Future.successful(Left(ErrorResponse.ErrorUnauthorized))
       }
     } recover {
-      case _: InsufficientEnrolments =>
-        Logger.warn(s"Unauthorised access for ${request.uri}")
+      case error: InsufficientEnrolments =>
+        logger.error(s"Unauthorised access for ${request.uri} with error ${error.reason}")
         Left(ErrorResponse.errorUnauthorized("Unauthorized for exports"))
-      case e: AuthorisationException =>
-        Logger.warn(s"Unauthorised Exception for ${request.uri} ${e.reason}")
+      case error: AuthorisationException =>
+        logger.error(s"Unauthorised Exception for ${request.uri} with error ${error.reason}")
         Left(ErrorResponse.errorUnauthorized("Unauthorized for exports"))
       case ex: Throwable =>
-        Logger.error("Internal server error is " + ex.getMessage)
+        logger.error("Internal server error is " + ex.getMessage)
         Left(ErrorResponse.ErrorInternalServerError)
     }
 
@@ -64,10 +67,10 @@ class ExportController @Inject()(override val authConnector: AuthConnector)(impl
     Action.async(bodyParser) { implicit request =>
       authorisedWithEori.flatMap {
         case Right(authorisedRequest) =>
-          Logger.info(s"Authorised request for ${authorisedRequest.eori.value}")
+          logger.info(s"Authorised request for ${authorisedRequest.eori.value}")
           body(authorisedRequest)
         case Left(error) =>
-          Logger.error("Problems with Authorisation")
+          logger.error(s"Problems with Authorisation: ${error.message}")
           Future.successful(error.XmlResult)
       }
     }

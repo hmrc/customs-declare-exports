@@ -39,23 +39,17 @@ object DeclarationNotification {
   implicit val measureFormats = Json.format[Measure]
   implicit val amountFormats = Json.format[Amount]
   implicit val dateTimeStringFormats = Json.format[DateTimeString]
-  implicit val responseDateTimeElementFormats =
-    Json.format[ResponseDateTimeElement]
+  implicit val responseDateTimeElementFormats = Json.format[ResponseDateTimeElement]
   implicit val responsePointerFormats = Json.format[ResponsePointer]
-  implicit val responseDutyTaxFeePaymentFormats =
-    Json.format[ResponseDutyTaxFeePayment]
-  implicit val responseCommodityDutyTaxFeeFormats =
-    Json.format[ResponseCommodityDutyTaxFee]
+  implicit val responseDutyTaxFeePaymentFormats = Json.format[ResponseDutyTaxFeePayment]
+  implicit val responseCommodityDutyTaxFeeFormats = Json.format[ResponseCommodityDutyTaxFee]
   implicit val responseCommodityFormats = Json.format[ResponseCommodity]
-  implicit val responseGovernmentAgencyGoodsItemFormats =
-    Json.format[ResponseGovernmentAgencyGoodsItem]
+  implicit val responseGovernmentAgencyGoodsItemFormats = Json.format[ResponseGovernmentAgencyGoodsItem]
   implicit val responseGoodsShipmentFormats = Json.format[ResponseGoodsShipment]
   implicit val responseCommunicationFormats = Json.format[ResponseCommunication]
-  implicit val responseObligationGuaranteeFormats =
-    Json.format[ResponseObligationGuarantee]
+  implicit val responseObligationGuaranteeFormats = Json.format[ResponseObligationGuarantee]
   implicit val responseStatusFormats = Json.format[ResponseStatus]
-  implicit val responseAdditionalInformationFormats =
-    Json.format[ResponseAdditionalInformation]
+  implicit val responseAdditionalInformationFormats = Json.format[ResponseAdditionalInformation]
   implicit val responseAmendmentFormats = Json.format[ResponseAmendment]
   implicit val responseAppealOfficeFormats = Json.format[ResponseAppealOffice]
   implicit val responseBankFormats = Json.format[ResponseBank]
@@ -67,7 +61,6 @@ object DeclarationNotification {
   implicit val responseFormats = Json.format[Response]
   implicit val declarationMetadataFormats = Json.format[DeclarationMetadata]
   implicit val exportsNotificationFormats = Json.format[DeclarationNotification]
-
 }
 
 case class DeclarationNotification(

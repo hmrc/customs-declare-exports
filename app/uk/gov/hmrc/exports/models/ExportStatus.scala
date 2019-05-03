@@ -23,6 +23,7 @@ sealed trait ExportStatus
 
 object ExportStatus {
 
+  //scalastyle:off
   implicit object StatusFormat extends Format[ExportStatus] {
     def reads(status: JsValue): JsResult[ExportStatus] = status match {
       case JsString("Pending") => JsSuccess(Pending)
@@ -88,6 +89,7 @@ object ExportStatus {
       case "18" => AwaitingExitResults
       case _    => UnknownExportStatus
     }
+  //scalastyle:on
 }
 
 case object Pending extends ExportStatus

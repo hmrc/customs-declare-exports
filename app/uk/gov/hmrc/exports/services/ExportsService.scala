@@ -37,6 +37,8 @@ class ExportsService @Inject()(
   submissionRepository: SubmissionRepository
 ) {
 
+  private val logger = Logger(this.getClass())
+
   def handleSubmission(eori: String, ducr: Option[String], lrn: String, xml: NodeSeq)(
     implicit hc: HeaderCarrier
   ): Future[Result] =
@@ -47,14 +49,11 @@ class ExportsService @Inject()(
           response.status match {
             case ACCEPTED =>
               response.conversationId.fold({
-                Logger.info(s"No ConversationID returned for submission with Eori: $eori")
+                logger.error(s"No ConversationID returned for submission with Eori: $eori and lrn: $lrn")
                 Future.successful(InternalServerError("No conversation Id Returned"))
-              }) { conversationId =>
-                persistSubmission(eori, conversationId, ducr, lrn, Pending.toString)
-              }
+              })(persistSubmission(eori, _, ducr, lrn, Pending.toString))
             case _ =>
-              Logger
-                .info(s"Non Accepted status ${response.status} returned by Customs Declaration Service for Eori: $eori")
+              logger.error(s"Customs Declaration Service return ${response.status} for Eori: $eori and lrn: $lrn")
               Future.successful(InternalServerError("Non Accepted status returned by Customs Declaration Service"))
         }
       )
@@ -64,12 +63,19 @@ class ExportsService @Inject()(
   ): Future[Either[Result, CancellationStatus]] =
     customsDeclarationsConnector
       .submitCancellation(eori, xml)
-      .flatMap {
-        case CustomsDeclarationsResponse(ACCEPTED, Some(_)) =>
-          submissionRepository
-            .cancelDeclaration(eori, mrn)
-            .map(cancellationStatus => Right(cancellationStatus))
-        case _ => Future.successful(Left(InternalServerError("")))
+      .flatMap { response =>
+        response match {
+          case CustomsDeclarationsResponse(ACCEPTED, Some(_)) =>
+            submissionRepository
+              .cancelDeclaration(eori, mrn)
+              .map { cancellationStatus =>
+                logger.debug(s"Cancellation status for declaration with mrn $mrn is $cancellationStatus")
+                Right(cancellationStatus)
+              }
+          case _ =>
+            logger.error(s"Customs Declaration Service return ${response.status}")
+            Future.successful(Left(InternalServerError("")))
+        }
       }
 
   private def persistSubmission(
@@ -84,11 +90,11 @@ class ExportsService @Inject()(
       .map(
         res =>
           if (res) {
-            Logger.debug("submission data saved to DB")
+            logger.debug(s"Submission data with conversation Id $conversationId and lrn $lrn saved to DB")
             play.api.mvc.Results.Accepted(Json.toJson(ExportsResponse(ACCEPTED, "Submission response saved")))
           } else {
-            Logger.error(s"error  saving submission data to DB for conversationID:$conversationId")
-            InternalServerError("failed saving submission")
+            logger.error(s"Error during saving submission data to DB for conversationID:$conversationId")
+            InternalServerError("Failed saving submission")
         }
       )
 }

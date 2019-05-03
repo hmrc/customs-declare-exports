@@ -17,15 +17,13 @@
 package uk.gov.hmrc.exports.repositories
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
 import play.api.libs.json.JsString
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
-import uk.gov.hmrc.mongo.{AtomicUpdate, ReactiveRepository}
+import uk.gov.hmrc.mongo.{AtomicUpdate, DatabaseUpdate, ReactiveRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -65,7 +63,7 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
     val modifier = BSONDocument("$set" -> BSONDocument("mrn" -> submission.mrn, "status" -> submission.status))
 
     atomicUpdate(finder, modifier).map {
-      case Some(result) => result.writeResult.ok
+      case Some(result) => logDatabaseResult(result)
       case _            => false
     }
   }
@@ -76,7 +74,7 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
       val modifier = BSONDocument("$set" -> BSONDocument("mrn" -> mrn, "status" -> status.get))
 
       atomicUpdate(finder, modifier).map {
-        case Some(result) => result.writeResult.ok
+        case Some(result) => logDatabaseResult(result)
         case _            => false
       }
     } else Future.successful(false)
@@ -94,10 +92,16 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
         Future.successful(CancellationRequestExists)
       case Some(_) =>
         atomicUpdate(finder, modifier).map {
-          case Some(result) if result.writeResult.ok => CancellationRequested
-          case _                                     => MissingDeclaration
+          case Some(result) if logDatabaseResult(result) => CancellationRequested
+          case _                                         => MissingDeclaration
         }
       case _ => Future.successful(MissingDeclaration)
     }
+  }
+
+  private def logDatabaseResult[A](result: DatabaseUpdate[A]): Boolean = {
+    if (!result.writeResult.ok) logger.error("Problem during updating database: " + result.writeResult.message)
+
+    result.writeResult.ok
   }
 }
