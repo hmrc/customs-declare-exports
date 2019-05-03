@@ -46,27 +46,31 @@ class NotificationsController @Inject()(
   submissionRepository: SubmissionRepository
 ) extends ExportController(authConnector) {
 
+  private val logger = Logger(this.getClass())
+
   def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
     val timer = metrics.startTimer(notificationMetric)
     headerValidator
       .validateAndExtractSubmissionNotificationHeaders(request.headers.toSimpleMap) match {
       case Right(extractedHeaders) =>
-        getSubmissionNotificationFromRequest(extractedHeaders).flatMap(
-          result =>
-            result.fold(Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)) {
-              save(_).map { res =>
+        getSubmissionNotificationFromRequest(extractedHeaders).flatMap {
+            case Some(notification) =>
+              save(notification).map { res =>
                 timer.stop()
                 res
               }
-
-          }
-        )
-      case Left(errorResponse) => Future.successful(errorResponse.XmlResult)
+            case _ =>
+              logger.error("Invalid notification payload")
+              Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)
+        }
+      case Left(error) =>
+        logger.error(s"Error during validation and extracting headers with message: ${ error.message}")
+        Future.successful(error.XmlResult)
     }
   }
 
   //TODO response should be streamed or paginated depending on the no of notifications.
-  def getNotifications: Action[AnyContent] =
+  def getNotifications(): Action[AnyContent] =
     authorisedAction(BodyParsers.parse.default) { request =>
       notificationsRepository
         .findByEori(request.eori.value)
@@ -85,11 +89,11 @@ class NotificationsController @Inject()(
   )(implicit request: Request[NodeSeq]): Future[Option[DeclarationNotification]] =
     submissionRepository
       .getByConversationId(vhnar.conversationId.value)
-      .map(mayBeSubmission => {
+      .map { mayBeSubmission =>
         mayBeSubmission.flatMap { submission =>
           handleXmlParseToNotification(request.body.toString, vhnar.conversationId.value, submission.eori)
         }
-      })
+      }
 
   private def handleXmlParseToNotification(xmlString: String, conversationId: String, eori: String) = {
     val parseXmlResult = Try[MetaData] {
@@ -99,9 +103,11 @@ class NotificationsController @Inject()(
     parseXmlResult match {
       case Success(metaData) =>
         val mrn = metaData.response.headOption.flatMap(_.declaration.flatMap(_.id))
+
         if (mrn.isEmpty) {
-          Logger.error("Unable to determine MRN")
+          logger.error("Unable to determine MRN during parsing notification")
         }
+
         val notification = DeclarationNotification(
           DateTime.now,
           conversationId,
@@ -118,11 +124,9 @@ class NotificationsController @Inject()(
           metaData.response
         )
 
-        Logger.debug("\u001b[34m Notification is " + notification + "\u001b[0m")
-
         Some(notification)
-      case Failure(ex) =>
-        Logger.error("problem parsing Notification", ex)
+      case Failure(exception) =>
+        logger.error(s"There is a problem during parsing notification with exception: ${exception.getMessage}")
         None
     }
   }
@@ -148,9 +152,11 @@ class NotificationsController @Inject()(
     } yield
       if (notificationSaved) {
         metrics.incrementCounter(notificationMetric)
+        logger.debug("Notification saved successfully")
         Accepted
       } else {
         metrics.incrementCounter(notificationMetric)
+        logger.error("There was a problem during saving notification")
         InternalServerError(NotificationFailedErrorResponse.toXml())
       }
   }
@@ -163,5 +169,4 @@ class NotificationsController @Inject()(
         case _ => response.functionCode
       }
     }.headOption
-
 }

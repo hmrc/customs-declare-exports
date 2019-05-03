@@ -41,70 +41,70 @@ class SubmissionController @Inject()(
   notificationsRepository: NotificationsRepository
 ) extends ExportController(authConnector) {
 
+  private val logger = Logger(this.getClass())
+
   private def xmlOrEmptyBody: BodyParser[AnyContent] =
     BodyParser(
       rq =>
         parse.tolerantXml(rq).map {
           case Right(xml) => Right(AnyContentAsXml(xml))
-          case _          => Left(ErrorResponse.ErrorInvalidPayload.XmlResult)
+          case _          =>
+            logger.error("Invalid xml payload")
+            Left(ErrorResponse.ErrorInvalidPayload.XmlResult)
       }
     )
 
   def submitDeclaration(): Action[AnyContent] =
     authorisedAction(bodyParser = xmlOrEmptyBody) { implicit request =>
-      implicit val headers: Map[String, String] = request.headers.toSimpleMap
-      processSubmissionRequest
+      processSubmissionRequest(request.headers.toSimpleMap)
     }
 
   def cancelDeclaration(): Action[AnyContent] =
     authorisedAction(bodyParser = xmlOrEmptyBody) { implicit request =>
-      implicit val headers: Map[String, String] = request.headers.toSimpleMap
-      processCancelationRequest
+      processCancelationRequest(request.headers.toSimpleMap)
     }
 
-  private def processSubmissionRequest()(
+  private def processSubmissionRequest(headers: Map[String, String])(
     implicit request: AuthorizedSubmissionRequest[AnyContent],
-    hc: HeaderCarrier,
-    headers: Map[String, String]
+    hc: HeaderCarrier
   ): Future[Result] =
-    headerValidator.validateAndExtractSubmissionHeaders match {
+    headerValidator.validateAndExtractSubmissionHeaders(headers) match {
       case Right(vhr) =>
         request.body.asXml match {
           case Some(xml) =>
             handleDeclarationSubmit(request.eori.value, vhr.localReferenceNumber.value, vhr.ducr, xml).recoverWith {
               case e: Exception =>
-                Logger.error(s"problem calling declaration api ${e.getMessage}")
+                logger.error(s"There is a problem during calling declaration api ${e.getMessage}")
                 Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
             }
           case None =>
-            Logger.error("body is not xml")
+            logger.error("Body is not a xml")
             Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)
         }
-      case Left(_) =>
-        Logger.error("Invalid Headers found")
+      case Left(error) =>
+        logger.error(s"Invalid Headers found. Error message: ${error.message}")
         Future.successful(ErrorResponse.ErrorGenericBadRequest.XmlResult)
     }
 
-  private def processCancelationRequest()(
+  private def processCancelationRequest(headers: Map[String, String])(
     implicit request: AuthorizedSubmissionRequest[AnyContent],
-    hc: HeaderCarrier,
-    headers: Map[String, String]
+    hc: HeaderCarrier
   ): Future[Result] =
     headerValidator.validateAndExtractCancellationHeaders(headers) match {
       case Right(vhr) =>
         request.body.asXml match {
           case Some(xml) =>
-            handleDeclarationCancelation(request.eori.value, vhr.mrn.value, xml).recoverWith {
+            handleDeclarationCancellation(request.eori.value, vhr.mrn.value, xml).recoverWith {
               case e: Exception =>
-                Logger.error(s"problem calling declaration api ${e.getMessage}")
+                logger.error(s"There is a problem during calling declaration api ${e.getMessage}")
                 Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
             }
           case None =>
-            Logger.error("body is not xml")
+            logger.error("Body is not xml")
             Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)
         }
-      case Left(_) =>
-        Logger.error("Invalid Headers found")
+      case Left(error) =>
+        logger.error(s"Invalid Headers found. Error message: ${error.message}")
         Future.successful(ErrorResponse.ErrorGenericBadRequest.XmlResult)
     }
 
@@ -113,11 +113,11 @@ class SubmissionController @Inject()(
       val body = request.body
       submissionRepository.updateSubmission(body).map { res =>
         if (res) {
-          Logger.debug("data updated in DB for conversationID")
+          logger.debug("Submission updated successfully")
           Ok(Json.toJson(ExportsResponse(OK, "Submission response updated")))
         } else {
-          Logger.error("error updating submission data to DB")
-          InternalServerError("failed updating submission")
+          logger.error("There was an error during updating submission")
+          InternalServerError("Failed updating submission")
         }
       }
     }
@@ -156,7 +156,7 @@ class SubmissionController @Inject()(
   ): Future[Result] =
     exportsService.handleSubmission(eori, ducr, lrn, xml)
 
-  private def handleDeclarationCancelation(eori: String, mrn: String, xml: NodeSeq)(
+  private def handleDeclarationCancellation(eori: String, mrn: String, xml: NodeSeq)(
     implicit hc: HeaderCarrier
   ): Future[Result] =
     exportsService.handleCancellation(eori, mrn, xml).map {

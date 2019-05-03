@@ -37,5 +37,4 @@ class ExportsMetrics @Inject()(metrics: Metrics) {
 
 object MetricIdentifiers {
   val notificationMetric = "submission.notification"
-
 }

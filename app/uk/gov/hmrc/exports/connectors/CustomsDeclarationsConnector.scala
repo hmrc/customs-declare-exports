@@ -33,12 +33,14 @@ import scala.xml.NodeSeq
 @Singleton
 class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: HttpClient) {
 
+  private val logger = Logger(this.getClass())
+
   def submitDeclaration(
     eori: String,
     xml: NodeSeq
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[CustomsDeclarationsResponse] =
     postMetaData(eori, appConfig.submitDeclarationUri, xml).map { res =>
-      Logger.debug(s"CUSTOMS_DECLARATIONS response is  --> ${res.toString}")
+      logger.debug(s"CUSTOMS_DECLARATIONS response is  --> ${res.toString}")
       res
     }
 
@@ -47,7 +49,7 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
     xml: NodeSeq
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[CustomsDeclarationsResponse] =
     postMetaData(eori, appConfig.cancelDeclarationUri, xml).map { res =>
-      Logger.debug(s"CUSTOMS_DECLARATIONS cancellation response is  --> ${res.toString}")
+      logger.debug(s"CUSTOMS_DECLARATIONS cancellation response is  --> ${res.toString}")
       res
     }
 
@@ -68,7 +70,7 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
     implicit hc: HeaderCarrier,
     ec: ExecutionContext
   ): Future[CustomsDeclarationsResponse] = {
-    Logger.debug(s"CUSTOMS_DECLARATIONS request payload is -> $body")
+    logger.debug(s"CUSTOMS_DECLARATIONS request payload is -> $body")
     httpClient
       .POSTString[CustomsDeclarationsResponse](
         s"${appConfig.customsDeclarationsBaseUrl}$uri",
@@ -77,8 +79,7 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
       )(responseReader, hc, ec)
       .recover {
         case error: Throwable =>
-          Logger.error(s"Error to check development environment ${error.toString}")
-          Logger.error(s"Error to check development environment (GET MESSAGE) ${error.getMessage}")
+          logger.error(s"Error during submitting declaration: ${error.getMessage}")
           CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, None)
       }
   }

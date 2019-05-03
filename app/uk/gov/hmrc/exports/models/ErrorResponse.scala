@@ -15,6 +15,7 @@
  */
 
 package uk.gov.hmrc.exports.models
+
 import play.api.http.ContentTypes
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.Result
@@ -55,14 +56,12 @@ object ErrorResponse extends HttpStatusCodeShortDescriptions {
   def errorUnauthorized(errorMessage: String): ErrorResponse =
     ErrorResponse(UNAUTHORIZED, UnauthorizedCode, errorMessage)
 
-  def errorBadRequest(errorMessage: String): ErrorResponse =
-    ErrorResponse(BAD_REQUEST, BadRequestCode, errorMessage)
+  def errorBadRequest(errorMessage: String): ErrorResponse = ErrorResponse(BAD_REQUEST, BadRequestCode, errorMessage)
 
   def errorInternalServerError(errorMessage: String): ErrorResponse =
     ErrorResponse(INTERNAL_SERVER_ERROR, InternalServerErrorCode, errorMessage)
 
-  val ErrorUnauthorized =
-    ErrorResponse(UNAUTHORIZED, UnauthorizedCode, "Insufficient Enrolments")
+  val ErrorUnauthorized: ErrorResponse = ErrorResponse(UNAUTHORIZED, UnauthorizedCode, "Insufficient Enrolments")
 
   val ErrorGenericBadRequest: ErrorResponse = errorBadRequest("Bad Request")
 
