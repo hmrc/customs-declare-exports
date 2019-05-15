@@ -18,21 +18,22 @@ package integration.uk.gov.hmrc.exports.connector
 
 import integration.uk.gov.hmrc.exports.base.IntegrationTestSpec
 import integration.uk.gov.hmrc.exports.stubs.CustomsDeclarationsAPIService
+import integration.uk.gov.hmrc.exports.util.ExternalServicesConfig.{AuthToken, Host, Port}
+import integration.uk.gov.hmrc.exports.util.{CustomsDeclarationsAPIConfig, TestModule}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.Helpers._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import integration.uk.gov.hmrc.exports.util.ExternalServicesConfig.{AuthToken, Host, Port}
-import integration.uk.gov.hmrc.exports.util.{CustomsDeclarationsAPIConfig, TestModule}
-import play.api.test.Helpers.{ACCEPTED, INTERNAL_SERVER_ERROR, NOT_FOUND}
-import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, NotFoundException, Upstream5xxResponse}
+import uk.gov.hmrc.http.HeaderCarrier
 import util.ExportsTestData
 
 import scala.xml.XML
 
 class CustomsDeclarationsConnectorSpec
-    extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar with CustomsDeclarationsAPIService with ExportsTestData {
+    extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar with CustomsDeclarationsAPIService
+    with ExportsTestData {
 
   private lazy val connector = app.injector.instanceOf[CustomsDeclarationsConnector]
 
@@ -42,55 +43,71 @@ class CustomsDeclarationsConnectorSpec
     startMockServer()
   }
 
-  override protected def afterEach(): Unit = {
+  override protected def afterEach(): Unit =
     resetMockServer()
-  }
 
   override protected def afterAll() {
     stopMockServer()
   }
 
   override implicit lazy val app: Application =
-    GuiceApplicationBuilder(overrides = Seq(TestModule.asGuiceableModule)).configure(Map(
-      "microservice.services.customs-declarations.host" -> Host,
-      "microservice.services.customs-declarations.port" -> Port,
-      "microservice.services.customs-declarations.submit-uri" -> CustomsDeclarationsAPIConfig.submitDeclarationServiceContext,
-      "microservice.services.customs-declarations.bearer-token" -> AuthToken
-    )).build()
+    GuiceApplicationBuilder(overrides = Seq(TestModule.asGuiceableModule))
+      .configure(
+        Map(
+          "microservice.services.customs-declarations.host" -> Host,
+          "microservice.services.customs-declarations.port" -> Port,
+          "microservice.services.customs-declarations.submit-uri" -> CustomsDeclarationsAPIConfig.submitDeclarationServiceContext,
+          "microservice.services.customs-declarations.bearer-token" -> AuthToken
+        )
+      )
+      .build()
 
-  "CustomsDeclarationsConnector" should {
+  "Customs Declarations Connector" should {
 
-    "make a correct request" in {
+    "return 202 when request is processed" in {
       val payload = randomSubmitDeclaration
       startSubmissionService(ACCEPTED)
       await(sendValidXml(payload.toXml))
-      verifyDecServiceWasCalledCorrectly(requestBody = expectedSubmissionRequestPayload(payload.declaration.get.functionalReferenceId.get), expectedEori = declarantEoriValue)
+      verifyDecServiceWasCalledCorrectly(
+        requestBody = expectedSubmissionRequestPayload(payload.declaration.get.functionalReferenceId.get),
+        expectedEori = declarantEoriValue
+      )
     }
 
-    "return a failure response with internal server error when external service returns 404" in {
-      startSubmissionService(NOT_FOUND)
-      val response = await(sendValidXml(randomSubmitDeclaration.toXml))
-      response.status should be(INTERNAL_SERVER_ERROR)
-    }
-
-    "return a failed future when external service returns 500" in {
-      startSubmissionService(INTERNAL_SERVER_ERROR)
-      val response = await(sendValidXml(randomSubmitDeclaration.toXml))
-      response.status should be(INTERNAL_SERVER_ERROR)
-    }
-
-    "return a failed future when fail to connect the external service" in {
+    "return Internal Server Error when we fail to connect to external service" in {
       stopMockServer()
       val response = await(sendValidXml(randomSubmitDeclaration.toXml))
       response.status should be(INTERNAL_SERVER_ERROR)
       startMockServer()
     }
 
+    "return Internal Server Error when external service returns 500" in {
+      startSubmissionService(INTERNAL_SERVER_ERROR)
+      val response = await(sendValidXml(randomSubmitDeclaration.toXml))
+      response.status should be(INTERNAL_SERVER_ERROR)
+    }
+
+    "return Internal Server Error when we sent invalid request 400" in {
+      startSubmissionService(BAD_REQUEST)
+      val response = await(sendValidXml("<xml><element>test</element></xml>"))
+      response.status should be(INTERNAL_SERVER_ERROR)
+    }
+
+    "return Internal Server Error when are unauthorized to connect 401" in {
+      startSubmissionService(UNAUTHORIZED)
+      val response = await(sendValidXml(randomSubmitDeclaration.toXml))
+      response.status should be(INTERNAL_SERVER_ERROR)
+    }
+
+    "return Internal Server Error when external service returns 404" in {
+      startSubmissionService(NOT_FOUND)
+      val response = await(sendValidXml(randomSubmitDeclaration.toXml))
+      response.status should be(INTERNAL_SERVER_ERROR)
+    }
   }
 
-  private def sendValidXml(xml: String) = {
+  private def sendValidXml(xml: String) =
     connector.submitDeclaration(declarantEoriValue, XML.loadString(xml))
-  }
 
   private def expectedSubmissionRequestPayload(functionalReferenceId: String) = {
     val returnXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">

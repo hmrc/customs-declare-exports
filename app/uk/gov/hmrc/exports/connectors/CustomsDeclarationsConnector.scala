@@ -35,7 +35,7 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
   implicit ec: ExecutionContext
 ) {
 
-  private val logger = Logger(this.getClass())
+  private val logger = Logger(this.getClass)
 
   def submitDeclaration(eori: String, xml: NodeSeq)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] =
     postMetaData(eori, appConfig.submitDeclarationUri, xml).map { res =>
@@ -54,7 +54,6 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
   ): Future[CustomsDeclarationsResponse] =
     post(eori, uri, xml.toString())
 
-  //noinspection ConvertExpressionToSAM
   //noinspection ConvertExpressionToSAM
   private implicit val responseReader: HttpReads[CustomsDeclarationsResponse] =
     new HttpReads[CustomsDeclarationsResponse] {
@@ -106,7 +105,12 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
       .recover {
         case error: Throwable =>
           logger.error(s"Error during submitting declaration: ${error.getMessage}")
-          CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, None)
+
+          error match {
+            case a: Upstream4xxResponse =>
+              CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, Some(a.headers("X-Conversation-ID").head))
+            case _ => CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, None)
+          }
       }
   }
 

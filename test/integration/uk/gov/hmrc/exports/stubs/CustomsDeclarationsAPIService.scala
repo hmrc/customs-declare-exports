@@ -16,54 +16,59 @@
 
 package integration.uk.gov.hmrc.exports.stubs
 
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, equalTo, equalToXml, notMatching, post, postRequestedFor, stubFor, urlMatching, verify}
+import java.util.UUID
+
+import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.matching.UrlPattern
 import integration.uk.gov.hmrc.exports.base.WireMockRunner
 import integration.uk.gov.hmrc.exports.util.{CustomsDeclarationsAPIConfig, ExternalServicesConfig}
 import play.api.http.ContentTypes
 import play.api.mvc.Codec
-import play.api.test.Helpers.{ACCEPT, ACCEPTED, AUTHORIZATION, CONTENT_TYPE, DATE, XML, X_FORWARDED_HOST}
+import play.api.test.Helpers.{ACCEPT, ACCEPTED, CONTENT_TYPE}
 import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
-
-
 
 trait CustomsDeclarationsAPIService extends WireMockRunner {
 
   private val submissionURL = urlMatching(CustomsDeclarationsAPIConfig.submitDeclarationServiceContext)
 
-
-
   def startSubmissionService(status: Int = ACCEPTED): Unit = startService(status, submissionURL)
 
-
-  private def startService (status: Int, url: UrlPattern) = {
-    stubFor(post(url).
-      willReturn(
+  private def startService(status: Int, url: UrlPattern) =
+    stubFor(
+      post(url).willReturn(
         aResponse()
-          .withStatus(status)))
-
-  }
-
-  def verifyDecServiceWasCalledCorrectly(requestBody: String,
-                                         expectedAuthToken: String = ExternalServicesConfig.AuthToken,
-                                         expectedEori: String) {
-
-    verifyDecServiceWasCalledWith(CustomsDeclarationsAPIConfig.submitDeclarationServiceContext, requestBody, expectedAuthToken, expectedEori)
-  }
-
-
-  private def verifyDecServiceWasCalledWith(requestPath: String,
-                                                  requestBody: String,
-                                                  expectedAuthToken: String ,
-                                                  expectedEori: String) {
-    verify(1, postRequestedFor(urlMatching(requestPath))
-      .withHeader(CONTENT_TYPE, equalTo(ContentTypes.XML(Codec.utf_8)))
-      .withHeader(ACCEPT, equalTo("application/vnd.hmrc.1.0+xml"))
-      .withHeader(CustomsHeaderNames.XEoriIdentifierHeaderName, equalTo(expectedEori))
-      .withRequestBody(equalToXml(requestBody))
+          .withStatus(status)
+          .withHeader("X-Conversation-ID", UUID.randomUUID().toString)
+      )
     )
 
+  def verifyDecServiceWasCalledCorrectly(
+    requestBody: String,
+    expectedAuthToken: String = ExternalServicesConfig.AuthToken,
+    expectedEori: String
+  ) {
 
+    verifyDecServiceWasCalledWith(
+      CustomsDeclarationsAPIConfig.submitDeclarationServiceContext,
+      requestBody,
+      expectedAuthToken,
+      expectedEori
+    )
+  }
 
+  private def verifyDecServiceWasCalledWith(
+    requestPath: String,
+    requestBody: String,
+    expectedAuthToken: String,
+    expectedEori: String
+  ) {
+    verify(
+      1,
+      postRequestedFor(urlMatching(requestPath))
+        .withHeader(CONTENT_TYPE, equalTo(ContentTypes.XML(Codec.utf_8)))
+        .withHeader(ACCEPT, equalTo("application/vnd.hmrc.1.0+xml"))
+        .withHeader(CustomsHeaderNames.XEoriIdentifierHeaderName, equalTo(expectedEori))
+        .withRequestBody(equalToXml(requestBody))
+    )
   }
 }
