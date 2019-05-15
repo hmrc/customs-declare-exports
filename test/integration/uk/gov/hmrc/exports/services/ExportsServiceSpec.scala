@@ -1,47 +1,45 @@
 package integration.uk.gov.hmrc.exports.services
 
-import com.google.inject.AbstractModule
-import integration.uk.gov.hmrc.exports.base.{IntegrationTestModule, IntegrationTestSpec}
-import integration.uk.gov.hmrc.exports.stubs.CustomsDeclarationsAPIService
-import integration.uk.gov.hmrc.exports.util.{CustomsDeclarationsAPIConfig, TestModule}
-import integration.uk.gov.hmrc.exports.util.ExternalServicesConfig.{AuthToken, Host, Port}
-import org.scalatest.mockito.MockitoSugar
+import integration.uk.gov.hmrc.exports.base.IntegrationTestSpec
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
+import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
-import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
 import play.api.inject._
+import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
 import play.api.mvc.Result
-import org.mockito.ArgumentMatchers.any
-import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
+import play.api.test.Helpers._
+import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.exports.services.ExportsService
 import uk.gov.hmrc.http.HeaderCarrier
-import util.ExportsTestData
-import play.api.test.Helpers._
+import util.ExternalServicesConfig.{Host, Port}
+import util.stubs.CustomsDeclarationsAPIService
+import util.{CustomsDeclarationsAPIConfig, ExportsTestData}
 
 import scala.concurrent.Future
 import scala.xml.XML
 
-class ExportsServiceSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar with CustomsDeclarationsAPIService
-  with ExportsTestData {
+class ExportsServiceSpec
+    extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar with CustomsDeclarationsAPIService
+    with ExportsTestData {
 
   val mockSubmissionRepository: SubmissionRepository = mock[SubmissionRepository]
 
   def overrideModules: Seq[GuiceableModule] = Nil
 
   override implicit lazy val app: Application =
-    GuiceApplicationBuilder().overrides(overrideModules: _*)
-      .overrides(
-      bind[SubmissionRepository].to(mockSubmissionRepository)
-    ).configure(
-      Map(
-        "microservice.services.customs-declarations.host" -> Host,
-        "microservice.services.customs-declarations.port" -> Port,
-        "microservice.services.customs-declarations.submit-uri" -> CustomsDeclarationsAPIConfig.submitDeclarationServiceContext,
-        "microservice.services.customs-declarations.bearer-token" -> AuthToken
+    GuiceApplicationBuilder()
+      .overrides(overrideModules: _*)
+      .overrides(bind[SubmissionRepository].to(mockSubmissionRepository))
+      .configure(
+        Map(
+          "microservice.services.customs-declarations.host" -> Host,
+          "microservice.services.customs-declarations.port" -> Port,
+          "microservice.services.customs-declarations.submit-uri" -> CustomsDeclarationsAPIConfig.submitDeclarationServiceContext,
+          "microservice.services.customs-declarations.bearer-token" -> authToken
+        )
       )
-    )
       .build()
 
   private lazy val exportsService = app.injector.instanceOf[ExportsService]
@@ -59,17 +57,23 @@ class ExportsServiceSpec extends IntegrationTestSpec with GuiceOneAppPerSuite wi
     stopMockServer()
   }
 
-  def withSubmissionPersisted(result: Boolean): Unit ={
+  def withSubmissionPersisted(result: Boolean): Unit =
     when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(result))
-  }
 
   "ExportService" should {
-    "blah blah" in{
+    "blah blah" in {
       val payload = randomSubmitDeclaration
       startSubmissionService(ACCEPTED)
 
       withSubmissionPersisted(true)
-      val result: Result = await(exportsService.handleSubmission(declarantEoriValue, Some(declarantDucrValue), declarantLrnValue, XML.loadString(payload.toXml)))
+      val result: Result = await(
+        exportsService.handleSubmission(
+          declarantEoriValue,
+          Some(declarantDucrValue),
+          declarantLrnValue,
+          XML.loadString(payload.toXml)
+        )
+      )
 
       contentAsString(result) should be("")
     }

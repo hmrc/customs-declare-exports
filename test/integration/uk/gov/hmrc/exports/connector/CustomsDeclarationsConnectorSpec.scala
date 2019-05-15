@@ -17,9 +17,8 @@
 package integration.uk.gov.hmrc.exports.connector
 
 import integration.uk.gov.hmrc.exports.base.IntegrationTestSpec
-import integration.uk.gov.hmrc.exports.stubs.CustomsDeclarationsAPIService
-import integration.uk.gov.hmrc.exports.util.ExternalServicesConfig.{AuthToken, Host, Port}
-import integration.uk.gov.hmrc.exports.util.{CustomsDeclarationsAPIConfig, TestModule}
+import util.ExternalServicesConfig.{Host, Port}
+import integration.uk.gov.hmrc.exports.util.TestModule
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
@@ -27,7 +26,8 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.http.HeaderCarrier
-import util.ExportsTestData
+import util.stubs.CustomsDeclarationsAPIService
+import util.{CustomsDeclarationsAPIConfig, ExportsTestData}
 
 import scala.xml.XML
 
@@ -57,7 +57,8 @@ class CustomsDeclarationsConnectorSpec
           "microservice.services.customs-declarations.host" -> Host,
           "microservice.services.customs-declarations.port" -> Port,
           "microservice.services.customs-declarations.submit-uri" -> CustomsDeclarationsAPIConfig.submitDeclarationServiceContext,
-          "microservice.services.customs-declarations.bearer-token" -> AuthToken
+          "microservice.services.customs-declarations.bearer-token" -> authToken,
+          "microservice.services.customs-declarations.api-version" -> CustomsDeclarationsAPIConfig.apiVersion
         )
       )
       .build()
@@ -70,7 +71,8 @@ class CustomsDeclarationsConnectorSpec
       await(sendValidXml(payload.toXml))
       verifyDecServiceWasCalledCorrectly(
         requestBody = expectedSubmissionRequestPayload(payload.declaration.get.functionalReferenceId.get),
-        expectedEori = declarantEoriValue
+        expectedEori = declarantEoriValue,
+        expectedApiVersion = CustomsDeclarationsAPIConfig.apiVersion
       )
     }
 

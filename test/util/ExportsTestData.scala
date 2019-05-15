@@ -22,7 +22,7 @@ import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
 import uk.gov.hmrc.exports.controllers.CustomsHeaderNames._
-import uk.gov.hmrc.exports.models.{DeclarationMetadata, DeclarationNotification, Submission, SubmissionData, SubmissionResponse}
+import uk.gov.hmrc.exports.models.{DeclarationMetadata, DeclarationNotification, Eori, Submission, SubmissionData, SubmissionResponse}
 import uk.gov.hmrc.wco.dec.{DateTimeString, MetaData, Response, ResponseDateTimeElement, Declaration => WcoDeclaration}
 
 import scala.util.Random
@@ -47,9 +47,10 @@ trait ExportsTestData {
   val submissionData: SubmissionData = SubmissionData.buildSubmissionData(submission, 0)
   val seqSubmissions: Seq[Submission] = Seq(submission)
   val seqSubmissionData: Seq[SubmissionData] = Seq(submissionData)
-  val dummyToken: String =
-    "Bearer BXQ3/Treo4kQCZvVcCqKPlwxRN4RA9Mb5RF8fFxOuwG5WSg+S+Rsp9Nq998Fgg0HeNLXL7NGwEAIzwM6vuA6YYhRQnTRFaBhrp+1w+kVW8g1qHGLYO48QPWuxdM87VMCZqxnCuDoNxVn76vwfgtpNj0+NwfzXV2Zc12L2QGgF9H9KwIkeIPK/mMlBESjue4V]"
+  val authToken: String = "BXQ3/Treo4kQCZvVcCqKPlwxRN4RA9Mb5RF8fFxOuwG5WSg+S+Rsp9Nq998Fgg0HeNLXL7NGwEAIzwM6vuA6YYhRQnTRFaBhrp+1w+kVW8g1qHGLYO48QPWuxdM87VMCZqxnCuDoNxVn76vwfgtpNj0+NwfzXV2Zc12L2QGgF9H9KwIkeIPK/mMlBESjue4V]"
+  val dummyToken: String = s"Bearer $authToken"
   val declarantEoriValue: String = "ZZ123456789000"
+  val declarantEori : Eori = Eori(declarantEoriValue)
   val declarantLrnValue: String = "MyLrnValue1234"
   val declarantDucrValue: String = "MyDucrValue1234"
   val declarantMrnValue: String = "MyMucrValue1234"

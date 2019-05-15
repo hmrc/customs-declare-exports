@@ -19,7 +19,7 @@ package integration.uk.gov.hmrc.exports.base
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
-import integration.uk.gov.hmrc.exports.util.ExternalServicesConfig._
+import util.ExternalServicesConfig._
 
 trait WireMockRunner {
 
