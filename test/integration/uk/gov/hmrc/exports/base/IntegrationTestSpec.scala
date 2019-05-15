@@ -22,7 +22,7 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import play.api.inject.guice.GuiceableModule
 import uk.gov.hmrc.play.test.UnitSpec
 
-case class IntegrationTestModule() extends AbstractModule {
+object IntegrationTestModule extends AbstractModule {
   def configure(): Unit = ()
 
   def asGuiceableModule: GuiceableModule = GuiceableModule.guiceable(this)
