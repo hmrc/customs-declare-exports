@@ -12,7 +12,7 @@ import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
 import play.api.inject._
 import play.api.mvc.Result
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.repositories.NotificationsRepository
+import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.ExportsService
 import uk.gov.hmrc.http.HeaderCarrier
 import util.ExportsTestData
@@ -23,12 +23,15 @@ import scala.xml.XML
 class ExportsServiceSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar with CustomsDeclarationsAPIService
   with ExportsTestData {
 
-  val mockNotificationsRepository: NotificationsRepository = mock[NotificationsRepository]
+  val mockSubmissionRepository: SubmissionRepository = mock[SubmissionRepository]
+
+  def overrideModules: Seq[GuiceableModule] = Nil
+
 
   override implicit lazy val app: Application =
-    GuiceApplicationBuilder().overrides(
-      bind[NotificationsRepository].to(mockNotificationsRepository),
-      bind[GuiceableModule].to(IntegrationTestModule.asGuiceableModule)
+    GuiceApplicationBuilder().overrides(overrideModules: _*)
+      .overrides(
+      bind[SubmissionRepository].to(mockSubmissionRepository)
     ).configure(
       Map(
         "microservice.services.customs-declarations.host" -> Host,
