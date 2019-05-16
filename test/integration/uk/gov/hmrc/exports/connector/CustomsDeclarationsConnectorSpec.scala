@@ -17,9 +17,8 @@
 package integration.uk.gov.hmrc.exports.connector
 
 import integration.uk.gov.hmrc.exports.base.IntegrationTestSpec
-import integration.uk.gov.hmrc.exports.stubs.CustomsDeclarationsAPIService
-import integration.uk.gov.hmrc.exports.util.ExternalServicesConfig.{AuthToken, Host, Port}
-import integration.uk.gov.hmrc.exports.util.{CustomsDeclarationsAPIConfig, TestModule}
+import util.ExternalServicesConfig.{Host, Port}
+import integration.uk.gov.hmrc.exports.util.TestModule
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
@@ -28,7 +27,8 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
 import uk.gov.hmrc.http.HeaderCarrier
-import util.ExportsTestData
+import util.stubs.CustomsDeclarationsAPIService
+import util.{CustomsDeclarationsAPIConfig, ExportsTestData}
 
 import scala.concurrent.Future
 import scala.xml.XML
@@ -47,7 +47,8 @@ class CustomsDeclarationsConnectorSpec
           "microservice.services.customs-declarations.host" -> Host,
           "microservice.services.customs-declarations.port" -> Port,
           "microservice.services.customs-declarations.submit-uri" -> CustomsDeclarationsAPIConfig.submitDeclarationServiceContext,
-          "microservice.services.customs-declarations.bearer-token" -> AuthToken
+          "microservice.services.customs-declarations.bearer-token" -> authToken,
+          "microservice.services.customs-declarations.api-version" -> CustomsDeclarationsAPIConfig.apiVersion
         )
       )
       .build()
@@ -138,12 +139,5 @@ class CustomsDeclarationsConnectorSpec
   private def sendValidXml(xml: String): Future[CustomsDeclarationsResponse] =
     connector.submitDeclaration(declarantEoriValue, XML.loadString(xml))
 
-  private def expectedSubmissionRequestPayload(functionalReferenceId: String) = {
-    val returnXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
-        <wstxns1:Declaration xmlns:wstxns1="urn:wco:datamodel:WCO:DEC-DMS:2">
-           <wstxns1:FunctionalReferenceID>{functionalReferenceId}</wstxns1:FunctionalReferenceID>
-        </wstxns1:Declaration>
-      </MetaData>
-    returnXml.toString
-  }
+
 }

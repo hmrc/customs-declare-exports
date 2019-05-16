@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package integration.uk.gov.hmrc.exports.stubs
+package util.stubs
 
 import java.util.UUID
 
@@ -22,13 +22,13 @@ import com.github.tomakehurst.wiremock.client.WireMock.{status, _}
 import com.github.tomakehurst.wiremock.matching.UrlPattern
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import integration.uk.gov.hmrc.exports.base.WireMockRunner
-import integration.uk.gov.hmrc.exports.util.{CustomsDeclarationsAPIConfig, ExternalServicesConfig}
 import play.api.http.ContentTypes
 import play.api.mvc.Codec
 import play.api.test.Helpers.{ACCEPT, ACCEPTED, CONTENT_TYPE}
 import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
+import util.{CustomsDeclarationsAPIConfig, ExportsTestData}
 
-trait CustomsDeclarationsAPIService extends WireMockRunner {
+trait CustomsDeclarationsAPIService extends WireMockRunner with ExportsTestData{
 
   private val submissionURL = urlMatching(CustomsDeclarationsAPIConfig.submitDeclarationServiceContext)
 
@@ -57,16 +57,18 @@ trait CustomsDeclarationsAPIService extends WireMockRunner {
     }
 
   def verifyDecServiceWasCalledCorrectly(
-    requestBody: String,
-    expectedAuthToken: String = ExternalServicesConfig.AuthToken,
-    expectedEori: String
+                                          requestBody: String,
+                                          expectedAuthToken: String = authToken,
+                                          expectedEori: String,
+                                          expectedApiVersion: String
   ) {
 
     verifyDecServiceWasCalledWith(
       CustomsDeclarationsAPIConfig.submitDeclarationServiceContext,
       requestBody,
       expectedAuthToken,
-      expectedEori
+      expectedEori,
+      expectedApiVersion
     )
   }
 
@@ -74,13 +76,14 @@ trait CustomsDeclarationsAPIService extends WireMockRunner {
     requestPath: String,
     requestBody: String,
     expectedAuthToken: String,
-    expectedEori: String
+    expectedEori: String,
+    expectedVersion: String
   ) {
     verify(
       1,
       postRequestedFor(urlMatching(requestPath))
         .withHeader(CONTENT_TYPE, equalTo(ContentTypes.XML(Codec.utf_8)))
-        .withHeader(ACCEPT, equalTo("application/vnd.hmrc.1.0+xml"))
+        .withHeader(ACCEPT, equalTo(s"application/vnd.hmrc.$expectedVersion+xml"))
         .withHeader(CustomsHeaderNames.XEoriIdentifierHeaderName, equalTo(expectedEori))
         .withRequestBody(equalToXml(requestBody))
     )

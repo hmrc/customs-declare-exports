@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package integration.uk.gov.hmrc.exports.util
+package util
 
 object CustomsDeclarationsAPIConfig {
+  val apiVersion: String = "1.0"
+
+
   val submitDeclarationServiceContext = "/"
   val CancelDeclarationServiceContext = "/cancellation-requests"
 
-  val AuditContext = "/write/audit.*"
-  val NrsServiceContext = "/submission"
+
 
 }
