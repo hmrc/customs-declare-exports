@@ -106,9 +106,16 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
         case error: Throwable =>
           logger.error(s"Error during submitting declaration: ${error.getMessage}")
 
+          // TODO: added some checks here as conversationID not always could there (at least looking at the code, needs confirming,
+          // TODO: and would be nice to have conversationId to track what went wrong
           error match {
-            case a: Upstream4xxResponse =>
-              CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, Some(a.headers("X-Conversation-ID").head))
+            case exWithHeaders: Upstream4xxResponse =>
+              val conversationId = exWithHeaders.headers.get("X-Conversation-ID") match {
+                case Some(data) => data.head
+                case None       => "No conversation ID found"
+              }
+
+              CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, Some(conversationId))
             case _ => CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, None)
           }
       }

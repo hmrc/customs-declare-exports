@@ -26,9 +26,11 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
+import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
 import uk.gov.hmrc.http.HeaderCarrier
 import util.ExportsTestData
 
+import scala.concurrent.Future
 import scala.xml.XML
 
 class CustomsDeclarationsConnectorSpec
@@ -36,19 +38,7 @@ class CustomsDeclarationsConnectorSpec
     with ExportsTestData {
 
   private lazy val connector = app.injector.instanceOf[CustomsDeclarationsConnector]
-
   private implicit val hc: HeaderCarrier = HeaderCarrier()
-
-  override protected def beforeAll() {
-    startMockServer()
-  }
-
-  override protected def afterEach(): Unit =
-    resetMockServer()
-
-  override protected def afterAll() {
-    stopMockServer()
-  }
 
   override implicit lazy val app: Application =
     GuiceApplicationBuilder(overrides = Seq(TestModule.asGuiceableModule))
@@ -62,51 +52,90 @@ class CustomsDeclarationsConnectorSpec
       )
       .build()
 
+  // TODO: added couple of tests for having convId or not, seems like there is logic which even if we got 202 but not convId
+  // TODO: it will be wrapped into 500 (to be confirmed)
+  // TODO: do we handle cancellations now ? as if so we would need to add tests here
   "Customs Declarations Connector" should {
 
-    "return 202 when request is processed" in {
-      val payload = randomSubmitDeclaration
-      startSubmissionService(ACCEPTED)
-      await(sendValidXml(payload.toXml))
-      verifyDecServiceWasCalledCorrectly(
-        requestBody = expectedSubmissionRequestPayload(payload.declaration.get.functionalReferenceId.get),
-        expectedEori = declarantEoriValue
-      )
-    }
+    "return response with specific status" when {
 
-    "return Internal Server Error when we fail to connect to external service" in {
-      stopMockServer()
-      val response = await(sendValidXml(randomSubmitDeclaration.toXml))
-      response.status should be(INTERNAL_SERVER_ERROR)
-      startMockServer()
-    }
+      "it fail to connect to external service - 500" in {
 
-    "return Internal Server Error when external service returns 500" in {
-      startSubmissionService(INTERNAL_SERVER_ERROR)
-      val response = await(sendValidXml(randomSubmitDeclaration.toXml))
-      response.status should be(INTERNAL_SERVER_ERROR)
-    }
+        stopMockServer()
 
-    "return Internal Server Error when we sent invalid request 400" in {
-      startSubmissionService(BAD_REQUEST)
-      val response = await(sendValidXml("<xml><element>test</element></xml>"))
-      response.status should be(INTERNAL_SERVER_ERROR)
-    }
+        val response = await(sendValidXml(randomSubmitDeclaration.toXml))
+        response.status should be(INTERNAL_SERVER_ERROR)
 
-    "return Internal Server Error when are unauthorized to connect 401" in {
-      startSubmissionService(UNAUTHORIZED)
-      val response = await(sendValidXml(randomSubmitDeclaration.toXml))
-      response.status should be(INTERNAL_SERVER_ERROR)
-    }
+        startMockServer()
+      }
 
-    "return Internal Server Error when external service returns 404" in {
-      startSubmissionService(NOT_FOUND)
-      val response = await(sendValidXml(randomSubmitDeclaration.toXml))
-      response.status should be(INTERNAL_SERVER_ERROR)
+      "request is processed successfully - 202" in {
+
+        val payload = randomSubmitDeclaration
+
+        startSubmissionService(ACCEPTED)
+        await(sendValidXml(payload.toXml))
+
+        verifyDecServiceWasCalledCorrectly(
+          requestBody = expectedSubmissionRequestPayload(payload.declaration.get.functionalReferenceId.get),
+          expectedEori = declarantEoriValue
+        )
+      }
+
+      "request is processed successfully (external 202), but does not have conversationId - 500" in {
+
+        startSubmissionService(ACCEPTED, conversationId = false)
+        val response = await(sendValidXml(randomSubmitDeclaration.toXml))
+
+        response.status should be(INTERNAL_SERVER_ERROR)
+        response.conversationId should be(None)
+      }
+
+      "request is not processed - 500" in {
+
+        startSubmissionService(INTERNAL_SERVER_ERROR)
+        val response = await(sendValidXml(randomSubmitDeclaration.toXml))
+
+        response.status should be(INTERNAL_SERVER_ERROR)
+      }
+
+      "request is not processed (external 401) - 500" in {
+
+        startSubmissionService(UNAUTHORIZED)
+        val response = await(sendValidXml(randomSubmitDeclaration.toXml))
+
+        response.status should be(INTERNAL_SERVER_ERROR)
+      }
+
+      "request is not processed (external 404) - 500" in {
+
+        startSubmissionService(NOT_FOUND)
+        val response = await(sendValidXml(randomSubmitDeclaration.toXml))
+
+        response.status should be(INTERNAL_SERVER_ERROR)
+      }
+
+      "request is not processed (external 400) and does not have conversationId - 500" in {
+
+        startSubmissionService(BAD_REQUEST, conversationId = false)
+        val response = await(sendValidXml(randomSubmitDeclaration.toXml))
+
+        response.status should be(INTERNAL_SERVER_ERROR)
+        response.conversationId should be(Some("No conversation ID found"))
+      }
+
+      "request is not processed (external 400) and does have conversationId - 500" in {
+
+        startSubmissionService(BAD_REQUEST)
+        val response = await(sendValidXml("<xml><element>test</element></xml>"))
+
+        response.status should be(INTERNAL_SERVER_ERROR)
+        response.conversationId should not be Some("No conversation ID found")
+      }
     }
   }
 
-  private def sendValidXml(xml: String) =
+  private def sendValidXml(xml: String): Future[CustomsDeclarationsResponse] =
     connector.submitDeclaration(declarantEoriValue, XML.loadString(xml))
 
   private def expectedSubmissionRequestPayload(functionalReferenceId: String) = {

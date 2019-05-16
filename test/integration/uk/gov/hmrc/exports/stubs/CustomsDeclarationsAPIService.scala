@@ -18,8 +18,9 @@ package integration.uk.gov.hmrc.exports.stubs
 
 import java.util.UUID
 
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.{status, _}
 import com.github.tomakehurst.wiremock.matching.UrlPattern
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import integration.uk.gov.hmrc.exports.base.WireMockRunner
 import integration.uk.gov.hmrc.exports.util.{CustomsDeclarationsAPIConfig, ExternalServicesConfig}
 import play.api.http.ContentTypes
@@ -31,16 +32,29 @@ trait CustomsDeclarationsAPIService extends WireMockRunner {
 
   private val submissionURL = urlMatching(CustomsDeclarationsAPIConfig.submitDeclarationServiceContext)
 
-  def startSubmissionService(status: Int = ACCEPTED): Unit = startService(status, submissionURL)
+  // TODO: return either stub with or without conversationID
+  def startSubmissionService(status: Int = ACCEPTED, conversationId: Boolean = true): Unit =
+    startService(status, submissionURL, conversationId)
 
-  private def startService(status: Int, url: UrlPattern) =
-    stubFor(
-      post(url).willReturn(
-        aResponse()
-          .withStatus(status)
-          .withHeader("X-Conversation-ID", UUID.randomUUID().toString)
+  private def startService(status: Int, url: UrlPattern, conversationId: Boolean): StubMapping =
+    if (conversationId) {
+
+      stubFor(
+        post(url).willReturn(
+          aResponse()
+            .withStatus(status)
+            .withHeader("X-Conversation-ID", UUID.randomUUID().toString)
+        )
       )
-    )
+    } else {
+
+      stubFor(
+        post(url).willReturn(
+          aResponse()
+            .withStatus(status)
+        )
+      )
+    }
 
   def verifyDecServiceWasCalledCorrectly(
     requestBody: String,
