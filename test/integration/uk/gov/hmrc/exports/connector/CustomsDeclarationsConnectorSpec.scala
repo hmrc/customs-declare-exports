@@ -79,7 +79,8 @@ class CustomsDeclarationsConnectorSpec
 
         verifyDecServiceWasCalledCorrectly(
           requestBody = expectedSubmissionRequestPayload(payload.declaration.get.functionalReferenceId.get),
-          expectedEori = declarantEoriValue
+          expectedEori = declarantEoriValue,
+          expectedApiVersion = CustomsDeclarationsAPIConfig.apiVersion
         )
       }
 
@@ -138,6 +139,4 @@ class CustomsDeclarationsConnectorSpec
 
   private def sendValidXml(xml: String): Future[CustomsDeclarationsResponse] =
     connector.submitDeclaration(declarantEoriValue, XML.loadString(xml))
-
-
 }

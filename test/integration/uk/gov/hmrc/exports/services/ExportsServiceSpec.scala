@@ -17,9 +17,6 @@
 package integration.uk.gov.hmrc.exports.services
 
 import integration.uk.gov.hmrc.exports.base.IntegrationTestSpec
-import integration.uk.gov.hmrc.exports.stubs.CustomsDeclarationsAPIService
-import integration.uk.gov.hmrc.exports.util.CustomsDeclarationsAPIConfig
-import integration.uk.gov.hmrc.exports.util.ExternalServicesConfig.{AuthToken, Host, Port}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
@@ -32,7 +29,9 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.exports.services.ExportsService
 import uk.gov.hmrc.http.HeaderCarrier
-import util.ExportsTestData
+import util.ExternalServicesConfig._
+import util.stubs.CustomsDeclarationsAPIService
+import util.{CustomsDeclarationsAPIConfig, ExportsTestData}
 
 import scala.concurrent.Future
 import scala.xml.XML
@@ -54,7 +53,7 @@ class ExportsServiceSpec
           "microservice.services.customs-declarations.host" -> Host,
           "microservice.services.customs-declarations.port" -> Port,
           "microservice.services.customs-declarations.submit-uri" -> CustomsDeclarationsAPIConfig.submitDeclarationServiceContext,
-          "microservice.services.customs-declarations.bearer-token" -> AuthToken
+          "microservice.services.customs-declarations.bearer-token" -> authToken
         )
       )
       .build()
@@ -178,5 +177,4 @@ class ExportsServiceSpec
       }
     }
   }
-
 }

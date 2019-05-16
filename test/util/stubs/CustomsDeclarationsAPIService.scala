@@ -28,7 +28,7 @@ import play.api.test.Helpers.{ACCEPT, ACCEPTED, CONTENT_TYPE}
 import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
 import util.{CustomsDeclarationsAPIConfig, ExportsTestData}
 
-trait CustomsDeclarationsAPIService extends WireMockRunner with ExportsTestData{
+trait CustomsDeclarationsAPIService extends WireMockRunner with ExportsTestData {
 
   private val submissionURL = urlMatching(CustomsDeclarationsAPIConfig.submitDeclarationServiceContext)
 
@@ -57,10 +57,10 @@ trait CustomsDeclarationsAPIService extends WireMockRunner with ExportsTestData{
     }
 
   def verifyDecServiceWasCalledCorrectly(
-                                          requestBody: String,
-                                          expectedAuthToken: String = authToken,
-                                          expectedEori: String,
-                                          expectedApiVersion: String
+    requestBody: String,
+    expectedAuthToken: String = authToken,
+    expectedEori: String,
+    expectedApiVersion: String
   ) {
 
     verifyDecServiceWasCalledWith(
