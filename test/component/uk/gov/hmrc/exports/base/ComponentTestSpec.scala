@@ -18,7 +18,7 @@ package component.uk.gov.hmrc.exports.base
 
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{verify, when, never}
+import org.mockito.Mockito.{verify, when, reset, verifyZeroInteractions}
 import org.mockito.stubbing.OngoingStubbing
 import org.mockito.verification.VerificationMode
 import org.scalatest.concurrent.Eventually
@@ -48,6 +48,8 @@ trait ComponentTestSpec
   }
 
   override protected def beforeEach() {
+    reset(mockSubmissionRepository)
+    reset(mockNotificationsRepository)
     resetMockServer()
   }
 
@@ -65,9 +67,7 @@ trait ComponentTestSpec
   }
 
   def verifySubmissionRepositoryWasNotCalled(): Unit = {
-
-    val submissionCaptor: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
-    verify(mockSubmissionRepository.save(submissionCaptor.capture()), never())
+    verifyZeroInteractions(mockSubmissionRepository)
   }
 
   val dateTime = 1546344000000L // 01/01/2019 12:00:00

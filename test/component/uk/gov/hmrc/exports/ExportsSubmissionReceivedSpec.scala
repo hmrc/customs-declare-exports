@@ -17,6 +17,8 @@
 package component.uk.gov.hmrc.exports
 
 import component.uk.gov.hmrc.exports.base.ComponentTestSpec
+import org.mockito.Mockito.reset
+import org.scalatest.BeforeAndAfterEach
 import play.api.mvc.{AnyContentAsXml, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -25,7 +27,7 @@ import util.CustomsDeclarationsAPIConfig
 import scala.concurrent.Future
 import scala.xml.XML
 
-class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
+class ExportsSubmissionReceivedSpec extends ComponentTestSpec with BeforeAndAfterEach {
 
   lazy val ValidSubmissionRequest: FakeRequest[AnyContentAsXml] = FakeRequest()
     .withHeaders(ValidHeaders.toSeq: _*)
@@ -96,14 +98,14 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
 
       // not sure about this, if it should happen or not
       And("the request was authorised with AuthService")
-      // eventually(verifyAuthorisationNotCalled())
+      eventually(verifyAuthServiceCalledForNonCsp())
 
       //do we need to test Audit service interaction? if so do it here
       //do we need to test NRS service interaction? if so do that here
 
       // but these two should not be done
       And("the submission repository was called correctly")
-      eventually(verifySubmissionRepositoryWasNotCalled())
+      eventually(verifySubmissionRepositoryIsCorrectlyCalled(declarantEoriValue))
 
       And("the declarations Api Service was called correctly")
       eventually(
