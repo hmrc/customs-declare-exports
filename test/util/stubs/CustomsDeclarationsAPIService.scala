@@ -1,3 +1,19 @@
+/*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package util.stubs
 
 import java.util.UUID
@@ -15,16 +31,32 @@ trait CustomsDeclarationsAPIService extends WireMockRunner with ExportsTestData{
 
   private val submissionURL = urlMatching(CustomsDeclarationsAPIConfig.submitDeclarationServiceContext)
 
-  def startSubmissionService(status: Int = ACCEPTED): Unit = startService(status, submissionURL)
+  def startSubmissionService(status: Int = ACCEPTED): Unit = {
+    startService(status, submissionURL, true)
+  }
 
-  private def startService(status: Int, url: UrlPattern) =
-    stubFor(
-      post(url).willReturn(
-        aResponse()
-          .withStatus(status)
-          .withHeader("X-Conversation-ID", UUID.randomUUID().toString)
+  def startSubmissionServiceNoHeaders(status: Int = ACCEPTED): Unit = {
+    startService(status, submissionURL, false)
+  }
+
+  private def startService(status: Int, url: UrlPattern, includeConversationIdHeader: Boolean) = {
+    if(includeConversationIdHeader) {
+      stubFor(
+        post(url).willReturn(
+      aResponse()
+        .withStatus(status).withHeader("X-Conversation-ID", UUID.randomUUID().toString)
+        )
       )
-    )
+    }else{
+      stubFor(
+        post(url).willReturn(
+          aResponse()
+            .withStatus(status)
+        )
+      )
+    }
+
+  }
 
   def verifyDecServiceWasCalledCorrectly(
                                           requestBody: String,

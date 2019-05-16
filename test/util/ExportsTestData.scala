@@ -104,5 +104,17 @@ trait ExportsTestData {
   def randomSubmitDeclaration: MetaData =
     MetaData(declaration = Option(WcoDeclaration(functionalReferenceId = Some(randomString(35)))))
 
+  def generateSubmitDeclaration(lrnValue: String): MetaData =
+    MetaData(declaration = Option(WcoDeclaration(functionalReferenceId = Some(lrnValue))))
+
   protected def randomString(length: Int): String = Random.alphanumeric.take(length).mkString
+
+  def expectedSubmissionRequestPayload(functionalReferenceId: String) = {
+    val returnXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+      <wstxns1:Declaration xmlns:wstxns1="urn:wco:datamodel:WCO:DEC-DMS:2">
+        <wstxns1:FunctionalReferenceID>{functionalReferenceId}</wstxns1:FunctionalReferenceID>
+      </wstxns1:Declaration>
+    </MetaData>
+    returnXml.toString
+  }
 }

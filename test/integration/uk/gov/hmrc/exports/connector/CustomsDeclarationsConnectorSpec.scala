@@ -106,17 +106,16 @@ class CustomsDeclarationsConnectorSpec
       val response = await(sendValidXml(randomSubmitDeclaration.toXml))
       response.status should be(INTERNAL_SERVER_ERROR)
     }
+
+    "return Internal Server Error when conversation ID is not returned in the header" in{
+      startSubmissionServiceNoHeaders(ACCEPTED)
+      val response = await(sendValidXml(randomSubmitDeclaration.toXml))
+      response.status should be(INTERNAL_SERVER_ERROR)
+    }
   }
 
   private def sendValidXml(xml: String) =
     connector.submitDeclaration(declarantEoriValue, XML.loadString(xml))
 
-  private def expectedSubmissionRequestPayload(functionalReferenceId: String) = {
-    val returnXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
-        <wstxns1:Declaration xmlns:wstxns1="urn:wco:datamodel:WCO:DEC-DMS:2">
-           <wstxns1:FunctionalReferenceID>{functionalReferenceId}</wstxns1:FunctionalReferenceID>
-        </wstxns1:Declaration>
-      </MetaData>
-    returnXml.toString
-  }
+
 }
