@@ -14,41 +14,60 @@
  * limitations under the License.
  */
 
-package util
+package component.uk.gov.hmrc.exports.base
 
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.{any, eq => meq}
-import org.mockito.Mockito.when
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.{verify, when, never}
 import org.mockito.stubbing.OngoingStubbing
-import org.mockito.Mockito.verify
+import org.mockito.verification.VerificationMode
 import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FeatureSpec, GivenWhenThen, Matchers}
+import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.models.Submission
 import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
+import util.stubs.CustomsDeclarationsAPIService
+import util.{AuditService, AuthService, CustomsDeclarationsAPIConfig, ExportsTestData, ExternalServicesConfig}
 
 import scala.concurrent.Future
 
 trait ComponentTestSpec
     extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach
-    with Eventually with MockitoSugar with Matchers with ExportsTestData {
+    with Eventually with MockitoSugar with Matchers with ExportsTestData with AuditService with OptionValues
+    with AuthService with CustomsDeclarationsAPIService {
 
   private val mockSubmissionRepository = mock[SubmissionRepository]
   private val mockNotificationsRepository = mock[NotificationsRepository]
 
-  def withSubmissionRepository(saveResponse: Boolean): OngoingStubbing[Future[Boolean]] = {
-    when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(saveResponse))
+  override protected def beforeAll() {
+    startMockServer()
   }
 
-  def verifySubmissionRepositoryIsCorrectlyCalled(eoriValue: String){
+  override protected def beforeEach() {
+    resetMockServer()
+  }
+
+  override protected def afterAll() {
+    stopMockServer()
+  }
+
+  def withSubmissionRepository(saveResponse: Boolean): OngoingStubbing[Future[Boolean]] =
+    when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(saveResponse))
+
+  def verifySubmissionRepositoryIsCorrectlyCalled(eoriValue: String) {
     val submissionCaptor: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
     verify(mockSubmissionRepository).save(submissionCaptor.capture())
     submissionCaptor.getValue.eori shouldBe eoriValue
+  }
 
+  def verifySubmissionRepositoryWasNotCalled(): Unit = {
+
+    val submissionCaptor: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
+    verify(mockSubmissionRepository.save(submissionCaptor.capture()), never())
   }
 
   val dateTime = 1546344000000L // 01/01/2019 12:00:00
