@@ -46,25 +46,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
       When("a POST request with data is sent to the API")
       val result: Future[Result] = route(app = app, request).value
 
-      When("submission sent to the submission repository")
-      withSubmissionRepository(true)
-
-      Then("a response with a 202 (ACCEPTED) status is received")
-      status(result) shouldBe ACCEPTED
-
-      And("the response body is as expected")
-      contentAsString(result) shouldBe "{\"status\":202,\"message\":\"Submission response saved\"}"
-
-      And("the request was authorised with AuthService")
-      eventually(verifyAuthServiceCalledForNonCsp())
-
-      //do we need to test Audit service interaction? if so do it here
-      //do we need to test NRS service interaction? if so do that here
-
-      And("the submission repository was called correctly")
-      eventually(verifySubmissionRepositoryIsCorrectlyCalled(declarantEoriValue))
-
-      And("the declarations Api Service was called correctly")
+      Then("the declarations Api Service is called correctly")
       eventually(
         verifyDecServiceWasCalledCorrectly(
           requestBody = expectedSubmissionRequestPayload(declarantLrnValue),
@@ -72,11 +54,69 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
           expectedApiVersion = CustomsDeclarationsAPIConfig.apiVersion
         )
       )
+
+      When("submission sent to the submission repository")
+      withSubmissionRepository(true)
+
+      Then("the submission repository was called correctly")
+      eventually(verifySubmissionRepositoryIsCorrectlyCalled(declarantEoriValue, 1))
+
+      And("a response with a 202 (ACCEPTED) status is received")
+      status(result) shouldBe ACCEPTED
+
+      And("the response body is as successful")
+      contentAsString(result) shouldBe "{\"status\":202,\"message\":\"Submission response saved\"}"
+
+      And("the request was authorised with AuthService")
+      eventually(verifyAuthServiceCalledForNonCsp())
+
+      //do we need to test Audit service interaction? if so do it here
+      //do we need to test NRS service interaction? if so do that here
     }
 
-    scenario("An authorised user submits a customs declaration but it is not persisted") {
+    scenario("An authorised user submits a customs declaration but it is not persisted in DB") {
 
       startSubmissionService(ACCEPTED)
+      val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest.copyFakeRequest(uri = endpoint, method = POST)
+
+      Given("A enrolled User wants to submit a valid customs declaration")
+      authServiceAuthorizesWithEoriAndNoRetrievals()
+
+      When("a POST request with data is sent to the API")
+      val result: Future[Result] = route(app = app, request).value
+
+      Then("the declarations Api Service was called correctly")
+      eventually(
+        verifyDecServiceWasCalledCorrectly(
+          requestBody = expectedSubmissionRequestPayload(declarantLrnValue),
+          expectedEori = declarantEoriValue,
+          expectedApiVersion = CustomsDeclarationsAPIConfig.apiVersion
+        )
+      )
+
+      When("submission sent to the submission repository, but fails to be saved")
+      withSubmissionRepository(false)
+
+      // TODO: for some reason is called twice ?
+      Then("the submission repository was called correctly")
+      eventually(verifySubmissionRepositoryIsCorrectlyCalled(declarantEoriValue, 2))
+
+      And("a response with a 500 (INTERNAL_SERVER_ERROR) status is received")
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+
+      And("the response body contains error")
+      contentAsString(result) shouldBe "Failed saving submission"
+
+      And("the request was authorised with AuthService")
+      eventually(verifyAuthServiceCalledForNonCsp())
+
+      //do we need to test Audit service interaction? if so do it here
+      //do we need to test NRS service interaction? if so do that here
+    }
+
+    scenario("An authorised user tries to submit declaration, but the service returns 500") {
+
+      startSubmissionService(INTERNAL_SERVER_ERROR)
       val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest.copyFakeRequest(uri = endpoint, method = POST)
 
       Given("A enrolled User wants to submit a valid customs declaration")
@@ -88,22 +128,21 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
       When("submission sent to the submission repository, but fails to be saved")
       withSubmissionRepository(false)
 
-      Then("a response with a 202 (ACCEPTED) status is received")
+      // TODO: for some reason is called twice ?
+      And("the submission repository was called correctly")
+      eventually(verifySubmissionRepositoryIsCorrectlyCalled(declarantEoriValue, 2))
+
+      Then("a response with a 500 (INTERNAL_SERVER_ERROR) status is received")
       status(result) shouldBe INTERNAL_SERVER_ERROR
 
-      And("the response body is as expected")
-      contentAsString(result) shouldBe "Failed saving submission"
+      And("the response body contains failure")
+      contentAsString(result) shouldBe "Non Accepted status returned by Customs Declaration Service"
 
-      // not sure about this, if it should happen or not
       And("the request was authorised with AuthService")
-      // eventually(verifyAuthorisationNotCalled())
+      eventually(verifyAuthServiceCalledForNonCsp())
 
       //do we need to test Audit service interaction? if so do it here
       //do we need to test NRS service interaction? if so do that here
-
-      // but these two should not be done
-      And("the submission repository was called correctly")
-      eventually(verifySubmissionRepositoryWasNotCalled())
 
       And("the declarations Api Service was called correctly")
       eventually(

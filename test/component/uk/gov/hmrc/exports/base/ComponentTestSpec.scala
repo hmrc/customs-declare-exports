@@ -18,12 +18,11 @@ package component.uk.gov.hmrc.exports.base
 
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{verify, when, never}
+import org.mockito.Mockito.{times, verify, when}
 import org.mockito.stubbing.OngoingStubbing
-import org.mockito.verification.VerificationMode
+import org.scalatest._
 import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.bind
@@ -31,7 +30,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.models.Submission
 import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
 import util.stubs.CustomsDeclarationsAPIService
-import util.{AuditService, AuthService, CustomsDeclarationsAPIConfig, ExportsTestData, ExternalServicesConfig}
+import util._
 
 import scala.concurrent.Future
 
@@ -58,16 +57,10 @@ trait ComponentTestSpec
   def withSubmissionRepository(saveResponse: Boolean): OngoingStubbing[Future[Boolean]] =
     when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(saveResponse))
 
-  def verifySubmissionRepositoryIsCorrectlyCalled(eoriValue: String) {
+  def verifySubmissionRepositoryIsCorrectlyCalled(eoriValue: String, howMany :Int) {
     val submissionCaptor: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
-    verify(mockSubmissionRepository).save(submissionCaptor.capture())
+    verify(mockSubmissionRepository, times(howMany)).save(submissionCaptor.capture())
     submissionCaptor.getValue.eori shouldBe eoriValue
-  }
-
-  def verifySubmissionRepositoryWasNotCalled(): Unit = {
-
-    val submissionCaptor: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
-    verify(mockSubmissionRepository.save(submissionCaptor.capture()), never())
   }
 
   val dateTime = 1546344000000L // 01/01/2019 12:00:00
