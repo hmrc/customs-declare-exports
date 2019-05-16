@@ -106,8 +106,6 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
         case error: Throwable =>
           logger.error(s"Error during submitting declaration: ${error.getMessage}")
 
-          // TODO: added some checks here as conversationID not always could there (at least looking at the code, needs confirming,
-          // TODO: and would be nice to have conversationId to track what went wrong
           error match {
             case exWithHeaders: Upstream4xxResponse =>
               val conversationId = exWithHeaders.headers.get("X-Conversation-ID") match {

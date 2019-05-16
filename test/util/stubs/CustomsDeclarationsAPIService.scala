@@ -32,7 +32,6 @@ trait CustomsDeclarationsAPIService extends WireMockRunner with ExportsTestData 
 
   private val submissionURL = urlMatching(CustomsDeclarationsAPIConfig.submitDeclarationServiceContext)
 
-  // TODO: return either stub with or without conversationID
   def startSubmissionService(status: Int = ACCEPTED, conversationId: Boolean = true): Unit =
     startService(status, submissionURL, conversationId)
 
@@ -71,6 +70,9 @@ trait CustomsDeclarationsAPIService extends WireMockRunner with ExportsTestData 
       expectedApiVersion
     )
   }
+
+  def verifyDecServiceWasNotCalled(): Unit =
+    verify(exactly(0), postRequestedFor(urlMatching(CustomsDeclarationsAPIConfig.submitDeclarationServiceContext)))
 
   private def verifyDecServiceWasCalledWith(
     requestPath: String,

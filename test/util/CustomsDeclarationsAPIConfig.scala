@@ -22,7 +22,4 @@ object CustomsDeclarationsAPIConfig {
 
   val submitDeclarationServiceContext = "/"
   val CancelDeclarationServiceContext = "/cancellation-requests"
-
-
-
 }
