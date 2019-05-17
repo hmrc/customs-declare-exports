@@ -37,223 +37,71 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
 
     scenario("an authorised user successfully submits a customs declaration") {
 
-      startSubmissionService(ACCEPTED)
-      val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest.copyFakeRequest(uri = endpoint, method = POST)
-
-      Given("user is authorised")
-      authServiceAuthorizesWithEoriAndNoRetrievals()
-
-      When("a POST request with data is sent to the API")
-      val result: Future[Result] = route(app = app, request).value
-
-      And("submission should be persisted")
-      withSubmissionRepository(true)
-
-      Then("a response with a 202 (ACCEPTED) status is received")
-      status(result) shouldBe ACCEPTED
-
-      And("the response body is successful")
-      contentAsString(result) shouldBe "{\"status\":202,\"message\":\"Submission response saved\"}"
-
-      And("the Declarations API Service is called correctly")
-      eventually(
-        verifyDecServiceWasCalledCorrectly(
-          requestBody = expectedSubmissionRequestPayload(declarantLrnValue),
-          expectedEori = declarantEoriValue,
-          expectedApiVersion = CustomsDeclarationsAPIConfig.apiVersion
-        )
+      testScenario(
+        primeDecApiStubToReturnStatus = ACCEPTED,
+        submissionRepoMockedResult = true,
+        submissionRepoIsCalled = true,
+        expectedResponseStatus = ACCEPTED,
+        expectedResponseBody = "{\"status\":202,\"message\":\"Submission response saved\"}"
       )
-
-      And("the submission repository is called correctly")
-      eventually(verifySubmissionRepositoryIsCorrectlyCalled(declarantEoriValue))
-
-      And("the request was authorised with AuthService")
-      eventually(verifyAuthServiceCalledForNonCsp())
-
-      // TODO: do we need to test Audit service interaction? if so do it here
-      // TODO: do we need to test NRS service interaction? if so do that here
     }
 
     scenario("an authorised user successfully submits a customs declaration, but it is not persisted in DB") {
 
-      startSubmissionService(ACCEPTED)
-      val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest.copyFakeRequest(uri = endpoint, method = POST)
-
-      Given("user is authorised")
-      authServiceAuthorizesWithEoriAndNoRetrievals()
-
-      When("a POST request with data is sent to the API")
-      val result: Future[Result] = route(app = app, request).value
-
-      And("submission should not be persisted")
-      withSubmissionRepository(false)
-
-      Then("a response with a 500 (INTERNAL_SERVER_ERROR) status is received")
-      status(result) shouldBe INTERNAL_SERVER_ERROR
-
-      And("the response body contains error")
-      contentAsString(result) shouldBe "Failed saving submission"
-
-      And("the Declarations API Service is called correctly")
-      eventually(
-        verifyDecServiceWasCalledCorrectly(
-          requestBody = expectedSubmissionRequestPayload(declarantLrnValue),
-          expectedEori = declarantEoriValue,
-          expectedApiVersion = CustomsDeclarationsAPIConfig.apiVersion
-        )
+      testScenario(
+        primeDecApiStubToReturnStatus = ACCEPTED,
+        submissionRepoMockedResult = false,
+        submissionRepoIsCalled = true,
+        expectedResponseStatus = INTERNAL_SERVER_ERROR,
+        expectedResponseBody = "Failed saving submission"
       )
-
-      And("the submission repository was called correctly")
-      eventually(verifySubmissionRepositoryIsCorrectlyCalled(declarantEoriValue))
-
-      And("the request was authorised with AuthService")
-      eventually(verifyAuthServiceCalledForNonCsp())
     }
 
     scenario("an authorised user tries to submit declaration, but the submission service returns 500") {
 
-      startSubmissionService(INTERNAL_SERVER_ERROR)
-      val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest.copyFakeRequest(uri = endpoint, method = POST)
-
-      Given("user is authorised")
-      authServiceAuthorizesWithEoriAndNoRetrievals()
-
-      When("a POST request with data is sent to the API")
-      val result: Future[Result] = route(app = app, request).value
-
-      And("submission should be persisted")
-      withSubmissionRepository(true)
-
-      Then("a response with a 500 (INTERNAL_SERVER_ERROR) status is received")
-      status(result) shouldBe INTERNAL_SERVER_ERROR
-
-      And("the response body contains error")
-      contentAsString(result) shouldBe "Non Accepted status returned by Customs Declaration Service"
-
-      And("the Declarations API Service was called correctly")
-      eventually(
-        verifyDecServiceWasCalledCorrectly(
-          requestBody = expectedSubmissionRequestPayload(declarantLrnValue),
-          expectedEori = declarantEoriValue,
-          expectedApiVersion = CustomsDeclarationsAPIConfig.apiVersion
-        )
+      testScenario(
+        primeDecApiStubToReturnStatus = INTERNAL_SERVER_ERROR,
+        submissionRepoMockedResult = false,
+        submissionRepoIsCalled = false,
+        expectedResponseStatus = INTERNAL_SERVER_ERROR,
+        expectedResponseBody = "Non Accepted status returned by Customs Declaration Service"
       )
-
-      And("the submission repository was not called")
-      eventually(verifySubmissionRepositoryWasNotCalled())
-
-      And("the request was authorised with AuthService")
-      eventually(verifyAuthServiceCalledForNonCsp())
     }
 
     scenario("an authorised user tries to submit declaration, but the submission service returns 400") {
 
-      startSubmissionService(BAD_REQUEST)
-      val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest.copyFakeRequest(uri = endpoint, method = POST)
-
-      Given("user is authorised")
-      authServiceAuthorizesWithEoriAndNoRetrievals()
-
-      When("a POST request with data is sent to the API")
-      val result: Future[Result] = route(app = app, request).value
-
-      And("submission should be persisted")
-      withSubmissionRepository(true)
-
-      Then("a response with a 500 (INTERNAL_SERVER_ERROR) status is received")
-      status(result) shouldBe INTERNAL_SERVER_ERROR
-
-      And("the response body contains error")
-      contentAsString(result) shouldBe "Non Accepted status returned by Customs Declaration Service"
-
-      And("the Declarations API Service was called correctly")
-      eventually(
-        verifyDecServiceWasCalledCorrectly(
-          requestBody = expectedSubmissionRequestPayload(declarantLrnValue),
-          expectedEori = declarantEoriValue,
-          expectedApiVersion = CustomsDeclarationsAPIConfig.apiVersion
-        )
+      testScenario(
+        primeDecApiStubToReturnStatus = BAD_REQUEST,
+        submissionRepoMockedResult = true,
+        submissionRepoIsCalled = false,
+        expectedResponseStatus = INTERNAL_SERVER_ERROR,
+        expectedResponseBody = "Non Accepted status returned by Customs Declaration Service"
       )
-
-      And("the submission repository was not called")
-      eventually(verifySubmissionRepositoryWasNotCalled())
-
-      And("the request was authorised with AuthService")
-      eventually(verifyAuthServiceCalledForNonCsp())
     }
 
     scenario("an authorised user tries to submit declaration, but the submission service returns 401") {
 
-      startSubmissionService(UNAUTHORIZED)
-      val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest.copyFakeRequest(uri = endpoint, method = POST)
-
-      Given("user is authorised")
-      authServiceAuthorizesWithEoriAndNoRetrievals()
-
-      When("a POST request with data is sent to the API")
-      val result: Future[Result] = route(app = app, request).value
-
-      And("submission should be persisted")
-      withSubmissionRepository(true)
-
-      Then("a response with a 500 (INTERNAL_SERVER_ERROR) status is received")
-      status(result) shouldBe INTERNAL_SERVER_ERROR
-
-      And("the response body contains error")
-      contentAsString(result) shouldBe "Non Accepted status returned by Customs Declaration Service"
-
-      And("the Declarations API Service was called correctly")
-      eventually(
-        verifyDecServiceWasCalledCorrectly(
-          requestBody = expectedSubmissionRequestPayload(declarantLrnValue),
-          expectedEori = declarantEoriValue,
-          expectedApiVersion = CustomsDeclarationsAPIConfig.apiVersion
-        )
+      testScenario(
+        primeDecApiStubToReturnStatus = UNAUTHORIZED,
+        submissionRepoMockedResult = true,
+        submissionRepoIsCalled = false,
+        expectedResponseStatus = INTERNAL_SERVER_ERROR,
+        expectedResponseBody = "Non Accepted status returned by Customs Declaration Service"
       )
-
-      And("the submission repository was not called")
-      eventually(verifySubmissionRepositoryWasNotCalled())
-
-      And("the request was authorised with AuthService")
-      eventually(verifyAuthServiceCalledForNonCsp())
     }
 
     scenario("an authorised user tries to submit declaration, but the submission service returns 404") {
 
-      startSubmissionService(NOT_FOUND)
-      val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest.copyFakeRequest(uri = endpoint, method = POST)
-
-      Given("user is authorised")
-      authServiceAuthorizesWithEoriAndNoRetrievals()
-
-      When("a POST request with data is sent to the API")
-      val result: Future[Result] = route(app = app, request).value
-
-      And("submission should be persisted")
-      withSubmissionRepository(true)
-
-      Then("a response with a 500 (INTERNAL_SERVER_ERROR) status is received")
-      status(result) shouldBe INTERNAL_SERVER_ERROR
-
-      And("the response body contains error")
-      contentAsString(result) shouldBe "Non Accepted status returned by Customs Declaration Service"
-
-      And("the Declarations API Service was called correctly")
-      eventually(
-        verifyDecServiceWasCalledCorrectly(
-          requestBody = expectedSubmissionRequestPayload(declarantLrnValue),
-          expectedEori = declarantEoriValue,
-          expectedApiVersion = CustomsDeclarationsAPIConfig.apiVersion
-        )
+      testScenario(
+        primeDecApiStubToReturnStatus = NOT_FOUND,
+        submissionRepoMockedResult = true,
+        submissionRepoIsCalled = false,
+        expectedResponseStatus = INTERNAL_SERVER_ERROR,
+        expectedResponseBody = "Non Accepted status returned by Customs Declaration Service"
       )
-
-      And("the submission repository was not called")
-      eventually(verifySubmissionRepositoryWasNotCalled())
-
-      And("the request was authorised with AuthService")
-      eventually(verifyAuthServiceCalledForNonCsp())
     }
 
+    // TODO: these 3 tests are kinda different then the rest
     scenario("an authorised user tries to submit declaration, but submissions service is down") {
 
       val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest.copyFakeRequest(uri = endpoint, method = POST)
@@ -347,6 +195,56 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
 
       And("the Declarations API Service is not called")
       eventually(verifyDecServiceWasNotCalled())
+    }
+
+    def testScenario(
+      primeDecApiStubToReturnStatus: Int,
+      submissionRepoMockedResult: Boolean,
+      submissionRepoIsCalled: Boolean,
+      expectedResponseStatus: Int,
+      expectedResponseBody: String
+    ): Unit = {
+
+      startSubmissionService(primeDecApiStubToReturnStatus)
+      val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest.copyFakeRequest(uri = endpoint, method = POST)
+
+      Given("user is authorised")
+      authServiceAuthorizesWithEoriAndNoRetrievals()
+
+      When("a POST request with data is sent to the API")
+      val result: Future[Result] = route(app = app, request).value
+
+      And("submission should be handled")
+      withSubmissionRepository(submissionRepoMockedResult)
+
+      Then(s"a response with a $expectedResponseStatus status is received")
+      status(result) shouldBe expectedResponseStatus
+
+      And(s"the response body is $expectedResponseBody")
+      contentAsString(result) shouldBe expectedResponseBody
+
+      And("the Declarations API Service is called correctly")
+      eventually(
+        verifyDecServiceWasCalledCorrectly(
+          requestBody = expectedSubmissionRequestPayload(declarantLrnValue),
+          expectedEori = declarantEoriValue,
+          expectedApiVersion = CustomsDeclarationsAPIConfig.apiVersion
+        )
+      )
+
+      if (submissionRepoIsCalled) {
+        And("the submission repository is called correctly")
+        eventually(verifySubmissionRepositoryIsCorrectlyCalled(declarantEoriValue))
+      } else {
+        And("the submission repository is not called")
+        verifySubmissionRepositoryWasNotCalled()
+      }
+
+      And("the request was authorised with AuthService")
+      eventually(verifyAuthServiceCalledForNonCsp())
+
+      // TODO: do we need to test Audit service interaction? if so do it here
+      // TODO: do we need to test NRS service interaction? if so do that here
     }
   }
 }
