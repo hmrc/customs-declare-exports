@@ -31,44 +31,69 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
 
 @Singleton
-class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: HttpClient) {
+class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: HttpClient)(
+  implicit ec: ExecutionContext
+) {
 
-  private val logger = Logger(this.getClass())
+  private val logger = Logger(this.getClass)
 
-  def submitDeclaration(
-    eori: String,
-    xml: NodeSeq
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[CustomsDeclarationsResponse] =
+  def submitDeclaration(eori: String, xml: NodeSeq)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] =
     postMetaData(eori, appConfig.submitDeclarationUri, xml).map { res =>
       logger.debug(s"CUSTOMS_DECLARATIONS response is  --> ${res.toString}")
       res
     }
 
-  def submitCancellation(
-    eori: String,
-    xml: NodeSeq
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[CustomsDeclarationsResponse] =
+  def submitCancellation(eori: String, xml: NodeSeq)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] =
     postMetaData(eori, appConfig.cancelDeclarationUri, xml).map { res =>
       logger.debug(s"CUSTOMS_DECLARATIONS cancellation response is  --> ${res.toString}")
       res
     }
 
   private def postMetaData(eori: String, uri: String, xml: NodeSeq)(
-    implicit hc: HeaderCarrier,
-    ec: ExecutionContext
+    implicit hc: HeaderCarrier
   ): Future[CustomsDeclarationsResponse] =
     post(eori, uri, xml.toString())
 
   //noinspection ConvertExpressionToSAM
-  val responseReader: HttpReads[CustomsDeclarationsResponse] =
+  private implicit val responseReader: HttpReads[CustomsDeclarationsResponse] =
     new HttpReads[CustomsDeclarationsResponse] {
-      override def read(method: String, url: String, response: HttpResponse): CustomsDeclarationsResponse =
-        CustomsDeclarationsResponse(response.status, response.header("X-Conversation-ID"))
+      override def read(method: String, url: String, response: HttpResponse): CustomsDeclarationsResponse = {
+        Logger.debug(s"Response: ${response.status} => ${response.body}")
+        response.status / 100 match {
+          case 4 =>
+            throw Upstream4xxResponse(
+              message = "Invalid request made to Customs Declarations API",
+              upstreamResponseCode = response.status,
+              reportAs = Status.INTERNAL_SERVER_ERROR,
+              headers = response.allHeaders
+            )
+          case 5 =>
+            throw Upstream5xxResponse(
+              message = "Customs Declarations API unable to service request",
+              upstreamResponseCode = response.status,
+              reportAs = Status.INTERNAL_SERVER_ERROR
+            )
+          case _ =>
+            CustomsDeclarationsResponse(
+              response.status,
+              Some(
+                response
+                  .header("X-Conversation-ID")
+                  .getOrElse(
+                    throw Upstream5xxResponse(
+                      message = "Conversation ID missing from Customs Declaration API response",
+                      upstreamResponseCode = response.status,
+                      reportAs = Status.INTERNAL_SERVER_ERROR
+                    )
+                  )
+              )
+            )
+        }
+      }
     }
 
   private[connectors] def post(eori: String, uri: String, body: String)(
-    implicit hc: HeaderCarrier,
-    ec: ExecutionContext
+    implicit hc: HeaderCarrier
   ): Future[CustomsDeclarationsResponse] = {
     logger.debug(s"CUSTOMS_DECLARATIONS request payload is -> $body")
     httpClient
@@ -80,7 +105,17 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
       .recover {
         case error: Throwable =>
           logger.error(s"Error during submitting declaration: ${error.getMessage}")
-          CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, None)
+
+          error match {
+            case exWithHeaders: Upstream4xxResponse =>
+              val conversationId = exWithHeaders.headers.get("X-Conversation-ID") match {
+                case Some(data) => data.head
+                case None       => "No conversation ID found"
+              }
+
+              CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, Some(conversationId))
+            case _ => CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, None)
+          }
       }
   }
 

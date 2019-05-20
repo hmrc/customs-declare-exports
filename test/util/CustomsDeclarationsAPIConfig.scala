@@ -14,20 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models
+package util
 
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Name}
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+object CustomsDeclarationsAPIConfig {
+  val apiVersion: String = "1.0"
 
-case class CustomsDeclarationsResponse(status: Int, conversationId: Option[String] = None)
 
-case class SignedInUser(
-  credentials: Credentials,
-  name: Name,
-  email: Option[String],
-  eori: String,
-  externalId: String,
-  internalId: Option[String],
-  affinityGroup: Option[AffinityGroup],
-  enrolments: Enrolments
-)
+  val submitDeclarationServiceContext = "/"
+  val CancelDeclarationServiceContext = "/cancellation-requests"
+}

@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models
+package integration.uk.gov.hmrc.exports.util
 
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Name}
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import com.google.inject.AbstractModule
+import play.api.inject.guice.GuiceableModule
 
-case class CustomsDeclarationsResponse(status: Int, conversationId: Option[String] = None)
+object TestModule extends AbstractModule {
+  def configure(): Unit = ()
 
-case class SignedInUser(
-  credentials: Credentials,
-  name: Name,
-  email: Option[String],
-  eori: String,
-  externalId: String,
-  internalId: Option[String],
-  affinityGroup: Option[AffinityGroup],
-  enrolments: Enrolments
-)
+  def asGuiceableModule: GuiceableModule = GuiceableModule.guiceable(this)
+}
