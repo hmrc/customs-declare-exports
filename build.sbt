@@ -31,8 +31,10 @@ lazy val microservice = Project(appName, file("."))
   .enablePlugins(PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, SbtArtifactory)
   .settings(
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test(),
+    dependencyOverrides ++= AppDependencies.jettyOverrides,
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
-    majorVersion := 0
+    majorVersion := 0,
+    scalaVersion := "2.12.8"
   )
   .settings(publishingSettings: _*)
   .configs(testConfig: _*)
@@ -77,7 +79,7 @@ lazy val scoverageSettings: Seq[Setting[_]] = Seq(
     ,"metrics\\..*"
     ,".*(BuildInfo|Routes|Options).*"
   ).mkString(";"),
-  coverageMinimum := 94,
+  coverageMinimum := 93,
   coverageFailOnMinimum := true,
   coverageHighlighting := true,
   parallelExecution in Test := false

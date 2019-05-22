@@ -27,11 +27,11 @@ import scala.xml.XML
 
 class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
 
-  lazy val ValidSubmissionRequest: FakeRequest[AnyContentAsXml] = FakeRequest()
+  val endpoint = "/declaration"
+
+  lazy val ValidSubmissionRequest: FakeRequest[AnyContentAsXml] = FakeRequest("POST", endpoint)
     .withHeaders(ValidHeaders.toSeq: _*)
     .withXmlBody(XML.loadString(generateSubmitDeclaration(declarantLrnValue).toXml))
-
-  val endpoint = "/declaration"
 
   feature("Export Service should handle user submissions when") {
 
@@ -104,7 +104,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
     // TODO: these 3 tests are kinda different then the rest
     scenario("an authorised user tries to submit declaration, but submissions service is down") {
 
-      val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest.copyFakeRequest(uri = endpoint, method = POST)
+      val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest
 
       Given("user is authorised")
       authServiceAuthorizesWithEoriAndNoRetrievals()
@@ -140,7 +140,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
     scenario("an authorised user tries to submit declaration, but submissions repository is down") {
 
       startSubmissionService(ACCEPTED)
-      val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest.copyFakeRequest(uri = endpoint, method = POST)
+      val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest
 
       Given("user is authorised")
       authServiceAuthorizesWithEoriAndNoRetrievals()
@@ -173,7 +173,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
     scenario("an unauthorised user try to submit declaration") {
 
       startSubmissionService(ACCEPTED)
-      val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest.copyFakeRequest(uri = endpoint, method = POST)
+      val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest
 
       When("a POST request with data is sent to the API")
       val result: Future[Result] = route(app = app, request).value
@@ -206,7 +206,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
     ): Unit = {
 
       startSubmissionService(primeDecApiStubToReturnStatus)
-      val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest.copyFakeRequest(uri = endpoint, method = POST)
+      val request: FakeRequest[AnyContentAsXml] = ValidSubmissionRequest
 
       Given("user is authorised")
       authServiceAuthorizesWithEoriAndNoRetrievals()

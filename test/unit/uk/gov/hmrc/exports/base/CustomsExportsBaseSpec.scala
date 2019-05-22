@@ -35,7 +35,6 @@ import play.api.libs.json.JsValue
 import play.api.libs.ws.WSClient
 import play.api.mvc.AnyContentAsJson
 import play.api.test.FakeRequest
-import play.filters.csrf.CSRF.Token
 import play.filters.csrf.{CSRFConfig, CSRFConfigProvider, CSRFFilter}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
@@ -102,12 +101,9 @@ trait CustomsExportsBaseSpec
       SessionKeys.userId -> "Int-ba17b467-90f3-42b6-9570-73be7b78eb2b"
     )
 
-    val tags = Map(Token.NameRequestTag -> cfg.tokenName, Token.RequestTag -> token)
-
     FakeRequest("POST", uri)
       .withHeaders((Map(cfg.headerName -> token) ++ headers).toSeq: _*)
       .withSession(session.toSeq: _*)
-      .copyFakeRequest(tags = tags)
       .withJsonBody(body)
   }
 

@@ -43,8 +43,9 @@ class NotificationsController @Inject()(
   headerValidator: HeaderValidator,
   notificationsRepository: NotificationsRepository,
   metrics: ExportsMetrics,
-  submissionRepository: SubmissionRepository
-) extends ExportController(authConnector) {
+  submissionRepository: SubmissionRepository,
+  cc: ControllerComponents
+) extends ExportController(authConnector, cc) {
 
   private val logger = Logger(this.getClass())
 
