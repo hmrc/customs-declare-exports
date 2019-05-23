@@ -16,15 +16,9 @@
 
 package uk.gov.hmrc.exports.models
 
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json._
 
 sealed trait CancellationStatus
-
-case object CancellationRequestExists extends CancellationStatus
-
-case object CancellationRequested extends CancellationStatus
-
-case object MissingDeclaration extends CancellationStatus
 
 object CancellationStatus {
 
@@ -47,5 +41,25 @@ object CancellationStatus {
       case "MissingDeclaration"        => MissingDeclaration
     })
 
-  implicit val format = Json.format[CancellationStatus]
+  implicit object CancellationStatusReads extends Reads[CancellationStatus] {
+    def reads(jsValue: JsValue): JsResult[CancellationStatus] = jsValue match {
+      case JsString("CancellationRequestExists") => JsSuccess(CancellationRequestExists)
+      case JsString("CancellationRequested") => JsSuccess(CancellationRequested)
+      case JsString("MissingDeclaration") => JsSuccess(MissingDeclaration)
+      case _ => JsError("Incorrect cancellation status")
+    }
+  }
+
+  implicit object CancellationStatusWrites extends Writes[CancellationStatus] {
+    def writes(status: CancellationStatus): JsValue = JsObject(Seq("status" -> JsString(status.toString)))
+  }
+
 }
+
+case object CancellationRequestExists extends CancellationStatus
+
+case object CancellationRequested extends CancellationStatus
+
+case object MissingDeclaration extends CancellationStatus
+
+

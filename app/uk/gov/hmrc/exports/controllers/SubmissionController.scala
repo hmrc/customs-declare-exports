@@ -38,8 +38,9 @@ class SubmissionController @Inject()(
   authConnector: AuthConnector,
   exportsService: ExportsService,
   headerValidator: HeaderValidator,
-  notificationsRepository: NotificationsRepository
-) extends ExportController(authConnector) {
+  notificationsRepository: NotificationsRepository,
+  cc: ControllerComponents
+) extends ExportController(authConnector, cc) {
 
   private val logger = Logger(this.getClass())
 

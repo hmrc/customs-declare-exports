@@ -19,11 +19,12 @@ package unit.uk.gov.hmrc.exports.config
 import java.util.UUID
 
 import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest.PrivateMethodTester.{PrivateMethod, _}
 import org.scalatest.mockito.MockitoSugar
-import play.api.Mode.Mode
+import play.api.Mode
+import play.api.Mode.Test
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.exports.config.AppConfig
+import uk.gov.hmrc.play.bootstrap.config.{RunMode, ServicesConfig}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class AppConfigSpec extends UnitSpec with MockitoSugar {
@@ -46,18 +47,14 @@ class AppConfigSpec extends UnitSpec with MockitoSugar {
 
   val environment = Environment.simple()
 
-  val mode = PrivateMethod[Mode]('mode)
-
-  val appNameConfiguration = PrivateMethod[Configuration]('appNameConfiguration)
-
-  private def appConfig(conf: Configuration) = new AppConfig(conf, environment)
+  private def runMode(conf: Configuration): RunMode = new RunMode(conf, Test)
+  private def servicesConfig(conf: Configuration) = new ServicesConfig(conf, runMode(conf))
+  private def appConfig(conf: Configuration) = new AppConfig(conf, environment, servicesConfig(conf))
 
   "AppConfig" should {
     "return config as object model when configuration is valid" in {
       val configService: AppConfig = appConfig(validServicesConfiguration)
 
-      configService invokePrivate mode() shouldBe environment.mode
-      configService invokePrivate appNameConfiguration() shouldBe validServicesConfiguration
       configService.authUrl shouldBe "http://localhostauth:9988"
       configService.loginUrl shouldBe "http://localhost:9949/auth-login-stub/gg-sign-in"
       configService.customsDeclarationsApiVersion shouldBe "1.0"
