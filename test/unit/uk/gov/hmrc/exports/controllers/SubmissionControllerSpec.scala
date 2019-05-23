@@ -29,6 +29,7 @@ import unit.uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
 import util.ExportsTestData
 
 class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach {
+
   val submitUri = "/declaration"
   val updateUri = "/update-submission"
   val cancelUri = "/cancel-declaration"

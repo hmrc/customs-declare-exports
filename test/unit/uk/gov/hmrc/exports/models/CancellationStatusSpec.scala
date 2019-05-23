@@ -17,14 +17,15 @@
 package unit.uk.gov.hmrc.exports.models
 
 import org.scalatest.{MustMatchers, WordSpec}
-import play.api.libs.json.{JsError, JsObject, JsString, JsSuccess}
-import uk.gov.hmrc.exports.models.{CancellationRequestExists, CancellationRequested, MissingDeclaration}
+import play.api.libs.json._
+import uk.gov.hmrc.exports.models.{CancellationRequestExists, CancellationRequested, CancellationStatus, MissingDeclaration}
 
 class CancellationStatusSpec extends WordSpec with MustMatchers {
 
   "Cancellation Status Reads" should {
 
     "read value correctly" in {
+
       import uk.gov.hmrc.exports.models.CancellationStatus.CancellationStatusReads.reads
 
       reads(JsString("CancellationRequestExists")) must be(JsSuccess(CancellationRequestExists))
@@ -32,13 +33,27 @@ class CancellationStatusSpec extends WordSpec with MustMatchers {
       reads(JsString("MissingDeclaration")) must be(JsSuccess(MissingDeclaration))
       reads(JsString("IncorrectStatus")) must be(JsError("Incorrect cancellation status"))
     }
+  }
+
+  "Cancellation Status Writes" should {
 
     "write value correctly" in {
+
       import uk.gov.hmrc.exports.models.CancellationStatus.CancellationStatusWrites.writes
 
       writes(CancellationRequestExists) must be(JsObject(Seq("status" -> JsString("CancellationRequestExists"))))
       writes(CancellationRequested) must be(JsObject(Seq("status" -> JsString("CancellationRequested"))))
       writes(MissingDeclaration) must be(JsObject(Seq("status" ->JsString("MissingDeclaration"))))
+    }
+  }
+
+  "Cancellation Status unapply" should {
+
+    "correctly unapply CancellationStatus object" in {
+
+      val expectedResult = Some(CancellationRequestExists.productPrefix -> Json.toJson(CancellationRequestExists.toString))
+
+      CancellationStatus.unapply(CancellationRequestExists) must be(expectedResult)
     }
   }
 }

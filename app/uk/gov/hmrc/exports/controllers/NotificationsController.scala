@@ -21,14 +21,14 @@ import javax.inject.Inject
 import org.joda.time.DateTime
 import play.api.Logger
 import play.api.libs.json.Json
-import play.api.mvc._
+import play.api.mvc.{PlayBodyParsers, _}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.exports.services.NotificationService
 import uk.gov.hmrc.wco.dec._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -44,7 +44,9 @@ class NotificationsController @Inject()(
   notificationsRepository: NotificationsRepository,
   metrics: ExportsMetrics,
   submissionRepository: SubmissionRepository,
-  cc: ControllerComponents
+  notificationsService: NotificationService,
+  cc: ControllerComponents,
+  bodyParsers: PlayBodyParsers
 ) extends ExportController(authConnector, cc) {
 
   private val logger = Logger(this.getClass())
@@ -61,25 +63,26 @@ class NotificationsController @Inject()(
                 res
               }
             case _ =>
-              logger.error("Invalid notification payload")
-              Future.successful(ErrorResponse.ErrorInvalidPayload.XmlResult)
+              logger.error(s"Invalid notification payload: ${request.body.toString()}")
+              Future.successful(Accepted)
         }
       case Left(error) =>
         logger.error(s"Error during validation and extracting headers with message: ${ error.message}")
-        Future.successful(error.XmlResult)
+        Future.successful(Accepted)
     }
   }
 
   //TODO response should be streamed or paginated depending on the no of notifications.
+  //TODO Return NO CONTENT (204) when there is no notifications
   def getNotifications(): Action[AnyContent] =
-    authorisedAction(BodyParsers.parse.default) { request =>
+    authorisedAction(bodyParsers.default) { request =>
       notificationsRepository
         .findByEori(request.eori.value)
         .map(res => Ok(Json.toJson(res)))
     }
 
   def getSubmissionNotifications(conversationId: String): Action[AnyContent] =
-    authorisedAction(BodyParsers.parse.default) { implicit authorizedRequest =>
+    authorisedAction(bodyParsers.default) { implicit authorizedRequest =>
       notificationsRepository
         .getByEoriAndConversationId(authorizedRequest.eori.value, conversationId)
         .map(res => Ok(Json.toJson(res)))
@@ -132,42 +135,6 @@ class NotificationsController @Inject()(
     }
   }
 
-  private def save(notification: DeclarationNotification)(implicit hc: HeaderCarrier): Future[Result] = {
-    val eori = notification.eori
-    val convId = notification.conversationId
+  private def save(notification: DeclarationNotification): Future[Result] = notificationsService.save(notification)
 
-    for {
-      oldNotification <- notificationsRepository
-        .getByEoriAndConversationId(eori, convId)
-        .map(_.sortWith((a, b) => a.isOlderThan(b)).headOption)
-      notificationSaved <- notificationsRepository.save(notification)
-      shouldBeUpdated = oldNotification.forall(notification.isOlderThan)
-      _ <- if (shouldBeUpdated)
-        submissionRepository.updateMrnAndStatus(
-          notification.eori,
-          notification.conversationId,
-          notification.mrn,
-          buildStatus(notification.response)
-        )
-      else Future.successful(false)
-    } yield
-      if (notificationSaved) {
-        metrics.incrementCounter(notificationMetric)
-        logger.debug("Notification saved successfully")
-        Accepted
-      } else {
-        metrics.incrementCounter(notificationMetric)
-        logger.error("There was a problem during saving notification")
-        InternalServerError(NotificationFailedErrorResponse.toXml())
-      }
-  }
-
-  private def buildStatus(responses: Seq[Response]): Option[String] =
-    responses.map { response =>
-      (response.functionCode, response.status.flatMap(_.nameCode).headOption) match {
-        case ("11", Some(nameCode)) if nameCode == "39" || nameCode == "41" =>
-          s"11$nameCode"
-        case _ => response.functionCode
-      }
-    }.headOption
 }

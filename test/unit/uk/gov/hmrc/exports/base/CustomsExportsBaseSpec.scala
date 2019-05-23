@@ -30,7 +30,6 @@ import play.api.Application
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.inject.{Injector, bind}
-import play.api.libs.concurrent.Execution.Implicits
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSClient
 import play.api.mvc.AnyContentAsJson
@@ -46,6 +45,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.reflect.ClassTag
 import scala.xml.NodeSeq
 
@@ -86,7 +86,7 @@ trait CustomsExportsBaseSpec
 
   implicit val mat: Materializer = app.materializer
 
-  implicit val ec: ExecutionContext = Implicits.defaultContext
+  implicit val ec: ExecutionContext = global
 
   implicit lazy val patience: PatienceConfig =
     PatienceConfig(timeout = 5.seconds, interval = 50.milliseconds) // be more patient than the default
