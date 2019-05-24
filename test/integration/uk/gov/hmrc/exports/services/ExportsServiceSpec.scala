@@ -26,6 +26,7 @@ import play.api.inject._
 import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
 import play.api.mvc.Result
 import play.api.test.Helpers._
+import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.exports.services.ExportsService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -65,8 +66,9 @@ class ExportsServiceSpec
   def withSubmissionPersisted(result: Boolean): Unit =
     when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(result))
 
-  // TODO: seems like ExportService handle persisting / cancelling, as before not sure about cancellation
-  // TODO: what other cases we could cover - I have done tests for persist/not persist and some errors on the way
+  def withDeclarationCancelled(result: CancellationStatus): Unit =
+    when(mockSubmissionRepository.cancelDeclaration(any(), any())).thenReturn(Future.successful(result))
+
   "Export Service" should {
 
     "save submission in DB" when {
@@ -174,6 +176,213 @@ class ExportsServiceSpec
         )
 
         contentAsString(result) should be("Non Accepted status returned by Customs Declaration Service")
+      }
+    }
+
+    // TODO: add status for submission actually cancelled, as we are missing it
+    "handle submission cancellation" when {
+
+      "it is cancelled for the first time" in {
+
+        startSubmissionService(ACCEPTED)
+        startCancellationService(ACCEPTED)
+
+        withSubmissionPersisted(true)
+        withDeclarationCancelled(CancellationRequested)
+
+        val declaration = randomSubmitDeclaration.toXml
+
+        // persist
+        val result: Result = await(
+          exportsService.handleSubmission(
+            declarantEoriValue,
+            Some(declarantDucrValue),
+            declarantLrnValue,
+            XML.loadString(declaration)
+          )
+        )
+
+        contentAsString(result) should be("{\"status\":202,\"message\":\"Submission response saved\"}")
+
+        // cancel
+        val cancel: Either[Result, CancellationStatus] =
+          await(exportsService.handleCancellation(declarantEoriValue, "FAKE_MRN", XML.loadString(declaration)))
+
+        cancel.right.get should be(CancellationRequested)
+      }
+
+      "it is already cancelled" in {
+
+        startSubmissionService(ACCEPTED)
+        startCancellationService(ACCEPTED)
+
+        withSubmissionPersisted(true)
+        withDeclarationCancelled(CancellationRequestExists)
+
+        val declaration = randomSubmitDeclaration.toXml
+
+        // persist
+        val result: Result = await(
+          exportsService.handleSubmission(
+            declarantEoriValue,
+            Some(declarantDucrValue),
+            declarantLrnValue,
+            XML.loadString(declaration)
+          )
+        )
+
+        contentAsString(result) should be("{\"status\":202,\"message\":\"Submission response saved\"}")
+
+        // cancel
+        val cancel: Either[Result, CancellationStatus] =
+          await(exportsService.handleCancellation(declarantEoriValue, "FAKE_MRN", XML.loadString(declaration)))
+
+        cancel.right.get should be(CancellationRequestExists)
+      }
+
+      "non existing submission is cancelled" in {
+
+        startSubmissionService(ACCEPTED)
+        startCancellationService(ACCEPTED)
+
+        withSubmissionPersisted(true)
+        withDeclarationCancelled(MissingDeclaration)
+
+        val declaration = randomSubmitDeclaration.toXml
+
+        // persist
+        val result: Result = await(
+          exportsService.handleSubmission(
+            declarantEoriValue,
+            Some(declarantDucrValue),
+            declarantLrnValue,
+            XML.loadString(declaration)
+          )
+        )
+
+        contentAsString(result) should be("{\"status\":202,\"message\":\"Submission response saved\"}")
+
+        // cancel
+        val cancel: Either[Result, CancellationStatus] =
+          await(exportsService.handleCancellation(declarantEoriValue, "", XML.loadString(declaration)))
+
+        cancel.right.get should be(MissingDeclaration)
+      }
+
+      "it is Not Accepted (BAD_REQUEST)" in {
+
+        startSubmissionService(ACCEPTED)
+        startCancellationService(BAD_REQUEST)
+
+        withSubmissionPersisted(true)
+        withDeclarationCancelled(CancellationRequested)
+
+        val declaration = randomSubmitDeclaration.toXml
+
+        // persist
+        val result: Result = await(
+          exportsService.handleSubmission(
+            declarantEoriValue,
+            Some(declarantDucrValue),
+            declarantLrnValue,
+            XML.loadString(declaration)
+          )
+        )
+
+        contentAsString(result) should be("{\"status\":202,\"message\":\"Submission response saved\"}")
+
+        // cancel
+        val cancel: Either[Result, CancellationStatus] =
+          await(exportsService.handleCancellation(declarantEoriValue, "FAKE_MRN", XML.loadString(declaration)))
+
+        cancel.left.get.header.status should be(INTERNAL_SERVER_ERROR)
+      }
+
+      "it is Not Accepted (NOT_FOUND)" in {
+
+        startSubmissionService(ACCEPTED)
+        startCancellationService(NOT_FOUND)
+
+        withSubmissionPersisted(true)
+        withDeclarationCancelled(CancellationRequested)
+
+        val declaration = randomSubmitDeclaration.toXml
+
+        // persist
+        val result: Result = await(
+          exportsService.handleSubmission(
+            declarantEoriValue,
+            Some(declarantDucrValue),
+            declarantLrnValue,
+            XML.loadString(declaration)
+          )
+        )
+
+        contentAsString(result) should be("{\"status\":202,\"message\":\"Submission response saved\"}")
+
+        // cancel
+        val cancel: Either[Result, CancellationStatus] =
+          await(exportsService.handleCancellation(declarantEoriValue, "FAKE_MRN", XML.loadString(declaration)))
+
+        cancel.left.get.header.status should be(INTERNAL_SERVER_ERROR)
+      }
+
+      "it is Not Accepted (UNAUTHORIZED)" in {
+
+        startSubmissionService(ACCEPTED)
+        startCancellationService(UNAUTHORIZED)
+
+        withSubmissionPersisted(true)
+        withDeclarationCancelled(CancellationRequested)
+
+        val declaration = randomSubmitDeclaration.toXml
+
+        // persist
+        val result: Result = await(
+          exportsService.handleSubmission(
+            declarantEoriValue,
+            Some(declarantDucrValue),
+            declarantLrnValue,
+            XML.loadString(declaration)
+          )
+        )
+
+        contentAsString(result) should be("{\"status\":202,\"message\":\"Submission response saved\"}")
+
+        // cancel
+        val cancel: Either[Result, CancellationStatus] =
+          await(exportsService.handleCancellation(declarantEoriValue, "FAKE_MRN", XML.loadString(declaration)))
+
+        cancel.left.get.header.status should be(INTERNAL_SERVER_ERROR)
+      }
+
+      "it is Not Accepted (INTERNAL_SERVER_ERROR)" in {
+
+        startSubmissionService(ACCEPTED)
+        startCancellationService(INTERNAL_SERVER_ERROR)
+
+        withSubmissionPersisted(true)
+        withDeclarationCancelled(CancellationRequested)
+
+        val declaration = randomSubmitDeclaration.toXml
+
+        // persist
+        val result: Result = await(
+          exportsService.handleSubmission(
+            declarantEoriValue,
+            Some(declarantDucrValue),
+            declarantLrnValue,
+            XML.loadString(declaration)
+          )
+        )
+
+        contentAsString(result) should be("{\"status\":202,\"message\":\"Submission response saved\"}")
+
+        // cancel
+        val cancel: Either[Result, CancellationStatus] =
+          await(exportsService.handleCancellation(declarantEoriValue, "FAKE_MRN", XML.loadString(declaration)))
+
+        cancel.left.get.header.status should be(INTERNAL_SERVER_ERROR)
       }
     }
   }
