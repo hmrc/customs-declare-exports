@@ -21,5 +21,5 @@ object CustomsDeclarationsAPIConfig {
 
 
   val submitDeclarationServiceContext = "/"
-  val CancelDeclarationServiceContext = "/cancellation-requests"
+  val cancelDeclarationServiceContext = "/cancellation-requests"
 }

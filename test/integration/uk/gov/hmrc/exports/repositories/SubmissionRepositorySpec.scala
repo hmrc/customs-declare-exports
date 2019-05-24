@@ -27,7 +27,7 @@ import util.ExportsTestData
 class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach {
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
-  val repo: SubmissionRepository = component[SubmissionRepository]
+  private val repo: SubmissionRepository = component[SubmissionRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -41,7 +41,7 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
 
   "Submission repository" should {
 
-    "be able to get submission by eori" in {
+    "be able to get submission by EORI" in {
       val found = repo.findByEori(eori).futureValue
 
       found.length must be(1)
@@ -62,7 +62,7 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
       found.ducr must be(Some(ducr))
     }
 
-    "be able to get submission by eori and mrn" in {
+    "be able to get submission by EORI and MRN" in {
       val found = repo.getByEoriAndMrn(eori, mrn).futureValue.get
 
       found.eori must be(eori)
@@ -99,21 +99,36 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
       repo.updateSubmission(submissionToUpdate).futureValue must be(false)
     }
 
-    //TODO: add return status when declaration is actually cancelled
     "be able to cancel declaration" in {
-      repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequested)
 
+      repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequested)
+    }
+
+    "check if declaration is already cancelled" in {
+
+      repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequested)
       repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequestExists)
+    }
+
+    "return error when we cancel non existing declaration" in {
 
       repo.cancelDeclaration("incorrect", "incorrect").futureValue must be(MissingDeclaration)
     }
 
-    "update mrn and status for existing submission" in {
+    //TODO: add return status when declaration is actually cancelled
+
+    "update MRN and status for existing submission" in {
       repo.updateMrnAndStatus(eori, conversationId, mrn, Some("NewStatus")).futureValue must be(true)
+
+      val found = repo.findByEori(eori).futureValue
+      found.head.status must be("NewStatus")
     }
 
-    "update mrn and status without new status for existing submission" in {
+    "do not update MRN and status when new status is None" in {
       repo.updateMrnAndStatus(eori, conversationId, mrn, None).futureValue must be(false)
+
+      val found = repo.findByEori(eori).futureValue
+      found.head.status must be("01")
     }
   }
 }

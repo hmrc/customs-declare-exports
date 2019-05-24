@@ -31,9 +31,13 @@ import util.{CustomsDeclarationsAPIConfig, ExportsTestData}
 trait CustomsDeclarationsAPIService extends WireMockRunner with ExportsTestData {
 
   private val submissionURL = urlMatching(CustomsDeclarationsAPIConfig.submitDeclarationServiceContext)
+  private val cancellationURL = urlMatching(CustomsDeclarationsAPIConfig.cancelDeclarationServiceContext)
 
   def startSubmissionService(status: Int = ACCEPTED, conversationId: Boolean = true): Unit =
     startService(status, submissionURL, conversationId)
+
+  def startCancellationService(status: Int = ACCEPTED, conversationId: Boolean = true): Unit =
+    startService(status, cancellationURL, conversationId)
 
   private def startService(status: Int, url: UrlPattern, conversationId: Boolean): StubMapping =
     if (conversationId) {

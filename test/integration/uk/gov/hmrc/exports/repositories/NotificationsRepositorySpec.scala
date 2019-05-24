@@ -28,36 +28,68 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class NotificationsRepositorySpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach {
 
   override protected def afterEach(): Unit = {
+
     super.afterEach()
-    repo.removeAll()
+    repo.removeAll().futureValue
   }
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
+  private val repo = component[NotificationsRepository]
 
-  val repo = component[NotificationsRepository]
-
-  // TODO: possibly split the tests, as it is too high level
   "Notifications repository" should {
-    "save notification with eori, conversationId and timestamp" in {
-      repo.save(notification).futureValue must be(true)
 
-      // we can now display a list of all the declarations belonging to the current user, searching by EORI
+    "save notification and retrieve it by EORI" in {
+
+      repo.save(notification).futureValue must be(true)
       val found = repo.findByEori(eori).futureValue
+
       found.length must be(1)
       found.head.eori must be(eori)
       found.head.conversationId must be(conversationId)
-
       found.head.dateTimeReceived.compareTo(now) must be(0)
+    }
 
-      // we can also retrieve the submission individually by conversation Id
-      val got = repo.getByConversationId(conversationId).futureValue.head
-      got.eori must be(eori)
-      got.conversationId must be(conversationId)
+    "save notification and retrieve it by conversationId" in {
 
-      // or we can retrieve it by eori and conversationId
-      val gotAgain = repo.getByEoriAndConversationId(eori, conversationId).futureValue.head
-      gotAgain.eori must be(eori)
-      gotAgain.conversationId must be(conversationId)
+      repo.save(notification).futureValue must be(true)
+      val found = repo.getByConversationId(conversationId).futureValue
+
+      found.length must be(1)
+      found.head.eori must be(eori)
+      found.head.conversationId must be(conversationId)
+      found.head.dateTimeReceived.compareTo(now) must be(0)
+    }
+
+    "save notification and retrieve it by both EORI and conversationId" in {
+
+      repo.save(notification).futureValue must be(true)
+      val found = repo.getByEoriAndConversationId(eori, conversationId).futureValue
+
+      found.length must be(1)
+      found.head.eori must be(eori)
+      found.head.conversationId must be(conversationId)
+      found.head.dateTimeReceived.compareTo(now) must be(0)
+    }
+
+    "save two notifications and retrive both" in {
+
+      repo.save(notification).futureValue must be(true)
+      val first = repo.getByEoriAndConversationId(eori, conversationId).futureValue
+
+      first.length must be(1)
+      first.head.eori must be(eori)
+      first.head.conversationId must be(conversationId)
+      first.head.dateTimeReceived.compareTo(now) must be(0)
+      first.head.response.head.functionalReferenceId must be(Some("123"))
+
+      repo.save(notification2).futureValue must be(true)
+      val second = repo.getByEoriAndConversationId(eori, conversationId).futureValue
+
+      second.length must be(2)
+      second(1).eori must be(eori)
+      second(1).conversationId must be(conversationId)
+      second(1).dateTimeReceived.compareTo(now) must be(0)
+      second(1).response.head.functionalReferenceId must be(Some("456"))
     }
   }
 }

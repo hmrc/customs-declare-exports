@@ -97,6 +97,8 @@ trait ExportsTestData {
   )
 
   val notification = DeclarationNotification(now, conversationId, mrn, eori, DeclarationMetadata(), response1)
+  val notification2 = DeclarationNotification(now, conversationId, mrn, eori, DeclarationMetadata(), response2)
+
   val submissionResponse = SubmissionResponse(eori, conversationId, Some(ducr), lrn, Some(mrn), status = "01")
 
   val ValidHeaders: Map[String, String] = Map(
