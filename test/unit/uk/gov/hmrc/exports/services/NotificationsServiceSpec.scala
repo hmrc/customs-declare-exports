@@ -27,7 +27,7 @@ import uk.gov.hmrc.exports.models.{DeclarationMetadata, DeclarationNotification}
 import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.NotificationService
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.wco.dec.{Response, ResponseStatus}
+import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement, ResponseStatus}
 import util.NotificationTestData
 
 import scala.concurrent.Future
@@ -66,69 +66,133 @@ class NotificationsServiceSpec
     }
   }
 
+  val PositionFunctionCode = "11"
+  val NameCodeGranted = "39"
+  val NameCodeDenied = "41"
+  val IncorrectNameCode = "15"
+
   "NotificationsService" should {
     "successfully Save DeclarationNotification in repo when save called and return ACCEPTED" in new SetUp {
+
       val notificationToSave: DeclarationNotification =
         submissionNotification.copy(dateTimeReceived = submissionNotification.dateTimeReceived.plusHours(2))
+
       testScenario(submissionNotification, notificationSaveResult = true, submissionUpdateResult = true)
     }
 
     "return ACCEPTED when submission is not able to be updated" in new SetUp {
+
       val notificationToSave: DeclarationNotification =
         submissionNotification.copy(dateTimeReceived = submissionNotification.dateTimeReceived.plusHours(2))
+
       testScenario(notificationToSave, notificationSaveResult = true, submissionUpdateResult = false)
     }
 
     "return ACCEPTED when notification received is older than existing notification" in new SetUp {
+
       val notificationToSave: DeclarationNotification =
         submissionNotification.copy(dateTimeReceived = submissionNotification.dateTimeReceived.minusHours(2))
+
       testScenario(notificationToSave, notificationSaveResult = true, submissionUpdateResult = true)
     }
 
     "return ACCEPTED when notification is not able to be persisted" in new SetUp {
+
       val notificationToSave: DeclarationNotification =
         submissionNotification.copy(dateTimeReceived = submissionNotification.dateTimeReceived.minusHours(2))
+
       testScenario(notificationToSave, notificationSaveResult = false, submissionUpdateResult = true)
     }
 
-    "test buildStatus maps 39 correctly to CustomsPositionGranted when function code is 11" in new SetUp {
-      val nameCode = "39"
-      val functionCode = "11"
-      val statusSeq = Seq(ResponseStatus(nameCode = Some(nameCode)))
-      val responses = Seq(Response(functionCode, status = statusSeq))
+    "test buildStatus maps nameCode 39 correctly to CustomsPositionGranted when function code is 11" in new SetUp {
+
+      val statusSeq = Seq(ResponseStatus(nameCode = Some(NameCodeGranted)))
+      val responses = Seq(Response(PositionFunctionCode, status = statusSeq))
       val notificationToSave = submissionNotification.copy(response = responses)
 
       testScenario(notificationToSave, notificationSaveResult = false, submissionUpdateResult = true)
 
-      verify(mockSubmissionRepo).updateMrnAndStatus(any(), any(), any(), status = meq(Some(functionCode + nameCode)))
-
+      verify(mockSubmissionRepo).updateMrnAndStatus(
+        any(),
+        any(),
+        any(),
+        status = meq(Some(PositionFunctionCode + NameCodeGranted))
+      )
     }
 
-    "test buildStatus maps 41 correctly to CustomsPositionDenied when function code is 11" in new SetUp {
-      val nameCode = "41"
-      val functionCode = "11"
-      val statusSeq = Seq(ResponseStatus(nameCode = Some(nameCode)))
-      val responses = Seq(Response(functionCode, status = statusSeq))
+    "test buildStatus maps nameCode 41 correctly to CustomsPositionDenied when function code is 11" in new SetUp {
+
+      val statusSeq = Seq(ResponseStatus(nameCode = Some(NameCodeDenied)))
+      val responses = Seq(Response(PositionFunctionCode, status = statusSeq))
       val notificationToSave = submissionNotification.copy(response = responses)
 
       testScenario(notificationToSave, notificationSaveResult = false, submissionUpdateResult = true)
 
-      verify(mockSubmissionRepo).updateMrnAndStatus(any(), any(), any(), status = meq(Some(functionCode + nameCode)))
-
+      verify(mockSubmissionRepo).updateMrnAndStatus(
+        any(),
+        any(),
+        any(),
+        status = meq(Some(PositionFunctionCode + NameCodeDenied))
+      )
     }
 
-    "test buildStatus maps correctly to 11 when function code is 11 and namecode is not 41 or 39" in new SetUp {
-      val nameCode = "15"
-      val functionCode = "11"
-      val statusSeq = Seq(ResponseStatus(nameCode = Some(nameCode)))
-      val responses = Seq(Response(functionCode, status = statusSeq))
+    "test buildStatus maps correctly to functionCode 11 when function code is 11 and nameCode is not 41 or 39" in new SetUp {
+
+      val statusSeq = Seq(ResponseStatus(nameCode = Some(IncorrectNameCode)))
+      val responses = Seq(Response(PositionFunctionCode, status = statusSeq))
       val notificationToSave = submissionNotification.copy(response = responses)
 
       testScenario(notificationToSave, notificationSaveResult = false, submissionUpdateResult = true)
 
-      verify(mockSubmissionRepo).updateMrnAndStatus(any(), any(), any(), status = meq(Some(functionCode)))
-
+      verify(mockSubmissionRepo).updateMrnAndStatus(any(), any(), any(), status = meq(Some(PositionFunctionCode)))
     }
 
+    "return the newest notification when all notifications has issue date time" in new SetUp {
+      import NotificationsServiceSpec._
+
+      val firstNotification =
+        generateNotificationWithDate(Some(ResponseDateTimeElement(DateTimeString("102", "20190522"))))
+      val secondNotification =
+        generateNotificationWithDate(Some(ResponseDateTimeElement(DateTimeString("102", "20190525"))))
+      val thridNotification =
+        generateNotificationWithDate(Some(ResponseDateTimeElement(DateTimeString("102", "20190529"))))
+      val notifications: Seq[DeclarationNotification] = Seq(firstNotification, secondNotification, thridNotification)
+      when(mockNotificationRepo.getByEoriAndConversationId(any(), any())).thenReturn(Future.successful(notifications))
+
+      val result = testObj.getTheNewestExistingNotification(eori, conversationId).futureValue
+
+      result should be(Some(thridNotification))
+    }
+
+    "return the newest notification when middle notification doesn't have issue date time" in new SetUp {
+      import NotificationsServiceSpec._
+
+      val firstNotification =
+        generateNotificationWithDate(Some(ResponseDateTimeElement(DateTimeString("102", "20190522"))))
+      val secondNotification = generateNotificationWithDate(None)
+      val thridNotification =
+        generateNotificationWithDate(Some(ResponseDateTimeElement(DateTimeString("102", "20190529"))))
+      val notifications: Seq[DeclarationNotification] = Seq(firstNotification, secondNotification, thridNotification)
+      when(mockNotificationRepo.getByEoriAndConversationId(any(), any())).thenReturn(Future.successful(notifications))
+
+      val result = testObj.getTheNewestExistingNotification(eori, conversationId).futureValue
+
+      result should be(Some(thridNotification))
+    }
   }
+}
+
+object NotificationsServiceSpec {
+  val eori = "123456"
+  val conversationId = "654321"
+
+  def generateNotificationWithDate(date: Option[ResponseDateTimeElement]): DeclarationNotification =
+    DeclarationNotification(
+      conversationId = "12345",
+      eori = eori,
+      mrn = conversationId,
+      metadata = DeclarationMetadata(),
+      response = Seq(Response(functionCode = "08", issueDateTime = date))
+    )
+
 }

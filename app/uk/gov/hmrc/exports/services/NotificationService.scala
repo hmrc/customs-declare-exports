@@ -43,19 +43,10 @@ class NotificationService @Inject()(
     val convId = notification.conversationId
 
     for {
-      oldNotification <- notificationsRepository
-        .getByEoriAndConversationId(eori, convId)
-        .map(_.sortWith((a, b) => a.isOlderThan(b)).headOption)
+      oldNotification <- getTheNewestExistingNotification(eori, convId)
       notificationSaved <- notificationsRepository.save(notification)
       shouldBeUpdated = oldNotification.forall(notification.isOlderThan)
-      _ <- if (shouldBeUpdated)
-        submissionRepository.updateMrnAndStatus(
-          notification.eori,
-          notification.conversationId,
-          notification.mrn,
-          buildStatus(notification.response)
-        )
-      else Future.successful(false)
+      _ <- if (shouldBeUpdated) updateMrnAndStatus(notification) else Future.successful(false)
     } yield
       if (notificationSaved) {
         metrics.incrementCounter(notificationMetric)
@@ -68,11 +59,30 @@ class NotificationService @Inject()(
       }
   }
 
+  def getTheNewestExistingNotification(eori: String, convId: String): Future[Option[DeclarationNotification]] =
+    notificationsRepository
+      .getByEoriAndConversationId(eori, convId)
+      .map(_.filter(_.response.headOption.flatMap(_.issueDateTime).isDefined))
+      .map(_.sortWith((a, b) => a.isOlderThan(b)).headOption)
+
+  def updateMrnAndStatus(notification: DeclarationNotification): Future[Boolean] =
+    submissionRepository.updateMrnAndStatus(
+      notification.eori,
+      notification.conversationId,
+      notification.mrn,
+      buildStatus(notification.response)
+    )
+
+  val PositionFunctionCode = "11"
+  val NameCodeGranted = "39"
+  val NameCodeDenied = "41"
+
   private def buildStatus(responses: Seq[Response]): Option[String] =
     responses.map { response =>
       (response.functionCode, response.status.flatMap(_.nameCode).headOption) match {
-        case ("11", Some(nameCode)) if nameCode == "39" || nameCode == "41" => s"11$nameCode"
-        case _                                                              => response.functionCode
+        case (PositionFunctionCode, Some(nameCode)) if nameCode == NameCodeGranted || nameCode == NameCodeDenied =>
+          s"11$nameCode"
+        case _ => response.functionCode
       }
     }.headOption
 }
