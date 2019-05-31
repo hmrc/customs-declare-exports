@@ -39,7 +39,8 @@ class SubmissionController @Inject()(
   exportsService: ExportsService,
   headerValidator: HeaderValidator,
   notificationsRepository: NotificationsRepository,
-  cc: ControllerComponents
+  cc: ControllerComponents,
+  bodyParsers: PlayBodyParsers
 ) extends ExportController(authConnector, cc) {
 
   private val logger = Logger(this.getClass())
@@ -124,18 +125,18 @@ class SubmissionController @Inject()(
     }
 
   def getSubmission(conversationId: String): Action[AnyContent] =
-    authorisedAction(BodyParsers.parse.default) { implicit request =>
+    authorisedAction(bodyParsers.default) { implicit request =>
       submissionRepository.getByConversationId(conversationId).map { submission =>
         Ok(Json.toJson(submission))
       }
     }
 
   def getSubmissionsByEori: Action[AnyContent] =
-    authorisedAction(BodyParsers.parse.default) { implicit authorizedRequest =>
+    authorisedAction(bodyParsers.default) { implicit authorizedRequest =>
       for {
         submissions <- findSubmissions(authorizedRequest.eori.value)
         notifications <- Future.sequence(
-          submissions.map(submission => getNumerOfNotifications(submission.conversationId))
+          submissions.map(submission => getNumberOfNotifications(submission.conversationId))
         )
       } yield {
         val result = submissions
@@ -149,7 +150,7 @@ class SubmissionController @Inject()(
   private def findSubmissions(eori: String): Future[Seq[Submission]] =
     submissionRepository.findByEori(eori)
 
-  private def getNumerOfNotifications(conversationId: String): Future[Int] =
+  private def getNumberOfNotifications(conversationId: String): Future[Int] =
     notificationsRepository.getByConversationId(conversationId).map(_.length)
 
   private def handleDeclarationSubmit(eori: String, lrn: String, ducr: Option[String], xml: NodeSeq)(

@@ -52,16 +52,25 @@ class DeclarationNotificationSpec extends WordSpec with MustMatchers {
   )
 
   "Declaration notification isOlderThan method" should {
+
     "return true if the notification is older" in {
+
       olderNotification.isOlderThan(earlierNotification) must be(true)
     }
 
     "return false if the notification is not older" in {
+
       earlierNotification.isOlderThan(olderNotification) must be(false)
     }
 
     "return false if notification doesn't contain response" in {
+
       olderNotification.isOlderThan(notificationWithoutResponse) must be(false)
+    }
+
+    "return false if first notification doesn't contain response" in {
+
+      notificationWithoutResponse.isOlderThan(olderNotification) must be(false)
     }
   }
 }

@@ -74,6 +74,7 @@ case class DeclarationNotification(
   metadata: DeclarationMetadata,
   response: Seq[Response] = Seq.empty
 ) {
+
   def isOlderThan(notification: DeclarationNotification): Boolean = {
     val firstDateOpt =
       response.flatMap(_.issueDateTime.map(_.dateTimeString.time)).headOption
@@ -83,6 +84,7 @@ case class DeclarationNotification(
 
     (firstDateOpt, secondDateOpt) match {
       case (Some(firstDate), Some(secondDate)) => firstDate.isAfter(secondDate)
+      case (Some(_), None)             => true
       case _                                   => false
     }
   }

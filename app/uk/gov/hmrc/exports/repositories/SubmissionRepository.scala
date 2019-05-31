@@ -54,8 +54,7 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
   override def isInsertion(newRecordId: BSONObjectID, oldRecord: Submission): Boolean =
     newRecordId.equals(oldRecord.id)
 
-  def save(submission: Submission): Future[Boolean] =
-    insert(submission).map(wr => wr.ok)
+  def save(submission: Submission): Future[Boolean] = insert(submission).map(wr => wr.ok)
 
   def updateSubmission(submission: Submission): Future[Boolean] = {
     val finder = BSONDocument("_id" -> submission.id, "conversationId" -> submission.conversationId)

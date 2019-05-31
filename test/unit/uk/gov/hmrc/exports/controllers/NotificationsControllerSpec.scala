@@ -34,12 +34,14 @@ import scala.concurrent.Future
 class NotificationsControllerSpec
     extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach with NotificationTestData {
 
-  override def beforeEach: Unit =
+  override def beforeEach: Unit = {
+    super.beforeEach()
     reset(mockSubmissionRepository, mockNotificationsRepository)
+  }
 
   "Notifications controller" should {
 
-    "return 200 status when it successfully get notifications" in {
+    "return 202 status when it successfully get notifications" in {
       withAuthorizedUser()
       haveNotifications(Seq(notification))
 
@@ -94,10 +96,10 @@ class NotificationsControllerSpec
 
       val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
 
-      status(result) must be(BAD_REQUEST)
+      status(result) must be(ACCEPTED)
     }
 
-    "return 500 status if it fail to save notification" in {
+    "return 202 status if it fail to save notification" in {
       when(mockSubmissionRepository.getByConversationId(any[String])).thenReturn(Future.successful(Some(submission)))
 
       withNotificationSaved(false)
@@ -105,7 +107,7 @@ class NotificationsControllerSpec
 
       val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
 
-      status(result) must be(INTERNAL_SERVER_ERROR)
+      status(result) must be(ACCEPTED)
     }
 
     "return 200 status when there are notifications connected to specific submission" in {
@@ -117,8 +119,7 @@ class NotificationsControllerSpec
       status(result) must be(OK)
     }
 
-    // TODO: invalid description or test return value as OK is 200
-    "return 204 status when there are no notifications connected to specific submission" in {
+    "return 200 status when there are no notifications connected to specific submission" in {
       withAuthorizedUser()
       withSubmissionNotification(Seq.empty)
 
