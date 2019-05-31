@@ -84,7 +84,7 @@ case class DeclarationNotification(
 
     (firstDateOpt, secondDateOpt) match {
       case (Some(firstDate), Some(secondDate)) => firstDate.isAfter(secondDate)
-      case (Some(_), None)             => true
+      case (Some(_), None)                     => true
       case _                                   => false
     }
   }
