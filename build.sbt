@@ -24,8 +24,8 @@ def forkedJvmPerTestConfig(tests: Seq[TestDefinition], packages: String*): Seq[G
   } toSeq
 
 lazy val testAll = TaskKey[Unit]("test-all")
-lazy val allTest = Seq(testAll := (test in ComponentTest)
-  .dependsOn((test in CdsIntegrationTest).dependsOn(test in Test)).value)
+lazy val allTest =
+  Seq(testAll := (test in ComponentTest).dependsOn((test in CdsIntegrationTest).dependsOn(test in Test)).value)
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, SbtArtifactory)
@@ -39,16 +39,15 @@ lazy val microservice = Project(appName, file("."))
   .settings(publishingSettings: _*)
   .configs(testConfig: _*)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
-  .settings(commonSettings,
+  .settings(
+    commonSettings,
     unitTestSettings,
     integrationTestSettings,
     allResolvers,
-    unitTestSettings,
-    scoverageSettings)
+    scoverageSettings
+  )
 
-def onPackageName(rootPackage: String): String => Boolean = {
-  testName => testName startsWith rootPackage
-}
+def onPackageName(rootPackage: String): String => Boolean = testName => testName startsWith rootPackage
 
 lazy val unitTestSettings =
   inConfig(Test)(Defaults.testTasks) ++
@@ -85,7 +84,4 @@ lazy val scoverageSettings: Seq[Setting[_]] = Seq(
   parallelExecution in Test := false
 )
 
-lazy val commonSettings: Seq[Setting[_]] = scalaSettings ++
-  publishingSettings ++
-  defaultSettings() ++
-  gitStampSettings
+lazy val commonSettings: Seq[Setting[_]] = scalaSettings ++ publishingSettings ++ defaultSettings() ++ gitStampSettings
