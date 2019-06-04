@@ -50,7 +50,7 @@ class SubmissionController @Inject()(
       rq =>
         parse.tolerantXml(rq).map {
           case Right(xml) => Right(AnyContentAsXml(xml))
-          case _          =>
+          case _ =>
             logger.error("Invalid xml payload")
             Left(ErrorResponse.ErrorInvalidPayload.XmlResult)
       }
@@ -66,10 +66,9 @@ class SubmissionController @Inject()(
       processCancelationRequest(request.headers.toSimpleMap)
     }
 
-  private def processSubmissionRequest(headers: Map[String, String])(
-    implicit request: AuthorizedSubmissionRequest[AnyContent],
-    hc: HeaderCarrier
-  ): Future[Result] =
+  private def processSubmissionRequest(
+    headers: Map[String, String]
+  )(implicit request: AuthorizedSubmissionRequest[AnyContent], hc: HeaderCarrier): Future[Result] =
     headerValidator.validateAndExtractSubmissionHeaders(headers) match {
       case Right(vhr) =>
         request.body.asXml match {
@@ -88,10 +87,9 @@ class SubmissionController @Inject()(
         Future.successful(ErrorResponse.ErrorGenericBadRequest.XmlResult)
     }
 
-  private def processCancelationRequest(headers: Map[String, String])(
-    implicit request: AuthorizedSubmissionRequest[AnyContent],
-    hc: HeaderCarrier
-  ): Future[Result] =
+  private def processCancelationRequest(
+    headers: Map[String, String]
+  )(implicit request: AuthorizedSubmissionRequest[AnyContent], hc: HeaderCarrier): Future[Result] =
     headerValidator.validateAndExtractCancellationHeaders(headers) match {
       case Right(vhr) =>
         request.body.asXml match {
@@ -131,27 +129,9 @@ class SubmissionController @Inject()(
       }
     }
 
-  def getSubmissionsByEori: Action[AnyContent] =
-    authorisedAction(bodyParsers.default) { implicit authorizedRequest =>
-      for {
-        submissions <- findSubmissions(authorizedRequest.eori.value)
-        notifications <- Future.sequence(
-          submissions.map(submission => getNumberOfNotifications(submission.conversationId))
-        )
-      } yield {
-        val result = submissions
-          .zip(notifications)
-          .map((SubmissionData.buildSubmissionData _).tupled)
-
-        Ok(Json.toJson(result))
-      }
-    }
-
-  private def findSubmissions(eori: String): Future[Seq[Submission]] =
-    submissionRepository.findByEori(eori)
-
-  private def getNumberOfNotifications(conversationId: String): Future[Int] =
-    notificationsRepository.getByConversationId(conversationId).map(_.length)
+  def getSubmissionsByEori: Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit authorizedRequest =>
+    submissionRepository.findByEori(authorizedRequest.eori.value).map(submissions => Ok(Json.toJson(submissions)))
+  }
 
   private def handleDeclarationSubmit(eori: String, lrn: String, ducr: Option[String], xml: NodeSeq)(
     implicit hc: HeaderCarrier

@@ -56,7 +56,7 @@ class NotificationsControllerSpec
       withNotificationSaved(true)
       withSubmissionNotification(Seq.empty)
 
-      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
+      val result = route(app, FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
 
       status(result) must be(ACCEPTED)
     }
@@ -69,7 +69,7 @@ class NotificationsControllerSpec
 
       val result = route(
         app,
-        FakeRequest(POST, uri)
+        FakeRequest(POST, postNotificationUri)
           .withHeaders(validHeaders.toSeq: _*)
           .withXmlBody(
             exampleRejectNotification(notificationMRN, now.withZone(DateTimeZone.UTC).toString("yyyyMMddHHmmssZ"))
@@ -94,7 +94,7 @@ class NotificationsControllerSpec
     "return 202 status when it unable to find submission for conversationID" in {
       when(mockSubmissionRepository.getByConversationId(any[String])).thenReturn(Future.successful(None))
 
-      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
+      val result = route(app, FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
 
       status(result) must be(ACCEPTED)
     }
@@ -105,7 +105,7 @@ class NotificationsControllerSpec
       withNotificationSaved(false)
       withSubmissionNotification(Seq.empty)
 
-      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
+      val result = route(app, FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
 
       status(result) must be(ACCEPTED)
     }
@@ -137,7 +137,7 @@ class NotificationsControllerSpec
       withNotificationSaved(true)
       withSubmissionNotification(Seq.empty)
 
-      val result = route(app, FakeRequest(POST, uri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
+      val result = route(app, FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
 
       status(result) must be(ACCEPTED)
 

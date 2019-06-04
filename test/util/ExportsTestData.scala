@@ -27,7 +27,6 @@ import uk.gov.hmrc.exports.models.{
   DeclarationNotification,
   Eori,
   Submission,
-  SubmissionData,
   SubmissionResponse
 }
 import uk.gov.hmrc.wco.dec.{DateTimeString, MetaData, Response, ResponseDateTimeElement, Declaration => WcoDeclaration}
@@ -49,11 +48,8 @@ trait ExportsTestData {
   val conversationId: String = "b1c09f1b-7c94-4e90-b754-7c5c71c44e11"
   val ducr: String = randomString(16)
 
-  val before: Long = System.currentTimeMillis()
   val submission: Submission = Submission(eori, conversationId, Some(ducr), lrn, Some(mrn), status = "01")
-  val submissionData: SubmissionData = SubmissionData.buildSubmissionData(submission, 0)
-  val seqSubmissions: Seq[Submission] = Seq(submission)
-  val seqSubmissionData: Seq[SubmissionData] = Seq(submissionData)
+
   val authToken: String =
     "BXQ3/Treo4kQCZvVcCqKPlwxRN4RA9Mb5RF8fFxOuwG5WSg+S+Rsp9Nq998Fgg0HeNLXL7NGwEAIzwM6vuA6YYhRQnTRFaBhrp+1w+kVW8g1qHGLYO48QPWuxdM87VMCZqxnCuDoNxVn76vwfgtpNj0+NwfzXV2Zc12L2QGgF9H9KwIkeIPK/mMlBESjue4V]"
   val dummyToken: String = s"Bearer $authToken"
