@@ -50,7 +50,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
   def fakeRequestWithPayload(uri: String, payload: String): FakeRequest[String] =
     FakeRequest("POST", uri).withBody(payload)
 
-  val validCancelHeaders = CustomsHeaderNames.XMrnHeaderName -> declarantMrnValue
+  val validCancelHeaders: (String, String) = CustomsHeaderNames.XMrnHeaderName -> declarantMrnValue
   AUTHORIZATION -> dummyToken
   CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
 
@@ -62,8 +62,10 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
   val fakeCancelXmlRequestWithMissingHeaders: FakeRequest[String] = fakeCancellationRequest("<someXml></someXml>")
     .withHeaders(AUTHORIZATION -> dummyToken, CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8))
+
   val submissionJson: JsValue = Json.toJson[Submission](submission)
-  val jsonSeqSubmission: JsValue = Json.toJson[Seq[SubmissionData]](seqSubmissionData)
+  val submissionSeq: Seq[Submission] = Seq(submission)
+  val submissionSeqJson: JsValue = Json.toJson[Seq[Submission]](submissionSeq)
 
   val updateSubmissionRequest: FakeRequest[JsValue] = FakeRequest("POST", updateUri).withBody(submissionJson)
 
@@ -163,13 +165,13 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
       "return 200 status with submission response body" in {
         withAuthorizedUser()
-        withSubmissions(seqSubmissions)
+        withSubmissions(submissionSeq)
         withNotification(Seq.empty)
 
         val result = route(app, FakeRequest("GET", "/submissions")).get
 
         status(result) must be(OK)
-        contentAsJson(result) must be(jsonSeqSubmission)
+        contentAsJson(result) must be(submissionSeqJson)
       }
 
       // TODO: 204 is safe response

@@ -40,35 +40,6 @@ object Submission {
   }
 }
 
-case class SubmissionData(
-  eori: String,
-  conversationId: String,
-  ducr: Option[String],
-  lrn: Option[String],
-  mrn: Option[String],
-  submittedTimestamp: Long,
-  status: String,
-  noOfNotifications: Int,
-  isCancellationRequested: Boolean
-)
-
-object SubmissionData {
-  implicit val format = Json.format[SubmissionData]
-
-  def buildSubmissionData(submission: Submission, noOfNotifications: Int): SubmissionData =
-    SubmissionData(
-      eori = submission.eori,
-      conversationId = submission.conversationId,
-      ducr = submission.ducr,
-      lrn = submission.lrn,
-      mrn = submission.mrn,
-      submittedTimestamp = submission.submittedTimestamp,
-      status = submission.status,
-      noOfNotifications = noOfNotifications,
-      isCancellationRequested = submission.isCancellationRequested
-    )
-}
-
 case class SubmissionResponse(
   eori: String,
   conversationId: String,

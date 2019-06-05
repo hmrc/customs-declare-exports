@@ -1,17 +1,17 @@
 # microservice specific routes
 
-POST        /declaration                                                           uk.gov.hmrc.exports.controllers.SubmissionController.submitDeclaration()
+POST        /declaration                                     uk.gov.hmrc.exports.controllers.SubmissionController.submitDeclaration()
 
-POST        /customs-declare-exports/notify                                          uk.gov.hmrc.exports.controllers.NotificationsController.saveNotification()
+POST        /customs-declare-exports/notify                  uk.gov.hmrc.exports.controllers.NotificationsController.saveNotification()
 
-GET         /customs-declare-exports/notifications                                   uk.gov.hmrc.exports.controllers.NotificationsController.getNotifications()
+GET         /notifications                                   uk.gov.hmrc.exports.controllers.NotificationsController.getNotifications()
 
-GET         /customs-declare-exports/submission-notifications/:conversationId        uk.gov.hmrc.exports.controllers.NotificationsController.getSubmissionNotifications(conversationId: String)
+GET         /submission-notifications/:conversationId        uk.gov.hmrc.exports.controllers.NotificationsController.getSubmissionNotifications(conversationId: String)
 
-POST        /update-submission                                                       uk.gov.hmrc.exports.controllers.SubmissionController.updateSubmission()
+POST        /update-submission                               uk.gov.hmrc.exports.controllers.SubmissionController.updateSubmission()
 
-GET         /submission/:conversationId                                              uk.gov.hmrc.exports.controllers.SubmissionController.getSubmission(conversationId: String)
+GET         /submission/:conversationId                      uk.gov.hmrc.exports.controllers.SubmissionController.getSubmission(conversationId: String)
 
-GET         /submissions                                                             uk.gov.hmrc.exports.controllers.SubmissionController.getSubmissionsByEori()
+GET         /submissions                                     uk.gov.hmrc.exports.controllers.SubmissionController.getSubmissionsByEori()
 
-POST        /cancel-declaration                                                      uk.gov.hmrc.exports.controllers.SubmissionController.cancelDeclaration()
+POST        /cancel-declaration                              uk.gov.hmrc.exports.controllers.SubmissionController.cancelDeclaration()

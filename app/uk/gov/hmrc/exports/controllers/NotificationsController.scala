@@ -57,17 +57,17 @@ class NotificationsController @Inject()(
       .validateAndExtractSubmissionNotificationHeaders(request.headers.toSimpleMap) match {
       case Right(extractedHeaders) =>
         getSubmissionNotificationFromRequest(extractedHeaders).flatMap {
-            case Some(notification) =>
-              save(notification).map { res =>
-                timer.stop()
-                res
-              }
-            case _ =>
-              logger.error(s"Invalid notification payload: ${request.body.toString()}")
-              Future.successful(Accepted)
+          case Some(notification) =>
+            save(notification).map { res =>
+              timer.stop()
+              res
+            }
+          case _ =>
+            logger.error(s"Invalid notification payload: ${request.body.toString()}")
+            Future.successful(Accepted)
         }
       case Left(error) =>
-        logger.error(s"Error during validation and extracting headers with message: ${ error.message}")
+        logger.error(s"Error during validation and extracting headers with message: ${error.message}")
         Future.successful(Accepted)
     }
   }
@@ -89,13 +89,13 @@ class NotificationsController @Inject()(
     }
 
   private def getSubmissionNotificationFromRequest(
-    vhnar: SubmissionNotificationApiRequest
+    validatedHeadersNotificationApiRequest: SubmissionNotificationApiRequest
   )(implicit request: Request[NodeSeq]): Future[Option[DeclarationNotification]] =
     submissionRepository
-      .getByConversationId(vhnar.conversationId.value)
+      .getByConversationId(validatedHeadersNotificationApiRequest.conversationId.value)
       .map { mayBeSubmission =>
         mayBeSubmission.flatMap { submission =>
-          handleXmlParseToNotification(request.body.toString, vhnar.conversationId.value, submission.eori)
+          handleXmlParseToNotification(request.body.toString, validatedHeadersNotificationApiRequest.conversationId.value, submission.eori)
         }
       }
 
