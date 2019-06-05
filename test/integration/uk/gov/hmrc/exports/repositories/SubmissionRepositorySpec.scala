@@ -22,16 +22,15 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.models.{CancellationRequestExists, CancellationRequested, MissingDeclaration, Submission}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import unit.uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
-import util.ExportsTestData
 
-class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach {
+class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach {
+  import SubmissionRepositorySpec._
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
-  private val repo: SubmissionRepository = component[SubmissionRepository]
+  private val repo: SubmissionRepository = app.injector.instanceOf[SubmissionRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    repo.save(submission).futureValue
   }
 
   override def afterEach(): Unit = {
@@ -42,6 +41,7 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
   "Submission repository" should {
 
     "be able to get submission by EORI" in {
+      repo.save(submission).futureValue
       val found = repo.findByEori(eori).futureValue
 
       found.length must be(1)
@@ -53,6 +53,7 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
     }
 
     "be able to get submission by conversationId" in {
+      repo.save(submission).futureValue
       val found = repo.getByConversationId(conversationId).futureValue.get
 
       found.eori must be(eori)
@@ -63,6 +64,7 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
     }
 
     "be able to get submission by EORI and MRN" in {
+      repo.save(submission).futureValue
       val found = repo.getByEoriAndMrn(eori, mrn).futureValue.get
 
       found.eori must be(eori)
@@ -72,63 +74,79 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with ExportsTestDa
       found.ducr must be(Some(ducr))
     }
 
-    "be able to update submission" in {
-      val submissionToUpdate =
-        Submission("eori", "conversationId", Some("ducr"), Some("lrn"), Some("mrn"), status = "01")
+    "be able to save submission" in {
+      repo.save(submission).futureValue must be(true)
 
-      repo.save(submissionToUpdate).futureValue must be(true)
+      val returnedSubmission = repo.getByConversationId(conversationId).futureValue.get
 
-      val oldFound = repo.getByConversationId("conversationId").futureValue.get
-
-      oldFound.mrn must be(Some("mrn"))
-      oldFound.status must be("01")
-
-      val updatedSubmission = oldFound.copy(mrn = Some("newMrn"), status = "02")
-
-      repo.updateSubmission(updatedSubmission).futureValue must be(true)
-
-      val newFound = repo.getByConversationId("conversationId").futureValue.get
-
-      newFound.mrn must be(Some("newMrn"))
-      newFound.status must be("02")
+      returnedSubmission must equal(submission)
     }
 
-    "not update when old submission not exist" in {
+    "be able to update submission" in {
+      repo.save(submission).futureValue must be(true)
+      val returnedSubmission = repo.getByConversationId(conversationId).futureValue.get
+
+      returnedSubmission must equal(submission)
+
+      val updatedSubmission = returnedSubmission.copy(mrn = Some("newMrn"), status = "02")
+      repo.updateSubmission(updatedSubmission).futureValue must be(true)
+      val returnedUpdatedSubmission = repo.getByConversationId(conversationId).futureValue.get
+
+      returnedUpdatedSubmission must equal(updatedSubmission)
+    }
+
+    "be able to update MRN and status" in {
+      repo.save(submission).futureValue must be(true)
+
+      repo.updateMrnAndStatus(eori, conversationId, "newMRN", Some("02")).futureValue must be(true)
+
+      val returnedUpdatedSubmission = repo.getByConversationId(conversationId).futureValue.get
+      returnedUpdatedSubmission
+    }
+
+    "not update when old submission does not exist" in {
       val submissionToUpdate = Submission("654321", "654321", Some("ducr"), Some("lrn"), Some("mrn"), status = "01")
 
       repo.updateSubmission(submissionToUpdate).futureValue must be(false)
     }
 
     "be able to cancel declaration" in {
-
+      repo.save(submission).futureValue
       repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequested)
     }
 
     "check if declaration is already cancelled" in {
-
+      repo.save(submission).futureValue
       repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequested)
       repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequestExists)
     }
 
-    "return error when we cancel non existing declaration" in {
-
+    "return Missing Declaration status when trying to cancel non existing declaration" in {
       repo.cancelDeclaration("incorrect", "incorrect").futureValue must be(MissingDeclaration)
     }
 
     //TODO: add return status when declaration is actually cancelled
 
-    "update MRN and status for existing submission" in {
-      repo.updateMrnAndStatus(eori, conversationId, mrn, Some("NewStatus")).futureValue must be(true)
-
-      val found = repo.findByEori(eori).futureValue
-      found.head.status must be("NewStatus")
-    }
-
-    "do not update MRN and status when new status is None" in {
+    "not update MRN and status when new status is None" in {
+      repo.save(submission).futureValue
       repo.updateMrnAndStatus(eori, conversationId, mrn, None).futureValue must be(false)
 
       val found = repo.findByEori(eori).futureValue
       found.head.status must be("01")
     }
   }
+}
+
+object SubmissionRepositorySpec {
+  import util.TestDataHelper._
+
+  val eori: String = "GB167676"
+  val lrn: Option[String] = Some(randomAlphanumericString(22))
+  val mrn: String = "MRN87878797"
+  val mucr: String = randomAlphanumericString(16)
+  val conversationId: String = "b1c09f1b-7c94-4e90-b754-7c5c71c44e11"
+  val ducr: String = randomAlphanumericString(16)
+
+  val submission: Submission = Submission(eori, conversationId, Some(ducr), lrn, Some(mrn), status = "01")
+
 }

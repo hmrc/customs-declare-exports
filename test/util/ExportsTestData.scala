@@ -21,6 +21,7 @@ import org.joda.time.{DateTime, DateTimeZone}
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
+import util.TestDataHelper._
 import uk.gov.hmrc.exports.controllers.CustomsHeaderNames._
 import uk.gov.hmrc.exports.models.{
   DeclarationMetadata,
@@ -41,12 +42,12 @@ trait ExportsTestData {
    */
 
   val eori: String = "GB167676"
-  val randomEori: String = randomString(8)
-  val lrn: Option[String] = Some(randomString(22))
+  val randomEori: String = randomAlphanumericString(8)
+  val lrn: Option[String] = Some(randomAlphanumericString(22))
   val mrn: String = "MRN87878797"
-  val mucr: String = randomString(16)
+  val mucr: String = randomAlphanumericString(16)
   val conversationId: String = "b1c09f1b-7c94-4e90-b754-7c5c71c44e11"
-  val ducr: String = randomString(16)
+  val ducr: String = randomAlphanumericString(16)
 
   val submission: Submission = Submission(eori, conversationId, Some(ducr), lrn, Some(mrn), status = "01")
 
@@ -108,12 +109,10 @@ trait ExportsTestData {
   )
 
   def randomSubmitDeclaration: MetaData =
-    MetaData(declaration = Option(WcoDeclaration(functionalReferenceId = Some(randomString(35)))))
+    MetaData(declaration = Option(WcoDeclaration(functionalReferenceId = Some(randomAlphanumericString(35)))))
 
   def generateSubmitDeclaration(lrnValue: String): MetaData =
     MetaData(declaration = Option(WcoDeclaration(functionalReferenceId = Some(lrnValue))))
-
-  protected def randomString(length: Int): String = Random.alphanumeric.take(length).mkString
 
   def expectedSubmissionRequestPayload(functionalReferenceId: String): String = {
     val returnXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
