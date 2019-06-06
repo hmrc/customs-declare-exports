@@ -19,6 +19,7 @@ package unit.uk.gov.hmrc.exports.base
 import java.util.UUID
 
 import akka.stream.Materializer
+import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
@@ -43,14 +44,16 @@ import uk.gov.hmrc.exports.models.{CancellationStatus, CustomsDeclarationsRespon
 import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.reflect.ClassTag
 import scala.xml.NodeSeq
 
 trait CustomsExportsBaseSpec
     extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar with ScalaFutures with AuthTestSupport {
+
+  SharedMetricRegistries.clear()
 
   val mockSubmissionRepository: SubmissionRepository = mock[SubmissionRepository]
   val mockNotificationsRepository: NotificationsRepository = mock[NotificationsRepository]

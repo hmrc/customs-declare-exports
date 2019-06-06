@@ -31,6 +31,7 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
 
   override def beforeEach(): Unit = {
     super.beforeEach()
+    repo.removeAll().futureValue
   }
 
   override def afterEach(): Unit = {
@@ -101,7 +102,8 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
       repo.updateMrnAndStatus(eori, conversationId, "newMRN", Some("02")).futureValue must be(true)
 
       val returnedUpdatedSubmission = repo.getByConversationId(conversationId).futureValue.get
-      returnedUpdatedSubmission
+      returnedUpdatedSubmission.mrn.value must equal("newMRN")
+      returnedUpdatedSubmission.status must equal("02")
     }
 
     "not update when old submission does not exist" in {
@@ -110,12 +112,20 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
       repo.updateSubmission(submissionToUpdate).futureValue must be(false)
     }
 
+    "not update MRN and status when new status is None" in {
+      repo.save(submission).futureValue
+      repo.updateMrnAndStatus(eori, conversationId, mrn, None).futureValue must be(false)
+
+      val found = repo.findByEori(eori).futureValue
+      found.head.status must be("01")
+    }
+
     "be able to cancel declaration" in {
       repo.save(submission).futureValue
       repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequested)
     }
 
-    "check if declaration is already cancelled" in {
+    "return Cancellation Request Exists status if the declaration has already been cancelled" in {
       repo.save(submission).futureValue
       repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequested)
       repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequestExists)
@@ -126,14 +136,6 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
     }
 
     //TODO: add return status when declaration is actually cancelled
-
-    "not update MRN and status when new status is None" in {
-      repo.save(submission).futureValue
-      repo.updateMrnAndStatus(eori, conversationId, mrn, None).futureValue must be(false)
-
-      val found = repo.findByEori(eori).futureValue
-      found.head.status must be("01")
-    }
   }
 }
 
