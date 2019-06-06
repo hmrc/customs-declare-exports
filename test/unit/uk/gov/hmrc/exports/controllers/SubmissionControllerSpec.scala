@@ -51,14 +51,11 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     FakeRequest("POST", uri).withBody(payload)
 
   val validCancelHeaders: (String, String) = CustomsHeaderNames.XMrnHeaderName -> declarantMrnValue
-  AUTHORIZATION -> dummyToken
-  CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
 
   def fakeCancellationRequest(payload: String): FakeRequest[String] = fakeRequestWithPayload(cancelUri, payload)
 
-  def fakeCancelRequestWithHeaders(payload: String): FakeRequest[String] =
-    fakeCancellationRequest(payload)
-      .withHeaders(validCancelHeaders)
+  def fakeCancelRequestWithHeaders(payload: String): FakeRequest[String] = fakeCancellationRequest(payload)
+    .withHeaders(validCancelHeaders)
 
   val fakeCancelXmlRequestWithMissingHeaders: FakeRequest[String] = fakeCancellationRequest("<someXml></someXml>")
     .withHeaders(AUTHORIZATION -> dummyToken, CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8))
@@ -79,6 +76,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     "POST to /declaration" should {
 
       "return 200 status when submission has been saved" in {
+
         withAuthorizedUser()
         withCustomsDeclarationSubmission(ACCEPTED)
         withDataSaved(true)
@@ -89,6 +87,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       }
 
       "return 400 status when required headers are missing" in {
+
         withAuthorizedUser()
         withDataSaved(true)
 
@@ -98,6 +97,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       }
 
       "return 500 status when something goes wrong in persisting data" in {
+
         withAuthorizedUser()
         withCustomsDeclarationSubmission(ACCEPTED)
         withDataSaved(false)
@@ -108,6 +108,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       }
 
       "return 500 status when something goes wrong in submission to dec api" in {
+
         withAuthorizedUser()
         withCustomsDeclarationSubmission(BAD_REQUEST)
 
@@ -115,11 +116,21 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
         status(failedResult) must be(INTERNAL_SERVER_ERROR)
       }
+
+      "return 401 status when user is without eori" in {
+
+        userWithoutEori()
+
+        val failedResult = route(app, fakeSubmitXmlRequestWithMissingHeaders).get
+
+        status(failedResult) must be(UNAUTHORIZED)
+      }
     }
 
     "POST to /update-submission" should {
 
       "return 200 status when submission has been updated" in {
+
         withAuthorizedUser()
         withSubmissionUpdated(true)
 
@@ -129,6 +140,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       }
 
       "return 500 status when something goes wrong" in {
+
         withAuthorizedUser()
         withSubmissionUpdated(false)
 
@@ -136,11 +148,21 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
         status(failedResult) must be(INTERNAL_SERVER_ERROR)
       }
+
+      "return 401 status when user is without eori" in {
+
+        userWithoutEori()
+
+        val failedResult = route(app, updateSubmissionRequest).get
+
+        status(failedResult) must be(UNAUTHORIZED)
+      }
     }
 
     "GET from /submission" should {
 
       "return 200 status with submission response body" in {
+
         withAuthorizedUser()
         getSubmission(Some(submission))
 
@@ -152,6 +174,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
       // TODO: 204 is safe response
       "return 200 status without submission response" in {
+
         withAuthorizedUser()
         getSubmission(None)
 
@@ -159,11 +182,21 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
         status(result) must be(OK)
       }
+
+      "return 401 status when user is without eori" in {
+
+        userWithoutEori()
+
+        val failedResult = route(app, FakeRequest("GET", "/submission/1234")).get
+
+        status(failedResult) must be(UNAUTHORIZED)
+      }
     }
 
     "GET submissions using EORI number" should {
 
       "return 200 status with submission response body" in {
+
         withAuthorizedUser()
         withSubmissions(submissionSeq)
         withNotification(Seq.empty)
@@ -176,6 +209,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
       // TODO: 204 is safe response
       "return 200 status without submission response" in {
+
         withAuthorizedUser()
         withSubmissions(Seq.empty)
         withNotification(Seq.empty)
@@ -183,6 +217,15 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
         val result = route(app, FakeRequest("GET", "/submissions")).get
 
         status(result) must be(OK)
+      }
+
+      "return 401 status when user is without eori" in {
+
+        userWithoutEori()
+
+        val failedResult = route(app, FakeRequest("GET", "/submissions")).get
+
+        status(failedResult) must be(UNAUTHORIZED)
       }
     }
   }
@@ -193,30 +236,30 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     "return bad request" when {
 
       "there is a missing required header " in {
+
         withAuthorizedUser()
         withCancellationRequest(CancellationRequested, Status.ACCEPTED)
 
         val result = route(app, fakeCancelXmlRequestWithMissingHeaders).get
 
         status(result) must be(BAD_REQUEST)
-
       }
 
       "none xml is sent " in {
+
         withAuthorizedUser()
         withCancellationRequest(CancellationRequested, Status.ACCEPTED)
 
         val result = route(app, fakeCancelRequestWithHeaders("SOMETEXT")).get
 
         status(result) must be(BAD_REQUEST)
-
       }
-
     }
 
     "return CancellationRequested" when {
 
       "there is an existing declaration" in {
+
         withAuthorizedUser()
         withCancellationRequest(CancellationRequested, Status.ACCEPTED)
 
@@ -225,12 +268,12 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
         status(result) must be(OK)
         contentAsJson(result) must be(Json.toJson[CancellationStatus](CancellationRequested))
       }
-
     }
 
     "return CancellationRequestExists" when {
 
       "there is an declaration with existing cancellation request, connection to api successful" in {
+
         withAuthorizedUser()
         withCancellationRequest(CancellationRequestExists, Status.ACCEPTED)
 
@@ -244,6 +287,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
     "return MissingDeclaration" when {
 
       "there is no existing declaration" in {
+
         withAuthorizedUser()
         withCancellationRequest(MissingDeclaration, Status.ACCEPTED)
 

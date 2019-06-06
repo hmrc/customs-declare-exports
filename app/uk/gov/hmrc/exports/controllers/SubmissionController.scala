@@ -63,7 +63,7 @@ class SubmissionController @Inject()(
 
   def cancelDeclaration(): Action[AnyContent] =
     authorisedAction(bodyParser = xmlOrEmptyBody) { implicit request =>
-      processCancelationRequest(request.headers.toSimpleMap)
+      processCancellationRequest(request.headers.toSimpleMap)
     }
 
   private def processSubmissionRequest(
@@ -87,7 +87,7 @@ class SubmissionController @Inject()(
         Future.successful(ErrorResponse.ErrorGenericBadRequest.XmlResult)
     }
 
-  private def processCancelationRequest(
+  private def processCancellationRequest(
     headers: Map[String, String]
   )(implicit request: AuthorizedSubmissionRequest[AnyContent], hc: HeaderCarrier): Future[Result] =
     headerValidator.validateAndExtractCancellationHeaders(headers) match {
