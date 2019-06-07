@@ -17,13 +17,13 @@
 package uk.gov.hmrc.exports.repositories
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.JsString
+import play.api.libs.json.{JsString, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.{BSONDocument, BSONObjectID}
+import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
-import uk.gov.hmrc.mongo.{AtomicUpdate, DatabaseUpdate, ReactiveRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,7 +34,7 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
       mc.mongoConnector.db,
       Submission.formats,
       objectIdFormats
-    ) with AtomicUpdate[Submission] {
+    ) {
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
@@ -51,56 +51,60 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
   def getByEoriAndMrn(eori: String, mrn: String): Future[Option[Submission]] =
     find("eori" -> JsString(eori), "mrn" -> JsString(mrn)).map(_.headOption)
 
-  override def isInsertion(newRecordId: BSONObjectID, oldRecord: Submission): Boolean =
-    newRecordId.equals(oldRecord.id)
-
   def save(submission: Submission): Future[Boolean] = insert(submission).map(wr => wr.ok)
 
+  // TODO: Should return updated object
   def updateSubmission(submission: Submission): Future[Boolean] = {
-    val finder = BSONDocument("_id" -> submission.id, "conversationId" -> submission.conversationId)
+    val finder = Json.obj(
+      "_id" -> Json.toJsFieldJsValueWrapper(submission.id)(objectIdFormats),
+      "conversationId" -> submission.conversationId
+    )
+    val modifier = Json.obj("$set" -> Json.obj("mrn" -> submission.mrn, "status" -> submission.status))
 
-    val modifier = BSONDocument("$set" -> BSONDocument("mrn" -> submission.mrn, "status" -> submission.status))
-
-    atomicUpdate(finder, modifier).map {
-      case Some(result) => logDatabaseResult(result)
-      case _            => false
+    findAndUpdate(finder, modifier, fetchNewObject = true).map {
+      case result if result.value.isEmpty =>
+        result.lastError.foreach(_.err.foreach(logDatabaseResult))
+        false
+      case _ =>
+        true
     }
   }
 
-  def updateMrnAndStatus(eori: String, convId: String, mrn: String, status: Option[String]): Future[Boolean] =
-    if (status.isDefined) {
-      val finder = BSONDocument("eori" -> eori, "conversationId" -> convId)
-      val modifier = BSONDocument("$set" -> BSONDocument("mrn" -> mrn, "status" -> status.get))
+  // TODO: Get rid of Option[_]
+  def updateMrnAndStatus(eori: String, convId: String, newMrn: String, newStatus: Option[String]): Future[Boolean] =
+    if (newStatus.isDefined) {
+      val finder = Json.obj("eori" -> eori, "conversationId" -> convId)
+      val modifier = Json.obj("$set" -> Json.obj("mrn" -> newMrn, "status" -> newStatus.get))
 
-      atomicUpdate(finder, modifier).map {
-        case Some(result) => logDatabaseResult(result)
-        case _            => false
+      findAndUpdate(finder, modifier, fetchNewObject = true).map {
+        case result if result.value.isEmpty =>
+          result.lastError.foreach(_.err.foreach(logDatabaseResult))
+          false
+        case _ =>
+          true
       }
     } else Future.successful(false)
 
   def cancelDeclaration(eori: String, mrn: String): Future[CancellationStatus] = {
-    val finder = BSONDocument("eori" -> eori, "mrn" -> mrn)
+    val finder = Json.obj("eori" -> eori, "mrn" -> mrn)
+    val modifier =
+      Json.obj("$set" -> Json.obj("status" -> RequestedCancellation.toString, "isCancellationRequested" -> true))
 
-    val modifier = BSONDocument(
-      "$set" -> BSONDocument("status" -> RequestedCancellation.toString, "isCancellationRequested" -> true)
-    )
-
-    find("eori" -> JsString(eori), "mrn" -> JsString(mrn))
-      .map(_.headOption) flatMap {
+    find("eori" -> JsString(eori), "mrn" -> JsString(mrn)).map(_.headOption).flatMap {
       case Some(submission) if submission.isCancellationRequested =>
         Future.successful(CancellationRequestExists)
       case Some(_) =>
-        atomicUpdate(finder, modifier).map {
-          case Some(result) if logDatabaseResult(result) => CancellationRequested
-          case _                                         => MissingDeclaration
+        findAndUpdate(finder, modifier, fetchNewObject = true).map {
+          case result if result.lastError.isDefined && result.lastError.get.err.isDefined =>
+            logDatabaseResult(result.lastError.get.err.getOrElse("No error message found"))
+            MissingDeclaration
+          case _ =>
+            CancellationRequested
         }
       case _ => Future.successful(MissingDeclaration)
     }
   }
 
-  private def logDatabaseResult[A](result: DatabaseUpdate[A]): Boolean = {
-    if (!result.writeResult.ok) logger.error("Problem during updating database: " + result.writeResult.message)
-
-    result.writeResult.ok
-  }
+  private def logDatabaseResult(errorDescription: String): Unit =
+    logger.error("Problem during updating database: " + errorDescription)
 }

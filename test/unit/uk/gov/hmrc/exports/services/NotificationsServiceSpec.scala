@@ -116,7 +116,7 @@ class NotificationsServiceSpec
         any(),
         any(),
         any(),
-        status = meq(Some(PositionFunctionCode + NameCodeGranted))
+        newStatus = meq(Some(PositionFunctionCode + NameCodeGranted))
       )
     }
 
@@ -132,7 +132,7 @@ class NotificationsServiceSpec
         any(),
         any(),
         any(),
-        status = meq(Some(PositionFunctionCode + NameCodeDenied))
+        newStatus = meq(Some(PositionFunctionCode + NameCodeDenied))
       )
     }
 
@@ -144,7 +144,7 @@ class NotificationsServiceSpec
 
       testScenario(notificationToSave, notificationSaveResult = false, submissionUpdateResult = true)
 
-      verify(mockSubmissionRepo).updateMrnAndStatus(any(), any(), any(), status = meq(Some(PositionFunctionCode)))
+      verify(mockSubmissionRepo).updateMrnAndStatus(any(), any(), any(), newStatus = meq(Some(PositionFunctionCode)))
     }
 
     "return the newest notification when all notifications has issue date time" in new SetUp {
