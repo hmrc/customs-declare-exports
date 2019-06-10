@@ -25,12 +25,13 @@ import play.api.http.Status._
 import play.api.mvc.Result
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.exports.models.declaration.{CustomsDeclarationsResponse, Submission}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.exports.services.ExportsService
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import scala.xml.{Elem, NodeSeq}
 
 class ExportsServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures with BeforeAndAfterEach {

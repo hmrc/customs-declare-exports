@@ -27,6 +27,7 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.exports.models.declaration.{DeclarationMetadata, DeclarationNotification}
 import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.NotificationService
 import uk.gov.hmrc.wco.dec._

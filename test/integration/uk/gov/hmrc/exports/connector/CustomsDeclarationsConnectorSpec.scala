@@ -17,7 +17,6 @@
 package integration.uk.gov.hmrc.exports.connector
 
 import integration.uk.gov.hmrc.exports.base.IntegrationTestSpec
-import util.ExternalServicesConfig.{Host, Port}
 import integration.uk.gov.hmrc.exports.util.TestModule
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -25,8 +24,9 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
+import uk.gov.hmrc.exports.models.declaration.CustomsDeclarationsResponse
 import uk.gov.hmrc.http.HeaderCarrier
+import util.ExternalServicesConfig.{Host, Port}
 import util.stubs.CustomsDeclarationsAPIService
 import util.{CustomsDeclarationsAPIConfig, ExportsTestData}
 

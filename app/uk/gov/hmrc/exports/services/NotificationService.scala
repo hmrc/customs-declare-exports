@@ -22,7 +22,7 @@ import play.api.mvc.Result
 import play.api.mvc.Results._
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers.notificationMetric
-import uk.gov.hmrc.exports.models.DeclarationNotification
+import uk.gov.hmrc.exports.models.declaration.DeclarationNotification
 import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.wco.dec.Response
 

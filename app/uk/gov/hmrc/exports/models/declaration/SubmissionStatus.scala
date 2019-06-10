@@ -14,39 +14,38 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models
+package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json._
 import uk.gov.hmrc.wco.dec.Response
 
-sealed trait ExportStatus
+sealed trait SubmissionStatus
 
-object ExportStatus {
+object SubmissionStatus {
 
   //scalastyle:off
-  implicit object StatusFormat extends Format[ExportStatus] {
-    def reads(status: JsValue): JsResult[ExportStatus] = status match {
-      case JsString("Pending") => JsSuccess(Pending)
-      case JsString("Cancellation Requested") =>
-        JsSuccess(RequestedCancellation)
-      case JsString("01")   => JsSuccess(Accepted)
-      case JsString("02")   => JsSuccess(Received)
-      case JsString("03")   => JsSuccess(Rejected)
-      case JsString("05")   => JsSuccess(UndergoingPhysicalCheck)
-      case JsString("06")   => JsSuccess(AdditionalDocumentsRequired)
-      case JsString("07")   => JsSuccess(Amended)
-      case JsString("08")   => JsSuccess(Released)
-      case JsString("09")   => JsSuccess(Cleared)
-      case JsString("10")   => JsSuccess(Cancelled)
-      case JsString("1139") => JsSuccess(CustomsPositionGranted)
-      case JsString("1141") => JsSuccess(CustomsPositionDenied)
-      case JsString("16")   => JsSuccess(GoodsHaveExitedTheCommunity)
-      case JsString("17")   => JsSuccess(DeclarationHandledExternally)
-      case JsString("18")   => JsSuccess(AwaitingExitResults)
-      case _                => JsSuccess(UnknownExportStatus)
+  implicit object StatusFormat extends Format[SubmissionStatus] {
+    def reads(status: JsValue): JsResult[SubmissionStatus] = status match {
+      case JsString("Pending")                => JsSuccess(Pending)
+      case JsString("Cancellation Requested") => JsSuccess(RequestedCancellation)
+      case JsString("01")                     => JsSuccess(Accepted)
+      case JsString("02")                     => JsSuccess(Received)
+      case JsString("03")                     => JsSuccess(Rejected)
+      case JsString("05")                     => JsSuccess(UndergoingPhysicalCheck)
+      case JsString("06")                     => JsSuccess(AdditionalDocumentsRequired)
+      case JsString("07")                     => JsSuccess(Amended)
+      case JsString("08")                     => JsSuccess(Released)
+      case JsString("09")                     => JsSuccess(Cleared)
+      case JsString("10")                     => JsSuccess(Cancelled)
+      case JsString("1139")                   => JsSuccess(CustomsPositionGranted)
+      case JsString("1141")                   => JsSuccess(CustomsPositionDenied)
+      case JsString("16")                     => JsSuccess(GoodsHaveExitedTheCommunity)
+      case JsString("17")                     => JsSuccess(DeclarationHandledExternally)
+      case JsString("18")                     => JsSuccess(AwaitingExitResults)
+      case _                                  => JsSuccess(UnknownSubmissionStatus)
     }
 
-    def writes(status: ExportStatus): JsValue = status match {
+    def writes(status: SubmissionStatus): JsValue = status match {
       case Pending                      => JsString("Pending")
       case RequestedCancellation        => JsString("Cancellation Requested")
       case Accepted                     => JsString("01")
@@ -63,11 +62,11 @@ object ExportStatus {
       case GoodsHaveExitedTheCommunity  => JsString("16")
       case DeclarationHandledExternally => JsString("17")
       case AwaitingExitResults          => JsString("18")
-      case UnknownExportStatus          => JsString("UnknownStatus")
+      case UnknownSubmissionStatus      => JsString("UnknownStatus")
     }
   }
 
-  def retrieveFromResponse(response: Response): ExportStatus =
+  def retrieveFromResponse(response: Response): SubmissionStatus =
     response.functionCode match {
       case "Pending"                => Pending
       case "Cancellation Requested" => RequestedCancellation
@@ -87,59 +86,59 @@ object ExportStatus {
       case "16" => GoodsHaveExitedTheCommunity
       case "17" => DeclarationHandledExternally
       case "18" => AwaitingExitResults
-      case _    => UnknownExportStatus
+      case _    => UnknownSubmissionStatus
     }
   //scalastyle:on
 }
 
-case object Pending extends ExportStatus
+case object Pending extends SubmissionStatus
 
-case object Accepted extends ExportStatus
+case object Accepted extends SubmissionStatus
 
-case object Received extends ExportStatus
+case object Received extends SubmissionStatus
 
-case object Rejected extends ExportStatus
+case object Rejected extends SubmissionStatus
 
-case object UndergoingPhysicalCheck extends ExportStatus {
+case object UndergoingPhysicalCheck extends SubmissionStatus {
   override def toString: String = "Undergoing Physical Check"
 }
 
-case object AdditionalDocumentsRequired extends ExportStatus {
+case object AdditionalDocumentsRequired extends SubmissionStatus {
   override def toString: String = "Additional Documents Required"
 }
 
-case object Amended extends ExportStatus
+case object Amended extends SubmissionStatus
 
-case object Released extends ExportStatus
+case object Released extends SubmissionStatus
 
-case object Cleared extends ExportStatus
+case object Cleared extends SubmissionStatus
 
-case object Cancelled extends ExportStatus
+case object Cancelled extends SubmissionStatus
 
-case object RequestedCancellation extends ExportStatus {
+case object RequestedCancellation extends SubmissionStatus {
   override def toString: String = "Cancellation Requested"
 }
 
-case object CustomsPositionGranted extends ExportStatus {
+case object CustomsPositionGranted extends SubmissionStatus {
   override def toString: String = "Customs Position Granted"
 }
 
-case object CustomsPositionDenied extends ExportStatus {
+case object CustomsPositionDenied extends SubmissionStatus {
   override def toString: String = "Customs Position Denied"
 }
 
-case object GoodsHaveExitedTheCommunity extends ExportStatus {
+case object GoodsHaveExitedTheCommunity extends SubmissionStatus {
   override def toString: String = "Goods Have Exited The Community"
 }
 
-case object DeclarationHandledExternally extends ExportStatus {
+case object DeclarationHandledExternally extends SubmissionStatus {
   override def toString: String = "Declaration Handled Externally"
 }
 
-case object AwaitingExitResults extends ExportStatus {
+case object AwaitingExitResults extends SubmissionStatus {
   override def toString: String = "Awaiting Exit Results"
 }
 
-case object UnknownExportStatus extends ExportStatus {
+case object UnknownSubmissionStatus extends SubmissionStatus {
   override def toString: String = "Unknown status"
 }

@@ -19,7 +19,7 @@ package util
 import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
 import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
-import uk.gov.hmrc.exports.models.{DeclarationMetadata, DeclarationNotification}
+import uk.gov.hmrc.exports.models.declaration.{DeclarationMetadata, DeclarationNotification}
 
 import scala.xml.Elem
 

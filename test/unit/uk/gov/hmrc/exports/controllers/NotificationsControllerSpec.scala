@@ -24,7 +24,7 @@ import org.scalatest.BeforeAndAfterEach
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers
-import uk.gov.hmrc.exports.models.{DeclarationMetadata, DeclarationNotification}
+import uk.gov.hmrc.exports.models.declaration.{DeclarationMetadata, DeclarationNotification}
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 import unit.uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
 import util.{ExportsTestData, NotificationTestData}

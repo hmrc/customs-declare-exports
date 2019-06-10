@@ -17,7 +17,7 @@
 package unit.uk.gov.hmrc.exports.models
 
 import org.scalatest.{MustMatchers, WordSpec}
-import uk.gov.hmrc.exports.models.{DeclarationMetadata, DeclarationNotification}
+import uk.gov.hmrc.exports.models.declaration.{DeclarationMetadata, DeclarationNotification}
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 
 class DeclarationNotificationSpec extends WordSpec with MustMatchers {

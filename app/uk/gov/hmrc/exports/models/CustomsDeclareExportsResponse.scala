@@ -16,18 +16,10 @@
 
 package uk.gov.hmrc.exports.models
 
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Name}
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import play.api.libs.json.Json
 
-case class CustomsDeclarationsResponse(status: Int, conversationId: Option[String] = None)
+case class CustomsDeclareExportsResponse(status: Int, message: String)
 
-case class SignedInUser(
-  credentials: Credentials,
-  name: Name,
-  email: Option[String],
-  eori: String,
-  externalId: String,
-  internalId: Option[String],
-  affinityGroup: Option[AffinityGroup],
-  enrolments: Enrolments
-)
+object CustomsDeclareExportsResponse {
+  implicit val formats = Json.format[CustomsDeclareExportsResponse]
+}

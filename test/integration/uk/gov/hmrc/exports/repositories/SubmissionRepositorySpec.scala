@@ -19,7 +19,8 @@ package integration.uk.gov.hmrc.exports.repositories
 import org.scalatest.BeforeAndAfterEach
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.exports.models.{CancellationRequestExists, CancellationRequested, MissingDeclaration, Submission}
+import uk.gov.hmrc.exports.models.declaration.Submission
+import uk.gov.hmrc.exports.models.{CancellationRequestExists, CancellationRequested, MissingDeclaration}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import unit.uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
 

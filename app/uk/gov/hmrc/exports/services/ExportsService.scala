@@ -24,6 +24,7 @@ import play.api.mvc.Results._
 import play.mvc.Http.Status._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.exports.models.declaration.{CustomsDeclarationsResponse, Pending, Submission}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -37,7 +38,7 @@ class ExportsService @Inject()(
   submissionRepository: SubmissionRepository
 ) {
 
-  private val logger = Logger(this.getClass())
+  private val logger = Logger(this.getClass)
 
   def handleSubmission(eori: String, ducr: Option[String], lrn: String, xml: NodeSeq)(
     implicit hc: HeaderCarrier
@@ -63,20 +64,18 @@ class ExportsService @Inject()(
   ): Future[Either[Result, CancellationStatus]] =
     customsDeclarationsConnector
       .submitCancellation(eori, xml)
-      .flatMap { response =>
-        response match {
-          case CustomsDeclarationsResponse(ACCEPTED, Some(_)) =>
-            submissionRepository
-              .cancelDeclaration(eori, mrn)
-              .map { cancellationStatus =>
-                logger.debug(s"Cancellation status for declaration with mrn $mrn is $cancellationStatus")
-                Right(cancellationStatus)
-              }
-          case _ =>
-            logger.error(s"Customs Declaration Service return ${response.status}")
-            Future.successful(Left(InternalServerError("")))
-        }
-      }
+      .flatMap {
+      case CustomsDeclarationsResponse(ACCEPTED, Some(_)) =>
+        submissionRepository
+          .cancelDeclaration(eori, mrn)
+          .map { cancellationStatus =>
+            logger.debug(s"Cancellation status for declaration with mrn $mrn is $cancellationStatus")
+            Right(cancellationStatus)
+          }
+      case response =>
+        logger.error(s"Customs Declaration Service return ${response.status}")
+        Future.successful(Left(InternalServerError("")))
+    }
 
   private def persistSubmission(
     eori: String,
@@ -91,7 +90,7 @@ class ExportsService @Inject()(
         res =>
           if (res) {
             logger.debug(s"Submission data with conversation Id $conversationId and lrn $lrn saved to DB")
-            play.api.mvc.Results.Accepted(Json.toJson(ExportsResponse(ACCEPTED, "Submission response saved")))
+            play.api.mvc.Results.Accepted(Json.toJson(CustomsDeclareExportsResponse(ACCEPTED, "Submission response saved")))
           } else {
             logger.error(s"Error during saving submission data to DB for conversationID:$conversationId")
             InternalServerError("Failed saving submission")

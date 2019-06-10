@@ -23,6 +23,7 @@ import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.exports.models.declaration.Submission
 import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.ExportsService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -114,7 +115,7 @@ class SubmissionController @Inject()(
       submissionRepository.updateSubmission(body).map { res =>
         if (res) {
           logger.debug("Submission updated successfully")
-          Ok(Json.toJson(ExportsResponse(OK, "Submission response updated")))
+          Ok(Json.toJson(CustomsDeclareExportsResponse(OK, "Submission response updated")))
         } else {
           logger.error("There was an error during updating submission")
           InternalServerError("Failed updating submission")
@@ -129,9 +130,11 @@ class SubmissionController @Inject()(
       }
     }
 
-  def getSubmissionsByEori: Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit authorizedRequest =>
-    submissionRepository.findByEori(authorizedRequest.eori.value).map(submissions => Ok(Json.toJson(submissions)))
-  }
+  def getSubmissionsByEori: Action[AnyContent] =
+    authorisedAction(bodyParsers.default) { implicit authorizedRequest =>
+      submissionRepository.findByEori(authorizedRequest.eori.value).map(submissions =>
+        Ok(Json.toJson(submissions)))
+    }
 
   private def handleDeclarationSubmit(eori: String, lrn: String, ducr: Option[String], xml: NodeSeq)(
     implicit hc: HeaderCarrier

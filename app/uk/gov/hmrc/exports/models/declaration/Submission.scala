@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models
+package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.Json
-import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.mongoEntity
 
 case class Submission(
   eori: String,
@@ -28,33 +25,10 @@ case class Submission(
   lrn: Option[String] = None,
   mrn: Option[String] = None,
   submittedTimestamp: Long = System.currentTimeMillis(),
-  id: BSONObjectID = BSONObjectID.generate(),
   status: String,
   isCancellationRequested: Boolean = false
 )
 
 object Submission {
-  implicit val objectIdFormats = ReactiveMongoFormats.objectIdFormats
-  implicit val formats = mongoEntity {
-    Json.format[Submission]
-  }
-}
-
-case class SubmissionResponse(
-  eori: String,
-  conversationId: String,
-  ducr: Option[String] = None,
-  lrn: Option[String] = None,
-  mrn: Option[String] = None,
-  status: String
-)
-
-object SubmissionResponse {
-  implicit val formats = Json.format[SubmissionResponse]
-}
-
-case class ExportsResponse(status: Int, message: String)
-
-object ExportsResponse {
-  implicit val formats = Json.format[ExportsResponse]
+  implicit val formats = Json.format[Submission]
 }
