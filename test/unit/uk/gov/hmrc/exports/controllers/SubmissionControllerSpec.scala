@@ -233,9 +233,9 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
   //TODO: add return status when declaration is cancelled
   "POST cancel declaration" should {
 
-    "return bad request" when {
+    "return specicic error status" when {
 
-      "there is a missing required header " in {
+      "there is a missing required header - BAD_REQUEST" in {
 
         withAuthorizedUser()
         withCancellationRequest(CancellationRequested, Status.ACCEPTED)
@@ -245,7 +245,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
         status(result) must be(BAD_REQUEST)
       }
 
-      "none xml is sent " in {
+      "none xml is sent - BAD_REQUEST" in {
 
         withAuthorizedUser()
         withCancellationRequest(CancellationRequested, Status.ACCEPTED)
@@ -253,6 +253,17 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
         val result = route(app, fakeCancelRequestWithHeaders("SOMETEXT")).get
 
         status(result) must be(BAD_REQUEST)
+      }
+
+      "user is without EORI - UNAUTHORIZED" in {
+
+        userWithoutEori()
+        withCancellationRequest(CancellationRequestExists, Status.ACCEPTED)
+
+        val result = route(app, fakeCancelRequestWithHeaders("<someXml></someXml>")).get
+
+        status(result) must be(UNAUTHORIZED)
+        contentAsString(result) must be("<?xml version='1.0' encoding='UTF-8'?>\n<errorResponse>\n        <code>UNAUTHORIZED</code>\n        <message>Insufficient Enrolments</message>\n      </errorResponse>")
       }
     }
 
