@@ -22,6 +22,7 @@ import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.exports.models.declaration.{RequestedCancellation, Submission}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 
@@ -56,7 +57,6 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
   // TODO: Should return updated object
   def updateSubmission(submission: Submission): Future[Boolean] = {
     val finder = Json.obj(
-      "_id" -> Json.toJsFieldJsValueWrapper(submission.id)(objectIdFormats),
       "conversationId" -> submission.conversationId
     )
     val modifier = Json.obj("$set" -> Json.obj("mrn" -> submission.mrn, "status" -> submission.status))

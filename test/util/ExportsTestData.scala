@@ -21,16 +21,11 @@ import org.joda.time.{DateTime, DateTimeZone}
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
-import util.TestDataHelper._
 import uk.gov.hmrc.exports.controllers.CustomsHeaderNames._
-import uk.gov.hmrc.exports.models.{
-  DeclarationMetadata,
-  DeclarationNotification,
-  Eori,
-  Submission,
-  SubmissionResponse
-}
+import uk.gov.hmrc.exports.models.Eori
+import uk.gov.hmrc.exports.models.declaration.{DeclarationMetadata, DeclarationNotification, Submission}
 import uk.gov.hmrc.wco.dec.{DateTimeString, MetaData, Response, ResponseDateTimeElement, Declaration => WcoDeclaration}
+import util.TestDataHelper._
 
 import scala.util.Random
 
@@ -96,7 +91,6 @@ trait ExportsTestData {
   val notification = DeclarationNotification(now, conversationId, mrn, eori, DeclarationMetadata(), response1)
   val notification2 = DeclarationNotification(now, conversationId, mrn, eori, DeclarationMetadata(), response2)
 
-  val submissionResponse = SubmissionResponse(eori, conversationId, Some(ducr), lrn, Some(mrn), status = "01")
 
   val ValidHeaders: Map[String, String] = Map(
     contentTypeHeader,

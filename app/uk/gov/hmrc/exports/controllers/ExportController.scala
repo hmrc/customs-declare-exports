@@ -38,7 +38,21 @@ class ExportController @Inject()(override val authConnector: AuthConnector, cc: 
       .getEnrolment("HMRC-CUS-ORG")
       .flatMap(_.getIdentifier("EORINumber"))
 
-  def authorisedWithEori[A](
+  def authorisedAction[A](
+    bodyParser: BodyParser[A]
+  )(body: AuthorizedSubmissionRequest[A] => Future[Result]): Action[A] =
+    Action.async(bodyParser) { implicit request =>
+      authorisedWithEori.flatMap {
+        case Right(authorisedRequest) =>
+          logger.info(s"Authorised request for ${authorisedRequest.eori.value}")
+          body(authorisedRequest)
+        case Left(error) =>
+          logger.error(s"Problems with Authorisation: ${error.message}")
+          Future.successful(error.XmlResult)
+      }
+    }
+
+  private def authorisedWithEori[A](
     implicit hc: HeaderCarrier,
     request: Request[A]
   ): Future[Either[ErrorResponse, AuthorizedSubmissionRequest[A]]] =
@@ -59,19 +73,5 @@ class ExportController @Inject()(override val authConnector: AuthConnector, cc: 
       case ex: Throwable =>
         logger.error("Internal server error is " + ex.getMessage)
         Left(ErrorResponse.ErrorInternalServerError)
-    }
-
-  def authorisedAction[A](
-    bodyParser: BodyParser[A]
-  )(body: AuthorizedSubmissionRequest[A] => Future[Result]): Action[A] =
-    Action.async(bodyParser) { implicit request =>
-      authorisedWithEori.flatMap {
-        case Right(authorisedRequest) =>
-          logger.info(s"Authorised request for ${authorisedRequest.eori.value}")
-          body(authorisedRequest)
-        case Left(error) =>
-          logger.error(s"Problems with Authorisation: ${error.message}")
-          Future.successful(error.XmlResult)
-      }
     }
 }

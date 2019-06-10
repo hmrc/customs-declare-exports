@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models
+package uk.gov.hmrc.exports.models.declaration
 
 import org.joda.time.DateTime
-import play.api.libs.json.JodaWrites._
-import play.api.libs.json.JodaReads._
-import play.api.libs.json.Json
+import play.api.libs.json.JodaReads.DefaultJodaDateTimeReads
+import play.api.libs.json.JodaWrites.JodaDateTimeWrites
+import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.wco.dec._
 
 import scala.xml.Elem
@@ -38,6 +38,7 @@ object DeclarationMetadata {
 }
 
 object DeclarationNotification {
+  implicit val JodaDateTimeFormats = Format(DefaultJodaDateTimeReads, JodaDateTimeWrites)
   implicit val measureFormats = Json.format[Measure]
   implicit val amountFormats = Json.format[Amount]
   implicit val dateTimeStringFormats = Json.format[DateTimeString]

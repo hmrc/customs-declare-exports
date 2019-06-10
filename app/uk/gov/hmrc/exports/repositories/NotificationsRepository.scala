@@ -17,12 +17,11 @@
 package uk.gov.hmrc.exports.repositories
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
 import play.api.libs.json.JsString
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.exports.models.DeclarationNotification
+import uk.gov.hmrc.exports.models.declaration.DeclarationNotification
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 

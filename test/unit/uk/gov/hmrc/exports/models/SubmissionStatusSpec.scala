@@ -18,31 +18,31 @@ package unit.uk.gov.hmrc.exports.models
 
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json._
-import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.wco.dec.{Response, ResponseStatus}
 
-class ExportStatusSpec extends WordSpec with MustMatchers {
+class SubmissionStatusSpec extends WordSpec with MustMatchers {
 
   "Reads for status" should {
     "correctly read a value for every scenario" in {
-      ExportStatus.StatusFormat.reads(JsString("Pending")) must be(JsSuccess(Pending))
-      ExportStatus.StatusFormat.reads(JsString("Cancellation Requested")) must be(JsSuccess(RequestedCancellation))
-      ExportStatus.StatusFormat.reads(JsString("01")) must be(JsSuccess(Accepted))
-      ExportStatus.StatusFormat.reads(JsString("02")) must be(JsSuccess(Received))
-      ExportStatus.StatusFormat.reads(JsString("03")) must be(JsSuccess(Rejected))
-      ExportStatus.StatusFormat.reads(JsString("05")) must be(JsSuccess(UndergoingPhysicalCheck))
-      ExportStatus.StatusFormat.reads(JsString("06")) must be(JsSuccess(AdditionalDocumentsRequired))
-      ExportStatus.StatusFormat.reads(JsString("07")) must be(JsSuccess(Amended))
-      ExportStatus.StatusFormat.reads(JsString("08")) must be(JsSuccess(Released))
-      ExportStatus.StatusFormat.reads(JsString("09")) must be(JsSuccess(Cleared))
-      ExportStatus.StatusFormat.reads(JsString("10")) must be(JsSuccess(Cancelled))
-      ExportStatus.StatusFormat.reads(JsString("1139")) must be(JsSuccess(CustomsPositionGranted))
-      ExportStatus.StatusFormat.reads(JsString("1141")) must be(JsSuccess(CustomsPositionDenied))
-      ExportStatus.StatusFormat.reads(JsString("16")) must be(JsSuccess(GoodsHaveExitedTheCommunity))
-      ExportStatus.StatusFormat.reads(JsString("17")) must be(JsSuccess(DeclarationHandledExternally))
-      ExportStatus.StatusFormat.reads(JsString("18")) must be(JsSuccess(AwaitingExitResults))
-      ExportStatus.StatusFormat.reads(JsString("WrongStatus")) must be(JsSuccess(UnknownExportStatus))
-      ExportStatus.StatusFormat.reads(JsString("UnknownStatus")) must be(JsSuccess(UnknownExportStatus))
+      SubmissionStatus.StatusFormat.reads(JsString("Pending")) must be(JsSuccess(Pending))
+      SubmissionStatus.StatusFormat.reads(JsString("Cancellation Requested")) must be(JsSuccess(RequestedCancellation))
+      SubmissionStatus.StatusFormat.reads(JsString("01")) must be(JsSuccess(Accepted))
+      SubmissionStatus.StatusFormat.reads(JsString("02")) must be(JsSuccess(Received))
+      SubmissionStatus.StatusFormat.reads(JsString("03")) must be(JsSuccess(Rejected))
+      SubmissionStatus.StatusFormat.reads(JsString("05")) must be(JsSuccess(UndergoingPhysicalCheck))
+      SubmissionStatus.StatusFormat.reads(JsString("06")) must be(JsSuccess(AdditionalDocumentsRequired))
+      SubmissionStatus.StatusFormat.reads(JsString("07")) must be(JsSuccess(Amended))
+      SubmissionStatus.StatusFormat.reads(JsString("08")) must be(JsSuccess(Released))
+      SubmissionStatus.StatusFormat.reads(JsString("09")) must be(JsSuccess(Cleared))
+      SubmissionStatus.StatusFormat.reads(JsString("10")) must be(JsSuccess(Cancelled))
+      SubmissionStatus.StatusFormat.reads(JsString("1139")) must be(JsSuccess(CustomsPositionGranted))
+      SubmissionStatus.StatusFormat.reads(JsString("1141")) must be(JsSuccess(CustomsPositionDenied))
+      SubmissionStatus.StatusFormat.reads(JsString("16")) must be(JsSuccess(GoodsHaveExitedTheCommunity))
+      SubmissionStatus.StatusFormat.reads(JsString("17")) must be(JsSuccess(DeclarationHandledExternally))
+      SubmissionStatus.StatusFormat.reads(JsString("18")) must be(JsSuccess(AwaitingExitResults))
+      SubmissionStatus.StatusFormat.reads(JsString("WrongStatus")) must be(JsSuccess(UnknownSubmissionStatus))
+      SubmissionStatus.StatusFormat.reads(JsString("UnknownStatus")) must be(JsSuccess(UnknownSubmissionStatus))
     }
 
     "correctly write a value for every scenario" in {
@@ -62,7 +62,7 @@ class ExportStatusSpec extends WordSpec with MustMatchers {
       Json.toJson(GoodsHaveExitedTheCommunity) must be(JsString("16"))
       Json.toJson(DeclarationHandledExternally) must be(JsString("17"))
       Json.toJson(AwaitingExitResults) must be(JsString("18"))
-      Json.toJson(UnknownExportStatus) must be(JsString("UnknownStatus"))
+      Json.toJson(UnknownSubmissionStatus) must be(JsString("UnknownStatus"))
     }
   }
 
@@ -70,93 +70,93 @@ class ExportStatusSpec extends WordSpec with MustMatchers {
     "correctly retrieve Accepted status" in {
       val acceptedResponse = Response("01")
 
-      ExportStatus.retrieveFromResponse(acceptedResponse) must be(Accepted)
+      SubmissionStatus.retrieveFromResponse(acceptedResponse) must be(Accepted)
     }
 
     "correctly retrieve Received status" in {
       val receivedResponse = Response("02")
 
-      ExportStatus.retrieveFromResponse(receivedResponse) must be(Received)
+      SubmissionStatus.retrieveFromResponse(receivedResponse) must be(Received)
     }
 
     "correctly retrieve Rejected status" in {
       val rejectedResponse = Response("03")
 
-      ExportStatus.retrieveFromResponse(rejectedResponse) must be(Rejected)
+      SubmissionStatus.retrieveFromResponse(rejectedResponse) must be(Rejected)
     }
 
     "correctly retrieve UndergoingPhysicalCheck status" in {
       val undergoingPhysicalCheckResponse = Response("05")
 
-      ExportStatus.retrieveFromResponse(undergoingPhysicalCheckResponse) must be(UndergoingPhysicalCheck)
+      SubmissionStatus.retrieveFromResponse(undergoingPhysicalCheckResponse) must be(UndergoingPhysicalCheck)
     }
 
     "correctly retrieve AdditionalDocumentsRequired status" in {
       val additionalDocumentsRequiredResponse = Response("06")
 
-      ExportStatus.retrieveFromResponse(additionalDocumentsRequiredResponse) must be(AdditionalDocumentsRequired)
+      SubmissionStatus.retrieveFromResponse(additionalDocumentsRequiredResponse) must be(AdditionalDocumentsRequired)
     }
 
     "correctly retrieve Amended status" in {
       val amendedResponse = Response("07")
 
-      ExportStatus.retrieveFromResponse(amendedResponse) must be(Amended)
+      SubmissionStatus.retrieveFromResponse(amendedResponse) must be(Amended)
     }
 
     "correctly retrieve Released status" in {
       val releasedResponse = Response("08")
 
-      ExportStatus.retrieveFromResponse(releasedResponse) must be(Released)
+      SubmissionStatus.retrieveFromResponse(releasedResponse) must be(Released)
     }
 
     "correctly retrieve Cleared status" in {
       val clearedResponse = Response("09")
 
-      ExportStatus.retrieveFromResponse(clearedResponse) must be(Cleared)
+      SubmissionStatus.retrieveFromResponse(clearedResponse) must be(Cleared)
     }
 
     "correctly retrieve Cancelled status" in {
       val cancelledResponse = Response("10")
 
-      ExportStatus.retrieveFromResponse(cancelledResponse) must be(Cancelled)
+      SubmissionStatus.retrieveFromResponse(cancelledResponse) must be(Cancelled)
     }
 
     "correctly retrieve CustomsPositionGranted status" in {
       val customsPositionGrantedResponse =
         Response(functionCode = "11", status = Seq(ResponseStatus(nameCode = Some("39"))))
 
-      ExportStatus.retrieveFromResponse(customsPositionGrantedResponse) must be(CustomsPositionGranted)
+      SubmissionStatus.retrieveFromResponse(customsPositionGrantedResponse) must be(CustomsPositionGranted)
     }
 
     "correctly retrieve CustomsPositionDenied status" in {
       val customsPositionDeniedResponse =
         Response(functionCode = "11", status = Seq(ResponseStatus(nameCode = Some("41"))))
 
-      ExportStatus.retrieveFromResponse(customsPositionDeniedResponse) must be(CustomsPositionDenied)
+      SubmissionStatus.retrieveFromResponse(customsPositionDeniedResponse) must be(CustomsPositionDenied)
     }
 
     "correctly retrieve GoodsHaveExitedTheCommunity status" in {
       val goodsHaveExitedTheCommunityResponse = Response("16")
 
-      ExportStatus.retrieveFromResponse(goodsHaveExitedTheCommunityResponse) must be(GoodsHaveExitedTheCommunity)
+      SubmissionStatus.retrieveFromResponse(goodsHaveExitedTheCommunityResponse) must be(GoodsHaveExitedTheCommunity)
     }
 
     "correctly retrieve DeclarationHandledExternally status" in {
       val declarationHandledExternallyResponse = Response("17")
 
-      ExportStatus.retrieveFromResponse(declarationHandledExternallyResponse) must be(DeclarationHandledExternally)
+      SubmissionStatus.retrieveFromResponse(declarationHandledExternallyResponse) must be(DeclarationHandledExternally)
     }
 
     "correctly retrieve AwaitingExitResults status" in {
       val awaitingExitResultsResponse = Response("18")
 
-      ExportStatus.retrieveFromResponse(awaitingExitResultsResponse) must be(AwaitingExitResults)
+      SubmissionStatus.retrieveFromResponse(awaitingExitResultsResponse) must be(AwaitingExitResults)
     }
 
     "correctly retrieve UnknownStatus status" in {
       val unknownStatusResponse = Response("20")
 
-      ExportStatus.retrieveFromResponse(unknownStatusResponse) must be(UnknownExportStatus)
+      SubmissionStatus.retrieveFromResponse(unknownStatusResponse) must be(UnknownSubmissionStatus)
     }
   }
 
@@ -170,7 +170,7 @@ class ExportStatusSpec extends WordSpec with MustMatchers {
       GoodsHaveExitedTheCommunity.toString must be("Goods Have Exited The Community")
       DeclarationHandledExternally.toString must be("Declaration Handled Externally")
       AwaitingExitResults.toString must be("Awaiting Exit Results")
-      UnknownExportStatus.toString must be("Unknown status")
+      UnknownSubmissionStatus.toString must be("Unknown status")
     }
   }
 }

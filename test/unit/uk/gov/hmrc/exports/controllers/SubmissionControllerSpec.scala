@@ -25,6 +25,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
 import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.exports.models.declaration.Submission
 import unit.uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
 import util.ExportsTestData
 
