@@ -85,7 +85,7 @@ class SubmissionService @Inject()(
     status: String
   ): Future[Result] =
     submissionRepository
-      .save(Submission(eori, conversationId, ducr, Some(lrn), None, status = status))
+      .save(Submission("123", eori, lrn, status = status))
       .map(
         res =>
           if (res) {

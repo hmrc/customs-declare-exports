@@ -16,31 +16,18 @@
 
 package uk.gov.hmrc.exports.models.declaration
 
-import java.util.UUID
+import java.time.LocalDateTime
 
 import play.api.libs.json.Json
 
-//case class Submission(
-//  eori: String,
-//  conversationId: String,
-//  ducr: Option[String] = None,
-//  lrn: Option[String] = None,
-//  mrn: Option[String] = None,
-//  submittedTimestamp: Long = System.currentTimeMillis(),
-//  status: String,
-//  isCancellationRequested: Boolean = false
-//)
+case class Action(
+  requestType: String,
+  conversationId: String,   // Unique key
+  requestTimestamp: LocalDateTime = LocalDateTime.now()
+) {
 
-case class Submission(
-  uuid: String = UUID.randomUUID().toString,
-  eori: String,
-  lrn: String,
-  status: String,
-  mrn: Option[String] = None,  // Unique key
-  ducr: Option[String] = None,
-  actions: Seq[Action] = Seq.empty
-)
+}
 
-object Submission {
-  implicit val formats = Json.format[Submission]
+object Action {
+  implicit val format = Json.format[Action]
 }
