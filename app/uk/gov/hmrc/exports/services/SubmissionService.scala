@@ -33,7 +33,7 @@ import scala.concurrent.Future
 import scala.xml.NodeSeq
 
 @Singleton
-class ExportsService @Inject()(
+class SubmissionService @Inject()(
   customsDeclarationsConnector: CustomsDeclarationsConnector,
   submissionRepository: SubmissionRepository
 ) {

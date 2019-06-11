@@ -22,10 +22,12 @@ import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
+import uk.gov.hmrc.exports.controllers.actions.Authenticator
+import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.Submission
-import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.ExportsService
+import uk.gov.hmrc.exports.repositories.SubmissionRepository
+import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -37,25 +39,13 @@ class SubmissionController @Inject()(
   appConfig: AppConfig,
   submissionRepository: SubmissionRepository,
   authConnector: AuthConnector,
-  exportsService: ExportsService,
+  exportsService: SubmissionService,
   headerValidator: HeaderValidator,
-  notificationsRepository: NotificationsRepository,
   cc: ControllerComponents,
   bodyParsers: PlayBodyParsers
-) extends ExportController(authConnector, cc) {
+) extends Authenticator(authConnector, cc) {
 
-  private val logger = Logger(this.getClass())
-
-  private def xmlOrEmptyBody: BodyParser[AnyContent] =
-    BodyParser(
-      rq =>
-        parse.tolerantXml(rq).map {
-          case Right(xml) => Right(AnyContentAsXml(xml))
-          case _ =>
-            logger.error("Invalid xml payload")
-            Left(ErrorResponse.ErrorInvalidPayload.XmlResult)
-      }
-    )
+  private val logger = Logger(this.getClass)
 
   def submitDeclaration(): Action[AnyContent] =
     authorisedAction(bodyParser = xmlOrEmptyBody) { implicit request =>
@@ -66,6 +56,17 @@ class SubmissionController @Inject()(
     authorisedAction(bodyParser = xmlOrEmptyBody) { implicit request =>
       processCancellationRequest(request.headers.toSimpleMap)
     }
+
+  private def xmlOrEmptyBody: BodyParser[AnyContent] =
+    BodyParser(
+      rq =>
+        parse.tolerantXml(rq).map {
+          case Right(xml) => Right(AnyContentAsXml(xml))
+          case _ =>
+            logger.error("Invalid xml payload")
+            Left(ErrorResponse.ErrorInvalidPayload.XmlResult)
+        }
+    )
 
   private def processSubmissionRequest(
     headers: Map[String, String]
@@ -88,6 +89,11 @@ class SubmissionController @Inject()(
         Future.successful(ErrorResponse.ErrorGenericBadRequest.XmlResult)
     }
 
+  private def handleDeclarationSubmit(eori: String, lrn: String, ducr: Option[String], xml: NodeSeq)(
+    implicit hc: HeaderCarrier
+  ): Future[Result] =
+    exportsService.handleSubmission(eori, ducr, lrn, xml)
+
   private def processCancellationRequest(
     headers: Map[String, String]
   )(implicit request: AuthorizedSubmissionRequest[AnyContent], hc: HeaderCarrier): Future[Result] =
@@ -107,6 +113,14 @@ class SubmissionController @Inject()(
       case Left(error) =>
         logger.error(s"Invalid Headers found. Error message: ${error.message}")
         Future.successful(ErrorResponse.ErrorGenericBadRequest.XmlResult)
+    }
+
+  private def handleDeclarationCancellation(eori: String, mrn: String, xml: NodeSeq)(
+    implicit hc: HeaderCarrier
+  ): Future[Result] =
+    exportsService.handleCancellation(eori, mrn, xml).map {
+      case Right(cancellationStatus) => Ok(Json.toJson(cancellationStatus))
+      case Left(value)               => value
     }
 
   def updateSubmission(): Action[Submission] =
@@ -132,20 +146,10 @@ class SubmissionController @Inject()(
 
   def getSubmissionsByEori: Action[AnyContent] =
     authorisedAction(bodyParsers.default) { implicit authorizedRequest =>
-      submissionRepository.findByEori(authorizedRequest.eori.value).map(submissions =>
-        Ok(Json.toJson(submissions)))
+      submissionRepository.findByEori(authorizedRequest.eori.value).map(submissions => Ok(Json.toJson(submissions)))
     }
 
-  private def handleDeclarationSubmit(eori: String, lrn: String, ducr: Option[String], xml: NodeSeq)(
-    implicit hc: HeaderCarrier
-  ): Future[Result] =
-    exportsService.handleSubmission(eori, ducr, lrn, xml)
 
-  private def handleDeclarationCancellation(eori: String, mrn: String, xml: NodeSeq)(
-    implicit hc: HeaderCarrier
-  ): Future[Result] =
-    exportsService.handleCancellation(eori, mrn, xml).map {
-      case Right(cancellationStatus) => Ok(Json.toJson(cancellationStatus))
-      case Left(value)               => value
-    }
+
+
 }

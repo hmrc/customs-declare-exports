@@ -24,6 +24,8 @@ import play.api.libs.json.Json
 import play.api.mvc.{PlayBodyParsers, _}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
+import uk.gov.hmrc.exports.controllers.actions.Authenticator
+import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 import uk.gov.hmrc.exports.models._
@@ -48,7 +50,7 @@ class NotificationsController @Inject()(
   notificationsService: NotificationService,
   cc: ControllerComponents,
   bodyParsers: PlayBodyParsers
-) extends ExportController(authConnector, cc) {
+) extends Authenticator(authConnector, cc) {
 
   private val logger = Logger(this.getClass())
 

@@ -16,6 +16,7 @@
 
 package integration.uk.gov.hmrc.exports.base
 
+import com.codahale.metrics.SharedMetricRegistries
 import com.google.inject.AbstractModule
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
@@ -28,8 +29,10 @@ object IntegrationTestModule extends AbstractModule {
   def asGuiceableModule: GuiceableModule = GuiceableModule.guiceable(this)
 }
 // TODO: moved the before/after here
-trait IntegrationTestSpec extends UnitSpec
-  with BeforeAndAfterEach with BeforeAndAfterAll with WireMockRunner with Eventually {
+trait IntegrationTestSpec
+    extends UnitSpec with BeforeAndAfterEach with BeforeAndAfterAll with WireMockRunner with Eventually {
+
+  SharedMetricRegistries.clear()
 
   override protected def beforeAll() {
     startMockServer()

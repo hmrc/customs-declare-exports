@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.controllers
+package uk.gov.hmrc.exports.controllers.actions
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
@@ -27,16 +27,13 @@ import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
 
+// TODO: This needs to be separated from BackendController and be injected instead of inheriting in other controllers
 @Singleton
-class ExportController @Inject()(override val authConnector: AuthConnector, cc: ControllerComponents)(implicit ec: ExecutionContext)
-    extends BackendController(cc) with AuthorisedFunctions {
+class Authenticator @Inject()(override val authConnector: AuthConnector, cc: ControllerComponents)(
+  implicit ec: ExecutionContext
+) extends BackendController(cc) with AuthorisedFunctions {
 
-  private val logger = Logger(this.getClass())
-
-  private def hasEnrolment(allEnrolments: Enrolments): Option[EnrolmentIdentifier] =
-    allEnrolments
-      .getEnrolment("HMRC-CUS-ORG")
-      .flatMap(_.getIdentifier("EORINumber"))
+  private val logger = Logger(this.getClass)
 
   def authorisedAction[A](
     bodyParser: BodyParser[A]
@@ -74,4 +71,9 @@ class ExportController @Inject()(override val authConnector: AuthConnector, cc: 
         logger.error("Internal server error is " + ex.getMessage)
         Left(ErrorResponse.ErrorInternalServerError)
     }
+
+  private def hasEnrolment(allEnrolments: Enrolments): Option[EnrolmentIdentifier] =
+    allEnrolments
+      .getEnrolment("HMRC-CUS-ORG")
+      .flatMap(_.getIdentifier("EORINumber"))
 }

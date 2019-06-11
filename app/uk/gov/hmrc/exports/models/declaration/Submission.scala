@@ -29,6 +29,16 @@ case class Submission(
   isCancellationRequested: Boolean = false
 )
 
+//case class Submission(
+//  uuid: String,
+//  eori: String,
+//  ducr: Option[String],
+//  lrn: String,
+//  mrn: Option[String],
+//  status: String,
+//  actions: Seq[String]
+//)
+
 object Submission {
   implicit val formats = Json.format[Submission]
 }

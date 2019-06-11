@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.controllers
+package uk.gov.hmrc.exports.controllers.util
 
 import javax.inject.Singleton
 import play.api.Logger
 import play.api.http.HeaderNames
+import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
 import uk.gov.hmrc.exports.models._
 
 @Singleton

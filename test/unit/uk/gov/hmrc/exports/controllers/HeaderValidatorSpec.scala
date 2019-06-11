@@ -17,7 +17,7 @@
 package unit.uk.gov.hmrc.exports.controllers
 
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.exports.controllers.HeaderValidator
+import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec

@@ -25,7 +25,7 @@ import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
 import unit.uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
 import util.ExportsTestData
 
-class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
+class AuthenticatorSpec extends CustomsExportsBaseSpec with ExportsTestData {
   val uri = "/declaration"
   val xmlBody: String = randomSubmitDeclaration.toXml
   val fakeXmlRequest: FakeRequest[String] = FakeRequest("POST", uri).withBody(xmlBody)

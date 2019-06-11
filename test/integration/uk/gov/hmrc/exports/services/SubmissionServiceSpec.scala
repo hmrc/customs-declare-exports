@@ -28,7 +28,7 @@ import play.api.mvc.Result
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
-import uk.gov.hmrc.exports.services.ExportsService
+import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.http.HeaderCarrier
 import util.ExternalServicesConfig._
 import util.stubs.CustomsDeclarationsAPIService
@@ -37,7 +37,7 @@ import util.{CustomsDeclarationsAPIConfig, ExportsTestData}
 import scala.concurrent.Future
 import scala.xml.XML
 
-class ExportsServiceSpec
+class SubmissionServiceSpec
     extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar with CustomsDeclarationsAPIService
     with ExportsTestData {
 
@@ -59,7 +59,7 @@ class ExportsServiceSpec
       )
       .build()
 
-  private lazy val exportsService = app.injector.instanceOf[ExportsService]
+  private lazy val exportsService = app.injector.instanceOf[SubmissionService]
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
