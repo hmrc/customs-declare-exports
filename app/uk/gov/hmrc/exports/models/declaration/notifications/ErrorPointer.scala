@@ -14,21 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models.declaration
-
-import java.util.UUID
+package uk.gov.hmrc.exports.models.declaration.notifications
 
 import play.api.libs.json.Json
 
-case class Submission(
-  uuid: String = UUID.randomUUID().toString,
-  eori: String,
-  lrn: String,
-  mrn: Option[String] = None,  // Unique key
-  ducr: Option[String] = None,
-  actions: Seq[Action] = Seq.empty
+case class ErrorPointer(
+  documentSectionCode: String,
+  tagId: Option[String] = None
 )
 
-object Submission {
-  implicit val formats = Json.format[Submission]
+object ErrorPointer {
+  implicit val format = Json.format[ErrorPointer]
 }

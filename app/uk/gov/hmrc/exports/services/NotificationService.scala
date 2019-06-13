@@ -22,7 +22,8 @@ import play.api.mvc.Result
 import play.api.mvc.Results._
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers.notificationMetric
-import uk.gov.hmrc.exports.models.declaration.DeclarationNotification
+import uk.gov.hmrc.exports.models.declaration.Submission
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.wco.dec.Response
 
@@ -38,15 +39,15 @@ class NotificationService @Inject()(
 
   private val logger = Logger(this.getClass)
 
-  def save(notification: DeclarationNotification): Future[Result] = {
-    val eori = notification.eori
+  def save(notification: Notification): Future[Result] = {
+//    val eori = notification.eori
     val convId = notification.conversationId
 
     for {
-      oldNotification <- getTheNewestExistingNotification(eori, convId)
+      oldNotification <- getTheNewestExistingNotification(convId)
       notificationSaved <- notificationsRepository.save(notification)
-      shouldBeUpdated = oldNotification.forall(notification.isOlderThan)
-      _ <- if (shouldBeUpdated) updateMrnAndStatus(notification) else Future.successful(false)
+      shouldBeUpdated = true // oldNotification.forall(notification.isOlderThan)
+      _ <- if (shouldBeUpdated) updateMrnAndStatus(notification) else Future.successful(None)
     } yield
       if (notificationSaved) {
         metrics.incrementCounter(notificationMetric)
@@ -59,19 +60,10 @@ class NotificationService @Inject()(
       }
   }
 
-  def getTheNewestExistingNotification(eori: String, convId: String): Future[Option[DeclarationNotification]] =
-    notificationsRepository
-      .getByEoriAndConversationId(eori, convId)
-      .map(_.filter(_.response.headOption.flatMap(_.issueDateTime).isDefined))
-      .map(_.sortWith((a, b) => a.isOlderThan(b)).headOption)
+  def getTheNewestExistingNotification(convId: String): Future[Option[Notification]] = ???
 
-  def updateMrnAndStatus(notification: DeclarationNotification): Future[Boolean] =
-    submissionRepository.updateMrnAndStatus(
-      notification.eori,
-      notification.conversationId,
-      notification.mrn,
-      buildStatus(notification.response)
-    )
+  private def updateMrnAndStatus(notification: Notification): Future[Option[Submission]] =
+    submissionRepository.updateMrn("", notification.conversationId)(notification.mrn)
 
   val PositionFunctionCode = "11"
   val NameCodeGranted = "39"

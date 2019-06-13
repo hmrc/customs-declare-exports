@@ -14,21 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models.declaration
+package util.testdata
+import scala.util.Random
 
-import java.util.UUID
+object TestDataHelper {
 
-import play.api.libs.json.Json
-
-case class Submission(
-  uuid: String = UUID.randomUUID().toString,
-  eori: String,
-  lrn: String,
-  mrn: Option[String] = None,  // Unique key
-  ducr: Option[String] = None,
-  actions: Seq[Action] = Seq.empty
-)
-
-object Submission {
-  implicit val formats = Json.format[Submission]
+  def randomAlphanumericString(length: Int): String = Random.alphanumeric.take(length).mkString
 }

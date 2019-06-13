@@ -16,80 +16,132 @@
 
 package integration.uk.gov.hmrc.exports.repositories
 
-import org.scalatest.BeforeAndAfterEach
+import java.time.LocalDateTime
+
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.{BeforeAndAfterEach, MustMatchers, OptionValues, WordSpec}
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import uk.gov.hmrc.exports.models.declaration.notifications.{ErrorPointer, Notification, NotificationError}
 import uk.gov.hmrc.exports.repositories.NotificationsRepository
-import unit.uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
-import util.ExportsTestData
+import util.testdata.TestDataHelper
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Random
 
-class NotificationsRepositorySpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach {
+class NotificationsRepositorySpec
+    extends WordSpec with GuiceOneAppPerSuite with BeforeAndAfterEach with ScalaFutures with MustMatchers
+    with OptionValues {
 
-  override protected def afterEach(): Unit = {
+  import NotificationsRepositorySpec._
 
+  override lazy val app: Application = GuiceApplicationBuilder().build()
+  private val repo = app.injector.instanceOf[NotificationsRepository]
+
+  implicit val ec: ExecutionContext = global
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    repo.removeAll().futureValue
+  }
+
+  override def afterEach(): Unit = {
     super.afterEach()
     repo.removeAll().futureValue
   }
 
-  override lazy val app: Application = GuiceApplicationBuilder().build()
-  private val repo = component[NotificationsRepository]
+  "Notification Repository on save" when {
 
-  "Notifications repository" should {
+    "the operation was successful" should {
+      "return true" in {
+        repo.save(notification).futureValue must be(true)
 
-    "save notification and retrieve it by EORI" in {
-
-      repo.save(notification).futureValue must be(true)
-      val found = repo.findByEori(eori).futureValue
-
-      found.length must be(1)
-      found.head.eori must be(eori)
-      found.head.conversationId must be(conversationId)
-      found.head.dateTimeReceived.compareTo(now) must be(0)
-    }
-
-    "save notification and retrieve it by conversationId" in {
-
-      repo.save(notification).futureValue must be(true)
-      val found = repo.getByConversationId(conversationId).futureValue
-
-      found.length must be(1)
-      found.head.eori must be(eori)
-      found.head.conversationId must be(conversationId)
-      found.head.dateTimeReceived.compareTo(now) must be(0)
-    }
-
-    "save notification and retrieve it by both EORI and conversationId" in {
-
-      repo.save(notification).futureValue must be(true)
-      val found = repo.getByEoriAndConversationId(eori, conversationId).futureValue
-
-      found.length must be(1)
-      found.head.eori must be(eori)
-      found.head.conversationId must be(conversationId)
-      found.head.dateTimeReceived.compareTo(now) must be(0)
-    }
-
-    "save two notifications and retrive both" in {
-
-      repo.save(notification).futureValue must be(true)
-      val first = repo.getByEoriAndConversationId(eori, conversationId).futureValue
-
-      first.length must be(1)
-      first.head.eori must be(eori)
-      first.head.conversationId must be(conversationId)
-      first.head.dateTimeReceived.compareTo(now) must be(0)
-      first.head.response.head.functionalReferenceId must be(Some("123"))
-
-      repo.save(notification2).futureValue must be(true)
-      val second = repo.getByEoriAndConversationId(eori, conversationId).futureValue
-
-      second.length must be(2)
-      second(1).eori must be(eori)
-      second(1).conversationId must be(conversationId)
-      second(1).dateTimeReceived.compareTo(now) must be(0)
-      second(1).response.head.functionalReferenceId must be(Some("456"))
+        val notificationInDB = repo.findNotificationByConversationId(conversationId).futureValue
+        notificationInDB.length must equal(1)
+        notificationInDB.head must equal(notification)
+      }
     }
   }
+
+  "Notification Repository on findNotificationByConversationId" when {
+
+    "there is no Notification with given conversationId" should {
+      "return empty list" in {
+        repo.findNotificationByConversationId(conversationId).futureValue must equal(Seq.empty)
+      }
+    }
+
+    "there is single Notification with given conversationId" should {
+      "return this Notification only" in {
+        repo.save(notification).futureValue
+
+        val foundNotifications = repo.findNotificationByConversationId(conversationId).futureValue
+
+        foundNotifications.length must equal(1)
+        foundNotifications.head must equal(notification)
+      }
+    }
+
+    "there are multiple Notifications with given conversationId" should {
+      "return all the Notifications" in {
+        repo.save(notification).futureValue
+        repo.save(notification_2).futureValue
+
+        val foundNotifications = repo.findNotificationByConversationId(conversationId).futureValue
+
+        foundNotifications.length must equal(2)
+        foundNotifications must contain(notification)
+        foundNotifications must contain(notification_2)
+      }
+    }
+  }
+
+}
+
+object NotificationsRepositorySpec {
+
+  private lazy val functionCodes: Seq[String] =
+    Seq("01", "02", "03", "05", "06", "07", "08", "09", "10", "11", "16", "17", "18")
+  private lazy val functionCodesRandomised: Iterator[String] = Random.shuffle(functionCodes).toIterator
+  private def randomResponseFunctionCode: String = functionCodesRandomised.next()
+
+  val conversationId: String = "b1c09f1b-7c94-4e90-b754-7c5c71c44e11"
+  val mrn: String = "MRN87878797"
+  lazy val dateTimeIssued: LocalDateTime = LocalDateTime.now()
+  lazy val dateTimeIssued_2: LocalDateTime = LocalDateTime.now()
+  val functionCode: String = randomResponseFunctionCode
+  val functionCode_2: String = randomResponseFunctionCode
+  val nameCode: Option[String] = None
+  val errors = Seq(
+    NotificationError(
+      validationCode = "CDS12056",
+      pointers = Seq(ErrorPointer(documentSectionCode = "42A", tagId = None))
+    )
+  )
+
+  private val payloadExemplaryLength = 300
+  val payload = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
+  val payload_2 = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
+
+  val notification = Notification(
+    conversationId = conversationId,
+    mrn = mrn,
+    dateTimeIssued = dateTimeIssued,
+    functionCode = functionCode,
+    nameCode = nameCode,
+    errors = errors,
+    payload = payload
+  )
+  val notification_2 = Notification(
+    conversationId = conversationId,
+    mrn = mrn,
+    dateTimeIssued = dateTimeIssued_2,
+    functionCode = functionCode_2,
+    nameCode = nameCode,
+    errors = errors,
+    payload = payload_2
+  )
+
 }

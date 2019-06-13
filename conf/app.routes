@@ -8,8 +8,6 @@ GET         /notifications                                   uk.gov.hmrc.exports
 
 GET         /submission-notifications/:conversationId        uk.gov.hmrc.exports.controllers.NotificationsController.getSubmissionNotifications(conversationId: String)
 
-POST        /update-submission                               uk.gov.hmrc.exports.controllers.SubmissionController.updateSubmission()
-
 GET         /submission/:conversationId                      uk.gov.hmrc.exports.controllers.SubmissionController.getSubmission(conversationId: String)
 
 GET         /submissions                                     uk.gov.hmrc.exports.controllers.SubmissionController.getSubmissionsByEori()

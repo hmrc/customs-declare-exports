@@ -30,9 +30,10 @@ import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.http.HeaderCarrier
+import util.CustomsDeclarationsAPIConfig
 import util.ExternalServicesConfig._
 import util.stubs.CustomsDeclarationsAPIService
-import util.{CustomsDeclarationsAPIConfig, ExportsTestData}
+import util.testdata.ExportsTestData
 
 import scala.concurrent.Future
 import scala.xml.XML
@@ -66,8 +67,8 @@ class SubmissionServiceSpec
   def withSubmissionPersisted(result: Boolean): Unit =
     when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(result))
 
-  def withDeclarationCancelled(result: CancellationStatus): Unit =
-    when(mockSubmissionRepository.cancelDeclaration(any(), any())).thenReturn(Future.successful(result))
+//  def withDeclarationCancelled(result: CancellationStatus): Unit =
+//    when(mockSubmissionRepository.cancelDeclaration(any(), any())).thenReturn(Future.successful(result))
 
   "Export Service" should {
 
@@ -188,7 +189,6 @@ class SubmissionServiceSpec
         startCancellationService(ACCEPTED)
 
         withSubmissionPersisted(true)
-        withDeclarationCancelled(CancellationRequested)
 
         val declaration = randomSubmitDeclaration.toXml
 
@@ -217,7 +217,6 @@ class SubmissionServiceSpec
         startCancellationService(ACCEPTED)
 
         withSubmissionPersisted(true)
-        withDeclarationCancelled(CancellationRequestExists)
 
         val declaration = randomSubmitDeclaration.toXml
 
@@ -246,7 +245,6 @@ class SubmissionServiceSpec
         startCancellationService(ACCEPTED)
 
         withSubmissionPersisted(true)
-        withDeclarationCancelled(MissingDeclaration)
 
         val declaration = randomSubmitDeclaration.toXml
 
@@ -275,7 +273,6 @@ class SubmissionServiceSpec
         startCancellationService(BAD_REQUEST)
 
         withSubmissionPersisted(true)
-        withDeclarationCancelled(CancellationRequested)
 
         val declaration = randomSubmitDeclaration.toXml
 
@@ -304,7 +301,6 @@ class SubmissionServiceSpec
         startCancellationService(NOT_FOUND)
 
         withSubmissionPersisted(true)
-        withDeclarationCancelled(CancellationRequested)
 
         val declaration = randomSubmitDeclaration.toXml
 
@@ -333,7 +329,6 @@ class SubmissionServiceSpec
         startCancellationService(UNAUTHORIZED)
 
         withSubmissionPersisted(true)
-        withDeclarationCancelled(CancellationRequested)
 
         val declaration = randomSubmitDeclaration.toXml
 
@@ -362,7 +357,6 @@ class SubmissionServiceSpec
         startCancellationService(INTERNAL_SERVER_ERROR)
 
         withSubmissionPersisted(true)
-        withDeclarationCancelled(CancellationRequested)
 
         val declaration = randomSubmitDeclaration.toXml
 

@@ -53,8 +53,5 @@ case class ValidatedHeadersSubmissionRequest(localReferenceNumber: LocalReferenc
 
 case class ValidatedHeadersCancellationRequest(mrn: Mrn) extends HasMrn
 
-case class MovementNotificationApiRequest(authToken: AuthToken, conversationId: ConversationId, eori: Eori)
-    extends HasEori with HasConversationId with HasAuthToken
-
 case class SubmissionNotificationApiRequest(authToken: AuthToken, conversationId: ConversationId)
     extends HasConversationId with HasAuthToken

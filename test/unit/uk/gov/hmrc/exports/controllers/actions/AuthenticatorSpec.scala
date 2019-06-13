@@ -23,7 +23,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
 import unit.uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
-import util.ExportsTestData
+import util.testdata.ExportsTestData
 
 class AuthenticatorSpec extends CustomsExportsBaseSpec with ExportsTestData {
   val uri = "/declaration"

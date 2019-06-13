@@ -21,7 +21,7 @@ import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
-import util.ExportsTestData
+import util.testdata.ExportsTestData
 
 class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestData {
 
@@ -132,32 +132,6 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
       "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {
         val result: Either[ErrorResponse, ValidatedHeadersCancellationRequest] =
           validator.validateAndExtractCancellationHeaders(Map.empty)
-        result should be(Left(ErrorResponse.ErrorInvalidPayload))
-      }
-
-    }
-
-    "validateAndExtractMovementNotificationHeaders" should {
-
-      "return Right of MovementNotificationApiRequest when validateHeaders is called on valid headers" in new SetUp {
-        implicit val hc: HeaderCarrier = mock[HeaderCarrier]
-
-        val result: Either[ErrorResponse, MovementNotificationApiRequest] =
-          validator.validateAndExtractMovementNotificationHeaders(ValidHeaders)
-        result should be(
-          Right(
-            MovementNotificationApiRequest(
-              AuthToken(dummyToken),
-              ConversationId(conversationId),
-              Eori(declarantEoriValue)
-            )
-          )
-        )
-      }
-
-      "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {
-        val result: Either[ErrorResponse, MovementNotificationApiRequest] =
-          validator.validateAndExtractMovementNotificationHeaders(Map.empty)
         result should be(Left(ErrorResponse.ErrorInvalidPayload))
       }
 

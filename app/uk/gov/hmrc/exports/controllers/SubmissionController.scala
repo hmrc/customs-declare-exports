@@ -25,7 +25,6 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.Submission
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -65,7 +64,7 @@ class SubmissionController @Inject()(
           case _ =>
             logger.error("Invalid xml payload")
             Left(ErrorResponse.ErrorInvalidPayload.XmlResult)
-        }
+      }
     )
 
   private def processSubmissionRequest(
@@ -123,33 +122,18 @@ class SubmissionController @Inject()(
       case Left(value)               => value
     }
 
-  def updateSubmission(): Action[Submission] =
-    authorisedAction(parse.json[Submission]) { implicit request =>
-      val body = request.body
-      submissionRepository.updateSubmission(body).map { res =>
-        if (res) {
-          logger.debug("Submission updated successfully")
-          Ok(Json.toJson(CustomsDeclareExportsResponse(OK, "Submission response updated")))
-        } else {
-          logger.error("There was an error during updating submission")
-          InternalServerError("Failed updating submission")
-        }
-      }
-    }
-
   def getSubmission(conversationId: String): Action[AnyContent] =
     authorisedAction(bodyParsers.default) { implicit request =>
-      submissionRepository.getByConversationId(conversationId).map { submission =>
+      submissionRepository.findSubmissionByConversationId(conversationId).map { submission =>
         Ok(Json.toJson(submission))
       }
     }
 
   def getSubmissionsByEori: Action[AnyContent] =
     authorisedAction(bodyParsers.default) { implicit authorizedRequest =>
-      submissionRepository.findByEori(authorizedRequest.eori.value).map(submissions => Ok(Json.toJson(submissions)))
+      submissionRepository
+        .findAllSubmissionsForEori(authorizedRequest.eori.value)
+        .map(submissions => Ok(Json.toJson(submissions)))
     }
-
-
-
 
 }

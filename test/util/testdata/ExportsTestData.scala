@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-package util
+package util.testdata
 
-import java.util.UUID
-
-import integration.uk.gov.hmrc.exports.repositories.SubmissionRepositorySpec.action
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.http.HeaderNames.CONTENT_TYPE
@@ -26,11 +23,8 @@ import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
 import uk.gov.hmrc.exports.controllers.CustomsHeaderNames._
 import uk.gov.hmrc.exports.models.Eori
-import uk.gov.hmrc.exports.models.declaration.{DeclarationMetadata, DeclarationNotification, Submission}
-import uk.gov.hmrc.wco.dec.{DateTimeString, MetaData, Response, ResponseDateTimeElement, Declaration => WcoDeclaration}
-import util.TestDataHelper._
-
-import scala.util.Random
+import uk.gov.hmrc.wco.dec.{DateTimeString, MetaData, ResponseDateTimeElement, Declaration => WcoDeclaration}
+import util.testdata.TestDataHelper.randomAlphanumericString
 
 trait ExportsTestData {
   /*
@@ -39,7 +33,6 @@ trait ExportsTestData {
     when this occurred.
    */
 
-  val uuid = UUID.randomUUID().toString
   val eori: String = "GB167676"
   val randomEori: String = randomAlphanumericString(8)
   val lrn: Option[String] = Some(randomAlphanumericString(22))
@@ -48,16 +41,6 @@ trait ExportsTestData {
   val submissionStatus: String = "01"
   val conversationId: String = "b1c09f1b-7c94-4e90-b754-7c5c71c44e11"
   val ducr: String = randomAlphanumericString(16)
-
-  val submission: Submission = Submission(
-    uuid = uuid,
-    eori = eori,
-    lrn = lrn.get,
-    status = submissionStatus,
-    mrn = Some(mrn),
-    ducr = Some(ducr),
-    actions = Seq(action)
-  )
 
   val authToken: String =
     "BXQ3/Treo4kQCZvVcCqKPlwxRN4RA9Mb5RF8fFxOuwG5WSg+S+Rsp9Nq998Fgg0HeNLXL7NGwEAIzwM6vuA6YYhRQnTRFaBhrp+1w+kVW8g1qHGLYO48QPWuxdM87VMCZqxnCuDoNxVn76vwfgtpNj0+NwfzXV2Zc12L2QGgF9H9KwIkeIPK/mMlBESjue4V]"
@@ -77,33 +60,9 @@ trait ExportsTestData {
   val VALID_MRN_HEADER: (String, String) = XMrnHeaderName -> declarantMrnValue
   val now: DateTime = DateTime.now.withZone(DateTimeZone.UTC)
 
-  private lazy val responseFunctionCodes: Seq[String] =
-    Seq("01", "02", "03", "05", "06", "07", "08", "09", "10", "11", "16", "17", "18")
-  protected def randomResponseFunctionCode: String = responseFunctionCodes(Random.nextInt(responseFunctionCodes.length))
-
   val dtfOut = DateTimeFormat.forPattern("yyyyMMddHHmmss")
   def dateTimeElement(dateTimeVal: DateTime) =
     Some(ResponseDateTimeElement(DateTimeString("102", dateTimeVal.toString("yyyyMMdd"))))
-
-  val response1: Seq[Response] = Seq(
-    Response(
-      functionCode = randomResponseFunctionCode,
-      functionalReferenceId = Some("123"),
-      issueDateTime = dateTimeElement(DateTime.parse("2019-02-05T10:11:12.123"))
-    )
-  )
-
-  val response2: Seq[Response] = Seq(
-    Response(
-      functionCode = randomResponseFunctionCode,
-      functionalReferenceId = Some("456"),
-      issueDateTime = dateTimeElement(now.minusHours(5))
-    )
-  )
-
-  val notification = DeclarationNotification(now, conversationId, mrn, eori, DeclarationMetadata(), response1)
-  val notification2 = DeclarationNotification(now, conversationId, mrn, eori, DeclarationMetadata(), response2)
-
 
   val ValidHeaders: Map[String, String] = Map(
     contentTypeHeader,

@@ -138,15 +138,15 @@ class SubmissionServiceSpec extends UnitSpec with MockitoSugar with ScalaFutures
           .submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier])
       ).thenReturn(Future.successful(CustomsDeclarationsResponse(ACCEPTED, Some(conversationId))))
 
-      when(mockSubmissionRepo.cancelDeclaration(any[String], any[String]))
-        .thenReturn(Future.successful(CancellationRequested))
+//      when(mockSubmissionRepo.cancelDeclaration(any[String], any[String]))
+//        .thenReturn(Future.successful(CancellationRequested))
       val result: Either[Result, CancellationStatus] = testObj.handleCancellation(eori, mrn, xmlNode).futureValue
 
       result shouldBe Right(CancellationRequested)
 
       verify(mockDeclarationConnector, times(1))
         .submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier])
-      verify(mockSubmissionRepo, times(1)).cancelDeclaration(any[String], any[String])
+//      verify(mockSubmissionRepo, times(1)).cancelDeclaration(any[String], any[String])
     }
 
     "return Internal Server error when connector fails" in new Test() {

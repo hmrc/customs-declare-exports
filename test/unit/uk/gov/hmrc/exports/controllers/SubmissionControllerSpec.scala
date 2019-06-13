@@ -16,6 +16,7 @@
 
 package unit.uk.gov.hmrc.exports.controllers
 
+import integration.uk.gov.hmrc.exports.repositories.SubmissionRepositorySpec.submission
 import org.mockito.Mockito.reset
 import org.scalatest.BeforeAndAfterEach
 import play.api.http.{ContentTypes, Status}
@@ -27,8 +28,7 @@ import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.Submission
 import unit.uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
-import util.ExportsTestData
-
+import util.testdata.ExportsTestData
 class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach {
 
   val submitUri = "/declaration"
@@ -128,38 +128,6 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       }
     }
 
-    "POST to /update-submission" should {
-
-      "return 200 status when submission has been updated" in {
-
-        withAuthorizedUser()
-        withSubmissionUpdated(true)
-
-        val result = route(app, updateSubmissionRequest).get
-
-        status(result) must be(OK)
-      }
-
-      "return 500 status when something goes wrong" in {
-
-        withAuthorizedUser()
-        withSubmissionUpdated(false)
-
-        val failedResult = route(app, updateSubmissionRequest).get
-
-        status(failedResult) must be(INTERNAL_SERVER_ERROR)
-      }
-
-      "return 401 status when user is without eori" in {
-
-        userWithoutEori()
-
-        val failedResult = route(app, updateSubmissionRequest).get
-
-        status(failedResult) must be(UNAUTHORIZED)
-      }
-    }
-
     "GET from /submission" should {
 
       "return 200 status with submission response body" in {
@@ -200,7 +168,6 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
         withAuthorizedUser()
         withSubmissions(submissionSeq)
-        withNotification(Seq.empty)
 
         val result = route(app, FakeRequest("GET", "/submissions")).get
 
@@ -213,7 +180,6 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
         withAuthorizedUser()
         withSubmissions(Seq.empty)
-        withNotification(Seq.empty)
 
         val result = route(app, FakeRequest("GET", "/submissions")).get
 

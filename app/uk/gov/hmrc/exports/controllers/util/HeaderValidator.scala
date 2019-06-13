@@ -83,23 +83,6 @@ class HeaderValidator {
     }
   }
 
-  def validateAndExtractMovementNotificationHeaders(
-    headers: Map[String, String]
-  ): Either[ErrorResponse, MovementNotificationApiRequest] = {
-    val result = for {
-      eori <- extractEoriHeader(headers)
-      authToken <- extractAuthTokenHeader(headers)
-      conversationId <- extractConversationIdHeader(headers)
-    } yield MovementNotificationApiRequest(AuthToken(authToken), ConversationId(conversationId), Eori(eori))
-
-    result match {
-      case Some(request) => Right(request)
-      case _ =>
-        logger.error("Error during validating and extracting movement headers")
-        Left(ErrorResponse.ErrorInvalidPayload)
-    }
-  }
-
   def validateAndExtractSubmissionNotificationHeaders(
     headers: Map[String, String]
   ): Either[ErrorResponse, SubmissionNotificationApiRequest] = {

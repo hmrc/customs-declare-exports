@@ -31,6 +31,7 @@ import uk.gov.hmrc.exports.models.declaration.Submission
 import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
 import util._
 import util.stubs.CustomsDeclarationsAPIService
+import util.testdata.ExportsTestData
 
 import scala.concurrent.Future
 

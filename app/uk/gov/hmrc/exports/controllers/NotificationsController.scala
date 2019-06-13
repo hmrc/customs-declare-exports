@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.controllers
 
+import java.time.LocalDateTime
+
 import com.google.inject.Singleton
 import javax.inject.Inject
-import org.joda.time.DateTime
 import play.api.Logger
-import play.api.libs.json.Json
 import play.api.mvc.{PlayBodyParsers, _}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
@@ -29,7 +29,7 @@ import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.{DeclarationMetadata, DeclarationNotification}
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.NotificationService
 import uk.gov.hmrc.wco.dec._
@@ -52,7 +52,7 @@ class NotificationsController @Inject()(
   bodyParsers: PlayBodyParsers
 ) extends Authenticator(authConnector, cc) {
 
-  private val logger = Logger(this.getClass())
+  private val logger = Logger(this.getClass)
 
   def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
     val timer = metrics.startTimer(notificationMetric)
@@ -63,6 +63,7 @@ class NotificationsController @Inject()(
         getSubmissionNotificationFromRequest(extractedHeaders).flatMap {
           case Some(notification) =>
             save(notification).map { res =>
+              metrics.incrementCounter(notificationMetric)
               timer.stop()
               res
             }
@@ -78,25 +79,25 @@ class NotificationsController @Inject()(
 
   //TODO response should be streamed or paginated depending on the no of notifications.
   //TODO Return NO CONTENT (204) when there is no notifications
-  def getNotifications(): Action[AnyContent] =
-    authorisedAction(bodyParsers.default) { request =>
-      notificationsRepository
-        .findByEori(request.eori.value)
-        .map(res => Ok(Json.toJson(res)))
-    }
+  def getNotifications(): Action[AnyContent] = ???
+//    authorisedAction(bodyParsers.default) { request =>
+//      notificationsRepository
+//        .findByEori(request.eori.value)
+//        .map(res => Ok(Json.toJson(res)))
+//    }
 
-  def getSubmissionNotifications(conversationId: String): Action[AnyContent] =
-    authorisedAction(bodyParsers.default) { implicit authorizedRequest =>
-      notificationsRepository
-        .getByEoriAndConversationId(authorizedRequest.eori.value, conversationId)
-        .map(res => Ok(Json.toJson(res)))
-    }
+  def getSubmissionNotifications(conversationId: String): Action[AnyContent] = ???
+//    authorisedAction(bodyParsers.default) { implicit authorizedRequest =>
+//      notificationsRepository
+//        .getByEoriAndConversationId(authorizedRequest.eori.value, conversationId)
+//        .map(res => Ok(Json.toJson(res)))
+//    }
 
   private def getSubmissionNotificationFromRequest(
     validatedHeadersNotificationApiRequest: SubmissionNotificationApiRequest
-  )(implicit request: Request[NodeSeq]): Future[Option[DeclarationNotification]] =
+  )(implicit request: Request[NodeSeq]): Future[Option[Notification]] =
     submissionRepository
-      .getByConversationId(validatedHeadersNotificationApiRequest.conversationId.value)
+      .findSubmissionByConversationId(validatedHeadersNotificationApiRequest.conversationId.value)
       .map { mayBeSubmission =>
         mayBeSubmission.flatMap { submission =>
           handleXmlParseToNotification(request.body.toString, validatedHeadersNotificationApiRequest.conversationId.value, submission.eori)
@@ -116,20 +117,15 @@ class NotificationsController @Inject()(
           logger.error("Unable to determine MRN during parsing notification")
         }
 
-        val notification = DeclarationNotification(
-          DateTime.now,
+        val notification = Notification(
           conversationId,
           mrn.getOrElse("UNKNOWN"),
-          eori,
-          DeclarationMetadata(
-            metaData.wcoDataModelVersionCode,
-            metaData.wcoTypeName,
-            metaData.responsibleCountryCode,
-            metaData.responsibleAgencyName,
-            metaData.agencyAssignedCustomizationCode,
-            metaData.agencyAssignedCustomizationVersionCode
-          ),
-          metaData.response
+          LocalDateTime.now(),
+          metaData.response.headOption.map(_.functionCode).getOrElse(""),
+          None,
+//          metaData.response.headOption.flatMap(_.status).flatMap(_.nameCode).headOption,
+          Seq.empty,
+          xmlString
         )
 
         Some(notification)
@@ -139,6 +135,6 @@ class NotificationsController @Inject()(
     }
   }
 
-  private def save(notification: DeclarationNotification): Future[Result] = notificationsService.save(notification)
+  private def save(notification: Notification): Future[Result] = notificationsService.save(notification)
 
 }

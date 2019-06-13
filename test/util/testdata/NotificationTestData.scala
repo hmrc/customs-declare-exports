@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package util
+package util.testdata
+import java.time.LocalDateTime
 
 import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
 import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
-import uk.gov.hmrc.exports.models.declaration.{DeclarationMetadata, DeclarationNotification}
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 
 import scala.xml.Elem
 
@@ -131,6 +132,14 @@ trait NotificationTestData {
     "X-Badge-Identifier" -> "badgeIdentifier1"
   )
 
-  val submissionNotification =
-    DeclarationNotification(conversationId = "1234", eori = "eori", mrn = "mrn", metadata = DeclarationMetadata())
+  val notification = Notification(
+    conversationId = "1234",
+    mrn = "mrn",
+    dateTimeIssued = LocalDateTime.now(),
+    functionCode = "01",
+    nameCode = None,
+    errors = Seq.empty,
+    payload = TestDataHelper.randomAlphanumericString(300)
+  )
+
 }

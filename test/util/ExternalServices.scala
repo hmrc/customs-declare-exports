@@ -22,10 +22,10 @@ import play.api.http.Status
 import play.api.libs.json.{JsArray, Json}
 import play.api.test.Helpers.{AUTHORIZATION, OK}
 import play.mvc.Http.Status._
-import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
-import uk.gov.hmrc.auth.core.{AuthProviders, Enrolment}
+import uk.gov.hmrc.auth.core.Enrolment
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.exports.models.Eori
+import util.testdata.ExportsTestData
 
 
 trait AuditService extends WireMockRunner {

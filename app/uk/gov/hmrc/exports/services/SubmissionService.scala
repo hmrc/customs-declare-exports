@@ -24,7 +24,7 @@ import play.api.mvc.Results._
 import play.mvc.Http.Status._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.{CustomsDeclarationsResponse, Pending, Submission}
+import uk.gov.hmrc.exports.models.declaration.{Pending, Submission}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -61,21 +61,21 @@ class SubmissionService @Inject()(
 
   def handleCancellation(eori: String, mrn: String, xml: NodeSeq)(
     implicit hc: HeaderCarrier
-  ): Future[Either[Result, CancellationStatus]] =
-    customsDeclarationsConnector
-      .submitCancellation(eori, xml)
-      .flatMap {
-      case CustomsDeclarationsResponse(ACCEPTED, Some(_)) =>
-        submissionRepository
-          .cancelDeclaration(eori, mrn)
-          .map { cancellationStatus =>
-            logger.debug(s"Cancellation status for declaration with mrn $mrn is $cancellationStatus")
-            Right(cancellationStatus)
-          }
-      case response =>
-        logger.error(s"Customs Declaration Service return ${response.status}")
-        Future.successful(Left(InternalServerError("")))
-    }
+  ): Future[Either[Result, CancellationStatus]] = ???
+//    customsDeclarationsConnector
+//      .submitCancellation(eori, xml)
+//      .flatMap {
+//      case CustomsDeclarationsResponse(ACCEPTED, Some(_)) =>
+//        submissionRepository
+//          .cancelDeclaration(eori, mrn)
+//          .map { cancellationStatus =>
+//            logger.debug(s"Cancellation status for declaration with mrn $mrn is $cancellationStatus")
+//            Right(cancellationStatus)
+//          }
+//      case response =>
+//        logger.error(s"Customs Declaration Service return ${response.status}")
+//        Future.successful(Left(InternalServerError("")))
+//    }
 
   private def persistSubmission(
     eori: String,
@@ -85,7 +85,7 @@ class SubmissionService @Inject()(
     status: String
   ): Future[Result] =
     submissionRepository
-      .save(Submission("123", eori, lrn, status = status))
+      .save(Submission("123", eori, lrn))
       .map(
         res =>
           if (res) {
