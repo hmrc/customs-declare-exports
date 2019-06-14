@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.controllers
+package uk.gov.hmrc.exports.controllers.util
 
 object CustomsHeaderNames {
   val Authorization = "Authorization"

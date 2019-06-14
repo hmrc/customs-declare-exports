@@ -14,21 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models.declaration
+package uk.gov.hmrc.exports.services
 
-import java.util.UUID
+sealed trait SubmissionResult { def getMessage: String }
 
-import play.api.libs.json.Json
-
-case class Submission(
-  uuid: String = UUID.randomUUID().toString,
-  eori: String,
-  lrn: String,
-  mrn: Option[String] = None,
-  ducr: Option[String] = None,
-  actions: Seq[Action] = Seq.empty
-)
-
-object Submission {
-  implicit val formats = Json.format[Submission]
+final case class Success(msg: String) extends SubmissionResult {
+  override def getMessage: String = msg
+}
+final case class Failure(msg: String) extends SubmissionResult {
+  override def getMessage: String = msg
 }

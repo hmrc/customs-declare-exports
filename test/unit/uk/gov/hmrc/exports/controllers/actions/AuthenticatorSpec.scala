@@ -21,7 +21,7 @@ import play.api.mvc.Codec
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
+import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
 import unit.uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
 import util.testdata.ExportsTestData
 

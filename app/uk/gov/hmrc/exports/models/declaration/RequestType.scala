@@ -16,19 +16,22 @@
 
 package uk.gov.hmrc.exports.models.declaration
 
-import java.util.UUID
+import play.api.libs.json._
 
-import play.api.libs.json.Json
+sealed trait RequestType
 
-case class Submission(
-  uuid: String = UUID.randomUUID().toString,
-  eori: String,
-  lrn: String,
-  mrn: Option[String] = None,
-  ducr: Option[String] = None,
-  actions: Seq[Action] = Seq.empty
-)
+case object SubmissionRequest extends RequestType
+case object CancellationRequest extends RequestType
 
-object Submission {
-  implicit val formats = Json.format[Submission]
+object RequestType {
+
+  implicit object RequestTypeFormat extends Format[RequestType] {
+    override def writes(requestType: RequestType): JsValue = JsString(requestType.toString)
+
+    override def reads(json: JsValue): JsResult[RequestType] = json match {
+      case JsString("SubmissionRequest") => JsSuccess(SubmissionRequest)
+      case JsString("CancellationRequest") => JsSuccess(CancellationRequest)
+      case _ => JsError(s"Could not read Request Type from: $json")
+    }
+  }
 }

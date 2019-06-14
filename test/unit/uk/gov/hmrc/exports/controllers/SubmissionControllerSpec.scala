@@ -16,19 +16,24 @@
 
 package unit.uk.gov.hmrc.exports.controllers
 
-import integration.uk.gov.hmrc.exports.repositories.SubmissionRepositorySpec.submission
-import org.mockito.Mockito.reset
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.{reset, when}
 import org.scalatest.BeforeAndAfterEach
 import play.api.http.{ContentTypes, Status}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Codec
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
-import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.Submission
+import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
+import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.http.HeaderCarrier
 import unit.uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
 import util.testdata.ExportsTestData
+import util.testdata.SubmissionTestData._
+
+import scala.concurrent.Future
+import scala.xml.NodeSeq
+
 class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach {
 
   val submitUri = "/declaration"
@@ -55,8 +60,9 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
   def fakeCancellationRequest(payload: String): FakeRequest[String] = fakeRequestWithPayload(cancelUri, payload)
 
-  def fakeCancelRequestWithHeaders(payload: String): FakeRequest[String] = fakeCancellationRequest(payload)
-    .withHeaders(validCancelHeaders)
+  def fakeCancelRequestWithHeaders(payload: String): FakeRequest[String] =
+    fakeCancellationRequest(payload)
+      .withHeaders(validCancelHeaders)
 
   val fakeCancelXmlRequestWithMissingHeaders: FakeRequest[String] = fakeCancellationRequest("<someXml></someXml>")
     .withHeaders(AUTHORIZATION -> dummyToken, CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8))
@@ -200,7 +206,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
   //TODO: add return status when declaration is cancelled
   "POST cancel declaration" should {
 
-    "return specicic error status" when {
+    "return specific error status" when {
 
       "there is a missing required header - BAD_REQUEST" in {
 
@@ -230,7 +236,9 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
         val result = route(app, fakeCancelRequestWithHeaders("<someXml></someXml>")).get
 
         status(result) must be(UNAUTHORIZED)
-        contentAsString(result) must be("<?xml version='1.0' encoding='UTF-8'?>\n<errorResponse>\n        <code>UNAUTHORIZED</code>\n        <message>Insufficient Enrolments</message>\n      </errorResponse>")
+        contentAsString(result) must be(
+          "<?xml version='1.0' encoding='UTF-8'?>\n<errorResponse>\n        <code>UNAUTHORIZED</code>\n        <message>Insufficient Enrolments</message>\n      </errorResponse>"
+        )
       }
     }
 
@@ -239,7 +247,10 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       "there is an existing declaration" in {
 
         withAuthorizedUser()
-        withCancellationRequest(CancellationRequested, Status.ACCEPTED)
+        when(mockSubmissionRepository.findSubmissionByMrn(any[String])).thenReturn(Future.successful(Some(submission)))
+        when(mockSubmissionRepository.addAction(any[String], any[String])(any[Action])).thenReturn(Future.successful(Some(cancelledSubmission)))
+        when(mockDeclarationsApiConnector.submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier]))
+          .thenReturn(Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, Some(conversationId))))
 
         val result = route(app, fakeCancelRequestWithHeaders("<someXml></someXml>")).get
 
@@ -250,10 +261,13 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
     "return CancellationRequestExists" when {
 
-      "there is an declaration with existing cancellation request, connection to api successful" in {
+      "there is an declaration with existing cancellation request" in {
 
         withAuthorizedUser()
-        withCancellationRequest(CancellationRequestExists, Status.ACCEPTED)
+        when(mockSubmissionRepository.findSubmissionByMrn(any[String])).thenReturn(Future.successful(Some(cancelledSubmission)))
+        when(mockSubmissionRepository.addAction(any[String], any[String])(any[Action])).thenReturn(Future.successful(Some(cancelledSubmission)))
+        when(mockDeclarationsApiConnector.submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier]))
+          .thenReturn(Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, Some(conversationId))))
 
         val result = route(app, fakeCancelRequestWithHeaders("<someXml></someXml>")).get
 
@@ -267,7 +281,9 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       "there is no existing declaration" in {
 
         withAuthorizedUser()
-        withCancellationRequest(MissingDeclaration, Status.ACCEPTED)
+        when(mockSubmissionRepository.findSubmissionByMrn(any[String])).thenReturn(Future.successful(None))
+        when(mockDeclarationsApiConnector.submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier]))
+          .thenReturn(Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, Some(conversationId))))
 
         val result = route(app, fakeCancelRequestWithHeaders("<someXml></someXml>")).get
 
@@ -276,4 +292,5 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
       }
     }
   }
+
 }

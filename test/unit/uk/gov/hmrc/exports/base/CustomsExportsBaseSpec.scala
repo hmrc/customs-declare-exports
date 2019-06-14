@@ -40,8 +40,7 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
-import uk.gov.hmrc.exports.models.CancellationStatus
-import uk.gov.hmrc.exports.models.declaration.{CustomsDeclarationsResponse, Submission}
+import uk.gov.hmrc.exports.models.declaration.{CancellationStatus, CustomsDeclarationsResponse, Submission}
 import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 

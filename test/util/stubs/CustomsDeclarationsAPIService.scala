@@ -25,7 +25,7 @@ import integration.uk.gov.hmrc.exports.base.WireMockRunner
 import play.api.http.ContentTypes
 import play.api.mvc.Codec
 import play.api.test.Helpers.{ACCEPT, ACCEPTED, CONTENT_TYPE}
-import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
+import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
 import util.CustomsDeclarationsAPIConfig
 import util.testdata.ExportsTestData
 

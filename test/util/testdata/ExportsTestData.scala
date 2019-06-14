@@ -21,7 +21,7 @@ import org.joda.time.{DateTime, DateTimeZone}
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
-import uk.gov.hmrc.exports.controllers.CustomsHeaderNames._
+import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames._
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.wco.dec.{DateTimeString, MetaData, ResponseDateTimeElement, Declaration => WcoDeclaration}
 import util.testdata.TestDataHelper.randomAlphanumericString

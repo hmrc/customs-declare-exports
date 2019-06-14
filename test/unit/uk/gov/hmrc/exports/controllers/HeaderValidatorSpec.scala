@@ -114,7 +114,7 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
       "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {
         val result: Either[ErrorResponse, ValidatedHeadersSubmissionRequest] =
           validator.validateAndExtractSubmissionHeaders(Map.empty)
-        result shouldBe Left(ErrorResponse.ErrorInvalidPayload)
+        result shouldBe Left(ErrorResponse.errorInvalidPayload)
       }
 
     }
@@ -132,7 +132,7 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
       "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {
         val result: Either[ErrorResponse, ValidatedHeadersCancellationRequest] =
           validator.validateAndExtractCancellationHeaders(Map.empty)
-        result should be(Left(ErrorResponse.ErrorInvalidPayload))
+        result should be(Left(ErrorResponse.errorInvalidPayload))
       }
 
     }
@@ -150,7 +150,7 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
       "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {
         val result: Either[ErrorResponse, SubmissionNotificationApiRequest] =
           validator.validateAndExtractSubmissionNotificationHeaders(Map.empty)
-        result should be(Left(ErrorResponse.ErrorInvalidPayload))
+        result should be(Left(ErrorResponse.errorInvalidPayload))
       }
 
     }

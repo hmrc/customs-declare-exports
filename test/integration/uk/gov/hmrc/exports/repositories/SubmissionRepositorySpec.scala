@@ -23,8 +23,9 @@ import org.scalatest.{BeforeAndAfterEach, MustMatchers, OptionValues, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.exports.models.declaration.{Action, Submission}
+import uk.gov.hmrc.exports.models.declaration.{Action, CancellationRequest, Submission}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
+import util.testdata.SubmissionTestData._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,8 +33,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class SubmissionRepositorySpec
     extends WordSpec with GuiceOneAppPerSuite with BeforeAndAfterEach with ScalaFutures with MustMatchers
     with OptionValues {
-
-  import SubmissionRepositorySpec._
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
   private val repo: SubmissionRepository = app.injector.instanceOf[SubmissionRepository]
@@ -96,7 +95,7 @@ class SubmissionRepositorySpec
 
     "there is no Submission with given MRN" should {
       "return empty Option" in {
-        val newAction = Action("Cancellation", conversationId_2)
+        val newAction = Action(CancellationRequest, conversationId_2)
         repo.addAction(eori, mrn)(newAction).futureValue mustNot be(defined)
       }
     }
@@ -104,7 +103,7 @@ class SubmissionRepositorySpec
     "there is a Submission with given MRN" should {
       "return Submission updated" in {
         repo.save(submission).futureValue
-        val newAction = Action("Cancellation", conversationId_2)
+        val newAction = Action(CancellationRequest, conversationId_2)
         val expectedUpdatedSubmission = submission.copy(actions = submission.actions :+ newAction)
 
         val updatedSubmission = repo.addAction(eori, mrn)(newAction).futureValue
@@ -203,40 +202,5 @@ class SubmissionRepositorySpec
       }
     }
   }
-
-}
-
-object SubmissionRepositorySpec {
-  import util.testdata.TestDataHelper._
-
-  val uuid: String = UUID.randomUUID().toString
-  val uuid_2: String = UUID.randomUUID().toString
-  val eori: String = "GB167676"
-  val ducr: String = randomAlphanumericString(16)
-  val lrn: String = randomAlphanumericString(22)
-  val mrn: String = "MRN87878797"
-  val mrn_2: String = "MRN12341234"
-  val conversationId: String = "b1c09f1b-7c94-4e90-b754-7c5c71c44e11"
-  val conversationId_2: String = "b1c09f1b-7c94-4e90-b754-7c5c71c55e22"
-
-  lazy val action = Action(requestType = "Submission", conversationId = conversationId)
-  lazy val action_2 = Action(requestType = "Submission", conversationId = conversationId_2)
-
-  lazy val submission: Submission = Submission(
-    uuid = uuid,
-    eori = eori,
-    lrn = lrn,
-    mrn = Some(mrn),
-    ducr = Some(ducr),
-    actions = Seq(action)
-  )
-  lazy val submission_2: Submission = Submission(
-    uuid = uuid_2,
-    eori = eori,
-    lrn = lrn,
-    mrn = Some(mrn_2),
-    ducr = Some(ducr),
-    actions = Seq(action_2)
-  )
 
 }

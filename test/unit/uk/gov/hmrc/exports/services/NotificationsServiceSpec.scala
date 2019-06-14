@@ -16,7 +16,6 @@
 
 package unit.uk.gov.hmrc.exports.services
 
-import integration.uk.gov.hmrc.exports.repositories.SubmissionRepositorySpec.submission
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{reset, verify, when}
 import org.scalatest.BeforeAndAfterEach
@@ -29,6 +28,7 @@ import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepo
 import uk.gov.hmrc.exports.services.NotificationService
 import uk.gov.hmrc.play.test.UnitSpec
 import util.testdata.NotificationTestData
+import util.testdata.SubmissionTestData._
 
 import scala.concurrent.Future
 

@@ -21,4 +21,6 @@ case class CustomsDeclarationsResponse(status: Int, conversationId: Option[Strin
 
 object CustomsDeclarationsResponse {
   implicit val format = Json.format[CustomsDeclarationsResponse]
+
+  lazy val empty = CustomsDeclarationsResponse(0, None)
 }

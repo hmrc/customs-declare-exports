@@ -17,7 +17,6 @@
 package unit.uk.gov.hmrc.exports.controllers
 
 import integration.uk.gov.hmrc.exports.repositories.NotificationsRepositorySpec
-import integration.uk.gov.hmrc.exports.repositories.SubmissionRepositorySpec.submission
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
@@ -39,6 +38,7 @@ import uk.gov.hmrc.exports.services.NotificationService
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
 import util.testdata.NotificationTestData
+import util.testdata.SubmissionTestData._
 
 import scala.concurrent.Future
 import scala.util.Random

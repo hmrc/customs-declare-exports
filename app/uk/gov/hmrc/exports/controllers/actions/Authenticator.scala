@@ -58,7 +58,7 @@ class Authenticator @Inject()(override val authConnector: AuthConnector, cc: Con
         case Some(eori) => Future.successful(Right(AuthorizedSubmissionRequest(Eori(eori.value), request)))
         case _ =>
           logger.error("Unauthorised access. User without eori.")
-          Future.successful(Left(ErrorResponse.ErrorUnauthorized))
+          Future.successful(Left(ErrorResponse.errorUnauthorized))
       }
     } recover {
       case error: InsufficientEnrolments =>
@@ -69,7 +69,7 @@ class Authenticator @Inject()(override val authConnector: AuthConnector, cc: Con
         Left(ErrorResponse.errorUnauthorized("Unauthorized for exports"))
       case ex: Throwable =>
         logger.error("Internal server error is " + ex.getMessage)
-        Left(ErrorResponse.ErrorInternalServerError)
+        Left(ErrorResponse.errorInternalServerError)
     }
 
   private def hasEnrolment(allEnrolments: Enrolments): Option[EnrolmentIdentifier] =

@@ -18,13 +18,10 @@ package uk.gov.hmrc.exports.services
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.libs.json.Json
-import play.api.mvc.Result
-import play.api.mvc.Results._
 import play.mvc.Http.Status._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.{Pending, Submission}
+import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -40,60 +37,76 @@ class SubmissionService @Inject()(
 
   private val logger = Logger(this.getClass)
 
-  def handleSubmission(eori: String, ducr: Option[String], lrn: String, xml: NodeSeq)(
-    implicit hc: HeaderCarrier
-  ): Future[Result] =
-    customsDeclarationsConnector
-      .submitDeclaration(eori, xml)
-      .flatMap(
-        response =>
-          response.status match {
-            case ACCEPTED =>
-              response.conversationId.fold({
-                logger.error(s"No ConversationID returned for submission with Eori: $eori and lrn: $lrn")
-                Future.successful(InternalServerError("No conversation Id Returned"))
-              })(persistSubmission(eori, _, ducr, lrn, Pending.toString))
-            case _ =>
-              logger.error(s"Customs Declaration Service return ${response.status} for Eori: $eori and lrn: $lrn")
-              Future.successful(InternalServerError("Non Accepted status returned by Customs Declaration Service"))
-        }
-      )
+  def getAllSubmissionsForUser(eori: String): Future[Seq[Submission]] =
+    submissionRepository.findAllSubmissionsForEori(eori)
 
-  def handleCancellation(eori: String, mrn: String, xml: NodeSeq)(
-    implicit hc: HeaderCarrier
-  ): Future[Either[Result, CancellationStatus]] = ???
-//    customsDeclarationsConnector
-//      .submitCancellation(eori, xml)
-//      .flatMap {
-//      case CustomsDeclarationsResponse(ACCEPTED, Some(_)) =>
-//        submissionRepository
-//          .cancelDeclaration(eori, mrn)
-//          .map { cancellationStatus =>
-//            logger.debug(s"Cancellation status for declaration with mrn $mrn is $cancellationStatus")
-//            Right(cancellationStatus)
-//          }
-//      case response =>
-//        logger.error(s"Customs Declaration Service return ${response.status}")
-//        Future.successful(Left(InternalServerError("")))
-//    }
+  def getSubmission(uuid: String): Future[Option[Submission]] = submissionRepository.findSubmissionByUuid(uuid)
 
-  private def persistSubmission(
-    eori: String,
-    conversationId: String,
-    ducr: Option[String],
-    lrn: String,
-    status: String
-  ): Future[Result] =
-    submissionRepository
-      .save(Submission("123", eori, lrn))
-      .map(
-        res =>
-          if (res) {
-            logger.debug(s"Submission data with conversation Id $conversationId and lrn $lrn saved to DB")
-            play.api.mvc.Results.Accepted(Json.toJson(CustomsDeclareExportsResponse(ACCEPTED, "Submission response saved")))
-          } else {
-            logger.error(s"Error during saving submission data to DB for conversationID:$conversationId")
-            InternalServerError("Failed saving submission")
+  def getSubmissionByConversationId(conversationId: String): Future[Option[Submission]] =
+    submissionRepository.findSubmissionByConversationId(conversationId)
+
+  def save(eori: String, submissionRequestData: ValidatedHeadersSubmissionRequest)(
+    submissionXml: NodeSeq
+  )(implicit hc: HeaderCarrier): Future[Either[String, String]] =
+    customsDeclarationsConnector.submitDeclaration(eori, submissionXml).flatMap {
+      case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) =>
+        val newSubmission =
+          buildSubmission(eori, submissionRequestData.lrn.value, submissionRequestData.ducr, conversationId)
+        persistSubmission(newSubmission)
+
+      case CustomsDeclarationsResponse(status, _) =>
+        logger
+          .error(s"Customs Declarations Service returned $status for Eori: $eori and lrn: ${submissionRequestData.lrn}")
+        Future.successful(Left("Non Accepted status returned by Customs Declarations Service"))
+    }
+
+  private def buildSubmission(eori: String, lrn: String, ducr: Option[String], conversationId: String): Submission =
+    Submission(
+      eori = eori,
+      lrn = lrn,
+      ducr = ducr,
+      actions = Seq(Action(requestType = SubmissionRequest, conversationId = conversationId))
+    )
+
+  private def persistSubmission(submission: Submission): Future[Either[String, String]] =
+    submissionRepository.save(submission).map { res =>
+      if (res) {
+        logger.debug(s"Submission data with UUID: ${submission.uuid} saved to DB")
+        Right("Submission response saved")
+      } else {
+        logger.error(s"Error while saving Submission with UUID: ${submission.uuid} to DB")
+        Left("Failed saving submission")
+      }
+    }
+
+  def cancelDeclaration(eori: String, mrn: String)(
+    cancellationXml: NodeSeq
+  )(implicit hc: HeaderCarrier): Future[Either[String, CancellationStatus]] =
+    customsDeclarationsConnector.submitCancellation(eori, cancellationXml).flatMap {
+
+      case CustomsDeclarationsResponse(ACCEPTED, Some(convId)) =>
+        updateSubmissionInDB(eori, mrn, convId).map(Right(_))
+
+      case CustomsDeclarationsResponse(status, _) =>
+        logger.error(
+          s"Customs Declarations Service returned $status for Cancellation Request with Eori: $eori and MRN: $mrn"
+        )
+        Future.successful(Left("Non Accepted status returned by Customs Declarations Service"))
+    }
+
+  private def updateSubmissionInDB(eori: String, mrn: String, conversationId: String): Future[CancellationStatus] =
+    submissionRepository.findSubmissionByMrn(mrn).flatMap {
+      case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationRequestExists)
+      case Some(_) =>
+        val newAction = Action(requestType = CancellationRequest, conversationId = conversationId)
+        submissionRepository.addAction(eori, mrn)(newAction).map {
+          case Some(_) => CancellationRequested
+          case None    => MissingDeclaration
         }
-      )
+      case None => Future.successful(MissingDeclaration)
+    }
+
+  private def isSubmissionAlreadyCancelled(submission: Submission): Boolean =
+    submission.actions.exists(_.requestType == CancellationRequest)
+
 }

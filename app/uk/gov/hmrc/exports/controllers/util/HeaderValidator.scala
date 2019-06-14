@@ -19,7 +19,6 @@ package uk.gov.hmrc.exports.controllers.util
 import javax.inject.Singleton
 import play.api.Logger
 import play.api.http.HeaderNames
-import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
 import uk.gov.hmrc.exports.models._
 
 @Singleton
@@ -64,7 +63,7 @@ class HeaderValidator {
       case Some(request) => Right(request)
       case None =>
         logger.error("Error during validating and extracting submission headers")
-        Left(ErrorResponse.ErrorInvalidPayload)
+        Left(ErrorResponse.errorInvalidPayload)
     }
   }
 
@@ -79,7 +78,7 @@ class HeaderValidator {
       case Some(request) => Right(request)
       case _ =>
         logger.error("Error during validating and extracting cancellation headers")
-        Left(ErrorResponse.ErrorInvalidPayload)
+        Left(ErrorResponse.errorInvalidPayload)
     }
   }
 
@@ -95,7 +94,7 @@ class HeaderValidator {
       case Some(request) => Right(request)
       case _ =>
         logger.error("Error during validating and extracting submission notifications headers")
-        Left(ErrorResponse.ErrorInvalidPayload)
+        Left(ErrorResponse.errorInvalidPayload)
     }
   }
 }
