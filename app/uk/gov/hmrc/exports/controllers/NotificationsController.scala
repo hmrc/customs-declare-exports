@@ -54,6 +54,7 @@ class NotificationsController @Inject()(
 
   def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
     val timer = metrics.startTimer(notificationMetric)
+
     headerValidator
       .validateAndExtractSubmissionNotificationHeaders(request.headers.toSimpleMap) match {
       case Right(extractedHeaders) =>
