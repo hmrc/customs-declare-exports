@@ -99,7 +99,7 @@ class SubmissionService @Inject()(
       case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationRequestExists)
       case Some(_) =>
         val newAction = Action(requestType = CancellationRequest, conversationId = conversationId)
-        submissionRepository.addAction(eori, mrn)(newAction).map {
+        submissionRepository.addAction(mrn, newAction).map {
           case Some(_) => CancellationRequested
           case None    => MissingDeclaration
         }

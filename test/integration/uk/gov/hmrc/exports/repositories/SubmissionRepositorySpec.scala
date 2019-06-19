@@ -16,15 +16,15 @@
 
 package integration.uk.gov.hmrc.exports.repositories
 
-import java.util.UUID
-
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, OptionValues, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.exports.models.declaration.{Action, CancellationRequest, Submission}
+import reactivemongo.core.errors.DatabaseException
+import uk.gov.hmrc.exports.models.declaration.{Action, CancellationRequest}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
+import util.testdata.ExportsTestData._
 import util.testdata.SubmissionTestData._
 
 import scala.concurrent.ExecutionContext
@@ -59,6 +59,31 @@ class SubmissionRepositorySpec
         submissionInDB must be(defined)
       }
     }
+
+    "trying to save Submission with the same conversationId twice" should {
+      "throw DatabaseException" in {
+        repo.save(submission).futureValue must be(true)
+        val secondSubmission = submission_2.copy(actions = submission.actions)
+
+        val exc = repo.save(secondSubmission).failed.futureValue
+
+        exc mustBe an[DatabaseException]
+        exc.getMessage must include(
+          "E11000 duplicate key error collection: customs-declare-exports.submissions index: conversationIdIdx dup key"
+        )
+      }
+
+      "result in having only the first Submission persisted" in {
+        repo.save(submission).futureValue must be(true)
+        val secondSubmission = submission_2.copy(actions = submission.actions)
+
+        repo.save(secondSubmission).failed.futureValue
+
+        val submissionsInDB = repo.findAllSubmissionsForEori(eori).futureValue
+        submissionsInDB.length must be(1)
+        submissionsInDB.head must equal(submission)
+      }
+    }
   }
 
   "Submission Repository on updateMrn" should {
@@ -66,7 +91,7 @@ class SubmissionRepositorySpec
     "return empty Option" when {
       "there is no Submission with given ConversationId" in {
         val newMrn = mrn_2
-        repo.updateMrn(eori, conversationId)(newMrn).futureValue mustNot be(defined)
+        repo.updateMrn(conversationId, newMrn).futureValue mustNot be(defined)
       }
     }
 
@@ -76,7 +101,7 @@ class SubmissionRepositorySpec
         val newMrn = mrn_2
         val expectedUpdatedSubmission = submission.copy(mrn = Some(newMrn))
 
-        val updatedSubmission = repo.updateMrn(eori, conversationId)(newMrn).futureValue
+        val updatedSubmission = repo.updateMrn(conversationId, newMrn).futureValue
 
         updatedSubmission.value must equal(expectedUpdatedSubmission)
       }
@@ -84,7 +109,7 @@ class SubmissionRepositorySpec
       "new MRN is the same as the old one" in {
         repo.save(submission).futureValue
 
-        val updatedSubmission = repo.updateMrn(eori, conversationId)(mrn).futureValue
+        val updatedSubmission = repo.updateMrn(conversationId, mrn).futureValue
 
         updatedSubmission.value must equal(submission)
       }
@@ -96,7 +121,7 @@ class SubmissionRepositorySpec
     "there is no Submission with given MRN" should {
       "return empty Option" in {
         val newAction = Action(CancellationRequest, conversationId_2)
-        repo.addAction(eori, mrn)(newAction).futureValue mustNot be(defined)
+        repo.addAction(mrn, newAction).futureValue mustNot be(defined)
       }
     }
 
@@ -106,7 +131,7 @@ class SubmissionRepositorySpec
         val newAction = Action(CancellationRequest, conversationId_2)
         val expectedUpdatedSubmission = submission.copy(actions = submission.actions :+ newAction)
 
-        val updatedSubmission = repo.addAction(eori, mrn)(newAction).futureValue
+        val updatedSubmission = repo.addAction(mrn, newAction).futureValue
 
         updatedSubmission.value must equal(expectedUpdatedSubmission)
       }

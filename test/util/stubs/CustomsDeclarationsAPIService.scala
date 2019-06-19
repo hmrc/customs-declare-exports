@@ -27,9 +27,9 @@ import play.api.mvc.Codec
 import play.api.test.Helpers.{ACCEPT, ACCEPTED, CONTENT_TYPE}
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
 import util.CustomsDeclarationsAPIConfig
-import util.testdata.ExportsTestData
+import util.testdata.ExportsTestData._
 
-trait CustomsDeclarationsAPIService extends WireMockRunner with ExportsTestData {
+trait CustomsDeclarationsAPIService extends WireMockRunner {
 
   private val submissionURL = urlMatching(CustomsDeclarationsAPIConfig.submitDeclarationServiceContext)
   private val cancellationURL = urlMatching(CustomsDeclarationsAPIConfig.cancelDeclarationServiceContext)

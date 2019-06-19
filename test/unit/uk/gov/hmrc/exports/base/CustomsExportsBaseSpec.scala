@@ -41,7 +41,7 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models.declaration.{CancellationStatus, CustomsDeclarationsResponse, Submission}
-import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -56,7 +56,7 @@ trait CustomsExportsBaseSpec
   SharedMetricRegistries.clear()
 
   val mockSubmissionRepository: SubmissionRepository = mock[SubmissionRepository]
-  val mockNotificationsRepository: NotificationsRepository = mock[NotificationsRepository]
+  val mockNotificationsRepository: NotificationRepository = mock[NotificationRepository]
   val mockDeclarationsApiConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
 
 
@@ -83,7 +83,7 @@ trait CustomsExportsBaseSpec
       .overrides(
         bind[AuthConnector].to(mockAuthConnector),
         bind[SubmissionRepository].to(mockSubmissionRepository),
-        bind[NotificationsRepository].to(mockNotificationsRepository),
+        bind[NotificationRepository].to(mockNotificationsRepository),
         bind[CustomsDeclarationsConnector].to(mockDeclarationsApiConnector)
       )
       .build()

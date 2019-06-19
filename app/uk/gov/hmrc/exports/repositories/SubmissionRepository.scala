@@ -51,19 +51,22 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
 
   def findSubmissionByUuid(uuid: String): Future[Option[Submission]] = find("uuid" -> uuid).map(_.headOption)
 
+  // TODO: Need to change this method to return Future[WriteResult].
+  //  In current implementation it will never return false, because in case of an error,
+  //  insert throws an Exception which will be propagated.
   def save(submission: Submission): Future[Boolean] = insert(submission).map { res =>
     if (!res.ok) logger.error(s"Errors when persisting declaration submission: ${res.writeErrors.mkString("--")}")
     res.ok
   }
 
-  def updateMrn(eori: String, conversationId: String)(newMrn: String): Future[Option[Submission]] = {
-    val query = Json.obj("eori" -> eori, "actions.conversationId" -> conversationId)
+  def updateMrn(conversationId: String, newMrn: String): Future[Option[Submission]] = {
+    val query = Json.obj("actions.conversationId" -> conversationId)
     val update = Json.obj("$set" -> Json.obj("mrn" -> newMrn))
     performUpdate(query, update)
   }
 
-  def addAction(eori: String, mrn: String)(newAction: Action): Future[Option[Submission]] = {
-    val query = Json.obj("eori" -> eori, "mrn" -> mrn)
+  def addAction(mrn: String, newAction: Action): Future[Option[Submission]] = {
+    val query = Json.obj("mrn" -> mrn)
     val update = Json.obj("$addToSet" -> Json.obj("actions" -> newAction))
     performUpdate(query, update)
   }

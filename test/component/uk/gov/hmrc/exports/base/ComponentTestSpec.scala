@@ -28,20 +28,20 @@ import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.models.declaration.Submission
-import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import util._
 import util.stubs.CustomsDeclarationsAPIService
-import util.testdata.ExportsTestData
+import util.testdata.ExportsTestData._
 
 import scala.concurrent.Future
 
 trait ComponentTestSpec
     extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach
-    with Eventually with MockitoSugar with Matchers with ExportsTestData with AuditService with OptionValues
+    with Eventually with MockitoSugar with Matchers with AuditService with OptionValues
     with AuthService with CustomsDeclarationsAPIService {
 
   private val mockSubmissionRepository = mock[SubmissionRepository]
-  private val mockNotificationsRepository = mock[NotificationsRepository]
+  private val mockNotificationsRepository = mock[NotificationRepository]
 
   override protected def beforeAll() {
 
@@ -77,7 +77,7 @@ trait ComponentTestSpec
 
   override implicit lazy val app: Application = new GuiceApplicationBuilder()
     .overrides(bind[SubmissionRepository].toInstance(mockSubmissionRepository))
-    .overrides(bind[NotificationsRepository].toInstance(mockNotificationsRepository))
+    .overrides(bind[NotificationRepository].toInstance(mockNotificationsRepository))
     .configure(
       Map(
         "microservice.services.auth.host" -> ExternalServicesConfig.Host,

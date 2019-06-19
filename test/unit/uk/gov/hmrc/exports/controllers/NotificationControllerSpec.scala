@@ -16,7 +16,6 @@
 
 package unit.uk.gov.hmrc.exports.controllers
 
-import integration.uk.gov.hmrc.exports.repositories.NotificationsRepositorySpec
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
@@ -26,36 +25,35 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.inject.{Injector, bind}
-import play.api.mvc.Results.Accepted
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.metrics.{ExportsMetrics, MetricIdentifiers}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
-import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.NotificationService
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
-import util.testdata.NotificationTestData
+import util.testdata.NotificationTestData._
 import util.testdata.SubmissionTestData._
 
 import scala.concurrent.Future
 import scala.util.Random
 
-class NotificationsControllerSpec extends WordSpec
-    with GuiceOneAppPerSuite with AuthTestSupport with MustMatchers  with BeforeAndAfterEach with NotificationTestData {
+class NotificationControllerSpec extends WordSpec
+    with GuiceOneAppPerSuite with AuthTestSupport with MustMatchers  with BeforeAndAfterEach {
 
-  import NotificationsControllerSpec._
+  import NotificationControllerSpec._
 
   private val notificationServiceMock: NotificationService = mock[NotificationService]
-  private val notificationsRepositoryMock: NotificationsRepository = mock[NotificationsRepository]
+  private val notificationsRepositoryMock: NotificationRepository = mock[NotificationRepository]
   private val submissionRepositoryMock: SubmissionRepository = mock[SubmissionRepository]
 
   override lazy val app: Application = GuiceApplicationBuilder().overrides(
     bind[AuthConnector].to(mockAuthConnector),
     bind[NotificationService].to(notificationServiceMock),
-    bind[NotificationsRepository].to(notificationsRepositoryMock),
+    bind[NotificationRepository].to(notificationsRepositoryMock),
     bind[SubmissionRepository].to(submissionRepositoryMock)
   ).build()
 
@@ -65,7 +63,7 @@ class NotificationsControllerSpec extends WordSpec
 
   override def beforeEach: Unit = {
     super.beforeEach()
-    when(notificationServiceMock.save(any())).thenReturn(Future.successful(Accepted))
+    when(notificationServiceMock.save(any())).thenReturn(Future.successful(Left("")))
   }
 
 
@@ -109,7 +107,7 @@ class NotificationsControllerSpec extends WordSpec
         FakeRequest(POST, postNotificationUri)
           .withHeaders(validHeaders.toSeq: _*)
           .withXmlBody(
-            exampleRejectNotification(notificationMRN, now.withZone(DateTimeZone.UTC).toString("yyyyMMddHHmmssZ"))
+            exampleRejectNotificationXML(notificationMRN, now.withZone(DateTimeZone.UTC).toString("yyyyMMddHHmmssZ"))
           )
       ).get
 
@@ -216,7 +214,7 @@ class NotificationsControllerSpec extends WordSpec
         app,
         FakeRequest(POST, postNotificationUri)
           .withHeaders(noContentTypeHeader.toSeq: _*)
-          .withXmlBody(notificationXML(mrn))
+          .withXmlBody(exampleReceivedNotificationXML(mrn))
       ).get
 
       status(result) must be(UNSUPPORTED_MEDIA_TYPE)
@@ -226,7 +224,7 @@ class NotificationsControllerSpec extends WordSpec
   }
 }
 
-object NotificationsControllerSpec {
+object NotificationControllerSpec {
 
   val now: DateTime = DateTime.now.withZone(DateTimeZone.UTC)
   val conversationId: String = "b1c09f1b-7c94-4e90-b754-7c5c71c44e11"
@@ -245,6 +243,4 @@ object NotificationsControllerSpec {
       issueDateTime = dateTimeElement(DateTime.parse("2019-02-05T10:11:12.123"))
     )
   )
-
-  val notification = NotificationsRepositorySpec.notification
 }

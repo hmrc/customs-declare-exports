@@ -21,9 +21,9 @@ import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
-import util.testdata.ExportsTestData
+import util.testdata.ExportsTestData._
 
-class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestData {
+class HeaderValidatorSpec extends UnitSpec with MockitoSugar {
 
   trait SetUp {
     val validator = new HeaderValidator

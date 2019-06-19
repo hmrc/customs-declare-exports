@@ -30,6 +30,7 @@ import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.http.HeaderCarrier
 import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildCustomsDeclarationsConnectorMock, buildSubmissionRepositoryMock}
+import util.testdata.ExportsTestData._
 import util.testdata.SubmissionTestData._
 
 import scala.concurrent.Future
@@ -49,13 +50,13 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
     )
   }
 
-  "Submission Service on getAllSubmissionsForUser" should {
+  "SubmissionService on getAllSubmissionsForUser" should {
 
-    "return empty list if Submission Repository does not find any Submission" in new Test {
+    "return empty list if SubmissionRepository does not find any Submission" in new Test {
       submissionService.getAllSubmissionsForUser(eori).futureValue must equal(Seq.empty)
     }
 
-    "return all submissions returned by Submission Repository" in new Test {
+    "return all submissions returned by SubmissionRepository" in new Test {
       when(submissionRepositoryMock.findAllSubmissionsForEori(meq(eori)))
         .thenReturn(Future.successful(Seq(submission, submission_2)))
 
@@ -66,20 +67,20 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
       returnedSubmissions must contain(submission_2)
     }
 
-    "call SubmissionRepository.findAllSubmissionsForEori, passing EORI provided" in new Test {
+    "call SubmissionRepository.findAllSubmissionsForUser, passing EORI provided" in new Test {
       submissionService.getAllSubmissionsForUser(eori).futureValue
 
       verify(submissionRepositoryMock, times(1)).findAllSubmissionsForEori(meq(eori))
     }
   }
 
-  "Submission Service on getSubmission" should {
+  "SubmissionService on getSubmission" should {
 
-    "return empty Option if Submission Repository does not find any Submission" in new Test {
+    "return empty Option if SubmissionRepository does not find any Submission" in new Test {
       submissionService.getSubmission(uuid).futureValue must equal(None)
     }
 
-    "return submission returned by Submission Repository" in new Test {
+    "return submission returned by SubmissionRepository" in new Test {
       when(submissionRepositoryMock.findSubmissionByUuid(meq(uuid))).thenReturn(Future.successful(Some(submission)))
 
       val returnedSubmission = submissionService.getSubmission(uuid).futureValue
@@ -95,13 +96,13 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
     }
   }
 
-  "Submission Service on getSubmissionByConversationId" should {
+  "SubmissionService on getSubmissionByConversationId" should {
 
-    "return empty Option if Submission Repository does not find any Submission" in new Test {
+    "return empty Option if SubmissionRepository does not find any Submission" in new Test {
       submissionService.getSubmissionByConversationId(conversationId).futureValue must equal(None)
     }
 
-    "return submission returned by Submission Repository" in new Test {
+    "return submission returned by SubmissionRepository" in new Test {
       when(submissionRepositoryMock.findSubmissionByConversationId(meq(conversationId)))
         .thenReturn(Future.successful(Some(submission)))
 
@@ -118,7 +119,7 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
     }
   }
 
-  "Submission Service on save" when {
+  "SubmissionService on save" when {
 
     "everything works correctly" should {
 
@@ -143,8 +144,8 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
         submissionService.save(eori, validatedHeadersSubmissionRequest)(submissionXml).futureValue
 
         val inOrder: InOrder = Mockito.inOrder(customsDeclarationsConnectorMock, submissionRepositoryMock)
-        inOrder.verify(customsDeclarationsConnectorMock).submitDeclaration(any(), any())(any())
-        inOrder.verify(submissionRepositoryMock).save(any())
+        inOrder.verify(customsDeclarationsConnectorMock, times(1)).submitDeclaration(any(), any())(any())
+        inOrder.verify(submissionRepositoryMock, times(1)).save(any())
       }
 
       "call CustomsDeclarationsConnector with EORI and xml provided" in new Test {
@@ -181,7 +182,7 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
       }
     }
 
-    "CustomsDeclarationsConnector returns status other than ACCEPTED" should {
+    "CustomsDeclarationsConnector on submitDeclaration returns status other than ACCEPTED" should {
 
       "return Either.Left with proper message" in new Test {
         when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any()))
@@ -219,7 +220,7 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
     }
   }
 
-  "Submission Service on cancelDeclaration" when {
+  "SubmissionService on cancelDeclaration" when {
 
     "everything works correctly" should {
 
@@ -228,7 +229,7 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
           Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, conversationId = Some(conversationId)))
         )
         when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
-        when(submissionRepositoryMock.addAction(any(), any())(any()))
+        when(submissionRepositoryMock.addAction(any(), any()))
           .thenReturn(Future.successful(Some(cancelledSubmission)))
 
         val cancellationResult = submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
@@ -241,15 +242,15 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
           Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, conversationId = Some(conversationId)))
         )
         when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
-        when(submissionRepositoryMock.addAction(any(), any())(any()))
+        when(submissionRepositoryMock.addAction(any(), any()))
           .thenReturn(Future.successful(Some(cancelledSubmission)))
 
         submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
 
         val inOrder: InOrder = Mockito.inOrder(customsDeclarationsConnectorMock, submissionRepositoryMock)
-        inOrder.verify(customsDeclarationsConnectorMock).submitCancellation(any(), any())(any())
-        inOrder.verify(submissionRepositoryMock).findSubmissionByMrn(any())
-        inOrder.verify(submissionRepositoryMock).addAction(any(), any())(any())
+        inOrder.verify(customsDeclarationsConnectorMock, times(1)).submitCancellation(any(), any())(any())
+        inOrder.verify(submissionRepositoryMock, times(1)).findSubmissionByMrn(any())
+        inOrder.verify(submissionRepositoryMock, times(1)).addAction(any(), any())
       }
 
       "call CustomsDeclarationsConnector with XML provided" in new Test {
@@ -257,7 +258,7 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
           Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, conversationId = Some(conversationId)))
         )
         when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
-        when(submissionRepositoryMock.addAction(any(), any())(any()))
+        when(submissionRepositoryMock.addAction(any(), any()))
           .thenReturn(Future.successful(Some(cancelledSubmission)))
 
         submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
@@ -270,7 +271,7 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
           Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, conversationId = Some(conversationId)))
         )
         when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
-        when(submissionRepositoryMock.addAction(any(), any())(any()))
+        when(submissionRepositoryMock.addAction(any(), any()))
           .thenReturn(Future.successful(Some(cancelledSubmission)))
 
         submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
@@ -283,20 +284,20 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
           Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, conversationId = Some(conversationId)))
         )
         when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
-        when(submissionRepositoryMock.addAction(any(), any())(any()))
+        when(submissionRepositoryMock.addAction(any(), any()))
           .thenReturn(Future.successful(Some(cancelledSubmission)))
 
         submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
 
         val actionCaptor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])
-        verify(submissionRepositoryMock, times(1)).addAction(meq(eori), meq(mrn))(actionCaptor.capture())
+        verify(submissionRepositoryMock, times(1)).addAction(meq(mrn), actionCaptor.capture())
         val actionAdded = actionCaptor.getValue
         actionAdded.requestType must equal(CancellationRequest)
         actionAdded.conversationId must equal(conversationId)
       }
     }
 
-    "CustomsDeclarationsConnector returns status other than ACCEPTED" should {
+    "CustomsDeclarationsConnector on submitDeclaration returns status other than ACCEPTED" should {
 
       "return Either.Left with proper message" in new Test {
         when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any()))
@@ -339,7 +340,7 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
 
         submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
 
-        verify(submissionRepositoryMock, times(0)).addAction(any(), any())(any())
+        verify(submissionRepositoryMock, never()).addAction(any(), any())
       }
     }
 
@@ -365,7 +366,7 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
 
         submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
 
-        verify(submissionRepositoryMock, times(0)).addAction(any(), any())(any())
+        verify(submissionRepositoryMock, never()).addAction(any(), any())
       }
     }
 
@@ -376,7 +377,7 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
           Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, conversationId = Some(conversationId)))
         )
         when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
-        when(submissionRepositoryMock.addAction(any(), any())(any())).thenReturn(Future.successful(None))
+        when(submissionRepositoryMock.addAction(any(), any())).thenReturn(Future.successful(None))
 
         val cancellationResult = submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
 

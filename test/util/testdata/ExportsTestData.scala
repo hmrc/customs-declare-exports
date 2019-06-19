@@ -26,21 +26,15 @@ import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.wco.dec.{DateTimeString, MetaData, ResponseDateTimeElement, Declaration => WcoDeclaration}
 import util.testdata.TestDataHelper.randomAlphanumericString
 
-trait ExportsTestData {
-  /*
-    The first time an declaration is submitted, we save it with the user's EORI, their LRN (if provided)
-    and the conversation ID we received from the customs-declarations API response, generating a timestamp to record
-    when this occurred.
-   */
+object ExportsTestData {
 
   val eori: String = "GB167676"
-  val randomEori: String = randomAlphanumericString(8)
-  val lrn: Option[String] = Some(randomAlphanumericString(22))
-  val mrn: String = "MRN87878797"
-  val mucr: String = randomAlphanumericString(16)
-  val submissionStatus: String = "01"
-  val conversationId: String = "b1c09f1b-7c94-4e90-b754-7c5c71c44e11"
   val ducr: String = randomAlphanumericString(16)
+  val lrn: String = randomAlphanumericString(22)
+  val mrn: String = "MRN87878797"
+  val mrn_2: String = "MRN12341234"
+  val conversationId: String = "b1c09f1b-7c94-4e90-b754-7c5c71c44e11"
+  val conversationId_2: String = "b1c09f1b-7c94-4e90-b754-7c5c71c55e22"
 
   val authToken: String =
     "BXQ3/Treo4kQCZvVcCqKPlwxRN4RA9Mb5RF8fFxOuwG5WSg+S+Rsp9Nq998Fgg0HeNLXL7NGwEAIzwM6vuA6YYhRQnTRFaBhrp+1w+kVW8g1qHGLYO48QPWuxdM87VMCZqxnCuDoNxVn76vwfgtpNj0+NwfzXV2Zc12L2QGgF9H9KwIkeIPK/mMlBESjue4V]"

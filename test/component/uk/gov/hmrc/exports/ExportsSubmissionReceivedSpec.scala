@@ -21,6 +21,7 @@ import play.api.mvc.{AnyContentAsXml, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import util.CustomsDeclarationsAPIConfig
+import util.testdata.ExportsTestData._
 
 import scala.concurrent.Future
 import scala.xml.XML

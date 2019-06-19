@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.repositories
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.JsString
+import play.api.libs.json.{JsString, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
@@ -28,26 +28,35 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class NotificationsRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: ExecutionContext)
+class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: ExecutionContext)
     extends ReactiveRepository[Notification, BSONObjectID](
-      "exportNotifications",
+      "notifications",
       mc.mongoConnector.db,
       Notification.format,
       objectIdFormats
     ) {
 
   override def indexes: Seq[Index] = Seq(
-    // TODO: Consider using dateTimeIssued as unique key
-    Index(Seq("conversationId" -> IndexType.Ascending), name = Some("conversationIdIdx")),
-    Index(Seq("mrn" -> IndexType.Ascending), name = Some("mrnIdx"))
+    Index(Seq("dateTimeIssued" -> IndexType.Ascending), unique = true, name = Some("dateTimeIssuedIdx")),
+    Index(Seq("mrn" -> IndexType.Ascending), name = Some("mrnIdx")),
+    Index(Seq("conversationId" -> IndexType.Ascending), name = Some("conversationIdIdx"))
   )
 
+  // TODO: Need to change this method to return Future[WriteResult].
+  //  In current implementation it will never return false, because in case of an error,
+  //  insert throws an Exception which will be propagated.
   def save(notification: Notification): Future[Boolean] = insert(notification).map { res =>
     if (!res.ok) logger.error(s"Errors when persisting export notification: ${res.writeErrors.mkString("--")}")
     res.ok
   }
 
-  def findNotificationByConversationId(conversationId: String): Future[Seq[Notification]] =
+  def findNotificationsByConversationId(conversationId: String): Future[Seq[Notification]] =
     find("conversationId" -> JsString(conversationId))
+
+  def findNotificationsByConversationIds(conversationIds: Seq[String]): Future[Seq[Notification]] =
+    conversationIds match {
+      case Seq() => Future.successful(Seq.empty)
+      case _ => find("$or" -> conversationIds.map(id => Json.obj("conversationId" -> JsString(id))))
+  }
 
 }

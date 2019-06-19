@@ -19,19 +19,12 @@ package util.testdata
 import java.util.UUID
 
 import uk.gov.hmrc.exports.models.declaration.{Action, CancellationRequest, Submission, SubmissionRequest}
-import util.testdata.TestDataHelper._
+import util.testdata.ExportsTestData._
 
 object SubmissionTestData {
 
   val uuid: String = UUID.randomUUID().toString
   val uuid_2: String = UUID.randomUUID().toString
-  val eori: String = "GB167676"
-  val ducr: String = randomAlphanumericString(16)
-  val lrn: String = randomAlphanumericString(22)
-  val mrn: String = "MRN87878797"
-  val mrn_2: String = "MRN12341234"
-  val conversationId: String = "b1c09f1b-7c94-4e90-b754-7c5c71c44e11"
-  val conversationId_2: String = "b1c09f1b-7c94-4e90-b754-7c5c71c55e22"
 
   lazy val action = Action(requestType = SubmissionRequest, conversationId = conversationId)
   lazy val action_2 = Action(requestType = SubmissionRequest, conversationId = conversationId_2)

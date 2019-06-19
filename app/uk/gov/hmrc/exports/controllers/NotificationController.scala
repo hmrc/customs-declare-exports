@@ -30,7 +30,7 @@ import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
-import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.NotificationService
 import uk.gov.hmrc.wco.dec._
 
@@ -40,11 +40,11 @@ import scala.util.{Failure, Success, Try}
 import scala.xml.NodeSeq
 
 @Singleton
-class NotificationsController @Inject()(
+class NotificationController @Inject()(
   appConfig: AppConfig,
   authConnector: AuthConnector,
   headerValidator: HeaderValidator,
-  notificationsRepository: NotificationsRepository,
+  notificationsRepository: NotificationRepository,
   metrics: ExportsMetrics,
   submissionRepository: SubmissionRepository,
   notificationsService: NotificationService,
@@ -135,6 +135,7 @@ class NotificationsController @Inject()(
     }
   }
 
-  private def save(notification: Notification): Future[Result] = notificationsService.save(notification)
+  private def save(notification: Notification): Future[Result] = ???
+//    notificationsService.save(notification)
 
 }

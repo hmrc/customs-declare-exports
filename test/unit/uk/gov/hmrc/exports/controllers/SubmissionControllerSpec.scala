@@ -28,13 +28,13 @@ import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.http.HeaderCarrier
 import unit.uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
-import util.testdata.ExportsTestData
+import util.testdata.ExportsTestData._
 import util.testdata.SubmissionTestData._
 
 import scala.concurrent.Future
 import scala.xml.NodeSeq
 
-class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestData with BeforeAndAfterEach {
+class SubmissionControllerSpec extends CustomsExportsBaseSpec with BeforeAndAfterEach {
 
   val submitUri = "/declaration"
   val updateUri = "/update-submission"
@@ -248,7 +248,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
         withAuthorizedUser()
         when(mockSubmissionRepository.findSubmissionByMrn(any[String])).thenReturn(Future.successful(Some(submission)))
-        when(mockSubmissionRepository.addAction(any[String], any[String])(any[Action])).thenReturn(Future.successful(Some(cancelledSubmission)))
+        when(mockSubmissionRepository.addAction(any[String], any[Action])).thenReturn(Future.successful(Some(cancelledSubmission)))
         when(mockDeclarationsApiConnector.submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier]))
           .thenReturn(Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, Some(conversationId))))
 
@@ -265,7 +265,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with ExportsTestDa
 
         withAuthorizedUser()
         when(mockSubmissionRepository.findSubmissionByMrn(any[String])).thenReturn(Future.successful(Some(cancelledSubmission)))
-        when(mockSubmissionRepository.addAction(any[String], any[String])(any[Action])).thenReturn(Future.successful(Some(cancelledSubmission)))
+        when(mockSubmissionRepository.addAction(any[String], any[Action])).thenReturn(Future.successful(Some(cancelledSubmission)))
         when(mockDeclarationsApiConnector.submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier]))
           .thenReturn(Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, Some(conversationId))))
 

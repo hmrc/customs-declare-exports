@@ -21,7 +21,7 @@ import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.declaration.CustomsDeclarationsResponse
-import uk.gov.hmrc.exports.repositories.SubmissionRepository
+import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -45,8 +45,8 @@ object UnitTestMockBuilder extends MockitoSugar {
     when(submissionRepositoryMock.findSubmissionByConversationId(any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.findSubmissionByUuid(any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.save(any())).thenReturn(Future.successful(false))
-    when(submissionRepositoryMock.updateMrn(any(), any())(any())).thenReturn(Future.successful(None))
-    when(submissionRepositoryMock.addAction(any(), any())(any())).thenReturn(Future.successful(None))
+    when(submissionRepositoryMock.updateMrn(any(), any())).thenReturn(Future.successful(None))
+    when(submissionRepositoryMock.addAction(any(), any())).thenReturn(Future.successful(None))
     submissionRepositoryMock
   }
 
@@ -59,5 +59,13 @@ object UnitTestMockBuilder extends MockitoSugar {
     when(submissionServiceMock.save(any(), any())(any())).thenReturn(Future.successful(Left("")))
     when(submissionServiceMock.cancelDeclaration(any(), any())(any())).thenReturn(Future.successful(Left("")))
     submissionServiceMock
+  }
+
+  def buildNotificationRepositoryMock: NotificationRepository = {
+    val notificationRepositoryMock: NotificationRepository = mock[NotificationRepository]
+    when(notificationRepositoryMock.findNotificationsByConversationId(any())).thenReturn(Future.successful(Seq.empty))
+    when(notificationRepositoryMock.findNotificationsByConversationIds(any())).thenReturn(Future.successful(Seq.empty))
+    when(notificationRepositoryMock.save(any())).thenReturn(Future.successful(false))
+    notificationRepositoryMock
   }
 }

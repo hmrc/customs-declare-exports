@@ -28,22 +28,7 @@ case class Notification(
   nameCode: Option[String],
   errors: Seq[NotificationError],
   payload: String
-) {
-
-//  def isOlderThan(notification: Notification): Boolean = {
-//    val firstDateOpt =
-//      response.flatMap(_.issueDateTime.map(_.dateTimeString.time)).headOption
-//    val secondDateOpt = notification.response
-//      .flatMap(_.issueDateTime.map(_.dateTimeString.time))
-//      .headOption
-//
-//    (firstDateOpt, secondDateOpt) match {
-//      case (Some(firstDate), Some(secondDate)) => firstDate.isAfter(secondDate)
-//      case (Some(_), None)                     => true
-//      case _                                   => false
-//    }
-//  }
-}
+)
 
 object Notification {
   implicit val format = Json.format[Notification]

@@ -15,6 +15,7 @@
  */
 
 package util.testdata
+
 import scala.util.Random
 
 object TestDataHelper {

@@ -29,14 +29,13 @@ import uk.gov.hmrc.http.HeaderCarrier
 import util.CustomsDeclarationsAPIConfig
 import util.ExternalServicesConfig.{Host, Port}
 import util.stubs.CustomsDeclarationsAPIService
-import util.testdata.ExportsTestData
+import util.testdata.ExportsTestData._
 
 import scala.concurrent.Future
 import scala.xml.XML
 
 class CustomsDeclarationsConnectorSpec
-    extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar with CustomsDeclarationsAPIService
-    with ExportsTestData {
+    extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar with CustomsDeclarationsAPIService {
 
   private lazy val connector = app.injector.instanceOf[CustomsDeclarationsConnector]
   private implicit val hc: HeaderCarrier = HeaderCarrier()

@@ -2,14 +2,15 @@
 
 POST        /declaration                                     uk.gov.hmrc.exports.controllers.SubmissionController.submitDeclaration()
 
-POST        /customs-declare-exports/notify                  uk.gov.hmrc.exports.controllers.NotificationsController.saveNotification()
-
-GET         /notifications                                   uk.gov.hmrc.exports.controllers.NotificationsController.getNotifications()
-
-GET         /submission-notifications/:conversationId        uk.gov.hmrc.exports.controllers.NotificationsController.getSubmissionNotifications(conversationId: String)
-
 GET         /submission/:conversationId                      uk.gov.hmrc.exports.controllers.SubmissionController.getSubmission(conversationId: String)
 
 GET         /submissions                                     uk.gov.hmrc.exports.controllers.SubmissionController.getSubmissionsByEori()
 
 POST        /cancel-declaration                              uk.gov.hmrc.exports.controllers.SubmissionController.cancelDeclaration()
+
+POST        /customs-declare-exports/notify                  uk.gov.hmrc.exports.controllers.NotificationController.saveNotification()
+
+GET         /notifications                                   uk.gov.hmrc.exports.controllers.NotificationController.getNotifications()
+
+# TODO: Should provide MRN of Submission
+GET         /submission-notifications/:conversationId        uk.gov.hmrc.exports.controllers.NotificationController.getSubmissionNotifications(conversationId: String)
