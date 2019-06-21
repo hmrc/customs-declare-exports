@@ -47,7 +47,7 @@ class SubmissionController @Inject()(
   def submitDeclaration(): Action[AnyContent] =
     authorisedAction(bodyParser = xmlOrEmptyBody) { implicit request =>
       headerValidator.validateAndExtractSubmissionHeaders(request.headers.toSimpleMap) match {
-        case Right(vhr: ValidatedHeadersSubmissionRequest) =>
+        case Right(vhr: SubmissionRequestHeaders) =>
           request.body.asXml match {
             case Some(xml) =>
               forwardSubmissionRequestToService(request.eori.value, vhr, xml).recoverWith {
@@ -97,7 +97,7 @@ class SubmissionController @Inject()(
       }
     )
 
-  private def forwardSubmissionRequestToService(eori: String, vhr: ValidatedHeadersSubmissionRequest, xml: NodeSeq)(
+  private def forwardSubmissionRequestToService(eori: String, vhr: SubmissionRequestHeaders, xml: NodeSeq)(
     implicit hc: HeaderCarrier
   ): Future[Result] =
     submissionService.save(eori, vhr)(xml).map {

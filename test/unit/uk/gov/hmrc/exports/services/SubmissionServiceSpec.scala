@@ -25,7 +25,7 @@ import org.scalatest.{MustMatchers, WordSpec}
 import play.api.http.Status._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.models.{LocalReferenceNumber, ValidatedHeadersSubmissionRequest}
+import uk.gov.hmrc.exports.models.{LocalReferenceNumber, SubmissionRequestHeaders}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -389,8 +389,8 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
 }
 
 object SubmissionServiceSpec {
-  val validatedHeadersSubmissionRequest: ValidatedHeadersSubmissionRequest =
-    ValidatedHeadersSubmissionRequest(LocalReferenceNumber(lrn), Some(ducr))
+  val validatedHeadersSubmissionRequest: SubmissionRequestHeaders =
+    SubmissionRequestHeaders(LocalReferenceNumber(lrn), Some(ducr))
 
   val submissionXml: NodeSeq = <submissionXml></submissionXml>
   val cancellationXml: NodeSeq = <cancellationXml></cancellationXml>

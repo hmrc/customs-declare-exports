@@ -45,7 +45,7 @@ class SubmissionService @Inject()(
   def getSubmissionByConversationId(conversationId: String): Future[Option[Submission]] =
     submissionRepository.findSubmissionByConversationId(conversationId)
 
-  def save(eori: String, submissionRequestData: ValidatedHeadersSubmissionRequest)(
+  def save(eori: String, submissionRequestData: SubmissionRequestHeaders)(
     submissionXml: NodeSeq
   )(implicit hc: HeaderCarrier): Future[Either[String, String]] =
     customsDeclarationsConnector.submitDeclaration(eori, submissionXml).flatMap {

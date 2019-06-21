@@ -78,7 +78,7 @@ class AuthenticatorSpec extends CustomsExportsBaseSpec {
     }
 
     "handle InsufficientEnrolments error" in {
-      unauthorizedUser(InsufficientEnrolments())
+      withUnauthorizedUser(InsufficientEnrolments())
 
       val result = route(app, fakeXmlRequest).get
 
@@ -86,7 +86,7 @@ class AuthenticatorSpec extends CustomsExportsBaseSpec {
     }
 
     "handle AuthorisationException error" in {
-      unauthorizedUser(InsufficientConfidenceLevel())
+      withUnauthorizedUser(InsufficientConfidenceLevel())
 
       val result = route(app, fakeXmlRequest).get
 
@@ -94,7 +94,7 @@ class AuthenticatorSpec extends CustomsExportsBaseSpec {
     }
 
     "handle rest of errors as InternalServerError" in {
-      unauthorizedUser(new IllegalArgumentException())
+      withUnauthorizedUser(new IllegalArgumentException())
 
       val result = route(app, fakeXmlRequest).get
 

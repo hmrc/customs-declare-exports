@@ -57,6 +57,8 @@ object ErrorResponse extends HttpStatusCodeShortDescriptions {
 
   def errorInvalidPayload: ErrorResponse = errorBadRequest("Invalid payload")
 
+  def errorInvalidHeaders: ErrorResponse = errorBadRequest("Invalid headers")
+
   def errorInternalServerError(errorMessage: String): ErrorResponse =
     ErrorResponse(INTERNAL_SERVER_ERROR, InternalServerErrorCode, errorMessage)
 

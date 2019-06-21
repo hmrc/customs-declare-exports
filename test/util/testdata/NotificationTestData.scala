@@ -34,9 +34,7 @@ object NotificationTestData {
     "Bearer BXQ3/Treo4kQCZvVcCqKPlwxRN4RA9Mb5RF8fFxOuwG5WSg+S+Rsp9Nq998Fgg0HeNLXL7NGwEAIzwM6vuA6YYhRQnTRFa" +
       "Bhrp+1w+kVW8g1qHGLYO48QPWuxdM87VMCZqxnCuDoNxVn76vwfgtpNj0+NwfzXV2Zc12L2QGgF9H9KwIkeIPK/mMlBESjue4V]"
 
-  val submissionNotificationUri = "/submission-notifications/1234"
-  val getNotificationUri = "/notifications"
-  val postNotificationUri = "/customs-declare-exports/notify"
+
 
   val validXML: Elem = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
     <wstxns1:Response xmlns:wstxns1="urn:wco:datamodel:WCO:RES-DMS:2"></wstxns1:Response>
@@ -48,7 +46,7 @@ object NotificationTestData {
 
   def exampleReceivedNotificationXML(
     mrn: String,
-    dateTime: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssZ"))
+    dateTime: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
   ): Elem =
     <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
@@ -71,7 +69,7 @@ object NotificationTestData {
 
   def exampleRejectNotificationXML(
     mrn: String,
-    dateTime: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssZ"))
+    dateTime: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
   ): Elem =
     <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
@@ -116,7 +114,7 @@ object NotificationTestData {
 
   def exampleNotificationInIncorrectFormatXML(
     mrn: String,
-    dateTime: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssZ"))
+    dateTime: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
   ): Elem =
     <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
@@ -167,34 +165,31 @@ object NotificationTestData {
     "X-CDS-Client-ID" -> "1234",
     CustomsHeaderNames.XConversationIdName -> "XConv1",
     CustomsHeaderNames.Authorization -> dummyAuthToken,
-    "X-EORI-Identifier" -> "eori1",
+    CustomsHeaderNames.XEoriIdentifierHeaderName -> "eori1",
     HeaderNames.ACCEPT -> s"application/vnd.hmrc.${2.0}+xml",
     HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
   )
 
-  val noEoriHeaders: Map[String, String] = Map(
+  val headersWithoutEori: Map[String, String] = Map(
     "X-CDS-Client-ID" -> "1234",
     CustomsHeaderNames.XConversationIdName -> "XConv1",
     CustomsHeaderNames.Authorization -> dummyAuthToken,
     HeaderNames.ACCEPT -> s"application/vnd.hmrc.${2.0}+xml",
-    HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
-    "X-Badge-Identifier" -> "badgeIdentifier1"
+    HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
   )
 
-  val noAcceptHeader: Map[String, String] = Map(
+  val headersWithoutAuthorisation: Map[String, String] = Map(
     "X-CDS-Client-ID" -> "1234",
-    "X-Conversation-ID" -> "XConv1",
+    CustomsHeaderNames.XConversationIdName -> "XConv1",
     HeaderNames.ACCEPT -> "",
-    HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
-    "X-Badge-Identifier" -> "badgeIdentifier1"
+    HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
   )
 
-  val noContentTypeHeader: Map[String, String] = Map(
+  val headersWithoutContentType: Map[String, String] = Map(
     "X-CDS-Client-ID" -> "1234",
-    "X-Conversation-ID" -> "XConv1",
+    CustomsHeaderNames.XConversationIdName -> "XConv1",
     HeaderNames.ACCEPT -> s"application/vnd.hmrc.${2.0}+xml",
-    HeaderNames.CONTENT_TYPE -> "",
-    "X-Badge-Identifier" -> "badgeIdentifier1"
+    HeaderNames.CONTENT_TYPE -> ""
   )
 
   /**************************************************************************/

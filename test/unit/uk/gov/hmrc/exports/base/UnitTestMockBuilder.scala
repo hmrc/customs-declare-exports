@@ -20,9 +20,10 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
+import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models.declaration.CustomsDeclarationsResponse
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.SubmissionService
+import uk.gov.hmrc.exports.services.{NotificationService, SubmissionService}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -36,6 +37,12 @@ object UnitTestMockBuilder extends MockitoSugar {
     when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any()))
       .thenReturn(Future.successful(CustomsDeclarationsResponse.empty))
     customsDeclarationsConnectorMock
+  }
+
+  def buildExportsMetricsMock: ExportsMetrics = {
+    val exportsMetricsMock: ExportsMetrics = mock[ExportsMetrics]
+    when(exportsMetricsMock.startTimer(any())).thenCallRealMethod()
+    exportsMetricsMock
   }
 
   def buildSubmissionRepositoryMock: SubmissionRepository = {
@@ -67,5 +74,13 @@ object UnitTestMockBuilder extends MockitoSugar {
     when(notificationRepositoryMock.findNotificationsByConversationIds(any())).thenReturn(Future.successful(Seq.empty))
     when(notificationRepositoryMock.save(any())).thenReturn(Future.successful(false))
     notificationRepositoryMock
+  }
+
+  def buildNotificationServiceMock: NotificationService = {
+    val notificationServiceMock: NotificationService = mock[NotificationService]
+    when(notificationServiceMock.getAllNotificationsForUser(any())).thenReturn(Future.successful(Seq.empty))
+    when(notificationServiceMock.getNotificationsForSubmission(any())).thenReturn(Future.successful(Seq.empty))
+    when(notificationServiceMock.save(any())).thenReturn(Future.successful(Left("")))
+    notificationServiceMock
   }
 }

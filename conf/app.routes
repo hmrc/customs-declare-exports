@@ -10,7 +10,6 @@ POST        /cancel-declaration                              uk.gov.hmrc.exports
 
 POST        /customs-declare-exports/notify                  uk.gov.hmrc.exports.controllers.NotificationController.saveNotification()
 
-GET         /notifications                                   uk.gov.hmrc.exports.controllers.NotificationController.getNotifications()
+GET         /notifications                                   uk.gov.hmrc.exports.controllers.NotificationController.getAllNotificationsForUser()
 
-# TODO: Should provide MRN of Submission
-GET         /submission-notifications/:conversationId        uk.gov.hmrc.exports.controllers.NotificationController.getSubmissionNotifications(conversationId: String)
+GET         /submission-notifications/:mrn                   uk.gov.hmrc.exports.controllers.NotificationController.getSubmissionNotifications(mrn: String)

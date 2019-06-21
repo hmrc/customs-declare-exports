@@ -69,11 +69,11 @@ class NotificationService @Inject()(
         Future.successful(Left(exc.getMessage))
     }
 
-  private def updateRelatedSubmission(notification: Notification) =
+  private def updateRelatedSubmission(notification: Notification): Future[Either[String, Unit]] =
     try {
       submissionRepository.updateMrn(notification.conversationId, notification.mrn).map {
         case None =>
-          logger.error("Could not find Submission to update")
+          logger.error(s"Could not find Submission to update for conversationId: ${notification.conversationId}")
           Right()
         case Some(_) =>
           Right()
@@ -84,21 +84,4 @@ class NotificationService @Inject()(
         Future.successful(Left(exc.getMessage))
     }
 
-//  def getTheNewestExistingNotification(convId: String): Future[Option[Notification]] = ???
-//
-//  private def updateMrnAndStatus(notification: Notification): Future[Option[Submission]] =
-//    submissionRepository.updateMrn(notification.conversationId, notification.mrn)
-//
-//  val PositionFunctionCode = "11"
-//  val NameCodeGranted = "39"
-//  val NameCodeDenied = "41"
-//
-//  private def buildStatus(responses: Seq[Response]): Option[String] =
-//    responses.map { response =>
-//      (response.functionCode, response.status.flatMap(_.nameCode).headOption) match {
-//        case (PositionFunctionCode, Some(nameCode)) if nameCode == NameCodeGranted || nameCode == NameCodeDenied =>
-//          s"11$nameCode"
-//        case _ => response.functionCode
-//      }
-//    }.headOption
 }

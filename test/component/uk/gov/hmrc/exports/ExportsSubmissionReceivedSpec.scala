@@ -65,7 +65,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
         submissionRepoMockedResult = false,
         submissionRepoIsCalled = false,
         expectedResponseStatus = INTERNAL_SERVER_ERROR,
-        expectedResponseBody = "Non Accepted status returned by Customs Declaration Service"
+        expectedResponseBody = "Non Accepted status returned by Customs Declarations Service"
       )
     }
 
@@ -76,7 +76,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
         submissionRepoMockedResult = true,
         submissionRepoIsCalled = false,
         expectedResponseStatus = INTERNAL_SERVER_ERROR,
-        expectedResponseBody = "Non Accepted status returned by Customs Declaration Service"
+        expectedResponseBody = "Non Accepted status returned by Customs Declarations Service"
       )
     }
 
@@ -87,7 +87,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
         submissionRepoMockedResult = true,
         submissionRepoIsCalled = false,
         expectedResponseStatus = INTERNAL_SERVER_ERROR,
-        expectedResponseBody = "Non Accepted status returned by Customs Declaration Service"
+        expectedResponseBody = "Non Accepted status returned by Customs Declarations Service"
       )
     }
 
@@ -98,7 +98,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
         submissionRepoMockedResult = true,
         submissionRepoIsCalled = false,
         expectedResponseStatus = INTERNAL_SERVER_ERROR,
-        expectedResponseBody = "Non Accepted status returned by Customs Declaration Service"
+        expectedResponseBody = "Non Accepted status returned by Customs Declarations Service"
       )
     }
 
@@ -120,7 +120,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
       status(result) shouldBe INTERNAL_SERVER_ERROR
 
       And("the response body contains error")
-      contentAsString(result) shouldBe "Non Accepted status returned by Customs Declaration Service"
+      contentAsString(result) shouldBe "Non Accepted status returned by Customs Declarations Service"
 
       And("the Declarations API Service was called correctly")
       eventually(

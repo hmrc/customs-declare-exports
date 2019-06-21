@@ -53,7 +53,7 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
 
   // TODO: Need to change this method to return Future[WriteResult].
   //  In current implementation it will never return false, because in case of an error,
-  //  insert throws an Exception which will be propagated.
+  //  insert throws an Exception which will be propagated to the caller.
   def save(submission: Submission): Future[Boolean] = insert(submission).map { res =>
     if (!res.ok) logger.error(s"Errors when persisting declaration submission: ${res.writeErrors.mkString("--")}")
     res.ok

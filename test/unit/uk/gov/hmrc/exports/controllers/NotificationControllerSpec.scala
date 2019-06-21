@@ -17,212 +17,280 @@
 package unit.uk.gov.hmrc.exports.controllers
 
 import org.joda.time.{DateTime, DateTimeZone}
-import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{atLeastOnce, verify, when}
+import org.mockito.Mockito._
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
+import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.inject.{Injector, bind}
+import play.api.libs.json.Json
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.metrics.{ExportsMetrics, MetricIdentifiers}
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
-import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
+import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.services.NotificationService
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
+import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.buildNotificationServiceMock
 import util.testdata.NotificationTestData._
-import util.testdata.SubmissionTestData._
 
 import scala.concurrent.Future
 import scala.util.Random
+import scala.xml.Elem
 
-class NotificationControllerSpec extends WordSpec
-    with GuiceOneAppPerSuite with AuthTestSupport with MustMatchers  with BeforeAndAfterEach {
+class NotificationControllerSpec
+    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
+    with MustMatchers {
 
   import NotificationControllerSpec._
 
-  private val notificationServiceMock: NotificationService = mock[NotificationService]
-  private val notificationsRepositoryMock: NotificationRepository = mock[NotificationRepository]
-  private val submissionRepositoryMock: SubmissionRepository = mock[SubmissionRepository]
+  val getSubmissionNotificationsUri = "/submission-notifications/1234"
+  val getAllNotificationsForUserUri = "/notifications"
+  val saveNotificationUri = "/customs-declare-exports/notify"
 
-  override lazy val app: Application = GuiceApplicationBuilder().overrides(
-    bind[AuthConnector].to(mockAuthConnector),
-    bind[NotificationService].to(notificationServiceMock),
-    bind[NotificationRepository].to(notificationsRepositoryMock),
-    bind[SubmissionRepository].to(submissionRepositoryMock)
-  ).build()
+  private val notificationServiceMock: NotificationService = buildNotificationServiceMock
+  override lazy val app: Application = GuiceApplicationBuilder()
+    .overrides(bind[AuthConnector].to(mockAuthConnector), bind[NotificationService].to(notificationServiceMock))
+    .build()
 
-  private def injector: Injector = app.injector
-  private def appConfig: AppConfig = injector.instanceOf[AppConfig]
-  private lazy val metrics: ExportsMetrics = injector.instanceOf[ExportsMetrics]
+  private lazy val metrics: ExportsMetrics = app.injector.instanceOf[ExportsMetrics]
 
-  override def beforeEach: Unit = {
+  override def beforeEach(): Unit = {
     super.beforeEach()
-    when(notificationServiceMock.save(any())).thenReturn(Future.successful(Left("")))
+    reset(mockAuthConnector, notificationServiceMock)
   }
 
+  "Notification Controller on getSubmissionNotifications" when {
 
-//  private def haveNotifications(notifications: Seq[Notification]): Unit =
-//    when(notificationsRepositoryMock.findByEori(any())).thenReturn(Future.successful(notifications))
+    "everything works correctly" should {
 
-  private def withNotificationSaved(ok: Boolean): Unit =
-    when(notificationsRepositoryMock.save(any())).thenReturn(Future.successful(ok))
+      "return Ok status" in {
+        withAuthorizedUser()
+        val notificationsFromService = Seq(notification, notification_2)
+        when(notificationServiceMock.getNotificationsForSubmission(any()))
+          .thenReturn(Future.successful(notificationsFromService))
 
-//  private def withSubmissionNotification(notifications: Seq[Notification]): Unit =
-//    when(notificationsRepositoryMock.getByEoriAndConversationId(any(), any()))
-//      .thenReturn(Future.successful(notifications))
+        val result = routeGetSubmissionNotifications()
 
+        status(result) must be(OK)
+      }
 
-  "Notifications controller" should {
+      "return all Notifications returned by Notification Service" in {
+        withAuthorizedUser()
+        val notificationsFromService = Seq(notification, notification_2)
+        when(notificationServiceMock.getNotificationsForSubmission(any()))
+          .thenReturn(Future.successful(notificationsFromService))
 
-    "return 202 status when it successfully get notifications" in {
-      withAuthorizedUser()
+        val result = routeGetSubmissionNotifications()
 
-      val result = route(app, FakeRequest(GET, getNotificationUri)).get
+        contentAsJson(result) must equal(Json.toJson(notificationsFromService))
+      }
 
-      status(result) must be(OK)
+      "call Notification Service once" in {
+        withAuthorizedUser()
+        val notificationsFromService = Seq(notification, notification_2)
+        when(notificationServiceMock.getNotificationsForSubmission(any()))
+          .thenReturn(Future.successful(notificationsFromService))
+
+        routeGetSubmissionNotifications().futureValue
+
+        verify(notificationServiceMock, times(1)).getNotificationsForSubmission(any())
+      }
     }
 
-    "return 202 status when it successfully save notification" in {
-      when(submissionRepositoryMock.findSubmissionByConversationId(any[String])).thenReturn(Future.successful(Some(submission)))
-      withNotificationSaved(true)
+    "authorisation header is missing" should {
 
-      val result = route(app, FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
+      "return Unauthorised status" in {
+        withUnauthorizedUser(InsufficientEnrolments())
 
-      status(result) must be(ACCEPTED)
+        val result = routeGetSubmissionNotifications(headersWithoutAuthorisation)
+
+        status(result) must be(UNAUTHORIZED)
+      }
+
+      "not call NotificationService" in {
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        routeGetSubmissionNotifications(headersWithoutAuthorisation).futureValue
+
+        verifyZeroInteractions(notificationServiceMock)
+      }
     }
 
-    "handle reject notification correctly and Mrn parsed" in {
-      val notificationMRN = "19GB3FG7C5D8FFGV00"
-      when(submissionRepositoryMock.findSubmissionByConversationId(any[String])).thenReturn(Future.successful(Some(submission)))
-      withNotificationSaved(true)
-
-      val result = route(
-        app,
-        FakeRequest(POST, postNotificationUri)
-          .withHeaders(validHeaders.toSeq: _*)
-          .withXmlBody(
-            exampleRejectNotificationXML(notificationMRN, now.withZone(DateTimeZone.UTC).toString("yyyyMMddHHmmssZ"))
-          )
-      ).get
-
-      status(result) must be(ACCEPTED)
-
-      val notificationCaptor: ArgumentCaptor[Notification] = ArgumentCaptor.forClass(classOf[Notification])
-      verify(notificationServiceMock, atLeastOnce()).save(notificationCaptor.capture())
-
-      notificationCaptor.getValue.mrn must be(notificationMRN)
-    }
-
-    "return 202 status when it unable to find submission for conversationID" in {
-      when(submissionRepositoryMock.findSubmissionByConversationId(any[String])).thenReturn(Future.successful(None))
-
-      val result = route(app, FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
-
-      status(result) must be(ACCEPTED)
-    }
-
-    "return 202 status if it fail to save notification" in {
-      when(submissionRepositoryMock.findSubmissionByConversationId(any[String])).thenReturn(Future.successful(Some(submission)))
-
-      withNotificationSaved(false)
-
-      val result = route(app, FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
-
-      status(result) must be(ACCEPTED)
-    }
-
-    "return 200 status when there are notifications connected to specific submission" in {
-      withAuthorizedUser()
-
-      val result = route(app, FakeRequest(GET, submissionNotificationUri).withHeaders(validHeaders.toSeq: _*)).get
-
-      status(result) must be(OK)
-    }
-
-    "return 200 status when there are no notifications connected to specific submission" in {
-      withAuthorizedUser()
-
-      val result = route(app, FakeRequest(GET, submissionNotificationUri).withHeaders(validHeaders.toSeq: _*)).get
-
-      status(result) must be(OK)
-    }
-
-    "record notification timing and increase the Success Counter when response is OK" in {
-
-      val timer = metrics.timers(MetricIdentifiers.notificationMetric).getCount
-      val counter = metrics.counters(MetricIdentifiers.notificationMetric).getCount
-      when(submissionRepositoryMock.findSubmissionByConversationId(any[String])).thenReturn(Future.successful(Some(submission)))
-
-      withNotificationSaved(true)
-
-      val result = route(app, FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(validXML)).get
-
-      status(result) must be(ACCEPTED)
-
-      metrics.timers(MetricIdentifiers.notificationMetric).getCount mustBe timer + 1
-      metrics.counters(MetricIdentifiers.notificationMetric).getCount mustBe counter + 1
-    }
+    def routeGetSubmissionNotifications(headers: Map[String, String] = validHeaders): Future[Result] =
+      route(app, FakeRequest(GET, getSubmissionNotificationsUri).withHeaders(headers.toSeq: _*)).get
   }
 
-//  val olderNotification = Notification(
-//    conversationId = "convId",
-//    eori = "eori",
-//    mrn = mrn,
-//    metadata = DeclarationMetadata(),
-//    response = Seq(
-//      Response(functionCode = "02", issueDateTime = Some(ResponseDateTimeElement(DateTimeString("102", "20190224"))))
-//    )
-//  )
-//
-//  val newerNotification = Notification(
-//    conversationId = "convId",
-//    eori = "eori",
-//    mrn = mrn,
-//    metadata = DeclarationMetadata(),
-//    response = Seq(
-//      Response(functionCode = "02", issueDateTime = Some(ResponseDateTimeElement(DateTimeString("102", "20190227"))))
-//    )
-//  )
+  "Notification Controller on getAllNotificationsForUser" when {
 
-  "Saving notification" should {
+    "everything works correctly" should {
 
-    //    "call Notifications Service save method" in {
-    //      when(submissionRepositoryMock.findSubmissionByConversationId(any[String])).thenReturn(Future.successful(Some(submission)))
-    //      withAuthorizedUser()
-    //      withSubmissionNotification(Seq.empty)
-    //      withNotificationSaved(true)
-    //
-    //      reset(notificationServiceMock)
-    //      val result =
-    //        route(
-    //          app,
-    //          FakeRequest(POST, postNotificationUri).withHeaders(validHeaders.toSeq: _*).withXmlBody(notificationXML(mrn))
-    //        ).get
-    //
-    //      status(result) must be(ACCEPTED)
-    //      verify(notificationServiceMock, times(1)).save(any())
-    //    }
+      "return Ok status" in {
+        withAuthorizedUser()
+        val notificationsFromService = Seq(notification, notification_2, notification_3)
+        when(notificationServiceMock.getAllNotificationsForUser(any()))
+          .thenReturn(Future.successful(notificationsFromService))
 
-    "return UnsupportedMediaType if Content Type header is empty" in {
-      val result = route(
-        app,
-        FakeRequest(POST, postNotificationUri)
-          .withHeaders(noContentTypeHeader.toSeq: _*)
-          .withXmlBody(exampleReceivedNotificationXML(mrn))
-      ).get
+        val result = routeGetAllNotificationsForUser()
 
-      status(result) must be(UNSUPPORTED_MEDIA_TYPE)
+        status(result) must be(OK)
+      }
+
+      "return all Notifications returned by Notification Service" in {
+        withAuthorizedUser()
+        val notificationsFromService = Seq(notification, notification_2, notification_3)
+        when(notificationServiceMock.getAllNotificationsForUser(any()))
+          .thenReturn(Future.successful(notificationsFromService))
+
+        val result = routeGetAllNotificationsForUser()
+
+        contentAsJson(result) must equal(Json.toJson(notificationsFromService))
+      }
+
+      "call Notification Service once" in {
+        withAuthorizedUser()
+        val notificationsFromService = Seq(notification, notification_2, notification_3)
+        when(notificationServiceMock.getAllNotificationsForUser(any()))
+          .thenReturn(Future.successful(notificationsFromService))
+
+        routeGetAllNotificationsForUser().futureValue
+
+        verify(notificationServiceMock, times(1)).getAllNotificationsForUser(any())
+      }
     }
 
-    // TODO: decide on corner case - time change 1 hour forward, 1 hour backward, what is the risk ?
+    "authorisation header is missing" should {
+
+      "return Unauthorised response" in {
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        val result = routeGetAllNotificationsForUser(headersWithoutAuthorisation)
+
+        status(result) must be(UNAUTHORIZED)
+      }
+
+      "not call NotificationService" in {
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        routeGetAllNotificationsForUser(headersWithoutAuthorisation).futureValue
+
+        verifyZeroInteractions(notificationServiceMock)
+      }
+    }
+
+    def routeGetAllNotificationsForUser(headers: Map[String, String] = validHeaders): Future[Result] =
+      route(app, FakeRequest(GET, getAllNotificationsForUserUri).withHeaders(headers.toSeq: _*)).get
+  }
+
+  "Notification Controller on saveNotification" when {
+
+    "everything works correctly" should {
+
+      "return Accepted status" in {
+        withAuthorizedUser()
+        when(notificationServiceMock.save(any())).thenReturn(Future.successful(Right()))
+
+        val result = routePostSaveNotification()
+
+        status(result) must be(ACCEPTED)
+      }
+
+      "call Notification Service once" in {
+        withAuthorizedUser()
+        when(notificationServiceMock.save(any())).thenReturn(Future.successful(Right()))
+
+        routePostSaveNotification().futureValue
+
+        verify(notificationServiceMock, times(1)).save(any())
+      }
+    }
+
+    "Notification Service returns Either.Left" should {
+
+      "return InternalServerError" in {
+        withAuthorizedUser()
+        when(notificationServiceMock.save(any())).thenReturn(Future.successful(Left("Error message")))
+
+        val result = routePostSaveNotification()
+
+        status(result) must be(INTERNAL_SERVER_ERROR)
+      }
+    }
+
+    "authorisation header is missing" should {
+
+      "return Unauthorised status if authorisation header is missing" in {
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        val result = routePostSaveNotification(headers = headersWithoutAuthorisation)
+
+        status(result) must be(UNAUTHORIZED)
+      }
+
+      "not call NotificationService" in {
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        routePostSaveNotification(headers = headersWithoutAuthorisation).futureValue
+
+        verifyZeroInteractions(notificationServiceMock)
+      }
+    }
+
+    pending
+    "Content Type header is empty" should {
+
+      "return UnsupportedMediaType status" in {
+        withAuthorizedUser()
+
+        val result = routePostSaveNotification(headers = headersWithoutContentType)
+
+        status(result) must be(UNSUPPORTED_MEDIA_TYPE)
+      }
+
+      "not call NotificationService" in {
+        withAuthorizedUser()
+
+        routePostSaveNotification(headers = headersWithoutContentType).futureValue
+
+        verifyZeroInteractions(notificationServiceMock)
+      }
+    }
+
+    "cannot parse the payload" should {
+
+      "return Accepted status" in {
+        withAuthorizedUser()
+
+        val result = routePostSaveNotification(xmlBody = exampleNotificationInIncorrectFormatXML(mrn))
+
+        status(result) must be(ACCEPTED)
+      }
+
+      "not call NotificationService" in {
+        withAuthorizedUser()
+
+        routePostSaveNotification(xmlBody = exampleNotificationInIncorrectFormatXML(mrn)).futureValue
+
+        verifyZeroInteractions(notificationServiceMock)
+      }
+    }
+
+    def routePostSaveNotification(
+      headers: Map[String, String] = validHeaders,
+      xmlBody: Elem = exampleRejectNotificationXML(mrn)
+    ): Future[Result] =
+      route(
+        app,
+        FakeRequest(POST, saveNotificationUri)
+          .withHeaders(headers.toSeq: _*)
+          .withXmlBody(xmlBody)
+      ).get
   }
 }
+
 
 object NotificationControllerSpec {
 
@@ -233,7 +301,9 @@ object NotificationControllerSpec {
 
   private lazy val responseFunctionCodes: Seq[String] =
     Seq("01", "02", "03", "05", "06", "07", "08", "09", "10", "11", "16", "17", "18")
-  private lazy val randomResponseFunctionCode: String = responseFunctionCodes(Random.nextInt(responseFunctionCodes.length))
+  private lazy val randomResponseFunctionCode: String = responseFunctionCodes(
+    Random.nextInt(responseFunctionCodes.length)
+  )
   private def dateTimeElement(dateTimeVal: DateTime) =
     Some(ResponseDateTimeElement(DateTimeString("102", dateTimeVal.toString("yyyyMMdd"))))
   val response: Seq[Response] = Seq(
