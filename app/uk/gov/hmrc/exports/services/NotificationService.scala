@@ -54,6 +54,13 @@ class NotificationService @Inject()(
         notificationRepository.findNotificationsByConversationIds(conversationIds)
     }
 
+  def saveAll(notifications: Seq[Notification]): Future[Either[String, Unit]] = {
+    Future.sequence(notifications.map(save)).map { seq =>
+      if (seq.exists(_.isLeft)) Left("Failed saving notification")
+      else Right((): Unit)
+    }
+  }
+
   def save(notification: Notification): Future[Either[String, Unit]] =
     try {
       notificationRepository.save(notification).flatMap {
@@ -63,7 +70,7 @@ class NotificationService @Inject()(
     } catch {
       case exc: DatabaseException if exc.code.contains(databaseDuplicateKeyErrorCode) =>
         logger.error(s"Received duplicated notification with conversationId: ${notification.conversationId}")
-        Future.successful(Right())
+        Future.successful(Right((): Unit))
       case exc: Throwable =>
         logger.error(exc.getMessage)
         Future.successful(Left(exc.getMessage))
@@ -74,9 +81,9 @@ class NotificationService @Inject()(
       submissionRepository.updateMrn(notification.conversationId, notification.mrn).map {
         case None =>
           logger.error(s"Could not find Submission to update for conversationId: ${notification.conversationId}")
-          Right()
+          Right((): Unit)
         case Some(_) =>
-          Right()
+          Right((): Unit)
       }
     } catch {
       case exc: Throwable =>

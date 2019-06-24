@@ -59,7 +59,7 @@ object NotificationTestData {
         <FunctionCode>02</FunctionCode>
         <FunctionalReferenceID>1234555</FunctionalReferenceID>
         <IssueDateTime>
-          <DateTimeString formatCode="304">20190226085021Z</DateTimeString>
+          <DateTimeString formatCode="304">{dateTime}</DateTimeString>
         </IssueDateTime>
         <Declaration>
           <ID>{mrn}</ID>
@@ -108,6 +108,40 @@ object NotificationTestData {
             <DateTimeString formatCode="304">20190328092916Z</DateTimeString>
           </RejectionDateTime>
           <VersionID>1</VersionID>
+        </Declaration>
+      </Response>
+    </MetaData>
+
+  def exampleNotificationWithMultipleResponsesXML(
+    mrn: String,
+    dateTime_received: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX")),
+    dateTime_accepted: String = LocalDateTime.now().plusHours(1).atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
+  ): Elem =
+    <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+      <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
+      <WCOTypeName>RES</WCOTypeName>
+      <ResponsibleCountryCode/>
+      <ResponsibleAgencyName/>
+      <AgencyAssignedCustomizationCode/>
+      <AgencyAssignedCustomizationVersionCode/>
+      <Response>
+        <FunctionCode>02</FunctionCode>
+        <FunctionalReferenceID>1234555</FunctionalReferenceID>
+        <IssueDateTime>
+          <DateTimeString formatCode="304">{dateTime_received}</DateTimeString>
+        </IssueDateTime>
+        <Declaration>
+          <ID>{mrn}</ID>
+        </Declaration>
+      </Response>
+      <Response>
+        <FunctionCode>01</FunctionCode>
+        <FunctionalReferenceID>1234567890</FunctionalReferenceID>
+        <IssueDateTime>
+          <DateTimeString formatCode="304">{dateTime_accepted}</DateTimeString>
+        </IssueDateTime>
+        <Declaration>
+          <ID>{mrn}</ID>
         </Declaration>
       </Response>
     </MetaData>

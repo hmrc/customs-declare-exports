@@ -17,6 +17,7 @@
 package unit.uk.gov.hmrc.exports.controllers
 
 import org.joda.time.{DateTime, DateTimeZone}
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
@@ -31,6 +32,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.services.NotificationService
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
@@ -191,28 +193,50 @@ class NotificationControllerSpec
 
       "return Accepted status" in {
         withAuthorizedUser()
-        when(notificationServiceMock.save(any())).thenReturn(Future.successful(Right()))
+        when(notificationServiceMock.saveAll(any())).thenReturn(Future.successful(Right((): Unit)))
 
         val result = routePostSaveNotification()
 
         status(result) must be(ACCEPTED)
       }
 
-      "call Notification Service once" in {
+      "call NotificationService once" in {
         withAuthorizedUser()
-        when(notificationServiceMock.save(any())).thenReturn(Future.successful(Right()))
+        when(notificationServiceMock.saveAll(any())).thenReturn(Future.successful(Right((): Unit)))
 
         routePostSaveNotification().futureValue
 
-        verify(notificationServiceMock, times(1)).save(any())
+        verify(notificationServiceMock, times(1)).saveAll(any())
       }
+
+      "call NotificationService once, even if payload contains more Response elements" in {
+        withAuthorizedUser()
+        when(notificationServiceMock.saveAll(any())).thenReturn(Future.successful(Right((): Unit)))
+
+        routePostSaveNotification(xmlBody = exampleNotificationWithMultipleResponsesXML(mrn)).futureValue
+
+        verify(notificationServiceMock, times(1)).saveAll(any())
+      }
+
+      "call NotificationService with the same amount of Notifications as it is in the payload" in {
+        withAuthorizedUser()
+        when(notificationServiceMock.saveAll(any())).thenReturn(Future.successful(Right((): Unit)))
+
+        routePostSaveNotification(xmlBody = exampleNotificationWithMultipleResponsesXML(mrn)).futureValue
+
+        val notificationsCaptor: ArgumentCaptor[Seq[Notification]] = ArgumentCaptor.forClass(classOf[Seq[Notification]])
+        verify(notificationServiceMock, times(1)).saveAll(notificationsCaptor.capture())
+
+        notificationsCaptor.getValue.length must equal(2)
+      }
+
     }
 
-    "Notification Service returns Either.Left" should {
+    "NotificationService returns Either.Left" should {
 
       "return InternalServerError" in {
         withAuthorizedUser()
-        when(notificationServiceMock.save(any())).thenReturn(Future.successful(Left("Error message")))
+        when(notificationServiceMock.saveAll(any())).thenReturn(Future.successful(Left("Error message")))
 
         val result = routePostSaveNotification()
 

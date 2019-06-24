@@ -31,12 +31,12 @@ import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
+import uk.gov.hmrc.exports.models.declaration.notifications.{ErrorPointer, Notification, NotificationError}
 import uk.gov.hmrc.exports.services.NotificationService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.xml.NodeSeq
+import scala.xml.{Node, NodeSeq}
 
 @Singleton
 class NotificationController @Inject()(
@@ -72,60 +72,79 @@ class NotificationController @Inject()(
 
     headerValidator.validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
       case Right(extractedHeaders) =>
-        buildNotificationFromRequest(extractedHeaders, request.request.body.asXml) match {
-          case Some(notification) =>
-            notificationsService.save(notification).map {
-              case Right(_) =>
-                metrics.incrementCounter(notificationMetric)
-                timer.stop()
-                Accepted
-              case Left(criticalErrorMessage) =>
-                InternalServerError
-            }
-          case None =>
-            logger.error(s"Invalid notification payload")
-            Future.successful(Accepted)
+        val allNotifications = buildNotificationsFromRequest(extractedHeaders, request.request.body.asXml)
+
+        notificationsService.saveAll(allNotifications).map {
+          case Right(_) =>
+            metrics.incrementCounter(notificationMetric)
+            timer.stop()
+            Accepted
+          case Left(_) =>
+            InternalServerError
         }
       case Left(_) => Future.successful(Accepted)
     }
   }
 
-  private def buildNotificationFromRequest(
+  private def buildNotificationsFromRequest(
     notificationApiRequestHeaders: NotificationApiRequestHeaders,
     notificationXmlOpt: Option[NodeSeq]
-  ): Option[Notification] =
+  ): Seq[Notification] =
     if (notificationXmlOpt.nonEmpty) {
       try {
         val notificationXml = notificationXmlOpt.get
-        val responseXml = notificationXml \ "Response"
-        val mrn = (responseXml \ "Declaration" \ "ID").text
-        val formatter304 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
-        val dateTimeIssued = LocalDateTime.parse((responseXml \ "IssueDateTime" \ "DateTimeString").text, formatter304)
-        val functionCode = (responseXml \ "FunctionCode").text
+        val responsesXml = notificationXml \ "Response"
 
-        val nameCode =
-          if ((responseXml \ "Response" \ "Status").nonEmpty)
-            Some((responseXml \ "Response" \ "Status" \ "NameCode").text)
-          else None
+        responsesXml.map { singleResponseXml =>
+          val mrn = (singleResponseXml \ "Declaration" \ "ID").text
+          val formatter304 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
+          val dateTimeIssued =
+            LocalDateTime.parse((singleResponseXml \ "IssueDateTime" \ "DateTimeString").text, formatter304)
+          val functionCode = (singleResponseXml \ "FunctionCode").text
 
-//      val errors = if ()
+          val nameCode =
+            if ((singleResponseXml \ "Response" \ "Status").nonEmpty)
+              Some((singleResponseXml \ "Response" \ "Status" \ "NameCode").text)
+            else None
 
-        Some(
+          val errors = buildErrorsFromRequest(singleResponseXml)
+
           Notification(
             conversationId = notificationApiRequestHeaders.conversationId.value,
             mrn = mrn,
             dateTimeIssued = dateTimeIssued,
             functionCode = functionCode,
             nameCode = nameCode,
-            errors = Seq(),
+            errors = errors,
             payload = notificationXml.toString
           )
-        )
+        }
+
       } catch {
         case exc: Throwable =>
           logger.error(s"There is a problem during parsing notification with exception: ${exc.getMessage}")
-          None
+          Seq.empty
       }
-    } else None
+    } else Seq.empty
+
+  private def buildErrorsFromRequest(singleResponseXml: Node): Seq[NotificationError] =
+    if ((singleResponseXml \ "Error").nonEmpty) {
+      val errorsXml = singleResponseXml \ "Error"
+      errorsXml.map { singleErrorXml =>
+        val validationCode = (singleErrorXml \ "ValidationCode").text
+        val pointers = buildErrorPointers(singleErrorXml)
+        NotificationError(validationCode = validationCode, pointers = pointers)
+      }
+    } else Seq.empty
+
+  private def buildErrorPointers(singleErrorXml: Node): Seq[ErrorPointer] =
+    if ((singleErrorXml \ "Pointer").nonEmpty) {
+      val pointersXml = singleErrorXml \ "Pointer"
+      pointersXml.map { singlePointerXml =>
+        val documentSectionCode = (singlePointerXml \ "DocumentSectionCode").text
+        val tagId = if ((singlePointerXml \ "TagID").nonEmpty) Some((singlePointerXml \ "TagID").text) else None
+        ErrorPointer(documentSectionCode = documentSectionCode, tagId = tagId)
+      }
+    } else Seq.empty
 
 }

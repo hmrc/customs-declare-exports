@@ -203,7 +203,7 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
     "everything works correctly" should {
 
       "return Either.Right" in new SaveHappyPathTest {
-        notificationService.save(notification).futureValue must equal(Right())
+        notificationService.save(notification).futureValue must equal(Right((): Unit))
       }
 
       "call NotificationRepository and SubmissionRepository afterwards" in new SaveHappyPathTest {
@@ -254,7 +254,7 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
       "return Either.Right" in new Test {
         when(notificationRepositoryMock.save(any())).thenAnswer(duplicateKeyNotificationsDatabaseExceptionExampleAnswer)
 
-        notificationService.save(notification).futureValue must equal(Right())
+        notificationService.save(notification).futureValue must equal(Right((): Unit))
       }
 
       "not call SubmissionRepository" in new Test {
@@ -292,7 +292,7 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
         when(notificationRepositoryMock.save(any())).thenReturn(Future.successful(true))
         when(submissionRepositoryMock.updateMrn(any(), any())).thenReturn(Future.successful(None))
 
-        notificationService.save(notification).futureValue must equal(Right())
+        notificationService.save(notification).futureValue must equal(Right((): Unit))
       }
     }
 
