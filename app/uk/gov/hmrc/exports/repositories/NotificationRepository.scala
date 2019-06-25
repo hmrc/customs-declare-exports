@@ -56,7 +56,7 @@ class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: 
   def findNotificationsByConversationIds(conversationIds: Seq[String]): Future[Seq[Notification]] =
     conversationIds match {
       case Seq() => Future.successful(Seq.empty)
-      case _ => find("$or" -> conversationIds.map(id => Json.obj("conversationId" -> JsString(id))))
-  }
+      case _     => find("$or" -> conversationIds.map(id => Json.obj("conversationId" -> JsString(id))))
+    }
 
 }

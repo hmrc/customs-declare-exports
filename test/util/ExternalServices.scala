@@ -31,10 +31,14 @@ trait AuditService extends WireMockRunner {
 
   private val AuditWriteUrl: String = "/write/audit"
 
-  def stubAuditService(): Unit = stubFor(post(urlEqualTo(AuditWriteUrl))
-    .willReturn(
-      aResponse()
-        .withStatus(Status.OK)))
+  def stubAuditService(): Unit =
+    stubFor(
+      post(urlEqualTo(AuditWriteUrl))
+        .willReturn(
+          aResponse()
+            .withStatus(Status.OK)
+        )
+    )
 
   def verifyAuditWrite(): Unit = verify(postRequestedFor(urlEqualTo(AuditWriteUrl)))
 
@@ -49,7 +53,7 @@ trait AuthService extends WireMockRunner {
 
   private val authorisationPredicate = Enrolment(customsEnrolmentName)
 
-  private def bearerTokenMatcher(bearerToken: String)= equalTo("Bearer " + bearerToken)
+  private def bearerTokenMatcher(bearerToken: String) = equalTo("Bearer " + bearerToken)
 
   def stubDefaultAuthorisation(): Unit = {
     stubFor(post(urlEqualTo(authUrl)).willReturn(aResponse().withStatus(UNAUTHORIZED)))
@@ -58,30 +62,29 @@ trait AuthService extends WireMockRunner {
   }
 
   def stubBearerTokenAuth(bearerToken: String = authToken, status: Int = OK): Unit =
-    stubFor(post(urlEqualTo(authUrl)).withHeader(AUTHORIZATION, equalTo(s"Bearer $bearerToken"))
-      .willReturn(
-        aResponse()
-          .withStatus(status)
-          .withBody("{}")
-      )
+    stubFor(
+      post(urlEqualTo(authUrl))
+        .withHeader(AUTHORIZATION, equalTo(s"Bearer $bearerToken"))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody("{}")
+        )
     )
 
-  def authServiceAuthorizesWithEoriAndNoRetrievals(bearerToken: String = authToken,
-                                                         eori: Eori = declarantEori): Unit = {
-    stubFor(post(authUrlMatcher)
-      .withRequestBody(equalToJson(authRequestJsonWithAuthorisedEnrolmentRetrievals(authorisationPredicate)))
-      .withHeader(AUTHORIZATION, bearerTokenMatcher(bearerToken))
-      .willReturn(
-        aResponse()
-          .withStatus(Status.OK)
-          .withBody(
-            s"""{
+  def authServiceAuthorizesWithEoriAndNoRetrievals(bearerToken: String = authToken, eori: Eori = declarantEori): Unit =
+    stubFor(
+      post(authUrlMatcher)
+        .withRequestBody(equalToJson(authRequestJsonWithAuthorisedEnrolmentRetrievals(authorisationPredicate)))
+        .withHeader(AUTHORIZATION, bearerTokenMatcher(bearerToken))
+        .willReturn(
+          aResponse()
+            .withStatus(Status.OK)
+            .withBody(s"""{
                |  "allEnrolments": [ ${enrolmentRetrievalJson(customsEnrolmentName, "EORINumber", eori.value)} ]
-               |}""".stripMargin
-          )
-      )
+               |}""".stripMargin)
+        )
     )
-  }
 
   private def authRequestJsonWithAuthorisedEnrolmentRetrievals(predicate: Predicate) = {
     val predicateJsArray: JsArray = predicateToJson(predicate)
@@ -95,16 +98,13 @@ trait AuthService extends WireMockRunner {
     js
   }
 
-  private def predicateToJson(predicate: Predicate) = {
+  private def predicateToJson(predicate: Predicate) =
     predicate.toJson match {
       case arr: JsArray => arr
-      case other => Json.arr(other)
+      case other        => Json.arr(other)
     }
-  }
 
-  private def enrolmentRetrievalJson(enrolmentKey: String,
-                                     identifierName: String,
-                                     identifierValue: String): String = {
+  private def enrolmentRetrievalJson(enrolmentKey: String, identifierName: String, identifierValue: String): String =
     s"""
        |{
        | "key": "$enrolmentKey",
@@ -116,27 +116,27 @@ trait AuthService extends WireMockRunner {
        | ]
        |}
     """.stripMargin
-  }
 
   def verifyBearerTokenAuthorisationCalled(bearerToken: String = authToken): Unit =
-    verify(postRequestedFor(urlEqualTo(authUrl))
-      .withHeader(AUTHORIZATION, equalTo(s"Bearer $bearerToken")))
+    verify(
+      postRequestedFor(urlEqualTo(authUrl))
+        .withHeader(AUTHORIZATION, equalTo(s"Bearer $bearerToken"))
+    )
 
   def verifyAuthorisationCalledWithoutBearerToken(): Unit =
     verify(postRequestedFor(urlEqualTo(authUrl)).withoutHeader(AUTHORIZATION))
 
-  def verifyAuthServiceCalledForNonCsp(bearerToken: String = authToken): Unit = {
-    verify(1, postRequestedFor(authUrlMatcher)
-      .withRequestBody(equalToJson(authRequestJsonWithAuthorisedEnrolmentRetrievals(authorisationPredicate)))
-      .withHeader(AUTHORIZATION, bearerTokenMatcher(bearerToken))
+  def verifyAuthServiceCalledForNonCsp(bearerToken: String = authToken): Unit =
+    verify(
+      1,
+      postRequestedFor(authUrlMatcher)
+        .withRequestBody(equalToJson(authRequestJsonWithAuthorisedEnrolmentRetrievals(authorisationPredicate)))
+        .withHeader(AUTHORIZATION, bearerTokenMatcher(bearerToken))
     )
-  }
 
-  def verifyAuthorisationNotCalled(): Unit = {
+  def verifyAuthorisationNotCalled(): Unit =
     verify(0, postRequestedFor(urlEqualTo(authUrl)))
-  }
 }
-
 
 object ExternalServicesConfig {
   val Port = sys.env.getOrElse("WIREMOCK_SERVICE_LOCATOR_PORT", "11111").toInt

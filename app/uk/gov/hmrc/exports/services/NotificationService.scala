@@ -54,12 +54,11 @@ class NotificationService @Inject()(
         notificationRepository.findNotificationsByConversationIds(conversationIds)
     }
 
-  def saveAll(notifications: Seq[Notification]): Future[Either[String, Unit]] = {
+  def saveAll(notifications: Seq[Notification]): Future[Either[String, Unit]] =
     Future.sequence(notifications.map(save)).map { seq =>
       if (seq.exists(_.isLeft)) Left("Failed saving notification")
       else Right((): Unit)
     }
-  }
 
   def save(notification: Notification): Future[Either[String, Unit]] =
     try {

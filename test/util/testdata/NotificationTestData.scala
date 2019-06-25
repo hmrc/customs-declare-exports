@@ -34,8 +34,6 @@ object NotificationTestData {
     "Bearer BXQ3/Treo4kQCZvVcCqKPlwxRN4RA9Mb5RF8fFxOuwG5WSg+S+Rsp9Nq998Fgg0HeNLXL7NGwEAIzwM6vuA6YYhRQnTRFa" +
       "Bhrp+1w+kVW8g1qHGLYO48QPWuxdM87VMCZqxnCuDoNxVn76vwfgtpNj0+NwfzXV2Zc12L2QGgF9H9KwIkeIPK/mMlBESjue4V]"
 
-
-
   val validXML: Elem = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
     <wstxns1:Response xmlns:wstxns1="urn:wco:datamodel:WCO:RES-DMS:2"></wstxns1:Response>
   </MetaData>
@@ -115,7 +113,8 @@ object NotificationTestData {
   def exampleNotificationWithMultipleResponsesXML(
     mrn: String,
     dateTime_received: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX")),
-    dateTime_accepted: String = LocalDateTime.now().plusHours(1).atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
+    dateTime_accepted: String =
+      LocalDateTime.now().plusHours(1).atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
   ): Elem =
     <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>

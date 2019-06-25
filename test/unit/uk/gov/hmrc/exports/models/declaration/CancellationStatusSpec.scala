@@ -43,7 +43,7 @@ class CancellationStatusSpec extends WordSpec with MustMatchers {
 
       writes(CancellationRequestExists) must be(JsObject(Seq("status" -> JsString("CancellationRequestExists"))))
       writes(CancellationRequested) must be(JsObject(Seq("status" -> JsString("CancellationRequested"))))
-      writes(MissingDeclaration) must be(JsObject(Seq("status" ->JsString("MissingDeclaration"))))
+      writes(MissingDeclaration) must be(JsObject(Seq("status" -> JsString("MissingDeclaration"))))
     }
   }
 
@@ -51,7 +51,8 @@ class CancellationStatusSpec extends WordSpec with MustMatchers {
 
     "correctly unapply CancellationStatus object" in {
 
-      val expectedResult = Some(CancellationRequestExists.productPrefix -> Json.toJson(CancellationRequestExists.toString))
+      val expectedResult =
+        Some(CancellationRequestExists.productPrefix -> Json.toJson(CancellationRequestExists.toString))
 
       CancellationStatus.unapply(CancellationRequestExists) must be(expectedResult)
     }

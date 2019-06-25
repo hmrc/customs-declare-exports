@@ -296,7 +296,6 @@ class NotificationControllerSpec
   }
 }
 
-
 object NotificationControllerSpec {
 
   val now: DateTime = DateTime.now.withZone(DateTimeZone.UTC)

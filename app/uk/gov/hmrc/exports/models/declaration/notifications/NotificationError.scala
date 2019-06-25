@@ -18,10 +18,7 @@ package uk.gov.hmrc.exports.models.declaration.notifications
 
 import play.api.libs.json.Json
 
-case class NotificationError(
-  validationCode: String,
-  pointers: Seq[ErrorPointer]
-)
+case class NotificationError(validationCode: String, pointers: Seq[ErrorPointer])
 
 object NotificationError {
   implicit val format = Json.format[NotificationError]

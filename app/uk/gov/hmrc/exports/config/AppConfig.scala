@@ -21,7 +21,11 @@ import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class AppConfig @Inject()(val runModeConfiguration: Configuration, val environment: Environment, servicesConfig: ServicesConfig) {
+class AppConfig @Inject()(
+  val runModeConfiguration: Configuration,
+  val environment: Environment,
+  servicesConfig: ServicesConfig
+) {
 
   private def loadConfig(key: String): String =
     runModeConfiguration
@@ -37,11 +41,15 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, val environme
   lazy val customsDeclarationsApiVersion: String =
     servicesConfig.getString("microservice.services.customs-declarations.api-version")
 
-  lazy val submitDeclarationUri: String = servicesConfig.getString("microservice.services.customs-declarations.submit-uri")
+  lazy val submitDeclarationUri: String =
+    servicesConfig.getString("microservice.services.customs-declarations.submit-uri")
 
-  lazy val cancelDeclarationUri: String = servicesConfig.getString("microservice.services.customs-declarations.cancel-uri")
+  lazy val cancelDeclarationUri: String =
+    servicesConfig.getString("microservice.services.customs-declarations.cancel-uri")
 
-  lazy val notificationBearerToken: String = servicesConfig.getString("microservice.services.customs-declarations.bearer-token")
+  lazy val notificationBearerToken: String =
+    servicesConfig.getString("microservice.services.customs-declarations.bearer-token")
 
-  lazy val developerHubClientId: String = servicesConfig.getString("microservice.services.customs-declarations.client-id")
+  lazy val developerHubClientId: String =
+    servicesConfig.getString("microservice.services.customs-declarations.client-id")
 }

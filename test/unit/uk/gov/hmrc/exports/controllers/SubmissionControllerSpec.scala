@@ -249,7 +249,8 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with BeforeAndAfte
 
         withAuthorizedUser()
         when(mockSubmissionRepository.findSubmissionByMrn(any[String])).thenReturn(Future.successful(Some(submission)))
-        when(mockSubmissionRepository.addAction(any[String], any[Action])).thenReturn(Future.successful(Some(cancelledSubmission)))
+        when(mockSubmissionRepository.addAction(any[String], any[Action]))
+          .thenReturn(Future.successful(Some(cancelledSubmission)))
         when(mockDeclarationsApiConnector.submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier]))
           .thenReturn(Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, Some(conversationId))))
 
@@ -265,8 +266,10 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with BeforeAndAfte
       "there is an declaration with existing cancellation request" in {
 
         withAuthorizedUser()
-        when(mockSubmissionRepository.findSubmissionByMrn(any[String])).thenReturn(Future.successful(Some(cancelledSubmission)))
-        when(mockSubmissionRepository.addAction(any[String], any[Action])).thenReturn(Future.successful(Some(cancelledSubmission)))
+        when(mockSubmissionRepository.findSubmissionByMrn(any[String]))
+          .thenReturn(Future.successful(Some(cancelledSubmission)))
+        when(mockSubmissionRepository.addAction(any[String], any[Action]))
+          .thenReturn(Future.successful(Some(cancelledSubmission)))
         when(mockDeclarationsApiConnector.submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier]))
           .thenReturn(Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, Some(conversationId))))
 

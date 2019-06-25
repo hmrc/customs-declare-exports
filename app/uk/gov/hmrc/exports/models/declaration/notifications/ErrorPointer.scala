@@ -18,10 +18,7 @@ package uk.gov.hmrc.exports.models.declaration.notifications
 
 import play.api.libs.json.Json
 
-case class ErrorPointer(
-  documentSectionCode: String,
-  tagId: Option[String] = None
-)
+case class ErrorPointer(documentSectionCode: String, tagId: Option[String] = None)
 
 object ErrorPointer {
   implicit val format = Json.format[ErrorPointer]

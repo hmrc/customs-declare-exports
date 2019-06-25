@@ -77,6 +77,5 @@ class CustomsDeclarationsConnectorSpec extends UnitSpec with MockitoSugar {
       result.conversationId shouldBe Some(testConversationId)
     }
 
-
   }
 }

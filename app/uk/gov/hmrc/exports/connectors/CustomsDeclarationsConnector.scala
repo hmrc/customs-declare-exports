@@ -60,10 +60,10 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
     logger.debug(s"CUSTOMS_DECLARATIONS request payload is -> $body")
     httpClient
       .POSTString[CustomsDeclarationsResponse](
-      s"${appConfig.customsDeclarationsBaseUrl}$uri",
-      body,
-      headers = headers(eori)
-    )(responseReader, hc, ec)
+        s"${appConfig.customsDeclarationsBaseUrl}$uri",
+        body,
+        headers = headers(eori)
+      )(responseReader, hc, ec)
       .recover {
         case error: Throwable =>
           logger.error(s"Error during submitting declaration: ${error.getMessage}")

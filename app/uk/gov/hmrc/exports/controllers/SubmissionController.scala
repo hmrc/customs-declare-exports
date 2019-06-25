@@ -47,10 +47,10 @@ class SubmissionController @Inject()(
   def submitDeclaration(): Action[AnyContent] =
     authorisedAction(bodyParser = xmlOrEmptyBody) { implicit request =>
       headerValidator.validateAndExtractSubmissionHeaders(request.headers.toSimpleMap) match {
-        case Right(vhr: SubmissionRequestHeaders) =>
+        case Right(requestHeaders: SubmissionRequestHeaders) =>
           request.body.asXml match {
             case Some(xml) =>
-              forwardSubmissionRequestToService(request.eori.value, vhr, xml).recoverWith {
+              forwardSubmissionRequestToService(request.eori.value, requestHeaders, xml).recoverWith {
                 case e: Exception =>
                   logger.error(s"There is a problem during calling declaration api ${e.getMessage}")
                   Future.successful(ErrorResponse.errorInternalServerError.XmlResult)

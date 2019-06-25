@@ -29,4 +29,3 @@ case class SignedInUser(
   affinityGroup: Option[AffinityGroup],
   enrolments: Enrolments
 )
-

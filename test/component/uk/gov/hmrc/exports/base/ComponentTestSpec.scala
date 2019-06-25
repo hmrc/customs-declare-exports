@@ -37,8 +37,8 @@ import scala.concurrent.Future
 
 trait ComponentTestSpec
     extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach
-    with Eventually with MockitoSugar with Matchers with AuditService with OptionValues
-    with AuthService with CustomsDeclarationsAPIService {
+    with Eventually with MockitoSugar with Matchers with AuditService with OptionValues with AuthService
+    with CustomsDeclarationsAPIService {
 
   private val mockSubmissionRepository = mock[SubmissionRepository]
   private val mockNotificationsRepository = mock[NotificationRepository]
@@ -69,9 +69,8 @@ trait ComponentTestSpec
     submissionCaptor.getValue.eori shouldBe eoriValue
   }
 
-  def verifySubmissionRepositoryWasNotCalled(): Unit = {
+  def verifySubmissionRepositoryWasNotCalled(): Unit =
     verifyZeroInteractions(mockSubmissionRepository)
-  }
 
   val dateTime = 1546344000000L // 01/01/2019 12:00:00
 

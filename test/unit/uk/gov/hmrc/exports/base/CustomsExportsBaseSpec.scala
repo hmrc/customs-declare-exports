@@ -60,7 +60,6 @@ trait CustomsExportsBaseSpec
   val mockNotificationsRepository: NotificationRepository = mock[NotificationRepository]
   val mockDeclarationsApiConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
 
-
   def injector: Injector = app.injector
 
   def randomConversationId: String = UUID.randomUUID().toString
@@ -136,12 +135,11 @@ trait CustomsExportsBaseSpec
   protected def withCancellationRequest(
     status: CancellationStatus,
     apiStatus: Int
-  ): OngoingStubbing[Future[CustomsDeclarationsResponse]] = {
+  ): OngoingStubbing[Future[CustomsDeclarationsResponse]] =
 //    when(mockSubmissionRepository.cancelDeclaration(any(), any())).thenReturn(Future.successful(status))
     when(
       mockDeclarationsApiConnector
         .submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier])
     ).thenReturn(Future.successful(CustomsDeclarationsResponse(apiStatus, Some(UUID.randomUUID().toString))))
-  }
 
 }

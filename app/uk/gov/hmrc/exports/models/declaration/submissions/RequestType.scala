@@ -29,9 +29,9 @@ object RequestType {
     override def writes(requestType: RequestType): JsValue = JsString(requestType.toString)
 
     override def reads(json: JsValue): JsResult[RequestType] = json match {
-      case JsString("SubmissionRequest") => JsSuccess(SubmissionRequest)
+      case JsString("SubmissionRequest")   => JsSuccess(SubmissionRequest)
       case JsString("CancellationRequest") => JsSuccess(CancellationRequest)
-      case _ => JsError(s"Could not read Request Type from: $json")
+      case _                               => JsError(s"Could not read Request Type from: $json")
     }
   }
 }
