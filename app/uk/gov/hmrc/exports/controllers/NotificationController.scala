@@ -67,12 +67,12 @@ class NotificationController @Inject()(
         .map(notifications => Ok(Json.toJson(notifications)))
     }
 
-  def saveNotification(): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
+  def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
     val timer = metrics.startTimer(notificationMetric)
 
     headerValidator.validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
       case Right(extractedHeaders) =>
-        val allNotifications = buildNotificationsFromRequest(extractedHeaders, request.request.body.asXml)
+        val allNotifications = buildNotificationsFromRequest(extractedHeaders, request.body)
 
         notificationsService.saveAll(allNotifications).map {
           case Right(_) =>
@@ -88,44 +88,41 @@ class NotificationController @Inject()(
 
   private def buildNotificationsFromRequest(
     notificationApiRequestHeaders: NotificationApiRequestHeaders,
-    notificationXmlOpt: Option[NodeSeq]
+    notificationXml: NodeSeq
   ): Seq[Notification] =
-    if (notificationXmlOpt.nonEmpty) {
-      try {
-        val notificationXml = notificationXmlOpt.get
-        val responsesXml = notificationXml \ "Response"
+    try {
+      val responsesXml = notificationXml \ "Response"
 
-        responsesXml.map { singleResponseXml =>
-          val mrn = (singleResponseXml \ "Declaration" \ "ID").text
-          val formatter304 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
-          val dateTimeIssued =
-            LocalDateTime.parse((singleResponseXml \ "IssueDateTime" \ "DateTimeString").text, formatter304)
-          val functionCode = (singleResponseXml \ "FunctionCode").text
+      responsesXml.map { singleResponseXml =>
+        val mrn = (singleResponseXml \ "Declaration" \ "ID").text
+        val formatter304 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
+        val dateTimeIssued =
+          LocalDateTime.parse((singleResponseXml \ "IssueDateTime" \ "DateTimeString").text, formatter304)
+        val functionCode = (singleResponseXml \ "FunctionCode").text
 
-          val nameCode =
-            if ((singleResponseXml \ "Response" \ "Status").nonEmpty)
-              Some((singleResponseXml \ "Response" \ "Status" \ "NameCode").text)
-            else None
+        val nameCode =
+          if ((singleResponseXml \ "Response" \ "Status").nonEmpty)
+            Some((singleResponseXml \ "Response" \ "Status" \ "NameCode").text)
+          else None
 
-          val errors = buildErrorsFromRequest(singleResponseXml)
+        val errors = buildErrorsFromRequest(singleResponseXml)
 
-          Notification(
-            conversationId = notificationApiRequestHeaders.conversationId.value,
-            mrn = mrn,
-            dateTimeIssued = dateTimeIssued,
-            functionCode = functionCode,
-            nameCode = nameCode,
-            errors = errors,
-            payload = notificationXml.toString
-          )
-        }
-
-      } catch {
-        case exc: Throwable =>
-          logger.error(s"There is a problem during parsing notification with exception: ${exc.getMessage}")
-          Seq.empty
+        Notification(
+          conversationId = notificationApiRequestHeaders.conversationId.value,
+          mrn = mrn,
+          dateTimeIssued = dateTimeIssued,
+          functionCode = functionCode,
+          nameCode = nameCode,
+          errors = errors,
+          payload = notificationXml.toString
+        )
       }
-    } else Seq.empty
+
+    } catch {
+      case exc: Throwable =>
+        logger.error(s"There is a problem during parsing notification with exception: ${exc.getMessage}")
+        Seq.empty
+    }
 
   private def buildErrorsFromRequest(singleResponseXml: Node): Seq[NotificationError] =
     if ((singleResponseXml \ "Error").nonEmpty) {

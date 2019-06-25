@@ -244,25 +244,6 @@ class NotificationControllerSpec
       }
     }
 
-    "authorisation header is missing" should {
-
-      "return Unauthorised status if authorisation header is missing" in {
-        withUnauthorizedUser(InsufficientEnrolments())
-
-        val result = routePostSaveNotification(headers = headersWithoutAuthorisation)
-
-        status(result) must be(UNAUTHORIZED)
-      }
-
-      "not call NotificationService" in {
-        withUnauthorizedUser(InsufficientEnrolments())
-
-        routePostSaveNotification(headers = headersWithoutAuthorisation).futureValue
-
-        verifyZeroInteractions(notificationServiceMock)
-      }
-    }
-
     pending
     "Content Type header is empty" should {
 
