@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models.declaration
+package uk.gov.hmrc.exports.models.declaration.submissions
 
 import play.api.libs.json._
 import uk.gov.hmrc.wco.dec.Response

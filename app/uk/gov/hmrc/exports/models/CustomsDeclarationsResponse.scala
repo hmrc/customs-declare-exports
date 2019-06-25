@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models.declaration
+package uk.gov.hmrc.exports.models
+
 import play.api.libs.json.Json
 
 case class CustomsDeclarationsResponse(status: Int, conversationId: Option[String] = None)

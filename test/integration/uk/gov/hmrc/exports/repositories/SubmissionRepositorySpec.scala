@@ -22,7 +22,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.core.errors.DatabaseException
-import uk.gov.hmrc.exports.models.declaration.{Action, CancellationRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import util.testdata.ExportsTestData._
 import util.testdata.SubmissionTestData._

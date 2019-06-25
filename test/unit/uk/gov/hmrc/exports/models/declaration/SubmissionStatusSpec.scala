@@ -18,7 +18,7 @@ package unit.uk.gov.hmrc.exports.models.declaration
 
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json._
-import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.wco.dec.{Response, ResponseStatus}
 
 class SubmissionStatusSpec extends WordSpec with MustMatchers {

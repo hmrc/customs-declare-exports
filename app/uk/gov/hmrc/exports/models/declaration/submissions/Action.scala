@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models.declaration
+package uk.gov.hmrc.exports.models.declaration.submissions
 
-import java.util.UUID
+import java.time.LocalDateTime
 
 import play.api.libs.json.Json
 
-case class Submission(
-  uuid: String = UUID.randomUUID().toString,
-  eori: String,
-  lrn: String,
-  mrn: Option[String] = None,
-  ducr: Option[String] = None,
-  actions: Seq[Action] = Seq.empty
+case class Action(
+  requestType: RequestType,
+  conversationId: String,
+  requestTimestamp: LocalDateTime = LocalDateTime.now()
 )
 
-object Submission {
-  implicit val formats = Json.format[Submission]
+object Action {
+  implicit val format = Json.format[Action]
 }

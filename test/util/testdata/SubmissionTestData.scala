@@ -18,7 +18,7 @@ package util.testdata
 
 import java.util.UUID
 
-import uk.gov.hmrc.exports.models.declaration.{Action, CancellationRequest, Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest, Submission, SubmissionRequest}
 import util.testdata.ExportsTestData._
 
 object SubmissionTestData {

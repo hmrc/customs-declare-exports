@@ -24,8 +24,8 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.http.Status._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.models.{LocalReferenceNumber, SubmissionRequestHeaders}
+import uk.gov.hmrc.exports.models.declaration.submissions._
+import uk.gov.hmrc.exports.models.{CustomsDeclarationsResponse, LocalReferenceNumber, SubmissionRequestHeaders}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.http.HeaderCarrier

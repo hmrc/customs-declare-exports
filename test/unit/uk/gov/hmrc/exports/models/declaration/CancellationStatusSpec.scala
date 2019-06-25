@@ -18,7 +18,7 @@ package unit.uk.gov.hmrc.exports.models.declaration
 
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json._
-import uk.gov.hmrc.exports.models.declaration.{CancellationRequestExists, CancellationRequested, CancellationStatus, MissingDeclaration}
+import uk.gov.hmrc.exports.models.declaration.submissions.{CancellationRequestExists, CancellationRequested, CancellationStatus, MissingDeclaration}
 
 class CancellationStatusSpec extends WordSpec with MustMatchers {
 
@@ -26,7 +26,7 @@ class CancellationStatusSpec extends WordSpec with MustMatchers {
 
     "read value correctly" in {
 
-      import uk.gov.hmrc.exports.models.declaration.CancellationStatus.CancellationStatusReads.reads
+      import uk.gov.hmrc.exports.models.declaration.submissions.CancellationStatus.CancellationStatusReads.reads
 
       reads(JsString("CancellationRequestExists")) must be(JsSuccess(CancellationRequestExists))
       reads(JsString("CancellationRequested")) must be(JsSuccess(CancellationRequested))
@@ -39,7 +39,7 @@ class CancellationStatusSpec extends WordSpec with MustMatchers {
 
     "write value correctly" in {
 
-      import uk.gov.hmrc.exports.models.declaration.CancellationStatus.CancellationStatusWrites.writes
+      import uk.gov.hmrc.exports.models.declaration.submissions.CancellationStatus.CancellationStatusWrites.writes
 
       writes(CancellationRequestExists) must be(JsObject(Seq("status" -> JsString("CancellationRequestExists"))))
       writes(CancellationRequested) must be(JsObject(Seq("status" -> JsString("CancellationRequested"))))
