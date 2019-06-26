@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models.declaration
+package uk.gov.hmrc.exports.models.declaration.notifications
+
+import java.time.LocalDateTime
 
 import play.api.libs.json.Json
 
-case class Submission(
-  eori: String,
+case class Notification(
   conversationId: String,
-  ducr: Option[String] = None,
-  lrn: Option[String] = None,
-  mrn: Option[String] = None,
-  submittedTimestamp: Long = System.currentTimeMillis(),
-  status: String,
-  isCancellationRequested: Boolean = false
+  mrn: String,
+  dateTimeIssued: LocalDateTime,
+  functionCode: String,
+  nameCode: Option[String],
+  errors: Seq[NotificationError],
+  payload: String
 )
 
-object Submission {
-  implicit val formats = Json.format[Submission]
+object Notification {
+  implicit val format = Json.format[Notification]
 }

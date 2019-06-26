@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models.declaration
+package uk.gov.hmrc.exports.models
+
 import play.api.libs.json.Json
 
 case class CustomsDeclarationsResponse(status: Int, conversationId: Option[String] = None)
 
 object CustomsDeclarationsResponse {
   implicit val format = Json.format[CustomsDeclarationsResponse]
+
+  lazy val empty = CustomsDeclarationsResponse(0, None)
 }

@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models
+package uk.gov.hmrc.exports.models.declaration.submissions
 
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Name}
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import java.util.UUID
 
-case class SignedInUser(
-  credentials: Credentials,
-  name: Name,
-  email: Option[String],
+import play.api.libs.json.Json
+
+case class Submission(
+  uuid: String = UUID.randomUUID().toString,
   eori: String,
-  externalId: String,
-  internalId: Option[String],
-  affinityGroup: Option[AffinityGroup],
-  enrolments: Enrolments
+  lrn: String,
+  mrn: Option[String] = None,
+  ducr: Option[String] = None,
+  actions: Seq[Action] = Seq.empty
 )
+
+object Submission {
+  implicit val formats = Json.format[Submission]
+}

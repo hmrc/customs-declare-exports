@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models
+package uk.gov.hmrc.exports.models.declaration.notifications
 
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Name}
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import play.api.libs.json.Json
 
-case class SignedInUser(
-  credentials: Credentials,
-  name: Name,
-  email: Option[String],
-  eori: String,
-  externalId: String,
-  internalId: Option[String],
-  affinityGroup: Option[AffinityGroup],
-  enrolments: Enrolments
-)
+case class NotificationError(validationCode: String, pointers: Seq[ErrorPointer])
+
+object NotificationError {
+  implicit val format = Json.format[NotificationError]
+}

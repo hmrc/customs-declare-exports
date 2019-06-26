@@ -18,17 +18,18 @@ package util.stubs
 
 import java.util.UUID
 
-import com.github.tomakehurst.wiremock.client.WireMock.{status, _}
+import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.matching.UrlPattern
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import integration.uk.gov.hmrc.exports.base.WireMockRunner
 import play.api.http.ContentTypes
 import play.api.mvc.Codec
 import play.api.test.Helpers.{ACCEPT, ACCEPTED, CONTENT_TYPE}
-import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
-import util.{CustomsDeclarationsAPIConfig, ExportsTestData}
+import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
+import util.CustomsDeclarationsAPIConfig
+import util.testdata.ExportsTestData._
 
-trait CustomsDeclarationsAPIService extends WireMockRunner with ExportsTestData {
+trait CustomsDeclarationsAPIService extends WireMockRunner {
 
   private val submissionURL = urlMatching(CustomsDeclarationsAPIConfig.submitDeclarationServiceContext)
   private val cancellationURL = urlMatching(CustomsDeclarationsAPIConfig.cancelDeclarationServiceContext)

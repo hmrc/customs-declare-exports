@@ -16,19 +16,28 @@
 
 package integration.uk.gov.hmrc.exports.repositories
 
-import org.scalatest.BeforeAndAfterEach
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.{BeforeAndAfterEach, MustMatchers, OptionValues, WordSpec}
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.exports.models.declaration.Submission
-import uk.gov.hmrc.exports.models.{CancellationRequestExists, CancellationRequested, MissingDeclaration}
+import reactivemongo.core.errors.DatabaseException
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
-import unit.uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
+import util.testdata.ExportsTestData._
+import util.testdata.SubmissionTestData._
 
-class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfterEach {
-  import SubmissionRepositorySpec._
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits.global
+
+class SubmissionRepositorySpec
+    extends WordSpec with GuiceOneAppPerSuite with BeforeAndAfterEach with ScalaFutures with MustMatchers
+    with OptionValues {
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
   private val repo: SubmissionRepository = app.injector.instanceOf[SubmissionRepository]
+
+  implicit val ec: ExecutionContext = global
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -40,116 +49,183 @@ class SubmissionRepositorySpec extends CustomsExportsBaseSpec with BeforeAndAfte
     repo.removeAll().futureValue
   }
 
-  "Submission repository" should {
+  "Submission Repository on save" when {
 
-    "be able to get submission by EORI" in {
-      repo.save(submission).futureValue
-      val found = repo.findByEori(eori).futureValue
+    "the operation was successful" should {
+      "return true" in {
+        repo.save(submission).futureValue must be(true)
 
-      found.length must be(1)
-      found.head.eori must be(eori)
-      found.head.conversationId must be(conversationId)
-      found.head.mrn must be(Some(mrn))
-      found.head.lrn must be(lrn)
-      found.head.ducr must be(Some(ducr))
+        val submissionInDB = repo.findSubmissionByMrn(mrn).futureValue
+        submissionInDB must be(defined)
+      }
     }
 
-    "be able to get submission by conversationId" in {
-      repo.save(submission).futureValue
-      val found = repo.getByConversationId(conversationId).futureValue.get
+    "trying to save Submission with the same conversationId twice" should {
+      "throw DatabaseException" in {
+        repo.save(submission).futureValue must be(true)
+        val secondSubmission = submission_2.copy(actions = submission.actions)
 
-      found.eori must be(eori)
-      found.conversationId must be(conversationId)
-      found.mrn must be(Some(mrn))
-      found.lrn must be(lrn)
-      found.ducr must be(Some(ducr))
+        val exc = repo.save(secondSubmission).failed.futureValue
+
+        exc mustBe an[DatabaseException]
+        exc.getMessage must include(
+          "E11000 duplicate key error collection: customs-declare-exports.submissions index: conversationIdIdx dup key"
+        )
+      }
+
+      "result in having only the first Submission persisted" in {
+        repo.save(submission).futureValue must be(true)
+        val secondSubmission = submission_2.copy(actions = submission.actions)
+
+        repo.save(secondSubmission).failed.futureValue
+
+        val submissionsInDB = repo.findAllSubmissionsForEori(eori).futureValue
+        submissionsInDB.length must be(1)
+        submissionsInDB.head must equal(submission)
+      }
     }
-
-    "be able to get submission by EORI and MRN" in {
-      repo.save(submission).futureValue
-      val found = repo.getByEoriAndMrn(eori, mrn).futureValue.get
-
-      found.eori must be(eori)
-      found.conversationId must be(conversationId)
-      found.mrn must be(Some(mrn))
-      found.lrn must be(lrn)
-      found.ducr must be(Some(ducr))
-    }
-
-    "be able to save submission" in {
-      repo.save(submission).futureValue must be(true)
-
-      val returnedSubmission = repo.getByConversationId(conversationId).futureValue.get
-
-      returnedSubmission must equal(submission)
-    }
-
-    "be able to update submission" in {
-      repo.save(submission).futureValue must be(true)
-      val returnedSubmission = repo.getByConversationId(conversationId).futureValue.get
-
-      returnedSubmission must equal(submission)
-
-      val updatedSubmission = returnedSubmission.copy(mrn = Some("newMrn"), status = "02")
-      repo.updateSubmission(updatedSubmission).futureValue must be(true)
-      val returnedUpdatedSubmission = repo.getByConversationId(conversationId).futureValue.get
-
-      returnedUpdatedSubmission must equal(updatedSubmission)
-    }
-
-    "be able to update MRN and status" in {
-      repo.save(submission).futureValue must be(true)
-
-      repo.updateMrnAndStatus(eori, conversationId, "newMRN", Some("02")).futureValue must be(true)
-
-      val returnedUpdatedSubmission = repo.getByConversationId(conversationId).futureValue.get
-      returnedUpdatedSubmission.mrn.value must equal("newMRN")
-      returnedUpdatedSubmission.status must equal("02")
-    }
-
-    "not update when old submission does not exist" in {
-      val submissionToUpdate = Submission("654321", "654321", Some("ducr"), Some("lrn"), Some("mrn"), status = "01")
-
-      repo.updateSubmission(submissionToUpdate).futureValue must be(false)
-    }
-
-    "not update MRN and status when new status is None" in {
-      repo.save(submission).futureValue
-      repo.updateMrnAndStatus(eori, conversationId, mrn, None).futureValue must be(false)
-
-      val found = repo.findByEori(eori).futureValue
-      found.head.status must be("01")
-    }
-
-    "be able to cancel declaration" in {
-      repo.save(submission).futureValue
-      repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequested)
-    }
-
-    "return Cancellation Request Exists status if the declaration has already been cancelled" in {
-      repo.save(submission).futureValue
-      repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequested)
-      repo.cancelDeclaration(eori, mrn).futureValue must be(CancellationRequestExists)
-    }
-
-    "return Missing Declaration status when trying to cancel non existing declaration" in {
-      repo.cancelDeclaration("incorrect", "incorrect").futureValue must be(MissingDeclaration)
-    }
-
-    //TODO: add return status when declaration is actually cancelled
   }
-}
 
-object SubmissionRepositorySpec {
-  import util.TestDataHelper._
+  "Submission Repository on updateMrn" should {
 
-  val eori: String = "GB167676"
-  val lrn: Option[String] = Some(randomAlphanumericString(22))
-  val mrn: String = "MRN87878797"
-  val mucr: String = randomAlphanumericString(16)
-  val conversationId: String = "b1c09f1b-7c94-4e90-b754-7c5c71c44e11"
-  val ducr: String = randomAlphanumericString(16)
+    "return empty Option" when {
+      "there is no Submission with given ConversationId" in {
+        val newMrn = mrn_2
+        repo.updateMrn(conversationId, newMrn).futureValue mustNot be(defined)
+      }
+    }
 
-  val submission: Submission = Submission(eori, conversationId, Some(ducr), lrn, Some(mrn), status = "01")
+    "return Submission updated" when {
+      "there is a Submission containing Action with given ConversationId" in {
+        repo.save(submission).futureValue
+        val newMrn = mrn_2
+        val expectedUpdatedSubmission = submission.copy(mrn = Some(newMrn))
+
+        val updatedSubmission = repo.updateMrn(conversationId, newMrn).futureValue
+
+        updatedSubmission.value must equal(expectedUpdatedSubmission)
+      }
+
+      "new MRN is the same as the old one" in {
+        repo.save(submission).futureValue
+
+        val updatedSubmission = repo.updateMrn(conversationId, mrn).futureValue
+
+        updatedSubmission.value must equal(submission)
+      }
+    }
+  }
+
+  "Submission Repository on addAction" when {
+
+    "there is no Submission with given MRN" should {
+      "return empty Option" in {
+        val newAction = Action(CancellationRequest, conversationId_2)
+        repo.addAction(mrn, newAction).futureValue mustNot be(defined)
+      }
+    }
+
+    "there is a Submission with given MRN" should {
+      "return Submission updated" in {
+        repo.save(submission).futureValue
+        val newAction = Action(CancellationRequest, conversationId_2)
+        val expectedUpdatedSubmission = submission.copy(actions = submission.actions :+ newAction)
+
+        val updatedSubmission = repo.addAction(mrn, newAction).futureValue
+
+        updatedSubmission.value must equal(expectedUpdatedSubmission)
+      }
+    }
+  }
+
+  "Submission Repository on findAllSubmissionsByEori" when {
+
+    "there is no Submission associated with this EORI" should {
+      "return empty List" in {
+        repo.findAllSubmissionsForEori(eori).futureValue must equal(Seq.empty)
+      }
+    }
+
+    "there is single Submission associated with this EORI" should {
+      "return this Submission only" in {
+        repo.save(submission).futureValue
+
+        val retrievedSubmissions = repo.findAllSubmissionsForEori(eori).futureValue
+
+        retrievedSubmissions.size must equal(1)
+        retrievedSubmissions.headOption.value must equal(submission)
+      }
+    }
+
+    "there are multiple Submissions associated with this EORI" should {
+      "return all the Submissions" in {
+        repo.save(submission).futureValue
+        repo.save(submission_2).futureValue
+
+        val retrievedSubmissions = repo.findAllSubmissionsForEori(eori).futureValue
+
+        retrievedSubmissions.size must equal(2)
+        retrievedSubmissions must contain(submission)
+        retrievedSubmissions must contain(submission_2)
+      }
+    }
+  }
+
+  "Submission Repository on findSubmissionByMrn" when {
+
+    "there is no Submission with given MRN" should {
+      "return empty Option" in {
+        repo.findSubmissionByMrn(mrn).futureValue mustNot be(defined)
+      }
+    }
+
+    "there is a Submission with given MRN" should {
+      "return this Submission" in {
+        repo.save(submission).futureValue
+
+        val retrievedSubmission = repo.findSubmissionByMrn(mrn).futureValue
+
+        retrievedSubmission.value must equal(submission)
+      }
+    }
+  }
+
+  "Submission Repository on findSubmissionByConversationId" when {
+
+    "there is no Submission containing Action with given ConversationId" should {
+      "return empty Option" in {
+        repo.findSubmissionByConversationId(conversationId).futureValue mustNot be(defined)
+      }
+    }
+
+    "there is a Submission containing Action with given ConversationId" should {
+      "return this Submission" in {
+        repo.save(submission).futureValue
+
+        val retrievedSubmission = repo.findSubmissionByConversationId(conversationId).futureValue
+
+        retrievedSubmission.value must equal(submission)
+      }
+    }
+  }
+
+  "Submission Repository on findSubmissionByUuid" when {
+
+    "there is no Submission containing Action with given ConversationId" should {
+      "return empty Option" in {
+        repo.findSubmissionByUuid(uuid).futureValue mustNot be(defined)
+      }
+    }
+
+    "there is a Submission containing Action with given ConversationId" should {
+      "return this Submission" in {
+        repo.save(submission).futureValue
+
+        val retrievedSubmission = repo.findSubmissionByUuid(uuid).futureValue
+
+        retrievedSubmission.value must equal(submission)
+      }
+    }
+  }
 
 }

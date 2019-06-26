@@ -17,12 +17,12 @@
 package uk.gov.hmrc.exports.repositories
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsObject, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.{RequestedCancellation, Submission}
+import reactivemongo.play.json.commands.JSONFindAndModifyCommand.FindAndModifyResult
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 
@@ -38,72 +38,46 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
     ) {
 
   override def indexes: Seq[Index] = Seq(
-    Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
-    Index(Seq("conversationId" -> IndexType.Ascending), unique = true, name = Some("conversationIdIdx"))
+    Index(Seq("actions.conversationId" -> IndexType.Ascending), unique = true, name = Some("conversationIdIdx")),
+    Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx"))
   )
 
-  def findByEori(eori: String): Future[Seq[Submission]] =
-    find("eori" -> JsString(eori))
+  def findAllSubmissionsForEori(eori: String): Future[Seq[Submission]] = find("eori" -> eori)
 
-  def getByConversationId(conversationId: String): Future[Option[Submission]] =
-    find("conversationId" -> JsString(conversationId)).map(_.headOption)
+  def findSubmissionByMrn(mrn: String): Future[Option[Submission]] = find("mrn" -> mrn).map(_.headOption)
 
-  def getByEoriAndMrn(eori: String, mrn: String): Future[Option[Submission]] =
-    find("eori" -> JsString(eori), "mrn" -> JsString(mrn)).map(_.headOption)
+  def findSubmissionByConversationId(conversationId: String): Future[Option[Submission]] =
+    find("actions.conversationId" -> conversationId).map(_.headOption)
 
-  def save(submission: Submission): Future[Boolean] = insert(submission).map(wr => wr.ok)
+  def findSubmissionByUuid(uuid: String): Future[Option[Submission]] = find("uuid" -> uuid).map(_.headOption)
 
-  // TODO: Should return updated object
-  def updateSubmission(submission: Submission): Future[Boolean] = {
-    val finder = Json.obj(
-      "conversationId" -> submission.conversationId
-    )
-    val modifier = Json.obj("$set" -> Json.obj("mrn" -> submission.mrn, "status" -> submission.status))
-
-    findAndUpdate(finder, modifier, fetchNewObject = true).map {
-      case result if result.value.isEmpty =>
-        result.lastError.foreach(_.err.foreach(logDatabaseResult))
-        false
-      case _ =>
-        true
-    }
+  // TODO: Need to change this method to return Future[WriteResult].
+  //  In current implementation it will never return false, because in case of an error,
+  //  insert throws an Exception which will be propagated to the caller.
+  def save(submission: Submission): Future[Boolean] = insert(submission).map { res =>
+    if (!res.ok) logger.error(s"Errors when persisting declaration submission: ${res.writeErrors.mkString("--")}")
+    res.ok
   }
 
-  // TODO: Get rid of Option[_]
-  def updateMrnAndStatus(eori: String, convId: String, newMrn: String, newStatus: Option[String]): Future[Boolean] =
-    if (newStatus.isDefined) {
-      val finder = Json.obj("eori" -> eori, "conversationId" -> convId)
-      val modifier = Json.obj("$set" -> Json.obj("mrn" -> newMrn, "status" -> newStatus.get))
-
-      findAndUpdate(finder, modifier, fetchNewObject = true).map {
-        case result if result.value.isEmpty =>
-          result.lastError.foreach(_.err.foreach(logDatabaseResult))
-          false
-        case _ =>
-          true
-      }
-    } else Future.successful(false)
-
-  def cancelDeclaration(eori: String, mrn: String): Future[CancellationStatus] = {
-    val finder = Json.obj("eori" -> eori, "mrn" -> mrn)
-    val modifier =
-      Json.obj("$set" -> Json.obj("status" -> RequestedCancellation.toString, "isCancellationRequested" -> true))
-
-    find("eori" -> JsString(eori), "mrn" -> JsString(mrn)).map(_.headOption).flatMap {
-      case Some(submission) if submission.isCancellationRequested =>
-        Future.successful(CancellationRequestExists)
-      case Some(_) =>
-        findAndUpdate(finder, modifier, fetchNewObject = true).map {
-          case result if result.lastError.isDefined && result.lastError.get.err.isDefined =>
-            logDatabaseResult(result.lastError.get.err.getOrElse("No error message found"))
-            MissingDeclaration
-          case _ =>
-            CancellationRequested
-        }
-      case _ => Future.successful(MissingDeclaration)
-    }
+  def updateMrn(conversationId: String, newMrn: String): Future[Option[Submission]] = {
+    val query = Json.obj("actions.conversationId" -> conversationId)
+    val update = Json.obj("$set" -> Json.obj("mrn" -> newMrn))
+    performUpdate(query, update)
   }
 
-  private def logDatabaseResult(errorDescription: String): Unit =
-    logger.error("Problem during updating database: " + errorDescription)
+  def addAction(mrn: String, newAction: Action): Future[Option[Submission]] = {
+    val query = Json.obj("mrn" -> mrn)
+    val update = Json.obj("$addToSet" -> Json.obj("actions" -> newAction))
+    performUpdate(query, update)
+  }
+
+  private def performUpdate(query: JsObject, update: JsObject): Future[Option[Submission]] =
+    findAndUpdate(query, update, fetchNewObject = true).map { updateResult =>
+      if (updateResult.value.isEmpty) logDatabaseUpdateError(updateResult)
+      updateResult.result[Submission]
+    }
+
+  private def logDatabaseUpdateError(res: FindAndModifyResult): Unit =
+    res.lastError.foreach(_.err.foreach(errorMsg => logger.error(s"Problem during database update: $errorMsg")))
+
 }

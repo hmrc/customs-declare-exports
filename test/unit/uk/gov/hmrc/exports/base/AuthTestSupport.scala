@@ -20,10 +20,10 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.mockito.{ArgumentMatcher, ArgumentMatchers}
 import org.scalatest.mockito.MockitoSugar
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.allEnrolments
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Name}
-import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.exports.models.SignedInUser
 
 import scala.concurrent.Future
@@ -48,7 +48,7 @@ trait AuthTestSupport extends MockitoSugar {
       )(any(), any())
     ).thenReturn(Future.successful(user.enrolments))
 
-  def unauthorizedUser(error: Throwable): Unit =
+  def withUnauthorizedUser(error: Throwable): Unit =
     when(mockAuthConnector.authorise(any(), any())(any(), any())).thenReturn(Future.failed(error))
 
   def userWithoutEori(user: SignedInUser = newUser("", externalId = "external1")): Unit =

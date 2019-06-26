@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models
+package uk.gov.hmrc.exports.controllers.util
 
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Name}
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+object CustomsHeaderNames {
+  val Authorization = "Authorization"
+  val XEoriIdentifierHeaderName = "X-EORI-Identifier"
+  val XLrnHeaderName = "X-LRN"
+  val XMrnHeaderName = "X-MRN"
+  val XDucrHeaderName = "X-DUCR"
+  val XClientIdName = "X-Client-ID"
+  val XConversationIdName = "X-Conversation-ID"
 
-case class SignedInUser(
-  credentials: Credentials,
-  name: Name,
-  email: Option[String],
-  eori: String,
-  externalId: String,
-  internalId: Option[String],
-  affinityGroup: Option[AffinityGroup],
-  enrolments: Enrolments
-)
+}

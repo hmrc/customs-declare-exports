@@ -21,11 +21,11 @@ import play.api.mvc.Codec
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
+import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
 import unit.uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
-import util.ExportsTestData
+import util.testdata.ExportsTestData._
 
-class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
+class AuthenticatorSpec extends CustomsExportsBaseSpec {
   val uri = "/declaration"
   val xmlBody: String = randomSubmitDeclaration.toXml
   val fakeXmlRequest: FakeRequest[String] = FakeRequest("POST", uri).withBody(xmlBody)
@@ -78,7 +78,7 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
     }
 
     "handle InsufficientEnrolments error" in {
-      unauthorizedUser(InsufficientEnrolments())
+      withUnauthorizedUser(InsufficientEnrolments())
 
       val result = route(app, fakeXmlRequest).get
 
@@ -86,7 +86,7 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
     }
 
     "handle AuthorisationException error" in {
-      unauthorizedUser(InsufficientConfidenceLevel())
+      withUnauthorizedUser(InsufficientConfidenceLevel())
 
       val result = route(app, fakeXmlRequest).get
 
@@ -94,7 +94,7 @@ class ExportControllerSpec extends CustomsExportsBaseSpec with ExportsTestData {
     }
 
     "handle rest of errors as InternalServerError" in {
-      unauthorizedUser(new IllegalArgumentException())
+      withUnauthorizedUser(new IllegalArgumentException())
 
       val result = route(app, fakeXmlRequest).get
 

@@ -17,13 +17,13 @@
 package unit.uk.gov.hmrc.exports.controllers
 
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.exports.controllers.HeaderValidator
+import org.scalatest.{MustMatchers, WordSpec}
+import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
-import util.ExportsTestData
+import util.testdata.ExportsTestData._
 
-class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestData {
+class HeaderValidatorSpec extends WordSpec with MockitoSugar with MustMatchers {
 
   trait SetUp {
     val validator = new HeaderValidator
@@ -34,69 +34,69 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
     "return lrn from header when extract is called and header is present" in new SetUp {
       val extractedLrn: Option[String] =
         validator.extractLrnHeader(ValidHeaders)
-      extractedLrn shouldBe Some(declarantLrnValue)
+      extractedLrn must equal(Some(declarantLrnValue))
     }
 
     "return ducr from header when extract is called and header is present" in new SetUp {
       val extractedDucr: Option[String] =
         validator.extractOptionalDucrHeader(ValidHeaders)
-      extractedDucr shouldBe Some(declarantDucrValue)
+      extractedDucr must equal(Some(declarantDucrValue))
     }
 
     "return mrn from header when extract is called and header is present" in new SetUp {
       val extractedMrn: Option[String] =
         validator.extractMrnHeader(ValidHeaders)
-      extractedMrn shouldBe Some(declarantMrnValue)
+      extractedMrn must equal(Some(declarantMrnValue))
     }
 
     "return eori from header when extract is called and header is present" in new SetUp {
       val extractedEori: Option[String] =
         validator.extractEoriHeader(ValidHeaders)
-      extractedEori shouldBe Some(declarantEoriValue)
+      extractedEori must equal(Some(declarantEoriValue))
     }
 
     "return authToken from header when extract is called and header is present" in new SetUp {
       val extractedAuthToken: Option[String] =
         validator.extractAuthTokenHeader(ValidHeaders)
-      extractedAuthToken shouldBe Some(dummyToken)
+      extractedAuthToken must equal(Some(dummyToken))
     }
 
     "return conversationId from header when extract is called and header is present" in new SetUp {
       val extractedConversationId: Option[String] =
         validator.extractConversationIdHeader(ValidHeaders)
-      extractedConversationId shouldBe Some(conversationId)
+      extractedConversationId must equal(Some(conversationId))
     }
 
     "return None from header when extract is called and LRN header not present" in new SetUp {
       val extractedLrn: Option[String] = validator.extractLrnHeader(Map.empty)
-      extractedLrn shouldBe None
+      extractedLrn must equal(None)
     }
 
     "return None from header when extract is called and DUCR header not present" in new SetUp {
       val extractedDucr: Option[String] = validator.extractOptionalDucrHeader(Map.empty)
-      extractedDucr shouldBe None
+      extractedDucr must equal(None)
     }
 
     "return None from header when extract is called and MUCR header not present" in new SetUp {
       val extractedMucr: Option[String] = validator.extractMrnHeader(Map.empty)
-      extractedMucr shouldBe None
+      extractedMucr must equal(None)
     }
 
     "return None from header when extract is called and EORI header not present" in new SetUp {
       val extractedEori: Option[String] = validator.extractEoriHeader(Map.empty)
-      extractedEori shouldBe None
+      extractedEori must equal(None)
     }
 
     "return None from header when extract is called and AuthToken header not present" in new SetUp {
       val extractedAuthToken: Option[String] =
         validator.extractAuthTokenHeader(Map.empty)
-      extractedAuthToken shouldBe None
+      extractedAuthToken must equal(None)
     }
 
     "return None from header when extract is called and conversationId header not present" in new SetUp {
       val extractedConversationId: Option[String] =
         validator.extractConversationIdHeader(Map.empty)
-      extractedConversationId shouldBe None
+      extractedConversationId must equal(None)
     }
 
     "validateSubmissionHeaders" should {
@@ -104,17 +104,18 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
       "return Right of validatedHeaderResponse when validateHeaders is called on valid headers" in new SetUp {
         implicit val hc: HeaderCarrier = mock[HeaderCarrier]
 
-        val result: Either[ErrorResponse, ValidatedHeadersSubmissionRequest] =
+        val result: Either[ErrorResponse, SubmissionRequestHeaders] =
           validator.validateAndExtractSubmissionHeaders(ValidHeaders)
-        result should be(
-          Right(ValidatedHeadersSubmissionRequest(LocalReferenceNumber(declarantLrnValue), Some(declarantDucrValue)))
+        result must equal(
+          Right(SubmissionRequestHeaders(LocalReferenceNumber(declarantLrnValue), Some(declarantDucrValue)))
         )
       }
 
       "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {
-        val result: Either[ErrorResponse, ValidatedHeadersSubmissionRequest] =
+        val result: Either[ErrorResponse, SubmissionRequestHeaders] =
           validator.validateAndExtractSubmissionHeaders(Map.empty)
-        result shouldBe Left(ErrorResponse.ErrorInvalidPayload)
+
+        result must equal(Left(ErrorResponse.errorInvalidHeaders))
       }
 
     }
@@ -124,41 +125,15 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
       "return Right of validatedHeaderResponse when validateHeaders is called on valid headers" in new SetUp {
         implicit val hc: HeaderCarrier = mock[HeaderCarrier]
 
-        val result: Either[ErrorResponse, ValidatedHeadersCancellationRequest] =
+        val result: Either[ErrorResponse, CancellationRequestHeaders] =
           validator.validateAndExtractCancellationHeaders(ValidHeaders)
-        result should be(Right(ValidatedHeadersCancellationRequest(Mrn(declarantMrnValue))))
+        result must equal(Right(CancellationRequestHeaders(Mrn(declarantMrnValue))))
       }
 
       "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {
-        val result: Either[ErrorResponse, ValidatedHeadersCancellationRequest] =
+        val result: Either[ErrorResponse, CancellationRequestHeaders] =
           validator.validateAndExtractCancellationHeaders(Map.empty)
-        result should be(Left(ErrorResponse.ErrorInvalidPayload))
-      }
-
-    }
-
-    "validateAndExtractMovementNotificationHeaders" should {
-
-      "return Right of MovementNotificationApiRequest when validateHeaders is called on valid headers" in new SetUp {
-        implicit val hc: HeaderCarrier = mock[HeaderCarrier]
-
-        val result: Either[ErrorResponse, MovementNotificationApiRequest] =
-          validator.validateAndExtractMovementNotificationHeaders(ValidHeaders)
-        result should be(
-          Right(
-            MovementNotificationApiRequest(
-              AuthToken(dummyToken),
-              ConversationId(conversationId),
-              Eori(declarantEoriValue)
-            )
-          )
-        )
-      }
-
-      "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {
-        val result: Either[ErrorResponse, MovementNotificationApiRequest] =
-          validator.validateAndExtractMovementNotificationHeaders(Map.empty)
-        result should be(Left(ErrorResponse.ErrorInvalidPayload))
+        result must equal(Left(ErrorResponse.errorInvalidHeaders))
       }
 
     }
@@ -168,15 +143,15 @@ class HeaderValidatorSpec extends UnitSpec with MockitoSugar with ExportsTestDat
       "return Right of SubmissionNotificationApiRequest when validateHeaders is called on valid headers" in new SetUp {
         implicit val hc: HeaderCarrier = mock[HeaderCarrier]
 
-        val result: Either[ErrorResponse, SubmissionNotificationApiRequest] =
-          validator.validateAndExtractSubmissionNotificationHeaders(ValidHeaders)
-        result should be(Right(SubmissionNotificationApiRequest(AuthToken(dummyToken), ConversationId(conversationId))))
+        val result: Either[ErrorResponse, NotificationApiRequestHeaders] =
+          validator.validateAndExtractNotificationHeaders(ValidHeaders)
+        result must equal(Right(NotificationApiRequestHeaders(AuthToken(dummyToken), ConversationId(conversationId))))
       }
 
       "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {
-        val result: Either[ErrorResponse, SubmissionNotificationApiRequest] =
-          validator.validateAndExtractSubmissionNotificationHeaders(Map.empty)
-        result should be(Left(ErrorResponse.ErrorInvalidPayload))
+        val result: Either[ErrorResponse, NotificationApiRequestHeaders] =
+          validator.validateAndExtractNotificationHeaders(Map.empty)
+        result must equal(Left(ErrorResponse.errorInvalidHeaders))
       }
 
     }

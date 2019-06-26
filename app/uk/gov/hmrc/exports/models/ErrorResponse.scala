@@ -31,17 +31,10 @@ trait HttpStatusCodeShortDescriptions {
   val InternalServerErrorCode = "INTERNAL_SERVER_ERROR"
 }
 
-case class ResponseContents(code: String, message: String)
-
-object ResponseContents {
-  implicit val writes: Writes[ResponseContents] = Json.writes[ResponseContents]
-}
-
 case class ErrorResponse(httpStatusCode: Int, errorCode: String, message: String, content: ResponseContents*)
     extends Error {
 
-  lazy val XmlResult: Result =
-    Status(httpStatusCode)(responseXml).as(ContentTypes.XML)
+  lazy val XmlResult: Result = Status(httpStatusCode)(responseXml).as(ContentTypes.XML)
 
   private lazy val responseXml: String =
     "<?xml version='1.0' encoding='UTF-8'?>\n" +
@@ -56,16 +49,24 @@ object ErrorResponse extends HttpStatusCodeShortDescriptions {
   def errorUnauthorized(errorMessage: String): ErrorResponse =
     ErrorResponse(UNAUTHORIZED, UnauthorizedCode, errorMessage)
 
+  def errorUnauthorized: ErrorResponse = ErrorResponse(UNAUTHORIZED, UnauthorizedCode, "Insufficient Enrolments")
+
   def errorBadRequest(errorMessage: String): ErrorResponse = ErrorResponse(BAD_REQUEST, BadRequestCode, errorMessage)
+
+  def errorBadRequest: ErrorResponse = errorBadRequest("Bad Request")
+
+  def errorInvalidPayload: ErrorResponse = errorBadRequest("Invalid payload")
+
+  def errorInvalidHeaders: ErrorResponse = errorBadRequest("Invalid headers")
 
   def errorInternalServerError(errorMessage: String): ErrorResponse =
     ErrorResponse(INTERNAL_SERVER_ERROR, InternalServerErrorCode, errorMessage)
 
-  val ErrorUnauthorized: ErrorResponse = ErrorResponse(UNAUTHORIZED, UnauthorizedCode, "Insufficient Enrolments")
+  def errorInternalServerError: ErrorResponse = errorInternalServerError("Internal server error")
+}
 
-  val ErrorGenericBadRequest: ErrorResponse = errorBadRequest("Bad Request")
+case class ResponseContents(code: String, message: String)
 
-  val ErrorInvalidPayload: ErrorResponse = errorBadRequest("Invalid payload")
-
-  val ErrorInternalServerError: ErrorResponse = errorInternalServerError("Internal server error")
+object ResponseContents {
+  implicit val writes: Writes[ResponseContents] = Json.writes[ResponseContents]
 }

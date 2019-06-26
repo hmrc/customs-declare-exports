@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.models
+package unit.uk.gov.hmrc.exports.models.declaration
 
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json._
-import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.wco.dec.{Response, ResponseStatus}
 
 class SubmissionStatusSpec extends WordSpec with MustMatchers {
@@ -41,8 +41,8 @@ class SubmissionStatusSpec extends WordSpec with MustMatchers {
       SubmissionStatus.StatusFormat.reads(JsString("16")) must be(JsSuccess(GoodsHaveExitedTheCommunity))
       SubmissionStatus.StatusFormat.reads(JsString("17")) must be(JsSuccess(DeclarationHandledExternally))
       SubmissionStatus.StatusFormat.reads(JsString("18")) must be(JsSuccess(AwaitingExitResults))
-      SubmissionStatus.StatusFormat.reads(JsString("WrongStatus")) must be(JsSuccess(UnknownSubmissionStatus))
-      SubmissionStatus.StatusFormat.reads(JsString("UnknownStatus")) must be(JsSuccess(UnknownSubmissionStatus))
+      SubmissionStatus.StatusFormat.reads(JsString("WrongStatus")) must be(JsSuccess(UnknownStatus))
+      SubmissionStatus.StatusFormat.reads(JsString("UnknownStatus")) must be(JsSuccess(UnknownStatus))
     }
 
     "correctly write a value for every scenario" in {
@@ -62,7 +62,7 @@ class SubmissionStatusSpec extends WordSpec with MustMatchers {
       Json.toJson(GoodsHaveExitedTheCommunity) must be(JsString("16"))
       Json.toJson(DeclarationHandledExternally) must be(JsString("17"))
       Json.toJson(AwaitingExitResults) must be(JsString("18"))
-      Json.toJson(UnknownSubmissionStatus) must be(JsString("UnknownStatus"))
+      Json.toJson(UnknownStatus) must be(JsString("UnknownStatus"))
     }
   }
 
@@ -156,7 +156,7 @@ class SubmissionStatusSpec extends WordSpec with MustMatchers {
     "correctly retrieve UnknownStatus status" in {
       val unknownStatusResponse = Response("20")
 
-      SubmissionStatus.retrieveFromResponse(unknownStatusResponse) must be(UnknownSubmissionStatus)
+      SubmissionStatus.retrieveFromResponse(unknownStatusResponse) must be(UnknownStatus)
     }
   }
 
@@ -170,7 +170,7 @@ class SubmissionStatusSpec extends WordSpec with MustMatchers {
       GoodsHaveExitedTheCommunity.toString must be("Goods Have Exited The Community")
       DeclarationHandledExternally.toString must be("Declaration Handled Externally")
       AwaitingExitResults.toString must be("Awaiting Exit Results")
-      UnknownSubmissionStatus.toString must be("Unknown status")
+      UnknownStatus.toString must be("Unknown status")
     }
   }
 }

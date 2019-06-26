@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models
+package uk.gov.hmrc.exports.models.declaration.submissions
 
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Name}
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import java.time.LocalDateTime
 
-case class SignedInUser(
-  credentials: Credentials,
-  name: Name,
-  email: Option[String],
-  eori: String,
-  externalId: String,
-  internalId: Option[String],
-  affinityGroup: Option[AffinityGroup],
-  enrolments: Enrolments
+import play.api.libs.json.Json
+
+case class Action(
+  requestType: RequestType,
+  conversationId: String,
+  requestTimestamp: LocalDateTime = LocalDateTime.now()
 )
+
+object Action {
+  implicit val format = Json.format[Action]
+}

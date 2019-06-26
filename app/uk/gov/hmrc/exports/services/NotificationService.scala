@@ -18,13 +18,9 @@ package uk.gov.hmrc.exports.services
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.mvc.Result
-import play.api.mvc.Results._
-import uk.gov.hmrc.exports.metrics.ExportsMetrics
-import uk.gov.hmrc.exports.metrics.MetricIdentifiers.notificationMetric
-import uk.gov.hmrc.exports.models.declaration.DeclarationNotification
-import uk.gov.hmrc.exports.repositories.{NotificationsRepository, SubmissionRepository}
-import uk.gov.hmrc.wco.dec.Response
+import reactivemongo.core.errors.DatabaseException
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification
+import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -32,57 +28,66 @@ import scala.concurrent.Future
 @Singleton
 class NotificationService @Inject()(
   submissionRepository: SubmissionRepository,
-  notificationsRepository: NotificationsRepository,
-  metrics: ExportsMetrics
+  notificationRepository: NotificationRepository
 ) {
 
   private val logger = Logger(this.getClass)
+  private val databaseDuplicateKeyErrorCode = 11000
 
-  def save(notification: DeclarationNotification): Future[Result] = {
-    val eori = notification.eori
-    val convId = notification.conversationId
+  def getAllNotificationsForUser(eori: String): Future[Seq[Notification]] =
+    submissionRepository.findAllSubmissionsForEori(eori).flatMap {
+      case Seq() => Future.successful(Seq.empty)
+      case submissions =>
+        val conversationIds = for {
+          submission <- submissions
+          action <- submission.actions
+        } yield action.conversationId
 
-    for {
-      oldNotification <- getTheNewestExistingNotification(eori, convId)
-      notificationSaved <- notificationsRepository.save(notification)
-      shouldBeUpdated = oldNotification.forall(notification.isOlderThan)
-      _ <- if (shouldBeUpdated) updateMrnAndStatus(notification) else Future.successful(false)
-    } yield
-      if (notificationSaved) {
-        metrics.incrementCounter(notificationMetric)
-        logger.debug("Notification saved successfully")
-        Accepted
-      } else {
-        metrics.incrementCounter(notificationMetric)
-        logger.error("There was a problem during saving notification")
-        Accepted
+        notificationRepository.findNotificationsByConversationIds(conversationIds)
+    }
+
+  def getNotificationsForSubmission(mrn: String): Future[Seq[Notification]] =
+    submissionRepository.findSubmissionByMrn(mrn).flatMap {
+      case None => Future.successful(Seq.empty)
+      case Some(submission) =>
+        val conversationIds = submission.actions.map(_.conversationId)
+        notificationRepository.findNotificationsByConversationIds(conversationIds)
+    }
+
+  def saveAll(notifications: Seq[Notification]): Future[Either[String, Unit]] =
+    Future.sequence(notifications.map(save)).map { seq =>
+      if (seq.exists(_.isLeft)) Left("Failed saving notification")
+      else Right((): Unit)
+    }
+
+  def save(notification: Notification): Future[Either[String, Unit]] =
+    try {
+      notificationRepository.save(notification).flatMap {
+        case false => Future.successful(Left("Failed saving notification"))
+        case true  => updateRelatedSubmission(notification)
       }
-  }
+    } catch {
+      case exc: DatabaseException if exc.code.contains(databaseDuplicateKeyErrorCode) =>
+        logger.error(s"Received duplicated notification with conversationId: ${notification.conversationId}")
+        Future.successful(Right((): Unit))
+      case exc: Throwable =>
+        logger.error(exc.getMessage)
+        Future.successful(Left(exc.getMessage))
+    }
 
-  def getTheNewestExistingNotification(eori: String, convId: String): Future[Option[DeclarationNotification]] =
-    notificationsRepository
-      .getByEoriAndConversationId(eori, convId)
-      .map(_.filter(_.response.headOption.flatMap(_.issueDateTime).isDefined))
-      .map(_.sortWith((a, b) => a.isOlderThan(b)).headOption)
-
-  def updateMrnAndStatus(notification: DeclarationNotification): Future[Boolean] =
-    submissionRepository.updateMrnAndStatus(
-      notification.eori,
-      notification.conversationId,
-      notification.mrn,
-      buildStatus(notification.response)
-    )
-
-  val PositionFunctionCode = "11"
-  val NameCodeGranted = "39"
-  val NameCodeDenied = "41"
-
-  private def buildStatus(responses: Seq[Response]): Option[String] =
-    responses.map { response =>
-      (response.functionCode, response.status.flatMap(_.nameCode).headOption) match {
-        case (PositionFunctionCode, Some(nameCode)) if nameCode == NameCodeGranted || nameCode == NameCodeDenied =>
-          s"11$nameCode"
-        case _ => response.functionCode
+  private def updateRelatedSubmission(notification: Notification): Future[Either[String, Unit]] =
+    try {
+      submissionRepository.updateMrn(notification.conversationId, notification.mrn).map {
+        case None =>
+          logger.error(s"Could not find Submission to update for conversationId: ${notification.conversationId}")
+          Right((): Unit)
+        case Some(_) =>
+          Right((): Unit)
       }
-    }.headOption
+    } catch {
+      case exc: Throwable =>
+        logger.error(exc.getMessage)
+        Future.successful(Left(exc.getMessage))
+    }
+
 }

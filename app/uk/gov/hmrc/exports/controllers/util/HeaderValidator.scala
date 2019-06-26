@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.controllers
+package uk.gov.hmrc.exports.controllers.util
 
 import javax.inject.Singleton
 import play.api.Logger
@@ -54,64 +54,47 @@ class HeaderValidator {
 
   def validateAndExtractSubmissionHeaders(
     headers: Map[String, String]
-  ): Either[ErrorResponse, ValidatedHeadersSubmissionRequest] = {
+  ): Either[ErrorResponse, SubmissionRequestHeaders] = {
     val result = for {
       lrn <- extractLrnHeader(headers)
-    } yield ValidatedHeadersSubmissionRequest(LocalReferenceNumber(lrn), extractOptionalDucrHeader(headers))
+    } yield SubmissionRequestHeaders(LocalReferenceNumber(lrn), extractOptionalDucrHeader(headers))
 
     result match {
       case Some(request) => Right(request)
       case None =>
         logger.error("Error during validating and extracting submission headers")
-        Left(ErrorResponse.ErrorInvalidPayload)
+        Left(ErrorResponse.errorInvalidHeaders)
     }
   }
 
   def validateAndExtractCancellationHeaders(
     headers: Map[String, String]
-  ): Either[ErrorResponse, ValidatedHeadersCancellationRequest] = {
+  ): Either[ErrorResponse, CancellationRequestHeaders] = {
     val result = for {
       mrn <- extractMrnHeader(headers)
-    } yield ValidatedHeadersCancellationRequest(Mrn(mrn))
+    } yield CancellationRequestHeaders(Mrn(mrn))
 
     result match {
       case Some(request) => Right(request)
       case _ =>
         logger.error("Error during validating and extracting cancellation headers")
-        Left(ErrorResponse.ErrorInvalidPayload)
+        Left(ErrorResponse.errorInvalidHeaders)
     }
   }
 
-  def validateAndExtractMovementNotificationHeaders(
+  def validateAndExtractNotificationHeaders(
     headers: Map[String, String]
-  ): Either[ErrorResponse, MovementNotificationApiRequest] = {
+  ): Either[ErrorResponse, NotificationApiRequestHeaders] = {
     val result = for {
-      eori <- extractEoriHeader(headers)
       authToken <- extractAuthTokenHeader(headers)
       conversationId <- extractConversationIdHeader(headers)
-    } yield MovementNotificationApiRequest(AuthToken(authToken), ConversationId(conversationId), Eori(eori))
+    } yield NotificationApiRequestHeaders(AuthToken(authToken), ConversationId(conversationId))
 
     result match {
       case Some(request) => Right(request)
       case _ =>
-        logger.error("Error during validating and extracting movement headers")
-        Left(ErrorResponse.ErrorInvalidPayload)
-    }
-  }
-
-  def validateAndExtractSubmissionNotificationHeaders(
-    headers: Map[String, String]
-  ): Either[ErrorResponse, SubmissionNotificationApiRequest] = {
-    val result = for {
-      authToken <- extractAuthTokenHeader(headers)
-      conversationId <- extractConversationIdHeader(headers)
-    } yield SubmissionNotificationApiRequest(AuthToken(authToken), ConversationId(conversationId))
-
-    result match {
-      case Some(request) => Right(request)
-      case _ =>
-        logger.error("Error during validating and extracting submission notifications headers")
-        Left(ErrorResponse.ErrorInvalidPayload)
+        logger.error("Error during validating and extracting submission notification headers")
+        Left(ErrorResponse.errorInvalidHeaders)
     }
   }
 }

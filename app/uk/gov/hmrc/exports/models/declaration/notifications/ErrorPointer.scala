@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package util
+package uk.gov.hmrc.exports.models.declaration.notifications
 
-import scala.util.Random
+import play.api.libs.json.Json
 
-object TestDataHelper {
+case class ErrorPointer(documentSectionCode: String, tagId: Option[String] = None)
 
-  def randomAlphanumericString(length: Int): String = Random.alphanumeric.take(length).mkString
+object ErrorPointer {
+  implicit val format = Json.format[ErrorPointer]
 }

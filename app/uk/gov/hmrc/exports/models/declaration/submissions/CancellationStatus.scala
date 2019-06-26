@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models
+package uk.gov.hmrc.exports.models.declaration.submissions
 
 import play.api.libs.json._
 
@@ -44,9 +44,9 @@ object CancellationStatus {
   implicit object CancellationStatusReads extends Reads[CancellationStatus] {
     def reads(jsValue: JsValue): JsResult[CancellationStatus] = jsValue match {
       case JsString("CancellationRequestExists") => JsSuccess(CancellationRequestExists)
-      case JsString("CancellationRequested") => JsSuccess(CancellationRequested)
-      case JsString("MissingDeclaration") => JsSuccess(MissingDeclaration)
-      case _ => JsError("Incorrect cancellation status")
+      case JsString("CancellationRequested")     => JsSuccess(CancellationRequested)
+      case JsString("MissingDeclaration")        => JsSuccess(MissingDeclaration)
+      case _                                     => JsError("Incorrect cancellation status")
     }
   }
 
@@ -61,5 +61,3 @@ case object CancellationRequestExists extends CancellationStatus
 case object CancellationRequested extends CancellationStatus
 
 case object MissingDeclaration extends CancellationStatus
-
-

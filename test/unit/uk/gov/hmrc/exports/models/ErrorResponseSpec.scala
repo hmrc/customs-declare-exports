@@ -52,21 +52,21 @@ class ErrorResponseSpec extends WordSpec with MustMatchers {
     "contains correct Unathorized error" in {
       val unauthorizedMessage = "Insufficient Enrolments"
 
-      ErrorResponse.ErrorUnauthorized.httpStatusCode must be(UNAUTHORIZED)
-      ErrorResponse.ErrorUnauthorized.errorCode must be(ErrorResponse.UnauthorizedCode)
-      ErrorResponse.ErrorUnauthorized.message must be(unauthorizedMessage)
+      ErrorResponse.errorUnauthorized.httpStatusCode must be(UNAUTHORIZED)
+      ErrorResponse.errorUnauthorized.errorCode must be(ErrorResponse.UnauthorizedCode)
+      ErrorResponse.errorUnauthorized.message must be(unauthorizedMessage)
     }
 
     "contains correct Generic Bad Request error" in {
-      ErrorResponse.ErrorGenericBadRequest.message must be("Bad Request")
+      ErrorResponse.errorBadRequest.message must be("Bad Request")
     }
 
     "contains correct Invalid Payload error" in {
-      ErrorResponse.ErrorInvalidPayload.message must be("Invalid payload")
+      ErrorResponse.errorInvalidPayload.message must be("Invalid payload")
     }
 
     "contains correct Internal server error" in {
-      ErrorResponse.ErrorInternalServerError.message must be("Internal server error")
+      ErrorResponse.errorInternalServerError.message must be("Internal server error")
     }
 
     "contains correct error codes" in {

@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.controllers
+package util.testdata
 
-object CustomsHeaderNames {
-  val Authorization = "Authorization"
-  val XEoriIdentifierHeaderName = "X-EORI-Identifier"
-  val XLrnHeaderName = "X-LRN"
-  val XMrnHeaderName = "X-MRN"
-  val XDucrHeaderName = "X-DUCR"
-  val XClientIdName = "X-Client-ID"
-  val XConversationIdName = "X-Conversation-ID"
+import scala.util.Random
 
+object TestDataHelper {
+
+  def randomAlphanumericString(length: Int): String = Random.alphanumeric.take(length).mkString
 }

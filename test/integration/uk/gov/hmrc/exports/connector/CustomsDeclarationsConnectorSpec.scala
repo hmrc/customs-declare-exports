@@ -24,18 +24,18 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.models.declaration.CustomsDeclarationsResponse
+import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
 import uk.gov.hmrc.http.HeaderCarrier
+import util.CustomsDeclarationsAPIConfig
 import util.ExternalServicesConfig.{Host, Port}
 import util.stubs.CustomsDeclarationsAPIService
-import util.{CustomsDeclarationsAPIConfig, ExportsTestData}
+import util.testdata.ExportsTestData._
 
 import scala.concurrent.Future
 import scala.xml.XML
 
 class CustomsDeclarationsConnectorSpec
-    extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar with CustomsDeclarationsAPIService
-    with ExportsTestData {
+    extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar with CustomsDeclarationsAPIService {
 
   private lazy val connector = app.injector.instanceOf[CustomsDeclarationsConnector]
   private implicit val hc: HeaderCarrier = HeaderCarrier()

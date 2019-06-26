@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.models
 import play.api.mvc.{Request, WrappedRequest}
 
 trait HasLocalReferenceNumber {
-  val localReferenceNumber: LocalReferenceNumber
+  val lrn: LocalReferenceNumber
 }
 
 trait HasEori {
@@ -48,13 +48,9 @@ case class AuthToken(value: String) extends AnyVal
 case class AuthorizedSubmissionRequest[A](eori: Eori, request: Request[A])
     extends WrappedRequest[A](request) with HasEori
 
-case class ValidatedHeadersSubmissionRequest(localReferenceNumber: LocalReferenceNumber, ducr: Option[String])
-    extends HasLocalReferenceNumber
+case class SubmissionRequestHeaders(lrn: LocalReferenceNumber, ducr: Option[String]) extends HasLocalReferenceNumber
 
-case class ValidatedHeadersCancellationRequest(mrn: Mrn) extends HasMrn
+case class CancellationRequestHeaders(mrn: Mrn) extends HasMrn
 
-case class MovementNotificationApiRequest(authToken: AuthToken, conversationId: ConversationId, eori: Eori)
-    extends HasEori with HasConversationId with HasAuthToken
-
-case class SubmissionNotificationApiRequest(authToken: AuthToken, conversationId: ConversationId)
+case class NotificationApiRequestHeaders(authToken: AuthToken, conversationId: ConversationId)
     extends HasConversationId with HasAuthToken

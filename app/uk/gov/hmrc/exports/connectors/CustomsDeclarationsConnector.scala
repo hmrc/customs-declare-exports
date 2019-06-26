@@ -22,8 +22,8 @@ import play.api.Logger
 import play.api.http.{ContentTypes, HeaderNames, Status}
 import play.api.mvc.Codec
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.controllers.CustomsHeaderNames
-import uk.gov.hmrc.exports.models.declaration.CustomsDeclarationsResponse
+import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
+import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
@@ -60,10 +60,10 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
     logger.debug(s"CUSTOMS_DECLARATIONS request payload is -> $body")
     httpClient
       .POSTString[CustomsDeclarationsResponse](
-      s"${appConfig.customsDeclarationsBaseUrl}$uri",
-      body,
-      headers = headers(eori)
-    )(responseReader, hc, ec)
+        s"${appConfig.customsDeclarationsBaseUrl}$uri",
+        body,
+        headers = headers(eori)
+      )(responseReader, hc, ec)
       .recover {
         case error: Throwable =>
           logger.error(s"Error during submitting declaration: ${error.getMessage}")
