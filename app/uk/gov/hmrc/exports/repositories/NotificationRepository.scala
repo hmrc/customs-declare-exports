@@ -37,7 +37,7 @@ class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: 
     ) {
 
   override def indexes: Seq[Index] = Seq(
-    Index(Seq("dateTimeIssued" -> IndexType.Ascending), unique = true, name = Some("dateTimeIssuedIdx")),
+    Index(Seq("dateTimeIssued" -> IndexType.Ascending), name = Some("dateTimeIssuedIdx")),
     Index(Seq("mrn" -> IndexType.Ascending), name = Some("mrnIdx")),
     Index(Seq("conversationId" -> IndexType.Ascending), name = Some("conversationIdIdx"))
   )
