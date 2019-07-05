@@ -19,15 +19,14 @@ package unit.uk.gov.hmrc.exports.config
 import java.util.UUID
 
 import com.typesafe.config.{Config, ConfigFactory}
+import org.scalatest.{Matchers, WordSpec}
 import org.scalatest.mockito.MockitoSugar
-import play.api.Mode
 import play.api.Mode.Test
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.play.bootstrap.config.{RunMode, ServicesConfig}
-import uk.gov.hmrc.play.test.UnitSpec
 
-class AppConfigSpec extends UnitSpec with MockitoSugar {
+class AppConfigSpec extends WordSpec with Matchers with MockitoSugar {
   private val validAppConfig: Config =
     ConfigFactory.parseString("""
       |urls.login="http://localhost:9949/auth-login-stub/gg-sign-in"
