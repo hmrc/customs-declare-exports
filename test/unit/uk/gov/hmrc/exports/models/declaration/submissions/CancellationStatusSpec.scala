@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.models.declaration
+package unit.uk.gov.hmrc.exports.models.declaration.submissions
 
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json._
