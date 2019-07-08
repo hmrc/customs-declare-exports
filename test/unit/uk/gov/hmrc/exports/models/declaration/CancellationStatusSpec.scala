@@ -41,9 +41,9 @@ class CancellationStatusSpec extends WordSpec with MustMatchers {
 
       import uk.gov.hmrc.exports.models.declaration.submissions.CancellationStatus.CancellationStatusWrites.writes
 
-      writes(CancellationRequestExists) must be(JsObject(Seq("status" -> JsString("CancellationRequestExists"))))
-      writes(CancellationRequested) must be(JsObject(Seq("status" -> JsString("CancellationRequested"))))
-      writes(MissingDeclaration) must be(JsObject(Seq("status" -> JsString("MissingDeclaration"))))
+      writes(CancellationRequestExists) must be(JsString("CancellationRequestExists"))
+      writes(CancellationRequested) must be(JsString("CancellationRequested"))
+      writes(MissingDeclaration) must be(JsString("MissingDeclaration"))
     }
   }
 
