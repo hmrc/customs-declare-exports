@@ -7,6 +7,8 @@ import uk.gov.hmrc.versioning.SbtGitVersioning
 
 val appName = "customs-declare-exports"
 
+PlayKeys.devSettings := Seq("play.server.http.port" -> "6792")
+
 lazy val allResolvers = resolvers ++= Seq(
   Resolver.bintrayRepo("hmrc", "releases"),
   Resolver.jcenterRepo
