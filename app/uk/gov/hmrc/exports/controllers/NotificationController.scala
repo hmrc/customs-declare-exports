@@ -25,7 +25,6 @@ import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc.{PlayBodyParsers, _}
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
@@ -40,7 +39,6 @@ import scala.xml.{Node, NodeSeq}
 
 @Singleton
 class NotificationController @Inject()(
-  appConfig: AppConfig,
   authConnector: AuthConnector,
   headerValidator: HeaderValidator,
   metrics: ExportsMetrics,
