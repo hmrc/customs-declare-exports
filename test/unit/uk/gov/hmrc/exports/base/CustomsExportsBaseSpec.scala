@@ -41,6 +41,7 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.{CancellationStatus, Submission}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
@@ -127,10 +128,13 @@ trait CustomsExportsBaseSpec
   protected def withSubmissions(submissions: Seq[Submission]): OngoingStubbing[Future[Seq[Submission]]] =
     when(mockSubmissionRepository.findAllSubmissionsForEori(any())).thenReturn(Future.successful(submissions))
 
-//  protected def withNotification(
-//    notifications: Seq[Notification]
-//  ): OngoingStubbing[Future[Seq[Notification]]] =
-//    when(mockNotificationsRepository.getByConversationId(any())).thenReturn(Future.successful(notifications))
+  protected def withoutNotifications(): OngoingStubbing[Future[Seq[Notification]]] =
+    when(mockNotificationsRepository.findNotificationsByConversationId(any())).thenReturn(Future.successful(Seq.empty))
+
+  protected def withNotification(
+    notifications: Seq[Notification]
+  ): OngoingStubbing[Future[Seq[Notification]]] =
+    when(mockNotificationsRepository.findNotificationsByConversationId(any())).thenReturn(Future.successful(notifications))
 
   protected def withCancellationRequest(
     status: CancellationStatus,

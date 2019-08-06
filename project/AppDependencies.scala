@@ -20,7 +20,7 @@ object AppDependencies {
     "org.scalatest" %% "scalatest" % "3.0.5" % testScope,
     "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % "test",
     "com.github.tomakehurst" % "wiremock" % wireMockVersion % testScope exclude("org.apache.httpcomponents","httpclient") exclude("org.apache.httpcomponents","httpcore"),
-   "org.pegdown" % "pegdown" % "1.6.0" % testScope,
+    "org.pegdown" % "pegdown" % "1.6.0" % testScope,
     "com.typesafe.play" %% "play-test" % PlayVersion.current % testScope,
     "org.mockito" % "mockito-core" % "2.27.0" % "test"
   )

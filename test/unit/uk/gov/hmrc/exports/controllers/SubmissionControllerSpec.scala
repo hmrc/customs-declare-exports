@@ -77,6 +77,8 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with BeforeAndAfte
   override def beforeEach(): Unit = {
     super.beforeEach()
     reset(mockDeclarationsApiConnector, mockSubmissionRepository)
+    withoutNotifications()
+
   }
 
   "Actions for submission" when {
@@ -88,6 +90,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with BeforeAndAfte
         withAuthorizedUser()
         withCustomsDeclarationSubmission(ACCEPTED)
         withDataSaved(true)
+
 
         val result = route(app, fakeSubmitXmlRequestWithHeaders).get
 
