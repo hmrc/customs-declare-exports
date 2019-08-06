@@ -22,7 +22,7 @@ import play.mvc.Http.Status._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.exports.repositories.SubmissionRepository
+import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,7 +32,8 @@ import scala.xml.NodeSeq
 @Singleton
 class SubmissionService @Inject()(
   customsDeclarationsConnector: CustomsDeclarationsConnector,
-  submissionRepository: SubmissionRepository
+  submissionRepository: SubmissionRepository,
+  notificationRepository: NotificationRepository
 ) {
 
   private val logger = Logger(this.getClass)
@@ -52,7 +53,15 @@ class SubmissionService @Inject()(
       case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) =>
         val newSubmission =
           buildSubmission(eori, submissionRequestData.lrn.value, submissionRequestData.ducr, conversationId)
-        persistSubmission(newSubmission)
+
+        persistSubmission(newSubmission).flatMap( outcome =>
+          notificationRepository.findNotificationsByConversationId(conversationId).flatMap { notifications =>
+            val result = Future.successful(outcome)
+            notifications.headOption.map(_.mrn).fold(result) { mrn =>
+              submissionRepository.updateMrn(conversationId, mrn).flatMap(_ => result)
+            }
+          }
+        )
 
       case CustomsDeclarationsResponse(status, _) =>
         logger

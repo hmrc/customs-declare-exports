@@ -16,6 +16,7 @@
 
 package unit.uk.gov.hmrc.exports.controllers.actions
 
+import org.scalatest.BeforeAndAfterEach
 import play.api.http.ContentTypes
 import play.api.mvc.Codec
 import play.api.test.FakeRequest
@@ -25,7 +26,7 @@ import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
 import unit.uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
 import util.testdata.ExportsTestData._
 
-class AuthenticatorSpec extends CustomsExportsBaseSpec {
+class AuthenticatorSpec extends CustomsExportsBaseSpec with BeforeAndAfterEach {
   val uri = "/declaration"
   val xmlBody: String = randomSubmitDeclaration.toXml
   val fakeXmlRequest: FakeRequest[String] = FakeRequest("POST", uri).withBody(xmlBody)
@@ -37,6 +38,11 @@ class AuthenticatorSpec extends CustomsExportsBaseSpec {
         AUTHORIZATION -> dummyToken,
         CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
       )
+
+  override protected def beforeEach(): Unit = {
+    super.beforeEach()
+    withoutNotifications()
+  }
 
   "Export Controller" should {
 
@@ -101,4 +107,5 @@ class AuthenticatorSpec extends CustomsExportsBaseSpec {
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
   }
+
 }

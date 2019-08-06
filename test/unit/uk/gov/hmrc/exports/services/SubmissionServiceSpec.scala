@@ -26,10 +26,14 @@ import play.api.http.Status._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.{CustomsDeclarationsResponse, LocalReferenceNumber, SubmissionRequestHeaders}
-import uk.gov.hmrc.exports.repositories.SubmissionRepository
+import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.http.HeaderCarrier
-import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildCustomsDeclarationsConnectorMock, buildSubmissionRepositoryMock}
+import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{
+  buildCustomsDeclarationsConnectorMock,
+  buildSubmissionRepositoryMock,
+  buildNotificationRepositoryMock
+}
 import util.testdata.ExportsTestData._
 import util.testdata.SubmissionTestData._
 
@@ -44,9 +48,11 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
     implicit val hc: HeaderCarrier = mock[HeaderCarrier]
     val customsDeclarationsConnectorMock: CustomsDeclarationsConnector = buildCustomsDeclarationsConnectorMock
     val submissionRepositoryMock: SubmissionRepository = buildSubmissionRepositoryMock
+    val notificationRepositoryMock: NotificationRepository = buildNotificationRepositoryMock
     val submissionService = new SubmissionService(
       customsDeclarationsConnector = customsDeclarationsConnectorMock,
-      submissionRepository = submissionRepositoryMock
+      submissionRepository = submissionRepositoryMock,
+      notificationRepository = notificationRepositoryMock
     )
   }
 
