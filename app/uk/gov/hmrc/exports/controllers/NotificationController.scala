@@ -33,8 +33,7 @@ import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.notifications.{ErrorPointer, Notification, NotificationError}
 import uk.gov.hmrc.exports.services.NotificationService
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.{Node, NodeSeq}
 
 @Singleton
@@ -45,7 +44,7 @@ class NotificationController @Inject()(
   notificationsService: NotificationService,
   bodyParsers: PlayBodyParsers,
   cc: ControllerComponents
-) extends Authenticator(authConnector, cc) {
+)(implicit executionContext: ExecutionContext) extends Authenticator(authConnector, cc) {
 
   private val logger = Logger(this.getClass)
 

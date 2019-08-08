@@ -23,14 +23,14 @@ import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.DeclarationService
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class DeclarationController @Inject()(
   declarationService: DeclarationService,
   authenticator: Authenticator,
   override val controllerComponents: ControllerComponents
-) extends RESTController {
+)(implicit executionContext: ExecutionContext) extends RESTController {
 
   def post(): Action[ExportsDeclaration] = authenticator.authorisedAction(parse.json[ExportsDeclaration]) { implicit request =>
     declarationService

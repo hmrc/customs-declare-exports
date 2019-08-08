@@ -29,15 +29,11 @@ import uk.gov.hmrc.exports.models.{CustomsDeclarationsResponse, LocalReferenceNu
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.http.HeaderCarrier
-import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{
-  buildCustomsDeclarationsConnectorMock,
-  buildSubmissionRepositoryMock,
-  buildNotificationRepositoryMock
-}
+import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildCustomsDeclarationsConnectorMock, buildNotificationRepositoryMock, buildSubmissionRepositoryMock}
 import util.testdata.ExportsTestData._
 import util.testdata.SubmissionTestData._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
 
 class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers {
@@ -53,7 +49,7 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
       customsDeclarationsConnector = customsDeclarationsConnectorMock,
       submissionRepository = submissionRepositoryMock,
       notificationRepository = notificationRepositoryMock
-    )
+    )(ExecutionContext.global)
   }
 
   "SubmissionService on getAllSubmissionsForUser" should {
