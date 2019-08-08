@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc._
+import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.DeclarationService
 
@@ -27,10 +28,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 @Singleton
 class DeclarationController @Inject()(
   declarationService: DeclarationService,
+  authenticator: Authenticator,
   override val controllerComponents: ControllerComponents
 ) extends RESTController {
 
-  def post(): Action[ExportsDeclaration] = Action.async(parsingJson[ExportsDeclaration]) { implicit request =>
+  def post(): Action[ExportsDeclaration] = authenticator.authorisedAction(parsingJson[ExportsDeclaration]) { implicit request =>
     declarationService
       .save(request.body)
       .map(declaration => Created(Json.toJson(declaration)))

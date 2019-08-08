@@ -20,7 +20,6 @@ import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
@@ -31,7 +30,7 @@ import play.api.libs.json.Json.toJson
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.DeclarationService
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
@@ -39,17 +38,17 @@ import unit.uk.gov.hmrc.exports.base.AuthTestSupport
 import scala.concurrent.Future
 
 class DeclarationControllerSpec
-    extends WordSpec with GuiceOneAppPerSuite with BeforeAndAfterEach with ScalaFutures
-    with MustMatchers with MockitoSugar {
+    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
+    with MustMatchers {
 
   private val declarationService: DeclarationService = mock[DeclarationService]
   override lazy val app: Application = GuiceApplicationBuilder()
-    .overrides(bind[DeclarationService].to(declarationService))
+    .overrides(bind[AuthConnector].to(mockAuthConnector), bind[DeclarationService].to(declarationService))
     .build()
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(declarationService)
+    reset(mockAuthConnector, declarationService)
   }
 
   "POST" should {
@@ -58,6 +57,7 @@ class DeclarationControllerSpec
     "return 200" when {
       "request is valid" in {
         val declaration = ExportsDeclaration(id = "id", eori = "eori")
+        withAuthorizedUser()
         given(declarationService.save(any[ExportsDeclaration])).willReturn(Future.successful(declaration))
 
         val result: Future[Result] = route(app, post.withJsonBody(toJson(declaration))).get
@@ -69,8 +69,22 @@ class DeclarationControllerSpec
 
     "return 400" when {
       "invalid json" in {
+        withAuthorizedUser()
+
         val result: Future[Result] = route(app, post.withJsonBody(Json.obj())).get
+
         status(result) must be(BAD_REQUEST)
+      }
+    }
+
+    "return 401" when {
+      "unauthorized" in {
+        val declaration = ExportsDeclaration(id = "id", eori = "eori")
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        val result: Future[Result] = route(app, post.withJsonBody(toJson(declaration))).get
+
+        status(result) must be(UNAUTHORIZED)
       }
     }
   }
