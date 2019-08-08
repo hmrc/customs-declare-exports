@@ -32,7 +32,7 @@ class DeclarationController @Inject()(
   override val controllerComponents: ControllerComponents
 ) extends RESTController {
 
-  def post(): Action[ExportsDeclaration] = authenticator.authorisedAction(parsingJson[ExportsDeclaration]) { implicit request =>
+  def post(): Action[ExportsDeclaration] = authenticator.authorisedAction(parse.json[ExportsDeclaration]) { implicit request =>
     declarationService
       .save(request.body)
       .map(declaration => Created(Json.toJson(declaration)))

@@ -16,33 +16,6 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import play.api.libs.json._
-import play.api.mvc.{BaseController, BodyParser}
+import play.api.mvc.BaseController
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
-trait RESTController extends BaseController {
-
-  def parsingJson[T](implicit rds: Reads[T]): BodyParser[T] = parse.json.validate { json =>
-    json.validate[T] match {
-      case JsSuccess(value, _) => Right(value)
-      case JsError(errors) =>
-        Left(BadRequest(Json.toJson(ErrorResponse(errors.map {
-          case (path, errs) => ErrorResponseError(path.toString(), errs.map(_.message))
-        }))))
-    }
-  }
-
-  case class ErrorResponse(errors: Seq[ErrorResponseError])
-
-  object ErrorResponse {
-    implicit val format: OFormat[ErrorResponse] = Json.format[ErrorResponse]
-  }
-
-  case class ErrorResponseError(path: String, error: Seq[String])
-
-  object ErrorResponseError {
-    implicit val format: OFormat[ErrorResponseError] = Json.format[ErrorResponseError]
-  }
-
-}
+trait RESTController extends BaseController {}
