@@ -22,14 +22,13 @@ import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class NotificationService @Inject()(
   submissionRepository: SubmissionRepository,
   notificationRepository: NotificationRepository
-) {
+)(implicit executionContext: ExecutionContext) {
 
   private val logger = Logger(this.getClass)
   private val databaseDuplicateKeyErrorCode = 11000
@@ -53,7 +52,7 @@ class NotificationService @Inject()(
         val conversationIds = submission.actions.map(_.conversationId)
         notificationRepository.findNotificationsByConversationIds(conversationIds)
     }
-  
+
   def saveAll(notifications: Seq[Notification]): Future[Either[String, Unit]] =
     Future.sequence(notifications.map(save)).map { seq =>
       if (seq.exists(_.isLeft)) Left("Failed saving notification")

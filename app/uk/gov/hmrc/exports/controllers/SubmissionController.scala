@@ -27,8 +27,7 @@ import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
 
 @Singleton
@@ -38,7 +37,7 @@ class SubmissionController @Inject()(
   headerValidator: HeaderValidator,
   cc: ControllerComponents,
   bodyParsers: PlayBodyParsers
-) extends Authenticator(authConnector, cc) {
+)(implicit executionContext: ExecutionContext) extends Authenticator(authConnector, cc) {
 
   private val logger = Logger(this.getClass)
 
