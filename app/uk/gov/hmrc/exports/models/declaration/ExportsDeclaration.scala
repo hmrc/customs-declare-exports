@@ -21,8 +21,7 @@ import java.time.Instant
 import play.api.libs.json._
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 
-case class ExportsDeclaration
-(
+case class ExportsDeclaration(
   id: String,
   eori: String,
   status: DeclarationStatus,

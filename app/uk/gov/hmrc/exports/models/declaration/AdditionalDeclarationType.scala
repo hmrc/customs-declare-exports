@@ -18,9 +18,7 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 
-case class AdditionalDeclarationType(
-  additionalDeclarationType: String
-)
+case class AdditionalDeclarationType(additionalDeclarationType: String)
 
 object AdditionalDeclarationType {
   implicit val format: OFormat[AdditionalDeclarationType] = Json.format[AdditionalDeclarationType]

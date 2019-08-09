@@ -22,11 +22,11 @@ import uk.gov.hmrc.exports.repositories.DeclarationRepository
 
 import scala.concurrent.Future
 
-class DeclarationService @Inject()(declarationRepository: DeclarationRepository){
+class DeclarationService @Inject()(declarationRepository: DeclarationRepository) {
 
   /*
-  * For now this just delegates to the repository,
-  * eventually it will judge based on a status whether the declaration is a draft, or for submitting.
+   * For now this just delegates to the repository,
+   * eventually it will judge based on a status whether the declaration is a draft, or for submitting.
    */
   def save(declaration: ExportsDeclaration): Future[ExportsDeclaration] = declarationRepository.create(declaration)
 

@@ -53,7 +53,7 @@ class NotificationService @Inject()(
         val conversationIds = submission.actions.map(_.conversationId)
         notificationRepository.findNotificationsByConversationIds(conversationIds)
     }
-  
+
   def saveAll(notifications: Seq[Notification]): Future[Either[String, Unit]] =
     Future.sequence(notifications.map(save)).map { seq =>
       if (seq.exists(_.isLeft)) Left("Failed saving notification")

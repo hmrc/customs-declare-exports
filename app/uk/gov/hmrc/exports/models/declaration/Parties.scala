@@ -74,14 +74,14 @@ object CarrierDetails {
 }
 
 case class Parties(
-                    exporterDetails: Option[ExporterDetails] = None,
-                    consigneeDetails: Option[ConsigneeDetails] = None,
-                    declarantDetails: Option[DeclarantDetails] = None,
-                    representativeDetails: Option[RepresentativeDetails] = None,
-                    declarationAdditionalActorsData: Option[DeclarationAdditionalActors] = None,
-                    declarationHoldersData: Option[DeclarationHolders] = None,
-                    carrierDetails: Option[CarrierDetails] = None
-                  )
+  exporterDetails: Option[ExporterDetails] = None,
+  consigneeDetails: Option[ConsigneeDetails] = None,
+  declarantDetails: Option[DeclarantDetails] = None,
+  representativeDetails: Option[RepresentativeDetails] = None,
+  declarationAdditionalActorsData: Option[DeclarationAdditionalActors] = None,
+  declarationHoldersData: Option[DeclarationHolders] = None,
+  carrierDetails: Option[CarrierDetails] = None
+)
 object Parties {
   implicit val format: OFormat[Parties] = Json.format[Parties]
 }

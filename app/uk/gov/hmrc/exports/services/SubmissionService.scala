@@ -54,12 +54,13 @@ class SubmissionService @Inject()(
         val newSubmission =
           buildSubmission(eori, submissionRequestData.lrn.value, submissionRequestData.ducr, conversationId)
 
-        persistSubmission(newSubmission).flatMap( outcome =>
-          notificationRepository.findNotificationsByConversationId(conversationId).flatMap { notifications =>
-            val result = Future.successful(outcome)
-            notifications.headOption.map(_.mrn).fold(result) { mrn =>
-              submissionRepository.updateMrn(conversationId, mrn).flatMap(_ => result)
-            }
+        persistSubmission(newSubmission).flatMap(
+          outcome =>
+            notificationRepository.findNotificationsByConversationId(conversationId).flatMap { notifications =>
+              val result = Future.successful(outcome)
+              notifications.headOption.map(_.mrn).fold(result) { mrn =>
+                submissionRepository.updateMrn(conversationId, mrn).flatMap(_ => result)
+              }
           }
         )
 

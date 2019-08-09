@@ -20,8 +20,7 @@ import play.api.libs.json._
 
 object EnumJson {
 
-  def format[E <: Enumeration](enum: E): Format[E#Value] = {
+  def format[E <: Enumeration](enum: E): Format[E#Value] =
     Format(Reads.enumNameReads(enum), Writes.enumNameWrites)
-  }
 
 }

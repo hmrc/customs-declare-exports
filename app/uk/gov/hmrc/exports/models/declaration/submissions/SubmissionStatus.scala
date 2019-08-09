@@ -28,7 +28,7 @@ object SubmissionStatus {
   implicit object StatusFormat extends Format[SubmissionStatus] {
     def reads(status: JsValue): JsResult[SubmissionStatus] = status match {
       case JsString(code) => JsSuccess(getStatusOrUnknown(code))
-      case _ => JsSuccess(UnknownStatus)
+      case _              => JsSuccess(UnknownStatus)
     }
 
     def writes(status: SubmissionStatus): JsValue = JsString(status.fullCode)
