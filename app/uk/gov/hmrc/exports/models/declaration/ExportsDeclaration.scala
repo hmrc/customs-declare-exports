@@ -17,14 +17,16 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import java.time.Instant
-import java.util.UUID
 
 import play.api.libs.json._
 
 case class ExportsDeclaration
 (
-  id: String = UUID.randomUUID().toString,
-  eori: String
+  id: String,
+  eori: String,
+  createdDateTime: Instant,
+  updatedDateTime: Instant,
+  choice: String
 )
 
 object ExportsDeclaration {

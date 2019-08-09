@@ -16,6 +16,9 @@
 
 package unit.uk.gov.hmrc.exports.controllers
 
+import java.time.Instant
+
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
@@ -25,21 +28,23 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsResultException, Json}
+import play.api.libs.json.Json
 import play.api.libs.json.Json.toJson
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
+import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.DeclarationService
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
+import util.testdata.ExportsDeclarationBuilder
 
 import scala.concurrent.Future
 
 class DeclarationControllerSpec
     extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
-    with MustMatchers {
+    with MustMatchers with ExportsDeclarationBuilder {
 
   private val declarationService: DeclarationService = mock[DeclarationService]
   override lazy val app: Application = GuiceApplicationBuilder()
@@ -56,14 +61,16 @@ class DeclarationControllerSpec
 
     "return 200" when {
       "request is valid" in {
-        val declaration = ExportsDeclaration(id = "id", eori = "eori")
+        val request = aDeclarationRequest()
+        val declaration = aDeclaration(withId("id"), withEori("eori"))
         withAuthorizedUser()
         given(declarationService.save(any[ExportsDeclaration])).willReturn(Future.successful(declaration))
 
-        val result: Future[Result] = route(app, post.withJsonBody(toJson(declaration))).get
+        val result: Future[Result] = route(app, post.withJsonBody(toJson(request))).get
 
         status(result) must be(CREATED)
         contentAsJson(result) mustBe toJson(declaration)
+        theDeclarationSaved.eori mustBe userEori
       }
     }
 
@@ -79,15 +86,21 @@ class DeclarationControllerSpec
 
     "return 401" when {
       "unauthorized" in {
-        val declaration = ExportsDeclaration(id = "id", eori = "eori")
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result: Future[Result] = route(app, post.withJsonBody(toJson(declaration))).get
+        val result: Future[Result] = route(app, post.withJsonBody(toJson(aDeclarationRequest()))).get
 
         status(result) must be(UNAUTHORIZED)
       }
     }
   }
+
+  def aDeclarationRequest() =
+    ExportsDeclarationRequest(createdDateTime = Instant.now(), updatedDateTime = Instant.now(), choice = "choice")
+
+  def theDeclarationSaved: ExportsDeclaration = {
+    val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
+    verify(declarationService).save(captor.capture())
+    captor.getValue
+  }
 }
-
-
