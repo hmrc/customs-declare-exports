@@ -66,29 +66,31 @@ class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsD
     seals = Seq(seal)
   )
 
+  private val declaration = ExportsDeclaration(
+    id = id,
+    eori = eori,
+    status = status,
+    createdDateTime = createdDate,
+    updatedDateTime = updatedDate,
+    choice = choice,
+    dispatchLocation = Some(dispatchLocation),
+    additionalDeclarationType = Some(additionalDeclarationType),
+    consignmentReferences = Some(consignmentReferences),
+    borderTransport = Some(borderTransport),
+    transportDetails = Some(transportDetails),
+    containerData = Some(containers),
+    parties = parties,
+    locations = locations,
+    items = Set(item),
+    totalNumberOfItems = Some(totalNumberOfItems),
+    previousDocuments = Some(previousDocuments),
+    natureOfTransaction = Some(natureOfTransaction),
+    seals = Seq(seal)
+  )
+
   "Request" should {
     "map to ExportsDeclaration" in {
-      request.toExportsDeclaration(id, Eori(eori)) shouldBe ExportsDeclaration(
-        id = id,
-        eori = eori,
-        status = status,
-        createdDateTime = createdDate,
-        updatedDateTime = updatedDate,
-        choice = choice,
-        dispatchLocation = Some(dispatchLocation),
-        additionalDeclarationType = Some(additionalDeclarationType),
-        consignmentReferences = Some(consignmentReferences),
-        borderTransport = Some(borderTransport),
-        transportDetails = Some(transportDetails),
-        containerData = Some(containers),
-        parties = parties,
-        locations = locations,
-        items = Set(item),
-        totalNumberOfItems = Some(totalNumberOfItems),
-        previousDocuments = Some(previousDocuments),
-        natureOfTransaction = Some(natureOfTransaction),
-        seals = Seq(seal)
-      )
+      request.toExportsDeclaration(id, Eori(eori)) shouldBe declaration
     }
   }
 
