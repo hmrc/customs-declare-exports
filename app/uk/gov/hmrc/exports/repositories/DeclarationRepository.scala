@@ -26,19 +26,20 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: AppConfig)(
-  implicit ec: ExecutionContext
-) extends ReactiveRepository[ExportsDeclaration, BSONObjectID] (
+class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)
+    extends ReactiveRepository[ExportsDeclaration, BSONObjectID](
       "declarations",
       mc.mongoConnector.db,
       ExportsDeclaration.format,
       objectIdFormats
     ) {
 
-  def find(id: String, eori: String): Future[Option[ExportsDeclaration]] = super.find("id" -> id, "eori" -> eori).map(_.headOption)
+  def find(id: String, eori: String): Future[Option[ExportsDeclaration]] =
+    super.find("id" -> id, "eori" -> eori).map(_.headOption)
 
   def find(eori: String): Future[Seq[ExportsDeclaration]] = super.find("eori" -> eori).map(_.toSeq)
 
-  def create(declaration: ExportsDeclaration): Future[ExportsDeclaration] = super.insert(declaration).map (_ => declaration)
+  def create(declaration: ExportsDeclaration): Future[ExportsDeclaration] =
+    super.insert(declaration).map(_ => declaration)
 
 }

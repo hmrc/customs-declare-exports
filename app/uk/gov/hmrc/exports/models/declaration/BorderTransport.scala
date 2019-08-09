@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services
+package uk.gov.hmrc.exports.models.declaration
 
-import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.repositories.DeclarationRepository
+import play.api.libs.json.{Json, OFormat}
 
-import scala.concurrent.Future
+case class BorderTransport(
+  borderModeOfTransportCode: String,
+  meansOfTransportOnDepartureType: String,
+  meansOfTransportOnDepartureIDNumber: Option[String]
+)
 
-class DeclarationService @Inject()(declarationRepository: DeclarationRepository) {
-
-  /*
-   * For now this just delegates to the repository,
-   * eventually it will judge based on a status whether the declaration is a draft, or for submitting.
-   */
-  def save(declaration: ExportsDeclaration): Future[ExportsDeclaration] = declarationRepository.create(declaration)
-
+object BorderTransport {
+  implicit val formats: OFormat[BorderTransport] = Json.format[BorderTransport]
 }

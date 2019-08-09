@@ -18,31 +18,76 @@ package uk.gov.hmrc.exports.controllers.request
 
 import java.time.Instant
 
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.Eori
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration._
 import util.testdata.ExportsDeclarationBuilder
 
-class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsDeclarationBuilder with MockitoSugar{
 
+  private val status = DeclarationStatus.COMPLETE
   private val choice = "choice"
   private val createdDate = Instant.MIN
   private val updatedDate = Instant.MAX
   private val eori = "eori"
   private val id = "id"
+  private val dispatchLocation = mock[DispatchLocation]
+  private val additionalDeclarationType = mock[AdditionalDeclarationType]
+  private val consignmentReferences = mock[ConsignmentReferences]
+  private val borderTransport = mock[BorderTransport]
+  private val transportDetails = mock[TransportDetails]
+  private val containers = mock[TransportInformationContainers]
+  private val parties = mock[Parties]
+  private val locations = mock[Locations]
+  private val item = mock[ExportItem]
+  private val totalNumberOfItems = mock[TotalNumberOfItems]
+  private val previousDocuments = mock[PreviousDocuments]
+  private val natureOfTransaction = mock[NatureOfTransaction]
+  private val seal = mock[Seal]
+
+  private val request = ExportsDeclarationRequest(
+    status = status,
+    createdDateTime = createdDate,
+    updatedDateTime = updatedDate,
+    choice = choice,
+    dispatchLocation = Some(dispatchLocation),
+    additionalDeclarationType = Some(additionalDeclarationType),
+    consignmentReferences = Some(consignmentReferences),
+    borderTransport = Some(borderTransport),
+    transportDetails = Some(transportDetails),
+    containerData = Some(containers),
+    parties = parties,
+    locations = locations,
+    items = Set(item),
+    totalNumberOfItems = Some(totalNumberOfItems),
+    previousDocuments = Some(previousDocuments),
+    natureOfTransaction = Some(natureOfTransaction),
+    seals = Seq(seal)
+  )
 
   "Request" should {
     "map to ExportsDeclaration" in {
-      ExportsDeclarationRequest(
-        createdDateTime = createdDate,
-        updatedDateTime = updatedDate,
-        choice = choice
-      ).toExportsDeclaration(id, Eori(eori)) shouldBe ExportsDeclaration(
+      request.toExportsDeclaration(id, Eori(eori)) shouldBe ExportsDeclaration(
         id = id,
         eori = eori,
+        status = status,
         createdDateTime = createdDate,
         updatedDateTime = updatedDate,
-        choice = choice
+        choice = choice,
+        dispatchLocation = Some(dispatchLocation),
+        additionalDeclarationType = Some(additionalDeclarationType),
+        consignmentReferences = Some(consignmentReferences),
+        borderTransport = Some(borderTransport),
+        transportDetails = Some(transportDetails),
+        containerData = Some(containers),
+        parties = parties,
+        locations = locations,
+        items = Set(item),
+        totalNumberOfItems = Some(totalNumberOfItems),
+        previousDocuments = Some(previousDocuments),
+        natureOfTransaction = Some(natureOfTransaction),
+        seals = Seq(seal)
       )
     }
   }

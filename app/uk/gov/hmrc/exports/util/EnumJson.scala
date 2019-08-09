@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services
+package uk.gov.hmrc.exports.util
 
-import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.repositories.DeclarationRepository
+import play.api.libs.json._
 
-import scala.concurrent.Future
+object EnumJson {
 
-class DeclarationService @Inject()(declarationRepository: DeclarationRepository) {
-
-  /*
-   * For now this just delegates to the repository,
-   * eventually it will judge based on a status whether the declaration is a draft, or for submitting.
-   */
-  def save(declaration: ExportsDeclaration): Future[ExportsDeclaration] = declarationRepository.create(declaration)
+  def format[E <: Enumeration](enum: E): Format[E#Value] =
+    Format(Reads.enumNameReads(enum), Writes.enumNameWrites)
 
 }

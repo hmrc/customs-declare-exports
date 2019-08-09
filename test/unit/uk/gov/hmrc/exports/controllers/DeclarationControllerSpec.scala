@@ -35,7 +35,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.DeclarationService
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
 import util.testdata.ExportsDeclarationBuilder
@@ -96,7 +96,7 @@ class DeclarationControllerSpec
   }
 
   def aDeclarationRequest() =
-    ExportsDeclarationRequest(createdDateTime = Instant.now(), updatedDateTime = Instant.now(), choice = "choice")
+    ExportsDeclarationRequest(status = DeclarationStatus.COMPLETE, createdDateTime = Instant.now(), updatedDateTime = Instant.now(), choice = "choice")
 
   def theDeclarationSaved: ExportsDeclaration = {
     val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
