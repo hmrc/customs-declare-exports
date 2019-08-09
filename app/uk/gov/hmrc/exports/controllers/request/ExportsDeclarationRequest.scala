@@ -34,7 +34,8 @@ case class ExportsDeclarationRequest(
   borderTransport: Option[BorderTransport] = None,
   transportDetails: Option[TransportDetails] = None,
   containerData: Option[TransportInformationContainers] = None,
-  parties: Parties = Parties()
+  parties: Parties = Parties(),
+  locations: Locations = Locations()
 ) {
   def toExportsDeclaration(id: String, eori: Eori): ExportsDeclaration = ExportsDeclaration(
     id = id,
@@ -49,7 +50,8 @@ case class ExportsDeclarationRequest(
     borderTransport = this.borderTransport,
     transportDetails = this.transportDetails,
     containerData = this.containerData,
-    parties = this.parties
+    parties = this.parties,
+    locations = this.locations
   )
 }
 

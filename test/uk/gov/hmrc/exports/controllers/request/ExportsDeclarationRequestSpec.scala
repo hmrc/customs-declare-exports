@@ -39,6 +39,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsD
   private val transportDetails = mock[TransportDetails]
   private val containers = mock[TransportInformationContainers]
   private val parties = mock[Parties]
+  private val locations = mock[Locations]
 
   private val request = ExportsDeclarationRequest(
     status = status,
@@ -51,7 +52,8 @@ class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsD
     borderTransport = Some(borderTransport),
     transportDetails = Some(transportDetails),
     containerData = Some(containers),
-    parties = parties
+    parties = parties,
+    locations = locations
   )
 
   "Request" should {
@@ -69,7 +71,8 @@ class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsD
         borderTransport = Some(borderTransport),
         transportDetails = Some(transportDetails),
         containerData = Some(containers),
-        parties = parties
+        parties = parties,
+        locations = locations
       )
     }
   }

@@ -35,7 +35,8 @@ case class ExportsDeclaration
   borderTransport: Option[BorderTransport],
   transportDetails: Option[TransportDetails],
   containerData: Option[TransportInformationContainers],
-  parties: Parties
+  parties: Parties,
+  locations: Locations
 )
 
 object ExportsDeclaration {
