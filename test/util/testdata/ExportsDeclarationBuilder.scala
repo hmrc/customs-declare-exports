@@ -44,7 +44,12 @@ trait ExportsDeclarationBuilder {
     transportDetails = None,
     containerData = None,
     parties = Parties(),
-    locations = Locations()
+    locations = Locations(),
+    items = Set.empty[ExportItem],
+    totalNumberOfItems = None,
+    previousDocuments = None,
+    natureOfTransaction = None,
+    seals = Seq.empty[Seal]
   )
 
   private type ExportsDeclarationModifier = ExportsDeclaration => ExportsDeclaration
@@ -210,5 +215,32 @@ trait ExportsDeclarationBuilder {
         locations =
           cache.locations.copy(officeOfExit = Some(OfficeOfExit(officeId, presentationOfficeId, circumstancesCode)))
     )
+
+  def withoutItems(): ExportsDeclarationModifier = _.copy(items = Set.empty)
+
+  def withItem(item: ExportItem): ExportsDeclarationModifier =
+    m => m.copy(items = m.items + item)
+
+  def withItems(item1: ExportItem, others: ExportItem*): ExportsDeclarationModifier =
+    _.copy(items = Set(item1) ++ others)
+
+  def withoutTotalNumberOfItems(): ExportsDeclarationModifier = _.copy(totalNumberOfItems = None)
+
+  def withTotalNumberOfItems(
+    totalAmountInvoiced: Option[String] = None,
+    exchangeRate: Option[String] = None,
+    totalPackage: String = "1"
+  ): ExportsDeclarationModifier =
+    _.copy(totalNumberOfItems = Some(TotalNumberOfItems(totalAmountInvoiced, exchangeRate, totalPackage)))
+
+  def withoutNatureOfTransaction(): ExportsDeclarationModifier = _.copy(natureOfTransaction = None)
+
+  def withNatureOfTransaction(natureType: String): ExportsDeclarationModifier =
+    _.copy(natureOfTransaction = Some(NatureOfTransaction(natureType)))
+
+  def withoutSeal(): ExportsDeclarationModifier = _.copy(seals = Seq.empty)
+
+  def withSeal(seal1: Seal, others: Seal*): ExportsDeclarationModifier =
+    cache => cache.copy(seals = cache.seals ++ Seq(seal1) ++ others)
 
 }

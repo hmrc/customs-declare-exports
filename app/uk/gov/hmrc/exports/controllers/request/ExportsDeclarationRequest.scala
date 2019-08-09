@@ -35,7 +35,12 @@ case class ExportsDeclarationRequest(
   transportDetails: Option[TransportDetails] = None,
   containerData: Option[TransportInformationContainers] = None,
   parties: Parties = Parties(),
-  locations: Locations = Locations()
+  locations: Locations = Locations(),
+  items: Set[ExportItem] = Set.empty[ExportItem],
+  totalNumberOfItems: Option[TotalNumberOfItems] = None,
+  previousDocuments: Option[PreviousDocuments] = None,
+  natureOfTransaction: Option[NatureOfTransaction] = None,
+  seals: Seq[Seal] = Seq.empty
 ) {
   def toExportsDeclaration(id: String, eori: Eori): ExportsDeclaration = ExportsDeclaration(
     id = id,
@@ -51,7 +56,12 @@ case class ExportsDeclarationRequest(
     transportDetails = this.transportDetails,
     containerData = this.containerData,
     parties = this.parties,
-    locations = this.locations
+    locations = this.locations,
+    items = this.items,
+    totalNumberOfItems = this.totalNumberOfItems,
+    previousDocuments = this.previousDocuments,
+    natureOfTransaction = this.natureOfTransaction,
+    seals = this.seals
   )
 }
 

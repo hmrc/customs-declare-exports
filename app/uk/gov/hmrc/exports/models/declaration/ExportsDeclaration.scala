@@ -36,7 +36,12 @@ case class ExportsDeclaration
   transportDetails: Option[TransportDetails],
   containerData: Option[TransportInformationContainers],
   parties: Parties,
-  locations: Locations
+  locations: Locations,
+  items: Set[ExportItem],
+  totalNumberOfItems: Option[TotalNumberOfItems],
+  previousDocuments: Option[PreviousDocuments],
+  natureOfTransaction: Option[NatureOfTransaction],
+  seals: Seq[Seal]
 )
 
 object ExportsDeclaration {
