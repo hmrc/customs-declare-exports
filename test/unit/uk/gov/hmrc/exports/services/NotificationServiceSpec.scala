@@ -33,7 +33,7 @@ import util.testdata.ExportsTestData._
 import util.testdata.NotificationTestData._
 import util.testdata.SubmissionTestData._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers {
 
@@ -45,7 +45,7 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
     val notificationService = new NotificationService(
       submissionRepository = submissionRepositoryMock,
       notificationRepository = notificationRepositoryMock
-    )
+    )(ExecutionContext.global)
   }
 
   val PositionFunctionCode = "11"
