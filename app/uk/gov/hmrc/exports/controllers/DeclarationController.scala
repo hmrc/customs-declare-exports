@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.exports.controllers
 
+import java.util.UUID
+
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.services.DeclarationService
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,9 +34,9 @@ class DeclarationController @Inject()(
   override val controllerComponents: ControllerComponents
 ) extends RESTController {
 
-  def post(): Action[ExportsDeclaration] = authenticator.authorisedAction(parse.json[ExportsDeclaration]) { implicit request =>
+  def post(): Action[ExportsDeclarationRequest] = authenticator.authorisedAction(parse.json[ExportsDeclarationRequest]) { implicit request =>
     declarationService
-      .save(request.body)
+      .save(request.body.toExportsDeclaration(id = UUID.randomUUID().toString, eori = request.eori))
       .map(declaration => Created(Json.toJson(declaration)))
   }
 
