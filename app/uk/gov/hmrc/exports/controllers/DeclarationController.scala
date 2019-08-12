@@ -35,7 +35,7 @@ class DeclarationController @Inject()(
 )(implicit executionContext: ExecutionContext) extends RESTController {
 
   def post(): Action[ExportsDeclarationRequest] =
-    authenticator.authorisedAction(parse.json[ExportsDeclarationRequest]) { implicit request =>
+    authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
       declarationService
         .save(request.body.toExportsDeclaration(id = UUID.randomUUID().toString, eori = request.eori))
         .map(declaration => Created(Json.toJson(declaration)))

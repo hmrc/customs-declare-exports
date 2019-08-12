@@ -28,8 +28,8 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
 import play.api.libs.json.Json.toJson
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -77,12 +77,18 @@ class DeclarationControllerSpec
     "return 400" when {
       "invalid json" in {
         withAuthorizedUser()
-
-        val result: Future[Result] = route(app, post.withJsonBody(Json.obj())).get
+        val payload = Json.toJson(aDeclarationRequest()).as[JsObject] - "choice"
+        val result: Future[Result] = route(app, post.withJsonBody(payload)).get
 
         status(result) must be(BAD_REQUEST)
+        contentAsJson(result) mustBe Json.obj(
+          "message" -> "Bad Request",
+          "errors" -> Json.arr(Json.obj("/choice" -> Json.arr("error.path.missing")))
+        )
         verifyZeroInteractions(declarationService)
       }
+
+
     }
 
     "return 401" when {

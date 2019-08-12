@@ -16,6 +16,24 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import play.api.mvc.BaseController
+import play.api.Logger
+import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
+import play.api.mvc.{BaseController, BodyParser}
 
-trait RESTController extends BaseController {}
+import scala.concurrent.ExecutionContext
+
+trait RESTController extends BaseController {
+
+  def parsingJson[T](implicit rds: Reads[T], exc: ExecutionContext): BodyParser[T] = parse.json.validate { json =>
+    json.validate[T] match {
+      case JsSuccess(value, _) => Right(value)
+      case JsError(errors) =>
+        val payload = Json.obj("message" -> "Bad Request", "errors" -> errors.map {
+          case (path, errs) => Json.obj(path.toString() -> errs.map(_.message))
+        })
+        Logger.warn(s"Bad Request [$payload]")
+        Left(BadRequest(payload))
+    }
+  }
+
+}
