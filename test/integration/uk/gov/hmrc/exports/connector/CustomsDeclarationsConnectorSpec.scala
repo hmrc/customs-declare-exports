@@ -32,7 +32,6 @@ import util.stubs.CustomsDeclarationsAPIService
 import util.testdata.ExportsTestData._
 
 import scala.concurrent.Future
-import scala.xml.XML
 
 class CustomsDeclarationsConnectorSpec
     extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar with CustomsDeclarationsAPIService {
@@ -138,5 +137,5 @@ class CustomsDeclarationsConnectorSpec
   }
 
   private def sendValidXml(xml: String): Future[CustomsDeclarationsResponse] =
-    connector.submitDeclaration(declarantEoriValue, XML.loadString(xml))
+    connector.submitDeclaration(declarantEoriValue, xml)
 }

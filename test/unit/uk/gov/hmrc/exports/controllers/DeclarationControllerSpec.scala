@@ -38,10 +38,11 @@ import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.format
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.DeclarationService
+import uk.gov.hmrc.http.HeaderCarrier
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
 import util.testdata.ExportsDeclarationBuilder
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class DeclarationControllerSpec
     extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
@@ -65,7 +66,7 @@ class DeclarationControllerSpec
         withAuthorizedUser()
         val request = aDeclarationRequest()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.save(any[ExportsDeclaration])).willReturn(Future.successful(declaration))
+        given(declarationService.save(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext])).willReturn(Future.successful(declaration))
 
         val result: Future[Result] = route(app, post.withJsonBody(toJson(request))).get
 
@@ -241,7 +242,7 @@ class DeclarationControllerSpec
         val request = aDeclarationRequest()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
         given(declarationService.findOne("id", userEori)).willReturn(Future.successful(Some(declaration)))
-        given(declarationService.save(any[ExportsDeclaration])).willReturn(Future.successful(declaration))
+        given(declarationService.save(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext])).willReturn(Future.successful(declaration))
 
         val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
 
@@ -265,7 +266,7 @@ class DeclarationControllerSpec
         status(result) must be(NOT_FOUND)
         contentAsString(result) mustBe empty
         verify(declarationService).findOne("id", userEori)
-        verify(declarationService, never()).save(any[ExportsDeclaration])
+        verify(declarationService, never()).save(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext])
       }
     }
 
@@ -301,7 +302,7 @@ class DeclarationControllerSpec
 
   def theDeclarationSaved: ExportsDeclaration = {
     val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
-    verify(declarationService).save(captor.capture())
+    verify(declarationService).save(captor.capture())(any[HeaderCarrier], any[ExecutionContext])
     captor.getValue
   }
 }

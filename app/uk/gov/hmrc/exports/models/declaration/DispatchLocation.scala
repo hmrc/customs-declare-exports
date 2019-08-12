@@ -22,4 +22,9 @@ case class DispatchLocation(dispatchLocation: String)
 
 object DispatchLocation {
   implicit val format: OFormat[DispatchLocation] = Json.format[DispatchLocation]
+
+  object AllowedDispatchLocations {
+    val OutsideEU = "EX"
+    val SpecialFiscalTerritory = "CO"
+  }
 }

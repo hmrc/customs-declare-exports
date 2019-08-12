@@ -18,7 +18,10 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 
-case class ProcedureCodes(procedureCode: Option[String], additionalProcedureCodes: Seq[String])
+case class ProcedureCodes(procedureCode: Option[String], additionalProcedureCodes: Seq[String]) {
+  def extractProcedureCode(): (Option[String], Option[String]) =
+    (procedureCode.map(_.substring(0, 2)), procedureCode.map(_.substring(2, 4)))
+}
 object ProcedureCodes {
   implicit val format: OFormat[ProcedureCodes] = Json.format[ProcedureCodes]
 }
@@ -39,23 +42,26 @@ object AdditionalFiscalReferences {
 }
 
 case class ItemType(
-                     combinedNomenclatureCode: String,
-                     taricAdditionalCode: Seq[String],
-                     nationalAdditionalCode: Seq[String],
-                     descriptionOfGoods: String,
-                     cusCode: Option[String],
-                     unDangerousGoodsCode: Option[String],
-                     statisticalValue: String
+  combinedNomenclatureCode: String,
+  taricAdditionalCode: Seq[String],
+  nationalAdditionalCode: Seq[String],
+  descriptionOfGoods: String,
+  cusCode: Option[String],
+  unDangerousGoodsCode: Option[String],
+  statisticalValue: String
 )
 object ItemType {
   implicit val format: OFormat[ItemType] = Json.format[ItemType]
+
+  object IdentificationTypeCodes {
+    val CombinedNomenclatureCode = "TSP"
+    val TARICAdditionalCode = "TRA"
+    val NationalAdditionalCode = "GN"
+    val CUSCode = "CV"
+  }
 }
 
-case class PackageInformation(
-  typesOfPackages: Option[String],
-  numberOfPackages: Option[Int],
-  shippingMarks: Option[String]
-)
+case class PackageInformation(typesOfPackages: String, numberOfPackages: Int, shippingMarks: String)
 object PackageInformation {
   implicit val format: OFormat[PackageInformation] = Json.format[PackageInformation]
 }
