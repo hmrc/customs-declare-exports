@@ -1,6 +1,8 @@
 # microservice specific routes
 
 POST        /v2/declaration                                  uk.gov.hmrc.exports.controllers.DeclarationController.post()
+GET         /v2/declaration                                  uk.gov.hmrc.exports.controllers.DeclarationController.get()
+GET         /v2/declaration/:id                              uk.gov.hmrc.exports.controllers.DeclarationController.getByID(id: String)
 
 POST        /declaration                                     uk.gov.hmrc.exports.controllers.SubmissionController.submitDeclaration()
 
