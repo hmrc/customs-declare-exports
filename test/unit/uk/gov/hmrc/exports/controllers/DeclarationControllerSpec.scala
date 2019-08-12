@@ -83,12 +83,10 @@ class DeclarationControllerSpec
         status(result) must be(BAD_REQUEST)
         contentAsJson(result) mustBe Json.obj(
           "message" -> "Bad Request",
-          "errors" -> Json.arr(Json.obj("/choice" -> Json.arr("error.path.missing")))
+          "errors" -> Json.arr("/choice: error.path.missing")
         )
         verifyZeroInteractions(declarationService)
       }
-
-
     }
 
     "return 401" when {
