@@ -19,7 +19,6 @@ package uk.gov.hmrc.exports.controllers
 import java.util.UUID
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
@@ -37,30 +36,30 @@ class DeclarationController @Inject()(
 )(implicit executionContext: ExecutionContext)
     extends RESTController {
 
-  def post(): Action[ExportsDeclarationRequest] =
+  def create(): Action[ExportsDeclarationRequest] =
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
       declarationService
         .save(request.body.toExportsDeclaration(id = UUID.randomUUID().toString, eori = request.eori))
-        .map(declaration => Created(Json.toJson(declaration)))
+        .map(declaration => Created(declaration))
     }
 
-  def get(): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    declarationService.find(request.eori.value).map(results => Ok(Json.toJson(results)))
+  def findAll(): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    declarationService.find(request.eori.value).map(results => Ok(results))
   }
 
-  def getByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+  def findByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     declarationService.findOne(id, request.eori.value).map {
-      case Some(declaration) => Ok(Json.toJson(declaration))
+      case Some(declaration) => Ok(declaration)
       case None              => NotFound
     }
   }
 
   def deleteByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     declarationService.findOne(id, request.eori.value).flatMap {
-      case Some(declaration) if declaration.status != DeclarationStatus.COMPLETE =>
-        declarationService.deleteOne(declaration).map(_ => NoContent)
-      case None => Future.successful(NoContent)
-      case _    => Future.successful(BadRequest(Json.toJson(ErrorResponse("Cannot remove a declaration once it is COMPLETE"))))
+      case Some(declaration) if declaration.status == DeclarationStatus.COMPLETE =>
+        Future.successful(BadRequest(ErrorResponse("Cannot remove a declaration once it is COMPLETE")))
+      case Some(declaration) => declarationService.deleteOne(declaration).map(_ => NoContent)
+      case None              => Future.successful(NoContent)
     }
   }
 
