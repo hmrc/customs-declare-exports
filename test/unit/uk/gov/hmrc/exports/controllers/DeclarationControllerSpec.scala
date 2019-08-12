@@ -58,7 +58,7 @@ class DeclarationControllerSpec
   }
 
   "POST /" should {
-    val post = FakeRequest("POST", "/v2/declaration")
+    val post = FakeRequest("POST", "/v2/declarations")
 
     "return 201" when {
       "request is valid" in {
@@ -103,7 +103,7 @@ class DeclarationControllerSpec
   }
 
   "GET /" should {
-    val get = FakeRequest("GET", "/v2/declaration")
+    val get = FakeRequest("GET", "/v2/declarations")
 
     "return 200" when {
       "request is valid" in {
@@ -132,7 +132,7 @@ class DeclarationControllerSpec
   }
 
   "GET /:id" should {
-    val get = FakeRequest("GET", "/v2/declaration/id")
+    val get = FakeRequest("GET", "/v2/declarations/id")
 
     "return 200" when {
       "request is valid" in {
@@ -174,7 +174,7 @@ class DeclarationControllerSpec
   }
 
   "DELETE /:id" should {
-    val delete = FakeRequest("DELETE", "/v2/declaration/id")
+    val delete = FakeRequest("DELETE", "/v2/declarations/id")
 
     "return 204" when {
       "request is valid" in {
@@ -233,7 +233,7 @@ class DeclarationControllerSpec
   }
 
   "PUT /:id" should {
-    val put = FakeRequest("PUT", "/v2/declaration/id")
+    val put = FakeRequest("PUT", "/v2/declarations/id")
 
     "return 200" when {
       "request is valid" in {
