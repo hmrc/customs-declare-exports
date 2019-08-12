@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.services
 
-import org.scalatestplus.play.PlaySpec
+import org.scalatest.{MustMatchers, WordSpec}
 import uk.gov.hmrc.exports.models.Country
 
-class CountriesServiceSpec extends PlaySpec {
+class CountriesServiceSpec extends WordSpec with MustMatchers {
 
   "Countries" should {
 
