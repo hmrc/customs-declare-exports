@@ -41,4 +41,15 @@ class DeclarationController @Inject()(
         .map(declaration => Created(Json.toJson(declaration)))
     }
 
+  def get(): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    declarationService.find(request.eori.value).map(results => Ok(Json.toJson(results)))
+  }
+
+  def getByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    declarationService.findOne(id, request.eori.value).map {
+      case Some(declaration) => Ok(Json.toJson(declaration))
+      case None => NotFound
+    }
+  }
+
 }

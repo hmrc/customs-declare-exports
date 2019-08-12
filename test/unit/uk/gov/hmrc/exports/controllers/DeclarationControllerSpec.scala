@@ -56,14 +56,14 @@ class DeclarationControllerSpec
     reset(mockAuthConnector, declarationService)
   }
 
-  "POST" should {
+  "POST /" should {
     val post = FakeRequest("POST", "/v2/declaration")
 
-    "return 200" when {
+    "return 201" when {
       "request is valid" in {
-        val request = aDeclarationRequest()
-        val declaration = aDeclaration(withId("id"), withEori("eori"))
         withAuthorizedUser()
+        val request = aDeclarationRequest()
+        val declaration = aDeclaration(withId("id"), withEori(userEori))
         given(declarationService.save(any[ExportsDeclaration])).willReturn(Future.successful(declaration))
 
         val result: Future[Result] = route(app, post.withJsonBody(toJson(request))).get
@@ -81,6 +81,7 @@ class DeclarationControllerSpec
         val result: Future[Result] = route(app, post.withJsonBody(Json.obj())).get
 
         status(result) must be(BAD_REQUEST)
+        verifyZeroInteractions(declarationService)
       }
     }
 
@@ -91,6 +92,78 @@ class DeclarationControllerSpec
         val result: Future[Result] = route(app, post.withJsonBody(toJson(aDeclarationRequest()))).get
 
         status(result) must be(UNAUTHORIZED)
+        verifyZeroInteractions(declarationService)
+      }
+    }
+  }
+
+  "GET /" should {
+    val get = FakeRequest("GET", "/v2/declaration")
+
+    "return 200" when {
+      "request is valid" in {
+        withAuthorizedUser()
+        val declaration = aDeclaration(withId("id"), withEori(userEori))
+        given(declarationService.find(anyString())).willReturn(Future.successful(Seq(declaration)))
+
+        val result: Future[Result] = route(app, get).get
+
+        status(result) must be(OK)
+        contentAsJson(result) mustBe toJson(Seq(declaration))
+        verify(declarationService).find(userEori)
+      }
+    }
+
+    "return 401" when {
+      "unauthorized" in {
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        val result: Future[Result] = route(app, get).get
+
+        status(result) must be(UNAUTHORIZED)
+        verifyZeroInteractions(declarationService)
+      }
+    }
+  }
+
+  "GET /:id" should {
+    val get = FakeRequest("GET", "/v2/declaration/id")
+
+    "return 200" when {
+      "request is valid" in {
+        withAuthorizedUser()
+        val declaration = aDeclaration(withId("id"), withEori(userEori))
+        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(Some(declaration)))
+
+        val result: Future[Result] = route(app, get).get
+
+        status(result) must be(OK)
+        contentAsJson(result) mustBe toJson(declaration)
+        verify(declarationService).findOne("id", userEori)
+      }
+    }
+
+    "return 404" when {
+      "id is not found" in {
+        withAuthorizedUser()
+        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(None))
+
+        val result: Future[Result] = route(app, get).get
+
+        status(result) must be(NOT_FOUND)
+        contentAsString(result) mustBe empty
+        verify(declarationService).findOne("id", userEori)
+      }
+    }
+
+    "return 401" when {
+      "unauthorized" in {
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        val result: Future[Result] = route(app, get).get
+
+        status(result) must be(UNAUTHORIZED)
+        verifyZeroInteractions(declarationService)
       }
     }
   }

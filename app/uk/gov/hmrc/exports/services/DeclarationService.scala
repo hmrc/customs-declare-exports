@@ -30,4 +30,8 @@ class DeclarationService @Inject()(declarationRepository: DeclarationRepository)
    */
   def save(declaration: ExportsDeclaration): Future[ExportsDeclaration] = declarationRepository.create(declaration)
 
+  def find(eori: String): Future[Seq[ExportsDeclaration]] = declarationRepository.find(eori)
+
+  def findOne(id: String, eori: String): Future[Option[ExportsDeclaration]] = declarationRepository.find(id, eori)
+
 }

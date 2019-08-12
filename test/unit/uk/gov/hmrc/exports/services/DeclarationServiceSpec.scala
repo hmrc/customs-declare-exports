@@ -41,6 +41,24 @@ class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFuture
     }
   }
 
+  "Find by EORI" should {
+    "delegate to the repository" in {
+      val declaration = mock[ExportsDeclaration]
+      given(repository.find("eori")).willReturn(Future.successful(Seq(declaration)))
+
+      service.find("eori").futureValue mustBe Seq(declaration)
+    }
+  }
+
+  "Find by ID & EORI" should {
+    "delegate to the repository" in {
+      val declaration = mock[ExportsDeclaration]
+      given(repository.find("id", "eori")).willReturn(Future.successful(Some(declaration)))
+
+      service.findOne("id", "eori").futureValue mustBe Some(declaration)
+    }
+  }
+
 }
 
 
