@@ -105,4 +105,15 @@ class DeclarationRepositoryTest
     }
   }
 
+  "Delete" should {
+    "remove the declaration" in {
+      val declaration = aDeclaration(withId("id"), withEori("eori"))
+      givenADeclarationExists(declaration)
+
+      repository.delete(declaration).futureValue
+
+      collectionSize shouldBe 0
+    }
+  }
+
 }

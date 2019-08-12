@@ -3,6 +3,7 @@
 POST        /v2/declaration                                  uk.gov.hmrc.exports.controllers.DeclarationController.post()
 GET         /v2/declaration                                  uk.gov.hmrc.exports.controllers.DeclarationController.get()
 GET         /v2/declaration/:id                              uk.gov.hmrc.exports.controllers.DeclarationController.getByID(id: String)
+DELETE      /v2/declaration/:id                              uk.gov.hmrc.exports.controllers.DeclarationController.deleteByID(id: String)
 
 POST        /declaration                                     uk.gov.hmrc.exports.controllers.SubmissionController.submitDeclaration()
 

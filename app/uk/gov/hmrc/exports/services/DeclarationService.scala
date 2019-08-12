@@ -34,4 +34,6 @@ class DeclarationService @Inject()(declarationRepository: DeclarationRepository)
 
   def findOne(id: String, eori: String): Future[Option[ExportsDeclaration]] = declarationRepository.find(id, eori)
 
+  def deleteOne(declaration: ExportsDeclaration): Future[Unit] = declarationRepository.delete(declaration)
+
 }

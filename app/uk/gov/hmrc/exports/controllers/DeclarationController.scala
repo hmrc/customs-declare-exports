@@ -23,16 +23,19 @@ import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
+import uk.gov.hmrc.exports.controllers.response.ErrorResponse
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.services.DeclarationService
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DeclarationController @Inject()(
   declarationService: DeclarationService,
   authenticator: Authenticator,
   override val controllerComponents: ControllerComponents
-)(implicit executionContext: ExecutionContext) extends RESTController {
+)(implicit executionContext: ExecutionContext)
+    extends RESTController {
 
   def post(): Action[ExportsDeclarationRequest] =
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
@@ -48,7 +51,16 @@ class DeclarationController @Inject()(
   def getByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     declarationService.findOne(id, request.eori.value).map {
       case Some(declaration) => Ok(Json.toJson(declaration))
-      case None => NotFound
+      case None              => NotFound
+    }
+  }
+
+  def deleteByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    declarationService.findOne(id, request.eori.value).flatMap {
+      case Some(declaration) if declaration.status != DeclarationStatus.COMPLETE =>
+        declarationService.deleteOne(declaration).map(_ => NoContent)
+      case None => Future.successful(NoContent)
+      case _    => Future.successful(BadRequest(Json.toJson(ErrorResponse("Cannot remove a declaration once it is COMPLETE"))))
     }
   }
 
