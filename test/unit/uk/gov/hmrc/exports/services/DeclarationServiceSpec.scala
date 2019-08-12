@@ -16,7 +16,9 @@
 
 package unit.uk.gov.hmrc.exports.services
 
+import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
+import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
@@ -38,6 +40,17 @@ class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFuture
       given(repository.create(declaration)).willReturn(Future.successful(persistedDeclaration))
 
       service.save(declaration).futureValue mustBe persistedDeclaration
+    }
+  }
+
+  "Delete" should {
+    "delegate to the repository" in {
+      val declaration = mock[ExportsDeclaration]
+      given(repository.delete(any[ExportsDeclaration])).willReturn(Future.successful((): Unit))
+
+      service.deleteOne(declaration).futureValue
+
+      verify(repository).delete(declaration)
     }
   }
 

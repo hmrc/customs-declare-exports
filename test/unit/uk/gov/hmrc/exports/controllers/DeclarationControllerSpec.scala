@@ -83,12 +83,10 @@ class DeclarationControllerSpec
         status(result) must be(BAD_REQUEST)
         contentAsJson(result) mustBe Json.obj(
           "message" -> "Bad Request",
-          "errors" -> Json.arr(Json.obj("/choice" -> Json.arr("error.path.missing")))
+          "errors" -> Json.arr("/choice: error.path.missing")
         )
         verifyZeroInteractions(declarationService)
       }
-
-
     }
 
     "return 401" when {
@@ -167,6 +165,65 @@ class DeclarationControllerSpec
         withUnauthorizedUser(InsufficientEnrolments())
 
         val result: Future[Result] = route(app, get).get
+
+        status(result) must be(UNAUTHORIZED)
+        verifyZeroInteractions(declarationService)
+      }
+    }
+  }
+
+  "DELETE /:id" should {
+    val delete = FakeRequest("DELETE", "/v2/declaration/id")
+
+    "return 204" when {
+      "request is valid" in {
+        withAuthorizedUser()
+        val declaration = aDeclaration(withId("id"), withEori(userEori), withStatus(DeclarationStatus.DRAFT))
+        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(Some(declaration)))
+        given(declarationService.deleteOne(any[ExportsDeclaration])).willReturn(Future.successful((): Unit))
+
+        val result: Future[Result] = route(app, delete).get
+
+        status(result) must be(NO_CONTENT)
+        contentAsString(result) mustBe empty
+        verify(declarationService).findOne("id", userEori)
+        verify(declarationService).deleteOne(declaration)
+      }
+    }
+
+    "return 400" when {
+      "declaration is COMPLETE" in {
+        withAuthorizedUser()
+        val declaration = aDeclaration(withId("id"), withEori(userEori), withStatus(DeclarationStatus.COMPLETE))
+        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(Some(declaration)))
+
+        val result: Future[Result] = route(app, delete).get
+
+        status(result) must be(BAD_REQUEST)
+        contentAsJson(result) mustBe Json.obj("message" -> "Cannot remove a declaration once it is COMPLETE")
+        verify(declarationService).findOne("id", userEori)
+        verify(declarationService, never()).deleteOne(declaration)
+      }
+    }
+
+    "return 204" when {
+      "id is not found" in {
+        withAuthorizedUser()
+        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(None))
+
+        val result: Future[Result] = route(app, delete).get
+
+        status(result) must be(NO_CONTENT)
+        contentAsString(result) mustBe empty
+        verify(declarationService).findOne("id", userEori)
+      }
+    }
+
+    "return 401" when {
+      "unauthorized" in {
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        val result: Future[Result] = route(app, delete).get
 
         status(result) must be(UNAUTHORIZED)
         verifyZeroInteractions(declarationService)

@@ -42,4 +42,9 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
   def create(declaration: ExportsDeclaration): Future[ExportsDeclaration] =
     super.insert(declaration).map(_ => declaration)
 
+  def delete(declaration: ExportsDeclaration): Future[Unit] =
+    super
+      .remove("id" -> declaration.id, "eori" -> declaration.eori)
+      .map(_ => Unit)
+
 }

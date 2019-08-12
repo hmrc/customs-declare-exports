@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.controllers
 import play.api.Logger
 import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
 import play.api.mvc.{BaseController, BodyParser}
+import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 
 import scala.concurrent.ExecutionContext
 
@@ -28,9 +29,9 @@ trait RESTController extends BaseController {
     json.validate[T] match {
       case JsSuccess(value, _) => Right(value)
       case JsError(errors) =>
-        val payload = Json.obj("message" -> "Bad Request", "errors" -> errors.map {
-          case (path, errs) => Json.obj(path.toString() -> errs.map(_.message))
-        })
+        val payload = Json.toJson(ErrorResponse("Bad Request", Some(errors.map {
+          case (path, errs) => path.toString() + ": " + errs.map(_.message).headOption.getOrElse("unknown")
+        })))
         Logger.warn(s"Bad Request [$payload]")
         Left(BadRequest(payload))
     }
