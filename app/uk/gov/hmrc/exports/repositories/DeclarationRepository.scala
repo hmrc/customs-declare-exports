@@ -18,8 +18,12 @@ package uk.gov.hmrc.exports.repositories
 
 import javax.inject.Inject
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.api.Cursor.FailOnError
+import reactivemongo.api.ReadPreference
 import reactivemongo.bson.BSONObjectID
+import reactivemongo.play.json.ImplicitBSONHandlers
 import uk.gov.hmrc.exports.config.AppConfig
+import uk.gov.hmrc.exports.models.DeclarationSearch
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
@@ -37,7 +41,13 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
   def find(id: String, eori: String): Future[Option[ExportsDeclaration]] =
     super.find("id" -> id, "eori" -> eori).map(_.headOption)
 
-  def find(eori: String): Future[Seq[ExportsDeclaration]] = super.find("eori" -> eori).map(_.toSeq)
+  def find(search: DeclarationSearch): Future[Seq[ExportsDeclaration]] = {
+    val query = DeclarationSearch.format.writes(search)
+    collection
+      .find(query, projection = None)(ImplicitBSONHandlers.JsObjectDocumentWriter, ImplicitBSONHandlers.JsObjectDocumentWriter)
+      .cursor[ExportsDeclaration](ReadPreference.primaryPreferred)
+      .collect(maxDocs = -1, FailOnError[List[ExportsDeclaration]]()).map(_.toSeq)
+  }
 
   def create(declaration: ExportsDeclaration): Future[ExportsDeclaration] =
     super.insert(declaration).map(_ => declaration)

@@ -23,11 +23,13 @@ import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
+import uk.gov.hmrc.exports.models.DeclarationSearch
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.format
 import uk.gov.hmrc.exports.services.DeclarationService
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @Singleton
 class DeclarationController @Inject()(
@@ -55,8 +57,12 @@ class DeclarationController @Inject()(
       }
     }
 
-  def findAll(): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    declarationService.find(request.eori.value).map(results => Ok(results))
+  def findAll(status: Option[String]): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    val search = DeclarationSearch(
+      eori = request.eori.value,
+      status = status.map(v => Try(DeclarationStatus.withName(v))).filter(_.isSuccess).map(_.get)
+    )
+    declarationService.find(search).map(results => Ok(results))
   }
 
   def findByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>

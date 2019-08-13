@@ -22,6 +22,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.api.ReadConcern
+import uk.gov.hmrc.exports.models.DeclarationSearch
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo.format
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
@@ -93,7 +94,7 @@ class DeclarationRepositoryTest
         val declaration3 = aDeclaration(withId("id3"), withEori("eori2"))
         givenADeclarationExists(declaration1, declaration2, declaration3)
 
-        repository.find("eori1").futureValue shouldBe Seq(declaration1, declaration2)
+        repository.find(DeclarationSearch("eori1")).futureValue shouldBe Seq(declaration1, declaration2)
       }
     }
 
@@ -101,7 +102,7 @@ class DeclarationRepositoryTest
       "none exist with eori" in {
         givenADeclarationExists(aDeclaration(withId("id"), withEori("some-other-eori")))
 
-        repository.find("eori").futureValue shouldBe Seq.empty[ExportsDeclaration]
+        repository.find(DeclarationSearch("eori")).futureValue shouldBe Seq.empty[ExportsDeclaration]
       }
     }
   }

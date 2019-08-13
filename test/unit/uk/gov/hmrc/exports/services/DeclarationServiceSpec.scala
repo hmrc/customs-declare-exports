@@ -22,6 +22,7 @@ import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
+import uk.gov.hmrc.exports.models.DeclarationSearch
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.services.DeclarationService
@@ -57,9 +58,10 @@ class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFuture
   "Find by EORI" should {
     "delegate to the repository" in {
       val declaration = mock[ExportsDeclaration]
-      given(repository.find("eori")).willReturn(Future.successful(Seq(declaration)))
+      val search = mock[DeclarationSearch]
+      given(repository.find(search)).willReturn(Future.successful(Seq(declaration)))
 
-      service.find("eori").futureValue mustBe Seq(declaration)
+      service.find(search).futureValue mustBe Seq(declaration)
     }
   }
 
