@@ -231,6 +231,70 @@ class DeclarationControllerSpec
     }
   }
 
+  "PUT /:id" should {
+    val put = FakeRequest("PUT", "/v2/declaration/id")
+
+    "return 200" when {
+      "request is valid" in {
+        withAuthorizedUser()
+        val request = aDeclarationRequest()
+        val declaration = aDeclaration(withId("id"), withEori(userEori))
+        given(declarationService.findOne("id", userEori)).willReturn(Future.successful(Some(declaration)))
+        given(declarationService.save(any[ExportsDeclaration])).willReturn(Future.successful(declaration))
+
+        val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
+
+        status(result) must be(OK)
+        contentAsJson(result) mustBe toJson(declaration)
+        verify(declarationService).findOne("id", userEori)
+        val savedDeclaration = theDeclarationSaved
+        savedDeclaration.eori mustBe userEori
+        savedDeclaration.id mustBe "id"
+      }
+    }
+
+    "return 404" when {
+      "id is not found" in {
+        withAuthorizedUser()
+        val request = aDeclarationRequest()
+        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(None))
+
+        val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
+
+        status(result) must be(NOT_FOUND)
+        contentAsString(result) mustBe empty
+        verify(declarationService).findOne("id", userEori)
+        verify(declarationService, never()).save(any[ExportsDeclaration])
+      }
+    }
+
+    "return 400" when {
+      "invalid json" in {
+        withAuthorizedUser()
+        val payload = Json.toJson(aDeclarationRequest()).as[JsObject] - "choice"
+        val result: Future[Result] = route(app, put.withJsonBody(payload)).get
+
+        status(result) must be(BAD_REQUEST)
+        contentAsJson(result) mustBe Json.obj(
+          "message" -> "Bad Request",
+          "errors" -> Json.arr("/choice: error.path.missing")
+        )
+        verifyZeroInteractions(declarationService)
+      }
+    }
+
+    "return 401" when {
+      "unauthorized" in {
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        val result: Future[Result] = route(app, put.withJsonBody(toJson(aDeclarationRequest()))).get
+
+        status(result) must be(UNAUTHORIZED)
+        verifyZeroInteractions(declarationService)
+      }
+    }
+  }
+
   def aDeclarationRequest() =
     ExportsDeclarationRequest(status = DeclarationStatus.COMPLETE, createdDateTime = Instant.now(), updatedDateTime = Instant.now(), choice = "choice")
 
