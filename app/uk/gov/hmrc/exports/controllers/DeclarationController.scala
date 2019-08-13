@@ -24,6 +24,7 @@ import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.format
 import uk.gov.hmrc.exports.services.DeclarationService
 
 import scala.concurrent.{ExecutionContext, Future}

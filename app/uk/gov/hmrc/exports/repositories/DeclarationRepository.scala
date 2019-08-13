@@ -30,7 +30,7 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
     extends ReactiveRepository[ExportsDeclaration, BSONObjectID](
       "declarations",
       mc.mongoConnector.db,
-      ExportsDeclaration.format,
+      ExportsDeclaration.Mongo.format,
       objectIdFormats
     ) {
 

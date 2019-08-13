@@ -23,6 +23,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.api.ReadConcern
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo.format
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import util.testdata.ExportsDeclarationBuilder
 
