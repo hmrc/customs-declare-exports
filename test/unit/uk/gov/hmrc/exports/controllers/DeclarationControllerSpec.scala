@@ -35,9 +35,9 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
-import uk.gov.hmrc.exports.models.DeclarationSearch
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.format
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
+import uk.gov.hmrc.exports.models.{DeclarationSearch, Page, Paginated}
 import uk.gov.hmrc.exports.services.DeclarationService
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
 import util.testdata.ExportsDeclarationBuilder
@@ -107,41 +107,54 @@ class DeclarationControllerSpec
     val get = FakeRequest("GET", "/v2/declaration")
 
     "return 200" when {
-      "request has no search params" in {
+      "valid request" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch])).willReturn(Future.successful(Seq(declaration)))
+        given(declarationService.find(any[DeclarationSearch], any[Page])).willReturn(Future.successful(Paginated(declaration)))
 
         val result: Future[Result] = route(app, get).get
 
         status(result) must be(OK)
-        contentAsJson(result) mustBe toJson(Seq(declaration))
+        contentAsJson(result) mustBe toJson(Paginated(declaration))
         theSearch mustBe DeclarationSearch(eori = userEori, status = None)
+      }
+
+      "request has valid pagination" in {
+        withAuthorizedUser()
+        val declaration = aDeclaration(withId("id"), withEori(userEori))
+        given(declarationService.find(any[DeclarationSearch], any[Page])).willReturn(Future.successful(Paginated(declaration)))
+
+        val get = FakeRequest("GET", "/v2/declaration?page-index=1&page-size=100")
+        val result: Future[Result] = route(app, get).get
+
+        status(result) must be(OK)
+        contentAsJson(result) mustBe toJson(Paginated(declaration))
+        thePagination mustBe Page(1, 100)
       }
 
       "request has valid search params" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch])).willReturn(Future.successful(Seq(declaration)))
+        given(declarationService.find(any[DeclarationSearch], any[Page])).willReturn(Future.successful(Paginated(declaration)))
 
         val get = FakeRequest("GET", "/v2/declaration?status=COMPLETE")
         val result: Future[Result] = route(app, get).get
 
         status(result) must be(OK)
-        contentAsJson(result) mustBe toJson(Seq(declaration))
+        contentAsJson(result) mustBe toJson(Paginated(declaration))
         theSearch mustBe DeclarationSearch(eori = userEori, status = Some(DeclarationStatus.COMPLETE))
       }
 
       "request has invalid search params" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch])).willReturn(Future.successful(Seq(declaration)))
+        given(declarationService.find(any[DeclarationSearch], any[Page])).willReturn(Future.successful(Paginated(declaration)))
 
         val get = FakeRequest("GET", "/v2/declaration?status=invalid")
         val result: Future[Result] = route(app, get).get
 
         status(result) must be(OK)
-        contentAsJson(result) mustBe toJson(Seq(declaration))
+        contentAsJson(result) mustBe toJson(Paginated(declaration))
         theSearch mustBe DeclarationSearch(eori = userEori, status = None)
       }
     }
@@ -159,7 +172,13 @@ class DeclarationControllerSpec
 
     def theSearch: DeclarationSearch = {
       val captor: ArgumentCaptor[DeclarationSearch] = ArgumentCaptor.forClass(classOf[DeclarationSearch])
-      verify(declarationService).find(captor.capture())
+      verify(declarationService).find(captor.capture(), any[Page])
+      captor.getValue
+    }
+
+    def thePagination: Page = {
+      val captor: ArgumentCaptor[Page] = ArgumentCaptor.forClass(classOf[Page])
+      verify(declarationService).find(any[DeclarationSearch], captor.capture())
       captor.getValue
     }
   }

@@ -1,7 +1,7 @@
 # microservice specific routes
 
 POST        /v2/declaration                                  uk.gov.hmrc.exports.controllers.DeclarationController.create()
-GET         /v2/declaration                                  uk.gov.hmrc.exports.controllers.DeclarationController.findAll(status: Option[String])
+GET         /v2/declaration                                  uk.gov.hmrc.exports.controllers.DeclarationController.findAll(status: Option[String] ?= None, page: uk.gov.hmrc.exports.models.Page ?= uk.gov.hmrc.exports.models.Page())
 PUT         /v2/declaration/:id                              uk.gov.hmrc.exports.controllers.DeclarationController.update(id: String)
 GET         /v2/declaration/:id                              uk.gov.hmrc.exports.controllers.DeclarationController.findByID(id: String)
 DELETE      /v2/declaration/:id                              uk.gov.hmrc.exports.controllers.DeclarationController.deleteByID(id: String)

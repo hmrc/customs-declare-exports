@@ -17,14 +17,15 @@
 package uk.gov.hmrc.exports.repositories
 
 import javax.inject.Inject
+import play.api.libs.json.{JsObject, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.Cursor.FailOnError
-import reactivemongo.api.ReadPreference
+import reactivemongo.api.{QueryOpts, ReadConcern, ReadPreference}
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.ImplicitBSONHandlers
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.DeclarationSearch
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.{DeclarationSearch, Page, Paginated}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 
@@ -41,12 +42,17 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
   def find(id: String, eori: String): Future[Option[ExportsDeclaration]] =
     super.find("id" -> id, "eori" -> eori).map(_.headOption)
 
-  def find(search: DeclarationSearch): Future[Seq[ExportsDeclaration]] = {
-    val query = DeclarationSearch.format.writes(search)
-    collection
-      .find(query, projection = None)(ImplicitBSONHandlers.JsObjectDocumentWriter, ImplicitBSONHandlers.JsObjectDocumentWriter)
-      .cursor[ExportsDeclaration](ReadPreference.primaryPreferred)
-      .collect(maxDocs = -1, FailOnError[List[ExportsDeclaration]]()).map(_.toSeq)
+  def find(search: DeclarationSearch, pagination: Page): Future[Paginated[ExportsDeclaration]] = {
+    val query = Json.toJson(search).as[JsObject]
+    for {
+      results <- collection
+        .find(query, projection = None)(ImplicitBSONHandlers.JsObjectDocumentWriter, ImplicitBSONHandlers.JsObjectDocumentWriter)
+        .options(QueryOpts(skipN = (pagination.index -1) * pagination.size, batchSizeN = pagination.size))
+        .cursor[ExportsDeclaration](ReadPreference.primaryPreferred)
+        .collect(maxDocs = pagination.size, FailOnError[List[ExportsDeclaration]]())
+        .map(_.toSeq)
+      total <- collection.count(Some(query), limit = Some(0), skip = 0, hint = None, readConcern = ReadConcern.Local)
+    } yield Paginated(results = results, page = pagination, total = total)
   }
 
   def create(declaration: ExportsDeclaration): Future[ExportsDeclaration] =
