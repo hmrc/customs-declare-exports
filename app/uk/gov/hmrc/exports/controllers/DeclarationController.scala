@@ -43,6 +43,17 @@ class DeclarationController @Inject()(
         .map(declaration => Created(declaration))
     }
 
+  def update(id: String): Action[ExportsDeclarationRequest] =
+    authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
+      declarationService.findOne(id, request.eori.value).flatMap {
+        case Some(_) =>
+          declarationService
+            .save(request.body.toExportsDeclaration(id = id, eori = request.eori))
+            .map(declaration => Ok(declaration))
+        case None => Future.successful(NotFound)
+      }
+    }
+
   def findAll(): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     declarationService.find(request.eori.value).map(results => Ok(results))
   }
