@@ -24,13 +24,15 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.api.ReadConcern
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo.format
+import uk.gov.hmrc.exports.models.{DeclarationSearch, Page, Paginated}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import util.testdata.ExportsDeclarationBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class DeclarationRepositoryTest
-    extends WordSpec with Matchers with GuiceOneAppPerSuite with ScalaFutures with BeforeAndAfterEach with ExportsDeclarationBuilder {
+    extends WordSpec with Matchers with GuiceOneAppPerSuite with ScalaFutures with BeforeAndAfterEach
+    with ExportsDeclarationBuilder {
 
   override lazy val app: Application = GuiceApplicationBuilder().build()
   private val repository = app.injector.instanceOf[DeclarationRepository]
@@ -51,9 +53,8 @@ class DeclarationRepositoryTest
       .futureValue
       .toInt
 
-  private def givenADeclarationExists(declarations: ExportsDeclaration*): Unit = {
+  private def givenADeclarationExists(declarations: ExportsDeclaration*): Unit =
     repository.collection.insert(false).many(declarations).futureValue
-  }
 
   "Create" should {
     "persist the declaration" in {
@@ -93,7 +94,32 @@ class DeclarationRepositoryTest
         val declaration3 = aDeclaration(withId("id3"), withEori("eori2"))
         givenADeclarationExists(declaration1, declaration2, declaration3)
 
-        repository.find("eori1").futureValue shouldBe Seq(declaration1, declaration2)
+        val page = Page(index = 1, size = 10)
+        repository.find(DeclarationSearch("eori1"), page).futureValue shouldBe Paginated(
+          Seq(declaration1, declaration2),
+          page,
+          2
+        )
+      }
+
+      "there is multiple pages of results" in {
+        val declaration1 = aDeclaration(withEori("eori"))
+        val declaration2 = aDeclaration(withEori("eori"))
+        val declaration3 = aDeclaration(withEori("eori"))
+        givenADeclarationExists(declaration1, declaration2, declaration3)
+
+        val page1 = Page(index = 1, size = 2)
+        repository.find(DeclarationSearch("eori"), page1).futureValue shouldBe Paginated(
+          Seq(declaration1, declaration2),
+          page1,
+          3
+        )
+        val page2 = Page(index = 2, size = 2)
+        repository.find(DeclarationSearch("eori"), page2).futureValue shouldBe Paginated(
+          Seq(declaration3),
+          page2,
+          3
+        )
       }
     }
 
@@ -101,7 +127,8 @@ class DeclarationRepositoryTest
       "none exist with eori" in {
         givenADeclarationExists(aDeclaration(withId("id"), withEori("some-other-eori")))
 
-        repository.find("eori").futureValue shouldBe Seq.empty[ExportsDeclaration]
+        repository.find(DeclarationSearch("eori"), Page()).futureValue shouldBe Paginated
+          .empty[ExportsDeclaration](Page())
       }
     }
   }

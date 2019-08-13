@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.services
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.{DeclarationSearch, Page, Paginated}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 
 import scala.concurrent.Future
@@ -30,7 +31,7 @@ class DeclarationService @Inject()(declarationRepository: DeclarationRepository)
    */
   def save(declaration: ExportsDeclaration): Future[ExportsDeclaration] = declarationRepository.create(declaration)
 
-  def find(eori: String): Future[Seq[ExportsDeclaration]] = declarationRepository.find(eori)
+  def find(search: DeclarationSearch, pagination: Page): Future[Paginated[ExportsDeclaration]] = declarationRepository.find(search, pagination)
 
   def findOne(id: String, eori: String): Future[Option[ExportsDeclaration]] = declarationRepository.find(id, eori)
 
