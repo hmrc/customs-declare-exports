@@ -26,8 +26,9 @@ object Page {
   val DEFAULT_SIZE = 50
 
   implicit val format: OFormat[Page] = Json.format[Page]
-  implicit def bindable(implicit intBinder: QueryStringBindable[Int]): QueryStringBindable[Page] =
+  implicit val bindable: QueryStringBindable[Page] =
     new QueryStringBindable[Page] {
+      private val intBinder = implicitly[QueryStringBindable[Int]]
       private def queryParamIndex(key: String) = key + "-index"
       private def queryParamSize(key: String) = key + "-size"
 
