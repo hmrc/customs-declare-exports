@@ -24,6 +24,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
+import uk.gov.hmrc.exports.models.{DeclarationSearch, Page, Paginated}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.services.{DeclarationService, WcoSubmissionService}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -39,7 +40,7 @@ class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFuture
   private val hc = mock[HeaderCarrier]
   private val ec = Implicits.global
 
-  "Save" should {
+  "Create" should {
     "delegate to the repository" in {
       val submission = mock[Submission]
       val declaration = mock[ExportsDeclaration]
@@ -49,7 +50,17 @@ class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFuture
       given(wcoSubmissionService.submit(declaration)(hc, ec))
         .willReturn(Future.successful(submission))
 
-      service.save(declaration)(hc, ec).futureValue mustBe persistedDeclaration
+      service.create(declaration)(hc, ec).futureValue mustBe persistedDeclaration
+    }
+  }
+
+  "Update" should {
+    "delegate to the repository" in {
+      val declaration = mock[ExportsDeclaration]
+      val persistedDeclaration = mock[ExportsDeclaration]
+      given(repository.update(declaration)).willReturn(Future.successful(Some(persistedDeclaration)))
+
+      service.update(declaration)(hc, ec).futureValue mustBe Some(persistedDeclaration)
     }
   }
 
@@ -67,9 +78,11 @@ class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFuture
   "Find by EORI" should {
     "delegate to the repository" in {
       val declaration = mock[ExportsDeclaration]
-      given(repository.find("eori")).willReturn(Future.successful(Seq(declaration)))
+      val search = mock[DeclarationSearch]
+      val page = mock[Page]
+      given(repository.find(search, page)).willReturn(Future.successful(Paginated(declaration)))
 
-      service.find("eori").futureValue mustBe Seq(declaration)
+      service.find(search, page).futureValue mustBe Paginated(declaration)
     }
   }
 

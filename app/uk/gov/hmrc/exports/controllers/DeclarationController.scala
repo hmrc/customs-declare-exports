@@ -25,9 +25,11 @@ import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.format
+import uk.gov.hmrc.exports.models.{DeclarationSearch, Page}
 import uk.gov.hmrc.exports.services.DeclarationService
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @Singleton
 class DeclarationController @Inject()(
@@ -40,23 +42,26 @@ class DeclarationController @Inject()(
   def create(): Action[ExportsDeclarationRequest] =
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
       declarationService
-        .save(request.body.toExportsDeclaration(id = UUID.randomUUID().toString, eori = request.eori))
+        .create(request.body.toExportsDeclaration(id = UUID.randomUUID().toString, eori = request.eori))
         .map(declaration => Created(declaration))
     }
 
   def update(id: String): Action[ExportsDeclarationRequest] =
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
-      declarationService.findOne(id, request.eori.value).flatMap {
-        case Some(_) =>
-          declarationService
-            .save(request.body.toExportsDeclaration(id = id, eori = request.eori))
-            .map(declaration => Ok(declaration))
-        case None => Future.successful(NotFound)
-      }
+      declarationService
+        .update(request.body.toExportsDeclaration(id = id, eori = request.eori))
+        .map {
+          case Some(declaration) => Ok(declaration)
+          case None => NotFound
+        }
     }
 
-  def findAll(): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    declarationService.find(request.eori.value).map(results => Ok(results))
+  def findAll(status: Option[String], pagination: Page): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    val search = DeclarationSearch(
+      eori = request.eori.value,
+      status = status.map(v => Try(DeclarationStatus.withName(v))).filter(_.isSuccess).map(_.get)
+    )
+    declarationService.find(search, pagination).map(results => Ok(results))
   }
 
   def findByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>

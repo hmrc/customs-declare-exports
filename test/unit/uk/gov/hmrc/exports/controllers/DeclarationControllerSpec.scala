@@ -32,11 +32,12 @@ import play.api.libs.json.Json.toJson
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.format
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
+import uk.gov.hmrc.exports.models.{DeclarationSearch, Page, Paginated}
 import uk.gov.hmrc.exports.services.DeclarationService
 import uk.gov.hmrc.http.HeaderCarrier
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
@@ -66,13 +67,13 @@ class DeclarationControllerSpec
         withAuthorizedUser()
         val request = aDeclarationRequest()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.save(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext])).willReturn(Future.successful(declaration))
+        given(declarationService.create(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext])).willReturn(Future.successful(declaration))
 
         val result: Future[Result] = route(app, post.withJsonBody(toJson(request))).get
 
         status(result) must be(CREATED)
         contentAsJson(result) mustBe toJson(declaration)
-        theDeclarationSaved.eori mustBe userEori
+        theDeclarationCreated.eori mustBe userEori
       }
     }
 
@@ -107,16 +108,55 @@ class DeclarationControllerSpec
     val get = FakeRequest("GET", "/v2/declarations")
 
     "return 200" when {
-      "request is valid" in {
+      "valid request" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(anyString())).willReturn(Future.successful(Seq(declaration)))
+        given(declarationService.find(any[DeclarationSearch], any[Page])).willReturn(Future.successful(Paginated(declaration)))
 
         val result: Future[Result] = route(app, get).get
 
         status(result) must be(OK)
-        contentAsJson(result) mustBe toJson(Seq(declaration))
-        verify(declarationService).find(userEori)
+        contentAsJson(result) mustBe toJson(Paginated(declaration))
+        theSearch mustBe DeclarationSearch(eori = userEori, status = None)
+      }
+
+      "request has valid pagination" in {
+        withAuthorizedUser()
+        val declaration = aDeclaration(withId("id"), withEori(userEori))
+        given(declarationService.find(any[DeclarationSearch], any[Page])).willReturn(Future.successful(Paginated(declaration)))
+
+        val get = FakeRequest("GET", "/v2/declarations?page-index=1&page-size=100")
+        val result: Future[Result] = route(app, get).get
+
+        status(result) must be(OK)
+        contentAsJson(result) mustBe toJson(Paginated(declaration))
+        thePagination mustBe Page(1, 100)
+      }
+
+      "request has valid search params" in {
+        withAuthorizedUser()
+        val declaration = aDeclaration(withId("id"), withEori(userEori))
+        given(declarationService.find(any[DeclarationSearch], any[Page])).willReturn(Future.successful(Paginated(declaration)))
+
+        val get = FakeRequest("GET", "/v2/declarations?status=COMPLETE")
+        val result: Future[Result] = route(app, get).get
+
+        status(result) must be(OK)
+        contentAsJson(result) mustBe toJson(Paginated(declaration))
+        theSearch mustBe DeclarationSearch(eori = userEori, status = Some(DeclarationStatus.COMPLETE))
+      }
+
+      "request has invalid search params" in {
+        withAuthorizedUser()
+        val declaration = aDeclaration(withId("id"), withEori(userEori))
+        given(declarationService.find(any[DeclarationSearch], any[Page])).willReturn(Future.successful(Paginated(declaration)))
+
+        val get = FakeRequest("GET", "/v2/declarations?status=invalid")
+        val result: Future[Result] = route(app, get).get
+
+        status(result) must be(OK)
+        contentAsJson(result) mustBe toJson(Paginated(declaration))
+        theSearch mustBe DeclarationSearch(eori = userEori, status = None)
       }
     }
 
@@ -129,6 +169,18 @@ class DeclarationControllerSpec
         status(result) must be(UNAUTHORIZED)
         verifyZeroInteractions(declarationService)
       }
+    }
+
+    def theSearch: DeclarationSearch = {
+      val captor: ArgumentCaptor[DeclarationSearch] = ArgumentCaptor.forClass(classOf[DeclarationSearch])
+      verify(declarationService).find(captor.capture(), any[Page])
+      captor.getValue
+    }
+
+    def thePagination: Page = {
+      val captor: ArgumentCaptor[Page] = ArgumentCaptor.forClass(classOf[Page])
+      verify(declarationService).find(any[DeclarationSearch], captor.capture())
+      captor.getValue
     }
   }
 
@@ -241,32 +293,28 @@ class DeclarationControllerSpec
         withAuthorizedUser()
         val request = aDeclarationRequest()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.findOne("id", userEori)).willReturn(Future.successful(Some(declaration)))
-        given(declarationService.save(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext])).willReturn(Future.successful(declaration))
+        given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext])).willReturn(Future.successful(Some(declaration)))
 
         val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(declaration)
-        verify(declarationService).findOne("id", userEori)
-        val savedDeclaration = theDeclarationSaved
-        savedDeclaration.eori mustBe userEori
-        savedDeclaration.id mustBe "id"
+        val updatedDeclaration = theDeclarationUpdated
+        updatedDeclaration.eori mustBe userEori
+        updatedDeclaration.id mustBe "id"
       }
     }
 
     "return 404" when {
-      "id is not found" in {
+      "declaration is not found" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
-        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(None))
+        given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext])).willReturn(Future.successful(None))
 
         val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
 
         status(result) must be(NOT_FOUND)
         contentAsString(result) mustBe empty
-        verify(declarationService).findOne("id", userEori)
-        verify(declarationService, never()).save(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext])
       }
     }
 
@@ -300,9 +348,15 @@ class DeclarationControllerSpec
   def aDeclarationRequest() =
     ExportsDeclarationRequest(status = DeclarationStatus.COMPLETE, createdDateTime = Instant.now(), updatedDateTime = Instant.now(), choice = "choice")
 
-  def theDeclarationSaved: ExportsDeclaration = {
+  def theDeclarationCreated: ExportsDeclaration = {
     val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
-    verify(declarationService).save(captor.capture())(any[HeaderCarrier], any[ExecutionContext])
+    verify(declarationService).create(captor.capture())(any[HeaderCarrier], any[ExecutionContext])
+    captor.getValue
+  }
+
+  def theDeclarationUpdated: ExportsDeclaration = {
+    val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
+    verify(declarationService).update(captor.capture())(any[HeaderCarrier], any[ExecutionContext])
     captor.getValue
   }
 }
