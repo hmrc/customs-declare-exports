@@ -30,7 +30,7 @@ object Choice {
 
   case object SupplementaryDec extends Choice("SMP")
 
-  case object StandardDec extends Choice("STD")                                                                                                                                                                                                                                                                                                                                                                     
+  case object StandardDec extends Choice("STD")
 
   case object CancelDec extends Choice("CAN")
 

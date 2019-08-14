@@ -17,7 +17,6 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.exports.models.declaration.officeOfExit.{OfficeOfExitStandard, OfficeOfExitSupplementary}
 
 case class DestinationCountries(
   countryOfDispatch: String,
@@ -55,15 +54,6 @@ object WarehouseIdentification {
 case class OfficeOfExit(officeId: String, presentationOfficeId: Option[String], circumstancesCode: Option[String])
 object OfficeOfExit {
   implicit val format: OFormat[OfficeOfExit] = Json.format[OfficeOfExit]
-  def from(officeOfExitSupplementary: OfficeOfExitSupplementary): OfficeOfExit =
-    OfficeOfExit(officeOfExitSupplementary.officeId, None, None)
-
-  def from(officeOfExitStandard: OfficeOfExitStandard): OfficeOfExit =
-    OfficeOfExit(
-      officeOfExitStandard.officeId,
-      officeOfExitStandard.presentationOfficeId,
-      Some(officeOfExitStandard.circumstancesCode)
-    )
 }
 
 case class Locations(
