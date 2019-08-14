@@ -18,8 +18,7 @@ package uk.gov.hmrc.exports.services.mapping.declaration
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.Choice.AllowedChoiceValues
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.models.declaration.officeOfExit.{OfficeOfExitStandard, OfficeOfExitSupplementary}
+import uk.gov.hmrc.exports.models.declaration.{ExportsDeclaration, OfficeOfExit}
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.ExitOffice
@@ -27,20 +26,13 @@ import wco.datamodel.wco.declaration_ds.dms._2._
 
 class ExitOfficeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit = model.choice match {
-    case AllowedChoiceValues.StandardDec =>
+    case AllowedChoiceValues.StandardDec | AllowedChoiceValues.SupplementaryDec =>
       model.locations.officeOfExit
-        .map(OfficeOfExitStandard(_))
-        .map(createExitOfficeFromStandardJourney)
-        .foreach(declaration.setExitOffice)
-
-    case AllowedChoiceValues.SupplementaryDec =>
-      model.locations.officeOfExit
-        .map(OfficeOfExitSupplementary(_))
-        .map(createExitOfficeFromSupplementaryJourney)
+        .map(build)
         .foreach(declaration.setExitOffice)
   }
 
-  private def createExitOfficeFromStandardJourney(data: OfficeOfExitStandard): Declaration.ExitOffice = {
+  private def build(data: OfficeOfExit): Declaration.ExitOffice = {
     val officeIdentificationIDType = new ExitOfficeIdentificationIDType()
     officeIdentificationIDType.setValue(data.officeId)
 
@@ -48,14 +40,4 @@ class ExitOfficeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration,
     exitOffice.setID(officeIdentificationIDType)
     exitOffice
   }
-
-  private def createExitOfficeFromSupplementaryJourney(data: OfficeOfExitSupplementary): Declaration.ExitOffice = {
-    val officeIdentificationIDType = new ExitOfficeIdentificationIDType()
-    officeIdentificationIDType.setValue(data.officeId)
-
-    val exitOffice = new ExitOffice()
-    exitOffice.setID(officeIdentificationIDType)
-    exitOffice
-  }
-
 }
