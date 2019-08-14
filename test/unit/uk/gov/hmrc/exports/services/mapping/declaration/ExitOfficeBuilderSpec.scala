@@ -17,7 +17,7 @@
 package unit.uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.Choice.AllowedChoiceValues
+import uk.gov.hmrc.exports.models.Choice
 import uk.gov.hmrc.exports.services.mapping.declaration.ExitOfficeBuilder
 import util.testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -28,7 +28,7 @@ class ExitOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarati
 
     "build then add" when {
       "standard journey with no data" in {
-        val model = aDeclaration(withChoice(AllowedChoiceValues.StandardDec), withoutOfficeOfExit())
+        val model = aDeclaration(withChoice(Choice.StandardDec), withoutOfficeOfExit())
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -37,7 +37,7 @@ class ExitOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarati
       }
 
       "supplementary journey with no data" in {
-        val model = aDeclaration(withChoice(AllowedChoiceValues.SupplementaryDec), withoutOfficeOfExit())
+        val model = aDeclaration(withChoice(Choice.SupplementaryDec), withoutOfficeOfExit())
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -46,7 +46,7 @@ class ExitOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarati
       }
 
       "standard journey with populated data" in {
-        val model = aDeclaration(withChoice(AllowedChoiceValues.StandardDec), withOfficeOfExit(officeId = "office-id"))
+        val model = aDeclaration(withChoice(Choice.StandardDec), withOfficeOfExit(officeId = "office-id"))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -56,7 +56,7 @@ class ExitOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarati
 
       "supplementary journey with populated data" in {
         val model =
-          aDeclaration(withChoice(AllowedChoiceValues.SupplementaryDec), withOfficeOfExit(officeId = "office-id"))
+          aDeclaration(withChoice(Choice.SupplementaryDec), withOfficeOfExit(officeId = "office-id"))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)

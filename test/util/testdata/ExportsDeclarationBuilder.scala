@@ -19,6 +19,7 @@ package util.testdata
 import java.time.{LocalDateTime, ZoneOffset}
 import java.util.UUID
 
+import uk.gov.hmrc.exports.models.Choice
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration._
 
@@ -34,7 +35,7 @@ trait ExportsDeclarationBuilder {
     status = DeclarationStatus.COMPLETE,
     createdDateTime = LocalDateTime.of(2019, 1, 1, 0, 0, 0).toInstant(ZoneOffset.UTC),
     updatedDateTime = LocalDateTime.of(2019, 2, 2, 0, 0, 0).toInstant(ZoneOffset.UTC),
-    choice = "choice",
+    choice = "STD",
     dispatchLocation = None,
     additionalDeclarationType = None,
     consignmentReferences = None,
@@ -61,7 +62,9 @@ trait ExportsDeclarationBuilder {
 
   def withStatus(status: DeclarationStatus): ExportsDeclarationModifier = _.copy(status = status)
 
-  def withChoice(choice: String): ExportsDeclarationModifier = _.copy(choice = choice)
+  def withChoice(choice: String): ExportsDeclarationModifier = _.copy(choice = Choice(choice))
+
+  def withChoice(choice: Choice): ExportsDeclarationModifier = _.copy(choice = choice)
 
   def withoutAdditionalDeclarationType(): ExportsDeclarationModifier = _.copy(additionalDeclarationType = None)
 

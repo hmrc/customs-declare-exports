@@ -17,7 +17,7 @@
 package unit.uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.Choice.AllowedChoiceValues
+import uk.gov.hmrc.exports.models.Choice
 import uk.gov.hmrc.exports.services.mapping.declaration.PresentationOfficeBuilder
 import util.testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -28,7 +28,7 @@ class PresentationOfficeBuilderSpec extends WordSpec with Matchers with ExportsD
 
     "build then add" when {
       "no office of exit" in {
-        val model = aDeclaration(withChoice(AllowedChoiceValues.StandardDec), withoutOfficeOfExit())
+        val model = aDeclaration(withChoice(Choice.StandardDec), withoutOfficeOfExit())
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -38,7 +38,7 @@ class PresentationOfficeBuilderSpec extends WordSpec with Matchers with ExportsD
 
       "empty presentation office id" in {
         val model =
-          aDeclaration(withChoice(AllowedChoiceValues.StandardDec), withOfficeOfExit(presentationOfficeId = None))
+          aDeclaration(withChoice(Choice.StandardDec), withOfficeOfExit(presentationOfficeId = None))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -47,7 +47,7 @@ class PresentationOfficeBuilderSpec extends WordSpec with Matchers with ExportsD
       }
 
       "choice is not standard" in {
-        val model = aDeclaration(withChoice("other"), withOfficeOfExit(presentationOfficeId = Some("id")))
+        val model = aDeclaration(withChoice("SMP"), withOfficeOfExit(presentationOfficeId = Some("id")))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -57,7 +57,7 @@ class PresentationOfficeBuilderSpec extends WordSpec with Matchers with ExportsD
 
       "populated" in {
         val model =
-          aDeclaration(withChoice(AllowedChoiceValues.StandardDec), withOfficeOfExit(presentationOfficeId = Some("id")))
+          aDeclaration(withChoice(Choice.StandardDec), withOfficeOfExit(presentationOfficeId = Some("id")))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)

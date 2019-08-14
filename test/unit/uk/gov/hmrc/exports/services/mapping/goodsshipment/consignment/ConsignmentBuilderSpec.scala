@@ -59,7 +59,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
               meansOfTransportOnDepartureType,
               Some(meansOfTransportOnDepartureIDNumber)
             ),
-            withChoice(Choice.AllowedChoiceValues.StandardDec),
+            withChoice(Choice.StandardDec),
             withWarehouseIdentification(ArrivalTransportMeansBuilderSpec.correctWarehouseIdentification),
             withTransportDetails(Some("Portugal"), container = true, "40", Some("1234567878ui"), Some("A")),
             withSeals(Seq(Seal("first"), Seal("second")))

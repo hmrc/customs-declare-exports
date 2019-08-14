@@ -15,12 +15,38 @@
  */
 
 package uk.gov.hmrc.exports.models
+import play.api.libs.json._
+
+sealed abstract class Choice(val value: String)
 
 object Choice {
-  object AllowedChoiceValues {
-    val SupplementaryDec = "SMP"
-    val StandardDec = "STD"
-    val CancelDec = "CAN"
-    val Submissions = "SUB"
+
+  def apply(value: String): Choice = value match {
+    case "SMP" => SupplementaryDec
+    case "STD" => StandardDec
+    case "CAN" => StandardDec
+    case "SUB" => Submissions
+  }
+
+  case object SupplementaryDec extends Choice("SMP")
+
+  case object StandardDec extends Choice("STD")                                                                                                                                                                                                                                                                                                                                                                     
+
+  case object CancelDec extends Choice("CAN")
+
+  case object Submissions extends Choice("SUB")
+
+  implicit object ChoiceReads extends Reads[Choice] {
+    def reads(jsValue: JsValue): JsResult[Choice] = jsValue match {
+      case JsString("SMP") => JsSuccess(SupplementaryDec)
+      case JsString("STD") => JsSuccess(StandardDec)
+      case JsString("CAN") => JsSuccess(CancelDec)
+      case JsString("SUB") => JsSuccess(Submissions)
+      case _               => JsError("Incorrect choice status")
+    }
+  }
+
+  implicit object ChoiceWrites extends Writes[Choice] {
+    def writes(choice: Choice): JsValue = JsString(choice.value)
   }
 }

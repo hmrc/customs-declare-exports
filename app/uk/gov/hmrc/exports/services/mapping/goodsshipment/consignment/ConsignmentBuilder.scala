@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.Choice.AllowedChoiceValues
+import uk.gov.hmrc.exports.models.Choice
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
@@ -48,7 +48,7 @@ class ConsignmentBuilder @Inject()(
     )
 
     exportsCacheModel.choice match {
-      case AllowedChoiceValues.StandardDec =>
+      case Choice.StandardDec =>
         transportEquipmentBuilder.buildThenAdd(exportsCacheModel.seals, consignment)
       case _ =>
     }

@@ -17,7 +17,7 @@
 package unit.uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.Choice.AllowedChoiceValues
+import uk.gov.hmrc.exports.models.Choice
 import uk.gov.hmrc.exports.services.mapping.declaration.SpecificCircumstancesCodeBuilder
 import util.testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -29,7 +29,7 @@ class SpecificCircumstancesCodeBuilderSpec extends WordSpec with Matchers with E
     "build then add" when {
 
       "no office of exit" in {
-        val model = aDeclaration(withChoice(AllowedChoiceValues.StandardDec), withoutOfficeOfExit())
+        val model = aDeclaration(withChoice(Choice.StandardDec), withoutOfficeOfExit())
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -39,7 +39,7 @@ class SpecificCircumstancesCodeBuilderSpec extends WordSpec with Matchers with E
 
       "invalid circumstance choice" in {
         val model =
-          aDeclaration(withChoice(AllowedChoiceValues.StandardDec), withOfficeOfExit(circumstancesCode = Some("")))
+          aDeclaration(withChoice(Choice.StandardDec), withOfficeOfExit(circumstancesCode = Some("")))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -48,7 +48,7 @@ class SpecificCircumstancesCodeBuilderSpec extends WordSpec with Matchers with E
       }
 
       "choice is not standard" in {
-        val model = aDeclaration(withChoice("other"), withOfficeOfExit(circumstancesCode = Some("Yes")))
+        val model = aDeclaration(withChoice("SMP"), withOfficeOfExit(circumstancesCode = Some("Yes")))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -58,7 +58,7 @@ class SpecificCircumstancesCodeBuilderSpec extends WordSpec with Matchers with E
 
       "valid circumstance choice" in {
         val model =
-          aDeclaration(withChoice(AllowedChoiceValues.StandardDec), withOfficeOfExit(circumstancesCode = Some("Yes")))
+          aDeclaration(withChoice(Choice.StandardDec), withOfficeOfExit(circumstancesCode = Some("Yes")))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)

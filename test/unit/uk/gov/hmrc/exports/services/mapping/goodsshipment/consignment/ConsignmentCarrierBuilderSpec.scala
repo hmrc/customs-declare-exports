@@ -42,10 +42,8 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with ExportsD
 
       "address is empty" in {
         // Given
-        val model = aDeclaration(
-          withCarrierDetails(eori = Some("eori"), address = None),
-          withChoice(Choice.AllowedChoiceValues.StandardDec)
-        )
+        val model =
+          aDeclaration(withCarrierDetails(eori = Some("eori"), address = None), withChoice(Choice.StandardDec))
         val consignment = new Declaration.Consignment()
 
         // When
@@ -62,7 +60,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with ExportsD
             eori = None,
             address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))
           ),
-          withChoice(Choice.AllowedChoiceValues.StandardDec)
+          withChoice(Choice.StandardDec)
         )
         val consignment = new Declaration.Consignment()
 
@@ -80,7 +78,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with ExportsD
             eori = Some("eori"),
             address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))
           ),
-          withChoice(Choice.AllowedChoiceValues.StandardDec)
+          withChoice(Choice.StandardDec)
         )
         val consignment = new Declaration.Consignment()
 
@@ -100,7 +98,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with ExportsD
         // Given
         val model = aDeclaration(
           withCarrierDetails(eori = Some("eori"), address = Some(Address("", "", "", "", ""))),
-          withChoice(Choice.AllowedChoiceValues.StandardDec)
+          withChoice(Choice.StandardDec)
         )
         val consignment = new Declaration.Consignment()
 
@@ -116,7 +114,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with ExportsD
         // Given
         val model = aDeclaration(
           withCarrierDetails(eori = Some("eori"), address = Some(Address("name", "line", "city", "postcode", "other"))),
-          withChoice(Choice.AllowedChoiceValues.StandardDec)
+          withChoice(Choice.StandardDec)
         )
         val consignment = new Declaration.Consignment()
 

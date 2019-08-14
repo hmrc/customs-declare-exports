@@ -15,7 +15,7 @@
  */
 
 package uk.gov.hmrc.exports.services.mapping
-import uk.gov.hmrc.exports.models.declaration.ItemType.IdentificationTypeCodes.{
+import uk.gov.hmrc.exports.models.declaration.IdentificationTypeCodes.{
   CUSCode,
   CombinedNomenclatureCode,
   NationalAdditionalCode,
@@ -36,12 +36,15 @@ object CachingMappingHelper {
 
   def getClassificationsFromItemTypes(itemType: ItemType): Seq[Classification] =
     Seq(
-      Classification(Some(itemType.combinedNomenclatureCode), identificationTypeCode = Some(CombinedNomenclatureCode))
-    ) ++ itemType.cusCode.map(id => Classification(Some(id), identificationTypeCode = Some(CUSCode))) ++
+      Classification(
+        Some(itemType.combinedNomenclatureCode),
+        identificationTypeCode = Some(CombinedNomenclatureCode.value)
+      )
+    ) ++ itemType.cusCode.map(id => Classification(Some(id), identificationTypeCode = Some(CUSCode.value))) ++
       itemType.nationalAdditionalCode.map(
-        code => Classification(Some(code), identificationTypeCode = Some(NationalAdditionalCode))
+        code => Classification(Some(code), identificationTypeCode = Some(NationalAdditionalCode.value))
       ) ++ itemType.taricAdditionalCode
-      .map(code => Classification(Some(code), identificationTypeCode = Some(TARICAdditionalCode)))
+      .map(code => Classification(Some(code), identificationTypeCode = Some(TARICAdditionalCode.value)))
 
   def mapGoodsMeasure(data: CommodityMeasure) =
     Commodity(

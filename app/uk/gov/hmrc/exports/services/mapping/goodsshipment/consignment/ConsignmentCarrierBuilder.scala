@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.Choice.AllowedChoiceValues
+import uk.gov.hmrc.exports.models.Choice
 import uk.gov.hmrc.exports.models.declaration.{Address, CarrierDetails, EntityDetails, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
@@ -28,7 +28,7 @@ import wco.datamodel.wco.declaration_ds.dms._2._
 class ConsignmentCarrierBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration.Consignment] {
 
   override def buildThenAdd(model: ExportsDeclaration, consignment: Declaration.Consignment): Unit =
-    if (model.choice.equals(AllowedChoiceValues.StandardDec)) {
+    if (model.choice.equals(Choice.StandardDec)) {
       model.parties.carrierDetails
         .filter(isDefined)
         .map(_.details)

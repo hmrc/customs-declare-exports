@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.models.declaration
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json._
 
 case class ProcedureCodes(procedureCode: Option[String], additionalProcedureCodes: Seq[String]) {
   def extractProcedureCode(): (Option[String], Option[String]) =
@@ -52,12 +52,27 @@ case class ItemType(
 )
 object ItemType {
   implicit val format: OFormat[ItemType] = Json.format[ItemType]
+}
 
-  object IdentificationTypeCodes {
-    val CombinedNomenclatureCode = "TSP"
-    val TARICAdditionalCode = "TRA"
-    val NationalAdditionalCode = "GN"
-    val CUSCode = "CV"
+sealed abstract class IdentificationTypeCodes(val value: String)
+object IdentificationTypeCodes {
+  case object CombinedNomenclatureCode extends IdentificationTypeCodes("TSP")
+  case object TARICAdditionalCode extends IdentificationTypeCodes("TRA")
+  case object NationalAdditionalCode extends IdentificationTypeCodes("GN")
+  case object CUSCode extends IdentificationTypeCodes("CV")
+
+  implicit object IdentificationTypeCodesReads extends Reads[IdentificationTypeCodes] {
+    def reads(jsValue: JsValue): JsResult[IdentificationTypeCodes] = jsValue match {
+      case JsString("TSP") => JsSuccess(CombinedNomenclatureCode)
+      case JsString("TRA") => JsSuccess(TARICAdditionalCode)
+      case JsString("GN")  => JsSuccess(NationalAdditionalCode)
+      case JsString("CV")  => JsSuccess(CUSCode)
+      case _               => JsError("Incorrect choice status")
+    }
+  }
+
+  implicit object IdentificationTypeCodesWrites extends Writes[IdentificationTypeCodes] {
+    def writes(code: IdentificationTypeCodes): JsValue = JsString(code.toString)
   }
 }
 

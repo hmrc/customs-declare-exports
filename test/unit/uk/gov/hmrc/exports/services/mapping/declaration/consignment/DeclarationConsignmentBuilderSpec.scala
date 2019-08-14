@@ -20,7 +20,7 @@ import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.Choice.AllowedChoiceValues
+import uk.gov.hmrc.exports.models.Choice
 import uk.gov.hmrc.exports.services.mapping.declaration.consignment.{
   DeclarationConsignmentBuilder,
   FreightBuilder,
@@ -48,7 +48,7 @@ class DeclarationConsignmentBuilderSpec
 
       "standard journey" in {
         // Given
-        val model = aDeclaration(withChoice(AllowedChoiceValues.StandardDec))
+        val model = aDeclaration(withChoice(Choice.StandardDec))
         val declaration = new Declaration()
 
         // When
@@ -63,7 +63,7 @@ class DeclarationConsignmentBuilderSpec
 
       "other journey" in {
         // Given
-        val model = aDeclaration(withChoice("other"))
+        val model = aDeclaration(withChoice("SMP"))
         val declaration = new Declaration()
 
         // When

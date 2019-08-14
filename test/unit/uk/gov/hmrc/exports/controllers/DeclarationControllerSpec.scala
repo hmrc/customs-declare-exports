@@ -49,10 +49,10 @@ class DeclarationControllerSpec
     extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
     with MustMatchers with ExportsDeclarationBuilder {
 
-  private val declarationService: DeclarationService = mock[DeclarationService]
   override lazy val app: Application = GuiceApplicationBuilder()
     .overrides(bind[AuthConnector].to(mockAuthConnector), bind[DeclarationService].to(declarationService))
     .build()
+  private val declarationService: DeclarationService = mock[DeclarationService]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -66,8 +66,9 @@ class DeclarationControllerSpec
       "request is valid" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
-        val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.create(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext])).willReturn(Future.successful(declaration))
+        val declaration = aDeclaration(withChoice("STD"), withId("id"), withEori(userEori))
+        given(declarationService.create(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
+          .willReturn(Future.successful(declaration))
 
         val result: Future[Result] = route(app, post.withJsonBody(toJson(request))).get
 
@@ -111,7 +112,8 @@ class DeclarationControllerSpec
       "valid request" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page])).willReturn(Future.successful(Paginated(declaration)))
+        given(declarationService.find(any[DeclarationSearch], any[Page]))
+          .willReturn(Future.successful(Paginated(declaration)))
 
         val result: Future[Result] = route(app, get).get
 
@@ -123,7 +125,8 @@ class DeclarationControllerSpec
       "request has valid pagination" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page])).willReturn(Future.successful(Paginated(declaration)))
+        given(declarationService.find(any[DeclarationSearch], any[Page]))
+          .willReturn(Future.successful(Paginated(declaration)))
 
         val get = FakeRequest("GET", "/v2/declarations?page-index=1&page-size=100")
         val result: Future[Result] = route(app, get).get
@@ -136,7 +139,8 @@ class DeclarationControllerSpec
       "request has valid search params" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page])).willReturn(Future.successful(Paginated(declaration)))
+        given(declarationService.find(any[DeclarationSearch], any[Page]))
+          .willReturn(Future.successful(Paginated(declaration)))
 
         val get = FakeRequest("GET", "/v2/declarations?status=COMPLETE")
         val result: Future[Result] = route(app, get).get
@@ -149,7 +153,8 @@ class DeclarationControllerSpec
       "request has invalid search params" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page])).willReturn(Future.successful(Paginated(declaration)))
+        given(declarationService.find(any[DeclarationSearch], any[Page]))
+          .willReturn(Future.successful(Paginated(declaration)))
 
         val get = FakeRequest("GET", "/v2/declarations?status=invalid")
         val result: Future[Result] = route(app, get).get
@@ -292,8 +297,9 @@ class DeclarationControllerSpec
       "request is valid" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
-        val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext])).willReturn(Future.successful(Some(declaration)))
+        val declaration = aDeclaration(withChoice("STD"), withId("id"), withEori(userEori))
+        given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
+          .willReturn(Future.successful(Some(declaration)))
 
         val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
 
@@ -309,7 +315,8 @@ class DeclarationControllerSpec
       "declaration is not found" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
-        given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext])).willReturn(Future.successful(None))
+        given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
+          .willReturn(Future.successful(None))
 
         val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
 
@@ -346,7 +353,12 @@ class DeclarationControllerSpec
   }
 
   def aDeclarationRequest() =
-    ExportsDeclarationRequest(status = DeclarationStatus.COMPLETE, createdDateTime = Instant.now(), updatedDateTime = Instant.now(), choice = "choice")
+    ExportsDeclarationRequest(
+      status = DeclarationStatus.COMPLETE,
+      createdDateTime = Instant.now(),
+      updatedDateTime = Instant.now(),
+      choice = "STD"
+    )
 
   def theDeclarationCreated: ExportsDeclaration = {
     val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
