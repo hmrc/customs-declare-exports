@@ -16,14 +16,21 @@
 
 package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
+import org.mockito.Mockito.when
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.Choice
+import uk.gov.hmrc.exports.models.{Choice, Country}
 import uk.gov.hmrc.exports.models.declaration.Address
+import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentCarrierBuilder
 import util.testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
+
+  val mockCountriesService = mock[CountriesService]
+  when(mockCountriesService.allCountries)
+    .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
   "ConsignmentCarrierBuilderSpec" should {
 
@@ -34,7 +41,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with ExportsD
         val consignment = new Declaration.Consignment()
 
         // When
-        new ConsignmentCarrierBuilder().buildThenAdd(model, consignment)
+        new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
         // Then
         consignment.getCarrier shouldBe null
@@ -47,7 +54,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with ExportsD
         val consignment = new Declaration.Consignment()
 
         // When
-        new ConsignmentCarrierBuilder().buildThenAdd(model, consignment)
+        new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
         // Then
         consignment.getCarrier.getAddress shouldBe null
@@ -65,7 +72,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with ExportsD
         val consignment = new Declaration.Consignment()
 
         // When
-        new ConsignmentCarrierBuilder().buildThenAdd(model, consignment)
+        new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
         // Then
         consignment.getCarrier.getID shouldBe null
@@ -83,7 +90,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with ExportsD
         val consignment = new Declaration.Consignment()
 
         // When
-        new ConsignmentCarrierBuilder().buildThenAdd(model, consignment)
+        new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
         // Then
         consignment.getCarrier.getID.getValue shouldBe "eori"
@@ -103,7 +110,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with ExportsD
         val consignment = new Declaration.Consignment()
 
         // When
-        new ConsignmentCarrierBuilder().buildThenAdd(model, consignment)
+        new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
         // Then
         consignment.getCarrier.getName shouldBe null
@@ -119,7 +126,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with ExportsD
         val consignment = new Declaration.Consignment()
 
         // When
-        new ConsignmentCarrierBuilder().buildThenAdd(model, consignment)
+        new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
         // Then
         consignment.getCarrier.getAddress.getCountryCode.getValue shouldBe ""

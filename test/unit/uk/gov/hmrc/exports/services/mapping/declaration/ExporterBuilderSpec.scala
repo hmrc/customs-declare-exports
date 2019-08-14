@@ -16,13 +16,21 @@
 
 package unit.uk.gov.hmrc.exports.services.mapping.declaration
 
+import org.mockito.Mockito.when
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.Address
+import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.declaration.ExporterBuilder
 import util.testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class ExporterBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class ExporterBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
+
+  val mockCountriesService = mock[CountriesService]
+  when(mockCountriesService.allCountries)
+    .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
   "ExporterBuilder" should {
 
@@ -94,5 +102,5 @@ class ExporterBuilderSpec extends WordSpec with Matchers with ExportsDeclaration
     }
   }
 
-  private def builder: ExporterBuilder = new ExporterBuilder
+  private def builder: ExporterBuilder = new ExporterBuilder(mockCountriesService)
 }

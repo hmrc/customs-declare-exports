@@ -16,6 +16,4 @@
 
 package uk.gov.hmrc.exports.models
 
-import play.api.libs.json.Json
-
 case class Country(countryName: String, countryCode: String)

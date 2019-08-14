@@ -23,7 +23,8 @@ import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class ConsigneeBuilder @Inject()() extends ModifyingBuilder[ConsigneeDetails, GoodsShipment] {
+class ConsigneeBuilder @Inject()(countriesService: CountriesService)
+    extends ModifyingBuilder[ConsigneeDetails, GoodsShipment] {
 
   override def buildThenAdd(consigneeDetails: ConsigneeDetails, goodsShipment: GoodsShipment) =
     if (isDefined(consigneeDetails))
@@ -72,7 +73,7 @@ class ConsigneeBuilder @Inject()() extends ModifyingBuilder[ConsigneeDetails, Go
       if (address.country.nonEmpty) {
         val countryCode = new AddressCountryCodeType
         countryCode.setValue(
-          CountriesService.allCountries
+          countriesService.allCountries
             .find(country => address.country.contains(country.countryName))
             .map(_.countryCode)
             .getOrElse("")

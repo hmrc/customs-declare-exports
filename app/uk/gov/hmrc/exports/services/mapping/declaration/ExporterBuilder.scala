@@ -24,7 +24,8 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.Exporter
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class ExporterBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class ExporterBuilder @Inject()(countriesService: CountriesService)
+    extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
     model.parties.exporterDetails
       .filter(isDefined)
@@ -68,7 +69,7 @@ class ExporterBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, D
 
     val addressCountryCodeType = new AddressCountryCodeType
     addressCountryCodeType.setValue(
-      CountriesService.allCountries
+      countriesService.allCountries
         .find(country => address.country.contains(country.countryName))
         .map(_.countryCode)
         .getOrElse("")

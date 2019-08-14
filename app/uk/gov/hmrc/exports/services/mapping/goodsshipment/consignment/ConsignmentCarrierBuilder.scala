@@ -25,7 +25,8 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.Consignment.Carrier
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class ConsignmentCarrierBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration.Consignment] {
+class ConsignmentCarrierBuilder @Inject()(countriesService: CountriesService)
+    extends ModifyingBuilder[ExportsDeclaration, Declaration.Consignment] {
 
   override def buildThenAdd(model: ExportsDeclaration, consignment: Declaration.Consignment): Unit =
     if (model.choice.equals(Choice.StandardDec)) {
@@ -89,7 +90,7 @@ class ConsignmentCarrierBuilder @Inject()() extends ModifyingBuilder[ExportsDecl
     if (address.country.nonEmpty) {
       val countryCode = new AddressCountryCodeType
       countryCode.setValue(
-        CountriesService.allCountries
+        countriesService.allCountries
           .find(country => address.country.contains(country.countryName))
           .map(_.countryCode)
           .getOrElse("")

@@ -24,7 +24,8 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Destination
 import wco.datamodel.wco.declaration_ds.dms._2.DestinationCountryCodeType
 
-class DestinationBuilder @Inject()() extends ModifyingBuilder[DestinationCountries, GoodsShipment] {
+class DestinationBuilder @Inject()(countriesService: CountriesService)
+    extends ModifyingBuilder[DestinationCountries, GoodsShipment] {
 
   override def buildThenAdd(countries: DestinationCountries, goodsShipment: GoodsShipment) =
     if (isDefined(countries))
@@ -36,7 +37,7 @@ class DestinationBuilder @Inject()() extends ModifyingBuilder[DestinationCountri
 
     val countryCode = new DestinationCountryCodeType()
     countryCode.setValue(
-      CountriesService.allCountries
+      countriesService.allCountries
         .find(country => countryOfDestination.contains(country.countryCode))
         .map(_.countryCode)
         .getOrElse("")

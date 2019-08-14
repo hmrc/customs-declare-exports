@@ -24,7 +24,8 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.Agent
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class AgentBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class AgentBuilder @Inject()(countriesService: CountriesService)
+    extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
   override def buildThenAdd(exportsCacheModel: ExportsDeclaration, declaration: Declaration): Unit =
     exportsCacheModel.parties.representativeDetails.foreach { representativeDetails =>
@@ -67,7 +68,7 @@ class AgentBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Decl
 
               val countryCode = new AddressCountryCodeType
               countryCode.setValue(
-                CountriesService.allCountries
+                countriesService.allCountries
                   .find(country => address.country.contains(country.countryName))
                   .map(_.countryCode)
                   .getOrElse("")

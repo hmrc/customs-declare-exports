@@ -16,13 +16,22 @@
 
 package unit.uk.gov.hmrc.exports.services.mapping.declaration
 
+import org.mockito.Mockito.when
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.{Address, EntityDetails, RepresentativeDetails}
+import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.declaration.AgentBuilder
 import util.testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class AgentBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class AgentBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
+
+  val mockCountriesService = mock[CountriesService]
+  when(mockCountriesService.allCountries)
+    .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
+
 
   "AgentBuilder" should {
 
@@ -35,7 +44,8 @@ class AgentBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBui
               statusCode = Some(RepresentativeDetails.DirectRepresentative)
             )
           )
-        val agentBuilder = new AgentBuilder
+
+        val agentBuilder = new AgentBuilder(mockCountriesService)
         val emptyDeclaration = new Declaration
 
         agentBuilder.buildThenAdd(model, emptyDeclaration)
@@ -67,7 +77,7 @@ class AgentBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBui
               statusCode = Some(RepresentativeDetails.DirectRepresentative)
             )
           )
-        val agentBuilder = new AgentBuilder
+        val agentBuilder = new AgentBuilder(mockCountriesService)
         val emptyDeclaration = new Declaration
 
         agentBuilder.buildThenAdd(model, emptyDeclaration)

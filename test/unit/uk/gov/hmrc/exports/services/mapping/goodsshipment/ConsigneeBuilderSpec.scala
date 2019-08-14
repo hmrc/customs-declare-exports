@@ -16,17 +16,25 @@
 
 package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment
 
+import org.mockito.Mockito.when
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.{Address, ConsigneeDetails, EntityDetails}
+import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.ConsigneeBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class ConsigneeBuilderSpec extends WordSpec with Matchers {
+class ConsigneeBuilderSpec extends WordSpec with MockitoSugar with Matchers {
+
+  val mockCountriesService = mock[CountriesService]
+  when(mockCountriesService.allCountries)
+    .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
   "ConsigneeBuilder" should {
     "correctly map to the WCO-DEC GoodsShipment.Consignee instance" when {
       "only eori is supplied " in {
-        val builder = new ConsigneeBuilder
+        val builder = new ConsigneeBuilder(mockCountriesService)
 
         val goodsShipment = new GoodsShipment
         val details = ConsigneeDetails(EntityDetails(Some("9GB1234567ABCDEF"), None))
@@ -39,7 +47,7 @@ class ConsigneeBuilderSpec extends WordSpec with Matchers {
       }
 
       "only address is supplied " in {
-        val builder = new ConsigneeBuilder
+        val builder = new ConsigneeBuilder(mockCountriesService)
 
         val goodsShipment = new GoodsShipment
         val details = ConsigneeDetails(EntityDetails(None, Some(ConsigneeBuilderSpec.correctAddress)))
@@ -55,7 +63,7 @@ class ConsigneeBuilderSpec extends WordSpec with Matchers {
       }
 
       "empty data is supplied " in {
-        val builder = new ConsigneeBuilder
+        val builder = new ConsigneeBuilder(mockCountriesService)
 
         val goodsShipment = new GoodsShipment
         val details = ConsigneeDetails(EntityDetails(None, None))
@@ -66,7 +74,7 @@ class ConsigneeBuilderSpec extends WordSpec with Matchers {
       }
 
       "'address.fullname' is not supplied" in {
-        val builder = new ConsigneeBuilder
+        val builder = new ConsigneeBuilder(mockCountriesService)
 
         val goodsShipment = new GoodsShipment
         val details = ConsigneeDetails(EntityDetails(None, Some(ConsigneeBuilderSpec.addressWithEmptyFullname)))

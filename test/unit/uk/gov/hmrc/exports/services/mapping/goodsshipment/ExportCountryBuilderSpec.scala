@@ -16,18 +16,27 @@
 
 package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment
 
+import org.mockito.Mockito.when
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.DestinationCountries
+import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.ExportCountryBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class ExportCountryBuilderSpec extends WordSpec with Matchers {
+class ExportCountryBuilderSpec extends WordSpec with MockitoSugar with Matchers {
+
+  val mockCountriesService = mock[CountriesService]
+  when(mockCountriesService.allCountries)
+    .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
+
 
   "ExportCountryBuilder" should {
 
     "correctly map new model to the WCO-DEC GoodsShipment.ExportCountries instance" when {
       "countryOfDispatch has been supplied" in {
-        val builder = new ExportCountryBuilder
+        val builder = new ExportCountryBuilder(mockCountriesService)
         val goodsShipment = new GoodsShipment
 
         builder.buildThenAdd(DestinationCountries("GB", Seq.empty, "PL"), goodsShipment)
@@ -37,7 +46,7 @@ class ExportCountryBuilderSpec extends WordSpec with Matchers {
       }
 
       "countryOfDispatch has not been supplied" in {
-        val builder = new ExportCountryBuilder
+        val builder = new ExportCountryBuilder(mockCountriesService)
         val goodsShipment = new GoodsShipment
 
         builder.buildThenAdd(DestinationCountries("", Seq.empty, ""), goodsShipment)

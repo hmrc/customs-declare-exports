@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.exports.services
 
+import javax.inject.Inject
 import play.api.libs.json._
 import uk.gov.hmrc.exports.models.Country
 
-object CountriesService {
+class CountriesService @Inject()(){
 
   private val countries: List[Country] = {
     val jsonFile = getClass.getResourceAsStream("/code-lists/location-autocomplete-canonical-list.json")

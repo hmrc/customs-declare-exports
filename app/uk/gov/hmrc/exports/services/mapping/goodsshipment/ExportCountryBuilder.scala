@@ -24,7 +24,8 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.ExportCountry
 import wco.datamodel.wco.declaration_ds.dms._2.ExportCountryCountryCodeType
 
-class ExportCountryBuilder @Inject()() extends ModifyingBuilder[DestinationCountries, GoodsShipment] {
+class ExportCountryBuilder @Inject()(countriesService: CountriesService)
+    extends ModifyingBuilder[DestinationCountries, GoodsShipment] {
   override def buildThenAdd(model: DestinationCountries, goodsShipment: GoodsShipment): Unit =
     if (isDefined(model)) {
       goodsShipment.setExportCountry(createExportCountry(model))
@@ -36,7 +37,7 @@ class ExportCountryBuilder @Inject()() extends ModifyingBuilder[DestinationCount
 
     val id = new ExportCountryCountryCodeType()
     id.setValue(
-      CountriesService.allCountries
+      countriesService.allCountries
         .find(country => data.countryOfDispatch.contains(country.countryCode))
         .map(_.countryCode)
         .getOrElse("")
