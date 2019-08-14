@@ -66,13 +66,13 @@ class DeclarationControllerSpec
         withAuthorizedUser()
         val request = aDeclarationRequest()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.save(any[ExportsDeclaration])).willReturn(Future.successful(declaration))
+        given(declarationService.create(any[ExportsDeclaration])).willReturn(Future.successful(declaration))
 
         val result: Future[Result] = route(app, post.withJsonBody(toJson(request))).get
 
         status(result) must be(CREATED)
         contentAsJson(result) mustBe toJson(declaration)
-        theDeclarationSaved.eori mustBe userEori
+        theDeclarationCreated.eori mustBe userEori
       }
     }
 
@@ -292,32 +292,28 @@ class DeclarationControllerSpec
         withAuthorizedUser()
         val request = aDeclarationRequest()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.findOne("id", userEori)).willReturn(Future.successful(Some(declaration)))
-        given(declarationService.save(any[ExportsDeclaration])).willReturn(Future.successful(declaration))
+        given(declarationService.update(any[ExportsDeclaration])).willReturn(Future.successful(Some(declaration)))
 
         val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(declaration)
-        verify(declarationService).findOne("id", userEori)
-        val savedDeclaration = theDeclarationSaved
-        savedDeclaration.eori mustBe userEori
-        savedDeclaration.id mustBe "id"
+        val updatedDeclaration = theDeclarationUpdated
+        updatedDeclaration.eori mustBe userEori
+        updatedDeclaration.id mustBe "id"
       }
     }
 
     "return 404" when {
-      "id is not found" in {
+      "declaration is not found" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
-        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(None))
+        given(declarationService.update(any[ExportsDeclaration])).willReturn(Future.successful(None))
 
         val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
 
         status(result) must be(NOT_FOUND)
         contentAsString(result) mustBe empty
-        verify(declarationService).findOne("id", userEori)
-        verify(declarationService, never()).save(any[ExportsDeclaration])
       }
     }
 
@@ -351,9 +347,15 @@ class DeclarationControllerSpec
   def aDeclarationRequest() =
     ExportsDeclarationRequest(status = DeclarationStatus.COMPLETE, createdDateTime = Instant.now(), updatedDateTime = Instant.now(), choice = "choice")
 
-  def theDeclarationSaved: ExportsDeclaration = {
+  def theDeclarationCreated: ExportsDeclaration = {
     val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
-    verify(declarationService).save(captor.capture())
+    verify(declarationService).create(captor.capture())
+    captor.getValue
+  }
+
+  def theDeclarationUpdated: ExportsDeclaration = {
+    val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
+    verify(declarationService).update(captor.capture())
     captor.getValue
   }
 }

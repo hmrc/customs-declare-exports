@@ -65,6 +65,25 @@ class DeclarationRepositoryTest
     }
   }
 
+  "Update" should {
+    "update the declaration" in {
+      val declaration = aDeclaration(withId("id"), withEori("eori"))
+      givenADeclarationExists(declaration)
+
+      repository.update(declaration).futureValue shouldBe Some(declaration)
+
+      collectionSize shouldBe 1
+    }
+
+    "do nothing for missing declaration" in {
+      val declaration = aDeclaration(withId("id"), withEori("eori"))
+
+      repository.update(declaration).futureValue shouldBe None
+
+      collectionSize shouldBe 0
+    }
+  }
+
   "Find by ID & EORI" should {
     "return the persisted declaration" when {
       "one exists with eori and ID" in {
