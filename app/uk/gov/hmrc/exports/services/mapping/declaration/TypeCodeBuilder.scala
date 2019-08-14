@@ -40,12 +40,3 @@ class TypeCodeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, D
     typeCodeType
   }
 }
-object TypeCodeBuilder {
-
-  def build(codeType: String): DeclarationTypeCodeType = {
-    val typeCodeType = new DeclarationTypeCodeType()
-    typeCodeType.setValue(codeType)
-    typeCodeType
-  }
-
-}

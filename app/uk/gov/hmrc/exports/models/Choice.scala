@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.exports.models
 
-case class Choice(value: String)
-
 object Choice {
   object AllowedChoiceValues {
     val SupplementaryDec = "SMP"
