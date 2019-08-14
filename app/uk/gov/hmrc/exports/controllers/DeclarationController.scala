@@ -42,19 +42,18 @@ class DeclarationController @Inject()(
   def create(): Action[ExportsDeclarationRequest] =
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
       declarationService
-        .save(request.body.toExportsDeclaration(id = UUID.randomUUID().toString, eori = request.eori))
+        .create(request.body.toExportsDeclaration(id = UUID.randomUUID().toString, eori = request.eori))
         .map(declaration => Created(declaration))
     }
 
   def update(id: String): Action[ExportsDeclarationRequest] =
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
-      declarationService.findOne(id, request.eori.value).flatMap {
-        case Some(_) =>
-          declarationService
-            .save(request.body.toExportsDeclaration(id = id, eori = request.eori))
-            .map(declaration => Ok(declaration))
-        case None => Future.successful(NotFound)
-      }
+      declarationService
+        .update(request.body.toExportsDeclaration(id = id, eori = request.eori))
+        .map {
+          case Some(declaration) => Ok(declaration)
+          case None => NotFound
+        }
     }
 
   def findAll(status: Option[String], pagination: Page): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>

@@ -29,7 +29,9 @@ class DeclarationService @Inject()(declarationRepository: DeclarationRepository)
    * For now this just delegates to the repository,
    * eventually it will judge based on a status whether the declaration is a draft, or for submitting.
    */
-  def save(declaration: ExportsDeclaration): Future[ExportsDeclaration] = declarationRepository.create(declaration)
+  def create(declaration: ExportsDeclaration): Future[ExportsDeclaration] = declarationRepository.create(declaration)
+
+  def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] = declarationRepository.update(declaration)
 
   def find(search: DeclarationSearch, pagination: Page): Future[Paginated[ExportsDeclaration]] = declarationRepository.find(search, pagination)
 

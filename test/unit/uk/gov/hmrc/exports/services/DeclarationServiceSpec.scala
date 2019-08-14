@@ -34,13 +34,23 @@ class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFuture
   private val repository = mock[DeclarationRepository]
   private val service = new DeclarationService(repository)
 
-  "Save" should {
+  "Create" should {
     "delegate to the repository" in {
       val declaration = mock[ExportsDeclaration]
       val persistedDeclaration = mock[ExportsDeclaration]
       given(repository.create(declaration)).willReturn(Future.successful(persistedDeclaration))
 
-      service.save(declaration).futureValue mustBe persistedDeclaration
+      service.create(declaration).futureValue mustBe persistedDeclaration
+    }
+  }
+
+  "Update" should {
+    "delegate to the repository" in {
+      val declaration = mock[ExportsDeclaration]
+      val persistedDeclaration = mock[ExportsDeclaration]
+      given(repository.update(declaration)).willReturn(Future.successful(Some(persistedDeclaration)))
+
+      service.update(declaration).futureValue mustBe Some(persistedDeclaration)
     }
   }
 

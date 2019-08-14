@@ -58,6 +58,13 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
   def create(declaration: ExportsDeclaration): Future[ExportsDeclaration] =
     super.insert(declaration).map(_ => declaration)
 
+  def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] = super.findAndUpdate(
+    Json.obj("id" -> declaration.id, "eori" -> declaration.eori),
+    Json.toJson(declaration).as[JsObject],
+    fetchNewObject = true,
+    upsert = false
+  ).map(_.value.map(_.as[ExportsDeclaration]))
+
   def delete(declaration: ExportsDeclaration): Future[Unit] =
     super
       .remove("id" -> declaration.id, "eori" -> declaration.eori)
