@@ -46,6 +46,7 @@ class WcoSubmissionService @Inject()(
       case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) =>
         val newSubmission =
           Submission(
+            uuid = declaration.id,
             eori = declaration.eori,
             lrn = lrn.getOrElse(throw new IllegalArgumentException("An LRN is required")),
             ducr = ducr,
