@@ -22,8 +22,8 @@ import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.models.{DeclarationSearch, Page, Paginated}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.services.{DeclarationService, WcoSubmissionService}
@@ -41,26 +41,62 @@ class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFuture
   private val ec = Implicits.global
 
   "Create" should {
-    "delegate to the repository" in {
-      val submission = mock[Submission]
-      val declaration = mock[ExportsDeclaration]
-      val persistedDeclaration = mock[ExportsDeclaration]
+    "delegate to the repository" when {
+      "declaration status is COMPLETE" in {
+        val submission = mock[Submission]
+        val declaration = mock[ExportsDeclaration]
+        val persistedDeclaration = mock[ExportsDeclaration]
+        given(declaration.status).willReturn(DeclarationStatus.COMPLETE)
+        given(repository.create(declaration)).willReturn(Future.successful(persistedDeclaration))
+        given(wcoSubmissionService.submit(declaration)(hc, ec)).willReturn(Future.successful(submission))
 
-      given(repository.create(declaration)).willReturn(Future.successful(persistedDeclaration))
-      given(wcoSubmissionService.submit(declaration)(hc, ec))
-        .willReturn(Future.successful(submission))
+        service.create(declaration)(hc, ec).futureValue mustBe persistedDeclaration
 
-      service.create(declaration)(hc, ec).futureValue mustBe persistedDeclaration
+        verify(repository).create(declaration)
+        verify(wcoSubmissionService).submit(declaration)(hc, ec)
+      }
+
+      "declaration status is not COMPLETE"  in {
+        val declaration = mock[ExportsDeclaration]
+        val persistedDeclaration = mock[ExportsDeclaration]
+        given(declaration.status).willReturn(DeclarationStatus.DRAFT)
+        given(repository.create(declaration)).willReturn(Future.successful(persistedDeclaration))
+
+        service.create(declaration)(hc, ec).futureValue mustBe persistedDeclaration
+
+        verify(repository).create(declaration)
+        verifyZeroInteractions(wcoSubmissionService)
+      }
     }
   }
 
   "Update" should {
-    "delegate to the repository" in {
-      val declaration = mock[ExportsDeclaration]
-      val persistedDeclaration = mock[ExportsDeclaration]
-      given(repository.update(declaration)).willReturn(Future.successful(Some(persistedDeclaration)))
+    "delegate to the repository" when {
+      "declaration status is COMPLETE" in {
+        val submission = mock[Submission]
+        val declaration = mock[ExportsDeclaration]
+        val persistedDeclaration = mock[ExportsDeclaration]
+        given(declaration.status).willReturn(DeclarationStatus.COMPLETE)
+        given(repository.update(declaration)).willReturn(Future.successful(Some(persistedDeclaration)))
+        given(wcoSubmissionService.submit(declaration)(hc, ec)).willReturn(Future.successful(submission))
 
-      service.update(declaration)(hc, ec).futureValue mustBe Some(persistedDeclaration)
+        service.update(declaration)(hc, ec).futureValue mustBe Some(persistedDeclaration)
+
+        verify(repository).update(declaration)
+        verify(wcoSubmissionService).submit(declaration)(hc, ec)
+      }
+
+      "declaration status is not COMPLETE" in {
+        val declaration = mock[ExportsDeclaration]
+        val persistedDeclaration = mock[ExportsDeclaration]
+        given(declaration.status).willReturn(DeclarationStatus.DRAFT)
+        given(repository.update(declaration)).willReturn(Future.successful(Some(persistedDeclaration)))
+
+        service.update(declaration)(hc, ec).futureValue mustBe Some(persistedDeclaration)
+
+        verify(repository).update(declaration)
+        verifyZeroInteractions(wcoSubmissionService)
+      }
     }
   }
 

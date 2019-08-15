@@ -48,21 +48,28 @@ class DeclarationController @Inject()(
 
   def update(id: String): Action[ExportsDeclarationRequest] =
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
-      declarationService
-        .update(request.body.toExportsDeclaration(id = id, eori = request.eori))
-        .map {
-          case Some(declaration) => Ok(declaration)
-          case None => NotFound
-        }
+      declarationService.findOne(id, request.eori.value).flatMap {
+        case Some(declaration) if declaration.status == DeclarationStatus.COMPLETE =>
+          Future.successful(BadRequest(ErrorResponse("Cannot update a declaration once it is COMPLETE")))
+        case Some(_) =>
+          declarationService
+            .update(request.body.toExportsDeclaration(id = id, eori = request.eori))
+            .map {
+              case Some(declaration) => Ok(declaration)
+              case None              => NotFound
+            }
+        case None => Future.successful(NotFound)
+      }
     }
 
-  def findAll(status: Option[String], pagination: Page): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    val search = DeclarationSearch(
-      eori = request.eori.value,
-      status = status.map(v => Try(DeclarationStatus.withName(v))).filter(_.isSuccess).map(_.get)
-    )
-    declarationService.find(search, pagination).map(results => Ok(results))
-  }
+  def findAll(status: Option[String], pagination: Page): Action[AnyContent] =
+    authenticator.authorisedAction(parse.default) { implicit request =>
+      val search = DeclarationSearch(
+        eori = request.eori.value,
+        status = status.map(v => Try(DeclarationStatus.withName(v))).filter(_.isSuccess).map(_.get)
+      )
+      declarationService.find(search, pagination).map(results => Ok(results))
+    }
 
   def findByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     declarationService.findOne(id, request.eori.value).map {
