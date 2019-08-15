@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.models.declaration
 import java.time.Instant
 
 import play.api.libs.json._
+import uk.gov.hmrc.exports.models.Choice
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 
 case class ExportsDeclaration(
@@ -27,7 +28,7 @@ case class ExportsDeclaration(
   status: DeclarationStatus,
   createdDateTime: Instant,
   updatedDateTime: Instant,
-  choice: String,
+  choice: Choice,
   dispatchLocation: Option[DispatchLocation],
   additionalDeclarationType: Option[AdditionalDeclarationType],
   consignmentReferences: Option[ConsignmentReferences],
@@ -44,6 +45,7 @@ case class ExportsDeclaration(
 )
 
 object ExportsDeclaration {
+  
   object REST {
     implicit val format: OFormat[ExportsDeclaration] = Json.format[ExportsDeclaration]
   }

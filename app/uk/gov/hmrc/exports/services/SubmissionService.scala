@@ -48,7 +48,7 @@ class SubmissionService @Inject()(
   def save(eori: String, submissionRequestData: SubmissionRequestHeaders)(
     submissionXml: NodeSeq
   )(implicit hc: HeaderCarrier): Future[Either[String, String]] =
-    customsDeclarationsConnector.submitDeclaration(eori, submissionXml).flatMap {
+    customsDeclarationsConnector.submitDeclaration(eori, submissionXml.toString()).flatMap {
       case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) =>
         val newSubmission =
           buildSubmission(eori, submissionRequestData.lrn.value, submissionRequestData.ducr, conversationId)

@@ -22,4 +22,9 @@ case class AdditionalDeclarationType(additionalDeclarationType: String)
 
 object AdditionalDeclarationType {
   implicit val format: OFormat[AdditionalDeclarationType] = Json.format[AdditionalDeclarationType]
+
+  object AllowedAdditionalDeclarationTypes {
+    val Simplified = "Y"
+    val Standard = "Z"
+  }
 }

@@ -23,24 +23,34 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.models.{DeclarationSearch, Page, Paginated}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
-import uk.gov.hmrc.exports.services.DeclarationService
+import uk.gov.hmrc.exports.services.{DeclarationService, WcoSubmissionService}
+import uk.gov.hmrc.http.HeaderCarrier
 
+import scala.concurrent.ExecutionContext.Implicits
 import scala.concurrent.Future
 
 class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers {
 
   private val repository = mock[DeclarationRepository]
-  private val service = new DeclarationService(repository)
+  private val wcoSubmissionService = mock[WcoSubmissionService]
+  private val service = new DeclarationService(repository, wcoSubmissionService)
+  private val hc = mock[HeaderCarrier]
+  private val ec = Implicits.global
 
   "Create" should {
     "delegate to the repository" in {
+      val submission = mock[Submission]
       val declaration = mock[ExportsDeclaration]
       val persistedDeclaration = mock[ExportsDeclaration]
-      given(repository.create(declaration)).willReturn(Future.successful(persistedDeclaration))
 
-      service.create(declaration).futureValue mustBe persistedDeclaration
+      given(repository.create(declaration)).willReturn(Future.successful(persistedDeclaration))
+      given(wcoSubmissionService.submit(declaration)(hc, ec))
+        .willReturn(Future.successful(submission))
+
+      service.create(declaration)(hc, ec).futureValue mustBe persistedDeclaration
     }
   }
 
@@ -50,7 +60,7 @@ class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFuture
       val persistedDeclaration = mock[ExportsDeclaration]
       given(repository.update(declaration)).willReturn(Future.successful(Some(persistedDeclaration)))
 
-      service.update(declaration).futureValue mustBe Some(persistedDeclaration)
+      service.update(declaration)(hc, ec).futureValue mustBe Some(persistedDeclaration)
     }
   }
 
@@ -86,5 +96,3 @@ class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFuture
   }
 
 }
-
-

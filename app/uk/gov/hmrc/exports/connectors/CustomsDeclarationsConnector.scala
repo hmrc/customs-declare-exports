@@ -37,22 +37,22 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
 
   private val logger = Logger(this.getClass)
 
-  def submitDeclaration(eori: String, xml: NodeSeq)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] =
+  def submitDeclaration(eori: String, xml: String)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] =
     postMetaData(eori, appConfig.submitDeclarationUri, xml).map { res =>
       logger.debug(s"CUSTOMS_DECLARATIONS response is  --> ${res.toString}")
       res
     }
 
   def submitCancellation(eori: String, xml: NodeSeq)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] =
-    postMetaData(eori, appConfig.cancelDeclarationUri, xml).map { res =>
+    postMetaData(eori, appConfig.cancelDeclarationUri, xml.toString()).map { res =>
       logger.debug(s"CUSTOMS_DECLARATIONS cancellation response is  --> ${res.toString}")
       res
     }
 
-  private def postMetaData(eori: String, uri: String, xml: NodeSeq)(
+  private def postMetaData(eori: String, uri: String, xml: String)(
     implicit hc: HeaderCarrier
   ): Future[CustomsDeclarationsResponse] =
-    post(eori, uri, xml.toString())
+    post(eori, uri, xml)
 
   private[connectors] def post(eori: String, uri: String, body: String)(
     implicit hc: HeaderCarrier

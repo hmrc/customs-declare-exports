@@ -158,7 +158,7 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
         submissionService.save(eori, validatedHeadersSubmissionRequest)(submissionXml).futureValue
 
         verify(customsDeclarationsConnectorMock, times(1))
-          .submitDeclaration(meq(eori), meq(submissionXml))(any())
+          .submitDeclaration(meq(eori), meq(submissionXml.toString()))(any())
       }
 
       "call SubmissionRepository with correctly built Submission (no MRN present)" in new Test {

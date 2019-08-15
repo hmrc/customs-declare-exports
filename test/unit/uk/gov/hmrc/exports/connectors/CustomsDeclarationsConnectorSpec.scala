@@ -65,7 +65,7 @@ class CustomsDeclarationsConnectorSpec extends UnitSpec with MockitoSugar {
       val eori = "GB123456"
       val xmlPayload: Elem = <SomeXML></SomeXML>
 
-      val result: CustomsDeclarationsResponse = await(testObj.submitDeclaration(eori, xmlPayload))
+      val result: CustomsDeclarationsResponse = await(testObj.submitDeclaration(eori, xmlPayload.toString()))
       result.conversationId shouldBe Some(testConversationId)
     }
 

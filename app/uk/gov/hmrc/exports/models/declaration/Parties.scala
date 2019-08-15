@@ -46,6 +46,9 @@ object DeclarantDetails {
 case class RepresentativeDetails(details: Option[EntityDetails], statusCode: Option[String])
 object RepresentativeDetails {
   implicit val format: OFormat[RepresentativeDetails] = Json.format[RepresentativeDetails]
+  val Declarant = "1"
+  val DirectRepresentative = "2"
+  val IndirectRepresentative = "3"
 }
 
 case class DeclarationAdditionalActors(actors: Seq[DeclarationAdditionalActor])
@@ -84,4 +87,11 @@ case class Parties(
 )
 object Parties {
   implicit val format: OFormat[Parties] = Json.format[Parties]
+}
+
+object PartyType {
+  val Consolidator = "CS"
+  val Manufacturer = "MF"
+  val FreightForwarder = "FW"
+  val WarehouseKeeper = "WH"
 }

@@ -37,7 +37,7 @@ class DeclarationController @Inject()(
   authenticator: Authenticator,
   override val controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
-    extends RESTController {
+    extends RESTController(controllerComponents) {
 
   def create(): Action[ExportsDeclarationRequest] =
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>

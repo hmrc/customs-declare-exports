@@ -24,7 +24,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.api.ReadConcern
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo.format
-import uk.gov.hmrc.exports.models.{DeclarationSearch, Page, Paginated}
+import uk.gov.hmrc.exports.models.{Choice, DeclarationSearch, Page, Paginated}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import util.testdata.ExportsDeclarationBuilder
 
@@ -67,7 +67,7 @@ class DeclarationRepositoryTest
 
   "Update" should {
     "update the declaration" in {
-      val declaration = aDeclaration(withId("id"), withEori("eori"))
+      val declaration = aDeclaration(withChoice(Choice.StandardDec), withId("id"), withEori("eori"))
       givenADeclarationExists(declaration)
 
       repository.update(declaration).futureValue shouldBe Some(declaration)

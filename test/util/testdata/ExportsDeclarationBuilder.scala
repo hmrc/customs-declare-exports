@@ -19,24 +19,23 @@ package util.testdata
 import java.time.{LocalDateTime, ZoneOffset}
 import java.util.UUID
 
+import uk.gov.hmrc.exports.models.Choice
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration._
 
 //noinspection ScalaStyle
 trait ExportsDeclarationBuilder {
 
+  private type ExportsDeclarationModifier = ExportsDeclaration => ExportsDeclaration
   protected val VALID_DUCR = "5GB123456789000-123ABC456DEFIIIII"
   protected val VALID_LRN = "FG7676767889"
-
-  private def uuid: String = UUID.randomUUID().toString
-
   private val modelWithDefaults: ExportsDeclaration = ExportsDeclaration(
     id = uuid,
     eori = "eori",
     status = DeclarationStatus.COMPLETE,
     createdDateTime = LocalDateTime.of(2019, 1, 1, 0, 0, 0).toInstant(ZoneOffset.UTC),
     updatedDateTime = LocalDateTime.of(2019, 2, 2, 0, 0, 0).toInstant(ZoneOffset.UTC),
-    choice = "choice",
+    choice = Choice.StandardDec,
     dispatchLocation = None,
     additionalDeclarationType = None,
     consignmentReferences = None,
@@ -52,20 +51,18 @@ trait ExportsDeclarationBuilder {
     seals = Seq.empty[Seal]
   )
 
-  private type ExportsDeclarationModifier = ExportsDeclaration => ExportsDeclaration
-
   def aDeclaration(modifiers: ExportsDeclarationModifier*): ExportsDeclaration =
     modifiers.foldLeft(modelWithDefaults)((current, modifier) => modifier(current))
 
-  // ************************************************* Builders ********************************************************
-
   def withId(id: String): ExportsDeclarationModifier = _.copy(id = id)
+
+  // ************************************************* Builders ********************************************************
 
   def withEori(eori: String): ExportsDeclarationModifier = _.copy(eori = eori)
 
   def withStatus(status: DeclarationStatus): ExportsDeclarationModifier = _.copy(status = status)
 
-  def withChoice(choice: String): ExportsDeclarationModifier = _.copy(choice = choice)
+  def withChoice(choice: Choice): ExportsDeclarationModifier = _.copy(choice = choice)
 
   def withoutAdditionalDeclarationType(): ExportsDeclarationModifier = _.copy(additionalDeclarationType = None)
 
@@ -106,6 +103,9 @@ trait ExportsDeclarationBuilder {
         containerData =
           Some(TransportInformationContainers(cache.containerData.map(_.containers).getOrElse(Seq.empty) ++ data))
     )
+
+  def withPreviousDocuments(previousDocuments: PreviousDocument*): ExportsDeclarationModifier =
+    _.copy(previousDocuments = Some(PreviousDocuments(previousDocuments)))
 
   def withoutExporterDetails(): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(exporterDetails = None))
@@ -182,6 +182,9 @@ trait ExportsDeclarationBuilder {
   def withoutWarehouseIdentification(): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(warehouseIdentification = None))
 
+  def withWarehouseIdentification(warehouseIdentification: WarehouseIdentification): ExportsDeclarationModifier =
+    cache => cache.copy(locations = cache.locations.copy(warehouseIdentification = Some(warehouseIdentification)))
+
   def withWarehouseIdentification(
     supervisingCustomsOffice: Option[String] = None,
     identificationType: Option[String] = None,
@@ -218,11 +221,16 @@ trait ExportsDeclarationBuilder {
 
   def withoutItems(): ExportsDeclarationModifier = _.copy(items = Set.empty)
 
-  def withItem(item: ExportItem): ExportsDeclarationModifier =
+  def withItem(item: ExportItem = ExportItem(uuid)): ExportsDeclarationModifier =
     m => m.copy(items = m.items + item)
 
   def withItems(item1: ExportItem, others: ExportItem*): ExportsDeclarationModifier =
     _.copy(items = Set(item1) ++ others)
+
+  def withItems(count: Int): ExportsDeclarationModifier =
+    cache => cache.copy(items = cache.items ++ (1 to count).map(_ => ExportItem(id = uuid)).toSet)
+
+  private def uuid: String = UUID.randomUUID().toString
 
   def withoutTotalNumberOfItems(): ExportsDeclarationModifier = _.copy(totalNumberOfItems = None)
 
@@ -238,9 +246,35 @@ trait ExportsDeclarationBuilder {
   def withNatureOfTransaction(natureType: String): ExportsDeclarationModifier =
     _.copy(natureOfTransaction = Some(NatureOfTransaction(natureType)))
 
+  def withoutTransportDetails(): ExportsDeclarationModifier = _.copy(transportDetails = None)
+
+  def withTransportDetails(details: TransportDetails): ExportsDeclarationModifier =
+    _.copy(transportDetails = Some(details))
+
+  def withTransportDetails(
+    meansOfTransportCrossingTheBorderNationality: Option[String] = None,
+    container: Boolean = false,
+    meansOfTransportCrossingTheBorderType: String = "",
+    meansOfTransportCrossingTheBorderIDNumber: Option[String] = None,
+    paymentMethod: Option[String] = None
+  ): ExportsDeclarationModifier =
+    _.copy(
+      transportDetails = Some(
+        TransportDetails(
+          meansOfTransportCrossingTheBorderNationality = meansOfTransportCrossingTheBorderNationality,
+          container = container,
+          meansOfTransportCrossingTheBorderType = meansOfTransportCrossingTheBorderType,
+          meansOfTransportCrossingTheBorderIDNumber = meansOfTransportCrossingTheBorderIDNumber,
+          paymentMethod = paymentMethod
+        )
+      )
+    )
+
   def withoutSeal(): ExportsDeclarationModifier = _.copy(seals = Seq.empty)
 
   def withSeal(seal1: Seal, others: Seal*): ExportsDeclarationModifier =
     cache => cache.copy(seals = cache.seals ++ Seq(seal1) ++ others)
+
+  def withSeals(seals: Seq[Seal]): ExportsDeclarationModifier = _.copy(seals = seals)
 
 }
