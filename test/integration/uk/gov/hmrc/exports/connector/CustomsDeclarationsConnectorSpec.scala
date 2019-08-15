@@ -24,7 +24,6 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
 import uk.gov.hmrc.http.HeaderCarrier
 import util.CustomsDeclarationsAPIConfig
 import util.ExternalServicesConfig.{Host, Port}
@@ -59,16 +58,6 @@ class CustomsDeclarationsConnectorSpec
 
     "return response with specific status" when {
 
-      "it fail to connect to external service - 500" in {
-
-        stopMockServer()
-
-        val response = await(sendValidXml(randomSubmitDeclaration.toXml))
-        response.status should be(INTERNAL_SERVER_ERROR)
-
-        startMockServer()
-      }
-
       "request is processed successfully - 202" in {
 
         val payload = randomSubmitDeclaration
@@ -86,56 +75,21 @@ class CustomsDeclarationsConnectorSpec
       "request is processed successfully (external 202), but does not have conversationId - 500" in {
 
         startSubmissionService(ACCEPTED, conversationId = false)
-        val response = await(sendValidXml(randomSubmitDeclaration.toXml))
-
-        response.status should be(INTERNAL_SERVER_ERROR)
-        response.conversationId should be(None)
+        intercept[RuntimeException] {
+          await(sendValidXml(randomSubmitDeclaration.toXml))
+        }
       }
 
       "request is not processed - 500" in {
 
         startSubmissionService(INTERNAL_SERVER_ERROR)
-        val response = await(sendValidXml(randomSubmitDeclaration.toXml))
-
-        response.status should be(INTERNAL_SERVER_ERROR)
-      }
-
-      "request is not processed (external 401) - 500" in {
-
-        startSubmissionService(UNAUTHORIZED)
-        val response = await(sendValidXml(randomSubmitDeclaration.toXml))
-
-        response.status should be(INTERNAL_SERVER_ERROR)
-      }
-
-      "request is not processed (external 404) - 500" in {
-
-        startSubmissionService(NOT_FOUND)
-        val response = await(sendValidXml(randomSubmitDeclaration.toXml))
-
-        response.status should be(INTERNAL_SERVER_ERROR)
-      }
-
-      "request is not processed (external 400) and does not have conversationId - 500" in {
-
-        startSubmissionService(BAD_REQUEST, conversationId = false)
-        val response = await(sendValidXml(randomSubmitDeclaration.toXml))
-
-        response.status should be(INTERNAL_SERVER_ERROR)
-        response.conversationId should be(Some("No conversation ID found"))
-      }
-
-      "request is not processed (external 400) and does have conversationId - 500" in {
-
-        startSubmissionService(BAD_REQUEST)
-        val response = await(sendValidXml("<xml><element>test</element></xml>"))
-
-        response.status should be(INTERNAL_SERVER_ERROR)
-        response.conversationId should not be Some("No conversation ID found")
+        intercept[RuntimeException] {
+          await(sendValidXml(randomSubmitDeclaration.toXml))
+        }
       }
     }
   }
 
-  private def sendValidXml(xml: String): Future[CustomsDeclarationsResponse] =
+  private def sendValidXml(xml: String): Future[String] =
     connector.submitDeclaration(declarantEoriValue, xml)
 }

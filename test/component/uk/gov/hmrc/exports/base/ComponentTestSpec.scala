@@ -19,7 +19,8 @@ package component.uk.gov.hmrc.exports.base
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{reset, verify, verifyZeroInteractions, when}
-import org.mockito.stubbing.OngoingStubbing
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 import org.scalatest._
 import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
@@ -60,8 +61,12 @@ trait ComponentTestSpec
     stopMockServer()
   }
 
-  def withSubmissionRepository(saveResponse: Boolean): OngoingStubbing[Future[Boolean]] =
-    when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(saveResponse))
+  private def withFutureArg[T](index: Int): Answer[Future[T]] = new Answer[Future[T]] {
+    override def answer(invocation: InvocationOnMock): Future[T] = invocation.getArgument(index)
+  }
+
+  def withSubmissionSuccess(): Unit =
+    when(mockSubmissionRepository.save(any())).thenAnswer(withFutureArg(0))
 
   def verifySubmissionRepositoryIsCorrectlyCalled(eoriValue: String) {
     val submissionCaptor: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])

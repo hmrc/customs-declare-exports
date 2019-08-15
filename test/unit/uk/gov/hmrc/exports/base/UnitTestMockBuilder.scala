@@ -18,6 +18,8 @@ package unit.uk.gov.hmrc.exports.base
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
@@ -33,7 +35,7 @@ object UnitTestMockBuilder extends MockitoSugar {
   def buildCustomsDeclarationsConnectorMock: CustomsDeclarationsConnector = {
     val customsDeclarationsConnectorMock: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
     when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any()))
-      .thenReturn(Future.successful(CustomsDeclarationsResponse.empty))
+      .thenReturn(Future.successful("conversation-id"))
     when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any()))
       .thenReturn(Future.successful(CustomsDeclarationsResponse.empty))
     customsDeclarationsConnectorMock
@@ -51,7 +53,7 @@ object UnitTestMockBuilder extends MockitoSugar {
     when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.findSubmissionByConversationId(any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.findSubmissionByUuid(any())).thenReturn(Future.successful(None))
-    when(submissionRepositoryMock.save(any())).thenReturn(Future.successful(false))
+    when(submissionRepositoryMock.save(any())).thenAnswer(withFutureArg(0))
     when(submissionRepositoryMock.updateMrn(any(), any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.addAction(any(), any())).thenReturn(Future.successful(None))
     submissionRepositoryMock
@@ -82,5 +84,9 @@ object UnitTestMockBuilder extends MockitoSugar {
     when(notificationServiceMock.saveAll(any())).thenReturn(Future.successful(Left("")))
     when(notificationServiceMock.save(any())).thenReturn(Future.successful(Left("")))
     notificationServiceMock
+  }
+
+  private def withFutureArg[T](index: Int): Answer[Future[T]] = new Answer[Future[T]] {
+    override def answer(invocation: InvocationOnMock): Future[T] = Future.successful(invocation.getArgument(index))
   }
 }

@@ -53,7 +53,7 @@ class SubmissionRepositorySpec
 
     "the operation was successful" should {
       "return true" in {
-        repo.save(submission).futureValue must be(true)
+        repo.save(submission).futureValue must be(submission)
 
         val submissionInDB = repo.findSubmissionByMrn(mrn).futureValue
         submissionInDB must be(defined)
@@ -62,7 +62,7 @@ class SubmissionRepositorySpec
 
     "trying to save Submission with the same conversationId twice" should {
       "throw DatabaseException" in {
-        repo.save(submission).futureValue must be(true)
+        repo.save(submission).futureValue must be(submission)
         val secondSubmission = submission_2.copy(actions = submission.actions)
 
         val exc = repo.save(secondSubmission).failed.futureValue
@@ -74,7 +74,7 @@ class SubmissionRepositorySpec
       }
 
       "result in having only the first Submission persisted" in {
-        repo.save(submission).futureValue must be(true)
+        repo.save(submission).futureValue must be(submission)
         val secondSubmission = submission_2.copy(actions = submission.actions)
 
         repo.save(secondSubmission).failed.futureValue

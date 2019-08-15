@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.models.{DeclarationSearch, Page, Paginated}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -26,7 +26,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class DeclarationService @Inject()(
   declarationRepository: DeclarationRepository,
-  wcoSubmissionService: WcoSubmissionService
+  wcoSubmissionService: WcoSubmissionService,
+  submissionService: SubmissionService
 ) {
 
   def create(
@@ -34,12 +35,29 @@ class DeclarationService @Inject()(
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[ExportsDeclaration] =
     for {
       saved <- declarationRepository.create(declaration)
-      _ <- wcoSubmissionService.submit(declaration)
+      _ <- submitIfComplete(declaration)
     } yield saved
 
-  def update(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[ExportsDeclaration]] = declarationRepository.update(declaration)
+  def update(
+    declaration: ExportsDeclaration
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[ExportsDeclaration]] =
+    for {
+      saved <- declarationRepository.update(declaration)
+      _ <- submitIfComplete(declaration)
+    } yield saved
 
-  def find(search: DeclarationSearch, pagination: Page): Future[Paginated[ExportsDeclaration]] = declarationRepository.find(search, pagination)
+  private def submitIfComplete(
+    declaration: ExportsDeclaration
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Unit] =
+    if (declaration.status == DeclarationStatus.COMPLETE) {
+      for {
+        submission <- wcoSubmissionService.submit(declaration)
+        _ <- submissionService.create(submission)
+      } yield Unit
+    } else Future.successful((): Unit)
+
+  def find(search: DeclarationSearch, pagination: Page): Future[Paginated[ExportsDeclaration]] =
+    declarationRepository.find(search, pagination)
 
   def findOne(id: String, eori: String): Future[Option[ExportsDeclaration]] = declarationRepository.find(id, eori)
 

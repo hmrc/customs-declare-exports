@@ -17,57 +17,35 @@
 package uk.gov.hmrc.exports.services
 
 import javax.inject.Inject
-import play.api.Logger
-import play.mvc.Http.Status.ACCEPTED
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest}
-import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class WcoSubmissionService @Inject()(
   wcoMapperService: WcoMapperService,
-  customsDeclarationsConnector: CustomsDeclarationsConnector,
-  submissionRepository: SubmissionRepository,
-  notificationRepository: NotificationRepository
+  customsDeclarationsConnector: CustomsDeclarationsConnector
 ) {
-  private val logger = Logger(this.getClass)
 
-  def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier, execution: ExecutionContext) = {
-
+  def submit(
+    declaration: ExportsDeclaration
+  )(implicit hc: HeaderCarrier, execution: ExecutionContext): Future[Submission] = {
     val metaData = wcoMapperService.produceMetaData(declaration)
     val lrn = wcoMapperService.declarationLrn(metaData)
+      .getOrElse(throw new IllegalArgumentException("An LRN is required"))
     val ducr = wcoMapperService.declarationUcr(metaData)
+    val payload = wcoMapperService.toXml(metaData)
 
-    customsDeclarationsConnector.submitDeclaration(declaration.eori, wcoMapperService.toXml(metaData)).flatMap {
-      case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) =>
-        val newSubmission =
-          Submission(
-            eori = declaration.eori,
-            lrn = lrn.getOrElse(throw new IllegalArgumentException("An LRN is required")),
-            ducr = ducr,
-            actions = Seq(Action(requestType = SubmissionRequest, conversationId = conversationId))
-          )
-
-        submissionRepository
-          .save(newSubmission)
-          .map(
-            outcome =>
-              notificationRepository.findNotificationsByConversationId(conversationId).flatMap { notifications =>
-                val result = Future.successful(outcome)
-                notifications.headOption.map(_.mrn).fold(result) { mrn =>
-                  submissionRepository.updateMrn(conversationId, mrn).flatMap(_ => result)
-                }
-            }
-          )
-
-      case CustomsDeclarationsResponse(status, _) =>
-        logger
-          .error(s"Customs Declarations Service returned $status for Eori: $declaration.eori and lrn: $lrn")
-        Future.successful(Left("Non Accepted status returned by Customs Declarations Service"))
+    customsDeclarationsConnector.submitDeclaration(declaration.eori, payload) map { conversationId =>
+      Submission(
+        uuid = declaration.id,
+        eori = declaration.eori,
+        lrn = lrn,
+        ducr = ducr,
+        actions = Seq(Action(requestType = SubmissionRequest, conversationId = conversationId))
+      )
     }
   }
 }
