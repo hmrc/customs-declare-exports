@@ -32,6 +32,7 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
   additionalInformationBuilder: AdditionalInformationBuilder,
   additionalDocumentsBuilder: AdditionalDocumentsBuilder,
   domesticDutyTaxPartyBuilder: DomesticDutyTaxPartyBuilder,
+  cachingMappingHelper: CachingMappingHelper,
   commodityBuilder: CommodityBuilder
 ) extends ModifyingBuilder[ExportItem, Declaration.GoodsShipment] {
 
@@ -64,11 +65,11 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
 
   private def mapItemTypeToCommodity(itemType: Option[ItemType]): Option[Commodity] =
     itemType.map({ item =>
-      CachingMappingHelper.commodityFromItemTypes(item)
+      cachingMappingHelper.commodityFromItemTypes(item)
     })
 
   private def mapCommodityMeasureToCommodity(commodityMeasure: Option[CommodityMeasure]): Option[Commodity] =
-    commodityMeasure.map(measure => CachingMappingHelper.mapGoodsMeasure(measure))
+    commodityMeasure.map(measure => cachingMappingHelper.mapGoodsMeasure(measure))
 
   private def combineCommodities(commodityPart1: Commodity, commodityPart2: Commodity): Commodity =
     commodityPart1.copy(goodsMeasure = commodityPart2.goodsMeasure)

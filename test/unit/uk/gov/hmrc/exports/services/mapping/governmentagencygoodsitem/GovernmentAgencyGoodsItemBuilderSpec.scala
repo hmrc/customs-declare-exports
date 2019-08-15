@@ -21,19 +21,13 @@ import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import play.api.libs.json._
-import uk.gov.hmrc.exports.models.declaration.{
-  AdditionalFiscalReference,
-  AdditionalFiscalReferences,
-  CommodityMeasure,
-  DocumentsProduced
-}
+import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem._
 import uk.gov.hmrc.wco.dec.Commodity
 import unit.uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
-import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.{
-  GovernmentAgencyGoodsItem => WCOGovernmentAgencyGoodsItem
-}
+import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.{GovernmentAgencyGoodsItem => WCOGovernmentAgencyGoodsItem}
 
 class GovernmentAgencyGoodsItemBuilderSpec
     extends WordSpec with Matchers with GovernmentAgencyGoodsItemData with MockitoSugar with ExportsItemBuilder {
@@ -46,6 +40,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
   private val additionalDocumentsBuilder = mock[AdditionalDocumentsBuilder]
   private val commodityBuilder = mock[CommodityBuilder]
   private val dutyTaxPartyBuilder = mock[DomesticDutyTaxPartyBuilder]
+  private val mockCachingMappingHelper = mock[CachingMappingHelper]
 
   "GovernmentAgencyGoodsItemBuilder" should {
 
@@ -64,6 +59,9 @@ class GovernmentAgencyGoodsItemBuilderSpec
         )
       )
 
+      when(mockCachingMappingHelper.mapGoodsMeasure(any[CommodityMeasure])).thenReturn(Commodity(description = Some("Some Commodity")))
+      when(mockCachingMappingHelper.commodityFromItemTypes(any[ItemType])).thenReturn(Commodity(description = Some("Some Commodity")))
+
       val goodsShipment = new GoodsShipment
       builder.buildThenAdd(exportItem, goodsShipment)
 
@@ -74,6 +72,8 @@ class GovernmentAgencyGoodsItemBuilderSpec
       verify(additionalInformationBuilder).buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
       verify(additionalDocumentsBuilder).buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
       verify(commodityBuilder).buildThenAdd(any[Commodity], any[GoodsShipment.GovernmentAgencyGoodsItem])
+      verify(mockCachingMappingHelper).mapGoodsMeasure(any[CommodityMeasure])
+      verify(mockCachingMappingHelper).commodityFromItemTypes(any[ItemType])
       verify(dutyTaxPartyBuilder)
         .buildThenAdd(any[AdditionalFiscalReference], any[GoodsShipment.GovernmentAgencyGoodsItem])
       goodsShipment.getGovernmentAgencyGoodsItem shouldNot be(empty)
@@ -134,6 +134,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
       additionalInformationBuilder,
       additionalDocumentsBuilder,
       dutyTaxPartyBuilder,
+      mockCachingMappingHelper,
       commodityBuilder
     )
 

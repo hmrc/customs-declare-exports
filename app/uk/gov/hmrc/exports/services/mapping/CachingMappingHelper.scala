@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.models.declaration.IdentificationTypeCodes.{
 import uk.gov.hmrc.exports.models.declaration.{CommodityMeasure, ItemType}
 import uk.gov.hmrc.wco.dec._
 
-object CachingMappingHelper {
+class CachingMappingHelper {
   val defaultMeasureCode = "KGM"
 
   def commodityFromItemTypes(itemType: ItemType): Commodity =
