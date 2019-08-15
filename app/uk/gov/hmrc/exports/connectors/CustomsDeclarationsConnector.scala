@@ -21,6 +21,7 @@ import javax.inject.Singleton
 import play.api.Logger
 import play.api.http.{ContentTypes, HeaderNames, Status}
 import play.api.mvc.Codec
+import play.mvc.Http.Status.ACCEPTED
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
 import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
@@ -37,10 +38,14 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
 
   private val logger = Logger(this.getClass)
 
-  def submitDeclaration(eori: String, xml: String)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] =
+  def submitDeclaration(eori: String, xml: String)(implicit hc: HeaderCarrier): Future[String] =
     postMetaData(eori, appConfig.submitDeclarationUri, xml).map { res =>
       logger.debug(s"CUSTOMS_DECLARATIONS response is  --> ${res.toString}")
-      res
+      res match {
+        case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) => conversationId
+        case CustomsDeclarationsResponse(status, _) =>
+          throw new RuntimeException(s"Customs Declarations Service returned [$status[ for EORI: [$eori]")
+      }
     }
 
   def submitCancellation(eori: String, xml: NodeSeq)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] =

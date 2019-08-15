@@ -114,7 +114,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
       val result: Future[Result] = route(app = app, request).value
 
       And("submission should be persisted")
-      withSubmissionRepository(true)
+      withSubmissionSuccess()
 
       Then("a response with a 500 (INTERNAL_SERVER_ERROR) status is received")
       status(result) shouldBe INTERNAL_SERVER_ERROR
@@ -180,7 +180,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
       val result: Future[Result] = route(app = app, request).value
 
       And("submission should be persisted")
-      withSubmissionRepository(true)
+      withSubmissionSuccess()
 
       Then("a response with a 500 (INTERNAL_SERVER_ERROR) status is received")
       status(result) shouldBe INTERNAL_SERVER_ERROR
@@ -216,7 +216,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec {
       val result: Future[Result] = route(app = app, request).value
 
       And("submission should be handled")
-      withSubmissionRepository(submissionRepoMockedResult)
+      withSubmissionSuccess()
 
       Then(s"a response with a $expectedResponseStatus status is received")
       status(result) shouldBe expectedResponseStatus

@@ -51,12 +51,9 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
 
   def findSubmissionByUuid(uuid: String): Future[Option[Submission]] = find("uuid" -> uuid).map(_.headOption)
 
-  // TODO: Need to change this method to return Future[WriteResult].
-  //  In current implementation it will never return false, because in case of an error,
-  //  insert throws an Exception which will be propagated to the caller.
-  def save(submission: Submission): Future[Boolean] = insert(submission).map { res =>
+  def save(submission: Submission): Future[Submission] = insert(submission).map { res =>
     if (!res.ok) logger.error(s"Errors when persisting declaration submission: ${res.writeErrors.mkString("--")}")
-    res.ok
+    submission
   }
 
   def updateMrn(conversationId: String, newMrn: String): Future[Option[Submission]] = {

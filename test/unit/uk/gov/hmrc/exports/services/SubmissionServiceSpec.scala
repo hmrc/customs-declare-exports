@@ -16,6 +16,8 @@
 
 package unit.uk.gov.hmrc.exports.services
 
+import java.time.LocalDateTime
+
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito._
 import org.mockito.{ArgumentCaptor, InOrder, Mockito}
@@ -24,6 +26,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.http.Status._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.{CustomsDeclarationsResponse, LocalReferenceNumber, SubmissionRequestHeaders}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
@@ -50,6 +53,27 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
       submissionRepository = submissionRepositoryMock,
       notificationRepository = notificationRepositoryMock
     )(ExecutionContext.global)
+  }
+
+  "create" should {
+    "delegate to the repository" when {
+      "no notifications" in new Test {
+        val submission: Submission = Submission(eori = "", lrn = "", actions = Seq(Action(SubmissionRequest, "conversation-id")))
+
+        submissionService.create(submission).futureValue mustBe submission
+      }
+
+      "some notifications" in new Test {
+        val submission: Submission = Submission(eori = "", lrn = "", actions = Seq(Action(SubmissionRequest, "conversation-id")))
+        val notification = Notification("conversation-id", "mrn", LocalDateTime.now(), "", None, Seq.empty, "")
+        when(notificationRepositoryMock.findNotificationsByConversationId("conversation-id")).thenReturn(Future.successful(Seq(notification)))
+        when(submissionRepositoryMock.updateMrn("conversation-id", "mrn")).thenReturn(Future.successful(Some(submission)))
+
+        submissionService.create(submission).futureValue mustBe submission
+
+        verify(submissionRepositoryMock).updateMrn("conversation-id", "mrn")
+      }
+    }
   }
 
   "SubmissionService on getAllSubmissionsForUser" should {
@@ -195,28 +219,6 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
         val actionAdded = actionCaptor.getValue
         actionAdded.requestType must equal(CancellationRequest)
         actionAdded.conversationId must equal(conversationId)
-      }
-    }
-
-    "CustomsDeclarationsConnector on submitDeclaration returns status other than ACCEPTED" should {
-
-      "return Either.Left with proper message" in new Test {
-        when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any()))
-          .thenReturn(Future.successful(CustomsDeclarationsResponse(status = BAD_REQUEST, conversationId = None)))
-
-        val cancellationResult = submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
-
-        cancellationResult must equal(Left("Non Accepted status returned by Customs Declarations Service"))
-
-      }
-
-      "not call SubmissionRepository" in new Test {
-        when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any()))
-          .thenReturn(Future.successful(CustomsDeclarationsResponse(status = BAD_REQUEST, conversationId = None)))
-
-        val cancellationResult = submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
-
-        verifyZeroInteractions(submissionRepositoryMock)
       }
     }
 

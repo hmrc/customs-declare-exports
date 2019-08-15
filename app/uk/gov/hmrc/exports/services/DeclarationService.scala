@@ -26,7 +26,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class DeclarationService @Inject()(
   declarationRepository: DeclarationRepository,
-  wcoSubmissionService: WcoSubmissionService
+  wcoSubmissionService: WcoSubmissionService,
+  submissionService: SubmissionService
 ) {
 
   def create(
@@ -49,7 +50,10 @@ class DeclarationService @Inject()(
     declaration: ExportsDeclaration
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Unit] =
     if (declaration.status == DeclarationStatus.COMPLETE) {
-      wcoSubmissionService.submit(declaration).map(_ => (): Unit)
+      for {
+        submission <- wcoSubmissionService.submit(declaration)
+        _ <- submissionService.create(submission)
+      } yield Unit
     } else Future.successful((): Unit)
 
   def find(search: DeclarationSearch, pagination: Page): Future[Paginated[ExportsDeclaration]] =

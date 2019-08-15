@@ -20,7 +20,6 @@ import java.util.UUID
 
 import akka.stream.Materializer
 import com.codahale.metrics.SharedMetricRegistries
-import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
@@ -46,10 +45,7 @@ import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.{CancellationStatus, Submission}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.WcoSubmissionService
-import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
-import util.testdata.TestDataHelper
-import util.testdata.TestDataHelper.randomAlphanumericString
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -118,16 +114,6 @@ trait CustomsExportsBaseSpec
       .withSession(session.toSeq: _*)
       .withJsonBody(body)
   }
-
-  // TODO: Take the mocking out of the BaseSpec
-  protected def withCustomsDeclarationSubmission(returnedStatus: Int): Unit =
-    when(
-      mockDeclarationsApiConnector
-        .submitDeclaration(any[String], any[String])(any[HeaderCarrier])
-    ).thenReturn(Future.successful(CustomsDeclarationsResponse(returnedStatus, Some(randomConversationId))))
-
-  protected def withDataSaved(ok: Boolean): OngoingStubbing[Future[Boolean]] =
-    when(mockSubmissionRepository.save(any())).thenReturn(Future.successful(ok))
 
   protected def getSubmission(submission: Option[Submission]): OngoingStubbing[Future[Option[Submission]]] =
     when(mockSubmissionRepository.findSubmissionByConversationId(any())).thenReturn(Future.successful(submission))
