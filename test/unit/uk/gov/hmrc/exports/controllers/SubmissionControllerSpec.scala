@@ -83,61 +83,6 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with BeforeAndAfte
 
   "Actions for submission" when {
 
-    "POST to /declaration" should {
-
-      "return 200 status when submission has been saved" in {
-
-        withAuthorizedUser()
-        withCustomsDeclarationSubmission(ACCEPTED)
-        withDataSaved(true)
-
-
-        val result = route(app, fakeSubmitXmlRequestWithHeaders).get
-
-        status(result) must be(ACCEPTED)
-      }
-
-      "return 400 status when required headers are missing" in {
-
-        withAuthorizedUser()
-        withDataSaved(true)
-
-        val result = route(app, fakeSubmitXmlRequestWithMissingHeaders).get
-
-        status(result) must be(BAD_REQUEST)
-      }
-
-      "return 500 status when something goes wrong in persisting data" in {
-
-        withAuthorizedUser()
-        withCustomsDeclarationSubmission(ACCEPTED)
-        withDataSaved(false)
-
-        val failedResult = route(app, fakeSubmitXmlRequestWithHeaders).get
-
-        status(failedResult) must be(INTERNAL_SERVER_ERROR)
-      }
-
-      "return 500 status when something goes wrong in submission to dec api" in {
-
-        withAuthorizedUser()
-        withCustomsDeclarationSubmission(BAD_REQUEST)
-
-        val failedResult = route(app, fakeSubmitXmlRequestWithHeaders).get
-
-        status(failedResult) must be(INTERNAL_SERVER_ERROR)
-      }
-
-      "return 401 status when user is without eori" in {
-
-        userWithoutEori()
-
-        val failedResult = route(app, fakeSubmitXmlRequestWithMissingHeaders).get
-
-        status(failedResult) must be(UNAUTHORIZED)
-      }
-    }
-
     "GET from /submission" should {
 
       "return 200 status with submission response body" in {

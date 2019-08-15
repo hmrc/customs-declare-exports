@@ -41,27 +41,6 @@ class SubmissionController @Inject()(
 
   private val logger = Logger(this.getClass)
 
-  def submitDeclaration(): Action[AnyContent] =
-    authorisedAction(bodyParser = xmlOrEmptyBody) { implicit request =>
-      headerValidator.validateAndExtractSubmissionHeaders(request.headers.toSimpleMap) match {
-        case Right(requestHeaders: SubmissionRequestHeaders) =>
-          request.body.asXml match {
-            case Some(xml) =>
-              forwardSubmissionRequestToService(request.eori.value, requestHeaders, xml).recoverWith {
-                case e: Exception =>
-                  logger.error(s"There is a problem during calling declaration api ${e.getMessage}")
-                  Future.successful(ErrorResponse.errorInternalServerError.XmlResult)
-              }
-            case None =>
-              logger.error("Body is not a xml")
-              Future.successful(ErrorResponse.errorInvalidPayload.XmlResult)
-          }
-        case Left(error) =>
-          logger.error(s"Invalid Headers found. Error message: ${error.message}")
-          Future.successful(ErrorResponse.errorBadRequest.XmlResult)
-      }
-    }
-
   def cancelDeclaration(): Action[AnyContent] =
     authorisedAction(bodyParser = xmlOrEmptyBody) { implicit request =>
       headerValidator.validateAndExtractCancellationHeaders(request.headers.toSimpleMap) match {
@@ -93,14 +72,6 @@ class SubmissionController @Inject()(
             Left(ErrorResponse.errorInvalidPayload.XmlResult)
       }
     )
-
-  private def forwardSubmissionRequestToService(eori: String, vhr: SubmissionRequestHeaders, xml: NodeSeq)(
-    implicit hc: HeaderCarrier
-  ): Future[Result] =
-    submissionService.save(eori, vhr)(xml).map {
-      case Right(successMsg) => Accepted(Json.toJson(CustomsDeclareExportsResponse(ACCEPTED, successMsg)))
-      case Left(errorMsg)    => InternalServerError(errorMsg)
-    }
 
   private def forwardCancellationRequestToService(eori: String, mrn: String, xml: NodeSeq)(
     implicit hc: HeaderCarrier

@@ -45,49 +45,6 @@ class SubmissionService @Inject()(
   def getSubmissionByConversationId(conversationId: String): Future[Option[Submission]] =
     submissionRepository.findSubmissionByConversationId(conversationId)
 
-  def save(eori: String, submissionRequestData: SubmissionRequestHeaders)(
-    submissionXml: NodeSeq
-  )(implicit hc: HeaderCarrier): Future[Either[String, String]] =
-    customsDeclarationsConnector.submitDeclaration(eori, submissionXml.toString()).flatMap {
-      case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) =>
-        val newSubmission =
-          buildSubmission(eori, submissionRequestData.lrn.value, submissionRequestData.ducr, conversationId)
-
-        persistSubmission(newSubmission).flatMap(
-          outcome =>
-            notificationRepository.findNotificationsByConversationId(conversationId).flatMap { notifications =>
-              val result = Future.successful(outcome)
-              notifications.headOption.map(_.mrn).fold(result) { mrn =>
-                submissionRepository.updateMrn(conversationId, mrn).flatMap(_ => result)
-              }
-          }
-        )
-
-      case CustomsDeclarationsResponse(status, _) =>
-        logger
-          .error(s"Customs Declarations Service returned $status for Eori: $eori and lrn: ${submissionRequestData.lrn}")
-        Future.successful(Left("Non Accepted status returned by Customs Declarations Service"))
-    }
-
-  private def buildSubmission(eori: String, lrn: String, ducr: Option[String], conversationId: String): Submission =
-    Submission(
-      eori = eori,
-      lrn = lrn,
-      ducr = ducr,
-      actions = Seq(Action(requestType = SubmissionRequest, conversationId = conversationId))
-    )
-
-  private def persistSubmission(submission: Submission): Future[Either[String, String]] =
-    submissionRepository.save(submission).map { res =>
-      if (res) {
-        logger.debug(s"Submission data with UUID: ${submission.uuid} saved to DB")
-        Right("Submission response saved")
-      } else {
-        logger.error(s"Error while saving Submission with UUID: ${submission.uuid} to DB")
-        Left("Failed saving submission")
-      }
-    }
-
   def cancelDeclaration(eori: String, mrn: String)(
     cancellationXml: NodeSeq
   )(implicit hc: HeaderCarrier): Future[Either[String, CancellationStatus]] =
