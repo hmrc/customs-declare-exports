@@ -19,15 +19,15 @@ package uk.gov.hmrc.exports.controllers.request
 import java.time.Instant
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.exports.models.{Choice, Eori}
 
 case class ExportsDeclarationRequest(
   status: DeclarationStatus,
   createdDateTime: Instant,
   updatedDateTime: Instant,
-  choice: String,
+  choice: Choice,
   dispatchLocation: Option[DispatchLocation] = None,
   additionalDeclarationType: Option[AdditionalDeclarationType] = None,
   consignmentReferences: Option[ConsignmentReferences] = None,

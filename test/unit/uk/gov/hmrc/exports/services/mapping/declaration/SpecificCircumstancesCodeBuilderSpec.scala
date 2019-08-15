@@ -48,7 +48,7 @@ class SpecificCircumstancesCodeBuilderSpec extends WordSpec with Matchers with E
       }
 
       "choice is not standard" in {
-        val model = aDeclaration(withChoice("SMP"), withOfficeOfExit(circumstancesCode = Some("Yes")))
+        val model = aDeclaration(withChoice(Choice.SupplementaryDec), withOfficeOfExit(circumstancesCode = Some("Yes")))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)

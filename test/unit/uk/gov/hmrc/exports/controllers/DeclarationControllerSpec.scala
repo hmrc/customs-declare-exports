@@ -37,7 +37,7 @@ import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.format
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models.{DeclarationSearch, Page, Paginated}
+import uk.gov.hmrc.exports.models.{Choice, DeclarationSearch, Page, Paginated}
 import uk.gov.hmrc.exports.services.DeclarationService
 import uk.gov.hmrc.http.HeaderCarrier
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
@@ -66,7 +66,7 @@ class DeclarationControllerSpec
       "request is valid" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
-        val declaration = aDeclaration(withChoice("STD"), withId("id"), withEori(userEori))
+        val declaration = aDeclaration(withChoice(Choice.StandardDec), withId("id"), withEori(userEori))
         given(declarationService.create(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
           .willReturn(Future.successful(declaration))
 
@@ -297,7 +297,7 @@ class DeclarationControllerSpec
       "request is valid" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
-        val declaration = aDeclaration(withChoice("STD"), withId("id"), withEori(userEori))
+        val declaration = aDeclaration(withChoice(Choice.StandardDec), withId("id"), withEori(userEori))
         given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
           .willReturn(Future.successful(Some(declaration)))
 
@@ -357,7 +357,7 @@ class DeclarationControllerSpec
       status = DeclarationStatus.COMPLETE,
       createdDateTime = Instant.now(),
       updatedDateTime = Instant.now(),
-      choice = "STD"
+      choice = Choice.StandardDec
     )
 
   def theDeclarationCreated: ExportsDeclaration = {

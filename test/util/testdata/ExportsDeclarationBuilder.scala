@@ -35,7 +35,7 @@ trait ExportsDeclarationBuilder {
     status = DeclarationStatus.COMPLETE,
     createdDateTime = LocalDateTime.of(2019, 1, 1, 0, 0, 0).toInstant(ZoneOffset.UTC),
     updatedDateTime = LocalDateTime.of(2019, 2, 2, 0, 0, 0).toInstant(ZoneOffset.UTC),
-    choice = "STD",
+    choice = Choice.StandardDec,
     dispatchLocation = None,
     additionalDeclarationType = None,
     consignmentReferences = None,
@@ -61,8 +61,6 @@ trait ExportsDeclarationBuilder {
   def withEori(eori: String): ExportsDeclarationModifier = _.copy(eori = eori)
 
   def withStatus(status: DeclarationStatus): ExportsDeclarationModifier = _.copy(status = status)
-
-  def withChoice(choice: String): ExportsDeclarationModifier = _.copy(choice = Choice(choice))
 
   def withChoice(choice: Choice): ExportsDeclarationModifier = _.copy(choice = choice)
 

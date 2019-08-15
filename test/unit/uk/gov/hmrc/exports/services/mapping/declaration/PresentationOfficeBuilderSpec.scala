@@ -47,7 +47,7 @@ class PresentationOfficeBuilderSpec extends WordSpec with Matchers with ExportsD
       }
 
       "choice is not standard" in {
-        val model = aDeclaration(withChoice("SMP"), withOfficeOfExit(presentationOfficeId = Some("id")))
+        val model = aDeclaration(withChoice(Choice.SupplementaryDec), withOfficeOfExit(presentationOfficeId = Some("id")))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)

@@ -46,50 +46,6 @@ case class ExportsDeclaration(
 
 object ExportsDeclaration {
   
-  @deprecated("Please use apply with `Choice` class", since = "2019-08-14")
-  def apply(
-    id: String,
-    eori: String,
-    status: DeclarationStatus,
-    createdDateTime: Instant,
-    updatedDateTime: Instant,
-    choice: String,
-    dispatchLocation: Option[DispatchLocation],
-    additionalDeclarationType: Option[AdditionalDeclarationType],
-    consignmentReferences: Option[ConsignmentReferences],
-    borderTransport: Option[BorderTransport],
-    transportDetails: Option[TransportDetails],
-    containerData: Option[TransportInformationContainers],
-    parties: Parties,
-    locations: Locations,
-    items: Set[ExportItem],
-    totalNumberOfItems: Option[TotalNumberOfItems],
-    previousDocuments: Option[PreviousDocuments],
-    natureOfTransaction: Option[NatureOfTransaction],
-    seals: Seq[Seal]
-  ): ExportsDeclaration =
-    new ExportsDeclaration(
-      id,
-      eori,
-      status,
-      createdDateTime,
-      updatedDateTime,
-      Choice(choice),
-      dispatchLocation,
-      additionalDeclarationType,
-      consignmentReferences,
-      borderTransport,
-      transportDetails,
-      containerData,
-      parties,
-      locations,
-      items,
-      totalNumberOfItems,
-      previousDocuments,
-      natureOfTransaction,
-      seals
-    )
-  
   object REST {
     implicit val format: OFormat[ExportsDeclaration] = Json.format[ExportsDeclaration]
   }
