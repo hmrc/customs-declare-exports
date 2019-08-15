@@ -38,7 +38,6 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
       ExportsDeclaration.Mongo.format,
       objectIdFormats
     ) {
-  def update(submittedDeclaration: Any) = ???
 
   def find(id: String, eori: String): Future[Option[ExportsDeclaration]] =
     super.find("id" -> id, "eori" -> eori).map(_.headOption)
