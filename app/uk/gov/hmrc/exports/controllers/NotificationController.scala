@@ -49,7 +49,7 @@ class NotificationController @Inject()(
   private val logger = Logger(this.getClass)
 
   def findByID(id: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
-    submissionService.getSubmission(id) flatMap {
+    submissionService.getSubmission(request.eori.value, id) flatMap {
       case Some(submission) if submission.mrn.isDefined =>
         notificationsService.getNotificationsForSubmission(submission.mrn.get)
           .map(notifications => Ok(notifications))

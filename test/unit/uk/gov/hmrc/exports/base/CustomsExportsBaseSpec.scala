@@ -119,7 +119,7 @@ trait CustomsExportsBaseSpec
     when(mockSubmissionRepository.findSubmissionByConversationId(any())).thenReturn(Future.successful(submission))
 
   protected def getSubmissionByID(submission: Option[Submission]): OngoingStubbing[Future[Option[Submission]]] =
-    when(mockSubmissionRepository.findSubmissionByUuid(any())).thenReturn(Future.successful(submission))
+    when(mockSubmissionRepository.findSubmissionByUuid(any(), any())).thenReturn(Future.successful(submission))
 
   protected def withSubmissions(submissions: Seq[Submission]): OngoingStubbing[Future[Seq[Submission]]] =
     when(mockSubmissionRepository.findAllSubmissionsForEori(any())).thenReturn(Future.successful(submissions))

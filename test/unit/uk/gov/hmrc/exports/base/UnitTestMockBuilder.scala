@@ -52,7 +52,7 @@ object UnitTestMockBuilder extends MockitoSugar {
     when(submissionRepositoryMock.findAllSubmissionsForEori(any())).thenReturn(Future.successful(Seq.empty))
     when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.findSubmissionByConversationId(any())).thenReturn(Future.successful(None))
-    when(submissionRepositoryMock.findSubmissionByUuid(any())).thenReturn(Future.successful(None))
+    when(submissionRepositoryMock.findSubmissionByUuid(any(), any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.save(any())).thenAnswer(withFutureArg(0))
     when(submissionRepositoryMock.updateMrn(any(), any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.addAction(any(), any())).thenReturn(Future.successful(None))
@@ -63,7 +63,7 @@ object UnitTestMockBuilder extends MockitoSugar {
     val submissionServiceMock: SubmissionService = mock[SubmissionService]
     implicit val hc: HeaderCarrier = mock[HeaderCarrier]
     when(submissionServiceMock.getAllSubmissionsForUser(any())).thenReturn(Future.successful(Seq.empty))
-    when(submissionServiceMock.getSubmission(any())).thenReturn(Future.successful(None))
+    when(submissionServiceMock.getSubmission(any(), any())).thenReturn(Future.successful(None))
     when(submissionServiceMock.getSubmissionByConversationId(any())).thenReturn(Future.successful(None))
     when(submissionServiceMock.cancelDeclaration(any(), any())(any())(any())).thenReturn(Future.successful(Left("")))
     submissionServiceMock

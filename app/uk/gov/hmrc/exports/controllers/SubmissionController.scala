@@ -98,7 +98,7 @@ class SubmissionController @Inject()(
     }
 
   def findByID(id: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
-    submissionService.getSubmission(id).map {
+    submissionService.getSubmission(request.eori.value, id).map {
       case Some(submission) => Ok(submission)
       case None => NotFound
     }

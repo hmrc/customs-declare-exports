@@ -103,22 +103,22 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
   "SubmissionService on getSubmission" should {
 
     "return empty Option if SubmissionRepository does not find any Submission" in new Test {
-      submissionService.getSubmission(uuid).futureValue must equal(None)
+      submissionService.getSubmission(eori, uuid).futureValue must equal(None)
     }
 
     "return submission returned by SubmissionRepository" in new Test {
-      when(submissionRepositoryMock.findSubmissionByUuid(meq(uuid))).thenReturn(Future.successful(Some(submission)))
+      when(submissionRepositoryMock.findSubmissionByUuid(meq(eori), meq(uuid))).thenReturn(Future.successful(Some(submission)))
 
-      val returnedSubmission = submissionService.getSubmission(uuid).futureValue
+      val returnedSubmission = submissionService.getSubmission(eori, uuid).futureValue
 
       returnedSubmission must be(defined)
       returnedSubmission.get must equal(submission)
     }
 
     "call SubmissionRepository.findSubmissionByUuid, passing UUID provided" in new Test {
-      submissionService.getSubmission(uuid).futureValue
+      submissionService.getSubmission(eori, uuid).futureValue
 
-      verify(submissionRepositoryMock, times(1)).findSubmissionByUuid(meq(uuid))
+      verify(submissionRepositoryMock, times(1)).findSubmissionByUuid(meq(eori), meq(uuid))
     }
   }
 

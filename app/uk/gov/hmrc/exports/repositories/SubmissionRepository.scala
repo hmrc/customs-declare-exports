@@ -49,7 +49,7 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
   def findSubmissionByConversationId(conversationId: String): Future[Option[Submission]] =
     find("actions.conversationId" -> conversationId).map(_.headOption)
 
-  def findSubmissionByUuid(uuid: String): Future[Option[Submission]] = find("uuid" -> uuid).map(_.headOption)
+  def findSubmissionByUuid(eori: String, uuid: String): Future[Option[Submission]] = find("eori" -> eori, "uuid" -> uuid).map(_.headOption)
 
   def save(submission: Submission): Future[Submission] = insert(submission).map { res =>
     if (!res.ok) logger.error(s"Errors when persisting declaration submission: ${res.writeErrors.mkString("--")}")

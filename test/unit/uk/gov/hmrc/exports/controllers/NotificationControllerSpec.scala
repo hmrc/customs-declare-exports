@@ -74,7 +74,7 @@ class NotificationControllerSpec
     "return 200" when {
       "submission found" in {
         withAuthorizedUser()
-        when(submissionService.getSubmission(any())).thenReturn(Future.successful(Some(submission)))
+        when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
         when(notificationServiceMock.getNotificationsForSubmission(any())).thenReturn(Future.successful(Seq(notification)))
 
         val result = route(app, FakeRequest("GET", "/v2/declarations/1234/submission/notifications")).get
@@ -87,7 +87,7 @@ class NotificationControllerSpec
     "return 400" when {
       "submission not found" in {
         withAuthorizedUser()
-        when(submissionService.getSubmission(any())).thenReturn(Future.successful(None))
+        when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(None))
 
         val result = route(app, FakeRequest("GET", "/v2/declarations/1234/submission/notifications")).get
 

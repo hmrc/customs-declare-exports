@@ -209,21 +209,27 @@ class SubmissionRepositorySpec
     }
   }
 
-  "Submission Repository on findSubmissionByUuid" when {
+  "findSubmissionByUuid" when {
 
-    "there is no Submission containing Action with given ConversationId" should {
-      "return empty Option" in {
-        repo.findSubmissionByUuid(uuid).futureValue mustNot be(defined)
+    "no matching submission exists" should {
+      "return None" in {
+        repo.findSubmissionByUuid(eori, uuid).futureValue mustBe None
       }
     }
 
-    "there is a Submission containing Action with given ConversationId" should {
-      "return this Submission" in {
+    "part matching submission exists" should {
+      "return None" in {
+        repo.save(submission).futureValue
+        repo.findSubmissionByUuid("other", uuid).futureValue mustBe None
+        repo.findSubmissionByUuid(eori, "other").futureValue mustBe None
+      }
+    }
+
+    "matching submission exists" should {
+      "return this Some" in {
         repo.save(submission).futureValue
 
-        val retrievedSubmission = repo.findSubmissionByUuid(uuid).futureValue
-
-        retrievedSubmission.value must equal(submission)
+        repo.findSubmissionByUuid(eori, uuid).futureValue mustBe Some(submission)
       }
     }
   }
