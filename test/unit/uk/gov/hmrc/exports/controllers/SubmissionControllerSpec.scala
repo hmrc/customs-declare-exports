@@ -88,7 +88,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with BeforeAndAfte
       "return 200 status with submission response body" in {
 
         withAuthorizedUser()
-        getSubmission(Some(submission))
+        getSubmissionByConversationID(Some(submission))
 
         val result = route(app, FakeRequest("GET", "/submission/1234")).get
 
@@ -100,7 +100,7 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with BeforeAndAfte
       "return 200 status without submission response" in {
 
         withAuthorizedUser()
-        getSubmission(None)
+        getSubmissionByConversationID(None)
 
         val result = route(app, FakeRequest("GET", "/submission/1234")).get
 
@@ -114,6 +114,41 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with BeforeAndAfte
         val failedResult = route(app, FakeRequest("GET", "/submission/1234")).get
 
         status(failedResult) must be(UNAUTHORIZED)
+      }
+    }
+
+    "GET /:id" should {
+      "return 200" when {
+        "submission found" in {
+          withAuthorizedUser()
+          getSubmissionByID(Some(submission))
+
+          val result = route(app, FakeRequest("GET", "/v2/declarations/1234/submission")).get
+
+          status(result) must be(OK)
+          contentAsJson(result) must be(submissionJson)
+        }
+      }
+
+      "return 400" when {
+        "submission not found" in {
+          withAuthorizedUser()
+          getSubmissionByID(None)
+
+          val result = route(app, FakeRequest("GET", "/v2/declarations/1234/submission")).get
+
+          status(result) must be(NOT_FOUND)
+        }
+      }
+
+      "return 401" when {
+        "not authenticated" in {
+          userWithoutEori()
+
+          val failedResult = route(app, FakeRequest("GET", "/v2/declarations/1234/submission")).get
+
+          status(failedResult) must be(UNAUTHORIZED)
+        }
       }
     }
 

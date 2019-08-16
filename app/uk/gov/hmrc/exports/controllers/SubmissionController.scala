@@ -37,7 +37,7 @@ class SubmissionController @Inject()(
   headerValidator: HeaderValidator,
   cc: ControllerComponents,
   bodyParsers: PlayBodyParsers
-)(implicit executionContext: ExecutionContext) extends Authenticator(authConnector, cc) {
+)(implicit executionContext: ExecutionContext) extends Authenticator(authConnector, cc) with JSONResponses {
 
   private val logger = Logger(this.getClass)
 
@@ -87,14 +87,21 @@ class SubmissionController @Inject()(
     authorisedAction(bodyParsers.default) { implicit request =>
       submissionService
         .getSubmissionByConversationId(conversationId)
-        .map(submission => Ok(Json.toJson(submission)))
+        .map(submission => Ok(submission))
     }
 
   def getSubmissionsByEori: Action[AnyContent] =
     authorisedAction(bodyParsers.default) { implicit request =>
       submissionService
         .getAllSubmissionsForUser(request.eori.value)
-        .map(submissions => Ok(Json.toJson(submissions)))
+        .map(submissions => Ok(submissions))
     }
+
+  def findByID(id: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
+    submissionService.getSubmission(id).map {
+      case Some(submission) => Ok(submission)
+      case None => NotFound
+    }
+  }
 
 }

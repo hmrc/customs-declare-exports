@@ -65,7 +65,7 @@ object UnitTestMockBuilder extends MockitoSugar {
     when(submissionServiceMock.getAllSubmissionsForUser(any())).thenReturn(Future.successful(Seq.empty))
     when(submissionServiceMock.getSubmission(any())).thenReturn(Future.successful(None))
     when(submissionServiceMock.getSubmissionByConversationId(any())).thenReturn(Future.successful(None))
-    when(submissionServiceMock.cancelDeclaration(any(), any())(any())).thenReturn(Future.successful(Left("")))
+    when(submissionServiceMock.cancelDeclaration(any(), any())(any())(any())).thenReturn(Future.successful(Left("")))
     submissionServiceMock
   }
 

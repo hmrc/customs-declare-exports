@@ -125,7 +125,6 @@ object DocumentProduced {
 }
 
 case class DocumentsProduced(documents: Seq[DocumentProduced])
-
 object DocumentsProduced {
   implicit val format: OFormat[DocumentsProduced] = Json.format[DocumentsProduced]
 }
