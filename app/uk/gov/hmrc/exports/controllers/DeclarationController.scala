@@ -19,6 +19,8 @@ package uk.gov.hmrc.exports.controllers
 import java.util.UUID
 
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
+import play.api.libs.json.{Json, Writes}
 import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
@@ -41,24 +43,32 @@ class DeclarationController @Inject()(
 
   def create(): Action[ExportsDeclarationRequest] =
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
+      logPayload("Create Declaration Request Received", request.body)
       declarationService
         .create(request.body.toExportsDeclaration(id = UUID.randomUUID().toString, eori = request.eori))
+        .map(logPayload("Create Declaration Response", _))
         .map(declaration => Created(declaration))
     }
 
   def update(id: String): Action[ExportsDeclarationRequest] =
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
+      logPayload("Update Declaration Request Received", request.body)
       declarationService.findOne(id, request.eori.value).flatMap {
         case Some(declaration) if declaration.status == DeclarationStatus.COMPLETE =>
-          Future.successful(BadRequest(ErrorResponse("Cannot update a declaration once it is COMPLETE")))
+          val response = ErrorResponse("Cannot update a declaration once it is COMPLETE")
+          logPayload("Update Declaration Response", response)
+          Future.successful(BadRequest(response))
         case Some(_) =>
           declarationService
             .update(request.body.toExportsDeclaration(id = id, eori = request.eori))
+            .map(logPayload("Update Declaration Response", _))
             .map {
               case Some(declaration) => Ok(declaration)
               case None              => NotFound
             }
-        case None => Future.successful(NotFound)
+        case None =>
+          logPayload("Update Declaration Response", "Not Found")
+          Future.successful(NotFound)
       }
     }
 
@@ -85,6 +95,11 @@ class DeclarationController @Inject()(
       case Some(declaration) => declarationService.deleteOne(declaration).map(_ => NoContent)
       case None              => Future.successful(NoContent)
     }
+  }
+
+  private def logPayload[T](prefix: String, t: T)(implicit wts: Writes[T]): T = {
+    Logger.debug(s"Create Request Received: ${Json.toJson(t)}")
+    t
   }
 
 }
