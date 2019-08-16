@@ -97,9 +97,9 @@ class DeclarationController @Inject()(
     }
   }
 
-  private def logPayload[T](prefix: String, t: T)(implicit wts: Writes[T]): T = {
-    Logger.debug(s"Create Request Received: ${Json.toJson(t)}")
-    t
+  private def logPayload[T](prefix: String, payload: T)(implicit wts: Writes[T]): T = {
+    Logger.debug(s"Create Request Received: ${Json.toJson(payload)}")
+    payload
   }
 
 }
