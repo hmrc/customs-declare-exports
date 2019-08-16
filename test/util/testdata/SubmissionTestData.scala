@@ -26,6 +26,7 @@ object SubmissionTestData {
 
   val uuid: String = UUID.randomUUID().toString
   val uuid_2: String = UUID.randomUUID().toString
+  val uuid_3: String = UUID.randomUUID().toString
 
   lazy val action = Action(requestType = SubmissionRequest, conversationId = conversationId)
   lazy val action_2 = Action(
@@ -49,7 +50,7 @@ object SubmissionTestData {
   lazy val submission_2: Submission =
     Submission(uuid = uuid_2, eori = eori, lrn = lrn, mrn = Some(mrn_2), ducr = Some(ducr), actions = Seq(action_2))
   lazy val submission_3: Submission =
-    Submission(uuid = uuid_2, eori = eori, lrn = lrn, mrn = Some(mrn_2), ducr = Some(ducr), actions = Seq(action_3))
+    Submission(uuid = uuid_3, eori = eori, lrn = lrn, mrn = Some(mrn_2), ducr = Some(ducr), actions = Seq(action_3))
 
   lazy val cancelledSubmission: Submission = Submission(
     uuid = uuid,
