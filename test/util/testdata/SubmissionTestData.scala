@@ -16,6 +16,7 @@
 
 package util.testdata
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest, Submission, SubmissionRequest}
@@ -25,9 +26,19 @@ object SubmissionTestData {
 
   val uuid: String = UUID.randomUUID().toString
   val uuid_2: String = UUID.randomUUID().toString
+  val uuid_3: String = UUID.randomUUID().toString
 
   lazy val action = Action(requestType = SubmissionRequest, conversationId = conversationId)
-  lazy val action_2 = Action(requestType = SubmissionRequest, conversationId = conversationId_2)
+  lazy val action_2 = Action(
+    requestType = SubmissionRequest,
+    conversationId = conversationId_2,
+    requestTimestamp = LocalDateTime.of(1971, 1, 1, 1, 1)
+  )
+  lazy val action_3 = Action(
+    requestType = SubmissionRequest,
+    conversationId = conversationId_2,
+    requestTimestamp = LocalDateTime.of(1972, 1, 1, 1, 1)
+  )
   lazy val actionCancellation = Action(
     requestType = CancellationRequest,
     conversationId = conversationId,
@@ -38,6 +49,9 @@ object SubmissionTestData {
     Submission(uuid = uuid, eori = eori, lrn = lrn, mrn = Some(mrn), ducr = Some(ducr), actions = Seq(action))
   lazy val submission_2: Submission =
     Submission(uuid = uuid_2, eori = eori, lrn = lrn, mrn = Some(mrn_2), ducr = Some(ducr), actions = Seq(action_2))
+  lazy val submission_3: Submission =
+    Submission(uuid = uuid_3, eori = eori, lrn = lrn, mrn = Some(mrn_2), ducr = Some(ducr), actions = Seq(action_3))
+
   lazy val cancelledSubmission: Submission = Submission(
     uuid = uuid,
     eori = eori,
