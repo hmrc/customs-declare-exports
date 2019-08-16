@@ -45,8 +45,8 @@ class SubmissionRepositorySpec
   }
 
   override def afterEach(): Unit = {
-    super.afterEach()
     repo.removeAll().futureValue
+    super.afterEach()
   }
 
   "Submission Repository on save" when {
@@ -161,12 +161,14 @@ class SubmissionRepositorySpec
       "return all the Submissions" in {
         repo.save(submission).futureValue
         repo.save(submission_2).futureValue
+        repo.save(submission_3).futureValue
 
         val retrievedSubmissions = repo.findAllSubmissionsForEori(eori).futureValue
 
         retrievedSubmissions.size must equal(2)
         retrievedSubmissions must contain(submission)
         retrievedSubmissions must contain(submission_2)
+        retrievedSubmissions mustBe inOrder(submission, submission_3, submission_2)
       }
     }
   }

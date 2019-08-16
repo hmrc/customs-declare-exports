@@ -17,10 +17,13 @@
 package uk.gov.hmrc.exports.repositories
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.api.Cursor.FailOnError
+import reactivemongo.api.ReadPreference
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
+import reactivemongo.play.json.ImplicitBSONHandlers
 import reactivemongo.play.json.commands.JSONFindAndModifyCommand.FindAndModifyResult
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission}
 import uk.gov.hmrc.mongo.ReactiveRepository
@@ -39,10 +42,18 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("actions.conversationId" -> IndexType.Ascending), unique = true, name = Some("conversationIdIdx")),
-    Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx"))
+    Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
+    Index(Seq("eori" -> IndexType.Ascending, "action.requestTimestamp" -> IndexType.Descending), name = Some("actionOrderedEori"))
   )
 
-  def findAllSubmissionsForEori(eori: String): Future[Seq[Submission]] = find("eori" -> eori)
+  def findAllSubmissionsForEori(eori: String): Future[Seq[Submission]] = {
+    import reactivemongo.play.json.ImplicitBSONHandlers.JsObjectDocumentWriter
+
+    collection.find(Json.obj("eori" -> eori), None)
+      .sort(Json.obj("actions.requestTimestamp" -> -1))
+      .cursor[Submission](ReadPreference.primaryPreferred)
+      .collect(maxDocs = -1, FailOnError[Seq[Submission]]())
+  }
 
   def findSubmissionByMrn(mrn: String): Future[Option[Submission]] = find("mrn" -> mrn).map(_.headOption)
 
