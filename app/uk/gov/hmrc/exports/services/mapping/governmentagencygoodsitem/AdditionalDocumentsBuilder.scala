@@ -170,7 +170,7 @@ object AdditionalDocumentsBuilder {
             DateTimeElement(
               DateTimeString(
                 formatCode = dateTimeCode,
-                value = LocalDate.parse(date.toString).format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+                value = date.toLocalDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"))
               )
           )
         ),

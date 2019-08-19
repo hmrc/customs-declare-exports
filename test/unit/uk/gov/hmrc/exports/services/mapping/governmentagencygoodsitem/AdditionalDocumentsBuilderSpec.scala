@@ -17,6 +17,7 @@
 package unit.uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.models.declaration.{Date, DocumentIdentifierAndPart, DocumentProduced}
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.AdditionalDocumentsBuilder
 import uk.gov.hmrc.wco.dec._
 
@@ -54,6 +55,27 @@ class AdditionalDocumentsBuilderSpec extends WordSpec with Matchers with Governm
       val writeOffQuantity = writeoff.getQuantityQuantity
       writeOffQuantity.getUnitCode shouldBe measurementUnit
       writeOffQuantity.getValue shouldBe documentQuantity.bigDecimal
+    }
+
+    "map DocumentProduced to GovernmentAgencyGoodsItemAdditionalDocument" in {
+      val doc = DocumentProduced(
+        documentTypeCode = Some("DOC"),
+        documentIdentifierAndPart = Some(DocumentIdentifierAndPart(Some("id"), Some("part"))),
+        documentStatus = Some("status"),
+        documentStatusReason = Some("reason"),
+        issuingAuthorityName = Some("issuingAuthority"),
+        dateOfValidity = Some(Date(Some(10), Some(4), Some(2017))),
+        documentWriteOff = None
+      )
+
+      val additionalDoc = AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument(doc)
+
+      additionalDoc.categoryCode shouldBe Some("D")
+      additionalDoc.typeCode shouldBe Some("OC")
+      additionalDoc.id shouldBe Some("idpart")
+      additionalDoc.lpcoExemptionCode shouldBe Some("status")
+      additionalDoc.name shouldBe Some("reason")
+      additionalDoc.effectiveDateTime shouldBe Some(DateTimeElement(DateTimeString("102", "20170410")))
     }
   }
 }

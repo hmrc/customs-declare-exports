@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.exports.models.declaration
 
+import java.time.LocalDate
+
 import play.api.libs.json._
 
 case class ProcedureCodes(procedureCode: Option[String], additionalProcedureCodes: Seq[String]) {
@@ -101,7 +103,9 @@ object DocumentIdentifierAndPart {
   implicit val format: OFormat[DocumentIdentifierAndPart] = Json.format[DocumentIdentifierAndPart]
 }
 
-case class Date(day: Option[Int], month: Option[Int], year: Option[Int])
+case class Date(day: Option[Int], month: Option[Int], year: Option[Int]){
+  def toLocalDate: LocalDate = LocalDate.of(year.getOrElse(0), month.getOrElse(0), day.getOrElse(0))
+}
 object Date {
   implicit val format: OFormat[Date] = Json.format[Date]
 }
