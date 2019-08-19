@@ -169,7 +169,7 @@ class SubmissionRepositorySpec
         retrievedSubmissions must contain(submission)
         retrievedSubmissions must contain(submission_2)
         retrievedSubmissions must contain(submission_3)
-        retrievedSubmissions mustBe inOrder(submission, submission_3, submission_2)
+        retrievedSubmissions must contain inOrder (submission, submission_3, submission_2)
       }
     }
   }

@@ -35,6 +35,7 @@ object ExportsTestData {
   val mrn_2: String = "MRN12341234"
   val conversationId: String = "b1c09f1b-7c94-4e90-b754-7c5c71c44e11"
   val conversationId_2: String = "b1c09f1b-7c94-4e90-b754-7c5c71c55e22"
+  val conversationId_3: String = "b1c09f1b-7c94-4e90-b754-7c5c71c55e33"
 
   val authToken: String =
     "BXQ3/Treo4kQCZvVcCqKPlwxRN4RA9Mb5RF8fFxOuwG5WSg+S+Rsp9Nq998Fgg0HeNLXL7NGwEAIzwM6vuA6YYhRQnTRFaBhrp+1w+kVW8g1qHGLYO48QPWuxdM87VMCZqxnCuDoNxVn76vwfgtpNj0+NwfzXV2Zc12L2QGgF9H9KwIkeIPK/mMlBESjue4V]"
@@ -45,7 +46,7 @@ object ExportsTestData {
   val declarantDucrValue: String = "MyDucrValue1234"
   val declarantMrnValue: String = "MyMucrValue1234"
 
-  val contentTypeHeader: (String, String) = CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
+  val contentTypeHeader: (String, String) = CONTENT_TYPE -> ContentTypes.JSON
   val Valid_X_EORI_IDENTIFIER_HEADER: (String, String) = XEoriIdentifierHeaderName -> declarantEoriValue
   val Valid_LRN_HEADER: (String, String) = XLrnHeaderName -> declarantLrnValue
   val Valid_AUTHORIZATION_HEADER: (String, String) = HeaderNames.AUTHORIZATION -> dummyToken
