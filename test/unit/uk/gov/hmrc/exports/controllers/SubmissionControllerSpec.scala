@@ -37,22 +37,9 @@ import scala.xml.NodeSeq
 
 class SubmissionControllerSpec extends CustomsExportsBaseSpec with BeforeAndAfterEach {
 
-  val submitUri = "/declaration"
-  val updateUri = "/update-submission"
   val cancelUri = "/cancel-declaration"
 
   val xmlBody: String = randomSubmitDeclaration.toXml
-  val fakeSubmitXmlRequest: FakeRequest[String] = FakeRequest("POST", submitUri).withBody(xmlBody)
-  val fakeSubmitXmlRequestWithHeaders: FakeRequest[String] = fakeSubmitXmlRequest
-    .withHeaders(
-      CustomsHeaderNames.XLrnHeaderName -> declarantLrnValue,
-      CustomsHeaderNames.XDucrHeaderName -> declarantDucrValue,
-      AUTHORIZATION -> dummyToken,
-      CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
-    )
-
-  val fakeSubmitXmlRequestWithMissingHeaders: FakeRequest[String] = fakeSubmitXmlRequest
-    .withHeaders(AUTHORIZATION -> dummyToken, CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8))
 
   def fakeRequestWithPayload(uri: String, payload: String): FakeRequest[String] =
     FakeRequest("POST", uri).withBody(payload)
@@ -71,8 +58,6 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with BeforeAndAfte
   val submissionJson: JsValue = Json.toJson[Submission](submission)
   val submissionSeq: Seq[Submission] = Seq(submission)
   val submissionSeqJson: JsValue = Json.toJson[Seq[Submission]](submissionSeq)
-
-  val updateSubmissionRequest: FakeRequest[JsValue] = FakeRequest("POST", updateUri).withBody(submissionJson)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
