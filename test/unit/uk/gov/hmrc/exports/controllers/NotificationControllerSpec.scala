@@ -33,11 +33,12 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
-import uk.gov.hmrc.exports.services.NotificationService
+import uk.gov.hmrc.exports.services.{NotificationService, SubmissionService}
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
-import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.buildNotificationServiceMock
+import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildNotificationServiceMock, buildSubmissionServiceMock}
 import util.testdata.NotificationTestData._
+import util.testdata.SubmissionTestData.submission
 
 import scala.concurrent.Future
 import scala.util.Random
@@ -54,8 +55,12 @@ class NotificationControllerSpec
   val saveNotificationUri = "/customs-declare-exports/notify"
 
   private val notificationServiceMock: NotificationService = buildNotificationServiceMock
+  private val submissionService: SubmissionService = buildSubmissionServiceMock
   override lazy val app: Application = GuiceApplicationBuilder()
-    .overrides(bind[AuthConnector].to(mockAuthConnector), bind[NotificationService].to(notificationServiceMock))
+    .overrides(bind[AuthConnector].to(mockAuthConnector),
+      bind[NotificationService].to(notificationServiceMock),
+      bind[SubmissionService].to(submissionService)
+    )
     .build()
 
   private lazy val metrics: ExportsMetrics = app.injector.instanceOf[ExportsMetrics]
@@ -63,6 +68,42 @@ class NotificationControllerSpec
   override def beforeEach(): Unit = {
     super.beforeEach()
     reset(mockAuthConnector, notificationServiceMock)
+  }
+
+  "GET /:id" should {
+    "return 200" when {
+      "submission found" in {
+        withAuthorizedUser()
+        when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
+        when(notificationServiceMock.getNotificationsForSubmission(any())).thenReturn(Future.successful(Seq(notification)))
+
+        val result = route(app, FakeRequest("GET", "/v2/declarations/1234/submission/notifications")).get
+
+        status(result) must be(OK)
+        contentAsJson(result) must be(Json.toJson(Seq(notification)))
+      }
+    }
+
+    "return 400" when {
+      "submission not found" in {
+        withAuthorizedUser()
+        when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(None))
+
+        val result = route(app, FakeRequest("GET", "/v2/declarations/1234/submission/notifications")).get
+
+        status(result) must be(NOT_FOUND)
+      }
+    }
+
+    "return 401" when {
+      "not authenticated" in {
+        userWithoutEori()
+
+        val failedResult = route(app, FakeRequest("GET", "/v2/declarations/1234/submission/notifications")).get
+
+        status(failedResult) must be(UNAUTHORIZED)
+      }
+    }
   }
 
   "Notification Controller on getSubmissionNotifications" when {

@@ -16,20 +16,14 @@
 
 package uk.gov.hmrc.exports.controllers
 import play.api.Logger
-import play.api.http.{ContentTypeOf, ContentTypes, Writeable}
 import play.api.libs.json._
-import play.api.mvc.{BodyParser, Codec, ControllerComponents}
+import play.api.mvc.{BodyParser, ControllerComponents}
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext
 
-abstract class RESTController(override val controllerComponents: ControllerComponents) extends BackendController(controllerComponents) {
-
-  implicit def writable[T](implicit writes: Writes[T], code: Codec): Writeable[T] = {
-    implicit val contentType: ContentTypeOf[T] = ContentTypeOf[T](Some(ContentTypes.JSON))
-    Writeable(Writeable.writeableOf_JsValue.transform.compose(writes.writes))
-  }
+abstract class RESTController(override val controllerComponents: ControllerComponents) extends BackendController(controllerComponents) with JSONResponses {
 
   def parsingJson[T](implicit rds: Reads[T], exc: ExecutionContext): BodyParser[T] = parse.json.validate { json =>
     json.validate[T] match {

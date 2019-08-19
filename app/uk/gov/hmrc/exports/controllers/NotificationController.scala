@@ -22,7 +22,6 @@ import java.time.format.DateTimeFormatter
 import com.google.inject.Singleton
 import javax.inject.Inject
 import play.api.Logger
-import play.api.libs.json.Json
 import play.api.mvc.{PlayBodyParsers, _}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
@@ -31,7 +30,7 @@ import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.notifications.{ErrorPointer, Notification, NotificationError}
-import uk.gov.hmrc.exports.services.NotificationService
+import uk.gov.hmrc.exports.services.{NotificationService, SubmissionService}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.{Node, NodeSeq}
@@ -42,17 +41,27 @@ class NotificationController @Inject()(
   headerValidator: HeaderValidator,
   metrics: ExportsMetrics,
   notificationsService: NotificationService,
+  submissionService: SubmissionService,
   bodyParsers: PlayBodyParsers,
   cc: ControllerComponents
-)(implicit executionContext: ExecutionContext) extends Authenticator(authConnector, cc) {
+)(implicit executionContext: ExecutionContext) extends Authenticator(authConnector, cc) with JSONResponses {
 
   private val logger = Logger(this.getClass)
+
+  def findByID(id: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
+    submissionService.getSubmission(request.eori.value, id) flatMap {
+      case Some(submission) if submission.mrn.isDefined =>
+        notificationsService.getNotificationsForSubmission(submission.mrn.get)
+          .map(notifications => Ok(notifications))
+      case _ => Future.successful(NotFound)
+    }
+  }
 
   def getSubmissionNotifications(mrn: String): Action[AnyContent] =
     authorisedAction(bodyParsers.default) { implicit request =>
       notificationsService
         .getNotificationsForSubmission(mrn)
-        .map(notifications => Ok(Json.toJson(notifications)))
+        .map(notifications => Ok(notifications))
     }
 
   //TODO response should be streamed or paginated depending on the no of notifications.
@@ -61,7 +70,7 @@ class NotificationController @Inject()(
     authorisedAction(bodyParsers.default) { implicit request =>
       notificationsService
         .getAllNotificationsForUser(request.eori.value)
-        .map(notifications => Ok(Json.toJson(notifications)))
+        .map(notifications => Ok(notifications))
     }
 
   def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
