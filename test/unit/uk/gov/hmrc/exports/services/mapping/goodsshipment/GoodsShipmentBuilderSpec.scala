@@ -72,7 +72,7 @@ class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclar
           withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
           withDestinationCountries("GB", Seq.empty, "PL"),
           withWarehouseIdentification(WarehouseIdentification(Some("GBWKG001"), Some("R"), None, Some("2"))),
-          withConsignmentReferences(Some("8GB123456789012-1234567890QWERTYUIO"), "123LRN"),
+          withConsignmentReferences("8GB123456789012-1234567890QWERTYUIO", "123LRN", Some("8GB123456789012")),
           withPreviousDocuments(correctPreviousDocument),
           withItem()
         )

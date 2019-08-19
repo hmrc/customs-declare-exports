@@ -26,17 +26,17 @@ import wco.datamodel.wco.declaration_ds.dms._2.UCRTraderAssignedReferenceIDType
 class UCRBuilder @Inject()() extends ModifyingBuilder[ConsignmentReferences, GoodsShipment] {
   override def buildThenAdd(model: ConsignmentReferences, goodsShipment: GoodsShipment): Unit =
     if (isDefined(model)) {
-      goodsShipment.setUCR(createUCR(model))
+      goodsShipment.setUCR(createPersonalUCR(model))
     }
 
-  private def isDefined(reference: ConsignmentReferences): Boolean = reference.ducr.isDefined
+  private def isDefined(reference: ConsignmentReferences): Boolean = reference.personalUcr.isDefined
 
-  private def createUCR(data: ConsignmentReferences): UCR = {
+  private def createPersonalUCR(data: ConsignmentReferences): UCR = {
     val ucr = new UCR()
 
-    data.ducr.foreach { value =>
+    data.personalUcr.foreach { personalUcr =>
       val traderAssignedReferenceID = new UCRTraderAssignedReferenceIDType()
-      traderAssignedReferenceID.setValue(value.ducr)
+      traderAssignedReferenceID.setValue(personalUcr)
       ucr.setTraderAssignedReferenceID(traderAssignedReferenceID)
     }
 

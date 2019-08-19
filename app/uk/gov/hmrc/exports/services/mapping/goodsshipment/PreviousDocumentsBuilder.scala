@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{PreviousDocument, PreviousDocuments}
+import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR, PreviousDocument, PreviousDocuments}
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.declaration_ds.dms._2.{
@@ -30,7 +30,7 @@ class PreviousDocumentsBuilder @Inject()() extends ModifyingBuilder[PreviousDocu
   override def buildThenAdd(model: PreviousDocuments, goodsShipment: GoodsShipment): Unit =
     if (isDefined(model)) {
       model.documents.foreach { data =>
-        goodsShipment.getPreviousDocument.add(createPreviousDocuments(data))
+        goodsShipment.getPreviousDocument.add(createPreviousDocuments(data, goodsShipment.getPreviousDocument.size()))
       }
     }
 
@@ -43,7 +43,10 @@ class PreviousDocumentsBuilder @Inject()() extends ModifyingBuilder[PreviousDocu
           doc.documentCategory.nonEmpty
     )
 
-  private def createPreviousDocuments(document: PreviousDocument): GoodsShipment.PreviousDocument = {
+  private def createPreviousDocuments(
+    document: PreviousDocument,
+    previousDocumentsSize: Int
+  ): GoodsShipment.PreviousDocument = {
     val previousDocument = new GoodsShipment.PreviousDocument()
 
     if (document.documentCategory.nonEmpty) {
@@ -68,6 +71,33 @@ class PreviousDocumentsBuilder @Inject()() extends ModifyingBuilder[PreviousDocu
       typeCode.setValue(document.documentType)
       previousDocument.setTypeCode(typeCode)
     }
+
+    previousDocument
+  }
+
+  def buildThenAdd(model: ConsignmentReferences, goodsShipment: GoodsShipment): Unit =
+    if (isDefined(model)) {
+      goodsShipment.getPreviousDocument.add(createDucrDocument(model.ducr))
+    }
+
+  private def isDefined(previousDocumentsData: ConsignmentReferences): Boolean = previousDocumentsData.ducr.nonEmpty
+
+  private def createDucrDocument(ducr: DUCR): GoodsShipment.PreviousDocument = {
+    val previousDocument = new GoodsShipment.PreviousDocument()
+
+    val categoryCode = new PreviousDocumentCategoryCodeType()
+    categoryCode.setValue("Z")
+    previousDocument.setCategoryCode(categoryCode)
+
+    val id = new PreviousDocumentIdentificationIDType()
+    id.setValue(ducr.ducr)
+    previousDocument.setID(id)
+
+    previousDocument.setLineNumeric(new java.math.BigDecimal(1))
+
+    val typeCode = new PreviousDocumentTypeCodeType()
+    typeCode.setValue("DCR")
+    previousDocument.setTypeCode(typeCode)
 
     previousDocument
   }

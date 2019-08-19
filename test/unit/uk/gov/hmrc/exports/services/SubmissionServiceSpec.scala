@@ -32,7 +32,11 @@ import uk.gov.hmrc.exports.models.{CustomsDeclarationsResponse, LocalReferenceNu
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.http.HeaderCarrier
-import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildCustomsDeclarationsConnectorMock, buildNotificationRepositoryMock, buildSubmissionRepositoryMock}
+import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{
+  buildCustomsDeclarationsConnectorMock,
+  buildNotificationRepositoryMock,
+  buildSubmissionRepositoryMock
+}
 import util.testdata.ExportsTestData._
 import util.testdata.SubmissionTestData._
 
@@ -58,16 +62,20 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
   "create" should {
     "delegate to the repository" when {
       "no notifications" in new Test {
-        val submission: Submission = Submission(eori = "", lrn = "", actions = Seq(Action(SubmissionRequest, "conversation-id")))
+        val submission: Submission =
+          Submission(eori = "", lrn = "", ducr = "", actions = Seq(Action(SubmissionRequest, "conversation-id")))
 
         submissionService.create(submission).futureValue mustBe submission
       }
 
       "some notifications" in new Test {
-        val submission: Submission = Submission(eori = "", lrn = "", actions = Seq(Action(SubmissionRequest, "conversation-id")))
+        val submission: Submission =
+          Submission(eori = "", lrn = "", ducr = "", actions = Seq(Action(SubmissionRequest, "conversation-id")))
         val notification = Notification("conversation-id", "mrn", LocalDateTime.now(), "", None, Seq.empty, "")
-        when(notificationRepositoryMock.findNotificationsByConversationId("conversation-id")).thenReturn(Future.successful(Seq(notification)))
-        when(submissionRepositoryMock.updateMrn("conversation-id", "mrn")).thenReturn(Future.successful(Some(submission)))
+        when(notificationRepositoryMock.findNotificationsByConversationId("conversation-id"))
+          .thenReturn(Future.successful(Seq(notification)))
+        when(submissionRepositoryMock.updateMrn("conversation-id", "mrn"))
+          .thenReturn(Future.successful(Some(submission)))
 
         submissionService.create(submission).futureValue mustBe submission
 
@@ -107,7 +115,8 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
     }
 
     "return submission returned by SubmissionRepository" in new Test {
-      when(submissionRepositoryMock.findSubmissionByUuid(meq(eori), meq(uuid))).thenReturn(Future.successful(Some(submission)))
+      when(submissionRepositoryMock.findSubmissionByUuid(meq(eori), meq(uuid)))
+        .thenReturn(Future.successful(Some(submission)))
 
       val returnedSubmission = submissionService.getSubmission(eori, uuid).futureValue
 
