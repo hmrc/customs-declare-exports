@@ -60,26 +60,24 @@ class NotificationRepositorySpec
       }
     }
 
+    //TODO if there is a requirement to reduce / elimate duplicate notifications these tests and the
+    // indexes will need changing. for now these tests have been changed to represent the current /
+    // expected behavior. Which is allow duplicates.
     "trying to save the same Notification twice" should {
-      "throw DatabaseException" in {
+      "be allowed" in {
         repo.save(notification).futureValue must be(true)
 
-        val exc = repo.save(notification).failed.futureValue
-
-        exc mustBe an[DatabaseException]
-        exc.getMessage must include(
-          "E11000 duplicate key error collection: customs-declare-exports.notifications index: dateTimeIssuedIdx dup key"
-        )
+        repo.save(notification).futureValue must be(true)
       }
     }
 
-    "result in having only the first Notification persisted" in {
+    "result in having 2 notifications persisted" in {
       repo.save(notification).futureValue must be(true)
 
-      repo.save(notification).failed.futureValue
+      repo.save(notification).futureValue
 
       val notificationsInDB = repo.findNotificationsByConversationId(notification.conversationId).futureValue
-      notificationsInDB.length must equal(1)
+      notificationsInDB.length must equal(2)
       notificationsInDB.head must equal(notification)
     }
   }
