@@ -22,9 +22,9 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.api.ReadConcern
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo.format
-import uk.gov.hmrc.exports.models.{Choice, DeclarationSearch, Page, Paginated}
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import util.testdata.ExportsDeclarationBuilder
 
@@ -114,7 +114,7 @@ class DeclarationRepositoryTest
         givenADeclarationExists(declaration1, declaration2, declaration3)
 
         val page = Page(index = 1, size = 10)
-        repository.find(DeclarationSearch("eori1"), page).futureValue shouldBe Paginated(
+        repository.find(DeclarationSearch("eori1"), page, DeclarationSort()).futureValue shouldBe Paginated(
           Seq(declaration1, declaration2),
           page,
           2
@@ -128,13 +128,13 @@ class DeclarationRepositoryTest
         givenADeclarationExists(declaration1, declaration2, declaration3)
 
         val page1 = Page(index = 1, size = 2)
-        repository.find(DeclarationSearch("eori"), page1).futureValue shouldBe Paginated(
+        repository.find(DeclarationSearch("eori"), page1, DeclarationSort()).futureValue shouldBe Paginated(
           Seq(declaration1, declaration2),
           page1,
           3
         )
         val page2 = Page(index = 2, size = 2)
-        repository.find(DeclarationSearch("eori"), page2).futureValue shouldBe Paginated(
+        repository.find(DeclarationSearch("eori"), page2, DeclarationSort()).futureValue shouldBe Paginated(
           Seq(declaration3),
           page2,
           3
@@ -146,9 +146,50 @@ class DeclarationRepositoryTest
       "none exist with eori" in {
         givenADeclarationExists(aDeclaration(withId("id"), withEori("some-other-eori")))
 
-        repository.find(DeclarationSearch("eori"), Page()).futureValue shouldBe Paginated
+        repository.find(DeclarationSearch("eori"), Page(), DeclarationSort()).futureValue shouldBe Paginated
           .empty[ExportsDeclaration](Page())
       }
+    }
+  }
+
+  "Find by DeclarationStatus" should {
+    "return the persisted declarations" when {
+      "some exist with status DRAFT" in {
+        val declaration1 = aDeclaration(withId("id1"), withStatus(DeclarationStatus.DRAFT))
+        val declaration2 = aDeclaration(withId("id2"), withStatus(DeclarationStatus.DRAFT))
+        val declaration3 = aDeclaration(withId("id3"), withStatus(DeclarationStatus.COMPLETE))
+        givenADeclarationExists(declaration1, declaration2, declaration3)
+
+        val page = Page(index = 1, size = 10)
+        repository
+          .find(DeclarationSearch("eori", Some(DeclarationStatus.DRAFT)), page, DeclarationSort())
+          .futureValue shouldBe Paginated(Seq(declaration1, declaration2), page, 2)
+      }
+    }
+  }
+
+  "Find with sort order" should {
+    "return the declarations in accending order" in {
+      val declaration3 = aDeclaration(withId("id3"))
+      val declaration1 = aDeclaration(withId("id1"))
+      val declaration2 = aDeclaration(withId("id2"))
+      givenADeclarationExists(declaration3, declaration1, declaration2)
+
+      val page = Page(index = 1, size = 10)
+      repository
+        .find(DeclarationSearch("eori"), page, DeclarationSort("id", DeclarationSort.ASC))
+        .futureValue shouldBe Paginated(Seq(declaration1, declaration2, declaration3), page, 3)
+    }
+    "return the declarations in decending order" in {
+      val declaration1 = aDeclaration(withUpdateTime(2019,1,1))
+      val declaration2 = aDeclaration(withUpdateTime(2019, 1, 2))
+      val declaration3 = aDeclaration(withUpdateTime(2019, 1, 3))
+      givenADeclarationExists(declaration3, declaration1, declaration2)
+
+      val page = Page(index = 1, size = 10)
+      repository
+        .find(DeclarationSearch("eori"), page, DeclarationSort("updatedDateTime", DeclarationSort.DEC))
+        .futureValue shouldBe Paginated(Seq(declaration3, declaration2, declaration1), page, 3)
     }
   }
 

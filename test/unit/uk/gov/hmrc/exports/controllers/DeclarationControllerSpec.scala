@@ -37,7 +37,7 @@ import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.format
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models.{Choice, DeclarationSearch, Page, Paginated}
+import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.services.DeclarationService
 import uk.gov.hmrc.http.HeaderCarrier
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
@@ -112,7 +112,7 @@ class DeclarationControllerSpec
       "valid request" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page]))
+        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
         val result: Future[Result] = route(app, get).get
@@ -125,7 +125,7 @@ class DeclarationControllerSpec
       "request has valid pagination" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page]))
+        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
         val get = FakeRequest("GET", "/v2/declarations?page-index=1&page-size=100")
@@ -139,7 +139,7 @@ class DeclarationControllerSpec
       "request has valid search params" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page]))
+        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
         val get = FakeRequest("GET", "/v2/declarations?status=COMPLETE")
@@ -153,7 +153,7 @@ class DeclarationControllerSpec
       "request has invalid search params" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page]))
+        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
         val get = FakeRequest("GET", "/v2/declarations?status=invalid")
@@ -178,13 +178,13 @@ class DeclarationControllerSpec
 
     def theSearch: DeclarationSearch = {
       val captor: ArgumentCaptor[DeclarationSearch] = ArgumentCaptor.forClass(classOf[DeclarationSearch])
-      verify(declarationService).find(captor.capture(), any[Page])
+      verify(declarationService).find(captor.capture(), any[Page], any[DeclarationSort])
       captor.getValue
     }
 
     def thePagination: Page = {
       val captor: ArgumentCaptor[Page] = ArgumentCaptor.forClass(classOf[Page])
-      verify(declarationService).find(any[DeclarationSearch], captor.capture())
+      verify(declarationService).find(any[DeclarationSearch], captor.capture(), any[DeclarationSort])
       captor.getValue
     }
   }

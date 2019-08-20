@@ -24,7 +24,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models.{DeclarationSearch, Page, Paginated}
+import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Page, Paginated}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService, WcoSubmissionService}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -123,9 +123,10 @@ class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFuture
       val declaration = mock[ExportsDeclaration]
       val search = mock[DeclarationSearch]
       val page = mock[Page]
-      given(declarationRepository.find(search, page)).willReturn(Future.successful(Paginated(declaration)))
+      val sort = mock[DeclarationSort]
+      given(declarationRepository.find(search, page, sort)).willReturn(Future.successful(Paginated(declaration)))
 
-      service.find(search, page).futureValue mustBe Paginated(declaration)
+      service.find(search, page, sort).futureValue mustBe Paginated(declaration)
     }
   }
 

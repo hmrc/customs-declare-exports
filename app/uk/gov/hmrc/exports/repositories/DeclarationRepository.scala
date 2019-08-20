@@ -25,7 +25,7 @@ import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.ImplicitBSONHandlers
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.models.{DeclarationSearch, Page, Paginated}
+import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Page, Paginated}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 
@@ -42,11 +42,12 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
   def find(id: String, eori: String): Future[Option[ExportsDeclaration]] =
     super.find("id" -> id, "eori" -> eori).map(_.headOption)
 
-  def find(search: DeclarationSearch, pagination: Page): Future[Paginated[ExportsDeclaration]] = {
+  def find(search: DeclarationSearch, pagination: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] = {
     val query = Json.toJson(search).as[JsObject]
     for {
       results <- collection
         .find(query, projection = None)(ImplicitBSONHandlers.JsObjectDocumentWriter, ImplicitBSONHandlers.JsObjectDocumentWriter)
+        .sort(Json.obj(sort.by -> sort.direction))
         .options(QueryOpts(skipN = (pagination.index -1) * pagination.size, batchSizeN = pagination.size))
         .cursor[ExportsDeclaration](ReadPreference.primaryPreferred)
         .collect(maxDocs = pagination.size, FailOnError[List[ExportsDeclaration]]())
