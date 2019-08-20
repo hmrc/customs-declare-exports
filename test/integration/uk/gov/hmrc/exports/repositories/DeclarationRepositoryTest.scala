@@ -181,7 +181,7 @@ class DeclarationRepositoryTest
         .futureValue shouldBe Paginated(Seq(declaration1, declaration2, declaration3), page, 3)
     }
     "return the declarations in decending order" in {
-      val declaration1 = aDeclaration(withUpdateTime(2019,1,1))
+      val declaration1 = aDeclaration(withUpdateTime(2019, 1, 1))
       val declaration2 = aDeclaration(withUpdateTime(2019, 1, 2))
       val declaration3 = aDeclaration(withUpdateTime(2019, 1, 3))
       givenADeclarationExists(declaration3, declaration1, declaration2)

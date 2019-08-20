@@ -31,7 +31,6 @@ class ExportCountryBuilderSpec extends WordSpec with MockitoSugar with Matchers 
   when(mockCountriesService.allCountries)
     .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
-
   "ExportCountryBuilder" should {
 
     "correctly map new model to the WCO-DEC GoodsShipment.ExportCountries instance" when {

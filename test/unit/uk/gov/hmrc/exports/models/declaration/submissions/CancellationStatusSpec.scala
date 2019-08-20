@@ -18,7 +18,12 @@ package unit.uk.gov.hmrc.exports.models.declaration.submissions
 
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json._
-import uk.gov.hmrc.exports.models.declaration.submissions.{CancellationRequestExists, CancellationRequested, CancellationStatus, MissingDeclaration}
+import uk.gov.hmrc.exports.models.declaration.submissions.{
+  CancellationRequestExists,
+  CancellationRequested,
+  CancellationStatus,
+  MissingDeclaration
+}
 
 class CancellationStatusSpec extends WordSpec with MustMatchers {
 

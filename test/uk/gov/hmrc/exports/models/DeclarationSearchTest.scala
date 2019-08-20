@@ -25,10 +25,7 @@ class DeclarationSearchTest extends PlaySpec {
   "Search" should {
     "build Mongo Query" in {
       val search = DeclarationSearch(eori = "123", status = Some(DeclarationStatus.COMPLETE))
-      Json.toJson(search) mustBe Json.obj(
-        "eori" -> "123",
-        "status" -> "COMPLETE"
-      )
+      Json.toJson(search) mustBe Json.obj("eori" -> "123", "status" -> "COMPLETE")
     }
   }
 

@@ -43,13 +43,17 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
   override def indexes: Seq[Index] = Seq(
     Index(Seq("actions.conversationId" -> IndexType.Ascending), unique = true, name = Some("conversationIdIdx")),
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
-    Index(Seq("eori" -> IndexType.Ascending, "action.requestTimestamp" -> IndexType.Descending), name = Some("actionOrderedEori"))
+    Index(
+      Seq("eori" -> IndexType.Ascending, "action.requestTimestamp" -> IndexType.Descending),
+      name = Some("actionOrderedEori")
+    )
   )
 
   def findAllSubmissionsForEori(eori: String): Future[Seq[Submission]] = {
     import reactivemongo.play.json.ImplicitBSONHandlers.JsObjectDocumentWriter
 
-    collection.find(Json.obj("eori" -> eori), None)
+    collection
+      .find(Json.obj("eori" -> eori), None)
       .sort(Json.obj("actions.requestTimestamp" -> -1))
       .cursor[Submission](ReadPreference.primaryPreferred)
       .collect(maxDocs = -1, FailOnError[Seq[Submission]]())
@@ -60,7 +64,8 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
   def findSubmissionByConversationId(conversationId: String): Future[Option[Submission]] =
     find("actions.conversationId" -> conversationId).map(_.headOption)
 
-  def findSubmissionByUuid(eori: String, uuid: String): Future[Option[Submission]] = find("eori" -> eori, "uuid" -> uuid).map(_.headOption)
+  def findSubmissionByUuid(eori: String, uuid: String): Future[Option[Submission]] =
+    find("eori" -> eori, "uuid" -> uuid).map(_.headOption)
 
   def save(submission: Submission): Future[Submission] = insert(submission).map { res =>
     if (!res.ok) logger.error(s"Errors when persisting declaration submission: ${res.writeErrors.mkString("--")}")

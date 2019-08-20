@@ -40,7 +40,8 @@ class SubmissionService @Inject()(
   def getAllSubmissionsForUser(eori: String): Future[Seq[Submission]] =
     submissionRepository.findAllSubmissionsForEori(eori)
 
-  def getSubmission(eori: String, uuid: String): Future[Option[Submission]] = submissionRepository.findSubmissionByUuid(eori, uuid)
+  def getSubmission(eori: String, uuid: String): Future[Option[Submission]] =
+    submissionRepository.findSubmissionByUuid(eori, uuid)
 
   def getSubmissionByConversationId(conversationId: String): Future[Option[Submission]] =
     submissionRepository.findSubmissionByConversationId(conversationId)
@@ -60,13 +61,17 @@ class SubmissionService @Inject()(
         Future.successful(Left("Non Accepted status returned by Customs Declarations Service"))
     }
 
-  def create(submission: Submission): Future[Submission] = for {
-    saved <- submissionRepository.save(submission)
-    conversationId = submission.actions.head.conversationId
-    notifications <- notificationRepository.findNotificationsByConversationId(conversationId)
-    _ <- notifications.headOption.map(_.mrn)
-      .fold(Future.successful((): Unit))(mrn => submissionRepository.updateMrn(conversationId, mrn).map(_ => (): Unit))
-  } yield saved
+  def create(submission: Submission): Future[Submission] =
+    for {
+      saved <- submissionRepository.save(submission)
+      conversationId = submission.actions.head.conversationId
+      notifications <- notificationRepository.findNotificationsByConversationId(conversationId)
+      _ <- notifications.headOption
+        .map(_.mrn)
+        .fold(Future.successful((): Unit))(
+          mrn => submissionRepository.updateMrn(conversationId, mrn).map(_ => (): Unit)
+        )
+    } yield saved
 
   private def updateSubmissionInDB(eori: String, mrn: String, conversationId: String): Future[CancellationStatus] =
     submissionRepository.findSubmissionByMrn(mrn).flatMap {

@@ -23,7 +23,8 @@ import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext
 
-abstract class RESTController(override val controllerComponents: ControllerComponents) extends BackendController(controllerComponents) with JSONResponses {
+abstract class RESTController(override val controllerComponents: ControllerComponents)
+    extends BackendController(controllerComponents) with JSONResponses {
 
   def parsingJson[T](implicit rds: Reads[T], exc: ExecutionContext): BodyParser[T] = parse.json.validate { json =>
     json.validate[T] match {

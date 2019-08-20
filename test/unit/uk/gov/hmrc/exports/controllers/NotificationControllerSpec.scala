@@ -57,7 +57,8 @@ class NotificationControllerSpec
   private val notificationServiceMock: NotificationService = buildNotificationServiceMock
   private val submissionService: SubmissionService = buildSubmissionServiceMock
   override lazy val app: Application = GuiceApplicationBuilder()
-    .overrides(bind[AuthConnector].to(mockAuthConnector),
+    .overrides(
+      bind[AuthConnector].to(mockAuthConnector),
       bind[NotificationService].to(notificationServiceMock),
       bind[SubmissionService].to(submissionService)
     )
@@ -75,7 +76,8 @@ class NotificationControllerSpec
       "submission found" in {
         withAuthorizedUser()
         when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
-        when(notificationServiceMock.getNotificationsForSubmission(any())).thenReturn(Future.successful(Seq(notification)))
+        when(notificationServiceMock.getNotificationsForSubmission(any()))
+          .thenReturn(Future.successful(Seq(notification)))
 
         val result = route(app, FakeRequest("GET", "/v2/declarations/1234/submission/notifications")).get
 

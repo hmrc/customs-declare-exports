@@ -30,7 +30,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.inject.{Injector, bind}
+import play.api.inject.{bind, Injector}
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSClient
 import play.api.mvc.AnyContentAsJson
@@ -115,7 +115,9 @@ trait CustomsExportsBaseSpec
       .withJsonBody(body)
   }
 
-  protected def getSubmissionByConversationID(submission: Option[Submission]): OngoingStubbing[Future[Option[Submission]]] =
+  protected def getSubmissionByConversationID(
+    submission: Option[Submission]
+  ): OngoingStubbing[Future[Option[Submission]]] =
     when(mockSubmissionRepository.findSubmissionByConversationId(any())).thenReturn(Future.successful(submission))
 
   protected def getSubmissionByID(submission: Option[Submission]): OngoingStubbing[Future[Option[Submission]]] =
@@ -127,10 +129,9 @@ trait CustomsExportsBaseSpec
   protected def withoutNotifications(): OngoingStubbing[Future[Seq[Notification]]] =
     when(mockNotificationsRepository.findNotificationsByConversationId(any())).thenReturn(Future.successful(Seq.empty))
 
-  protected def withNotification(
-    notifications: Seq[Notification]
-  ): OngoingStubbing[Future[Seq[Notification]]] =
-    when(mockNotificationsRepository.findNotificationsByConversationId(any())).thenReturn(Future.successful(notifications))
+  protected def withNotification(notifications: Seq[Notification]): OngoingStubbing[Future[Seq[Notification]]] =
+    when(mockNotificationsRepository.findNotificationsByConversationId(any()))
+      .thenReturn(Future.successful(notifications))
 
   protected def withCancellationRequest(
     status: CancellationStatus,

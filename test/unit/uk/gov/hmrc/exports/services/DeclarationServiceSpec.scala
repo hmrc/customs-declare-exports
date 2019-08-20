@@ -59,7 +59,7 @@ class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFuture
         verify(submissionService).create(submission)
       }
 
-      "declaration status is not COMPLETE"  in {
+      "declaration status is not COMPLETE" in {
         val declaration = mock[ExportsDeclaration]
         val persistedDeclaration = mock[ExportsDeclaration]
         given(declaration.status).willReturn(DeclarationStatus.DRAFT)

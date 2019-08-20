@@ -32,7 +32,6 @@ class AgentBuilderSpec extends WordSpec with Matchers with MockitoSugar with Exp
   when(mockCountriesService.allCountries)
     .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
-
   "AgentBuilder" should {
 
     "correctly map from ExportsCacheModel to the WCO-DEC Agent instance" when {

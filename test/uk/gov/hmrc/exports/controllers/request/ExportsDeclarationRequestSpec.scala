@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.{Choice, Eori}
 import util.testdata.ExportsDeclarationBuilder
 
-class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsDeclarationBuilder with MockitoSugar{
+class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsDeclarationBuilder with MockitoSugar {
 
   private val status = DeclarationStatus.COMPLETE
   private val choice = Choice.StandardDec

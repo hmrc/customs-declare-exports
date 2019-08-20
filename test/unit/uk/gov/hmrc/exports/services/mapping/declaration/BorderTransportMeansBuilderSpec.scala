@@ -31,7 +31,6 @@ class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with Mockit
   when(mockCountriesService.allCountries)
     .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
-
   "BorderTransportMeansBuilder" should {
 
     "build then add" when {
