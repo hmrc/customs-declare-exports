@@ -72,13 +72,14 @@ class DeclarationController @Inject()(
       }
     }
 
-  def findAll(status: Option[String], pagination: Page, sortBy: Option[String], sortDirection: Int): Action[AnyContent] =
+  def findAll(status: Option[String], pagination: Page, sortBy: Option[String], sortDirection: Option[String]): Action[AnyContent] =
     authenticator.authorisedAction(parse.default) { implicit request =>
       val search = DeclarationSearch(
         eori = request.eori.value,
         status = status.map(v => Try(DeclarationStatus.withName(v))).filter(_.isSuccess).map(_.get)
       )
-      val sort = sortBy.map(field => DeclarationSort(field, sortDirection)).getOrElse(DeclarationSort())
+      def direction: Option[String] => Int = option => if(option.exists(_.equalsIgnoreCase("asc"))) 1 else -1
+      val sort = sortBy.map(field => DeclarationSort(field, direction(sortDirection))).getOrElse(DeclarationSort())
       declarationService.find(search, pagination, sort).map(results => Ok(results))
     }
 

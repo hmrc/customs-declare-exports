@@ -163,6 +163,34 @@ class DeclarationControllerSpec
         contentAsJson(result) mustBe toJson(Paginated(declaration))
         theSearch mustBe DeclarationSearch(eori = userEori, status = None)
       }
+
+      "request has sorting ascending sort params" in {
+        withAuthorizedUser()
+        val declaration = aDeclaration(withId("id"), withEori(userEori))
+        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
+          .willReturn(Future.successful(Paginated(declaration)))
+
+        val get = FakeRequest("GET", "/v2/declarations?sortBy=updatedDateTime&sortDirection=asc")
+        val result: Future[Result] = route(app, get).get
+
+        status(result) must be(OK)
+        contentAsJson(result) mustBe toJson(Paginated(declaration))
+        theSort mustBe DeclarationSort(by = "updatedDateTime", direction = 1)
+      }
+
+      "request has sorting descending sort params" in {
+        withAuthorizedUser()
+        val declaration = aDeclaration(withId("id"), withEori(userEori))
+        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
+          .willReturn(Future.successful(Paginated(declaration)))
+
+        val get = FakeRequest("GET", "/v2/declarations?sortBy=updatedDateTime&sortDirection=des")
+        val result: Future[Result] = route(app, get).get
+
+        status(result) must be(OK)
+        contentAsJson(result) mustBe toJson(Paginated(declaration))
+        theSort mustBe DeclarationSort(by = "updatedDateTime", direction = -1)
+      }
     }
 
     "return 401" when {
@@ -179,6 +207,12 @@ class DeclarationControllerSpec
     def theSearch: DeclarationSearch = {
       val captor: ArgumentCaptor[DeclarationSearch] = ArgumentCaptor.forClass(classOf[DeclarationSearch])
       verify(declarationService).find(captor.capture(), any[Page], any[DeclarationSort])
+      captor.getValue
+    }
+
+    def theSort: DeclarationSort = {
+      val captor: ArgumentCaptor[DeclarationSort] = ArgumentCaptor.forClass(classOf[DeclarationSort])
+      verify(declarationService).find(any[DeclarationSearch], any[Page], captor.capture())
       captor.getValue
     }
 
