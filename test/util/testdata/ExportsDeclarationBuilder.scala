@@ -27,6 +27,7 @@ import uk.gov.hmrc.exports.models.declaration._
 trait ExportsDeclarationBuilder {
 
   private type ExportsDeclarationModifier = ExportsDeclaration => ExportsDeclaration
+  protected val VALID_PERSONAL_UCR = "5GB123456789000"
   protected val VALID_DUCR = "5GB123456789000-123ABC456DEFIIIII"
   protected val VALID_LRN = "FG7676767889"
   private val modelWithDefaults: ExportsDeclaration = ExportsDeclaration(
@@ -77,10 +78,11 @@ trait ExportsDeclarationBuilder {
   def withoutConsignmentReferences(): ExportsDeclarationModifier = _.copy(consignmentReferences = None)
 
   def withConsignmentReferences(
-    ducr: Option[String] = Some(VALID_DUCR),
-    lrn: String = VALID_LRN
+    ducr: String = VALID_DUCR,
+    lrn: String = VALID_LRN,
+    personalUcr: Option[String] = Some(VALID_DUCR)
   ): ExportsDeclarationModifier =
-    _.copy(consignmentReferences = Some(ConsignmentReferences(ducr.map(DUCR(_)), lrn)))
+    _.copy(consignmentReferences = Some(ConsignmentReferences(DUCR(ducr), lrn, personalUcr)))
 
   def withoutBorderTransport(): ExportsDeclarationModifier = _.copy(borderTransport = None)
 

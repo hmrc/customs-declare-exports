@@ -28,21 +28,28 @@ class PreviousDocumentsBuilderSpec extends WordSpec with Matchers with MockitoSu
   "PreviousDocumentsBuilder " should {
 
     "correctly map new model to a WCO-DEC GoodsShipment.PreviousDocuments instance" when {
-      "when document data is present" in {
+      "when document data is present and a DUCR has been added previously" in {
 
         val builder = new PreviousDocumentsBuilder
         val goodsShipment = new GoodsShipment
+        builder.buildThenAdd(UCRBuilderSpec.correctConsignmentReferences, goodsShipment)
+
         builder.buildThenAdd(
           PreviousDocuments(Seq(PreviousDocumentsBuilderSpec.correctPreviousDocument)),
           goodsShipment
         )
 
         val previousDocs = goodsShipment.getPreviousDocument
-        previousDocs.size should be(1)
-        previousDocs.get(0).getID.getValue should be("DocumentReference")
-        previousDocs.get(0).getCategoryCode.getValue should be("X")
-        previousDocs.get(0).getTypeCode.getValue should be("ABC")
-        previousDocs.get(0).getLineNumeric should be(BigDecimal(123).bigDecimal)
+        previousDocs.size should be(2)
+        previousDocs.get(0).getID.getValue should be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
+        previousDocs.get(0).getCategoryCode.getValue should be("Z")
+        previousDocs.get(0).getTypeCode.getValue should be("DCR")
+        previousDocs.get(0).getLineNumeric should be(BigDecimal(1).bigDecimal)
+
+        previousDocs.get(1).getID.getValue should be("DocumentReference")
+        previousDocs.get(1).getCategoryCode.getValue should be("X")
+        previousDocs.get(1).getTypeCode.getValue should be("ABC")
+        previousDocs.get(1).getLineNumeric should be(BigDecimal(123).bigDecimal)
 
       }
 

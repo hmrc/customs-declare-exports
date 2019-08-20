@@ -26,8 +26,8 @@ class UCRBuilderSpec extends WordSpec with Matchers with MockitoSugar {
 
   "UCRBuilder" should {
 
-    "correctly map new model to the WCO-DEC GoodsShipment.UCR instance" when {
-      "ducr supplied" in {
+    "correctly map new model to the WCO-DEC GoodsShipment.UCRBuilder instance" when {
+      "personal UCR supplied" in {
 
         val builder = new UCRBuilder
 
@@ -36,15 +36,15 @@ class UCRBuilderSpec extends WordSpec with Matchers with MockitoSugar {
 
         val ucrObject = goodsShipment.getUCR
         ucrObject.getID should be(null)
-        ucrObject.getTraderAssignedReferenceID.getValue should be(UCRBuilderSpec.exemplaryDucr)
+        ucrObject.getTraderAssignedReferenceID.getValue should be(UCRBuilderSpec.exemplaryPersonalUcr)
       }
 
-      "ducr not supplied" in {
+      "personal UCR not supplied" in {
 
         val builder = new UCRBuilder
 
         val goodsShipment = new GoodsShipment
-        builder.buildThenAdd(UCRBuilderSpec.correctConsignmentReferencesNoDucr, goodsShipment)
+        builder.buildThenAdd(UCRBuilderSpec.correctConsignmentReferencesNoPersonalUcr, goodsShipment)
 
         goodsShipment.getUCR should be(null)
       }
@@ -55,6 +55,9 @@ class UCRBuilderSpec extends WordSpec with Matchers with MockitoSugar {
 
 object UCRBuilderSpec {
   val exemplaryDucr = "8GB123456789012-1234567890QWERTYUIO"
-  val correctConsignmentReferences = ConsignmentReferences(ducr = Some(DUCR(ducr = exemplaryDucr)), lrn = "123LRN")
-  val correctConsignmentReferencesNoDucr = ConsignmentReferences(ducr = None, lrn = "123LRN")
+  val exemplaryPersonalUcr = "8GB123456789012"
+  val correctConsignmentReferences =
+    ConsignmentReferences(ducr = DUCR(ducr = exemplaryDucr), lrn = "123LRN", personalUcr = Some(exemplaryPersonalUcr))
+  val correctConsignmentReferencesNoPersonalUcr =
+    ConsignmentReferences(ducr = DUCR(ducr = exemplaryDucr), lrn = "123LRN")
 }

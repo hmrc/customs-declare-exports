@@ -18,7 +18,9 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 
-case class DUCR(ducr: String)
+case class DUCR(ducr: String) {
+  def nonEmpty: Boolean = this.ducr.nonEmpty
+}
 
 object DUCR {
   implicit val format: OFormat[DUCR] = Json.format[DUCR]

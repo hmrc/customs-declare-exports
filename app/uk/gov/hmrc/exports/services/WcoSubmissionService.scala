@@ -33,9 +33,12 @@ class WcoSubmissionService @Inject()(
     declaration: ExportsDeclaration
   )(implicit hc: HeaderCarrier, execution: ExecutionContext): Future[Submission] = {
     val metaData = wcoMapperService.produceMetaData(declaration)
-    val lrn = wcoMapperService.declarationLrn(metaData)
+    val lrn = wcoMapperService
+      .declarationLrn(metaData)
       .getOrElse(throw new IllegalArgumentException("An LRN is required"))
-    val ducr = wcoMapperService.declarationUcr(metaData)
+    val ducr = wcoMapperService
+      .declarationDucr(metaData)
+      .getOrElse(throw new IllegalArgumentException("An DUCR is required"))
     val payload = wcoMapperService.toXml(metaData)
 
     customsDeclarationsConnector.submitDeclaration(declaration.eori, payload) map { conversationId =>

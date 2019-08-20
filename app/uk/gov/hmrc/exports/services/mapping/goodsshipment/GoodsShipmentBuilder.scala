@@ -59,6 +59,8 @@ class GoodsShipmentBuilder @Inject()(
     exportsCacheModel.locations.warehouseIdentification
       .foreach(warehouseBuilder.buildThenAdd(_, goodsShipment))
 
+    exportsCacheModel.consignmentReferences.foreach(previousDocumentsBuilder.buildThenAdd(_, goodsShipment))
+
     exportsCacheModel.previousDocuments.foreach(previousDocumentsBuilder.buildThenAdd(_, goodsShipment))
 
     exportsCacheModel.parties.declarationAdditionalActorsData.foreach {

@@ -46,7 +46,7 @@ class FunctionalReferenceIdentificationBuilderSpec extends WordSpec with Matcher
       val builder = new FunctionalReferenceIdBuilder
 
       val declaration = new Declaration
-      val model = aDeclaration(withConsignmentReferences(ducr = None, lrn = ""))
+      val model = aDeclaration(withConsignmentReferences(ducr = "", lrn = ""))
       builder.buildThenAdd(model, declaration)
 
       declaration.getFunctionalReferenceID should be(null)

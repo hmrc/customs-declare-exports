@@ -28,19 +28,17 @@ class WcoMapperService @Inject()(submissionMetadataBuilder: SubmissionMetaDataBu
   def produceMetaData(exportsCacheModel: ExportsDeclaration): MetaData =
     submissionMetadataBuilder.build(exportsCacheModel)
 
-  def declarationUcr(metaData: MetaData): Option[String] = {
-    val ucr = Option(
+  def declarationDucr(metaData: MetaData): Option[String] =
+    Option(
       metaData.getAny
         .asInstanceOf[JAXBElement[Declaration]]
         .getValue
         .getGoodsShipment
-        .getUCR
-    )
-
-    ucr
-      .map(_.getTraderAssignedReferenceID.getValue)
-      .orElse(Some(""))
-  }
+        .getPreviousDocument
+        .get(0)
+        .getID
+        .getValue
+    ).orElse(None)
 
   def declarationLrn(metaData: MetaData): Option[String] =
     Option(
@@ -49,7 +47,7 @@ class WcoMapperService @Inject()(submissionMetadataBuilder: SubmissionMetaDataBu
         .getValue
         .getFunctionalReferenceID
         .getValue
-    ).orElse(Some(""))
+    ).orElse(None)
 
   def toXml(metaData: MetaData) = {
     import java.io.StringWriter

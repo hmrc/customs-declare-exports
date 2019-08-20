@@ -25,7 +25,7 @@ case class Submission(
   eori: String,
   lrn: String,
   mrn: Option[String] = None,
-  ducr: Option[String] = None,
+  ducr: String,
   actions: Seq[Action] = Seq.empty
 )
 
