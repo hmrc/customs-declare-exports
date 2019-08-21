@@ -20,7 +20,6 @@ import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.{ContentTypes, HeaderNames}
-import play.api.mvc.Codec
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames._
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.wco.dec.{DateTimeString, MetaData, ResponseDateTimeElement, Declaration => WcoDeclaration}
@@ -76,10 +75,37 @@ object ExportsTestData {
     MetaData(declaration = Option(WcoDeclaration(functionalReferenceId = Some(lrnValue))))
 
   def expectedSubmissionRequestPayload(functionalReferenceId: String): String = {
-    val returnXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
-      <wstxns1:Declaration xmlns:wstxns1="urn:wco:datamodel:WCO:DEC-DMS:2">
-        <wstxns1:FunctionalReferenceID>{functionalReferenceId}</wstxns1:FunctionalReferenceID>
-      </wstxns1:Declaration>
+    val returnXml =
+    <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2"
+              xmlns:ns2="urn:wco:datamodel:WCO:Declaration_DS:DMS:2"
+              xmlns:ns3="urn:wco:datamodel:WCO:DEC-DMS:2">
+      <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
+      <WCOTypeName>DEC</WCOTypeName>
+      <ResponsibleCountryCode>GB</ResponsibleCountryCode>
+      <ResponsibleAgencyName>HMRC</ResponsibleAgencyName>
+      <AgencyAssignedCustomizationCode>v2.1</AgencyAssignedCustomizationCode>
+      <ns3:Declaration>
+        <ns3:FunctionCode>9</ns3:FunctionCode>
+        <ns3:FunctionalReferenceID>{functionalReferenceId}</ns3:FunctionalReferenceID>
+        <ns3:GoodsItemQuantity>0</ns3:GoodsItemQuantity>
+        <ns3:Consignment/>
+        <ns3:GoodsShipment>
+          <ns3:Consignment>
+            <ns3:TransportEquipment>
+              <ns3:SequenceNumeric>0</ns3:SequenceNumeric>
+            </ns3:TransportEquipment>
+          </ns3:Consignment>
+          <ns3:PreviousDocument>
+            <ns3:CategoryCode>Z</ns3:CategoryCode>
+            <ns3:ID>5GB123456789000-123ABC456DEFIIIII</ns3:ID>
+            <ns3:TypeCode>DCR</ns3:TypeCode>
+            <ns3:LineNumeric>1</ns3:LineNumeric>
+          </ns3:PreviousDocument>
+          <ns3:UCR>
+            <ns3:TraderAssignedReferenceID>5GB123456789000-123ABC456DEFIIIII</ns3:TraderAssignedReferenceID>
+          </ns3:UCR>
+        </ns3:GoodsShipment>
+      </ns3:Declaration>
     </MetaData>
     returnXml.toString
   }
