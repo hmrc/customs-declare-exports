@@ -44,14 +44,16 @@ class NotificationController @Inject()(
   submissionService: SubmissionService,
   bodyParsers: PlayBodyParsers,
   cc: ControllerComponents
-)(implicit executionContext: ExecutionContext) extends Authenticator(authConnector, cc) with JSONResponses {
+)(implicit executionContext: ExecutionContext)
+    extends Authenticator(authConnector, cc) with JSONResponses {
 
   private val logger = Logger(this.getClass)
 
   def findByID(id: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
     submissionService.getSubmission(request.eori.value, id) flatMap {
       case Some(submission) if submission.mrn.isDefined =>
-        notificationsService.getNotificationsForSubmission(submission.mrn.get)
+        notificationsService
+          .getNotificationsForSubmission(submission.mrn.get)
           .map(notifications => Ok(notifications))
       case _ => Future.successful(NotFound)
     }

@@ -32,7 +32,6 @@ class GoodsLocationBuilderSpec extends WordSpec with Matchers with MockitoSugar 
   when(mockCountriesService.allCountries)
     .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
-
   "GoodsLocationBuilder" should {
 
     "correctly map GoodsLocation instance for supplementary journey" when {

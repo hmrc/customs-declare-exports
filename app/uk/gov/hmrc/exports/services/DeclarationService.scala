@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.services
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models.{DeclarationSearch, Page, Paginated}
+import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Page, Paginated}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -56,8 +56,8 @@ class DeclarationService @Inject()(
       } yield Unit
     } else Future.successful((): Unit)
 
-  def find(search: DeclarationSearch, pagination: Page): Future[Paginated[ExportsDeclaration]] =
-    declarationRepository.find(search, pagination)
+  def find(search: DeclarationSearch, pagination: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] =
+    declarationRepository.find(search, pagination, sort)
 
   def findOne(id: String, eori: String): Future[Option[ExportsDeclaration]] = declarationRepository.find(id, eori)
 

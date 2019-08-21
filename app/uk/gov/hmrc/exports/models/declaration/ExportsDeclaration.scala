@@ -45,7 +45,7 @@ case class ExportsDeclaration(
 )
 
 object ExportsDeclaration {
-  
+
   object REST {
     implicit val format: OFormat[ExportsDeclaration] = Json.format[ExportsDeclaration]
   }

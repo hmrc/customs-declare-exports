@@ -37,7 +37,7 @@ import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.format
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models.{Choice, DeclarationSearch, Page, Paginated}
+import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.services.DeclarationService
 import uk.gov.hmrc.http.HeaderCarrier
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
@@ -112,7 +112,7 @@ class DeclarationControllerSpec
       "valid request" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page]))
+        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
         val result: Future[Result] = route(app, get).get
@@ -125,7 +125,7 @@ class DeclarationControllerSpec
       "request has valid pagination" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page]))
+        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
         val get = FakeRequest("GET", "/v2/declarations?page-index=1&page-size=100")
@@ -139,7 +139,7 @@ class DeclarationControllerSpec
       "request has valid search params" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page]))
+        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
         val get = FakeRequest("GET", "/v2/declarations?status=COMPLETE")
@@ -153,7 +153,7 @@ class DeclarationControllerSpec
       "request has invalid search params" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page]))
+        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
         val get = FakeRequest("GET", "/v2/declarations?status=invalid")
@@ -162,6 +162,34 @@ class DeclarationControllerSpec
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(Paginated(declaration))
         theSearch mustBe DeclarationSearch(eori = userEori, status = None)
+      }
+
+      "request has sorting ascending sort params" in {
+        withAuthorizedUser()
+        val declaration = aDeclaration(withId("id"), withEori(userEori))
+        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
+          .willReturn(Future.successful(Paginated(declaration)))
+
+        val get = FakeRequest("GET", "/v2/declarations?sort-by=updatedDateTime&sort-direction=asc")
+        val result: Future[Result] = route(app, get).get
+
+        status(result) must be(OK)
+        contentAsJson(result) mustBe toJson(Paginated(declaration))
+        theSort mustBe DeclarationSort(by = SortBy.UPDATED, direction = SortDirection.ASC)
+      }
+
+      "request has sorting descending sort params" in {
+        withAuthorizedUser()
+        val declaration = aDeclaration(withId("id"), withEori(userEori))
+        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
+          .willReturn(Future.successful(Paginated(declaration)))
+
+        val get = FakeRequest("GET", "/v2/declarations?sort-by=createdDateTime&sort-direction=des")
+        val result: Future[Result] = route(app, get).get
+
+        status(result) must be(OK)
+        contentAsJson(result) mustBe toJson(Paginated(declaration))
+        theSort mustBe DeclarationSort(by = SortBy.CREATED, direction = SortDirection.DES)
       }
     }
 
@@ -178,13 +206,19 @@ class DeclarationControllerSpec
 
     def theSearch: DeclarationSearch = {
       val captor: ArgumentCaptor[DeclarationSearch] = ArgumentCaptor.forClass(classOf[DeclarationSearch])
-      verify(declarationService).find(captor.capture(), any[Page])
+      verify(declarationService).find(captor.capture(), any[Page], any[DeclarationSort])
+      captor.getValue
+    }
+
+    def theSort: DeclarationSort = {
+      val captor: ArgumentCaptor[DeclarationSort] = ArgumentCaptor.forClass(classOf[DeclarationSort])
+      verify(declarationService).find(any[DeclarationSearch], any[Page], captor.capture())
       captor.getValue
     }
 
     def thePagination: Page = {
       val captor: ArgumentCaptor[Page] = ArgumentCaptor.forClass(classOf[Page])
-      verify(declarationService).find(any[DeclarationSearch], captor.capture())
+      verify(declarationService).find(any[DeclarationSearch], captor.capture(), any[DeclarationSort])
       captor.getValue
     }
   }
@@ -297,7 +331,12 @@ class DeclarationControllerSpec
       "request is valid" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
-        val declaration = aDeclaration(withStatus(DeclarationStatus.DRAFT), withChoice(Choice.StandardDec), withId("id"), withEori(userEori))
+        val declaration = aDeclaration(
+          withStatus(DeclarationStatus.DRAFT),
+          withChoice(Choice.StandardDec),
+          withId("id"),
+          withEori(userEori)
+        )
         given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(Some(declaration)))
         given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
           .willReturn(Future.successful(Some(declaration)))
@@ -329,7 +368,12 @@ class DeclarationControllerSpec
       "declaration is not found - on update" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
-        val declaration = aDeclaration(withStatus(DeclarationStatus.DRAFT), withChoice(Choice.StandardDec), withId("id"), withEori(userEori))
+        val declaration = aDeclaration(
+          withStatus(DeclarationStatus.DRAFT),
+          withChoice(Choice.StandardDec),
+          withId("id"),
+          withEori(userEori)
+        )
         given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(Some(declaration)))
         given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
           .willReturn(Future.successful(None))
@@ -345,15 +389,18 @@ class DeclarationControllerSpec
       "declaration is COMPLETE" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
-        val declaration = aDeclaration(withStatus(DeclarationStatus.COMPLETE), withChoice(Choice.StandardDec), withId("id"), withEori(userEori))
+        val declaration = aDeclaration(
+          withStatus(DeclarationStatus.COMPLETE),
+          withChoice(Choice.StandardDec),
+          withId("id"),
+          withEori(userEori)
+        )
         given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(Some(declaration)))
 
         val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
 
         status(result) must be(BAD_REQUEST)
-        contentAsJson(result) mustBe Json.obj(
-          "message" -> "Cannot update a declaration once it is COMPLETE"
-        )
+        contentAsJson(result) mustBe Json.obj("message" -> "Cannot update a declaration once it is COMPLETE")
       }
 
       "invalid json" in {

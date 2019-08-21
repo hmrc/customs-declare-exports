@@ -37,7 +37,8 @@ class SubmissionController @Inject()(
   headerValidator: HeaderValidator,
   cc: ControllerComponents,
   bodyParsers: PlayBodyParsers
-)(implicit executionContext: ExecutionContext) extends Authenticator(authConnector, cc) with JSONResponses {
+)(implicit executionContext: ExecutionContext)
+    extends Authenticator(authConnector, cc) with JSONResponses {
 
   private val logger = Logger(this.getClass)
 
@@ -100,7 +101,7 @@ class SubmissionController @Inject()(
   def findByID(id: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
     submissionService.getSubmission(request.eori.value, id).map {
       case Some(submission) => Ok(submission)
-      case None => NotFound
+      case None             => NotFound
     }
   }
 

@@ -272,6 +272,9 @@ trait ExportsDeclarationBuilder {
       )
     )
 
+  def withUpdateDate(year: Int, month: Int, dayOfMonth: Int): ExportsDeclarationModifier =
+    _.copy(updatedDateTime = LocalDateTime.of(year, month, dayOfMonth, 10, 0, 0).toInstant(ZoneOffset.UTC))
+
   def withoutSeal(): ExportsDeclarationModifier = _.copy(seals = Seq.empty)
 
   def withSeal(seal1: Seal, others: Seal*): ExportsDeclarationModifier =

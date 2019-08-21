@@ -27,7 +27,9 @@ import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem._
 import uk.gov.hmrc.wco.dec.Commodity
 import unit.uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
-import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.{GovernmentAgencyGoodsItem => WCOGovernmentAgencyGoodsItem}
+import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.{
+  GovernmentAgencyGoodsItem => WCOGovernmentAgencyGoodsItem
+}
 
 class GovernmentAgencyGoodsItemBuilderSpec
     extends WordSpec with Matchers with GovernmentAgencyGoodsItemData with MockitoSugar with ExportsItemBuilder {
@@ -59,8 +61,10 @@ class GovernmentAgencyGoodsItemBuilderSpec
         )
       )
 
-      when(mockCachingMappingHelper.mapGoodsMeasure(any[CommodityMeasure])).thenReturn(Commodity(description = Some("Some Commodity")))
-      when(mockCachingMappingHelper.commodityFromItemTypes(any[ItemType])).thenReturn(Commodity(description = Some("Some Commodity")))
+      when(mockCachingMappingHelper.mapGoodsMeasure(any[CommodityMeasure]))
+        .thenReturn(Commodity(description = Some("Some Commodity")))
+      when(mockCachingMappingHelper.commodityFromItemTypes(any[ItemType]))
+        .thenReturn(Commodity(description = Some("Some Commodity")))
 
       val goodsShipment = new GoodsShipment
       builder.buildThenAdd(exportItem, goodsShipment)
