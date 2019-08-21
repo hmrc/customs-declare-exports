@@ -31,13 +31,14 @@ import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.notifications.{ErrorPointer, Notification, NotificationError}
 import uk.gov.hmrc.exports.services.{NotificationService, SubmissionService}
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.{Node, NodeSeq}
 
 @Singleton
 class NotificationController @Inject()(
-  authConnector: AuthConnector,
+  authorisedAction: Authenticator,
   headerValidator: HeaderValidator,
   metrics: ExportsMetrics,
   notificationsService: NotificationService,
@@ -45,11 +46,11 @@ class NotificationController @Inject()(
   bodyParsers: PlayBodyParsers,
   cc: ControllerComponents
 )(implicit executionContext: ExecutionContext)
-    extends Authenticator(authConnector, cc) with JSONResponses {
+    extends BackendController(cc) with JSONResponses {
 
   private val logger = Logger(this.getClass)
 
-  def findByID(id: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
+  def findByID(id: String): Action[AnyContent] = authorisedAction.async(bodyParsers.default) { implicit request =>
     submissionService.getSubmission(request.eori.value, id) flatMap {
       case Some(submission) if submission.mrn.isDefined =>
         notificationsService
@@ -60,7 +61,7 @@ class NotificationController @Inject()(
   }
 
   def getSubmissionNotifications(mrn: String): Action[AnyContent] =
-    authorisedAction(bodyParsers.default) { implicit request =>
+    authorisedAction.async(bodyParsers.default) { implicit request =>
       notificationsService
         .getNotificationsForSubmission(mrn)
         .map(notifications => Ok(notifications))
@@ -69,7 +70,7 @@ class NotificationController @Inject()(
   //TODO response should be streamed or paginated depending on the no of notifications.
   //TODO Return NO CONTENT (204) when there are no notifications
   def getAllNotificationsForUser(): Action[AnyContent] =
-    authorisedAction(bodyParsers.default) { implicit request =>
+    authorisedAction.async(bodyParsers.default) { implicit request =>
       notificationsService
         .getAllNotificationsForUser(request.eori.value)
         .map(notifications => Ok(notifications))

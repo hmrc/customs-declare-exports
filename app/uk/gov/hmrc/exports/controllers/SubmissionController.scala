@@ -26,24 +26,25 @@ import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
 
 @Singleton
 class SubmissionController @Inject()(
-  authConnector: AuthConnector,
+  authorisedAction: Authenticator,
   submissionService: SubmissionService,
   headerValidator: HeaderValidator,
   cc: ControllerComponents,
   bodyParsers: PlayBodyParsers
 )(implicit executionContext: ExecutionContext)
-    extends Authenticator(authConnector, cc) with JSONResponses {
+    extends BackendController(cc) with JSONResponses {
 
   private val logger = Logger(this.getClass)
 
   def cancelDeclaration(): Action[AnyContent] =
-    authorisedAction(bodyParser = xmlOrEmptyBody) { implicit request =>
+    authorisedAction.async(bodyParser = xmlOrEmptyBody) { implicit request =>
       headerValidator.validateAndExtractCancellationHeaders(request.headers.toSimpleMap) match {
         case Right(vhr) =>
           request.body.asXml match {
@@ -85,20 +86,20 @@ class SubmissionController @Inject()(
       }
 
   def getSubmission(conversationId: String): Action[AnyContent] =
-    authorisedAction(bodyParsers.default) { implicit request =>
+    authorisedAction.async(bodyParsers.default) { implicit request =>
       submissionService
         .getSubmissionByConversationId(conversationId)
         .map(submission => Ok(submission))
     }
 
   def getSubmissionsByEori: Action[AnyContent] =
-    authorisedAction(bodyParsers.default) { implicit request =>
+    authorisedAction.async(bodyParsers.default) { implicit request =>
       submissionService
         .getAllSubmissionsForUser(request.eori.value)
         .map(submissions => Ok(submissions))
     }
 
-  def findByID(id: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
+  def findByID(id: String): Action[AnyContent] = authorisedAction.async(bodyParsers.default) { implicit request =>
     submissionService.getSubmission(request.eori.value, id).map {
       case Some(submission) => Ok(submission)
       case None             => NotFound

@@ -42,7 +42,7 @@ class DeclarationController @Inject()(
     extends RESTController(controllerComponents) {
 
   def create(): Action[ExportsDeclarationRequest] =
-    authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
+    authenticator.async(parsingJson[ExportsDeclarationRequest]) { implicit request =>
       logPayload("Create Declaration Request Received", request.body)
       declarationService
         .create(request.body.toExportsDeclaration(id = UUID.randomUUID().toString, eori = request.eori))
@@ -51,7 +51,7 @@ class DeclarationController @Inject()(
     }
 
   def update(id: String): Action[ExportsDeclarationRequest] =
-    authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
+    authenticator.async(parsingJson[ExportsDeclarationRequest]) { implicit request =>
       logPayload("Update Declaration Request Received", request.body)
       declarationService.findOne(id, request.eori.value).flatMap {
         case Some(declaration) if declaration.status == DeclarationStatus.COMPLETE =>
@@ -73,7 +73,7 @@ class DeclarationController @Inject()(
     }
 
   def findAll(status: Option[String], pagination: Page, sort: DeclarationSort): Action[AnyContent] =
-    authenticator.authorisedAction(parse.default) { implicit request =>
+    authenticator.async { implicit request =>
       val search = DeclarationSearch(
         eori = request.eori.value,
         status = status.map(v => Try(DeclarationStatus.withName(v))).filter(_.isSuccess).map(_.get)
@@ -81,14 +81,14 @@ class DeclarationController @Inject()(
       declarationService.find(search, pagination, sort).map(results => Ok(results))
     }
 
-  def findByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+  def findByID(id: String): Action[AnyContent] = authenticator.async { implicit request =>
     declarationService.findOne(id, request.eori.value).map {
       case Some(declaration) => Ok(declaration)
       case None              => NotFound
     }
   }
 
-  def deleteByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+  def deleteByID(id: String): Action[AnyContent] = authenticator.async { implicit request =>
     declarationService.findOne(id, request.eori.value).flatMap {
       case Some(declaration) if declaration.status == DeclarationStatus.COMPLETE =>
         Future.successful(BadRequest(ErrorResponse("Cannot remove a declaration once it is COMPLETE")))

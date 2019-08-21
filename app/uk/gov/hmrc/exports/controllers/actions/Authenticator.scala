@@ -23,57 +23,49 @@ import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.exports.models.{AuthorizedSubmissionRequest, Eori, ErrorResponse}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.HeaderCarrierConverter
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
-// TODO: This needs to be separated from BackendController and be injected instead of inheriting in other controllers
 @Singleton
-class Authenticator @Inject()(override val authConnector: AuthConnector, cc: ControllerComponents)(
-  implicit ec: ExecutionContext
-) extends BackendController(cc) with AuthorisedFunctions {
+class Authenticator @Inject()(override val authConnector: AuthConnector, parsers: PlayBodyParsers)(
+  implicit override val executionContext: ExecutionContext
+) extends ActionRefiner[Request, AuthorizedSubmissionRequest] with AuthorisedFunctions
+    with ActionBuilder[AuthorizedSubmissionRequest, AnyContent] {
 
   private val logger = Logger(this.getClass)
 
-  def authorisedAction[A](
-    bodyParser: BodyParser[A]
-  )(body: AuthorizedSubmissionRequest[A] => Future[Result]): Action[A] =
-    Action.async(bodyParser) { implicit request =>
-      authorisedWithEori.flatMap {
-        case Right(authorisedRequest) =>
-          logger.info(s"Authorised request for ${authorisedRequest.eori.value}")
-          body(authorisedRequest)
-        case Left(error) =>
-          logger.error(s"Problems with Authorisation: ${error.message}")
-          Future.successful(error.XmlResult)
-      }
-    }
+  override def parser: BodyParser[AnyContent] = parsers.default
+
+  override protected def refine[A](request: Request[A]): Future[Either[Result, AuthorizedSubmissionRequest[A]]] = {
+    val hc = HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
+    authorisedWithEori(hc, request)
+  }
 
   private def authorisedWithEori[A](
-    implicit hc: HeaderCarrier,
+    hc: HeaderCarrier,
     request: Request[A]
-  ): Future[Either[ErrorResponse, AuthorizedSubmissionRequest[A]]] =
+  ): Future[Either[Result, AuthorizedSubmissionRequest[A]]] =
     authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments) { enrolments =>
       hasEnrolment(enrolments) match {
         case Some(eori) => Future.successful(Right(AuthorizedSubmissionRequest(Eori(eori.value), request)))
         case _ =>
           logger.error("Unauthorised access. User without eori.")
-          Future.successful(Left(ErrorResponse.errorUnauthorized))
+          Future.successful(Left(ErrorResponse.errorUnauthorized.XmlResult))
       }
-    } recover {
+    }(hc, executionContext) recover {
       case error: InsufficientEnrolments =>
         logger.error(s"Unauthorised access for ${request.uri} with error ${error.reason}")
-        Left(ErrorResponse.errorUnauthorized("Unauthorized for exports"))
+        Left(ErrorResponse.errorUnauthorized("Unauthorized for exports").XmlResult)
       case error: AuthorisationException =>
         logger.error(s"Unauthorised Exception for ${request.uri} with error ${error.reason}")
-        Left(ErrorResponse.errorUnauthorized("Unauthorized for exports"))
-      case ex: Throwable =>
-        logger.error("Internal server error is " + ex.getMessage)
-        Left(ErrorResponse.errorInternalServerError)
+        Left(ErrorResponse.errorUnauthorized("Unauthorized for exports").XmlResult)
+      case NonFatal(exception) =>
+        logger.error("Internal server error is " + exception.getMessage)
+        Left(ErrorResponse.errorInternalServerError.XmlResult)
     }
 
   private def hasEnrolment(allEnrolments: Enrolments): Option[EnrolmentIdentifier] =
-    allEnrolments
-      .getEnrolment("HMRC-CUS-ORG")
-      .flatMap(_.getIdentifier("EORINumber"))
+    allEnrolments.getEnrolment("HMRC-CUS-ORG").flatMap(_.getIdentifier("EORINumber"))
 }
