@@ -170,12 +170,12 @@ class DeclarationControllerSpec
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val get = FakeRequest("GET", "/v2/declarations?sortBy=updatedDateTime&sortDirection=asc")
+        val get = FakeRequest("GET", "/v2/declarations?sort-by=updatedDateTime&sort-direction=asc")
         val result: Future[Result] = route(app, get).get
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(Paginated(declaration))
-        theSort mustBe DeclarationSort(by = "updatedDateTime", direction = 1)
+        theSort mustBe DeclarationSort(by = SortBy.UPDATED, direction = SortDirection.ASC)
       }
 
       "request has sorting descending sort params" in {
@@ -184,12 +184,12 @@ class DeclarationControllerSpec
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val get = FakeRequest("GET", "/v2/declarations?sortBy=updatedDateTime&sortDirection=des")
+        val get = FakeRequest("GET", "/v2/declarations?sort-by=createdDateTime&sort-direction=des")
         val result: Future[Result] = route(app, get).get
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(Paginated(declaration))
-        theSort mustBe DeclarationSort(by = "updatedDateTime", direction = -1)
+        theSort mustBe DeclarationSort(by = SortBy.CREATED, direction = SortDirection.DES)
       }
     }
 

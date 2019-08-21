@@ -46,7 +46,8 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
     Index(
       Seq("eori" -> IndexType.Ascending, "action.requestTimestamp" -> IndexType.Descending),
       name = Some("actionOrderedEori")
-    )
+    ),
+    Index(Seq("updatedDateTime" -> IndexType.Ascending), name = Some("updateTimeIdx"))
   )
 
   def findAllSubmissionsForEori(eori: String): Future[Seq[Submission]] = {

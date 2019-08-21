@@ -170,25 +170,25 @@ class DeclarationRepositoryTest
 
   "Find with sort order" should {
     "return the declarations in accending order" in {
-      val declaration3 = aDeclaration(withId("id3"))
-      val declaration1 = aDeclaration(withId("id1"))
-      val declaration2 = aDeclaration(withId("id2"))
+      val declaration1 = aDeclaration(withUpdateDate(2019, 1, 1))
+      val declaration2 = aDeclaration(withUpdateDate(2019, 1, 2))
+      val declaration3 = aDeclaration(withUpdateDate(2019, 1, 3))
       givenADeclarationExists(declaration3, declaration1, declaration2)
 
       val page = Page(index = 1, size = 10)
       repository
-        .find(DeclarationSearch("eori"), page, DeclarationSort("id", DeclarationSort.ASC))
+        .find(DeclarationSearch("eori"), page, DeclarationSort(SortBy.UPDATED, SortDirection.ASC))
         .futureValue shouldBe Paginated(Seq(declaration1, declaration2, declaration3), page, 3)
     }
     "return the declarations in decending order" in {
-      val declaration1 = aDeclaration(withUpdateTime(2019, 1, 1))
-      val declaration2 = aDeclaration(withUpdateTime(2019, 1, 2))
-      val declaration3 = aDeclaration(withUpdateTime(2019, 1, 3))
+      val declaration1 = aDeclaration(withUpdateDate(2019, 1, 1))
+      val declaration2 = aDeclaration(withUpdateDate(2019, 1, 2))
+      val declaration3 = aDeclaration(withUpdateDate(2019, 1, 3))
       givenADeclarationExists(declaration3, declaration1, declaration2)
 
       val page = Page(index = 1, size = 10)
       repository
-        .find(DeclarationSearch("eori"), page, DeclarationSort("updatedDateTime", DeclarationSort.DEC))
+        .find(DeclarationSearch("eori"), page, DeclarationSort(SortBy.UPDATED, SortDirection.DES))
         .futureValue shouldBe Paginated(Seq(declaration3, declaration2, declaration1), page, 3)
     }
   }

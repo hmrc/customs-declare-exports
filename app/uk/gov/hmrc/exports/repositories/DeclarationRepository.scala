@@ -54,7 +54,7 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
           ImplicitBSONHandlers.JsObjectDocumentWriter,
           ImplicitBSONHandlers.JsObjectDocumentWriter
         )
-        .sort(Json.obj(sort.by -> sort.direction))
+        .sort(Json.obj(sort.by.toString -> sort.direction.id))
         .options(QueryOpts(skipN = (pagination.index - 1) * pagination.size, batchSizeN = pagination.size))
         .cursor[ExportsDeclaration](ReadPreference.primaryPreferred)
         .collect(maxDocs = pagination.size, FailOnError[List[ExportsDeclaration]]())

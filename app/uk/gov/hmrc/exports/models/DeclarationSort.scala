@@ -15,10 +15,60 @@
  */
 
 package uk.gov.hmrc.exports.models
+import play.api.libs.json.{Format, Json, OFormat}
+import play.api.mvc.QueryStringBindable
+import uk.gov.hmrc.exports.models.SortBy.SortBy
+import uk.gov.hmrc.exports.models.SortDirection.SortDirection
+import uk.gov.hmrc.exports.util.EnumJson
 
-case class DeclarationSort(by: String = "createdDateTime", direction: Int = DeclarationSort.ASC)
+case class DeclarationSort(
+  by: SortBy = DeclarationSort.DEFAULT_BY,
+  direction: SortDirection = DeclarationSort.DEFAULT_DIRECTION
+)
 
 object DeclarationSort {
-  val ASC = 1
-  val DEC = -1
+  val DEFAULT_BY = SortBy.CREATED
+  val DEFAULT_DIRECTION = SortDirection.ASC
+
+  implicit val format: OFormat[DeclarationSort] = Json.format[DeclarationSort]
+  implicit val bindable: QueryStringBindable[DeclarationSort] =
+    new QueryStringBindable[DeclarationSort] {
+      private val strBinder = implicitly[QueryStringBindable[String]]
+      private def queryParamBy(key: String) = key + "-by"
+      private def queryParamDirection(key: String) = key + "-direction"
+
+      def toSortBy: String => Option[SortBy] = value => SortBy.values.find(_.toString == value)
+
+      def toSortDirection: String => Option[SortDirection] = value => SortDirection.values.find(_.toString == value)
+
+      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, DeclarationSort]] = {
+        val by: SortBy = params.get(queryParamBy(key)).flatMap(_.headOption).flatMap(toSortBy).getOrElse(DEFAULT_BY)
+        val direction = params
+          .get(queryParamDirection(key))
+          .flatMap(_.headOption)
+          .flatMap(toSortDirection)
+          .getOrElse(DEFAULT_DIRECTION)
+        Some(Right(DeclarationSort(by, direction)))
+      }
+
+      override def unbind(key: String, sort: DeclarationSort): String =
+        strBinder.unbind(queryParamBy(key), sort.by.toString) + "&" + strBinder.unbind(
+          queryParamDirection(key),
+          sort.direction.toString
+        )
+    }
+}
+
+object SortBy extends Enumeration {
+  type SortBy = Value
+  implicit val format: Format[SortBy.Value] = EnumJson.format(SortBy)
+  val CREATED = Value("createdDateTime")
+  val UPDATED = Value("updatedDateTime")
+}
+
+object SortDirection extends Enumeration {
+  type SortDirection = Value
+  implicit val format: Format[SortDirection.Value] = EnumJson.format(SortDirection)
+  val ASC = Value(1, "asc")
+  val DES = Value(-1, "des")
 }
