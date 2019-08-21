@@ -16,6 +16,8 @@
 
 package component.uk.gov.hmrc.exports.base
 
+import java.time.LocalDateTime
+
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{reset, verify, verifyZeroInteractions, when}
@@ -28,8 +30,11 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
-import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.http.InternalServerException
 import util._
 import util.stubs.CustomsDeclarationsAPIService
 import util.testdata.ExportsTestData._
@@ -42,6 +47,7 @@ trait ComponentTestSpec
     with CustomsDeclarationsAPIService {
 
   private val mockSubmissionRepository = mock[SubmissionRepository]
+  private val mockDeclarationRepository = mock[DeclarationRepository]
   private val mockNotificationsRepository = mock[NotificationRepository]
 
   override protected def beforeAll() {
@@ -52,6 +58,7 @@ trait ComponentTestSpec
   override protected def beforeEach() {
 
     reset(mockSubmissionRepository)
+    reset(mockDeclarationRepository)
     reset(mockNotificationsRepository)
     resetMockServer()
   }
@@ -62,11 +69,38 @@ trait ComponentTestSpec
   }
 
   private def withFutureArg[T](index: Int): Answer[Future[T]] = new Answer[Future[T]] {
-    override def answer(invocation: InvocationOnMock): Future[T] = invocation.getArgument(index)
+    override def answer(invocation: InvocationOnMock): Future[T] = Future.successful(invocation.getArgument(index))
   }
 
-  def withSubmissionSuccess(): Unit =
+  def withSubmissionSuccess(): Unit = {
     when(mockSubmissionRepository.save(any())).thenAnswer(withFutureArg(0))
+    when(mockSubmissionRepository.updateMrn(any(), any()))
+    .thenReturn(Future.successful(Some(Submission(uuid = "uuid", eori = "eori-123", ducr = "ducr", lrn = "lrn"))))
+  }
+
+  def withSubmissionFailure(): Unit =
+    when(mockSubmissionRepository.save(any())).thenThrow(new RuntimeException("Could not save to DB"))
+
+  def withDeclarationRepositorySuccess(): Unit = {
+    when(mockDeclarationRepository.create(any())).thenAnswer(withFutureArg(0))
+  }
+
+  def withDeclarationRepositoryFailure() =
+    when(mockDeclarationRepository.create(any())).thenAnswer(new Answer[String] {
+      def answer(invocation: InvocationOnMock): String =
+        throw new InternalServerException("Could not save to DB")
+    })
+
+  def verifyDeclarationRepositoryIsCorrectlyCalled(eoriValue: String) {
+    val submissionCaptor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
+    verify(mockDeclarationRepository).create(submissionCaptor.capture())
+    submissionCaptor.getValue.eori shouldBe eoriValue
+  }
+
+  def withNotificationRepositorySuccess(): Unit =
+    when(mockNotificationsRepository.findNotificationsByConversationId(any())).thenReturn(
+      Future.successful(Seq(Notification("conversation-id", "mrn", LocalDateTime.now(), "", None, Seq.empty, "")))
+    )
 
   def verifySubmissionRepositoryIsCorrectlyCalled(eoriValue: String) {
     val submissionCaptor: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
@@ -82,6 +116,7 @@ trait ComponentTestSpec
   override implicit lazy val app: Application = new GuiceApplicationBuilder()
     .overrides(bind[SubmissionRepository].toInstance(mockSubmissionRepository))
     .overrides(bind[NotificationRepository].toInstance(mockNotificationsRepository))
+    .overrides(bind[DeclarationRepository].toInstance(mockDeclarationRepository))
     .configure(
       Map(
         "microservice.services.auth.host" -> ExternalServicesConfig.Host,
