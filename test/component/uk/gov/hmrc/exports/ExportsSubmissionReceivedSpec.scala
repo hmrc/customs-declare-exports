@@ -61,9 +61,9 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec with ScalaFutures 
       authServiceAuthorizesWithEoriAndNoRetrievals()
 
       When("a POST request with data is sent to the API")
-      val result = route(app = app, request).value
+      val result = route(app, request).value
 
-      Then(s"a response with a $CREATED status is received")
+      Then("a response with a 201 status is received")
       status(result) shouldBe CREATED
 
       And("the Declarations API Service is called correctly")
@@ -97,9 +97,9 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec with ScalaFutures 
       authServiceAuthorizesWithEoriAndNoRetrievals()
 
       When("a POST request with data is sent to the API")
-      val result = route(app = app, request).value
+      val result = route(app, request).value
 
-      Then(s"a response with a $INTERNAL_SERVER_ERROR status is received")
+      Then("a response with a 500 status is received")
       intercept[InternalServerException](status(result))
 
       And("the Declarations API Service is called correctly")
@@ -164,7 +164,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec with ScalaFutures 
       authServiceAuthorizesWithEoriAndNoRetrievals()
 
       When("a POST request with data is sent to the API")
-      val result: Future[Result] = route(app = app, request).value
+      val result: Future[Result] = route(app, request).value
 
       And("submission should be persisted")
       withSubmissionSuccess()
@@ -204,7 +204,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec with ScalaFutures 
       authServiceAuthorizesWithEoriAndNoRetrievals()
 
       When("a POST request with data is sent to the API")
-      val result: Future[Result] = route(app = app, request).value
+      val result: Future[Result] = route(app, request).value
 
       Then("a response with a 500 (INTERNAL_SERVER_ERROR) status is received")
       intercept[RuntimeException](status(result))
@@ -234,7 +234,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec with ScalaFutures 
       val request: FakeRequest[AnyContentAsJson] = ValidSubmissionRequest
 
       When("a POST request with data is sent to the API")
-      val result: Future[Result] = route(app = app, request).value
+      val result: Future[Result] = route(app, request).value
 
       And("submission should be persisted")
       withSubmissionSuccess()
@@ -270,7 +270,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec with ScalaFutures 
       authServiceAuthorizesWithEoriAndNoRetrievals()
 
       When("a POST request with data is sent to the API")
-      val result = route(app = app, request).value
+      val result = route(app, request).value
 
       Then(s"a response with a $expectedResponseStatus status is received")
       intercept[InternalServerException](status(result))
