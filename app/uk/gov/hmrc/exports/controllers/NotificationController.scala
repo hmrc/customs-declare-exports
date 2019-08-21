@@ -109,8 +109,8 @@ class NotificationController @Inject()(
         val functionCode = (singleResponseXml \ "FunctionCode").text
 
         val nameCode =
-          if ((singleResponseXml \ "Response" \ "Status").nonEmpty)
-            Some((singleResponseXml \ "Response" \ "Status" \ "NameCode").text)
+          if ((singleResponseXml \ "Status").nonEmpty)
+            Some((singleResponseXml \ "Status" \ "NameCode").text)
           else None
 
         val errors = buildErrorsFromRequest(singleResponseXml)
