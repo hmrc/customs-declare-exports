@@ -76,7 +76,7 @@ object ExportsTestData {
 
   def expectedSubmissionRequestPayload(functionalReferenceId: String): String = {
     val returnXml =
-    <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2"
+      <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2"
               xmlns:ns2="urn:wco:datamodel:WCO:Declaration_DS:DMS:2"
               xmlns:ns3="urn:wco:datamodel:WCO:DEC-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
