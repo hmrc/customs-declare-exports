@@ -75,15 +75,14 @@ trait ComponentTestSpec
   def withSubmissionSuccess(): Unit = {
     when(mockSubmissionRepository.save(any())).thenAnswer(withFutureArg(0))
     when(mockSubmissionRepository.updateMrn(any(), any()))
-    .thenReturn(Future.successful(Some(Submission(uuid = "uuid", eori = "eori-123", ducr = "ducr", lrn = "lrn"))))
+      .thenReturn(Future.successful(Some(Submission(uuid = "uuid", eori = "eori-123", ducr = "ducr", lrn = "lrn"))))
   }
 
   def withSubmissionFailure(): Unit =
     when(mockSubmissionRepository.save(any())).thenThrow(new RuntimeException("Could not save to DB"))
 
-  def withDeclarationRepositorySuccess(): Unit = {
+  def withDeclarationRepositorySuccess(): Unit =
     when(mockDeclarationRepository.create(any())).thenAnswer(withFutureArg(0))
-  }
 
   def withDeclarationRepositoryFailure() =
     when(mockDeclarationRepository.create(any())).thenAnswer(new Answer[String] {
