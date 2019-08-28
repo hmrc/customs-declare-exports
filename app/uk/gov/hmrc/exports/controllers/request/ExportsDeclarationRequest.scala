@@ -39,8 +39,7 @@ case class ExportsDeclarationRequest(
   items: Set[ExportItem] = Set.empty[ExportItem],
   totalNumberOfItems: Option[TotalNumberOfItems] = None,
   previousDocuments: Option[PreviousDocuments] = None,
-  natureOfTransaction: Option[NatureOfTransaction] = None,
-  seals: Seq[Seal] = Seq.empty
+  natureOfTransaction: Option[NatureOfTransaction] = None
 ) {
   def toExportsDeclaration(id: String, eori: Eori): ExportsDeclaration = ExportsDeclaration(
     id = id,
@@ -60,8 +59,7 @@ case class ExportsDeclarationRequest(
     items = this.items,
     totalNumberOfItems = this.totalNumberOfItems,
     previousDocuments = this.previousDocuments,
-    natureOfTransaction = this.natureOfTransaction,
-    seals = this.seals
+    natureOfTransaction = this.natureOfTransaction
   )
 }
 

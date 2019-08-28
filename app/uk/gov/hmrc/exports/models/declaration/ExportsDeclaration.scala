@@ -40,8 +40,7 @@ case class ExportsDeclaration(
   items: Set[ExportItem],
   totalNumberOfItems: Option[TotalNumberOfItems],
   previousDocuments: Option[PreviousDocuments],
-  natureOfTransaction: Option[NatureOfTransaction],
-  seals: Seq[Seal]
+  natureOfTransaction: Option[NatureOfTransaction]
 )
 
 object ExportsDeclaration {

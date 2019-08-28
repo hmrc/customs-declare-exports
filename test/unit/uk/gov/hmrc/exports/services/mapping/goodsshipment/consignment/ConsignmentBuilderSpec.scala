@@ -21,7 +21,7 @@ import org.mockito.Mockito.verify
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.Choice
-import uk.gov.hmrc.exports.models.declaration.{BorderTransport, ExportsDeclaration, Seal, TransportDetails}
+import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment._
 import util.testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -62,7 +62,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
             withChoice(Choice.StandardDec),
             withWarehouseIdentification(ArrivalTransportMeansBuilderSpec.correctWarehouseIdentification),
             withTransportDetails(Some("Portugal"), container = true, "40", Some("1234567878ui"), Some("A")),
-            withSeals(Seq(Seal("first"), Seal("second")))
+            withContainerData(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2"))))
           )
 
         val goodsShipment: Declaration.GoodsShipment = new Declaration.GoodsShipment
@@ -105,7 +105,14 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
           )
 
         verify(mockTransportEquipmentBuilder)
-          .buildThenAdd(refEq(Seq(Seal("first"), Seal("second"))), any[GoodsShipment.Consignment])
+          .buildThenAdd(
+            refEq(
+              TransportInformationContainers(
+                Seq(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2"))))
+              )
+            ),
+            any[GoodsShipment.Consignment]
+          )
       }
     }
   }

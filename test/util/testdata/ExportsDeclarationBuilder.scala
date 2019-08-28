@@ -48,8 +48,7 @@ trait ExportsDeclarationBuilder {
     items = Set.empty[ExportItem],
     totalNumberOfItems = None,
     previousDocuments = None,
-    natureOfTransaction = None,
-    seals = Seq.empty[Seal]
+    natureOfTransaction = None
   )
 
   def aDeclaration(modifiers: ExportsDeclarationModifier*): ExportsDeclaration =
@@ -274,12 +273,5 @@ trait ExportsDeclarationBuilder {
 
   def withUpdateDate(year: Int, month: Int, dayOfMonth: Int): ExportsDeclarationModifier =
     _.copy(updatedDateTime = LocalDateTime.of(year, month, dayOfMonth, 10, 0, 0).toInstant(ZoneOffset.UTC))
-
-  def withoutSeal(): ExportsDeclarationModifier = _.copy(seals = Seq.empty)
-
-  def withSeal(seal1: Seal, others: Seal*): ExportsDeclarationModifier =
-    cache => cache.copy(seals = cache.seals ++ Seq(seal1) ++ others)
-
-  def withSeals(seals: Seq[Seal]): ExportsDeclarationModifier = _.copy(seals = seals)
 
 }
