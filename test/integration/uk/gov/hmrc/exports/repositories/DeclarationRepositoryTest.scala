@@ -16,6 +16,8 @@
 
 package integration.uk.gov.hmrc.exports.repositories
 
+import java.time.{LocalDate, ZoneOffset}
+
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -214,6 +216,44 @@ class DeclarationRepositoryTest
 
         collectionSize shouldBe 2
       }
+    }
+  }
+
+  "Delete Expired Draft" should {
+    def expireDate(year: Int, month: Int, day: Int) =
+      LocalDate.of(year, month, day).atStartOfDay().toInstant(ZoneOffset.UTC)
+
+    "remove the expired draft declaration" in {
+      val draftDeclarationExpired = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(2019, 1, 1))
+      givenADeclarationExists(draftDeclarationExpired)
+
+      val count = repository.deleteExpiredDraft(expireDate(2019, 8, 1)).futureValue
+
+      count shouldBe 1
+      collectionSize shouldBe 0
+    }
+
+    "remove the correct number of expired draft declarations" in {
+      val draftDeclarationExpired1 = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(2019, 1, 1))
+      val draftDeclarationExpired2 = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(2019, 1, 1))
+      val draftDeclarationOngoing = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(2019, 3, 1))
+      val completedDeclaration = aDeclaration(withStatus(DeclarationStatus.COMPLETE), withUpdateDate(2019, 1, 1))
+      givenADeclarationExists(
+        draftDeclarationExpired1,
+        draftDeclarationExpired2,
+        draftDeclarationOngoing,
+        completedDeclaration
+      )
+
+      val count = repository.deleteExpiredDraft(expireDate(2019, 2, 1)).futureValue
+
+      count shouldBe 2
+      collectionSize shouldBe 2
+
+      val page = Page(index = 1, size = 10)
+      repository
+        .find(DeclarationSearch("eori"), page, DeclarationSort(SortBy.UPDATED, SortDirection.ASC))
+        .futureValue shouldBe Paginated(Seq(completedDeclaration, draftDeclarationOngoing), page, 2)
     }
   }
 }

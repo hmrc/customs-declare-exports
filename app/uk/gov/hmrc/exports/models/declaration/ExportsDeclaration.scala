@@ -51,7 +51,7 @@ object ExportsDeclaration {
   }
 
   object Mongo {
-    private implicit val formatInstant: OFormat[Instant] = new OFormat[Instant] {
+    implicit val formatInstant: OFormat[Instant] = new OFormat[Instant] {
       override def writes(datetime: Instant): JsObject =
         Json.obj("$date" -> datetime.toEpochMilli)
 

@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.exports.repositories
 
+import java.time._
+
 import javax.inject.Inject
 import play.api.libs.json.{JsObject, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
@@ -24,7 +26,7 @@ import reactivemongo.api.{QueryOpts, ReadConcern, ReadPreference}
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.ImplicitBSONHandlers
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Page, Paginated}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
@@ -80,5 +82,12 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
     super
       .remove("id" -> declaration.id, "eori" -> declaration.eori)
       .map(_ => Unit)
+
+  def deleteExpiredDraft(expiryDate: Instant): Future[Int] = {
+    import ExportsDeclaration.Mongo.formatInstant
+    super
+      .remove("status" -> DeclarationStatus.DRAFT, "updatedDateTime" -> Json.obj("$lte" -> expiryDate))
+      .map(res => res.n)
+  }
 
 }

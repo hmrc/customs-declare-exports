@@ -16,9 +16,13 @@
 
 package uk.gov.hmrc.exports.config
 
+import java.time.{Clock, LocalTime}
+
 import com.google.inject.{Inject, Singleton}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import scala.concurrent.duration.FiniteDuration
 
 @Singleton
 class AppConfig @Inject()(
@@ -26,6 +30,8 @@ class AppConfig @Inject()(
   val environment: Environment,
   servicesConfig: ServicesConfig
 ) {
+
+  lazy val clock: Clock = Clock.systemUTC()
 
   private def loadConfig(key: String): String =
     runModeConfiguration
@@ -52,4 +58,14 @@ class AppConfig @Inject()(
 
   lazy val developerHubClientId: String =
     servicesConfig.getString("microservice.services.customs-declarations.client-id")
+
+  lazy val draftTimeToLive: FiniteDuration =
+    servicesConfig.getDuration("draft.timeToLive").asInstanceOf[FiniteDuration]
+
+  lazy val purgeDraftDeclarations: JobConfig = JobConfig(
+    LocalTime.parse(servicesConfig.getString("scheduler.purge-draft-declarations.run-time")),
+    servicesConfig.getDuration("scheduler.purge-draft-declarations.interval").asInstanceOf[FiniteDuration]
+  )
 }
+
+case class JobConfig(elapseTime: LocalTime, interval: FiniteDuration)
