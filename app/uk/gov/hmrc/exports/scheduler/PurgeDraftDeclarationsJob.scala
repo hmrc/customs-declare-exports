@@ -38,6 +38,8 @@ class PurgeDraftDeclarationsJob @Inject()(appConfig: AppConfig, declarationRepos
   private val expireDuration = appConfig.draftTimeToLive
   private val clock = appConfig.clock
 
+  private val logger = Logger(this.getClass)
+
   override val name: String = "PurgeDraftDeclarations"
   override def interval: FiniteDuration = jobConfig.interval
   override def firstRunTime: LocalTime = jobConfig.elapseTime
@@ -47,7 +49,7 @@ class PurgeDraftDeclarationsJob @Inject()(appConfig: AppConfig, declarationRepos
     val expiryDate = Instant.now(clock).minusSeconds(expireDuration.toSeconds)
     for {
       count <- declarationRepository.deleteExpiredDraft(expiryDate)
-      _ = Logger.info(s"${name}Job: Purged $count items updated before $expiryDate")
+      _ = logger.info(s"${name}Job: Purged $count items updated before $expiryDate")
     } yield ()
   }
 

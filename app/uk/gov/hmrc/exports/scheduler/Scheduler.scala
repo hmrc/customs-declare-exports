@@ -35,8 +35,10 @@ class Scheduler @Inject()(
   scheduledJobs: ScheduledJobs
 ) {
 
+  private val logger = Logger(this.getClass)
+
   scheduledJobs.jobs.foreach { job =>
-    Logger.info(
+    logger.info(
       s"Scheduling job [${job.name}] to run periodically at [${job.firstRunTime}] with interval [${job.interval.length} ${job.interval.unit}]"
     )
     actorSystem.scheduler.schedule(
@@ -45,10 +47,10 @@ class Scheduler @Inject()(
       new Runnable() {
         override def run(): Unit =
           job.execute().map { _ =>
-            Logger.info(s"Scheduled Job [${job.name}]: Completed Successfully")
+            logger.info(s"Scheduled Job [${job.name}]: Completed Successfully")
           } recover {
             case t: Throwable =>
-              Logger.error(s"Scheduled Job [${job.name}]: Failed", t)
+              logger.error(s"Scheduled Job [${job.name}]: Failed", t)
           }
       }
     )
