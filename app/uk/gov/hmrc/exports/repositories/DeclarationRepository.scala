@@ -22,7 +22,6 @@ import javax.inject.Inject
 import play.api.libs.json.{JsObject, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.Cursor.FailOnError
-import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.{QueryOpts, ReadConcern, ReadPreference}
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.ImplicitBSONHandlers
@@ -84,10 +83,11 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
       .remove("id" -> declaration.id, "eori" -> declaration.eori)
       .map(_ => Unit)
 
-  def deleteExpiredDraft(expiryDate: Instant): Future[WriteResult] = {
+  def deleteExpiredDraft(expiryDate: Instant): Future[Int] = {
     import ExportsDeclaration.Mongo.formatInstant
     super
       .remove("status" -> DeclarationStatus.DRAFT, "updatedDateTime" -> Json.obj("$lte" -> expiryDate))
+      .map(res => res.n)
   }
 
 }

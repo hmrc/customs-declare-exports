@@ -46,8 +46,8 @@ class PurgeDraftDeclarationsJob @Inject()(appConfig: AppConfig, declarationRepos
 
     val expiryDate = Instant.now(clock).minusSeconds(expireDuration.toSeconds)
     for {
-      result <- declarationRepository.deleteExpiredDraft(expiryDate)
-      _ = Logger.info(s"${name}Job: Purged ${result.n} items updated before $expiryDate")
+      count <- declarationRepository.deleteExpiredDraft(expiryDate)
+      _ = Logger.info(s"${name}Job: Purged $count items updated before $expiryDate")
     } yield ()
   }
 

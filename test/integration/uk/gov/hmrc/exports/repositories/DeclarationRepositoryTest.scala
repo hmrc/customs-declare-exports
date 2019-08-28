@@ -24,7 +24,6 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.api.ReadConcern
-import reactivemongo.api.commands.WriteResult
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo.format
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
@@ -228,11 +227,9 @@ class DeclarationRepositoryTest
       val draftDeclarationExpired = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(2019, 1, 1))
       givenADeclarationExists(draftDeclarationExpired)
 
-      val result: WriteResult = repository.deleteExpiredDraft(expireDate(2019, 8, 1)).futureValue
+      val count = repository.deleteExpiredDraft(expireDate(2019, 8, 1)).futureValue
 
-      result.ok shouldBe true
-      result.n shouldBe 1
-
+      count shouldBe 1
       collectionSize shouldBe 0
     }
 
@@ -248,11 +245,9 @@ class DeclarationRepositoryTest
         completedDeclaration
       )
 
-      val result: WriteResult = repository.deleteExpiredDraft(expireDate(2019, 2, 1)).futureValue
+      val count = repository.deleteExpiredDraft(expireDate(2019, 2, 1)).futureValue
 
-      result.ok shouldBe true
-      result.n shouldBe 2
-
+      count shouldBe 2
       collectionSize shouldBe 2
 
       val page = Page(index = 1, size = 10)

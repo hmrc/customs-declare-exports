@@ -22,7 +22,6 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mockito.{reset, verify}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
-import reactivemongo.api.commands.WriteResult
 import uk.gov.hmrc.exports.config.{AppConfig, JobConfig}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.scheduler.PurgeDraftDeclarationsJob
@@ -72,7 +71,7 @@ class PurgeDraftDeclarationsJobSpec extends UnitSpec with MockitoSugar with Befo
       val expiryDate = Instant.now(appConfig.clock).minusSeconds(expireAfter.toSeconds)
 
       given(appConfig.draftTimeToLive).willReturn(expireAfter)
-      given(declarationRepository.deleteExpiredDraft(expiryDate)).willReturn(Future.successful(mock[WriteResult]))
+      given(declarationRepository.deleteExpiredDraft(expiryDate)).willReturn(Future.successful(0))
 
       await(newJob.execute())
 
