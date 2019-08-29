@@ -26,6 +26,8 @@ import scala.concurrent.ExecutionContext
 abstract class RESTController(override val controllerComponents: ControllerComponents)
     extends BackendController(controllerComponents) with JSONResponses {
 
+  private val logger = Logger(this.getClass)
+
   def parsingJson[T](implicit rds: Reads[T], exc: ExecutionContext): BodyParser[T] = parse.json.validate { json =>
     json.validate[T] match {
       case JsSuccess(value, _) => Right(value)
@@ -33,7 +35,7 @@ abstract class RESTController(override val controllerComponents: ControllerCompo
         val payload = Json.toJson(ErrorResponse("Bad Request", Some(errors.map {
           case (path, errs) => path.toString() + ": " + errs.map(_.message).headOption.getOrElse("unknown")
         })))
-        Logger.warn(s"Bad Request [$payload]")
+        logger.warn(s"Bad Request [$payload]")
         Left(BadRequest(payload))
     }
   }
