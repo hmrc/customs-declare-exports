@@ -100,7 +100,7 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
   private implicit val responseReader: HttpReads[CustomsDeclarationsResponse] =
     new HttpReads[CustomsDeclarationsResponse] {
       override def read(method: String, url: String, response: HttpResponse): CustomsDeclarationsResponse = {
-        Logger.debug(s"Response: ${response.status} => ${response.body}")
+        logger.debug(s"Response: ${response.status} => ${response.body}")
         getHttpResponseStatusType(response) match {
           case ApplicationErrorStatus =>
             throw Upstream4xxResponse(
