@@ -21,7 +21,7 @@ import java.time._
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito.{reset, verify}
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.config.{AppConfig, JobConfig}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.scheduler.PurgeDraftDeclarationsJob

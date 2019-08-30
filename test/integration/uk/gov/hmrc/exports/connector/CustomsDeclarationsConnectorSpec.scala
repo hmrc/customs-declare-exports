@@ -18,7 +18,7 @@ package integration.uk.gov.hmrc.exports.connector
 
 import integration.uk.gov.hmrc.exports.base.IntegrationTestSpec
 import integration.uk.gov.hmrc.exports.util.TestModule
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder

@@ -18,7 +18,7 @@ package unit.uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import play.api.libs.json._
 import uk.gov.hmrc.exports.models.declaration._

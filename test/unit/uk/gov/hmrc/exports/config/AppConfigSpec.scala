@@ -20,7 +20,7 @@ import java.util.UUID
 
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{Matchers, WordSpec}
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.Mode.Test
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.exports.config.AppConfig
