@@ -4,25 +4,25 @@ import sbt._
 
 object AppDependencies {
 
-  private val wireMockVersion = "2.23.2"
+  private val wireMockVersion = "2.24.1"
   private val testScope = "test,it"
 
   val compile = Seq(
     "uk.gov.hmrc" %% "simple-reactivemongo" % "7.20.0-play-26",
     ws,
-    "uk.gov.hmrc" %% "bootstrap-play-26" % "0.39.0",
-    "uk.gov.hmrc" %% "wco-dec" % "0.30.0",
+    "uk.gov.hmrc" %% "bootstrap-play-26" % "0.45.0",
+    "uk.gov.hmrc" %% "wco-dec" % "0.31.0",
     "uk.gov.hmrc" %% "logback-json-logger" % "4.6.0",
     "com.typesafe.play" %% "play-json-joda" % "2.6.10"
   )
 
   def test(scope: String = "test") = Seq(
-    "org.scalatest" %% "scalatest" % "3.0.5" % testScope,
+    "org.scalatest" %% "scalatest" % "3.0.8" % testScope,
     "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % "test",
     "com.github.tomakehurst" % "wiremock" % wireMockVersion % testScope exclude("org.apache.httpcomponents","httpclient") exclude("org.apache.httpcomponents","httpcore"),
     "org.pegdown" % "pegdown" % "1.6.0" % testScope,
     "com.typesafe.play" %% "play-test" % PlayVersion.current % testScope,
-    "org.mockito" % "mockito-core" % "2.27.0" % "test"
+    "org.mockito" % "mockito-core" % "3.0.0" % "test"
   )
 
   val jettyVersion = "9.2.26.v20180806"

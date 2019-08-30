@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.controllers.request
 
 import java.time.Instant
 
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.{Choice, Eori}
