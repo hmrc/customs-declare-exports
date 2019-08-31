@@ -18,7 +18,7 @@ package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.Mockito.verify
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.Choice
 import uk.gov.hmrc.exports.models.declaration._

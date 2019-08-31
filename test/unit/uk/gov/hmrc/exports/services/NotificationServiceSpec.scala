@@ -22,7 +22,7 @@ import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import org.mockito.{ArgumentCaptor, InOrder, Mockito}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
 import reactivemongo.bson.{BSONDocument, BSONInteger, BSONString}
 import reactivemongo.core.errors.DetailedDatabaseException

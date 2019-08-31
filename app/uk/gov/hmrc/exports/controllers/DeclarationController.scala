@@ -40,6 +40,7 @@ class DeclarationController @Inject()(
   override val controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
     extends RESTController(controllerComponents) {
+  private val logger = Logger(this.getClass)
 
   def create(): Action[ExportsDeclarationRequest] =
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
@@ -98,7 +99,7 @@ class DeclarationController @Inject()(
   }
 
   private def logPayload[T](prefix: String, payload: T)(implicit wts: Writes[T]): T = {
-    Logger.debug(s"Create Request Received: ${Json.toJson(payload)}")
+    logger.debug(s"Create Request Received: ${Json.toJson(payload)}")
     payload
   }
 

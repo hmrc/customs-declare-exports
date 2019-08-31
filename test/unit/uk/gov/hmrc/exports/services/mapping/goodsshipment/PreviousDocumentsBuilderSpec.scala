@@ -16,7 +16,7 @@
 
 package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment
 
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.declaration.{PreviousDocument, PreviousDocuments}
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.PreviousDocumentsBuilder

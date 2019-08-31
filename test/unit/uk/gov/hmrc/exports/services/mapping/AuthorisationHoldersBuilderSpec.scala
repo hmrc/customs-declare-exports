@@ -16,7 +16,7 @@
 
 package unit.uk.gov.hmrc.exports.services.mapping
 
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.declaration.DeclarationHolder
 import uk.gov.hmrc.exports.services.mapping.AuthorisationHoldersBuilder
