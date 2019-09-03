@@ -49,7 +49,9 @@ class ConsignmentBuilder @Inject()(
 
     exportsCacheModel.choice match {
       case Choice.StandardDec =>
-        transportEquipmentBuilder.buildThenAdd(exportsCacheModel.seals, consignment)
+        exportsCacheModel.containerData.foreach(
+          containerData => transportEquipmentBuilder.buildThenAdd(containerData, consignment)
+        )
       case _ =>
     }
 

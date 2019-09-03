@@ -44,7 +44,6 @@ class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsD
   private val totalNumberOfItems = mock[TotalNumberOfItems]
   private val previousDocuments = mock[PreviousDocuments]
   private val natureOfTransaction = mock[NatureOfTransaction]
-  private val seal = mock[Seal]
 
   private val request = ExportsDeclarationRequest(
     status = status,
@@ -62,8 +61,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsD
     items = Set(item),
     totalNumberOfItems = Some(totalNumberOfItems),
     previousDocuments = Some(previousDocuments),
-    natureOfTransaction = Some(natureOfTransaction),
-    seals = Seq(seal)
+    natureOfTransaction = Some(natureOfTransaction)
   )
 
   private val declaration = ExportsDeclaration(
@@ -84,8 +82,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsD
     items = Set(item),
     totalNumberOfItems = Some(totalNumberOfItems),
     previousDocuments = Some(previousDocuments),
-    natureOfTransaction = Some(natureOfTransaction),
-    seals = Seq(seal)
+    natureOfTransaction = Some(natureOfTransaction)
   )
 
   "Request" should {

@@ -24,7 +24,7 @@ object TransportInformationContainers {
   implicit val format: OFormat[TransportInformationContainers] = Json.format[TransportInformationContainers]
 }
 
-case class TransportInformationContainer(id: String)
+case class TransportInformationContainer(id: String, seals: Seq[Seal])
 
 object TransportInformationContainer {
   implicit val format: OFormat[TransportInformationContainer] = Json.format[TransportInformationContainer]

@@ -24,6 +24,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.models.Choice
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.format
+import uk.gov.hmrc.exports.models.declaration.{Seal, TransportInformationContainer}
 import uk.gov.hmrc.http.InternalServerException
 import util.CustomsDeclarationsAPIConfig
 import util.testdata.ExportsDeclarationBuilder
@@ -41,7 +42,8 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec with ScalaFutures 
           withChoice(Choice.StandardDec),
           withId("id"),
           withEori("eori-123"),
-          withConsignmentReferences(lrn = declarantLrnValue)
+          withConsignmentReferences(lrn = declarantLrnValue),
+          withContainerData(TransportInformationContainer("container123", Seq(Seal("seal1"))))
         )
       )
     )

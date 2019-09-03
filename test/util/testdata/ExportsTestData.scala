@@ -92,7 +92,12 @@ object ExportsTestData {
         <ns3:GoodsShipment>
           <ns3:Consignment>
             <ns3:TransportEquipment>
-              <ns3:SequenceNumeric>0</ns3:SequenceNumeric>
+              <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+              <ns3:ID>container123</ns3:ID>
+              <ns3:Seal>
+                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+                <ns3:ID>seal1</ns3:ID>
+              </ns3:Seal>
             </ns3:TransportEquipment>
           </ns3:Consignment>
           <ns3:PreviousDocument>
