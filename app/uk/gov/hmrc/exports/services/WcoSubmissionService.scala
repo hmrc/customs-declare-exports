@@ -17,6 +17,7 @@
 package uk.gov.hmrc.exports.services
 
 import javax.inject.Inject
+import play.api.Logger
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest}
@@ -29,6 +30,8 @@ class WcoSubmissionService @Inject()(
   customsDeclarationsConnector: CustomsDeclarationsConnector
 ) {
 
+  private val logger = Logger(this.getClass)
+
   def submit(
     declaration: ExportsDeclaration
   )(implicit hc: HeaderCarrier, execution: ExecutionContext): Future[Submission] = {
@@ -40,6 +43,8 @@ class WcoSubmissionService @Inject()(
       .declarationDucr(metaData)
       .getOrElse(throw new IllegalArgumentException("An DUCR is required"))
     val payload = wcoMapperService.toXml(metaData)
+
+   logger.debug(s"Sending $payload for $declaration")
 
     customsDeclarationsConnector.submitDeclaration(declaration.eori, payload) map { conversationId =>
       Submission(
