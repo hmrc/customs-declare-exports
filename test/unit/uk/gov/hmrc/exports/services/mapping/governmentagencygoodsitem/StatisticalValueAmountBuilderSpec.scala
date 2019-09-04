@@ -35,12 +35,12 @@ class StatisticalValueAmountBuilderSpec extends WordSpec with Matchers with Expo
       }
 
       "populated item type" in {
-        val model = anItem(withItemType(statisticalValue = "123"))
+        val model = anItem(withItemType(statisticalValue = "123.45"))
         val dcoItem = new GoodsShipment.GovernmentAgencyGoodsItem()
 
         builder.buildThenAdd(model, dcoItem)
 
-        dcoItem.getStatisticalValueAmount.getValue.intValue shouldBe 123
+        dcoItem.getStatisticalValueAmount.getValue.toString shouldBe "123.45"
         dcoItem.getStatisticalValueAmount.getCurrencyID shouldBe "GBP"
       }
     }

@@ -31,18 +31,14 @@ class StatisticalValueAmountBuilder @Inject()() extends ModifyingBuilder[ExportI
   def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: WCOGovernmentAgencyGoodsItem): Unit =
     exportItem.itemType.foreach { itemType =>
       wcoGovernmentAgencyGoodsItem.setStatisticalValueAmount(
-        createWCODecStatisticalValueAmount(Some(BigDecimal(itemType.statisticalValue)), Some(defaultCurrencyCode))
+        createWCODecStatisticalValueAmount(itemType.statisticalValue, defaultCurrencyCode)
       )
     }
 
-  private def createWCODecStatisticalValueAmount(amountValue: Option[BigDecimal], currencyId: Option[String]) = {
+  private def createWCODecStatisticalValueAmount(amountValue: String, currencyId: String) = {
     val statisticalValueAmountType = new GovernmentAgencyGoodsItemStatisticalValueAmountType
-    currencyId.foreach { id =>
-      statisticalValueAmountType.setCurrencyID(id)
-    }
-    amountValue.foreach { value =>
-      statisticalValueAmountType.setValue(new java.math.BigDecimal(value.bigDecimal.doubleValue()))
-    }
+    statisticalValueAmountType.setCurrencyID(currencyId)
+    statisticalValueAmountType.setValue(new java.math.BigDecimal(amountValue))
     statisticalValueAmountType
   }
 }
