@@ -38,7 +38,7 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
 
   override def buildThenAdd(exportItem: ExportItem, goodsShipment: Declaration.GoodsShipment): Unit = {
     val wcoGovernmentAgencyGoodsItem = new WCOGovernmentAgencyGoodsItem
-    wcoGovernmentAgencyGoodsItem.setSequenceNumeric(BigDecimal(exportItem.sequenceId).bigDecimal)
+    wcoGovernmentAgencyGoodsItem.setSequenceNumeric(new java.math.BigDecimal(exportItem.sequenceId))
 
     statisticalValueAmountBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
     packagingBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
