@@ -22,8 +22,8 @@ import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito._
 import org.mockito.{ArgumentCaptor, InOrder, Mockito}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.Status._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
@@ -128,29 +128,6 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
       submissionService.getSubmission(eori, uuid).futureValue
 
       verify(submissionRepositoryMock, times(1)).findSubmissionByUuid(meq(eori), meq(uuid))
-    }
-  }
-
-  "SubmissionService on getSubmissionByConversationId" should {
-
-    "return empty Option if SubmissionRepository does not find any Submission" in new Test {
-      submissionService.getSubmissionByConversationId(conversationId).futureValue must equal(None)
-    }
-
-    "return submission returned by SubmissionRepository" in new Test {
-      when(submissionRepositoryMock.findSubmissionByConversationId(meq(conversationId)))
-        .thenReturn(Future.successful(Some(submission)))
-
-      val returnedSubmission = submissionService.getSubmissionByConversationId(conversationId).futureValue
-
-      returnedSubmission must be(defined)
-      returnedSubmission.get must equal(submission)
-    }
-
-    "call SubmissionRepository.findSubmissionByUuid, passing UUID provided" in new Test {
-      submissionService.getSubmissionByConversationId(conversationId).futureValue
-
-      verify(submissionRepositoryMock, times(1)).findSubmissionByConversationId(meq(conversationId))
     }
   }
 

@@ -115,11 +115,6 @@ trait CustomsExportsBaseSpec
       .withJsonBody(body)
   }
 
-  protected def getSubmissionByConversationID(
-    submission: Option[Submission]
-  ): OngoingStubbing[Future[Option[Submission]]] =
-    when(mockSubmissionRepository.findSubmissionByConversationId(any())).thenReturn(Future.successful(submission))
-
   protected def getSubmissionByID(submission: Option[Submission]): OngoingStubbing[Future[Option[Submission]]] =
     when(mockSubmissionRepository.findSubmissionByUuid(any(), any())).thenReturn(Future.successful(submission))
 

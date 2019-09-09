@@ -8,8 +8,6 @@ DELETE      /v2/declarations/:id                             uk.gov.hmrc.exports
 GET         /v2/declarations/:id/submission                  uk.gov.hmrc.exports.controllers.SubmissionController.findByID(id: String)
 GET         /v2/declarations/:id/submission/notifications    uk.gov.hmrc.exports.controllers.NotificationController.findByID(id: String)
 
-GET         /submission/:conversationId                      uk.gov.hmrc.exports.controllers.SubmissionController.getSubmission(conversationId: String)
-
 GET         /submissions                                     uk.gov.hmrc.exports.controllers.SubmissionController.getSubmissionsByEori()
 
 POST        /cancel-declaration                              uk.gov.hmrc.exports.controllers.SubmissionController.cancelDeclaration()
@@ -17,5 +15,3 @@ POST        /cancel-declaration                              uk.gov.hmrc.exports
 POST        /customs-declare-exports/notify                  uk.gov.hmrc.exports.controllers.NotificationController.saveNotification()
 
 GET         /notifications                                   uk.gov.hmrc.exports.controllers.NotificationController.getAllNotificationsForUser()
-
-GET         /submission-notifications/:mrn                   uk.gov.hmrc.exports.controllers.NotificationController.getSubmissionNotifications(mrn: String)

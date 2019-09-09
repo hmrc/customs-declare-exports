@@ -43,9 +43,6 @@ class SubmissionService @Inject()(
   def getSubmission(eori: String, uuid: String): Future[Option[Submission]] =
     submissionRepository.findSubmissionByUuid(eori, uuid)
 
-  def getSubmissionByConversationId(conversationId: String): Future[Option[Submission]] =
-    submissionRepository.findSubmissionByConversationId(conversationId)
-
   def cancelDeclaration(eori: String, mrn: String)(
     cancellationXml: NodeSeq
   )(implicit hc: HeaderCarrier): Future[Either[String, CancellationStatus]] =
