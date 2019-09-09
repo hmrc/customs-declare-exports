@@ -51,9 +51,9 @@ class NotificationController @Inject()(
 
   def findByID(id: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
     submissionService.getSubmission(request.eori.value, id) flatMap {
-      case Some(submission) if submission.mrn.isDefined =>
+      case Some(submission) =>
         notificationsService
-          .getNotificationsForSubmission(submission.mrn.get)
+          .getNotifications(submission)
           .map(notifications => Ok(notifications))
       case _ => Future.successful(NotFound)
     }
