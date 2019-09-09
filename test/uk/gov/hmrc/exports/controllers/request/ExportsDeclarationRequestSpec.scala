@@ -18,8 +18,8 @@ package uk.gov.hmrc.exports.controllers.request
 
 import java.time.Instant
 
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.{Choice, Eori}
 import util.testdata.ExportsDeclarationBuilder
@@ -30,6 +30,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsD
   private val choice = Choice.StandardDec
   private val createdDate = Instant.MIN
   private val updatedDate = Instant.MAX
+  private val sourceId = "source-id"
   private val eori = "eori"
   private val id = "id"
   private val dispatchLocation = mock[DispatchLocation]
@@ -49,6 +50,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsD
     status = status,
     createdDateTime = createdDate,
     updatedDateTime = updatedDate,
+    sourceId = Some(sourceId),
     choice = choice,
     dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),
@@ -70,6 +72,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsD
     status = status,
     createdDateTime = createdDate,
     updatedDateTime = updatedDate,
+    sourceId = Some(sourceId),
     choice = choice,
     dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),
