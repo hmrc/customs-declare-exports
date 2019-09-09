@@ -36,6 +36,7 @@ trait ExportsDeclarationBuilder {
     status = DeclarationStatus.COMPLETE,
     createdDateTime = LocalDateTime.of(2019, 1, 1, 0, 0, 0).toInstant(ZoneOffset.UTC),
     updatedDateTime = LocalDateTime.of(2019, 2, 2, 0, 0, 0).toInstant(ZoneOffset.UTC),
+    sourceId = None,
     choice = Choice.StandardDec,
     dispatchLocation = None,
     additionalDeclarationType = None,

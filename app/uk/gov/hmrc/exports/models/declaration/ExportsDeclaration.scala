@@ -28,6 +28,7 @@ case class ExportsDeclaration(
   status: DeclarationStatus,
   createdDateTime: Instant,
   updatedDateTime: Instant,
+  sourceId: Option[String],
   choice: Choice,
   dispatchLocation: Option[DispatchLocation],
   additionalDeclarationType: Option[AdditionalDeclarationType],
