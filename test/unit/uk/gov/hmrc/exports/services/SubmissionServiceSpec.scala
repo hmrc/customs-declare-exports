@@ -32,7 +32,11 @@ import uk.gov.hmrc.exports.models.{CustomsDeclarationsResponse, LocalReferenceNu
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.http.HeaderCarrier
-import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildCustomsDeclarationsConnectorMock, buildNotificationRepositoryMock, buildSubmissionRepositoryMock}
+import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{
+  buildCustomsDeclarationsConnectorMock,
+  buildNotificationRepositoryMock,
+  buildSubmissionRepositoryMock
+}
 import util.testdata.ExportsTestData._
 import util.testdata.SubmissionTestData._
 
