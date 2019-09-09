@@ -20,6 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
+import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,6 +34,11 @@ class NotificationService @Inject()(
   private val logger = Logger(this.getClass)
   private val databaseDuplicateKeyErrorCode = 11000
 
+  def getNotifications(submission: Submission): Future[Seq[Notification]] = {
+    val conversationIds = submission.actions.map(_.conversationId)
+    notificationRepository.findNotificationsByConversationIds(conversationIds)
+  }
+
   def getAllNotificationsForUser(eori: String): Future[Seq[Notification]] =
     submissionRepository.findAllSubmissionsForEori(eori).flatMap {
       case Seq() => Future.successful(Seq.empty)
@@ -42,14 +48,6 @@ class NotificationService @Inject()(
           action <- submission.actions
         } yield action.conversationId
 
-        notificationRepository.findNotificationsByConversationIds(conversationIds)
-    }
-
-  def getNotificationsForSubmission(mrn: String): Future[Seq[Notification]] =
-    submissionRepository.findSubmissionByMrn(mrn).flatMap {
-      case None => Future.successful(Seq.empty)
-      case Some(submission) =>
-        val conversationIds = submission.actions.map(_.conversationId)
         notificationRepository.findNotificationsByConversationIds(conversationIds)
     }
 

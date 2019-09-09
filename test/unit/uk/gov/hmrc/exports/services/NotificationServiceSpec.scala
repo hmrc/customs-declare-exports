@@ -26,6 +26,8 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
 import reactivemongo.bson.{BSONDocument, BSONInteger, BSONString}
 import reactivemongo.core.errors.DetailedDatabaseException
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, RequestType, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.NotificationService
 import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder._
@@ -129,72 +131,17 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
     }
   }
 
-  "NotificationService on getNotificationsForSubmission" when {
+  "Get Notifications" should {
+    val notifications = mock[Seq[Notification]]
+    val submission = Submission("id", "eori", "lrn", None, "ducr", Seq(Action(SubmissionRequest, "id1")))
 
-    "everything works correctly" should {
+    "retrieve by conversation IDs" in new Test {
+      when(notificationRepositoryMock.findNotificationsByConversationIds(any[Seq[String]]))
+        .thenReturn(Future.successful(notifications))
 
-      "return all Notifications returned by NotificationRepository" in new GetNotificationsForSubmissionHappyPathTest {
-        val returnedNotifications = notificationService.getNotificationsForSubmission(mrn).futureValue
+      notificationService.getNotifications(submission).futureValue mustBe notifications
 
-        returnedNotifications.length must equal(2)
-        notificationsToBeReturned.foreach(returnedNotifications must contain(_))
-      }
-
-      "call SubmissionRepository and NotificationRepository afterwards" in new GetNotificationsForSubmissionHappyPathTest {
-        notificationService.getNotificationsForSubmission(mrn).futureValue
-
-        val inOrder: InOrder = Mockito.inOrder(submissionRepositoryMock, notificationRepositoryMock)
-        inOrder.verify(submissionRepositoryMock, times(1)).findSubmissionByMrn(any())
-        inOrder.verify(notificationRepositoryMock, times(1)).findNotificationsByConversationIds(any())
-      }
-
-      "call SubmissionRepository, passing MRN provided" in new GetNotificationsForSubmissionHappyPathTest {
-        notificationService.getNotificationsForSubmission(mrn).futureValue
-
-        verify(submissionRepositoryMock, times(1)).findSubmissionByMrn(meq(mrn))
-      }
-
-      "call NotificationRepository, passing all conversation IDs related to MRN" in new GetNotificationsForSubmissionHappyPathTest {
-        notificationService.getNotificationsForSubmission(mrn).futureValue
-
-        val expectedConversationIds = submission.actions.map(_.conversationId)
-        verify(notificationRepositoryMock, times(1)).findNotificationsByConversationIds(meq(expectedConversationIds))
-      }
-
-      trait GetNotificationsForSubmissionHappyPathTest extends Test {
-        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
-        val notificationsToBeReturned = Seq(notification, notification_2)
-        when(notificationRepositoryMock.findNotificationsByConversationIds(any()))
-          .thenReturn(Future.successful(notificationsToBeReturned))
-      }
-    }
-
-    "SubmissionRepository on findSubmissionByMrn returns empty Option" should {
-
-      "return empty list" in new Test {
-        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
-
-        notificationService.getNotificationsForSubmission(mrn).futureValue must equal(Seq.empty)
-      }
-
-      "not call NotificationRepository" in new Test {
-        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
-
-        notificationService.getNotificationsForSubmission(mrn).futureValue
-
-        verifyZeroInteractions(notificationRepositoryMock)
-      }
-    }
-
-    "NotificationRepository on findNotificationsByConversationIds returns empty list" should {
-
-      "return empty list" in new Test {
-        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
-        when(notificationRepositoryMock.findNotificationsByConversationIds(any()))
-          .thenReturn(Future.successful(Seq.empty))
-
-        notificationService.getNotificationsForSubmission(mrn).futureValue must equal(Seq.empty)
-      }
+      verify(notificationRepositoryMock).findNotificationsByConversationIds(Seq("id1"))
     }
   }
 

@@ -76,7 +76,7 @@ class NotificationControllerSpec
       "submission found" in {
         withAuthorizedUser()
         when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
-        when(notificationServiceMock.getNotificationsForSubmission(any()))
+        when(notificationServiceMock.getNotifications(any()))
           .thenReturn(Future.successful(Seq(notification)))
 
         val result = route(app, FakeRequest("GET", "/v2/declarations/1234/submission/notifications")).get
