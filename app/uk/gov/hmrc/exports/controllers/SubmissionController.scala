@@ -84,13 +84,6 @@ class SubmissionController @Inject()(
         case Left(errorMsg)            => InternalServerError(errorMsg)
       }
 
-  def getSubmission(conversationId: String): Action[AnyContent] =
-    authorisedAction(bodyParsers.default) { implicit request =>
-      submissionService
-        .getSubmissionByConversationId(conversationId)
-        .map(submission => Ok(submission))
-    }
-
   def getSubmissionsByEori: Action[AnyContent] =
     authorisedAction(bodyParsers.default) { implicit request =>
       submissionService

@@ -68,40 +68,6 @@ class SubmissionControllerSpec extends CustomsExportsBaseSpec with BeforeAndAfte
 
   "Actions for submission" when {
 
-    "GET from /submission" should {
-
-      "return 200 status with submission response body" in {
-
-        withAuthorizedUser()
-        getSubmissionByConversationID(Some(submission))
-
-        val result = route(app, FakeRequest("GET", "/submission/1234")).get
-
-        status(result) must be(OK)
-        contentAsJson(result) must be(submissionJson)
-      }
-
-      // TODO: 204 is safe response
-      "return 200 status without submission response" in {
-
-        withAuthorizedUser()
-        getSubmissionByConversationID(None)
-
-        val result = route(app, FakeRequest("GET", "/submission/1234")).get
-
-        status(result) must be(OK)
-      }
-
-      "return 401 status when user is without eori" in {
-
-        userWithoutEori()
-
-        val failedResult = route(app, FakeRequest("GET", "/submission/1234")).get
-
-        status(failedResult) must be(UNAUTHORIZED)
-      }
-    }
-
     "GET /:id" should {
       "return 200" when {
         "submission found" in {

@@ -30,7 +30,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.inject.{bind, Injector}
+import play.api.inject.{Injector, bind}
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSClient
 import play.api.mvc.AnyContentAsJson
@@ -114,11 +114,6 @@ trait CustomsExportsBaseSpec
       .withSession(session.toSeq: _*)
       .withJsonBody(body)
   }
-
-  protected def getSubmissionByConversationID(
-    submission: Option[Submission]
-  ): OngoingStubbing[Future[Option[Submission]]] =
-    when(mockSubmissionRepository.findSubmissionByConversationId(any())).thenReturn(Future.successful(submission))
 
   protected def getSubmissionByID(submission: Option[Submission]): OngoingStubbing[Future[Option[Submission]]] =
     when(mockSubmissionRepository.findSubmissionByUuid(any(), any())).thenReturn(Future.successful(submission))

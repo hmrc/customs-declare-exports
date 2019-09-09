@@ -59,13 +59,6 @@ class NotificationController @Inject()(
     }
   }
 
-  def getSubmissionNotifications(mrn: String): Action[AnyContent] =
-    authorisedAction(bodyParsers.default) { implicit request =>
-      notificationsService
-        .getNotificationsForSubmission(mrn)
-        .map(notifications => Ok(notifications))
-    }
-
   //TODO response should be streamed or paginated depending on the no of notifications.
   //TODO Return NO CONTENT (204) when there are no notifications
   def getAllNotificationsForUser(): Action[AnyContent] =

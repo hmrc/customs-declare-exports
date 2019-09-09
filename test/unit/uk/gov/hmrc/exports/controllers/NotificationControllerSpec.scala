@@ -108,67 +108,6 @@ class NotificationControllerSpec
     }
   }
 
-  "Notification Controller on getSubmissionNotifications" when {
-
-    "everything works correctly" should {
-
-      "return Ok status" in {
-        withAuthorizedUser()
-        val notificationsFromService = Seq(notification, notification_2)
-        when(notificationServiceMock.getNotificationsForSubmission(any()))
-          .thenReturn(Future.successful(notificationsFromService))
-
-        val result = routeGetSubmissionNotifications()
-
-        status(result) must be(OK)
-      }
-
-      "return all Notifications returned by Notification Service" in {
-        withAuthorizedUser()
-        val notificationsFromService = Seq(notification, notification_2)
-        when(notificationServiceMock.getNotificationsForSubmission(any()))
-          .thenReturn(Future.successful(notificationsFromService))
-
-        val result = routeGetSubmissionNotifications()
-
-        contentAsJson(result) must equal(Json.toJson(notificationsFromService))
-      }
-
-      "call Notification Service once" in {
-        withAuthorizedUser()
-        val notificationsFromService = Seq(notification, notification_2)
-        when(notificationServiceMock.getNotificationsForSubmission(any()))
-          .thenReturn(Future.successful(notificationsFromService))
-
-        routeGetSubmissionNotifications().futureValue
-
-        verify(notificationServiceMock, times(1)).getNotificationsForSubmission(any())
-      }
-    }
-
-    "authorisation header is missing" should {
-
-      "return Unauthorised status" in {
-        withUnauthorizedUser(InsufficientEnrolments())
-
-        val result = routeGetSubmissionNotifications(headersWithoutAuthorisation)
-
-        status(result) must be(UNAUTHORIZED)
-      }
-
-      "not call NotificationService" in {
-        withUnauthorizedUser(InsufficientEnrolments())
-
-        routeGetSubmissionNotifications(headersWithoutAuthorisation).futureValue
-
-        verifyZeroInteractions(notificationServiceMock)
-      }
-    }
-
-    def routeGetSubmissionNotifications(headers: Map[String, String] = validHeaders): Future[Result] =
-      route(app, FakeRequest(GET, getSubmissionNotificationsUri).withHeaders(headers.toSeq: _*)).get
-  }
-
   "Notification Controller on getAllNotificationsForUser" when {
 
     "everything works correctly" should {
