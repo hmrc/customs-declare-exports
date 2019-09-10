@@ -48,8 +48,8 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
       }
     }
 
-  def submitCancellation(eori: String, xml: NodeSeq)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] =
-    postMetaData(eori, appConfig.cancelDeclarationUri, xml.toString()).map { res =>
+  def submitCancellation(eori: String, xml: String)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] =
+    postMetaData(eori, appConfig.cancelDeclarationUri, xml).map { res =>
       logger.debug(s"CUSTOMS_DECLARATIONS cancellation response is  --> ${res.toString}")
       res
     }

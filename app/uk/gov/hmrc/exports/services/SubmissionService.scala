@@ -23,19 +23,32 @@ import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.NodeSeq
 
 @Singleton
 class SubmissionService @Inject()(
   customsDeclarationsConnector: CustomsDeclarationsConnector,
   submissionRepository: SubmissionRepository,
-  notificationRepository: NotificationRepository
+  notificationRepository: NotificationRepository,
+  metaDataBuilder: MetaDataBuilder,
+  wcoMapperService: WcoMapperService
 )(implicit executionContext: ExecutionContext) {
 
   private val logger = Logger(this.getClass)
+
+  def cancel(eori: Eori, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationStatus] = {
+    val metadata = metaDataBuilder.buildRequest(cancellation.functionalReferenceId, cancellation.mrn, cancellation.statementDescription, cancellation.changeReason, eori.value)
+    val xml = wcoMapperService.toXml(metadata)
+    customsDeclarationsConnector.submitCancellation(eori.value, xml).flatMap {
+      case CustomsDeclarationsResponse(ACCEPTED, Some(convId)) =>
+        updateSubmissionInDB(eori.value, cancellation.mrn, convId)
+      case  CustomsDeclarationsResponse(status, _) =>
+      throw new RuntimeException(s"Bad response status [${status}] from Cancellation Request with EORI [${eori.value}] and MRN [${cancellation.mrn}]")
+    }
+  }
 
   def getAllSubmissionsForUser(eori: String): Future[Seq[Submission]] =
     submissionRepository.findAllSubmissionsForEori(eori)
@@ -44,7 +57,7 @@ class SubmissionService @Inject()(
     submissionRepository.findSubmissionByUuid(eori, uuid)
 
   def cancelDeclaration(eori: String, mrn: String)(
-    cancellationXml: NodeSeq
+    cancellationXml: String
   )(implicit hc: HeaderCarrier): Future[Either[String, CancellationStatus]] =
     customsDeclarationsConnector.submitCancellation(eori, cancellationXml).flatMap {
 

@@ -21,6 +21,7 @@ import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.mapping.AuthorisationHoldersBuilder
 import uk.gov.hmrc.exports.services.mapping.declaration.consignment.DeclarationConsignmentBuilder
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.GoodsShipmentBuilder
+import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.AdditionalInformationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class DeclarationBuilder @Inject()(
@@ -41,10 +42,14 @@ class DeclarationBuilder @Inject()(
   declarationConsignmentBuilder: DeclarationConsignmentBuilder,
   authorisationHoldersBuilder: AuthorisationHoldersBuilder,
   currencyExchangeBuilder: CurrencyExchangeBuilder,
-  goodsShipmentBuilder: GoodsShipmentBuilder
+  goodsShipmentBuilder: GoodsShipmentBuilder,
+  identificationBuilder: IdentificationBuilder,
+  submitterBuilder: SubmitterBuilder,
+  amendmentBuilder: AmendmentBuilder,
+  additionalInformationBuilder: AdditionalInformationBuilder
 ) {
 
-  def build(model: ExportsDeclaration): Declaration = {
+  def buildDeclaration(model: ExportsDeclaration): Declaration = {
     val declaration = new Declaration()
     functionCodeBuilder.buildThenAdd(model, declaration)
     functionalReferenceIdBuilder.buildThenAdd(model, declaration)
@@ -66,6 +71,26 @@ class DeclarationBuilder @Inject()(
     declarationConsignmentBuilder.buildThenAdd(model, declaration)
     authorisationHoldersBuilder.buildThenAdd(model, declaration)
     currencyExchangeBuilder.buildThenAdd(model, declaration)
+    declaration
+  }
+
+  def buildCancellation(
+    functionalReferenceId: String,
+    declarationId: String,
+    statementDescription: String,
+    changeReason: String,
+    eori: String
+  ): Declaration = {
+    val declaration = new Declaration()
+
+    functionCodeBuilder.buildThenAdd("13", declaration)
+    typeCodeBuilder.buildThenAdd("INV", declaration)
+    functionalReferenceIdBuilder.buildThenAdd(functionalReferenceId, declaration)
+    identificationBuilder.buildThenAdd(declarationId, declaration)
+    submitterBuilder.buildThenAdd(eori, declaration)
+    amendmentBuilder.buildThenAdd(changeReason, declaration)
+    additionalInformationBuilder.buildThenAdd(statementDescription, declaration)
+
     declaration
   }
 }

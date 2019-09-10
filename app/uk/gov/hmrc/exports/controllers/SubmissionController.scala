@@ -20,35 +20,43 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc._
-import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.exports.models.declaration.submissions.{CancellationRequestExists, CancellationRequested, MissingDeclaration, SubmissionCancellation}
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.NodeSeq
 
 @Singleton
 class SubmissionController @Inject()(
-  authConnector: AuthConnector,
+  authenticator: Authenticator,
   submissionService: SubmissionService,
   headerValidator: HeaderValidator,
   cc: ControllerComponents,
   bodyParsers: PlayBodyParsers
 )(implicit executionContext: ExecutionContext)
-    extends Authenticator(authConnector, cc) with JSONResponses {
+    extends RESTController(cc) with JSONResponses {
 
   private val logger = Logger(this.getClass)
 
+  def cancel(): Action[SubmissionCancellation] =
+    authenticator.authorisedAction(parsingJson[SubmissionCancellation]) { implicit request =>
+      submissionService.cancel(request.eori, request.body) map {
+        case CancellationRequested => Ok
+        case CancellationRequestExists => Conflict
+        case MissingDeclaration => NotFound
+      }
+    }
+
   def cancelDeclaration(): Action[AnyContent] =
-    authorisedAction(bodyParser = xmlOrEmptyBody) { implicit request =>
+    authenticator.authorisedAction(bodyParser = xmlOrEmptyBody) { implicit request =>
       headerValidator.validateAndExtractCancellationHeaders(request.headers.toSimpleMap) match {
         case Right(vhr) =>
           request.body.asXml match {
             case Some(xml) =>
-              forwardCancellationRequestToService(request.eori.value, vhr.mrn.value, xml).recoverWith {
+              forwardCancellationRequestToService(request.eori.value, vhr.mrn.value, xml.toString).recoverWith {
                 case e: Exception =>
                   logger.error(s"There is a problem during calling declaration api ${e.getMessage}")
                   Future.successful(ErrorResponse.errorInternalServerError.XmlResult)
@@ -74,7 +82,7 @@ class SubmissionController @Inject()(
       }
     )
 
-  private def forwardCancellationRequestToService(eori: String, mrn: String, xml: NodeSeq)(
+  private def forwardCancellationRequestToService(eori: String, mrn: String, xml: String)(
     implicit hc: HeaderCarrier
   ): Future[Result] =
     submissionService
@@ -84,18 +92,19 @@ class SubmissionController @Inject()(
         case Left(errorMsg)            => InternalServerError(errorMsg)
       }
 
-  def getSubmissionsByEori: Action[AnyContent] =
-    authorisedAction(bodyParsers.default) { implicit request =>
+  def findSubmissions(): Action[AnyContent] =
+    authenticator.authorisedAction(bodyParsers.default) { implicit request =>
       submissionService
         .getAllSubmissionsForUser(request.eori.value)
         .map(submissions => Ok(submissions))
     }
 
-  def findByID(id: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
-    submissionService.getSubmission(request.eori.value, id).map {
-      case Some(submission) => Ok(submission)
-      case None             => NotFound
-    }
+  def findByID(id: String): Action[AnyContent] = authenticator.authorisedAction(bodyParsers.default) {
+    implicit request =>
+      submissionService.getSubmission(request.eori.value, id).map {
+        case Some(submission) => Ok(submission)
+        case None             => NotFound
+      }
   }
 
 }

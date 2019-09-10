@@ -29,6 +29,12 @@ class TypeCodeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, D
       declaration.setTypeCode(createTypeCode(additionalDeclarationType, exportsCacheModel.dispatchLocation))
     })
 
+  def buildThenAdd(codeType: String, declaration: Declaration): Unit = {
+    val typeCodeType = new DeclarationTypeCodeType()
+    typeCodeType.setValue(codeType)
+    declaration.setTypeCode(typeCodeType)
+  }
+
   private def createTypeCode(
     decType: AdditionalDeclarationType,
     dispatchLocation: Option[DispatchLocation]

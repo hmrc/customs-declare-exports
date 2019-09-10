@@ -17,24 +17,15 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
-import wco.datamodel.wco.declaration_ds.dms._2.DeclarationFunctionalReferenceIDType
+import wco.datamodel.wco.declaration_ds.dms._2.DeclarationIdentificationIDType
 
-class FunctionalReferenceIdBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class IdentificationBuilder @Inject()() extends ModifyingBuilder[String, Declaration]{
 
-  override def buildThenAdd(exportsCacheModel: ExportsDeclaration, declaration: Declaration) {
-    exportsCacheModel.consignmentReferences.foreach(references => {
-      if (references.lrn.nonEmpty) {
-        buildThenAdd(references.lrn, declaration)
-      }
-    })
-  }
-
-  def buildThenAdd(functionalReferenceId: String, declaration: Declaration): Unit = {
-    val referenceId = new DeclarationFunctionalReferenceIDType()
-    referenceId.setValue(functionalReferenceId)
-    declaration.setFunctionalReferenceID(referenceId)
+  override def buildThenAdd(declarationId: String, declaration: Declaration): Unit = {
+    val id = new DeclarationIdentificationIDType()
+    id.setValue(declarationId)
+    declaration.setID(id)
   }
 }

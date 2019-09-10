@@ -7,8 +7,8 @@ GET         /v2/declarations/:id                             uk.gov.hmrc.exports
 DELETE      /v2/declarations/:id                             uk.gov.hmrc.exports.controllers.DeclarationController.deleteByID(id: String)
 GET         /v2/declarations/:id/submission                  uk.gov.hmrc.exports.controllers.SubmissionController.findByID(id: String)
 GET         /v2/declarations/:id/submission/notifications    uk.gov.hmrc.exports.controllers.NotificationController.findByID(id: String)
-
-GET         /submissions                                     uk.gov.hmrc.exports.controllers.SubmissionController.getSubmissionsByEori()
+GET         /submissions                                     uk.gov.hmrc.exports.controllers.SubmissionController.findSubmissions()
+POST        /submission-cancellation                         uk.gov.hmrc.exports.controllers.SubmissionController.cancel()
 
 POST        /cancel-declaration                              uk.gov.hmrc.exports.controllers.SubmissionController.cancelDeclaration()
 

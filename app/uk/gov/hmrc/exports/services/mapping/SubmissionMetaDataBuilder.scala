@@ -40,7 +40,7 @@ class SubmissionMetaDataBuilder @Inject()(declarationBuilder: DeclarationBuilder
     val element: JAXBElement[Declaration] = new JAXBElement[Declaration](
       new QName("urn:wco:datamodel:WCO:DEC-DMS:2", "Declaration"),
       classOf[Declaration],
-      declarationBuilder.build(model)
+      declarationBuilder.buildDeclaration(model)
     )
     metaData.setAny(element)
     metaData
