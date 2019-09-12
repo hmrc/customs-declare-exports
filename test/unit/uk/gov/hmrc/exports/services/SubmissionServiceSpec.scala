@@ -31,7 +31,11 @@ import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepos
 import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
 import uk.gov.hmrc.exports.services.{SubmissionService, WcoMapperService}
 import uk.gov.hmrc.http.HeaderCarrier
-import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildCustomsDeclarationsConnectorMock, buildNotificationRepositoryMock, buildSubmissionRepositoryMock}
+import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{
+  buildCustomsDeclarationsConnectorMock,
+  buildNotificationRepositoryMock,
+  buildSubmissionRepositoryMock
+}
 import util.testdata.ExportsTestData._
 import util.testdata.SubmissionTestData._
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
@@ -66,7 +70,8 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
       "submission exists" in new Test {
         when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
         when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
+        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any()))
+          .thenReturn(Future.successful("conv-id"))
         when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
         when(submissionRepositoryMock.addAction(any(), any())).thenReturn(Future.successful(Some(submission)))
 
@@ -76,7 +81,8 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
       "submission is missing" in new Test {
         when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
         when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
+        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any()))
+          .thenReturn(Future.successful("conv-id"))
         when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
 
         submissionService.cancel("eori", cancellation).futureValue mustBe MissingDeclaration
@@ -85,8 +91,10 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
       "submission exists and previously cancelled" in new Test {
         when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
         when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
-        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submissionCancelled)))
+        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any()))
+          .thenReturn(Future.successful("conv-id"))
+        when(submissionRepositoryMock.findSubmissionByMrn(any()))
+          .thenReturn(Future.successful(Some(submissionCancelled)))
 
         submissionService.cancel("eori", cancellation).futureValue mustBe CancellationRequestExists
       }
