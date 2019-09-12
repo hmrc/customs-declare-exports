@@ -17,46 +17,45 @@
 package uk.gov.hmrc.exports.services
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
-import play.mvc.Http.Status._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
 import uk.gov.hmrc.http.HeaderCarrier
+import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.NodeSeq
 
 @Singleton
 class SubmissionService @Inject()(
   customsDeclarationsConnector: CustomsDeclarationsConnector,
   submissionRepository: SubmissionRepository,
-  notificationRepository: NotificationRepository
+  notificationRepository: NotificationRepository,
+  metaDataBuilder: MetaDataBuilder,
+  wcoMapperService: WcoMapperService
 )(implicit executionContext: ExecutionContext) {
 
-  private val logger = Logger(this.getClass)
+  def cancel(eori: String, cancellation: SubmissionCancellation)(
+    implicit hc: HeaderCarrier
+  ): Future[CancellationStatus] = {
+    val metadata: MetaData = metaDataBuilder.buildRequest(
+      cancellation.functionalReferenceId,
+      cancellation.mrn,
+      cancellation.statementDescription,
+      cancellation.changeReason,
+      eori
+    )
+    val xml: String = wcoMapperService.toXml(metadata)
+    customsDeclarationsConnector.submitCancellation(eori, xml).flatMap { convId =>
+      updateSubmissionInDB(eori, cancellation.mrn, convId)
+    }
+  }
 
   def getAllSubmissionsForUser(eori: String): Future[Seq[Submission]] =
     submissionRepository.findAllSubmissionsForEori(eori)
 
   def getSubmission(eori: String, uuid: String): Future[Option[Submission]] =
     submissionRepository.findSubmissionByUuid(eori, uuid)
-
-  def cancelDeclaration(eori: String, mrn: String)(
-    cancellationXml: NodeSeq
-  )(implicit hc: HeaderCarrier): Future[Either[String, CancellationStatus]] =
-    customsDeclarationsConnector.submitCancellation(eori, cancellationXml).flatMap {
-
-      case CustomsDeclarationsResponse(ACCEPTED, Some(convId)) =>
-        updateSubmissionInDB(eori, mrn, convId).map(Right(_))
-
-      case CustomsDeclarationsResponse(status, _) =>
-        logger.error(
-          s"Customs Declarations Service returned $status for Cancellation Request with Eori: $eori and MRN: $mrn"
-        )
-        Future.successful(Left("Non Accepted status returned by Customs Declarations Service"))
-    }
 
   def create(submission: Submission): Future[Submission] =
     for {

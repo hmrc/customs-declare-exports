@@ -23,33 +23,36 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 
 class FunctionalReferenceIdentificationBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
 
-  val exemplaryDucr = "8GB123456789012-1234567890QWERTYUIO"
+  private val builder = new FunctionalReferenceIdBuilder()
 
-  "FunctionalReferenceIdBuilder" should {
-    "correctly map to the WCO-DEC FunctionalReferenceId instance" in {
+  "Build then add from ExportsDeclaration" should {
 
-      val builder = new FunctionalReferenceIdBuilder
-
-      val declaration = new Declaration
+    "append to Declaration" in {
+      val declaration = new Declaration()
       val model = aDeclaration(withConsignmentReferences())
+
       builder.buildThenAdd(model, declaration)
 
       declaration.getFunctionalReferenceID.getValue should be("FG7676767889")
     }
 
-    "correctly map to the WCO-DEC FunctionalReferenceId instance for a CancellationRequest" in {
-      val referenceIDType = FunctionalReferenceIdBuilder.build("functionReferenceId")
-      referenceIDType.getValue should be("functionReferenceId")
-    }
-
-    "not map to the WCO-DEC FunctionalReferenceId instance if lrn is empty" in {
-      val builder = new FunctionalReferenceIdBuilder
-
-      val declaration = new Declaration
+    "not append to Declaration if lrn is empty" in {
+      val declaration = new Declaration()
       val model = aDeclaration(withConsignmentReferences(ducr = "", lrn = ""))
+
       builder.buildThenAdd(model, declaration)
 
       declaration.getFunctionalReferenceID should be(null)
+    }
+  }
+
+  "Build then add from code" should {
+    "append to Declaration" in {
+      val declaration = new Declaration()
+
+      builder.buildThenAdd("id", declaration)
+
+      declaration.getFunctionalReferenceID.getValue should be("id")
     }
   }
 }

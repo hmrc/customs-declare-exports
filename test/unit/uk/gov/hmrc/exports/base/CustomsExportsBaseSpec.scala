@@ -40,7 +40,7 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
-import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
+import uk.gov.hmrc.exports.models.{CustomsDeclarationsResponse, Eori}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.{CancellationStatus, Submission}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
@@ -127,15 +127,5 @@ trait CustomsExportsBaseSpec
   protected def withNotification(notifications: Seq[Notification]): OngoingStubbing[Future[Seq[Notification]]] =
     when(mockNotificationsRepository.findNotificationsByConversationId(any()))
       .thenReturn(Future.successful(notifications))
-
-  protected def withCancellationRequest(
-    status: CancellationStatus,
-    apiStatus: Int
-  ): OngoingStubbing[Future[CustomsDeclarationsResponse]] =
-//    when(mockSubmissionRepository.cancelDeclaration(any(), any())).thenReturn(Future.successful(status))
-    when(
-      mockDeclarationsApiConnector
-        .submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier])
-    ).thenReturn(Future.successful(CustomsDeclarationsResponse(apiStatus, Some(UUID.randomUUID().toString))))
 
 }

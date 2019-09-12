@@ -16,7 +16,7 @@
 
 package unit.uk.gov.hmrc.exports.controllers
 
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
@@ -26,6 +26,7 @@ import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json.toJson
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -36,77 +37,78 @@ import unit.uk.gov.hmrc.exports.base.AuthTestSupport
 
 import scala.concurrent.Future
 
-class SubmissionControllerSpec
+class CancellationControllerSpec
     extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
     with MustMatchers {
+
+  private val submissionService: SubmissionService = mock[SubmissionService]
 
   override lazy val app: Application = GuiceApplicationBuilder()
     .overrides(bind[AuthConnector].to(mockAuthConnector), bind[SubmissionService].to(submissionService))
     .build()
-  private val submissionService: SubmissionService = mock[SubmissionService]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
     reset(mockAuthConnector, submissionService)
   }
 
-  "Find All" should {
-    val get = FakeRequest("GET", "/submissions")
-    val submission = Submission("id", userEori, "lrn", None, "ducr")
-    val submissions = Seq(submission)
+  "Create" should {
+    val post = FakeRequest("POST", "/cancellations")
+    val cancellation = SubmissionCancellation("ref", "mrn", "statement", "reason")
 
     "return 200" when {
       "request is valid" in {
         withAuthorizedUser()
-        given(submissionService.getAllSubmissionsForUser(any())).willReturn(Future.successful(submissions))
+        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(CancellationRequested))
 
-        val result: Future[Result] = route(app, get).get
+        val result: Future[Result] = route(app, post.withJsonBody(toJson(cancellation))).get
 
         status(result) mustBe OK
-        contentAsJson(result) mustBe toJson(submissions)
-        verify(submissionService).getAllSubmissionsForUser(userEori)
+        contentAsString(result) mustBe empty
+        verify(submissionService).cancel(refEq(userEori), refEq(cancellation))(any())
       }
     }
 
-    "return 401" when {
-      "unauthorized" in {
-        withUnauthorizedUser(InsufficientEnrolments())
-
-        val result: Future[Result] = route(app, get).get
-
-        status(result) mustBe UNAUTHORIZED
-        verifyZeroInteractions(submissionService)
-      }
-    }
-  }
-
-  "Find By ID" should {
-    val get = FakeRequest("GET", "/v2/declarations/id/submission")
-    val submission = Submission("id", userEori, "lrn", None, "ducr")
-
-    "return 200" when {
-      "request is valid" in {
+    "return 409" when {
+      "cancellation exists" in {
         withAuthorizedUser()
-        given(submissionService.getSubmission(any(), any())).willReturn(Future.successful(Some(submission)))
+        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(CancellationRequestExists))
 
-        val result: Future[Result] = route(app, get).get
+        val result: Future[Result] = route(app, post.withJsonBody(toJson(cancellation))).get
 
-        status(result) mustBe OK
-        contentAsJson(result) mustBe toJson(submission)
-        verify(submissionService).getSubmission(userEori, "id")
+        status(result) mustBe CONFLICT
+        contentAsString(result) mustBe empty
+        verify(submissionService).cancel(refEq(userEori), refEq(cancellation))(any())
       }
     }
 
     "return 404" when {
-      "unknown ID" in {
+      "declaration doesnt exist" in {
         withAuthorizedUser()
-        given(submissionService.getSubmission(any(), any())).willReturn(Future.successful(None))
+        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(MissingDeclaration))
 
-        val result: Future[Result] = route(app, get).get
+        val result: Future[Result] = route(app, post.withJsonBody(toJson(cancellation))).get
 
         status(result) mustBe NOT_FOUND
         contentAsString(result) mustBe empty
-        verify(submissionService).getSubmission(userEori, "id")
+        verify(submissionService).cancel(refEq(userEori), refEq(cancellation))(any())
+      }
+    }
+
+    "return 400" when {
+      "invalid json" in {
+        withAuthorizedUser()
+        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(CancellationRequested))
+        val payload = toJson(cancellation).as[JsObject] - "changeReason"
+
+        val result: Future[Result] = route(app, post.withJsonBody(toJson(payload))).get
+
+        status(result) mustBe BAD_REQUEST
+        contentAsJson(result) mustBe Json.obj(
+          "message" -> "Bad Request",
+          "errors" -> Json.arr("/changeReason: error.path.missing")
+        )
+        verifyZeroInteractions(submissionService)
       }
     }
 
@@ -114,7 +116,7 @@ class SubmissionControllerSpec
       "unauthorized" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result: Future[Result] = route(app, get).get
+        val result: Future[Result] = route(app, post.withJsonBody(toJson(cancellation))).get
 
         status(result) mustBe UNAUTHORIZED
         verifyZeroInteractions(submissionService)

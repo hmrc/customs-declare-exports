@@ -37,7 +37,7 @@ object UnitTestMockBuilder extends MockitoSugar {
     when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any()))
       .thenReturn(Future.successful("conversation-id"))
     when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any()))
-      .thenReturn(Future.successful(CustomsDeclarationsResponse.empty))
+      .thenReturn(Future.successful("conversation-id"))
     customsDeclarationsConnectorMock
   }
 
@@ -63,7 +63,6 @@ object UnitTestMockBuilder extends MockitoSugar {
     implicit val hc: HeaderCarrier = mock[HeaderCarrier]
     when(submissionServiceMock.getAllSubmissionsForUser(any())).thenReturn(Future.successful(Seq.empty))
     when(submissionServiceMock.getSubmission(any(), any())).thenReturn(Future.successful(None))
-    when(submissionServiceMock.cancelDeclaration(any(), any())(any())(any())).thenReturn(Future.successful(Left("")))
     submissionServiceMock
   }
 

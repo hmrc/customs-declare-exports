@@ -24,15 +24,21 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 class TypeCodeBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
 
   "TypeCodeBuilder" should {
-    "correctly map to the WCO-DEC Type Code Code instance" in {
+    val builder = new TypeCodeBuilder()
 
-      val builder = new TypeCodeBuilder
-
+    "Build then add from ExportsDeclaration" in {
       val declaration = new Declaration
       val model = aDeclaration(withDispatchLocation("EX"), withAdditionalDeclarationType("Y"))
       builder.buildThenAdd(model, declaration)
 
       declaration.getTypeCode.getValue should be("EXY")
+    }
+
+    "Build then add from Code" in {
+      val declaration = new Declaration
+      builder.buildThenAdd("code", declaration)
+
+      declaration.getTypeCode.getValue should be("code")
     }
   }
 }

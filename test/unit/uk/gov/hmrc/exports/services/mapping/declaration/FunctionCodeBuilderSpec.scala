@@ -33,8 +33,12 @@ class FunctionCodeBuilderSpec extends WordSpec with Matchers with ExportsDeclara
       declaration.getFunctionCode.getValue should be("9")
     }
 
-    "build" in {
-      FunctionCodeBuilder.build("1").getValue should be("1")
+    "build then add" in {
+      val declaration = new Declaration()
+
+      new FunctionCodeBuilder().buildThenAdd("1", declaration)
+
+      declaration.getFunctionCode.getValue should be("1")
     }
   }
 }

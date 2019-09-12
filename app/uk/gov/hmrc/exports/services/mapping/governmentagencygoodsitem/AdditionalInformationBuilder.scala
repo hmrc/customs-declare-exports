@@ -19,19 +19,23 @@ package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.{AdditionalInformation, ExportItem}
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
+import wco.datamodel.wco.dec_dms._2.Declaration
+import wco.datamodel.wco.dec_dms._2.Declaration.AdditionalInformation.Pointer
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem.{
   AdditionalInformation => WCOAdditionalInformation
 }
 import wco.datamodel.wco.declaration_ds.dms._2.{
   AdditionalInformationStatementCodeType,
-  AdditionalInformationStatementDescriptionTextType
+  AdditionalInformationStatementDescriptionTextType,
+  AdditionalInformationStatementTypeCodeType,
+  PointerDocumentSectionCodeType
 }
 
 class AdditionalInformationBuilder @Inject()()
     extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
 
-  def buildThenAdd(
+  override def buildThenAdd(
     exportItem: ExportItem,
     wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem
   ): Unit =
@@ -42,6 +46,33 @@ class AdditionalInformationBuilder @Inject()()
         }
       }
     }
+
+  def buildThenAdd(statementDescription: String, declaration: Declaration): Unit = {
+    val additionalInformation = new Declaration.AdditionalInformation()
+    val statementDescriptionTextType = new AdditionalInformationStatementDescriptionTextType()
+    statementDescriptionTextType.setValue(statementDescription)
+
+    val statementTypeCode = new AdditionalInformationStatementTypeCodeType()
+    statementTypeCode.setValue("AES")
+
+    val pointer1 = new Pointer()
+    pointer1.setSequenceNumeric(new java.math.BigDecimal(1))
+    val pointerDocumentSectionCodeType1 = new PointerDocumentSectionCodeType()
+    pointerDocumentSectionCodeType1.setValue("42A")
+    pointer1.setDocumentSectionCode(pointerDocumentSectionCodeType1)
+
+    val pointer2 = new Pointer()
+    val pointerDocumentSectionCodeType2 = new PointerDocumentSectionCodeType()
+    pointerDocumentSectionCodeType2.setValue("06A")
+    pointer2.setDocumentSectionCode(pointerDocumentSectionCodeType2)
+
+    additionalInformation.getPointer.add(pointer1)
+    additionalInformation.getPointer.add(pointer2)
+
+    additionalInformation.setStatementDescription(statementDescriptionTextType)
+    additionalInformation.setStatementTypeCode(statementTypeCode)
+    declaration.getAdditionalInformation.add(additionalInformation)
+  }
 
   private def buildAdditionalInformation(info: AdditionalInformation): WCOAdditionalInformation = {
     val wcoAdditionalInformation = new WCOAdditionalInformation

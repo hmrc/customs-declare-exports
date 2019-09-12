@@ -29,7 +29,6 @@ import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.NodeSeq
 
 @Singleton
 class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: HttpClient)(
@@ -48,10 +47,14 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
       }
     }
 
-  def submitCancellation(eori: String, xml: NodeSeq)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] =
-    postMetaData(eori, appConfig.cancelDeclarationUri, xml.toString()).map { res =>
+  def submitCancellation(eori: String, xml: String)(implicit hc: HeaderCarrier): Future[String] =
+    postMetaData(eori, appConfig.cancelDeclarationUri, xml).map { res =>
       logger.debug(s"CUSTOMS_DECLARATIONS cancellation response is  --> ${res.toString}")
-      res
+      res match {
+        case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) => conversationId
+        case CustomsDeclarationsResponse(status, _) =>
+          throw new RuntimeException(s"Bad response status [${status}] from Cancellation Request with EORI [${eori}]")
+      }
     }
 
   private def postMetaData(eori: String, uri: String, xml: String)(

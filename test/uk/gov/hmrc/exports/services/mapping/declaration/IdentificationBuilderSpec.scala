@@ -16,22 +16,21 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
+import org.scalatest.{MustMatchers, WordSpec}
 import wco.datamodel.wco.dec_dms._2.Declaration
-import wco.datamodel.wco.declaration_ds.dms._2.DeclarationFunctionCodeType
 
-class FunctionCodeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class IdentificationBuilderSpec extends WordSpec with MustMatchers {
 
-  private val defaultFunctionCode = "9"
+  private val builder = new IdentificationBuilder()
 
-  override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
-    buildThenAdd(defaultFunctionCode, declaration)
+  "Build then add" should {
+    "append to declaration" in {
+      val declaration = new Declaration()
 
-  def buildThenAdd(value: String, declaration: Declaration): Unit = {
-    val functionCode = new DeclarationFunctionCodeType()
-    functionCode.setValue(value)
-    declaration.setFunctionCode(functionCode)
+      builder.buildThenAdd("id", declaration)
+
+      declaration.getID.getValue mustBe "id"
+    }
   }
+
 }
