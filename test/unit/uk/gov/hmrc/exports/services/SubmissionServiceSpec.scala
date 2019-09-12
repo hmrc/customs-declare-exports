@@ -20,18 +20,16 @@ import java.time.LocalDateTime
 
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito._
-import org.mockito.{ArgumentCaptor, InOrder, Mockito}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.http.Status._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.exports.models.{CustomsDeclarationsResponse, LocalReferenceNumber, SubmissionRequestHeaders}
+import uk.gov.hmrc.exports.models.{Eori, LocalReferenceNumber, SubmissionRequestHeaders}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.{SubmissionService, WcoMapperService}
 import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
+import uk.gov.hmrc.exports.services.{SubmissionService, WcoMapperService}
 import uk.gov.hmrc.http.HeaderCarrier
 import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildCustomsDeclarationsConnectorMock, buildNotificationRepositoryMock, buildSubmissionRepositoryMock}
 import util.testdata.ExportsTestData._
@@ -42,8 +40,6 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
 
 class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers {
-
-  import SubmissionServiceSpec._
 
   private trait Test {
     implicit val hc: HeaderCarrier = mock[HeaderCarrier]
@@ -59,6 +55,42 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
       metaDataBuilder = metaDataBuilder,
       wcoMapperService = wcoMapperService
     )(ExecutionContext.global)
+  }
+
+  "cancel" should {
+    val submission = Submission("id", "eori", "lrn", None, "ducr")
+    val submissionCancelled = Submission("id", "eori", "lrn", None, "ducr", Seq(Action(CancellationRequest, "conv-id")))
+    val cancellation = SubmissionCancellation("ref-id", "mrn", "description", "reason")
+
+    "submit and delegate to repository" when {
+      "submission exists" in new Test {
+        when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
+        when(wcoMapperService.toXml(any())).thenReturn("xml")
+        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
+        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
+        when(submissionRepositoryMock.addAction(any(), any())).thenReturn(Future.successful(Some(submission)))
+
+        submissionService.cancel("eori", cancellation).futureValue mustBe CancellationRequested
+      }
+
+      "submission is missing" in new Test {
+        when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
+        when(wcoMapperService.toXml(any())).thenReturn("xml")
+        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
+        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
+
+        submissionService.cancel("eori", cancellation).futureValue mustBe MissingDeclaration
+      }
+
+      "submission exists and previously cancelled" in new Test {
+        when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
+        when(wcoMapperService.toXml(any())).thenReturn("xml")
+        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
+        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submissionCancelled)))
+
+        submissionService.cancel("eori", cancellation).futureValue mustBe CancellationRequestExists
+      }
+    }
   }
 
   "create" should {

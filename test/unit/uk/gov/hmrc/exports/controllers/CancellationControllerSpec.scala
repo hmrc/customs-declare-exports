@@ -31,7 +31,6 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
-import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.services.SubmissionService
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
@@ -65,7 +64,7 @@ class CancellationControllerSpec extends WordSpec with GuiceOneAppPerSuite with 
 
         status(result) mustBe OK
         contentAsString(result) mustBe empty
-        verify(submissionService).cancel(refEq(Eori(userEori)), refEq(cancellation))(any())
+        verify(submissionService).cancel(refEq(userEori), refEq(cancellation))(any())
       }
     }
 
@@ -78,7 +77,7 @@ class CancellationControllerSpec extends WordSpec with GuiceOneAppPerSuite with 
 
         status(result) mustBe CONFLICT
         contentAsString(result) mustBe empty
-        verify(submissionService).cancel(refEq(Eori(userEori)), refEq(cancellation))(any())
+        verify(submissionService).cancel(refEq(userEori), refEq(cancellation))(any())
       }
     }
 
@@ -91,7 +90,7 @@ class CancellationControllerSpec extends WordSpec with GuiceOneAppPerSuite with 
 
         status(result) mustBe NOT_FOUND
         contentAsString(result) mustBe empty
-        verify(submissionService).cancel(refEq(Eori(userEori)), refEq(cancellation))(any())
+        verify(submissionService).cancel(refEq(userEori), refEq(cancellation))(any())
       }
     }
 

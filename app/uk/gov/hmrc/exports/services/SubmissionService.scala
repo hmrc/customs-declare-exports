@@ -38,7 +38,7 @@ class SubmissionService @Inject()(
   wcoMapperService: WcoMapperService
 )(implicit executionContext: ExecutionContext) {
 
-  def cancel(eori: Eori, cancellation: SubmissionCancellation)(
+  def cancel(eori: String, cancellation: SubmissionCancellation)(
     implicit hc: HeaderCarrier
   ): Future[CancellationStatus] = {
     val metadata: MetaData = metaDataBuilder.buildRequest(
@@ -46,11 +46,11 @@ class SubmissionService @Inject()(
       cancellation.mrn,
       cancellation.statementDescription,
       cancellation.changeReason,
-      eori.value
+      eori
     )
     val xml: String = wcoMapperService.toXml(metadata)
     customsDeclarationsConnector.submitCancellation(eori, xml).flatMap { convId =>
-        updateSubmissionInDB(eori.value, cancellation.mrn, convId)
+        updateSubmissionInDB(eori, cancellation.mrn, convId)
     }
   }
 

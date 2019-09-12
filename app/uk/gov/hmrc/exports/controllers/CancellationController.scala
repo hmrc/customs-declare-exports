@@ -36,7 +36,7 @@ class CancellationController @Inject()(
 
   def create(): Action[SubmissionCancellation] =
     authenticator.authorisedAction(parsingJson[SubmissionCancellation]) { implicit request =>
-      submissionService.cancel(request.eori, request.body) map {
+      submissionService.cancel(request.eori.value, request.body) map {
         case CancellationRequested => Ok
         case CancellationRequestExists => Conflict
         case MissingDeclaration => NotFound

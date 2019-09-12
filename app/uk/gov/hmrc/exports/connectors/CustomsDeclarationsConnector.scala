@@ -24,12 +24,11 @@ import play.api.mvc.Codec
 import play.mvc.Http.Status.ACCEPTED
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
-import uk.gov.hmrc.exports.models.{CustomsDeclarationsResponse, Eori}
+import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.NodeSeq
 
 @Singleton
 class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: HttpClient)(
@@ -48,16 +47,13 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
       }
     }
 
-  def submitCancellation(eori: Eori, xml: String)(implicit hc: HeaderCarrier): Future[String] =
-    postMetaData(eori.value, appConfig.cancelDeclarationUri, xml).map { res =>
+  def submitCancellation(eori: String, xml: String)(implicit hc: HeaderCarrier): Future[String] =
+    postMetaData(eori, appConfig.cancelDeclarationUri, xml).map { res =>
       logger.debug(s"CUSTOMS_DECLARATIONS cancellation response is  --> ${res.toString}")
       res match {
-        case CustomsDeclarationsResponse(ACCEPTED, Some(convId)) =>
-          convId
+        case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) => conversationId
         case CustomsDeclarationsResponse(status, _) =>
-          throw new RuntimeException(
-            s"Bad response status [${status}] from Cancellation Request with EORI [${eori}]"
-          )
+          throw new RuntimeException(s"Bad response status [${status}] from Cancellation Request with EORI [${eori}]")
       }
     }
 
