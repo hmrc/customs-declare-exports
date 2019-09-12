@@ -17,10 +17,7 @@
 package uk.gov.hmrc.exports.services
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
-import play.mvc.Http.Status._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder

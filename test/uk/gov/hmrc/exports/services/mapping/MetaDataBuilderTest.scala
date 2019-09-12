@@ -18,7 +18,7 @@ class MetaDataBuilderTest extends WordSpec with MustMatchers with MockitoSugar {
     val declaration = mock[Declaration]
 
     "Build MetaData" in {
-      given(declarationBuilder.buildCancellation(any(),  any(), any(), any(), any())).willReturn(declaration)
+      given(declarationBuilder.buildCancellation(any(), any(), any(), any(), any())).willReturn(declaration)
 
       val data = builder.buildRequest("ref", "mrn", "description", "reason", "eori")
 
