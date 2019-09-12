@@ -17,218 +17,109 @@
 package unit.uk.gov.hmrc.exports.controllers
 
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{reset, when}
-import org.scalatest.BeforeAndAfterEach
-import play.api.http.{ContentTypes, Status}
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.Codec
+import org.mockito.BDDMockito._
+import org.mockito.Mockito._
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
+import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json.toJson
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
-import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
+import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
 import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.http.HeaderCarrier
-import unit.uk.gov.hmrc.exports.base.CustomsExportsBaseSpec
-import util.testdata.ExportsTestData._
-import util.testdata.SubmissionTestData._
+import uk.gov.hmrc.exports.services.SubmissionService
+import unit.uk.gov.hmrc.exports.base.AuthTestSupport
 
 import scala.concurrent.Future
-import scala.xml.NodeSeq
 
-class SubmissionControllerSpec extends CustomsExportsBaseSpec with BeforeAndAfterEach {
+class SubmissionControllerSpec extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
+  with MustMatchers {
 
-  val cancelUri = "/cancel-declaration"
-
-  val xmlBody: String = randomSubmitDeclaration.toXml
-
-  def fakeRequestWithPayload(uri: String, payload: String): FakeRequest[String] =
-    FakeRequest("POST", uri).withBody(payload)
-
-  val validCancelHeaders: (String, String) = CustomsHeaderNames.XMrnHeaderName -> declarantMrnValue
-
-  def fakeCancellationRequest(payload: String): FakeRequest[String] = fakeRequestWithPayload(cancelUri, payload)
-
-  def fakeCancelRequestWithHeaders(payload: String): FakeRequest[String] =
-    fakeCancellationRequest(payload)
-      .withHeaders(validCancelHeaders)
-
-  val fakeCancelXmlRequestWithMissingHeaders: FakeRequest[String] = fakeCancellationRequest("<someXml></someXml>")
-    .withHeaders(AUTHORIZATION -> dummyToken, CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8))
-
-  val submissionJson: JsValue = Json.toJson[Submission](submission)
-  val submissionSeq: Seq[Submission] = Seq(submission)
-  val submissionSeqJson: JsValue = Json.toJson[Seq[Submission]](submissionSeq)
+  override lazy val app: Application = GuiceApplicationBuilder()
+    .overrides(bind[AuthConnector].to(mockAuthConnector), bind[SubmissionService].to(submissionService))
+    .build()
+  private val submissionService: SubmissionService = mock[SubmissionService]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(mockDeclarationsApiConnector, mockSubmissionRepository)
-    withoutNotifications()
-
+    reset(mockAuthConnector, submissionService)
   }
 
-  "Actions for submission" when {
+  "Find All" should {
+    val get = FakeRequest("GET", "/submissions")
+    val submission = Submission("id", userEori, "lrn", None, "ducr")
+    val submissions = Seq(submission)
 
-    "GET /:id" should {
-      "return 200" when {
-        "submission found" in {
-          withAuthorizedUser()
-          getSubmissionByID(Some(submission))
+    "return 200" when {
+      "request is valid" in {
+        withAuthorizedUser()
+        given(submissionService.getAllSubmissionsForUser(any())).willReturn(Future.successful(submissions))
 
-          val result = route(app, FakeRequest("GET", "/v2/declarations/1234/submission")).get
+        val result: Future[Result] = route(app, get).get
 
-          status(result) must be(OK)
-          contentAsJson(result) must be(submissionJson)
-        }
-      }
-
-      "return 400" when {
-        "submission not found" in {
-          withAuthorizedUser()
-          getSubmissionByID(None)
-
-          val result = route(app, FakeRequest("GET", "/v2/declarations/1234/submission")).get
-
-          status(result) must be(NOT_FOUND)
-        }
-      }
-
-      "return 401" when {
-        "not authenticated" in {
-          userWithoutEori()
-
-          val failedResult = route(app, FakeRequest("GET", "/v2/declarations/1234/submission")).get
-
-          status(failedResult) must be(UNAUTHORIZED)
-        }
+        status(result) mustBe OK
+        contentAsJson(result) mustBe toJson(submissions)
+        verify(submissionService).getAllSubmissionsForUser(userEori)
       }
     }
 
-    "GET submissions using EORI number" should {
+    "return 401" when {
+      "unauthorized" in {
+        withUnauthorizedUser(InsufficientEnrolments())
 
-      "return 200 status with submission response body" in {
+        val result: Future[Result] = route(app, get).get
 
-        withAuthorizedUser()
-        withSubmissions(submissionSeq)
-
-        val result = route(app, FakeRequest("GET", "/submissions")).get
-
-        status(result) must be(OK)
-        contentAsJson(result) must be(submissionSeqJson)
-      }
-
-      // TODO: 204 is safe response
-      "return 200 status without submission response" in {
-
-        withAuthorizedUser()
-        withSubmissions(Seq.empty)
-
-        val result = route(app, FakeRequest("GET", "/submissions")).get
-
-        status(result) must be(OK)
-      }
-
-      "return 401 status when user is without eori" in {
-
-        userWithoutEori()
-
-        val failedResult = route(app, FakeRequest("GET", "/submissions")).get
-
-        status(failedResult) must be(UNAUTHORIZED)
+        status(result) mustBe UNAUTHORIZED
+        verifyZeroInteractions(submissionService)
       }
     }
   }
 
-  //TODO: add return status when declaration is cancelled
-  "POST cancel declaration" should {
+  "Find By ID" should {
+    val get = FakeRequest("GET", "/v2/declarations/id/submission")
+    val submission = Submission("id", userEori, "lrn", None, "ducr")
 
-    "return specific error status" when {
-
-      "there is a missing required header - BAD_REQUEST" in {
-
+    "return 200" when {
+      "request is valid" in {
         withAuthorizedUser()
-        withCancellationRequest(CancellationRequested, Status.ACCEPTED)
+        given(submissionService.getSubmission(any(), any())).willReturn(Future.successful(Some(submission)))
 
-        val result = route(app, fakeCancelXmlRequestWithMissingHeaders).get
+        val result: Future[Result] = route(app, get).get
 
-        status(result) must be(BAD_REQUEST)
-      }
-
-      "none xml is sent - BAD_REQUEST" in {
-
-        withAuthorizedUser()
-        withCancellationRequest(CancellationRequested, Status.ACCEPTED)
-
-        val result = route(app, fakeCancelRequestWithHeaders("SOMETEXT")).get
-
-        status(result) must be(BAD_REQUEST)
-      }
-
-      "user is without EORI - UNAUTHORIZED" in {
-
-        userWithoutEori()
-        withCancellationRequest(CancellationRequestExists, Status.ACCEPTED)
-
-        val result = route(app, fakeCancelRequestWithHeaders("<someXml></someXml>")).get
-
-        status(result) must be(UNAUTHORIZED)
-        contentAsString(result) must be(
-          "<?xml version='1.0' encoding='UTF-8'?>\n<errorResponse>\n        <code>UNAUTHORIZED</code>\n        <message>Insufficient Enrolments</message>\n      </errorResponse>"
-        )
+        status(result) mustBe OK
+        contentAsJson(result) mustBe toJson(submission)
+        verify(submissionService).getSubmission(userEori, "id")
       }
     }
 
-    "return CancellationRequested" when {
-
-      "there is an existing declaration" in {
-
+    "return 404" when {
+      "unknown ID" in {
         withAuthorizedUser()
-        when(mockSubmissionRepository.findSubmissionByMrn(any[String])).thenReturn(Future.successful(Some(submission)))
-        when(mockSubmissionRepository.addAction(any[String], any[Action]))
-          .thenReturn(Future.successful(Some(cancelledSubmission)))
-        when(mockDeclarationsApiConnector.submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier]))
-          .thenReturn(Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, Some(conversationId))))
+        given(submissionService.getSubmission(any(), any())).willReturn(Future.successful(None))
 
-        val result = route(app, fakeCancelRequestWithHeaders("<someXml></someXml>")).get
+        val result: Future[Result] = route(app, get).get
 
-        status(result) must be(OK)
-        contentAsJson(result) must be(Json.toJson[CancellationStatus](CancellationRequested))
+        status(result) mustBe NOT_FOUND
+        contentAsString(result) mustBe empty
+        verify(submissionService).getSubmission(userEori, "id")
       }
     }
 
-    "return CancellationRequestExists" when {
+    "return 401" when {
+      "unauthorized" in {
+        withUnauthorizedUser(InsufficientEnrolments())
 
-      "there is an declaration with existing cancellation request" in {
+        val result: Future[Result] = route(app, get).get
 
-        withAuthorizedUser()
-        when(mockSubmissionRepository.findSubmissionByMrn(any[String]))
-          .thenReturn(Future.successful(Some(cancelledSubmission)))
-        when(mockSubmissionRepository.addAction(any[String], any[Action]))
-          .thenReturn(Future.successful(Some(cancelledSubmission)))
-        when(mockDeclarationsApiConnector.submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier]))
-          .thenReturn(Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, Some(conversationId))))
-
-        val result = route(app, fakeCancelRequestWithHeaders("<someXml></someXml>")).get
-
-        status(result) must be(OK)
-        contentAsJson(result) must be(Json.toJson[CancellationStatus](CancellationRequestExists))
-      }
-    }
-
-    "return MissingDeclaration" when {
-
-      "there is no existing declaration" in {
-
-        withAuthorizedUser()
-        when(mockSubmissionRepository.findSubmissionByMrn(any[String])).thenReturn(Future.successful(None))
-        when(mockDeclarationsApiConnector.submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier]))
-          .thenReturn(Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, Some(conversationId))))
-
-        val result = route(app, fakeCancelRequestWithHeaders("<someXml></someXml>")).get
-
-        status(result) must be(OK)
-        contentAsJson(result) must be(Json.toJson[CancellationStatus](MissingDeclaration))
+        status(result) mustBe UNAUTHORIZED
+        verifyZeroInteractions(submissionService)
       }
     }
   }
+
 
 }

@@ -22,7 +22,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.Status
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
+import uk.gov.hmrc.exports.models.{CustomsDeclarationsResponse, Eori}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import unit.uk.gov.hmrc.exports.base.UnitSpec
@@ -70,11 +70,11 @@ class CustomsDeclarationsConnectorSpec extends UnitSpec with MockitoSugar {
     }
 
     "cancelDeclaration" in new SetUp() {
-      val eori = "GB123456"
+      val eori = Eori("GB123456")
       val xmlPayload: Elem = <SomeXML></SomeXML>
 
-      val result: CustomsDeclarationsResponse = await(testObj.submitCancellation(eori, xmlPayload))
-      result.conversationId shouldBe Some(testConversationId)
+      val result: String = await(testObj.submitCancellation(eori, xmlPayload.toString()))
+      result shouldBe testConversationId
     }
 
   }

@@ -30,7 +30,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.inject.{bind, Injector}
+import play.api.inject.{Injector, bind}
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSClient
 import play.api.mvc.AnyContentAsJson
@@ -40,7 +40,7 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
-import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
+import uk.gov.hmrc.exports.models.{CustomsDeclarationsResponse, Eori}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.{CancellationStatus, Submission}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
@@ -128,14 +128,6 @@ trait CustomsExportsBaseSpec
     when(mockNotificationsRepository.findNotificationsByConversationId(any()))
       .thenReturn(Future.successful(notifications))
 
-  protected def withCancellationRequest(
-    status: CancellationStatus,
-    apiStatus: Int
-  ): OngoingStubbing[Future[CustomsDeclarationsResponse]] =
-//    when(mockSubmissionRepository.cancelDeclaration(any(), any())).thenReturn(Future.successful(status))
-    when(
-      mockDeclarationsApiConnector
-        .submitCancellation(any[String], any[NodeSeq])(any[HeaderCarrier])
-    ).thenReturn(Future.successful(CustomsDeclarationsResponse(apiStatus, Some(UUID.randomUUID().toString))))
+
 
 }

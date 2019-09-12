@@ -30,15 +30,13 @@ import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.{CustomsDeclarationsResponse, LocalReferenceNumber, SubmissionRequestHeaders}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.SubmissionService
+import uk.gov.hmrc.exports.services.{SubmissionService, WcoMapperService}
+import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
 import uk.gov.hmrc.http.HeaderCarrier
-import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{
-  buildCustomsDeclarationsConnectorMock,
-  buildNotificationRepositoryMock,
-  buildSubmissionRepositoryMock
-}
+import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildCustomsDeclarationsConnectorMock, buildNotificationRepositoryMock, buildSubmissionRepositoryMock}
 import util.testdata.ExportsTestData._
 import util.testdata.SubmissionTestData._
+import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
@@ -52,10 +50,14 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
     val customsDeclarationsConnectorMock: CustomsDeclarationsConnector = buildCustomsDeclarationsConnectorMock
     val submissionRepositoryMock: SubmissionRepository = buildSubmissionRepositoryMock
     val notificationRepositoryMock: NotificationRepository = buildNotificationRepositoryMock
+    val metaDataBuilder: MetaDataBuilder = mock[MetaDataBuilder]
+    val wcoMapperService: WcoMapperService = mock[WcoMapperService]
     val submissionService = new SubmissionService(
       customsDeclarationsConnector = customsDeclarationsConnectorMock,
       submissionRepository = submissionRepositoryMock,
-      notificationRepository = notificationRepositoryMock
+      notificationRepository = notificationRepositoryMock,
+      metaDataBuilder = metaDataBuilder,
+      wcoMapperService = wcoMapperService
     )(ExecutionContext.global)
   }
 
@@ -130,151 +132,6 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
       verify(submissionRepositoryMock, times(1)).findSubmissionByUuid(meq(eori), meq(uuid))
     }
   }
-
-  "SubmissionService on cancelDeclaration" when {
-
-    "everything works correctly" should {
-
-      "return Either.Right with proper message" in new Test {
-        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(
-          Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, conversationId = Some(conversationId)))
-        )
-        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
-        when(submissionRepositoryMock.addAction(any(), any()))
-          .thenReturn(Future.successful(Some(cancelledSubmission)))
-
-        val cancellationResult = submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
-
-        cancellationResult must equal(Right(CancellationRequested))
-      }
-
-      "call CustomsDeclarationsConnector and SubmissionRepository twice afterwards" in new Test {
-        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(
-          Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, conversationId = Some(conversationId)))
-        )
-        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
-        when(submissionRepositoryMock.addAction(any(), any()))
-          .thenReturn(Future.successful(Some(cancelledSubmission)))
-
-        submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
-
-        val inOrder: InOrder = Mockito.inOrder(customsDeclarationsConnectorMock, submissionRepositoryMock)
-        inOrder.verify(customsDeclarationsConnectorMock, times(1)).submitCancellation(any(), any())(any())
-        inOrder.verify(submissionRepositoryMock, times(1)).findSubmissionByMrn(any())
-        inOrder.verify(submissionRepositoryMock, times(1)).addAction(any(), any())
-      }
-
-      "call CustomsDeclarationsConnector with XML provided" in new Test {
-        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(
-          Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, conversationId = Some(conversationId)))
-        )
-        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
-        when(submissionRepositoryMock.addAction(any(), any()))
-          .thenReturn(Future.successful(Some(cancelledSubmission)))
-
-        submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
-
-        verify(customsDeclarationsConnectorMock, times(1)).submitCancellation(meq(eori), meq(cancellationXml))(any())
-      }
-
-      "call SubmissionRepository.findSubmissionByMrn with MRN provided" in new Test {
-        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(
-          Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, conversationId = Some(conversationId)))
-        )
-        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
-        when(submissionRepositoryMock.addAction(any(), any()))
-          .thenReturn(Future.successful(Some(cancelledSubmission)))
-
-        submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
-
-        verify(submissionRepositoryMock, times(1)).findSubmissionByMrn(meq(mrn))
-      }
-
-      "call SubmissionRepository.addAction with MRN provided and correctly built Action" in new Test {
-        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(
-          Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, conversationId = Some(conversationId)))
-        )
-        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
-        when(submissionRepositoryMock.addAction(any(), any()))
-          .thenReturn(Future.successful(Some(cancelledSubmission)))
-
-        submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
-
-        val actionCaptor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])
-        verify(submissionRepositoryMock, times(1)).addAction(meq(mrn), actionCaptor.capture())
-        val actionAdded = actionCaptor.getValue
-        actionAdded.requestType must equal(CancellationRequest)
-        actionAdded.conversationId must equal(conversationId)
-      }
-    }
-
-    "SubmissionRepository on findSubmissionByMrn returns empty Option" should {
-
-      "return MissingDeclaration cancellation status" in new Test {
-        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(
-          Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, conversationId = Some(conversationId)))
-        )
-        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
-
-        val cancellationResult = submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
-
-        cancellationResult must equal(Right(MissingDeclaration))
-      }
-
-      "not call SubmissionRepository.addAction" in new Test {
-        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(
-          Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, conversationId = Some(conversationId)))
-        )
-        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
-
-        submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
-
-        verify(submissionRepositoryMock, never()).addAction(any(), any())
-      }
-    }
-
-    "SubmissionRepository on findSubmissionByMrn returns Submission that has been already cancelled" should {
-
-      "return CancellationRequestExists cancellation status" in new Test {
-        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(
-          Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, conversationId = Some(conversationId)))
-        )
-        when(submissionRepositoryMock.findSubmissionByMrn(any()))
-          .thenReturn(Future.successful(Some(cancelledSubmission)))
-
-        val cancellationResult = submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
-
-        cancellationResult must equal(Right(CancellationRequestExists))
-      }
-
-      "not call SubmissionRepository.addAction" in new Test {
-        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(
-          Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, conversationId = Some(conversationId)))
-        )
-        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
-
-        submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
-
-        verify(submissionRepositoryMock, never()).addAction(any(), any())
-      }
-    }
-
-    "SubmissionRepository on addAction returns None" should {
-
-      "return MissingDeclaration cancellation status" in new Test {
-        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(
-          Future.successful(CustomsDeclarationsResponse(status = ACCEPTED, conversationId = Some(conversationId)))
-        )
-        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
-        when(submissionRepositoryMock.addAction(any(), any())).thenReturn(Future.successful(None))
-
-        val cancellationResult = submissionService.cancelDeclaration(eori, mrn)(cancellationXml).futureValue
-
-        cancellationResult must equal(Right(MissingDeclaration))
-      }
-    }
-  }
-
 }
 
 object SubmissionServiceSpec {
