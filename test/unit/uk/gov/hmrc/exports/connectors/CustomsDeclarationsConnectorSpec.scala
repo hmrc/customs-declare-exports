@@ -70,7 +70,7 @@ class CustomsDeclarationsConnectorSpec extends UnitSpec with MockitoSugar {
     }
 
     "cancelDeclaration" in new SetUp() {
-      val eori = Eori("GB123456")
+      val eori = "GB123456"
       val xmlPayload: Elem = <SomeXML></SomeXML>
 
       val result: String = await(testObj.submitCancellation(eori, xmlPayload.toString()))
