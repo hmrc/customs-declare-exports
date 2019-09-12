@@ -37,8 +37,9 @@ import unit.uk.gov.hmrc.exports.base.AuthTestSupport
 
 import scala.concurrent.Future
 
-class CancellationControllerSpec extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
-  with MustMatchers {
+class CancellationControllerSpec
+    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
+    with MustMatchers {
 
   private val submissionService: SubmissionService = mock[SubmissionService]
 

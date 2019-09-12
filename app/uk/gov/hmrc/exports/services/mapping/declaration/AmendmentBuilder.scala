@@ -21,7 +21,7 @@ import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.declaration_ds.dms._2.AmendmentChangeReasonCodeType
 
-class AmendmentBuilder @Inject()() extends ModifyingBuilder[String, Declaration]{
+class AmendmentBuilder @Inject()() extends ModifyingBuilder[String, Declaration] {
 
   override def buildThenAdd(changeReason: String, declaration: Declaration): Unit = {
     val amendment = new Declaration.Amendment()

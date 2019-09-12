@@ -36,8 +36,9 @@ import unit.uk.gov.hmrc.exports.base.AuthTestSupport
 
 import scala.concurrent.Future
 
-class SubmissionControllerSpec extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
-  with MustMatchers {
+class SubmissionControllerSpec
+    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
+    with MustMatchers {
 
   override lazy val app: Application = GuiceApplicationBuilder()
     .overrides(bind[AuthConnector].to(mockAuthConnector), bind[SubmissionService].to(submissionService))
@@ -120,6 +121,5 @@ class SubmissionControllerSpec extends WordSpec with GuiceOneAppPerSuite with Au
       }
     }
   }
-
 
 }

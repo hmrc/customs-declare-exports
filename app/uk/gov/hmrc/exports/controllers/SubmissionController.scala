@@ -23,7 +23,12 @@ import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.submissions.{CancellationRequestExists, CancellationRequested, MissingDeclaration, SubmissionCancellation}
+import uk.gov.hmrc.exports.models.declaration.submissions.{
+  CancellationRequestExists,
+  CancellationRequested,
+  MissingDeclaration,
+  SubmissionCancellation
+}
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.http.HeaderCarrier
 

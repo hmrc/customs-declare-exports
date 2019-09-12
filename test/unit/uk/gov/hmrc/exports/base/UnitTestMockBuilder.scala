@@ -34,8 +34,10 @@ object UnitTestMockBuilder extends MockitoSugar {
 
   def buildCustomsDeclarationsConnectorMock: CustomsDeclarationsConnector = {
     val customsDeclarationsConnectorMock: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
-    when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any())).thenReturn(Future.successful("conversation-id"))
-    when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conversation-id"))
+    when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any()))
+      .thenReturn(Future.successful("conversation-id"))
+    when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any()))
+      .thenReturn(Future.successful("conversation-id"))
     customsDeclarationsConnectorMock
   }
 

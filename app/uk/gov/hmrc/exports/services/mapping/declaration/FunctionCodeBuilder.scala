@@ -26,9 +26,8 @@ class FunctionCodeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaratio
 
   private val defaultFunctionCode = "9"
 
-  override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit = {
+  override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
     buildThenAdd(defaultFunctionCode, declaration)
-  }
 
   def buildThenAdd(value: String, declaration: Declaration): Unit = {
     val functionCode = new DeclarationFunctionCodeType()
