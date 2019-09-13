@@ -47,7 +47,7 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec with ScalaFutures 
         )
       )
     )
-  val endpoint = "/v2/declarations"
+  val endpoint = "/declarations"
 
   feature("Export Service should handle user submissions when") {
 

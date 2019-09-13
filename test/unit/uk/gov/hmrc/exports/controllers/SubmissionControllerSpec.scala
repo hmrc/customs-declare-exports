@@ -81,7 +81,7 @@ class SubmissionControllerSpec
   }
 
   "Find By ID" should {
-    val get = FakeRequest("GET", "/v2/declarations/id/submission")
+    val get = FakeRequest("GET", "/declarations/id/submission")
     val submission = Submission("id", userEori, "lrn", None, "ducr")
 
     "return 200" when {

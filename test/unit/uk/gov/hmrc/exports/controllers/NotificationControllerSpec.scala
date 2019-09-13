@@ -79,7 +79,7 @@ class NotificationControllerSpec
         when(notificationServiceMock.getNotifications(any()))
           .thenReturn(Future.successful(Seq(notification)))
 
-        val result = route(app, FakeRequest("GET", "/v2/declarations/1234/submission/notifications")).get
+        val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
 
         status(result) must be(OK)
         contentAsJson(result) must be(Json.toJson(Seq(notification)))
@@ -91,7 +91,7 @@ class NotificationControllerSpec
         withAuthorizedUser()
         when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(None))
 
-        val result = route(app, FakeRequest("GET", "/v2/declarations/1234/submission/notifications")).get
+        val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
 
         status(result) must be(NOT_FOUND)
       }
@@ -101,7 +101,7 @@ class NotificationControllerSpec
       "not authenticated" in {
         userWithoutEori()
 
-        val failedResult = route(app, FakeRequest("GET", "/v2/declarations/1234/submission/notifications")).get
+        val failedResult = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
 
         status(failedResult) must be(UNAUTHORIZED)
       }

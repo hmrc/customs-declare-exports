@@ -60,7 +60,7 @@ class DeclarationControllerSpec
   }
 
   "POST /" should {
-    val post = FakeRequest("POST", "/v2/declarations")
+    val post = FakeRequest("POST", "/declarations")
 
     "return 201" when {
       "request is valid" in {
@@ -106,7 +106,7 @@ class DeclarationControllerSpec
   }
 
   "GET /" should {
-    val get = FakeRequest("GET", "/v2/declarations")
+    val get = FakeRequest("GET", "/declarations")
 
     "return 200" when {
       "valid request" in {
@@ -128,7 +128,7 @@ class DeclarationControllerSpec
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val get = FakeRequest("GET", "/v2/declarations?page-index=1&page-size=100")
+        val get = FakeRequest("GET", "/declarations?page-index=1&page-size=100")
         val result: Future[Result] = route(app, get).get
 
         status(result) must be(OK)
@@ -142,7 +142,7 @@ class DeclarationControllerSpec
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val get = FakeRequest("GET", "/v2/declarations?status=COMPLETE")
+        val get = FakeRequest("GET", "/declarations?status=COMPLETE")
         val result: Future[Result] = route(app, get).get
 
         status(result) must be(OK)
@@ -156,7 +156,7 @@ class DeclarationControllerSpec
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val get = FakeRequest("GET", "/v2/declarations?status=invalid")
+        val get = FakeRequest("GET", "/declarations?status=invalid")
         val result: Future[Result] = route(app, get).get
 
         status(result) must be(OK)
@@ -170,7 +170,7 @@ class DeclarationControllerSpec
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val get = FakeRequest("GET", "/v2/declarations?sort-by=updatedDateTime&sort-direction=asc")
+        val get = FakeRequest("GET", "/declarations?sort-by=updatedDateTime&sort-direction=asc")
         val result: Future[Result] = route(app, get).get
 
         status(result) must be(OK)
@@ -184,7 +184,7 @@ class DeclarationControllerSpec
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val get = FakeRequest("GET", "/v2/declarations?sort-by=createdDateTime&sort-direction=des")
+        val get = FakeRequest("GET", "/declarations?sort-by=createdDateTime&sort-direction=des")
         val result: Future[Result] = route(app, get).get
 
         status(result) must be(OK)
@@ -224,7 +224,7 @@ class DeclarationControllerSpec
   }
 
   "GET /:id" should {
-    val get = FakeRequest("GET", "/v2/declarations/id")
+    val get = FakeRequest("GET", "/declarations/id")
 
     "return 200" when {
       "request is valid" in {
@@ -266,7 +266,7 @@ class DeclarationControllerSpec
   }
 
   "DELETE /:id" should {
-    val delete = FakeRequest("DELETE", "/v2/declarations/id")
+    val delete = FakeRequest("DELETE", "/declarations/id")
 
     "return 204" when {
       "request is valid" in {
@@ -325,7 +325,7 @@ class DeclarationControllerSpec
   }
 
   "PUT /:id" should {
-    val put = FakeRequest("PUT", "/v2/declarations/id")
+    val put = FakeRequest("PUT", "/declarations/id")
 
     "return 200" when {
       "request is valid" in {
