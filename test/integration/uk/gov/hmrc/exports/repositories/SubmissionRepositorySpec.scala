@@ -16,18 +16,21 @@
 
 package integration.uk.gov.hmrc.exports.repositories
 
+import java.util.UUID
+
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, OptionValues, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.core.errors.DatabaseException
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest}
+import uk.gov.hmrc.exports.models.Eori
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import util.testdata.ExportsTestData._
 import util.testdata.SubmissionTestData._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SubmissionRepositorySpec
@@ -139,14 +142,20 @@ class SubmissionRepositorySpec
   }
 
   "Submission Repository on addAction" when {
+    val action = Action(SubmissionRequest, UUID.randomUUID().toString)
     "there is no submission" should {
       "return failed future with IllegalStateException" in {
-        ???
+        an[IllegalStateException] mustBe thrownBy {
+          Await.result(repo.addAction(submission, action), patienceConfig.timeout)
+        }
       }
     }
     "there is submission" should {
       "add action at end of sequence" in {
-        ???
+        val savedSubmission = repo.save(submission).futureValue
+        repo.addAction(savedSubmission, action).futureValue
+        val result = repo.findSubmissionByUuid(savedSubmission.eori, savedSubmission.uuid).futureValue.value
+        result.actions.map(_.conversationId) must contain(action.conversationId)
       }
     }
   }
@@ -154,12 +163,15 @@ class SubmissionRepositorySpec
   "Submission Repository on findOrCreate" when {
     "there is submission" should {
       "return existing submission" in {
-        ???
+        repo.save(submission_2).futureValue
+        val result = repo.findOrCreate(Eori(submission_2.eori), submission_2.uuid, submission).futureValue
+        result.actions mustEqual submission_2.actions
       }
     }
     "there no submission" should {
       "insert provided submission" in {
-        ???
+        val result = repo.findOrCreate(Eori(submission_2.eori), submission_2.uuid, submission).futureValue
+        result.actions mustEqual submission.actions
       }
     }
   }
@@ -177,6 +189,7 @@ class SubmissionRepositorySpec
         repo.save(submission).futureValue
 
         val retrievedSubmissions = repo.findAllSubmissionsForEori(eori).futureValue
+
 
         retrievedSubmissions.size must equal(1)
         retrievedSubmissions.headOption.value must equal(submission)
