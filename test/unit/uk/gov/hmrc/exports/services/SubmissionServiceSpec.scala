@@ -73,7 +73,7 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
         when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any()))
           .thenReturn(Future.successful("conv-id"))
         when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
-        when(submissionRepositoryMock.addAction(any(), any())).thenReturn(Future.successful(Some(submission)))
+        when(submissionRepositoryMock.addAction(any[String](), any())).thenReturn(Future.successful(Some(submission)))
 
         submissionService.cancel("eori", cancellation).futureValue mustBe CancellationRequested
       }

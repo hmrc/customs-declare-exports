@@ -24,6 +24,8 @@ import reactivemongo.api.ReadPreference
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.commands.JSONFindAndModifyCommand.FindAndModifyResult
+import uk.gov.hmrc.exports.models.Eori
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
@@ -38,6 +40,14 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
       Submission.formats,
       objectIdFormats
     ) {
+
+  def findOrCreate(eori: Eori, id: String, onMissing: Submission): Future[Submission] = {
+    findSubmissionByUuid(eori.value, id).flatMap {
+      case Some(submission) => Future.successful(submission)
+      case None => save(onMissing)
+    }
+  }
+
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("actions.id" -> IndexType.Ascending), unique = true, name = Some("actionIdIdx")),
@@ -79,6 +89,12 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
     val query = Json.obj("mrn" -> mrn)
     val update = Json.obj("$addToSet" -> Json.obj("actions" -> newAction))
     performUpdate(query, update)
+  }
+
+  def addAction(submission: Submission, action: Action): Future[Submission] = {
+    val query = Json.obj("uuid" ->  submission.uuid)
+    val update = Json.obj("actions" -> Json.obj("$push" -> action))
+    performUpdate(query, update).map(_.getOrElse(throw new IllegalStateException("Submission exist before call")))
   }
 
   private def performUpdate(query: JsObject, update: JsObject): Future[Option[Submission]] =

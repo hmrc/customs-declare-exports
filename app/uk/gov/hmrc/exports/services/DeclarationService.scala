@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.services
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Page, Paginated}
+import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Eori, Page, Paginated}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -33,18 +33,12 @@ class DeclarationService @Inject()(
   def create(
     declaration: ExportsDeclaration
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[ExportsDeclaration] =
-    for {
-      saved <- declarationRepository.create(declaration)
-      _ <- submitIfComplete(declaration)
-    } yield saved
+    declarationRepository.create(declaration)
 
   def update(
     declaration: ExportsDeclaration
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[ExportsDeclaration]] =
-    for {
-      saved <- declarationRepository.update(declaration)
-      _ <- submitIfComplete(declaration)
-    } yield saved
+    declarationRepository.update(declaration)
 
   private def submitIfComplete(
     declaration: ExportsDeclaration
@@ -59,7 +53,7 @@ class DeclarationService @Inject()(
   def find(search: DeclarationSearch, pagination: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] =
     declarationRepository.find(search, pagination, sort)
 
-  def findOne(id: String, eori: String): Future[Option[ExportsDeclaration]] = declarationRepository.find(id, eori)
+  def findOne(id: String, eori: Eori): Future[Option[ExportsDeclaration]] = declarationRepository.find(id, eori)
 
   def deleteOne(declaration: ExportsDeclaration): Future[Unit] = declarationRepository.delete(declaration)
 

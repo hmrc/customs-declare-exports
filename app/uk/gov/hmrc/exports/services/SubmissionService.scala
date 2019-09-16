@@ -18,6 +18,8 @@ package uk.gov.hmrc.exports.services
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
+import uk.gov.hmrc.exports.models.Eori
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
@@ -34,6 +36,33 @@ class SubmissionService @Inject()(
   metaDataBuilder: MetaDataBuilder,
   wcoMapperService: WcoMapperService
 )(implicit executionContext: ExecutionContext) {
+
+  def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] = {
+    val metaData = wcoMapperService.produceMetaData(declaration)
+    val lrn = wcoMapperService
+      .declarationLrn(metaData)
+      .getOrElse(throw new IllegalArgumentException("An LRN is required"))
+    val ducr = wcoMapperService
+      .declarationDucr(metaData)
+      .getOrElse(throw new IllegalArgumentException("An DUCR is required"))
+    val payload = wcoMapperService.toXml(metaData)
+
+    val submission = Submission(
+      uuid = declaration.id,
+      eori = declaration.eori,
+      lrn = lrn,
+      ducr = ducr,
+      actions = Seq.empty
+    )
+
+    submissionRepository.findOrCreate(Eori(declaration.eori), declaration.id, submission).flatMap { submission =>
+      customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).flatMap { conversationId =>
+        val action = Action(requestType = SubmissionRequest, conversationId = conversationId)
+        submissionRepository.addAction(submission, action)
+      }
+    }
+  }
+
 
   def cancel(eori: String, cancellation: SubmissionCancellation)(
     implicit hc: HeaderCarrier

@@ -42,7 +42,9 @@ case class ExportsDeclaration(
   totalNumberOfItems: Option[TotalNumberOfItems],
   previousDocuments: Option[PreviousDocuments],
   natureOfTransaction: Option[NatureOfTransaction]
-)
+) {
+  def isCompleted: Boolean = status == DeclarationStatus.COMPLETE
+}
 
 object ExportsDeclaration {
 

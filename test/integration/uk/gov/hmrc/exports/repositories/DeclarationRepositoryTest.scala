@@ -86,13 +86,15 @@ class DeclarationRepositoryTest
     }
   }
 
+  val eori = Eori("eori")
+
   "Find by ID & EORI" should {
     "return the persisted declaration" when {
       "one exists with eori and ID" in {
         val declaration = aDeclaration(withId("id"), withEori("eori"))
         givenADeclarationExists(declaration)
 
-        repository.find("id", "eori").futureValue shouldBe Some(declaration)
+        repository.find("id", eori).futureValue shouldBe Some(declaration)
       }
     }
 
@@ -102,7 +104,7 @@ class DeclarationRepositoryTest
         val declaration2 = aDeclaration(withId("id"), withEori("some-other-eori"))
         givenADeclarationExists(declaration1, declaration2)
 
-        repository.find("id", "eori").futureValue shouldBe None
+        repository.find("id", eori).futureValue shouldBe None
       }
     }
   }
@@ -110,13 +112,14 @@ class DeclarationRepositoryTest
   "Find by EORI" should {
     "return the persisted declarations" when {
       "some exist with eori" in {
-        val declaration1 = aDeclaration(withId("id1"), withEori("eori1"))
-        val declaration2 = aDeclaration(withId("id2"), withEori("eori1"))
+        val eori1 = Eori("eori1")
+        val declaration1 = aDeclaration(withId("id1"), withEori(eori1))
+        val declaration2 = aDeclaration(withId("id2"), withEori(eori1))
         val declaration3 = aDeclaration(withId("id3"), withEori("eori2"))
         givenADeclarationExists(declaration1, declaration2, declaration3)
 
         val page = Page(index = 1, size = 10)
-        repository.find(DeclarationSearch("eori1"), page, DeclarationSort()).futureValue shouldBe Paginated(
+        repository.find(DeclarationSearch(eori1), page, DeclarationSort()).futureValue shouldBe Paginated(
           Seq(declaration1, declaration2),
           page,
           2
@@ -130,13 +133,13 @@ class DeclarationRepositoryTest
         givenADeclarationExists(declaration1, declaration2, declaration3)
 
         val page1 = Page(index = 1, size = 2)
-        repository.find(DeclarationSearch("eori"), page1, DeclarationSort()).futureValue shouldBe Paginated(
+        repository.find(DeclarationSearch(eori), page1, DeclarationSort()).futureValue shouldBe Paginated(
           Seq(declaration1, declaration2),
           page1,
           3
         )
         val page2 = Page(index = 2, size = 2)
-        repository.find(DeclarationSearch("eori"), page2, DeclarationSort()).futureValue shouldBe Paginated(
+        repository.find(DeclarationSearch(eori), page2, DeclarationSort()).futureValue shouldBe Paginated(
           Seq(declaration3),
           page2,
           3
@@ -148,7 +151,7 @@ class DeclarationRepositoryTest
       "none exist with eori" in {
         givenADeclarationExists(aDeclaration(withId("id"), withEori("some-other-eori")))
 
-        repository.find(DeclarationSearch("eori"), Page(), DeclarationSort()).futureValue shouldBe Paginated
+        repository.find(DeclarationSearch(eori), Page(), DeclarationSort()).futureValue shouldBe Paginated
           .empty[ExportsDeclaration](Page())
       }
     }
@@ -164,7 +167,7 @@ class DeclarationRepositoryTest
 
         val page = Page(index = 1, size = 10)
         repository
-          .find(DeclarationSearch("eori", Some(DeclarationStatus.DRAFT)), page, DeclarationSort())
+          .find(DeclarationSearch(eori, Some(DeclarationStatus.DRAFT)), page, DeclarationSort())
           .futureValue shouldBe Paginated(Seq(declaration1, declaration2), page, 2)
       }
     }
@@ -179,7 +182,7 @@ class DeclarationRepositoryTest
 
       val page = Page(index = 1, size = 10)
       repository
-        .find(DeclarationSearch("eori"), page, DeclarationSort(SortBy.UPDATED, SortDirection.ASC))
+        .find(DeclarationSearch(eori), page, DeclarationSort(SortBy.UPDATED, SortDirection.ASC))
         .futureValue shouldBe Paginated(Seq(declaration1, declaration2, declaration3), page, 3)
     }
     "return the declarations in decending order" in {
@@ -190,7 +193,7 @@ class DeclarationRepositoryTest
 
       val page = Page(index = 1, size = 10)
       repository
-        .find(DeclarationSearch("eori"), page, DeclarationSort(SortBy.UPDATED, SortDirection.DES))
+        .find(DeclarationSearch(eori), page, DeclarationSort(SortBy.UPDATED, SortDirection.DES))
         .futureValue shouldBe Paginated(Seq(declaration3, declaration2, declaration1), page, 3)
     }
   }
@@ -252,7 +255,7 @@ class DeclarationRepositoryTest
 
       val page = Page(index = 1, size = 10)
       repository
-        .find(DeclarationSearch("eori"), page, DeclarationSort(SortBy.UPDATED, SortDirection.ASC))
+        .find(DeclarationSearch(eori), page, DeclarationSort(SortBy.UPDATED, SortDirection.ASC))
         .futureValue shouldBe Paginated(Seq(completedDeclaration, draftDeclarationOngoing), page, 2)
     }
   }

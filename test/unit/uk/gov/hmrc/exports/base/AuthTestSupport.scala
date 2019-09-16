@@ -24,7 +24,7 @@ import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.allEnrolments
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Name}
-import uk.gov.hmrc.exports.models.SignedInUser
+import uk.gov.hmrc.exports.models.{Eori, SignedInUser}
 
 import scala.concurrent.Future
 
@@ -33,14 +33,14 @@ trait AuthTestSupport extends MockitoSugar {
   lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
   val enrolment: Predicate = Enrolment("HMRC-CUS-ORG")
-  val userEori = "12345"
+  val userEori = Eori("12345")
 
   def cdsEnrollmentMatcher(user: SignedInUser): ArgumentMatcher[Predicate] = new ArgumentMatcher[Predicate] {
     override def matches(p: Predicate): Boolean =
       p == enrolment && user.enrolments.getEnrolment("HMRC-CUS-ORG").isDefined
   }
 
-  def withAuthorizedUser(user: SignedInUser = newUser(userEori, "external1")): Unit =
+  def withAuthorizedUser(user: SignedInUser = newUser(userEori.value, "external1")): Unit =
     when(
       mockAuthConnector.authorise(
         ArgumentMatchers.argThat(cdsEnrollmentMatcher(user)),
