@@ -18,7 +18,8 @@ package integration.uk.gov.hmrc.exports.repositories
 
 import java.time.{LocalDate, ZoneOffset}
 
-import org.scalatest.concurrent.ScalaFutures
+import com.codahale.metrics.SharedMetricRegistries
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
@@ -33,16 +34,14 @@ import util.testdata.ExportsDeclarationBuilder
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class DeclarationRepositoryTest
-    extends WordSpec with Matchers with GuiceOneAppPerSuite with ScalaFutures with BeforeAndAfterEach
-    with ExportsDeclarationBuilder {
+    extends WordSpec with Matchers with ScalaFutures with BeforeAndAfterEach
+    with ExportsDeclarationBuilder with IntegrationPatience {
 
-  override lazy val app: Application = GuiceApplicationBuilder().build()
-  private val repository = app.injector.instanceOf[DeclarationRepository]
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    repository.removeAll().futureValue
+  private val injector = {
+    SharedMetricRegistries.clear()
+    GuiceApplicationBuilder().injector()
   }
+  private val repository = injector.instanceOf[DeclarationRepository]
 
   override def afterEach(): Unit = {
     super.afterEach()

@@ -28,28 +28,23 @@ import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Eori, Pag
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService, WcoSubmissionService}
 import uk.gov.hmrc.http.HeaderCarrier
+import util.testdata.ExportsDeclarationBuilder
 
 import scala.concurrent.ExecutionContext.Implicits
 import scala.concurrent.Future
 
-import util.testdata.ExportsDeclarationBuilder
-
 class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers with ExportsDeclarationBuilder {
 
   private val declarationRepository = mock[DeclarationRepository]
-  private val wcoSubmissionService = mock[WcoSubmissionService]
-  private val submissionService = mock[SubmissionService]
   private val service = new DeclarationService(declarationRepository)
   private val hc = mock[HeaderCarrier]
   private val ec = Implicits.global
 
   "Create" should {
     "delegate to the repository" in {
-      val submission = mock[Submission]
       val declaration = aDeclaration()
-      val persistedDeclaration = aDeclaration()
-
-      when(declarationRepository.create(any())).thenReturn(Future.successful(persistedDeclaration))
+      val persistedDeclaration = mock[ExportsDeclaration]
+      given(declarationRepository.create(any())).willReturn(Future.successful(persistedDeclaration))
 
       service.create(declaration)(hc, ec).futureValue mustBe persistedDeclaration
 
@@ -60,13 +55,10 @@ class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFuture
   "Update" should {
     "delegate to the repository" in {
       val declaration = aDeclaration()
-      val persistedDeclaration = aDeclaration()
-
-      when(declarationRepository.update(any())).thenReturn(Future.successful(Some(persistedDeclaration)))
+      val persistedDeclaration = mock[ExportsDeclaration]
+      given(declarationRepository.update(any())).willReturn(Future.successful(Some(persistedDeclaration)))
 
       service.update(declaration)(hc, ec).futureValue mustBe Some(persistedDeclaration)
-
-      verify(declarationRepository).update(declaration)
     }
   }
 

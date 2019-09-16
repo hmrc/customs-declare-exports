@@ -18,10 +18,12 @@ package integration.uk.gov.hmrc.exports.repositories
 
 import java.util.UUID
 
+import com.codahale.metrics.SharedMetricRegistries
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, OptionValues, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
+import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.exports.models.Eori
@@ -34,18 +36,16 @@ import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SubmissionRepositorySpec
-    extends WordSpec with GuiceOneAppPerSuite with BeforeAndAfterEach with ScalaFutures with MustMatchers
-    with OptionValues {
+    extends WordSpec with BeforeAndAfterEach with ScalaFutures with MustMatchers
+    with OptionValues  {
 
-  override lazy val app: Application = GuiceApplicationBuilder().build()
-  private val repo: SubmissionRepository = app.injector.instanceOf[SubmissionRepository]
+  private val injector: Injector = {
+    SharedMetricRegistries.clear()
+    GuiceApplicationBuilder().injector()
+  }
+  private val repo: SubmissionRepository = injector.instanceOf[SubmissionRepository]
 
   implicit val ec: ExecutionContext = global
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    repo.removeAll().futureValue
-  }
 
   override def afterEach(): Unit = {
     repo.removeAll().futureValue
