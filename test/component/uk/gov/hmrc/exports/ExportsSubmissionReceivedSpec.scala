@@ -18,12 +18,10 @@ package component.uk.gov.hmrc.exports
 
 import component.uk.gov.hmrc.exports.base.ComponentTestSpec
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import play.api.libs.json.Json
-import play.api.mvc.{AnyContent, AnyContentAsJson, Result}
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.models.Choice
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.format
 import uk.gov.hmrc.exports.models.declaration.{ExportsDeclaration, Seal, TransportInformationContainer}
 import uk.gov.hmrc.http.InternalServerException
 import util.CustomsDeclarationsAPIConfig

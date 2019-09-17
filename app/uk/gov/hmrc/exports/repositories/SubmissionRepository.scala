@@ -94,7 +94,7 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
   def addAction(submission: Submission, action: Action): Future[Submission] = {
     val query = Json.obj("uuid" ->  submission.uuid)
     val update = Json.obj("$addToSet" -> Json.obj("actions" -> action))
-    performUpdate(query, update).map(_.getOrElse(throw new IllegalStateException("Submission exist before call")))
+    performUpdate(query, update).map(_.getOrElse(throw new IllegalStateException("Submission must exist before")))
   }
 
   private def performUpdate(query: JsObject, update: JsObject): Future[Option[Submission]] =
