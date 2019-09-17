@@ -40,15 +40,6 @@ class ExportsSubmissionReceivedSpec extends ComponentTestSpec with ScalaFutures 
     withContainerData(TransportInformationContainer("container123", Seq(Seal("seal1"))))
   )
 
-
-  override protected def beforeEach(): Unit = {
-    super.beforeEach()
-  }
-
-  override protected def afterEach(): Unit = {
-    super.afterEach()
-  }
-
   val endpoint = s"/declarations/${declaration.id}/submission"
 
   lazy val ValidSubmissionRequest = FakeRequest("POST", endpoint)
