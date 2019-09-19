@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.models
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 
-case class DeclarationSearch(eori: Eori, status: Option[DeclarationStatus] = None) {}
+case class DeclarationSearch(eori: Eori, status: Option[DeclarationStatus] = None)
 
 object DeclarationSearch {
   // This serializes to a Mongo Query. If the query needs to be more advanced we will need to write a custom writes/reads

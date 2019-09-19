@@ -20,10 +20,10 @@ import com.codahale.metrics.SharedMetricRegistries
 import component.uk.gov.hmrc.exports.steps._
 import component.uk.gov.hmrc.exports.syntax._
 import integration.uk.gov.hmrc.exports.base.WireMockRunner
-import org.mockito.Mockito._
-import org.mockito.stubbing.Answer
 import org.mockito.ArgumentMatchers._
+import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar
@@ -34,8 +34,8 @@ import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
-import util.{CustomsDeclarationsAPIConfig, ExternalServicesConfig}
 import util.testdata.ExportsTestData._
+import util.{CustomsDeclarationsAPIConfig, ExternalServicesConfig}
 
 import scala.concurrent.Future
 
@@ -94,8 +94,8 @@ class ExportsSubmissionReceivedSpec
     stopMockServer()
   }
 
-  override def prepareContext(contest: ScenarioContext): ScenarioContext =
-    contest
+  override def prepareContext(context: ScenarioContext): ScenarioContext =
+    context
       .updated(patienceConfig)
       .updated(app)
       .updated(mockDeclarationRepository)
