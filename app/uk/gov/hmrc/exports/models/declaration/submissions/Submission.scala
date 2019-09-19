@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.models.declaration.submissions
 import java.util.UUID
 
 import play.api.libs.json.Json
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 
 case class Submission(
   uuid: String = UUID.randomUUID().toString,
@@ -30,5 +31,9 @@ case class Submission(
 )
 
 object Submission {
+
+  def apply(declaration: ExportsDeclaration, lrn: String, ducr: String): Submission =
+    new Submission(declaration.id, declaration.eori, lrn, None, ducr, Seq.empty)
+
   implicit val formats = Json.format[Submission]
 }

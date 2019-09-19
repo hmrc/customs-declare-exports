@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models
+package component.uk.gov.hmrc.exports.syntax
 
-import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
-
-case class DeclarationSearch(eori: Eori, status: Option[DeclarationStatus] = None) {}
-
-object DeclarationSearch {
-  // This serializes to a Mongo Query. If the query needs to be more advanced we will need to write a custom writes/reads
-  implicit val format: OFormat[DeclarationSearch] = Json.format[DeclarationSearch]
+sealed trait Step { self: AnyRef =>
+  def execute(context: ScenarioContext): ScenarioContext
+  def name: String
 }
+
+trait Precondition extends Step
+
+trait Action extends Step
+
+trait Postcondition extends Step

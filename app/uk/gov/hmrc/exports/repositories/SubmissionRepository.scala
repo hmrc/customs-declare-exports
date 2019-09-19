@@ -41,7 +41,6 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
       objectIdFormats
     ) {
 
-
   override def indexes: Seq[Index] = Seq(
     Index(Seq("actions.id" -> IndexType.Ascending), unique = true, name = Some("actionIdIdx")),
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
@@ -62,12 +61,11 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
       .collect(maxDocs = -1, FailOnError[Seq[Submission]]())
   }
 
-  def findOrCreate(eori: Eori, id: String, onMissing: Submission): Future[Submission] = {
+  def findOrCreate(eori: Eori, id: String, onMissing: Submission): Future[Submission] =
     findSubmissionByUuid(eori.value, id).flatMap {
       case Some(submission) => Future.successful(submission)
-      case None => save(onMissing)
+      case None             => save(onMissing)
     }
-  }
 
   def findSubmissionByMrn(mrn: String): Future[Option[Submission]] = find("mrn" -> mrn).map(_.headOption)
 
@@ -92,7 +90,7 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
   }
 
   def addAction(submission: Submission, action: Action): Future[Submission] = {
-    val query = Json.obj("uuid" ->  submission.uuid)
+    val query = Json.obj("uuid" -> submission.uuid)
     val update = Json.obj("$addToSet" -> Json.obj("actions" -> action))
     performUpdate(query, update).map(_.getOrElse(throw new IllegalStateException("Submission must exist before")))
   }

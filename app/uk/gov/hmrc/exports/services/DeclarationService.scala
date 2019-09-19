@@ -24,9 +24,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class DeclarationService @Inject()(
-  declarationRepository: DeclarationRepository
-) {
+class DeclarationService @Inject()(declarationRepository: DeclarationRepository) {
 
   def create(
     declaration: ExportsDeclaration

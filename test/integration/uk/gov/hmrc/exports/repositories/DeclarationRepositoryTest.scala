@@ -34,8 +34,8 @@ import util.testdata.ExportsDeclarationBuilder
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class DeclarationRepositoryTest
-    extends WordSpec with Matchers with ScalaFutures with BeforeAndAfterEach
-    with ExportsDeclarationBuilder with IntegrationPatience {
+    extends WordSpec with Matchers with ScalaFutures with BeforeAndAfterEach with ExportsDeclarationBuilder
+    with IntegrationPatience {
 
   private val injector = {
     SharedMetricRegistries.clear()

@@ -33,7 +33,8 @@ import util.testdata.ExportsDeclarationBuilder
 import scala.concurrent.ExecutionContext.Implicits
 import scala.concurrent.Future
 
-class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers with ExportsDeclarationBuilder {
+class DeclarationServiceSpec
+    extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers with ExportsDeclarationBuilder {
 
   private val declarationRepository = mock[DeclarationRepository]
   private val service = new DeclarationService(declarationRepository)

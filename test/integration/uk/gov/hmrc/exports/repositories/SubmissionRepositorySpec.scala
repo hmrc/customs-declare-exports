@@ -19,7 +19,7 @@ package integration.uk.gov.hmrc.exports.repositories
 import java.util.UUID
 
 import com.codahale.metrics.SharedMetricRegistries
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, OptionValues, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
@@ -36,8 +36,8 @@ import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SubmissionRepositorySpec
-    extends WordSpec with BeforeAndAfterEach with ScalaFutures with MustMatchers
-    with OptionValues  {
+    extends WordSpec with BeforeAndAfterEach with ScalaFutures with MustMatchers with OptionValues
+    with IntegrationPatience {
 
   private val injector: Injector = {
     SharedMetricRegistries.clear()
@@ -189,7 +189,6 @@ class SubmissionRepositorySpec
         repo.save(submission).futureValue
 
         val retrievedSubmissions = repo.findAllSubmissionsForEori(eori).futureValue
-
 
         retrievedSubmissions.size must equal(1)
         retrievedSubmissions.headOption.value must equal(submission)

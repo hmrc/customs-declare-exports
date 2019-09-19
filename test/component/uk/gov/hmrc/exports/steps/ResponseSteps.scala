@@ -14,14 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models
+package component.uk.gov.hmrc.exports.steps
 
-import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
+import component.uk.gov.hmrc.exports.syntax.{Postcondition, ScenarioContext}
+import org.scalatest.MustMatchers
+import play.api.mvc.Result
 
-case class DeclarationSearch(eori: Eori, status: Option[DeclarationStatus] = None) {}
+class ResultStatusPostcondition(expectedStatus: Int) extends Postcondition with MustMatchers {
+  override def name: String = s"Result status is $expectedStatus"
 
-object DeclarationSearch {
-  // This serializes to a Mongo Query. If the query needs to be more advanced we will need to write a custom writes/reads
-  implicit val format: OFormat[DeclarationSearch] = Json.format[DeclarationSearch]
+  override def execute(context: ScenarioContext): ScenarioContext = {
+    context.get[Result].header.status mustEqual expectedStatus
+    context
+  }
+}
+
+object `Result status` {
+  def is(status: Int): Postcondition = new ResultStatusPostcondition(status)
 }

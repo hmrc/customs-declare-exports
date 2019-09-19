@@ -23,7 +23,12 @@ import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.submissions.{CancellationRequestExists, CancellationRequested, MissingDeclaration, SubmissionCancellation}
+import uk.gov.hmrc.exports.models.declaration.submissions.{
+  CancellationRequestExists,
+  CancellationRequested,
+  MissingDeclaration,
+  SubmissionCancellation
+}
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -39,10 +44,10 @@ class SubmissionController @Inject()(
 )(implicit executionContext: ExecutionContext)
     extends RESTController(cc) with JSONResponses {
 
-  def create(id: String): Action[Unit] = authenticator.authorisedAction(parse.empty){ implicit request =>
+  def create(id: String): Action[Unit] = authenticator.authorisedAction(parse.empty) { implicit request =>
     declarationService.findOne(id, request.eori).flatMap {
       case Some(declaration) =>
-        if(declaration.isCompleted) {
+        if (declaration.isCompleted) {
           submissionService.submit(declaration).map(Created(_))
         } else {
           Future.successful(Conflict("Could not submit incomplete declaration"))
@@ -58,12 +63,11 @@ class SubmissionController @Inject()(
         .map(submissions => Ok(submissions))
     }
 
-  def findByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) {
-    implicit request =>
-      submissionService.getSubmission(request.eori.value, id).map {
-        case Some(submission) => Ok(submission)
-        case None             => NotFound
-      }
+  def findByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    submissionService.getSubmission(request.eori.value, id).map {
+      case Some(submission) => Ok(submission)
+      case None             => NotFound
+    }
   }
 
 }

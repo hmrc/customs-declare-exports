@@ -17,9 +17,11 @@
 package uk.gov.hmrc.exports.services
 
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
@@ -27,7 +29,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Success
+import scala.util.{Failure, Success}
 
 @Singleton
 class SubmissionService @Inject()(
@@ -38,30 +40,30 @@ class SubmissionService @Inject()(
   wcoMapperService: WcoMapperService
 )(implicit executionContext: ExecutionContext) {
 
+  val logger = Logger(classOf[SubmissionService])
+
   def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] = {
-    def updateMrnFromEarlierNotification(conversationId: String) = {
-      notificationRepository.findNotificationsByActionId(conversationId).map { notifications =>
-        notifications.headOption.foreach(notification =>
-          submissionRepository.updateMrn(conversationId, notification.mrn)
-        )
+    def updateMrnFromEarlierNotification(conversationId: String): Future[Seq[Notification]] =
+      notificationRepository.findNotificationsByActionId(conversationId).andThen {
+        case Success(notifications) =>
+          notifications.headOption.foreach(
+            notification =>
+              submissionRepository.updateMrn(conversationId, notification.mrn).andThen {
+                case Failure(e) => Logger.error("Error on updating submission mrn", e)
+            }
+          )
+        case Failure(e) => Logger.error("Error on searching notification by conversation Id", e)
       }
-    }
     val metaData = wcoMapperService.produceMetaData(declaration)
     val lrn = wcoMapperService
       .declarationLrn(metaData)
-      .getOrElse(throw new IllegalArgumentException("An LRN is required"))
+      .getOrElse(throw new IllegalArgumentException("A LRN is required"))
     val ducr = wcoMapperService
       .declarationDucr(metaData)
-      .getOrElse(throw new IllegalArgumentException("An DUCR is required"))
+      .getOrElse(throw new IllegalArgumentException("A DUCR is required"))
     val payload = wcoMapperService.toXml(metaData)
 
-    val submission = Submission(
-      uuid = declaration.id,
-      eori = declaration.eori,
-      lrn = lrn,
-      ducr = ducr,
-      actions = Seq.empty
-    )
+    val submission = Submission(declaration, lrn, ducr)
 
     submissionRepository.findOrCreate(Eori(declaration.eori), declaration.id, submission).flatMap { submission =>
       customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).flatMap { conversationId =>
@@ -72,7 +74,6 @@ class SubmissionService @Inject()(
       }
     }
   }
-
 
   def cancel(eori: String, cancellation: SubmissionCancellation)(
     implicit hc: HeaderCarrier

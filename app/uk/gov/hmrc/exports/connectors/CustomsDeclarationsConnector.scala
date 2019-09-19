@@ -43,7 +43,7 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
       res match {
         case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) => conversationId
         case CustomsDeclarationsResponse(status, _) =>
-          throw new InternalServerException(s"Customs Declarations Service returned [$status[ for EORI: [$eori]")
+          throw new InternalServerException(s"Customs Declarations Service returned [$status]")
       }
     }
 
@@ -53,7 +53,7 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
       res match {
         case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) => conversationId
         case CustomsDeclarationsResponse(status, _) =>
-          throw new RuntimeException(s"Bad response status [${status}] from Cancellation Request with EORI [${eori}]")
+          throw new RuntimeException(s"Bad response status [${status}] from Cancellation Request ")
       }
     }
 

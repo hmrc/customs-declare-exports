@@ -16,6 +16,8 @@
 
 package integration.uk.gov.hmrc.exports.connector
 
+import java.util.UUID
+
 import integration.uk.gov.hmrc.exports.base.IntegrationTestSpec
 import integration.uk.gov.hmrc.exports.util.TestModule
 import org.scalatestplus.mockito.MockitoSugar
@@ -62,7 +64,7 @@ class CustomsDeclarationsConnectorSpec
 
       "request is processed successfully - 202" in {
 
-        startSubmissionService(ACCEPTED)
+        startSubmissionService(ACCEPTED, UUID.randomUUID.toString)
         await(sendValidXml(expectedSubmissionRequestPayload("123")))
 
         verifyDecServiceWasCalledCorrectly(
@@ -74,7 +76,7 @@ class CustomsDeclarationsConnectorSpec
 
       "request is processed successfully (external 202), but does not have conversationId - 500" in {
 
-        startSubmissionService(ACCEPTED, conversationId = false)
+        startSubmissionService(ACCEPTED, conversationId = "")
         intercept[InternalServerException] {
           await(sendValidXml(expectedSubmissionRequestPayload("123")))
         }
@@ -82,7 +84,7 @@ class CustomsDeclarationsConnectorSpec
 
       "request is not processed - 500" in {
 
-        startSubmissionService(INTERNAL_SERVER_ERROR)
+        startSubmissionService(INTERNAL_SERVER_ERROR, UUID.randomUUID.toString)
         intercept[InternalServerException] {
           await(sendValidXml(expectedSubmissionRequestPayload("123")))
         }

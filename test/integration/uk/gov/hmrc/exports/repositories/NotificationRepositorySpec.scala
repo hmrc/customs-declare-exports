@@ -17,7 +17,7 @@
 package integration.uk.gov.hmrc.exports.repositories
 
 import com.codahale.metrics.SharedMetricRegistries
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, OptionValues, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
@@ -32,8 +32,8 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class NotificationRepositorySpec
-    extends WordSpec with BeforeAndAfterEach with ScalaFutures with MustMatchers
-    with OptionValues {
+    extends WordSpec with BeforeAndAfterEach with ScalaFutures with MustMatchers with OptionValues
+    with IntegrationPatience {
 
   private val injector: Injector = {
     SharedMetricRegistries.clear()

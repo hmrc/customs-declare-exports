@@ -49,17 +49,15 @@ trait ComponentTestSpec
     with Eventually with MockitoSugar with Matchers with AuditService with OptionValues with AuthService
     with CustomsDeclarationsAPIService {
 
-  private val mockSubmissionRepository = mock[SubmissionRepository]
-  private val mockDeclarationRepository = mock[DeclarationRepository]
-  private val mockNotificationsRepository = mock[NotificationRepository]
+  val mockSubmissionRepository: SubmissionRepository = mock[SubmissionRepository]
+  val mockDeclarationRepository: DeclarationRepository = mock[DeclarationRepository]
+  val mockNotificationsRepository: NotificationRepository = mock[NotificationRepository]
 
   override protected def beforeAll() {
-
     startMockServer()
   }
 
   override protected def beforeEach() {
-
     reset(mockSubmissionRepository)
     reset(mockDeclarationRepository)
     reset(mockNotificationsRepository)
@@ -67,7 +65,6 @@ trait ComponentTestSpec
   }
 
   override protected def afterAll() {
-
     stopMockServer()
   }
 
@@ -96,7 +93,8 @@ trait ComponentTestSpec
       def answer(invocation: InvocationOnMock): String =
         throw new InternalServerException("Could not save to DB")
     })
-    when(mockDeclarationRepository.find(any(), any())).thenReturn(Future.failed(new InternalServerException("Could not read DB")))
+    when(mockDeclarationRepository.find(any(), any()))
+      .thenReturn(Future.failed(new InternalServerException("Could not read DB")))
   }
 
   def verifyDeclarationRepositoryIsCorrectlyCalled(eoriValue: String) {
@@ -109,7 +107,6 @@ trait ComponentTestSpec
     when(mockNotificationsRepository.findNotificationsByActionId(any()))
       .thenReturn(Future.successful(Seq(Notification("action-id", "mrn", LocalDateTime.now(), UNKNOWN, Seq.empty, ""))))
 
-
   def verifySubmissionRepositoryIsCorrectlyCalled(eoriValue: String) {
 //    val submissionCaptor: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
 //    verify(mockSubmissionRepository).save(submissionCaptor.capture())
@@ -120,28 +117,5 @@ trait ComponentTestSpec
     verifyZeroInteractions(mockSubmissionRepository)
 
   val dateTime = 1546344000000L // 01/01/2019 12:00:00
-
-  override def fakeApplication: Application = {
-    SharedMetricRegistries.clear()
-    new GuiceApplicationBuilder()
-      .overrides(bind[SubmissionRepository].toInstance(mockSubmissionRepository))
-      .overrides(bind[NotificationRepository].toInstance(mockNotificationsRepository))
-      .overrides(bind[DeclarationRepository].toInstance(mockDeclarationRepository))
-      .configure(
-        Map(
-          "microservice.services.auth.host" -> ExternalServicesConfig.Host,
-          "microservice.services.auth.port" -> ExternalServicesConfig.Port,
-          "microservice.services.customs-declarations.host" -> ExternalServicesConfig.Host,
-          "microservice.services.customs-declarations.port" -> ExternalServicesConfig.Port,
-          "microservice.services.customs-declarations.submit-uri" -> CustomsDeclarationsAPIConfig.submitDeclarationServiceContext,
-          "microservice.services.customs-declarations.bearer-token" -> dummyToken,
-          "microservice.services.customs-declarations.api-version" -> CustomsDeclarationsAPIConfig.apiVersion,
-          "auditing.enabled" -> false,
-          "auditing.consumer.baseUri.host" -> ExternalServicesConfig.Host,
-          "auditing.consumer.baseUri.port" -> ExternalServicesConfig.Port
-        )
-      )
-      .build()
-  }
 
 }

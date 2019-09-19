@@ -16,297 +16,196 @@
 
 package component.uk.gov.hmrc.exports
 
-import component.uk.gov.hmrc.exports.base.ComponentTestSpec
+import com.codahale.metrics.SharedMetricRegistries
+import component.uk.gov.hmrc.exports.steps._
+import component.uk.gov.hmrc.exports.syntax._
+import integration.uk.gov.hmrc.exports.base.WireMockRunner
+import org.mockito.Mockito._
+import org.mockito.stubbing.Answer
+import org.mockito.ArgumentMatchers._
+import org.mockito.invocation.InvocationOnMock
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import play.api.mvc.Result
-import play.api.test.FakeRequest
-import play.api.test.Helpers._
-import uk.gov.hmrc.exports.models.Choice
-import uk.gov.hmrc.exports.models.declaration.{ExportsDeclaration, Seal, TransportInformationContainer}
-import uk.gov.hmrc.http.InternalServerException
-import util.CustomsDeclarationsAPIConfig
-import util.testdata.ExportsDeclarationBuilder
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
+import play.api.http.Status.{NOT_FOUND, _}
+import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
+import uk.gov.hmrc.exports.models.declaration.submissions.Submission
+import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
+import util.{CustomsDeclarationsAPIConfig, ExternalServicesConfig}
 import util.testdata.ExportsTestData._
 
 import scala.concurrent.Future
 
-class ExportsSubmissionReceivedSpec extends ComponentTestSpec with ScalaFutures with ExportsDeclarationBuilder with IntegrationPatience {
+class ExportsSubmissionReceivedSpec
+    extends TypedFeatureSpec with ScalaFutures with IntegrationPatience with WireMockRunner with MockitoSugar
+    with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach {
 
-  private val declaration: ExportsDeclaration = aDeclaration(
-    withChoice(Choice.StandardDec),
-    withId("id"),
-    withEori(declarantEoriValue),
-    withConsignmentReferences(lrn = declarantLrnValue),
-    withContainerData(TransportInformationContainer("container123", Seq(Seal("seal1"))))
-  )
+  val mockSubmissionRepository: SubmissionRepository = mock[SubmissionRepository]
+  val mockDeclarationRepository: DeclarationRepository = mock[DeclarationRepository]
+  val mockNotificationsRepository: NotificationRepository = mock[NotificationRepository]
 
-  val endpoint = s"/declarations/${declaration.id}/submission"
+  override def fakeApplication: Application = {
+    SharedMetricRegistries.clear()
+    new GuiceApplicationBuilder()
+      .overrides(bind[SubmissionRepository].toInstance(mockSubmissionRepository))
+      .overrides(bind[NotificationRepository].toInstance(mockNotificationsRepository))
+      .overrides(bind[DeclarationRepository].toInstance(mockDeclarationRepository))
+      .configure(
+        Map(
+          "microservice.services.auth.host" -> ExternalServicesConfig.Host,
+          "microservice.services.auth.port" -> ExternalServicesConfig.Port,
+          "microservice.services.customs-declarations.host" -> ExternalServicesConfig.Host,
+          "microservice.services.customs-declarations.port" -> ExternalServicesConfig.Port,
+          "microservice.services.customs-declarations.submit-uri" -> CustomsDeclarationsAPIConfig.submitDeclarationServiceContext,
+          "microservice.services.customs-declarations.bearer-token" -> dummyToken,
+          "microservice.services.customs-declarations.api-version" -> CustomsDeclarationsAPIConfig.apiVersion,
+          "auditing.enabled" -> false,
+          "auditing.consumer.baseUri.host" -> ExternalServicesConfig.Host,
+          "auditing.consumer.baseUri.port" -> ExternalServicesConfig.Port,
+          "play.ws.timeout.request" -> "2s"
+        )
+      )
+      .build()
+  }
 
-  lazy val ValidSubmissionRequest = FakeRequest("POST", endpoint)
-    .withHeaders(ValidHeaders.toSeq: _*)
+  override protected def beforeAll() {
+    startMockServer()
+  }
+
+  override protected def beforeEach() {
+    when(mockSubmissionRepository.findOrCreate(any(), any(), any())).thenAnswer(new Answer[Future[Submission]] {
+      override def answer(invocation: InvocationOnMock): Future[Submission] =
+        Future.successful(invocation.getArgument(2))
+    })
+  }
+
+  override protected def afterEach(): Unit = {
+    reset(mockSubmissionRepository)
+    reset(mockDeclarationRepository)
+    reset(mockNotificationsRepository)
+    resetMockServer()
+    super.afterEach()
+  }
+
+  override protected def afterAll() {
+    stopMockServer()
+  }
+
+  override def prepareContext(contest: ScenarioContext): ScenarioContext =
+    contest
+      .updated(patienceConfig)
+      .updated(app)
+      .updated(mockDeclarationRepository)
+      .updated(mockSubmissionRepository)
+      .updated(mockNotificationsRepository)
 
   feature("Export Service should handle user submissions when") {
 
-    scenario("an authorised user successfully submits a customs declaration") {
-      withSubmissionSuccess(declaration)
-      withNotificationRepositorySuccess()
-      withDeclarationRepositorySuccess(declaration)
-
-      startSubmissionService(ACCEPTED)
-      val request = ValidSubmissionRequest
-
-      Given("user is authorised")
-      authServiceAuthorizesWithEoriAndNoRetrievals()
-
-      When("a POST request with data is sent to the API")
-      val result = route(app, request).value
-
-      Then("a response with a 201 status is received")
-      status(result) shouldBe CREATED
-
-      And("the Declarations API Service is called correctly")
-      eventually(
-        verifyDecServiceWasCalledCorrectly(
-          requestBody = expectedSubmissionRequestPayload(declarantLrnValue),
-          expectedEori = declarantEoriValue,
-          expectedApiVersion = CustomsDeclarationsAPIConfig.apiVersion
-        )
-      )
-
-      And("the submission repository is called correctly")
-      eventually(verifySubmissionRepositoryIsCorrectlyCalled(declarantEoriValue))
-
-      And("the declaration repository is called correctly")
-      verifyDeclarationRepositoryIsCorrectlyCalled(declarantEoriValue)
-
-      And("the request was authorised with AuthService")
-      eventually(verifyAuthServiceCalledForNonCsp())
+    Scenario("an authorised user successfully submits a customs declaration") {
+      _.Given(`Authorized user`)
+        .And(`User has completed declaration`)
+        .And(`User does not try submit declaration earlier`)
+        .And(`Database add action without problems`)
+        .And(`Customs declaration is fully operational`)
+        .When(`User perform declaration submission`)
+        .Then(`Declaration is submitted to customs-declarations`)
+        .And(`Submission was created`)
+        .And(`Submission has request action`)
+        .And(`User has been authorized`)
     }
 
-    scenario("an authorised user successfully submits a customs declaration, but it is not persisted in DB") {
-      withSubmissionSuccess(declaration)
-      withNotificationRepositorySuccess()
-      withDeclarationRepositoryFailure()
-
-      startSubmissionService(ACCEPTED)
-      val request = ValidSubmissionRequest
-
-      Given("user is authorised")
-      authServiceAuthorizesWithEoriAndNoRetrievals()
-
-      When("a POST request with data is sent to the API")
-      val result = route(app, request).value
-
-      Then("a response with a 500 status is received")
-      intercept[InternalServerException](status(result))
-
-      And("the Declarations API Service is called correctly")
-      verifyDecServiceWasNotCalled()
-
-      And("the submission repository is not called")
-      verifySubmissionRepositoryWasNotCalled()
-
-      And("the request was authorised with AuthService")
-      eventually(verifyAuthServiceCalledForNonCsp())
+    Scenario("an authorised user tires to submit non existing declaration") {
+      _.Given(`Authorized user`)
+        .And(`User has no declaration`)
+        .When(`User perform declaration submission`)
+        .Then(`Result status` is NOT_FOUND)
+        .And(`No submission was created`)
+        .And(`No submission is posted on customs-declarations`)
+        .And(`User has been authorized`)
     }
 
-    scenario("an authorised user tries to submit declaration, but the submission service returns 500") {
-      withDeclarationRepositorySuccess(declaration)
-      testScenario(
-        primeDecApiStubToReturnStatus = INTERNAL_SERVER_ERROR,
-        submissionRepoMockedResult = true,
-        submissionRepoIsCalled = false,
-        expectedResponseStatus = INTERNAL_SERVER_ERROR,
-        expectedResponseBody = "Non Accepted status returned by Customs Declarations Service"
-      )
+    Scenario("authorized user tries to submit draft") {
+      _.Given(`Authorized user`)
+        .And(`User has incomplete declaration`)
+        .When(`User perform declaration submission`)
+        .Then(`Result status` is CONFLICT)
+        .And(`No submission was created`)
+        .And(`No submission is posted on customs-declarations`)
+        .And(`User has been authorized`)
     }
 
-    scenario("an authorised user tries to submit declaration, but the submission service returns 400") {
-      withDeclarationRepositorySuccess(declaration)
-      testScenario(
-        primeDecApiStubToReturnStatus = BAD_REQUEST,
-        submissionRepoMockedResult = true,
-        submissionRepoIsCalled = false,
-        expectedResponseStatus = INTERNAL_SERVER_ERROR,
-        expectedResponseBody = "Non Accepted status returned by Customs Declarations Service"
-      )
+    Seq(INTERNAL_SERVER_ERROR, BAD_GATEWAY, GATEWAY_TIMEOUT, NOT_FOUND, UNAUTHORIZED, BAD_REQUEST).foreach {
+      upstreamCode =>
+        Scenario(s"an authorised user tries to submit declaration, but the submission service returns $upstreamCode") {
+          _.Given(`Authorized user`)
+            .And(`User has completed declaration`)
+            .And(`Customs declaration response` is upstreamCode)
+            .When(`User perform declaration submission`)
+            .Then(`Result status` is INTERNAL_SERVER_ERROR)
+            .And(`Submission was created`)
+            .And(`Declaration is submitted to customs-declarations`)
+            .And(`Submission has no action`)
+            .And(`User has been authorized`)
+        }
     }
 
-    scenario("an authorised user tries to submit declaration, but the submission service returns 401") {
-      withDeclarationRepositorySuccess(declaration)
-      testScenario(
-        primeDecApiStubToReturnStatus = UNAUTHORIZED,
-        submissionRepoMockedResult = true,
-        submissionRepoIsCalled = false,
-        expectedResponseStatus = INTERNAL_SERVER_ERROR,
-        expectedResponseBody = "Non Accepted status returned by Customs Declarations Service"
-      )
+    Scenario("an authorised user tries to submit declaration, but submissions service is down") {
+      _.Given(`Authorized user`)
+        .And(`User has completed declaration`)
+        .And(`Customs declaration does not response`)
+        .When(`User perform declaration submission`)
+        .Then(`Result status` is INTERNAL_SERVER_ERROR)
+        .And(`Submission was created`)
+        .And(`Submission has no action`)
+        .And(`User has been authorized`)
     }
 
-    scenario("an authorised user tries to submit declaration, but the submission service returns 404") {
-      withDeclarationRepositorySuccess(declaration)
-      testScenario(
-        primeDecApiStubToReturnStatus = NOT_FOUND,
-        submissionRepoMockedResult = true,
-        submissionRepoIsCalled = false,
-        expectedResponseStatus = INTERNAL_SERVER_ERROR,
-        expectedResponseBody = "Non Accepted status returned by Customs Declarations Service"
-      )
+    Scenario("an authorised user tries to submit declaration, but database could not save submission") {
+      _.Given(`Authorized user`)
+        .And(`User has completed declaration`)
+        .And(`User does not try submit declaration earlier`)
+        .And(`Customs declaration is fully operational`)
+        .And(`Submission save rise error`)
+        .When(`User perform declaration submission`)
+        .Then(`Result status` is INTERNAL_SERVER_ERROR)
+        .And(`User has been authorized`)
     }
 
-    scenario("an authorised user tries to submit declaration, but submissions service is down") {
-
-      val request = ValidSubmissionRequest
-
-      Given("user is authorised")
-      authServiceAuthorizesWithEoriAndNoRetrievals()
-
-      When("a POST request with data is sent to the API")
-      val result: Future[Result] = route(app, request).value
-
-      And("submission should be persisted")
-      withSubmissionSuccess(declaration)
-      withNotificationRepositorySuccess()
-      withDeclarationRepositorySuccess(declaration)
-
-      Then("a response with a 500 (INTERNAL_SERVER_ERROR) status is received")
-      intercept[InternalServerException](status(result))
-
-      And("the Declarations API Service was called correctly")
-      eventually(
-        verifyDecServiceWasCalledCorrectly(
-          requestBody = expectedSubmissionRequestPayload(declarantLrnValue),
-          expectedEori = declarantEoriValue,
-          expectedApiVersion = CustomsDeclarationsAPIConfig.apiVersion
-        )
-      )
-
-      And("the submission repository was not called")
-//      eventually(verifySubmissionRepositoryWasNotCalled())
-//      FIXME  this interaction is bad
-
-      And("the declaration repository is called correctly")
-      verifyDeclarationRepositoryIsCorrectlyCalled(declarantEoriValue)
-
-      And("the request was authorised with AuthService")
-      eventually(verifyAuthServiceCalledForNonCsp())
+    Scenario("an authorised user tries to submit declaration, but database could not save submission action") {
+      _.Given(`Authorized user`)
+        .And(`User has completed declaration`)
+        .And(`User does not try submit declaration earlier`)
+        .And(`Customs declaration is fully operational`)
+        .And(`Submission action save rise error`)
+        .When(`User perform declaration submission`)
+        .Then(`Result status` is INTERNAL_SERVER_ERROR)
+        .And(`Submission was created`)
+        .And(`User has been authorized`)
     }
 
-    scenario("an authorised user tries to submit declaration, but submissions repository is down") {
-
-      startSubmissionService(ACCEPTED)
-      withSubmissionFailure()
-      withDeclarationRepositorySuccess(declaration)
-
-      val request = ValidSubmissionRequest
-
-      Given("user is authorised")
-      authServiceAuthorizesWithEoriAndNoRetrievals()
-
-      When("a POST request with data is sent to the API")
-      val result: Future[Result] = route(app, request).value
-
-      Then("a response with a 500 (INTERNAL_SERVER_ERROR) status is received")
-      intercept[RuntimeException](status(result))
-
-      And("the Declarations API Service is called correctly")
-//      eventually(
-//        verifyDecServiceWasCalledCorrectly(
-//          requestBody = expectedSubmissionRequestPayload(declarantLrnValue),
-//          expectedEori = declarantEoriValue,
-//          expectedApiVersion = CustomsDeclarationsAPIConfig.apiVersion
-//        )
-//      )
-      //FIXME races between tests
-
-      And("the submission repository is called correctly")
-//      eventually(verifySubmissionRepositoryIsCorrectlyCalled(declarantEoriValue))
-
-      And("the declaration repository is called correctly")
-      verifyDeclarationRepositoryIsCorrectlyCalled(declarantEoriValue)
-
-      And("the request was authorised with AuthService")
-      eventually(verifyAuthServiceCalledForNonCsp())
+    Scenario("upstream notifies about success earlier then send back result of successful request") {
+      _.Given(`Authorized user`)
+        .And(`User has completed declaration`)
+        .And(`User does not try submit declaration earlier`)
+        .And(`Database add action without problems`)
+        .And(`Customs declaration is fully operational`)
+        .And(`Notification came earlier than request is finished`)
+        .When(`User perform declaration submission`)
+        .Then(`Declaration is submitted to customs-declarations`)
+        .And(`Submission was created`)
+        .And(`Submission has request action`)
+        .And(`Submission was updated for mrn`)
+        .And(`User has been authorized`)
     }
 
-    scenario("an unauthorised user try to submit declaration") {
-
-      startSubmissionService(ACCEPTED)
-      val request = ValidSubmissionRequest
-
-      When("a POST request with data is sent to the API")
-      val result: Future[Result] = route(app, request).value
-
-      And("submission should be persisted")
-      withSubmissionSuccess(declaration)
-
-      Then("a response with a 500 (INTERNAL_SERVER_ERROR) status is received")
-      status(result) shouldBe INTERNAL_SERVER_ERROR
-
-      And("the response body contains error")
-      contentAsString(result) shouldBe "<?xml version='1.0' encoding='UTF-8'?>\n<errorResponse>\n        <code>INTERNAL_SERVER_ERROR</code>\n        <message>Internal server error</message>\n      </errorResponse>"
-
-      And("the request was authorised with AuthService")
-      eventually(verifyAuthServiceCalledForNonCsp())
-
-      And("the submission repository is not called")
-      eventually(verifySubmissionRepositoryWasNotCalled())
-
-      And("the Declarations API Service is not called")
-      eventually(verifyDecServiceWasNotCalled())
-    }
-
-    def testScenario(
-      primeDecApiStubToReturnStatus: Int,
-      submissionRepoMockedResult: Boolean,
-      submissionRepoIsCalled: Boolean,
-      expectedResponseStatus: Int,
-      expectedResponseBody: String
-    ): Unit = {
-
-      startSubmissionService(primeDecApiStubToReturnStatus)
-      val request = ValidSubmissionRequest
-      if(submissionRepoMockedResult) {
-        withSubmissionSuccess(declaration)
-      } else {
-        withSubmissionFailure()
-      }
-
-      Given("user is authorised")
-      authServiceAuthorizesWithEoriAndNoRetrievals()
-
-      When("a POST request with data is sent to the API")
-      val result = route(app, request).value
-
-      Then(s"a response with a $expectedResponseStatus status is received")
-      intercept[InternalServerException](status(result))
-
-      And("the Declarations API Service is called correctly")
-      eventually(
-        verifyDecServiceWasCalledCorrectly(
-          requestBody = expectedSubmissionRequestPayload(declarantLrnValue),
-          expectedEori = declarantEoriValue,
-          expectedApiVersion = CustomsDeclarationsAPIConfig.apiVersion
-        )
-      )
-
-      if (submissionRepoIsCalled) {
-        And("the submission repository is called correctly")
-        eventually(verifySubmissionRepositoryIsCorrectlyCalled(declarantEoriValue))
-      } else {
-        And("the submission repository is not called")
-        // verifySubmissionRepositoryWasNotCalled()
-        // FIXME - correct integration
-      }
-
-      And("the declaration repository is called correctly")
-      verifyDeclarationRepositoryIsCorrectlyCalled(declarantEoriValue)
-
-      And("the request was authorised with AuthService")
-      eventually(verifyAuthServiceCalledForNonCsp())
-
-      // TODO: do we need to test Audit service interaction? if so do it here
-      // TODO: do we need to test NRS service interaction? if so do that here
+    Scenario("an unauthorised user try to submit declaration") {
+      _.Given(`Unauthorized user`)
+        .When(`User perform declaration submission`)
+        .Then(`Result status` is UNAUTHORIZED)
+        .And(`User has been authorized`)
     }
   }
 }

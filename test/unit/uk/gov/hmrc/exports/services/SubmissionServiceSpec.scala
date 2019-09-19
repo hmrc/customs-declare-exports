@@ -35,7 +35,11 @@ import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepos
 import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
 import uk.gov.hmrc.exports.services.{SubmissionService, WcoMapperService}
 import uk.gov.hmrc.http.HeaderCarrier
-import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildCustomsDeclarationsConnectorMock, buildNotificationRepositoryMock, buildSubmissionRepositoryMock}
+import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{
+  buildCustomsDeclarationsConnectorMock,
+  buildNotificationRepositoryMock,
+  buildSubmissionRepositoryMock
+}
 import util.testdata.{ExportsDeclarationBuilder, NotificationTestData}
 import util.testdata.ExportsTestData._
 import util.testdata.SubmissionTestData._
@@ -44,7 +48,9 @@ import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.xml.NodeSeq
 
-class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers with ExportsDeclarationBuilder with Eventually {
+class SubmissionServiceSpec
+    extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers with ExportsDeclarationBuilder
+    with Eventually {
 
   val injector: Injector = Guice.createInjector()
 
@@ -121,8 +127,10 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
         val conversationId = UUID.randomUUID().toString
         private val firstSubmission: Submission = mock[Submission]
         when(submissionRepositoryMock.findOrCreate(any(), any(), any())).thenReturn(Future.successful(firstSubmission))
-        when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any())).thenReturn(Future.successful(conversationId))
-        when(submissionRepositoryMock.addAction(any[Submission](), any())).thenReturn(Future.successful(mock[Submission]))
+        when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any()))
+          .thenReturn(Future.successful(conversationId))
+        when(submissionRepositoryMock.addAction(any[Submission](), any()))
+          .thenReturn(Future.successful(mock[Submission]))
 
         val submission = submissionService.submit(declaration).futureValue
 
@@ -137,8 +145,10 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
       "keep action list empty" in new Test {
         private val firstSubmission: Submission = mock[Submission]
         when(submissionRepositoryMock.findOrCreate(any(), any(), any())).thenReturn(Future.successful(firstSubmission))
-        when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any())).thenReturn(Future.failed(new Exception()))
-        when(submissionRepositoryMock.addAction(any[Submission](), any())).thenReturn(Future.successful(mock[Submission]))
+        when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any()))
+          .thenReturn(Future.failed(new Exception()))
+        when(submissionRepositoryMock.addAction(any[Submission](), any()))
+          .thenReturn(Future.successful(mock[Submission]))
 
         Await.ready(submissionService.submit(declaration), patienceConfig.timeout)
 
@@ -151,8 +161,10 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
         val conversationId = UUID.randomUUID().toString
         private val firstSubmission: Submission = mock[Submission]
         when(submissionRepositoryMock.findOrCreate(any(), any(), any())).thenReturn(Future.successful(firstSubmission))
-        when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any())).thenReturn(Future.successful(conversationId))
-        when(submissionRepositoryMock.addAction(any[Submission](), any())).thenReturn(Future.successful(firstSubmission))
+        when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any()))
+          .thenReturn(Future.successful(conversationId))
+        when(submissionRepositoryMock.addAction(any[Submission](), any()))
+          .thenReturn(Future.successful(firstSubmission))
 
         private val notification: Notification = NotificationTestData.exampleNotification(conversationId)
         private val notifications: Seq[Notification] = Seq(notification)

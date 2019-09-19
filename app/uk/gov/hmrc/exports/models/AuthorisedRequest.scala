@@ -51,7 +51,6 @@ object Eori {
     Format(Reads.StringReads.map(apply), Writes(eori => Writes.StringWrites.writes(eori.value)))
 }
 
-
 case class ConversationId(value: String) extends AnyVal
 case class AuthToken(value: String) extends AnyVal
 
