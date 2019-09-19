@@ -48,7 +48,7 @@ class SubmissionController @Inject()(
     declarationService.findOne(id, request.eori).flatMap {
       case Some(declaration) =>
         if (declaration.isCompleted) {
-          submissionService.submit(declaration).map(Created(_))
+          submissionService.submit(declaration).map(Created.apply)
         } else {
           Future.successful(Conflict("Could not submit incomplete declaration"))
         }
