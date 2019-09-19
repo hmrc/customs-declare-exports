@@ -142,7 +142,7 @@ class SubmissionRepositorySpec
   }
 
   "Submission Repository on addAction" when {
-    val action = Action(SubmissionRequest, UUID.randomUUID().toString)
+    val action = Action(UUID.randomUUID().toString, SubmissionRequest)
     "there is no submission" should {
       "return failed future with IllegalStateException" in {
         an[IllegalStateException] mustBe thrownBy {
@@ -155,7 +155,7 @@ class SubmissionRepositorySpec
         val savedSubmission = repo.save(submission).futureValue
         repo.addAction(savedSubmission, action).futureValue
         val result = repo.findSubmissionByUuid(savedSubmission.eori, savedSubmission.uuid).futureValue.value
-        result.actions.map(_.conversationId) must contain(action.conversationId)
+        result.actions.map(_.id) must contain(action.id)
       }
     }
   }

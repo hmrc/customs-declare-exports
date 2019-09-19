@@ -17,20 +17,11 @@
 package uk.gov.hmrc.exports.controllers
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
-import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
-import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.submissions.{
-  CancellationRequestExists,
-  CancellationRequested,
-  MissingDeclaration,
-  SubmissionCancellation
-}
+import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -48,7 +39,7 @@ class SubmissionController @Inject()(
     declarationService.findOne(id, request.eori).flatMap {
       case Some(declaration) =>
         if (declaration.isCompleted) {
-          submissionService.submit(declaration).map(Created.apply)
+          submissionService.submit(declaration).map(Created.apply[Submission])
         } else {
           Future.successful(Conflict("Could not submit incomplete declaration"))
         }

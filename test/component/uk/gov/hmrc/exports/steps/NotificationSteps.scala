@@ -33,7 +33,7 @@ object `Notification came earlier than request is finished` extends Precondition
     val repo = context.get[NotificationRepository]
     val notification = exampleNotification(conversationId)
     val notifications = Seq(notification)
-    when(repo.findNotificationsByConversationId(any())).thenReturn(Future.successful(notifications))
+    when(repo.findNotificationsByActionId(any())).thenReturn(Future.successful(notifications))
     context.updated(notification)
   }
 }

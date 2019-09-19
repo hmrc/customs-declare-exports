@@ -168,7 +168,8 @@ class SubmissionServiceSpec
 
         private val notification: Notification = NotificationTestData.exampleNotification(conversationId)
         private val notifications: Seq[Notification] = Seq(notification)
-        when(notificationRepositoryMock.findNotificationsByActionId(conversationId)).thenReturn(Future.successful(notifications))
+        when(notificationRepositoryMock.findNotificationsByActionId(conversationId))
+          .thenReturn(Future.successful(notifications))
 
         submissionService.submit(declaration).futureValue
 
