@@ -60,8 +60,8 @@ class SubmissionService @Inject()(
   def create(submission: Submission): Future[Submission] =
     for {
       saved <- submissionRepository.save(submission)
-      conversationId = submission.actions.head.conversationId
-      notifications <- notificationRepository.findNotificationsByConversationId(conversationId)
+      conversationId = submission.actions.head.id
+      notifications <- notificationRepository.findNotificationsByActionId(conversationId)
       _ <- notifications.headOption
         .map(_.mrn)
         .fold(Future.successful((): Unit))(
@@ -69,11 +69,11 @@ class SubmissionService @Inject()(
         )
     } yield saved
 
-  private def updateSubmissionInDB(eori: String, mrn: String, conversationId: String): Future[CancellationStatus] =
+  private def updateSubmissionInDB(eori: String, mrn: String, actionId: String): Future[CancellationStatus] =
     submissionRepository.findSubmissionByMrn(mrn).flatMap {
       case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationRequestExists)
       case Some(_) =>
-        val newAction = Action(requestType = CancellationRequest, conversationId = conversationId)
+        val newAction = Action(requestType = CancellationRequest, id = actionId)
         submissionRepository.addAction(mrn, newAction).map {
           case Some(_) => CancellationRequested
           case None    => MissingDeclaration

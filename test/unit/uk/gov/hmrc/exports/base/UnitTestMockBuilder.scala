@@ -68,8 +68,8 @@ object UnitTestMockBuilder extends MockitoSugar {
 
   def buildNotificationRepositoryMock: NotificationRepository = {
     val notificationRepositoryMock: NotificationRepository = mock[NotificationRepository]
-    when(notificationRepositoryMock.findNotificationsByConversationId(any())).thenReturn(Future.successful(Seq.empty))
-    when(notificationRepositoryMock.findNotificationsByConversationIds(any())).thenReturn(Future.successful(Seq.empty))
+    when(notificationRepositoryMock.findNotificationsByActionId(any())).thenReturn(Future.successful(Seq.empty))
+    when(notificationRepositoryMock.findNotificationsByActionIds(any())).thenReturn(Future.successful(Seq.empty))
     when(notificationRepositoryMock.save(any())).thenReturn(Future.successful(false))
     notificationRepositoryMock
   }

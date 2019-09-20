@@ -122,10 +122,10 @@ trait CustomsExportsBaseSpec
     when(mockSubmissionRepository.findAllSubmissionsForEori(any())).thenReturn(Future.successful(submissions))
 
   protected def withoutNotifications(): OngoingStubbing[Future[Seq[Notification]]] =
-    when(mockNotificationsRepository.findNotificationsByConversationId(any())).thenReturn(Future.successful(Seq.empty))
+    when(mockNotificationsRepository.findNotificationsByActionId(any())).thenReturn(Future.successful(Seq.empty))
 
   protected def withNotification(notifications: Seq[Notification]): OngoingStubbing[Future[Seq[Notification]]] =
-    when(mockNotificationsRepository.findNotificationsByConversationId(any()))
+    when(mockNotificationsRepository.findNotificationsByActionId(any()))
       .thenReturn(Future.successful(notifications))
 
 }

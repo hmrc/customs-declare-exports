@@ -24,20 +24,20 @@ import util.testdata.ExportsTestData._
 
 object SubmissionTestData {
 
-  lazy val action = Action(requestType = SubmissionRequest, conversationId = conversationId)
+  lazy val action = Action(requestType = SubmissionRequest, id = actionId)
   lazy val action_2 = Action(
     requestType = SubmissionRequest,
-    conversationId = conversationId_2,
+    id = actionId_2,
     requestTimestamp = LocalDateTime.of(1971, 1, 1, 1, 1)
   )
   lazy val action_3 = Action(
     requestType = SubmissionRequest,
-    conversationId = conversationId_3,
+    id = actionId_3,
     requestTimestamp = LocalDateTime.of(1972, 1, 1, 1, 1)
   )
   lazy val actionCancellation = Action(
     requestType = CancellationRequest,
-    conversationId = conversationId,
+    id = actionId,
     requestTimestamp = action.requestTimestamp.plusHours(3)
   )
   lazy val submission: Submission =

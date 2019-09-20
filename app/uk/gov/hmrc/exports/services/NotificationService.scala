@@ -35,8 +35,8 @@ class NotificationService @Inject()(
   private val databaseDuplicateKeyErrorCode = 11000
 
   def getNotifications(submission: Submission): Future[Seq[Notification]] = {
-    val conversationIds = submission.actions.map(_.conversationId)
-    notificationRepository.findNotificationsByConversationIds(conversationIds)
+    val conversationIds = submission.actions.map(_.id)
+    notificationRepository.findNotificationsByActionIds(conversationIds)
   }
 
   def getAllNotificationsForUser(eori: String): Future[Seq[Notification]] =
@@ -46,9 +46,9 @@ class NotificationService @Inject()(
         val conversationIds = for {
           submission <- submissions
           action <- submission.actions
-        } yield action.conversationId
+        } yield action.id
 
-        notificationRepository.findNotificationsByConversationIds(conversationIds)
+        notificationRepository.findNotificationsByActionIds(conversationIds)
     }
 
   def saveAll(notifications: Seq[Notification]): Future[Either[String, Unit]] =
@@ -65,7 +65,7 @@ class NotificationService @Inject()(
       }
     } catch {
       case exc: DatabaseException if exc.code.contains(databaseDuplicateKeyErrorCode) =>
-        logger.error(s"Received duplicated notification with conversationId: ${notification.conversationId}")
+        logger.error(s"Received duplicated notification with actionId: ${notification.actionId}")
         Future.successful(Right((): Unit))
       case exc: Throwable =>
         logger.error(exc.getMessage)
@@ -74,9 +74,9 @@ class NotificationService @Inject()(
 
   private def updateRelatedSubmission(notification: Notification): Future[Either[String, Unit]] =
     try {
-      submissionRepository.updateMrn(notification.conversationId, notification.mrn).map {
+      submissionRepository.updateMrn(notification.actionId, notification.mrn).map {
         case None =>
-          logger.error(s"Could not find Submission to update for conversationId: ${notification.conversationId}")
+          logger.error(s"Could not find Submission to update for actionId: ${notification.actionId}")
           Right((): Unit)
         case Some(_) =>
           Right((): Unit)

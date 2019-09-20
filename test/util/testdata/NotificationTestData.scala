@@ -252,34 +252,25 @@ object NotificationTestData {
   val payload_3 = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
 
   val notification = Notification(
-    conversationId = conversationId,
-    actionId = conversationId,
+    actionId = actionId,
     mrn = mrn,
     dateTimeIssued = dateTimeIssued,
-    functionCode = functionCode,
-    nameCode = nameCode,
     status = SubmissionStatus.UNKNOWN,
     errors = errors,
     payload = payload
   )
   val notification_2 = Notification(
-    conversationId = conversationId,
-    actionId = conversationId,
+    actionId = actionId,
     mrn = mrn,
     dateTimeIssued = dateTimeIssued_2,
-    functionCode = functionCode_2,
-    nameCode = nameCode,
     status = SubmissionStatus.UNKNOWN,
     errors = errors,
     payload = payload_2
   )
   val notification_3 = Notification(
-    conversationId = conversationId_2,
-    actionId = conversationId_2,
+    actionId = actionId_2,
     mrn = mrn,
     dateTimeIssued = dateTimeIssued_3,
-    functionCode = functionCode_3,
-    nameCode = nameCode,
     status = SubmissionStatus.UNKNOWN,
     errors = Seq.empty,
     payload = payload_3

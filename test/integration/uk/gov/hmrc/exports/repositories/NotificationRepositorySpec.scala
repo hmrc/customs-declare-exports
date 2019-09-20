@@ -54,7 +54,7 @@ class NotificationRepositorySpec
       "return true" in {
         repo.save(notification).futureValue must be(true)
 
-        val notificationInDB = repo.findNotificationsByConversationId(conversationId).futureValue
+        val notificationInDB = repo.findNotificationsByActionId(actionId).futureValue
         notificationInDB.length must equal(1)
         notificationInDB.head must equal(notification)
       }
@@ -76,37 +76,37 @@ class NotificationRepositorySpec
 
       repo.save(notification).futureValue
 
-      val notificationsInDB = repo.findNotificationsByConversationId(notification.conversationId).futureValue
+      val notificationsInDB = repo.findNotificationsByActionId(notification.actionId).futureValue
       notificationsInDB.length must equal(2)
       notificationsInDB.head must equal(notification)
     }
   }
 
-  "Notification Repository on findNotificationsByConversationId" when {
+  "Notification Repository on findNotificationsByActionId" when {
 
-    "there is no Notification with given conversationId" should {
+    "there is no Notification with given actionId" should {
       "return empty list" in {
-        repo.findNotificationsByConversationId(conversationId).futureValue must equal(Seq.empty)
+        repo.findNotificationsByActionId(actionId).futureValue must equal(Seq.empty)
       }
     }
 
-    "there is single Notification with given conversationId" should {
+    "there is single Notification with given actionId" should {
       "return this Notification only" in {
         repo.save(notification).futureValue
 
-        val foundNotifications = repo.findNotificationsByConversationId(conversationId).futureValue
+        val foundNotifications = repo.findNotificationsByActionId(actionId).futureValue
 
         foundNotifications.length must equal(1)
         foundNotifications.head must equal(notification)
       }
     }
 
-    "there are multiple Notifications with given conversationId" should {
+    "there are multiple Notifications with given actionId" should {
       "return all the Notifications" in {
         repo.save(notification).futureValue
         repo.save(notification_2).futureValue
 
-        val foundNotifications = repo.findNotificationsByConversationId(conversationId).futureValue
+        val foundNotifications = repo.findNotificationsByActionId(actionId).futureValue
 
         foundNotifications.length must equal(2)
         foundNotifications must contain(notification)
@@ -115,21 +115,21 @@ class NotificationRepositorySpec
     }
   }
 
-  "Notification Repository on findNotificationsByConversationIds" when {
+  "Notification Repository on findNotificationsByActionIds" when {
 
-    "there is no Notification for any given conversationId" should {
+    "there is no Notification for any given actionId" should {
       "return empty list" in {
-        repo.findNotificationsByConversationIds(Seq(conversationId, conversationId_2)).futureValue must equal(Seq.empty)
+        repo.findNotificationsByActionIds(Seq(actionId, actionId_2)).futureValue must equal(Seq.empty)
       }
     }
 
-    "there are Notifications for one of provided conversationIds" should {
+    "there are Notifications for one of provided actionIds" should {
       "return those Notifications" in {
         repo.save(notification).futureValue
         repo.save(notification_2).futureValue
 
         val foundNotifications =
-          repo.findNotificationsByConversationIds(Seq(conversationId, conversationId_2)).futureValue
+          repo.findNotificationsByActionIds(Seq(actionId, actionId_2)).futureValue
 
         foundNotifications.length must equal(2)
         foundNotifications must contain(notification)
@@ -137,27 +137,27 @@ class NotificationRepositorySpec
       }
     }
 
-    "there are Notifications with different conversationIds" should {
+    "there are Notifications with different actionIds" should {
       "return only Notifications with conversationId same as provided one" in {
         repo.save(notification).futureValue
         repo.save(notification_2).futureValue
         repo.save(notification_3).futureValue
 
-        val foundNotifications = repo.findNotificationsByConversationIds(Seq(conversationId_2)).futureValue
+        val foundNotifications = repo.findNotificationsByActionIds(Seq(actionId_2)).futureValue
 
         foundNotifications.length must equal(1)
         foundNotifications must contain(notification_3)
       }
     }
 
-    "there are Notifications for all of provided conversationIds" should {
+    "there are Notifications for all of provided actionIds" should {
       "return all the Notifications" in {
         repo.save(notification).futureValue
         repo.save(notification_2).futureValue
         repo.save(notification_3).futureValue
 
         val foundNotifications =
-          repo.findNotificationsByConversationIds(Seq(conversationId, conversationId_2)).futureValue
+          repo.findNotificationsByActionIds(Seq(actionId, actionId_2)).futureValue
 
         foundNotifications.length must equal(3)
         foundNotifications must contain(notification)
@@ -172,7 +172,7 @@ class NotificationRepositorySpec
         repo.save(notification_2).futureValue
         repo.save(notification_3).futureValue
 
-        repo.findNotificationsByConversationIds(Seq.empty).futureValue must equal(Seq.empty)
+        repo.findNotificationsByActionIds(Seq.empty).futureValue must equal(Seq.empty)
       }
     }
   }
