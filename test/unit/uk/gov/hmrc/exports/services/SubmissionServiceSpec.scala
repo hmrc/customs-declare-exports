@@ -113,14 +113,8 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
       "some notifications" in new Test {
         val submission: Submission =
           Submission(eori = "", lrn = "", ducr = "", actions = Seq(Action(SubmissionRequest, "conversation-id")))
-        val notification = Notification(
-          "action-id",
-          "mrn",
-          LocalDateTime.now(),
-          status = SubmissionStatus.UNKNOWN,
-          Seq.empty,
-          ""
-        )
+        val notification =
+          Notification("action-id", "mrn", LocalDateTime.now(), status = SubmissionStatus.UNKNOWN, Seq.empty, "")
         when(notificationRepositoryMock.findNotificationsByActionId("conversation-id"))
           .thenReturn(Future.successful(Seq(notification)))
         when(submissionRepositoryMock.updateMrn("conversation-id", "mrn"))
