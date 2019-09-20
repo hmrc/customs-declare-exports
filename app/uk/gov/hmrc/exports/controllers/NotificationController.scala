@@ -30,6 +30,7 @@ import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.notifications.{ErrorPointer, Notification, NotificationError}
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.services.{NotificationService, SubmissionService}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -110,10 +111,12 @@ class NotificationController @Inject()(
 
         Notification(
           conversationId = notificationApiRequestHeaders.conversationId.value,
+          actionId = notificationApiRequestHeaders.conversationId.value,
           mrn = mrn,
           dateTimeIssued = dateTimeIssued,
           functionCode = functionCode,
           nameCode = nameCode,
+          status = SubmissionStatus.retrieve(functionCode, nameCode),
           errors = errors,
           payload = notificationXml.toString
         )

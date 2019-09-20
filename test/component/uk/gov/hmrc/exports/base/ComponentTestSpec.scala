@@ -33,6 +33,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.UNKNOWN
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.http.InternalServerException
 import util._
@@ -98,7 +99,9 @@ trait ComponentTestSpec
 
   def withNotificationRepositorySuccess(): Unit =
     when(mockNotificationsRepository.findNotificationsByConversationId(any())).thenReturn(
-      Future.successful(Seq(Notification("conversation-id", "mrn", LocalDateTime.now(), "", None, Seq.empty, "")))
+      Future.successful(
+        Seq(Notification("conversation-id", "action-id", "mrn", LocalDateTime.now(), "", None, UNKNOWN, Seq.empty, ""))
+      )
     )
 
   def verifySubmissionRepositoryIsCorrectlyCalled(eoriValue: String) {

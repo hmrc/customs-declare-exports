@@ -25,8 +25,8 @@ import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
-import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.exports.models.{Eori, LocalReferenceNumber, SubmissionRequestHeaders}
+import uk.gov.hmrc.exports.models.declaration.submissions.{SubmissionStatus, _}
+import uk.gov.hmrc.exports.models.{LocalReferenceNumber, SubmissionRequestHeaders}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
 import uk.gov.hmrc.exports.services.{SubmissionService, WcoMapperService}
@@ -113,7 +113,17 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
       "some notifications" in new Test {
         val submission: Submission =
           Submission(eori = "", lrn = "", ducr = "", actions = Seq(Action(SubmissionRequest, "conversation-id")))
-        val notification = Notification("conversation-id", "mrn", LocalDateTime.now(), "", None, Seq.empty, "")
+        val notification = Notification(
+          "conversation-id",
+          "action-id",
+          "mrn",
+          LocalDateTime.now(),
+          "",
+          None,
+          status = SubmissionStatus.UNKNOWN,
+          Seq.empty,
+          ""
+        )
         when(notificationRepositoryMock.findNotificationsByConversationId("conversation-id"))
           .thenReturn(Future.successful(Seq(notification)))
         when(submissionRepositoryMock.updateMrn("conversation-id", "mrn"))

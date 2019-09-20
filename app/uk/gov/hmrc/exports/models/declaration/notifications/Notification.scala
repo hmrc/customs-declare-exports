@@ -18,18 +18,21 @@ package uk.gov.hmrc.exports.models.declaration.notifications
 
 import java.time.LocalDateTime
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.SubmissionStatus
 
 case class Notification(
   conversationId: String,
+  actionId: String,
   mrn: String,
   dateTimeIssued: LocalDateTime,
   functionCode: String,
   nameCode: Option[String],
+  status: SubmissionStatus,
   errors: Seq[NotificationError],
   payload: String
 )
 
 object Notification {
-  implicit val format = Json.format[Notification]
+  implicit val format: OFormat[Notification] = Json.format[Notification]
 }
