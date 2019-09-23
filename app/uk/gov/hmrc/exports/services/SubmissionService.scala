@@ -27,6 +27,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Success
 
 @Singleton
 class SubmissionService @Inject()(
@@ -38,6 +39,13 @@ class SubmissionService @Inject()(
 )(implicit executionContext: ExecutionContext) {
 
   def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] = {
+    def updateMrnFromEarlierNotification(conversationId: String) = {
+      notificationRepository.findNotificationsByActionId(conversationId).map { notifications =>
+        notifications.headOption.foreach(notification =>
+          submissionRepository.updateMrn(conversationId, notification.mrn)
+        )
+      }
+    }
     val metaData = wcoMapperService.produceMetaData(declaration)
     val lrn = wcoMapperService
       .declarationLrn(metaData)
@@ -57,8 +65,10 @@ class SubmissionService @Inject()(
 
     submissionRepository.findOrCreate(Eori(declaration.eori), declaration.id, submission).flatMap { submission =>
       customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).flatMap { conversationId =>
-        val action = Action(requestType = SubmissionRequest, conversationId = conversationId)
-        submissionRepository.addAction(submission, action)
+        val action = Action(id = conversationId, requestType = SubmissionRequest)
+        submissionRepository.addAction(submission, action).andThen {
+          case Success(_) => updateMrnFromEarlierNotification(conversationId)
+        }
       }
     }
   }
@@ -86,23 +96,11 @@ class SubmissionService @Inject()(
   def getSubmission(eori: String, uuid: String): Future[Option[Submission]] =
     submissionRepository.findSubmissionByUuid(eori, uuid)
 
-  def create(submission: Submission): Future[Submission] =
-    for {
-      saved <- submissionRepository.save(submission)
-      conversationId = submission.actions.head.id
-      notifications <- notificationRepository.findNotificationsByActionId(conversationId)
-      _ <- notifications.headOption
-        .map(_.mrn)
-        .fold(Future.successful((): Unit))(
-          mrn => submissionRepository.updateMrn(conversationId, mrn).map(_ => (): Unit)
-        )
-    } yield saved
-
-  private def updateSubmissionInDB(eori: String, mrn: String, actionId: String): Future[CancellationStatus] =
+  private def updateSubmissionInDB(eori: String, mrn: String, conversationId: String): Future[CancellationStatus] =
     submissionRepository.findSubmissionByMrn(mrn).flatMap {
       case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationRequestExists)
       case Some(_) =>
-        val newAction = Action(requestType = CancellationRequest, id = actionId)
+        val newAction = Action(requestType = CancellationRequest, id = conversationId)
         submissionRepository.addAction(mrn, newAction).map {
           case Some(_) => CancellationRequested
           case None    => MissingDeclaration

@@ -138,6 +138,32 @@ class SubmissionRepositorySpec
     }
   }
 
+  "Submission Repository on addAction" when {
+    "there is no submission" should {
+      "return failed future with IllegalStateException" in {
+        ???
+      }
+    }
+    "there is submission" should {
+      "add action at end of sequence" in {
+        ???
+      }
+    }
+  }
+
+  "Submission Repository on findOrCreate" when {
+    "there is submission" should {
+      "return existing submission" in {
+        ???
+      }
+    }
+    "there no submission" should {
+      "insert provided submission" in {
+        ???
+      }
+    }
+  }
+
   "Submission Repository on findAllSubmissionsByEori" when {
 
     "there is no Submission associated with this EORI" should {

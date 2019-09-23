@@ -17,17 +17,15 @@
 package uk.gov.hmrc.exports.services
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Eori, Page, Paginated}
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class DeclarationService @Inject()(
-  declarationRepository: DeclarationRepository,
-  wcoSubmissionService: WcoSubmissionService,
-  submissionService: SubmissionService
+  declarationRepository: DeclarationRepository
 ) {
 
   def create(
@@ -39,16 +37,6 @@ class DeclarationService @Inject()(
     declaration: ExportsDeclaration
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[ExportsDeclaration]] =
     declarationRepository.update(declaration)
-
-  private def submitIfComplete(
-    declaration: ExportsDeclaration
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Unit] =
-    if (declaration.status == DeclarationStatus.COMPLETE) {
-      for {
-        submission <- wcoSubmissionService.submit(declaration)
-        _ <- submissionService.create(submission)
-      } yield Unit
-    } else Future.successful((): Unit)
 
   def find(search: DeclarationSearch, pagination: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] =
     declarationRepository.find(search, pagination, sort)

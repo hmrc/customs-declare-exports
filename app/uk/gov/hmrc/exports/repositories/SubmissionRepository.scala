@@ -41,13 +41,6 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
       objectIdFormats
     ) {
 
-  def findOrCreate(eori: Eori, id: String, onMissing: Submission): Future[Submission] = {
-    findSubmissionByUuid(eori.value, id).flatMap {
-      case Some(submission) => Future.successful(submission)
-      case None => save(onMissing)
-    }
-  }
-
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("actions.id" -> IndexType.Ascending), unique = true, name = Some("actionIdIdx")),
@@ -67,6 +60,13 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
       .sort(Json.obj("actions.requestTimestamp" -> -1))
       .cursor[Submission](ReadPreference.primaryPreferred)
       .collect(maxDocs = -1, FailOnError[Seq[Submission]]())
+  }
+
+  def findOrCreate(eori: Eori, id: String, onMissing: Submission): Future[Submission] = {
+    findSubmissionByUuid(eori.value, id).flatMap {
+      case Some(submission) => Future.successful(submission)
+      case None => save(onMissing)
+    }
   }
 
   def findSubmissionByMrn(mrn: String): Future[Option[Submission]] = find("mrn" -> mrn).map(_.headOption)

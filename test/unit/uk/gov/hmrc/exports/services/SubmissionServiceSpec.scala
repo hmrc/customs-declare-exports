@@ -17,13 +17,17 @@
 package unit.uk.gov.hmrc.exports.services
 
 import java.time.LocalDateTime
+import java.util.UUID
 
+import com.google.inject.{Guice, Injector}
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito._
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
+import uk.gov.hmrc.exports.models.declaration.{GoodsLocation, TransportInformationContainer}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.{SubmissionStatus, _}
 import uk.gov.hmrc.exports.models.{LocalReferenceNumber, SubmissionRequestHeaders}
@@ -31,19 +35,18 @@ import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepos
 import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
 import uk.gov.hmrc.exports.services.{SubmissionService, WcoMapperService}
 import uk.gov.hmrc.http.HeaderCarrier
-import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{
-  buildCustomsDeclarationsConnectorMock,
-  buildNotificationRepositoryMock,
-  buildSubmissionRepositoryMock
-}
+import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildCustomsDeclarationsConnectorMock, buildNotificationRepositoryMock, buildSubmissionRepositoryMock}
+import util.testdata.{ExportsDeclarationBuilder, NotificationTestData}
 import util.testdata.ExportsTestData._
 import util.testdata.SubmissionTestData._
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.xml.NodeSeq
 
-class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers {
+class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers with ExportsDeclarationBuilder with Eventually {
+
+  val injector: Injector = Guice.createInjector()
 
   private trait Test {
     implicit val hc: HeaderCarrier = mock[HeaderCarrier]
@@ -56,8 +59,8 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
       customsDeclarationsConnector = customsDeclarationsConnectorMock,
       submissionRepository = submissionRepositoryMock,
       notificationRepository = notificationRepositoryMock,
-      metaDataBuilder = metaDataBuilder,
-      wcoMapperService = wcoMapperService
+      metaDataBuilder = injector.getInstance(classOf[MetaDataBuilder]),
+      wcoMapperService = injector.getInstance(classOf[WcoMapperService])
     )(ExecutionContext.global)
   }
 
@@ -101,28 +104,65 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
     }
   }
 
-  "create" should {
-    "delegate to the repository" when {
-      "no notifications" in new Test {
-        val submission: Submission =
-          Submission(eori = "", lrn = "", ducr = "", actions = Seq(Action("conversation-id", SubmissionRequest)))
+  "submit" when {
+    val declaration = aDeclaration(
+      withConsignmentReferences(),
+      withDestinationCountries(),
+      withGoodsLocation(GoodsLocation("PL", "type", "id", Some("a"), Some("b"), Some("c"), Some("d"), Some("e"))),
+      withWarehouseIdentification(Some("a"), Some("b"), Some("c"), Some("d")),
+      withOfficeOfExit("id", Some("office"), Some("code")),
+      withContainerData(TransportInformationContainer("id", Seq.empty)),
+      withTotalNumberOfItems(Some("123"), Some("123")),
+      withNatureOfTransaction("nature"),
+      withItems(3)
+    )
+    "request to upstream service is successful" should {
+      "create request submission action" in new Test {
+        val conversationId = UUID.randomUUID().toString
+        private val firstSubmission: Submission = mock[Submission]
+        when(submissionRepositoryMock.findOrCreate(any(), any(), any())).thenReturn(Future.successful(firstSubmission))
+        when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any())).thenReturn(Future.successful(conversationId))
+        when(submissionRepositoryMock.addAction(any[Submission](), any())).thenReturn(Future.successful(mock[Submission]))
 
-        submissionService.create(submission).futureValue mustBe submission
+        val submission = submissionService.submit(declaration).futureValue
+
+        val actionCaptor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])
+        verify(submissionRepositoryMock).addAction(meq(firstSubmission), actionCaptor.capture())
+        val action = actionCaptor.getValue
+        action.id mustEqual conversationId
+        action.requestType mustEqual SubmissionRequest
       }
+    }
+    "request to upstream service failed" should {
+      "keep action list empty" in new Test {
+        private val firstSubmission: Submission = mock[Submission]
+        when(submissionRepositoryMock.findOrCreate(any(), any(), any())).thenReturn(Future.successful(firstSubmission))
+        when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any())).thenReturn(Future.failed(new Exception()))
+        when(submissionRepositoryMock.addAction(any[Submission](), any())).thenReturn(Future.successful(mock[Submission]))
 
-      "some notifications" in new Test {
-        val submission: Submission =
-          Submission(eori = "", lrn = "", ducr = "", actions = Seq(Action("conversation-id", SubmissionRequest)))
-        val notification =
-          Notification("action-id", "mrn", LocalDateTime.now(), status = SubmissionStatus.UNKNOWN, Seq.empty, "")
-        when(notificationRepositoryMock.findNotificationsByActionId("conversation-id"))
-          .thenReturn(Future.successful(Seq(notification)))
-        when(submissionRepositoryMock.updateMrn("conversation-id", "mrn"))
-          .thenReturn(Future.successful(Some(submission)))
+        Await.ready(submissionService.submit(declaration), patienceConfig.timeout)
 
-        submissionService.create(submission).futureValue mustBe submission
+        verify(submissionRepositoryMock, never()).addAction(any[Submission](), any())
+      }
+    }
 
-        verify(submissionRepositoryMock).updateMrn("conversation-id", "mrn")
+    "there are notification with conversation id" should {
+      "update submission with linked mrn" in new Test {
+        val conversationId = UUID.randomUUID().toString
+        private val firstSubmission: Submission = mock[Submission]
+        when(submissionRepositoryMock.findOrCreate(any(), any(), any())).thenReturn(Future.successful(firstSubmission))
+        when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any())).thenReturn(Future.successful(conversationId))
+        when(submissionRepositoryMock.addAction(any[Submission](), any())).thenReturn(Future.successful(firstSubmission))
+
+        private val notification: Notification = NotificationTestData.exampleNotification(conversationId)
+        private val notifications: Seq[Notification] = Seq(notification)
+        when(notificationRepositoryMock.findNotificationsByActionId(conversationId)).thenReturn(Future.successful(notifications))
+
+        submissionService.submit(declaration).futureValue
+
+        eventually {
+          verify(submissionRepositoryMock).updateMrn(conversationId, notification.mrn)
+        }
       }
     }
   }

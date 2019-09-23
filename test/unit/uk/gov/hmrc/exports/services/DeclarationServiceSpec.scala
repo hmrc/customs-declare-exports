@@ -32,78 +32,41 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits
 import scala.concurrent.Future
 
-class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers {
+import util.testdata.ExportsDeclarationBuilder
+
+class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers with ExportsDeclarationBuilder {
 
   private val declarationRepository = mock[DeclarationRepository]
   private val wcoSubmissionService = mock[WcoSubmissionService]
   private val submissionService = mock[SubmissionService]
-  private val service = new DeclarationService(declarationRepository, wcoSubmissionService, submissionService)
+  private val service = new DeclarationService(declarationRepository)
   private val hc = mock[HeaderCarrier]
   private val ec = Implicits.global
 
   "Create" should {
-    "delegate to the repository" when {
-      "declaration status is COMPLETE" in {
-        val submission = mock[Submission]
-        val declaration = mock[ExportsDeclaration]
-        val persistedDeclaration = mock[ExportsDeclaration]
-        given(declaration.status).willReturn(DeclarationStatus.COMPLETE)
-        given(declarationRepository.create(declaration)).willReturn(Future.successful(persistedDeclaration))
-        given(wcoSubmissionService.submit(declaration)(hc, ec)).willReturn(Future.successful(submission))
-        given(submissionService.create(submission)).willReturn(Future.successful(submission))
+    "delegate to the repository" in {
+      val submission = mock[Submission]
+      val declaration = aDeclaration()
+      val persistedDeclaration = aDeclaration()
 
-        service.create(declaration)(hc, ec).futureValue mustBe persistedDeclaration
+      when(declarationRepository.create(any())).thenReturn(Future.successful(persistedDeclaration))
 
-        verify(declarationRepository).create(declaration)
-//        verify(wcoSubmissionService).submit(declaration)(hc, ec)
-//        verify(submissionService).create(submission)
-      }
+      service.create(declaration)(hc, ec).futureValue mustBe persistedDeclaration
 
-      "declaration status is not COMPLETE" in {
-        val declaration = mock[ExportsDeclaration]
-        val persistedDeclaration = mock[ExportsDeclaration]
-        given(declaration.status).willReturn(DeclarationStatus.DRAFT)
-        given(declarationRepository.create(declaration)).willReturn(Future.successful(persistedDeclaration))
-
-        service.create(declaration)(hc, ec).futureValue mustBe persistedDeclaration
-
-        verify(declarationRepository).create(declaration)
-        verifyZeroInteractions(wcoSubmissionService)
-        verifyZeroInteractions(submissionService)
-      }
+      verify(declarationRepository).create(declaration)
     }
   }
 
   "Update" should {
-    "delegate to the repository" when {
-      "declaration status is COMPLETE" in {
-        val submission = mock[Submission]
-        val declaration = mock[ExportsDeclaration]
-        val persistedDeclaration = mock[ExportsDeclaration]
-        given(declaration.status).willReturn(DeclarationStatus.COMPLETE)
-        given(declarationRepository.update(declaration)).willReturn(Future.successful(Some(persistedDeclaration)))
-        given(wcoSubmissionService.submit(declaration)(hc, ec)).willReturn(Future.successful(submission))
-        given(submissionService.create(submission)).willReturn(Future.successful(submission))
+    "delegate to the repository" in {
+      val declaration = aDeclaration()
+      val persistedDeclaration = aDeclaration()
 
-        service.update(declaration)(hc, ec).futureValue mustBe Some(persistedDeclaration)
+      when(declarationRepository.update(any())).thenReturn(Future.successful(Some(persistedDeclaration)))
 
-        verify(declarationRepository).update(declaration)
-//        verify(wcoSubmissionService).submit(declaration)(hc, ec)
-//        verify(submissionService).create(submission)
-      }
+      service.update(declaration)(hc, ec).futureValue mustBe Some(persistedDeclaration)
 
-      "declaration status is not COMPLETE" in {
-        val declaration = mock[ExportsDeclaration]
-        val persistedDeclaration = mock[ExportsDeclaration]
-        given(declaration.status).willReturn(DeclarationStatus.DRAFT)
-        given(declarationRepository.update(declaration)).willReturn(Future.successful(Some(persistedDeclaration)))
-
-        service.update(declaration)(hc, ec).futureValue mustBe Some(persistedDeclaration)
-
-        verify(declarationRepository).update(declaration)
-        verifyZeroInteractions(wcoSubmissionService)
-        verifyZeroInteractions(submissionService)
-      }
+      verify(declarationRepository).update(declaration)
     }
   }
 
