@@ -110,12 +110,9 @@ class NotificationController @Inject()(
         val errors = buildErrorsFromRequest(singleResponseXml)
 
         Notification(
-          conversationId = notificationApiRequestHeaders.conversationId.value,
           actionId = notificationApiRequestHeaders.conversationId.value,
           mrn = mrn,
           dateTimeIssued = dateTimeIssued,
-          functionCode = functionCode,
-          nameCode = nameCode,
           status = SubmissionStatus.retrieve(functionCode, nameCode),
           errors = errors,
           payload = notificationXml.toString

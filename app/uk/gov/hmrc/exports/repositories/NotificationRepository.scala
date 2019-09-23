@@ -39,7 +39,7 @@ class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("dateTimeIssued" -> IndexType.Ascending), name = Some("dateTimeIssuedIdx")),
     Index(Seq("mrn" -> IndexType.Ascending), name = Some("mrnIdx")),
-    Index(Seq("conversationId" -> IndexType.Ascending), name = Some("conversationIdIdx"))
+    Index(Seq("actionId" -> IndexType.Ascending), name = Some("actionIdIdx"))
   )
 
   // TODO: Need to change this method to return Future[WriteResult].
@@ -50,13 +50,13 @@ class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: 
     res.ok
   }
 
-  def findNotificationsByConversationId(conversationId: String): Future[Seq[Notification]] =
-    find("conversationId" -> JsString(conversationId))
+  def findNotificationsByActionId(actionId: String): Future[Seq[Notification]] =
+    find("actionId" -> JsString(actionId))
 
-  def findNotificationsByConversationIds(conversationIds: Seq[String]): Future[Seq[Notification]] =
-    conversationIds match {
+  def findNotificationsByActionIds(actionIds: Seq[String]): Future[Seq[Notification]] =
+    actionIds match {
       case Seq() => Future.successful(Seq.empty)
-      case _     => find("$or" -> conversationIds.map(id => Json.obj("conversationId" -> JsString(id))))
+      case _     => find("$or" -> actionIds.map(id => Json.obj("actionId" -> JsString(id))))
     }
 
 }

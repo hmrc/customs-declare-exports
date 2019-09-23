@@ -69,7 +69,7 @@ class SubmissionRepositorySpec
 
         exc mustBe an[DatabaseException]
         exc.getMessage must include(
-          "E11000 duplicate key error collection: customs-declare-exports.submissions index: conversationIdIdx dup key"
+          "E11000 duplicate key error collection: customs-declare-exports.submissions index: actionIdIdx dup key"
         )
       }
 
@@ -91,7 +91,7 @@ class SubmissionRepositorySpec
     "return empty Option" when {
       "there is no Submission with given ConversationId" in {
         val newMrn = mrn_2
-        repo.updateMrn(conversationId, newMrn).futureValue mustNot be(defined)
+        repo.updateMrn(actionId, newMrn).futureValue mustNot be(defined)
       }
     }
 
@@ -101,7 +101,7 @@ class SubmissionRepositorySpec
         val newMrn = mrn_2
         val expectedUpdatedSubmission = submission.copy(mrn = Some(newMrn))
 
-        val updatedSubmission = repo.updateMrn(conversationId, newMrn).futureValue
+        val updatedSubmission = repo.updateMrn(actionId, newMrn).futureValue
 
         updatedSubmission.value must equal(expectedUpdatedSubmission)
       }
@@ -109,7 +109,7 @@ class SubmissionRepositorySpec
       "new MRN is the same as the old one" in {
         repo.save(submission).futureValue
 
-        val updatedSubmission = repo.updateMrn(conversationId, mrn).futureValue
+        val updatedSubmission = repo.updateMrn(actionId, mrn).futureValue
 
         updatedSubmission.value must equal(submission)
       }
@@ -120,7 +120,7 @@ class SubmissionRepositorySpec
 
     "there is no Submission with given MRN" should {
       "return empty Option" in {
-        val newAction = Action(CancellationRequest, conversationId_2)
+        val newAction = Action(actionId_2, CancellationRequest)
         repo.addAction(mrn, newAction).futureValue mustNot be(defined)
       }
     }
@@ -128,7 +128,7 @@ class SubmissionRepositorySpec
     "there is a Submission with given MRN" should {
       "return Submission updated" in {
         repo.save(submission).futureValue
-        val newAction = Action(CancellationRequest, conversationId_2)
+        val newAction = Action(actionId_2, CancellationRequest)
         val expectedUpdatedSubmission = submission.copy(actions = submission.actions :+ newAction)
 
         val updatedSubmission = repo.addAction(mrn, newAction).futureValue

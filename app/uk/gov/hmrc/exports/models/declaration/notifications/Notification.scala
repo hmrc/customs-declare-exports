@@ -22,12 +22,9 @@ import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.SubmissionStatus
 
 case class Notification(
-  conversationId: String,
   actionId: String,
   mrn: String,
   dateTimeIssued: LocalDateTime,
-  functionCode: String,
-  nameCode: Option[String],
   status: SubmissionStatus,
   errors: Seq[NotificationError],
   payload: String

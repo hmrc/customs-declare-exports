@@ -63,7 +63,7 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
 
   "cancel" should {
     val submission = Submission("id", "eori", "lrn", None, "ducr")
-    val submissionCancelled = Submission("id", "eori", "lrn", None, "ducr", Seq(Action(CancellationRequest, "conv-id")))
+    val submissionCancelled = Submission("id", "eori", "lrn", None, "ducr", Seq(Action("conv-id", CancellationRequest)))
     val cancellation = SubmissionCancellation("ref-id", "mrn", "description", "reason")
 
     "submit and delegate to repository" when {
@@ -105,26 +105,17 @@ class SubmissionServiceSpec extends WordSpec with MockitoSugar with ScalaFutures
     "delegate to the repository" when {
       "no notifications" in new Test {
         val submission: Submission =
-          Submission(eori = "", lrn = "", ducr = "", actions = Seq(Action(SubmissionRequest, "conversation-id")))
+          Submission(eori = "", lrn = "", ducr = "", actions = Seq(Action("conversation-id", SubmissionRequest)))
 
         submissionService.create(submission).futureValue mustBe submission
       }
 
       "some notifications" in new Test {
         val submission: Submission =
-          Submission(eori = "", lrn = "", ducr = "", actions = Seq(Action(SubmissionRequest, "conversation-id")))
-        val notification = Notification(
-          "conversation-id",
-          "action-id",
-          "mrn",
-          LocalDateTime.now(),
-          "",
-          None,
-          status = SubmissionStatus.UNKNOWN,
-          Seq.empty,
-          ""
-        )
-        when(notificationRepositoryMock.findNotificationsByConversationId("conversation-id"))
+          Submission(eori = "", lrn = "", ducr = "", actions = Seq(Action("conversation-id", SubmissionRequest)))
+        val notification =
+          Notification("action-id", "mrn", LocalDateTime.now(), status = SubmissionStatus.UNKNOWN, Seq.empty, "")
+        when(notificationRepositoryMock.findNotificationsByActionId("conversation-id"))
           .thenReturn(Future.successful(Seq(notification)))
         when(submissionRepositoryMock.updateMrn("conversation-id", "mrn"))
           .thenReturn(Future.successful(Some(submission)))

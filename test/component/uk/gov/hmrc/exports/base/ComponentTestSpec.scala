@@ -98,11 +98,8 @@ trait ComponentTestSpec
   }
 
   def withNotificationRepositorySuccess(): Unit =
-    when(mockNotificationsRepository.findNotificationsByConversationId(any())).thenReturn(
-      Future.successful(
-        Seq(Notification("conversation-id", "action-id", "mrn", LocalDateTime.now(), "", None, UNKNOWN, Seq.empty, ""))
-      )
-    )
+    when(mockNotificationsRepository.findNotificationsByActionId(any()))
+      .thenReturn(Future.successful(Seq(Notification("action-id", "mrn", LocalDateTime.now(), UNKNOWN, Seq.empty, ""))))
 
   def verifySubmissionRepositoryIsCorrectlyCalled(eoriValue: String) {
     val submissionCaptor: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])

@@ -20,11 +20,14 @@ import java.time.LocalDateTime
 
 import play.api.libs.json.Json
 
-case class Action(
-  requestType: RequestType,
-  conversationId: String,
-  requestTimestamp: LocalDateTime = LocalDateTime.now()
-)
+/**
+  * Action class
+  *
+  * @param id unique id of the Action.  This is the converstationId from customs-notifications
+  * @param requestType the request type
+  * @param requestTimestamp timestamp (defaults to now)
+  */
+case class Action(id: String, requestType: RequestType, requestTimestamp: LocalDateTime = LocalDateTime.now())
 
 object Action {
   implicit val format = Json.format[Action]

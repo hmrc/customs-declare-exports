@@ -40,7 +40,7 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
     ) {
 
   override def indexes: Seq[Index] = Seq(
-    Index(Seq("actions.conversationId" -> IndexType.Ascending), unique = true, name = Some("conversationIdIdx")),
+    Index(Seq("actions.id" -> IndexType.Ascending), unique = true, name = Some("actionIdIdx")),
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
     Index(
       Seq("eori" -> IndexType.Ascending, "action.requestTimestamp" -> IndexType.Descending),
@@ -70,7 +70,7 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
   }
 
   def updateMrn(conversationId: String, newMrn: String): Future[Option[Submission]] = {
-    val query = Json.obj("actions.conversationId" -> conversationId)
+    val query = Json.obj("actions.id" -> conversationId)
     val update = Json.obj("$set" -> Json.obj("mrn" -> newMrn))
     performUpdate(query, update)
   }

@@ -47,7 +47,7 @@ class WcoSubmissionService @Inject()(
         eori = declaration.eori,
         lrn = lrn,
         ducr = ducr,
-        actions = Seq(Action(requestType = SubmissionRequest, conversationId = conversationId))
+        actions = Seq(Action(requestType = SubmissionRequest, id = conversationId))
       )
     }
   }

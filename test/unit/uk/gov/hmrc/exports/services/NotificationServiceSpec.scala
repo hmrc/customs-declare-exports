@@ -22,12 +22,12 @@ import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import org.mockito.{ArgumentCaptor, InOrder, Mockito}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
 import reactivemongo.bson.{BSONDocument, BSONInteger, BSONString}
 import reactivemongo.core.errors.DetailedDatabaseException
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, RequestType, Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.NotificationService
 import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder._
@@ -71,7 +71,7 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
 
         val inOrder: InOrder = Mockito.inOrder(submissionRepositoryMock, notificationRepositoryMock)
         inOrder.verify(submissionRepositoryMock, times(1)).findAllSubmissionsForEori(any())
-        inOrder.verify(notificationRepositoryMock, times(1)).findNotificationsByConversationIds(any())
+        inOrder.verify(notificationRepositoryMock, times(1)).findNotificationsByActionIds(any())
       }
 
       "call SubmissionRepository, passing EORI provided" in new GetAllNotificationsForUserHappyPathTest {
@@ -84,19 +84,19 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
         notificationService.getAllNotificationsForUser(eori).futureValue
 
         val conversationIdCaptor: ArgumentCaptor[Seq[String]] = ArgumentCaptor.forClass(classOf[Seq[String]])
-        verify(notificationRepositoryMock, times(1)).findNotificationsByConversationIds(conversationIdCaptor.capture())
+        verify(notificationRepositoryMock, times(1)).findNotificationsByActionIds(conversationIdCaptor.capture())
         val actualConversationIds: Seq[String] = conversationIdCaptor.getValue
         actualConversationIds.length must equal(2)
-        actualConversationIds must contain(notification.conversationId)
-        actualConversationIds must contain(notification_2.conversationId)
-        actualConversationIds must contain(notification_3.conversationId)
+        actualConversationIds must contain(notification.actionId)
+        actualConversationIds must contain(notification_2.actionId)
+        actualConversationIds must contain(notification_3.actionId)
       }
 
       trait GetAllNotificationsForUserHappyPathTest extends Test {
         when(submissionRepositoryMock.findAllSubmissionsForEori(any()))
           .thenReturn(Future.successful(Seq(submission, submission_2)))
         val notificationsToBeReturned = Seq(notification, notification_2, notification_3)
-        when(notificationRepositoryMock.findNotificationsByConversationIds(any()))
+        when(notificationRepositoryMock.findNotificationsByActionIds(any()))
           .thenReturn(Future.successful(notificationsToBeReturned))
       }
     }
@@ -123,7 +123,7 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
       "return empty list" in new Test {
         when(submissionRepositoryMock.findAllSubmissionsForEori(any()))
           .thenReturn(Future.successful(Seq(submission, submission_2)))
-        when(notificationRepositoryMock.findNotificationsByConversationIds(any()))
+        when(notificationRepositoryMock.findNotificationsByActionIds(any()))
           .thenReturn(Future.successful(Seq.empty))
 
         notificationService.getAllNotificationsForUser(eori).futureValue must equal(Seq.empty)
@@ -133,15 +133,15 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
 
   "Get Notifications" should {
     val notifications = mock[Seq[Notification]]
-    val submission = Submission("id", "eori", "lrn", None, "ducr", Seq(Action(SubmissionRequest, "id1")))
+    val submission = Submission("id", "eori", "lrn", None, "ducr", Seq(Action("id1", SubmissionRequest)))
 
     "retrieve by conversation IDs" in new Test {
-      when(notificationRepositoryMock.findNotificationsByConversationIds(any[Seq[String]]))
+      when(notificationRepositoryMock.findNotificationsByActionIds(any[Seq[String]]))
         .thenReturn(Future.successful(notifications))
 
       notificationService.getNotifications(submission).futureValue mustBe notifications
 
-      verify(notificationRepositoryMock).findNotificationsByConversationIds(Seq("id1"))
+      verify(notificationRepositoryMock).findNotificationsByActionIds(Seq("id1"))
     }
   }
 
@@ -170,7 +170,7 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
       "call SubmissionRepository passing conversation ID and MRN provided in the Notification" in new SaveHappyPathTest {
         notificationService.save(notification).futureValue
 
-        verify(submissionRepositoryMock, times(1)).updateMrn(meq(conversationId), meq(mrn))
+        verify(submissionRepositoryMock, times(1)).updateMrn(meq(actionId), meq(mrn))
       }
 
       trait SaveHappyPathTest extends Test {

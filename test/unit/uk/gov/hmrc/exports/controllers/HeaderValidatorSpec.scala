@@ -64,7 +64,7 @@ class HeaderValidatorSpec extends WordSpec with MockitoSugar with MustMatchers {
     "return conversationId from header when extract is called and header is present" in new SetUp {
       val extractedConversationId: Option[String] =
         validator.extractConversationIdHeader(ValidHeaders)
-      extractedConversationId must equal(Some(conversationId))
+      extractedConversationId must equal(Some(actionId))
     }
 
     "return None from header when extract is called and LRN header not present" in new SetUp {
@@ -145,7 +145,7 @@ class HeaderValidatorSpec extends WordSpec with MockitoSugar with MustMatchers {
 
         val result: Either[ErrorResponse, NotificationApiRequestHeaders] =
           validator.validateAndExtractNotificationHeaders(ValidHeaders)
-        result must equal(Right(NotificationApiRequestHeaders(AuthToken(dummyToken), ConversationId(conversationId))))
+        result must equal(Right(NotificationApiRequestHeaders(AuthToken(dummyToken), ConversationId(actionId))))
       }
 
       "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {
