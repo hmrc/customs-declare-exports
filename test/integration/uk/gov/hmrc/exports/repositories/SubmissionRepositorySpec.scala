@@ -120,7 +120,7 @@ class SubmissionRepositorySpec
 
     "there is no Submission with given MRN" should {
       "return empty Option" in {
-        val newAction = Action(CancellationRequest, actionId_2)
+        val newAction = Action(actionId_2, CancellationRequest)
         repo.addAction(mrn, newAction).futureValue mustNot be(defined)
       }
     }
@@ -128,7 +128,7 @@ class SubmissionRepositorySpec
     "there is a Submission with given MRN" should {
       "return Submission updated" in {
         repo.save(submission).futureValue
-        val newAction = Action(CancellationRequest, actionId_2)
+        val newAction = Action(actionId_2, CancellationRequest)
         val expectedUpdatedSubmission = submission.copy(actions = submission.actions :+ newAction)
 
         val updatedSubmission = repo.addAction(mrn, newAction).futureValue

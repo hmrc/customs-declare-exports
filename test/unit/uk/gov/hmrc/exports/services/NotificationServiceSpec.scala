@@ -22,12 +22,12 @@ import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import org.mockito.{ArgumentCaptor, InOrder, Mockito}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
 import reactivemongo.bson.{BSONDocument, BSONInteger, BSONString}
 import reactivemongo.core.errors.DetailedDatabaseException
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, RequestType, Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.NotificationService
 import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder._
@@ -133,7 +133,7 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
 
   "Get Notifications" should {
     val notifications = mock[Seq[Notification]]
-    val submission = Submission("id", "eori", "lrn", None, "ducr", Seq(Action(SubmissionRequest, "id1")))
+    val submission = Submission("id", "eori", "lrn", None, "ducr", Seq(Action("id1", SubmissionRequest)))
 
     "retrieve by conversation IDs" in new Test {
       when(notificationRepositoryMock.findNotificationsByActionIds(any[Seq[String]]))
