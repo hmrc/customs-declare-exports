@@ -65,7 +65,7 @@ class CancellationControllerSpec
 
         status(result) mustBe OK
         contentAsString(result) mustBe empty
-        verify(submissionService).cancel(refEq(userEori), refEq(cancellation))(any())
+        verify(submissionService).cancel(refEq(userEori.value), refEq(cancellation))(any())
       }
     }
 
@@ -78,7 +78,7 @@ class CancellationControllerSpec
 
         status(result) mustBe CONFLICT
         contentAsString(result) mustBe empty
-        verify(submissionService).cancel(refEq(userEori), refEq(cancellation))(any())
+        verify(submissionService).cancel(refEq(userEori.value), refEq(cancellation))(any())
       }
     }
 
@@ -91,7 +91,7 @@ class CancellationControllerSpec
 
         status(result) mustBe NOT_FOUND
         contentAsString(result) mustBe empty
-        verify(submissionService).cancel(refEq(userEori), refEq(cancellation))(any())
+        verify(submissionService).cancel(refEq(userEori.value), refEq(cancellation))(any())
       }
     }
 

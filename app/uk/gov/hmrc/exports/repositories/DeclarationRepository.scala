@@ -27,7 +27,7 @@ import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.ImplicitBSONHandlers
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Page, Paginated}
+import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Eori, Page, Paginated}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 
@@ -41,8 +41,8 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
       objectIdFormats
     ) {
 
-  def find(id: String, eori: String): Future[Option[ExportsDeclaration]] =
-    super.find("id" -> id, "eori" -> eori).map(_.headOption)
+  def find(id: String, eori: Eori): Future[Option[ExportsDeclaration]] =
+    super.find("id" -> id, "eori" -> eori.value).map(_.headOption)
 
   def find(
     search: DeclarationSearch,

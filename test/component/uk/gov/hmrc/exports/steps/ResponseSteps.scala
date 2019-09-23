@@ -14,13 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services
+package component.uk.gov.hmrc.exports.steps
 
-sealed trait SubmissionResult { def getMessage: String }
+import component.uk.gov.hmrc.exports.syntax.{Postcondition, ScenarioContext}
+import org.scalatest.MustMatchers
+import play.api.mvc.Result
 
-final case class Success(msg: String) extends SubmissionResult {
-  override def getMessage: String = msg
+class ResultStatusPostcondition(expectedStatus: Int) extends Postcondition with MustMatchers {
+  override def name: String = s"Result status is $expectedStatus"
+
+  override def execute(context: ScenarioContext): ScenarioContext = {
+    context.get[Result].header.status mustEqual expectedStatus
+    context
+  }
 }
-final case class Failure(msg: String) extends SubmissionResult {
-  override def getMessage: String = msg
+
+object `Result status` {
+  def is(status: Int): Postcondition = new ResultStatusPostcondition(status)
 }

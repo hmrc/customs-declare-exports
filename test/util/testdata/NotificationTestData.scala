@@ -18,6 +18,7 @@ package util.testdata
 
 import java.time.format.DateTimeFormatter.ofPattern
 import java.time.{LocalDateTime, ZoneId}
+import java.util.UUID
 
 import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
@@ -250,6 +251,15 @@ object NotificationTestData {
   val payload = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
   val payload_2 = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
   val payload_3 = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
+
+  def exampleNotification(conversationId: String = UUID.randomUUID().toString) = Notification(
+    actionId = actionId,
+    mrn = mrn,
+    dateTimeIssued = dateTimeIssued,
+    status = SubmissionStatus.UNKNOWN,
+    errors = errors,
+    payload = payload
+  )
 
   val notification = Notification(
     actionId = actionId,

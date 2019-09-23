@@ -54,7 +54,7 @@ class DeclarationController @Inject()(
   def update(id: String): Action[ExportsDeclarationRequest] =
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
       logPayload("Update Declaration Request Received", request.body)
-      declarationService.findOne(id, request.eori.value).flatMap {
+      declarationService.findOne(id, request.eori).flatMap {
         case Some(declaration) if declaration.status == DeclarationStatus.COMPLETE =>
           val response = ErrorResponse("Cannot update a declaration once it is COMPLETE")
           logPayload("Update Declaration Response", response)
@@ -76,21 +76,21 @@ class DeclarationController @Inject()(
   def findAll(status: Option[String], pagination: Page, sort: DeclarationSort): Action[AnyContent] =
     authenticator.authorisedAction(parse.default) { implicit request =>
       val search = DeclarationSearch(
-        eori = request.eori.value,
+        eori = request.eori,
         status = status.map(v => Try(DeclarationStatus.withName(v))).filter(_.isSuccess).map(_.get)
       )
       declarationService.find(search, pagination, sort).map(results => Ok(results))
     }
 
   def findByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    declarationService.findOne(id, request.eori.value).map {
+    declarationService.findOne(id, request.eori).map {
       case Some(declaration) => Ok(declaration)
       case None              => NotFound
     }
   }
 
   def deleteByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    declarationService.findOne(id, request.eori.value).flatMap {
+    declarationService.findOne(id, request.eori).flatMap {
       case Some(declaration) if declaration.status == DeclarationStatus.COMPLETE =>
         Future.successful(BadRequest(ErrorResponse("Cannot remove a declaration once it is COMPLETE")))
       case Some(declaration) => declarationService.deleteOne(declaration).map(_ => NoContent)

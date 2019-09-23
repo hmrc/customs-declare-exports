@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models
+package component.uk.gov.hmrc.exports.syntax
 
-import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.Json
-import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
-
-class DeclarationSearchTest extends PlaySpec {
-
-  "Search" should {
-    "build Mongo Query" in {
-      val search = DeclarationSearch(eori = Eori("123"), status = Some(DeclarationStatus.COMPLETE))
-      Json.toJson(search) mustBe Json.obj("eori" -> "123", "status" -> "COMPLETE")
-    }
-  }
-
+sealed trait Step { self: AnyRef =>
+  def execute(context: ScenarioContext): ScenarioContext
+  def name: String
 }
+
+trait Precondition extends Step
+
+trait Action extends Step
+
+trait Postcondition extends Step

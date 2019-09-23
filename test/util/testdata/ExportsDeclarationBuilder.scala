@@ -19,7 +19,7 @@ package util.testdata
 import java.time.{LocalDateTime, ZoneOffset}
 import java.util.UUID
 
-import uk.gov.hmrc.exports.models.Choice
+import uk.gov.hmrc.exports.models.{Choice, Eori}
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration._
 
@@ -60,6 +60,8 @@ trait ExportsDeclarationBuilder {
   // ************************************************* Builders ********************************************************
 
   def withEori(eori: String): ExportsDeclarationModifier = _.copy(eori = eori)
+
+  def withEori(eori: Eori): ExportsDeclarationModifier = _.copy(eori = eori.value)
 
   def withStatus(status: DeclarationStatus): ExportsDeclarationModifier = _.copy(status = status)
 

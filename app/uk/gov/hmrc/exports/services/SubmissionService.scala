@@ -17,7 +17,11 @@
 package uk.gov.hmrc.exports.services
 
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
+import uk.gov.hmrc.exports.models.Eori
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
@@ -25,6 +29,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 @Singleton
 class SubmissionService @Inject()(
@@ -34,6 +39,41 @@ class SubmissionService @Inject()(
   metaDataBuilder: MetaDataBuilder,
   wcoMapperService: WcoMapperService
 )(implicit executionContext: ExecutionContext) {
+
+  val logger = Logger(classOf[SubmissionService])
+
+  def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] = {
+    def updateMrnFromEarlierNotification(conversationId: String): Future[Seq[Notification]] =
+      notificationRepository.findNotificationsByActionId(conversationId).andThen {
+        case Success(notifications) =>
+          notifications.headOption.foreach(
+            notification =>
+              submissionRepository.updateMrn(conversationId, notification.mrn).andThen {
+                case Failure(e) => Logger.error("Error on updating submission mrn", e)
+            }
+          )
+        case Failure(e) => Logger.error("Error on searching notification by conversation Id", e)
+      }
+    val metaData = wcoMapperService.produceMetaData(declaration)
+    val lrn = wcoMapperService
+      .declarationLrn(metaData)
+      .getOrElse(throw new IllegalArgumentException("A LRN is required"))
+    val ducr = wcoMapperService
+      .declarationDucr(metaData)
+      .getOrElse(throw new IllegalArgumentException("A DUCR is required"))
+    val payload = wcoMapperService.toXml(metaData)
+
+    val submission = Submission(declaration, lrn, ducr)
+
+    submissionRepository.findOrCreate(Eori(declaration.eori), declaration.id, submission).flatMap { submission =>
+      customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).flatMap { conversationId =>
+        val action = Action(id = conversationId, requestType = SubmissionRequest)
+        submissionRepository.addAction(submission, action).andThen {
+          case Success(_) => updateMrnFromEarlierNotification(conversationId)
+        }
+      }
+    }
+  }
 
   def cancel(eori: String, cancellation: SubmissionCancellation)(
     implicit hc: HeaderCarrier
@@ -57,23 +97,11 @@ class SubmissionService @Inject()(
   def getSubmission(eori: String, uuid: String): Future[Option[Submission]] =
     submissionRepository.findSubmissionByUuid(eori, uuid)
 
-  def create(submission: Submission): Future[Submission] =
-    for {
-      saved <- submissionRepository.save(submission)
-      conversationId = submission.actions.head.id
-      notifications <- notificationRepository.findNotificationsByActionId(conversationId)
-      _ <- notifications.headOption
-        .map(_.mrn)
-        .fold(Future.successful((): Unit))(
-          mrn => submissionRepository.updateMrn(conversationId, mrn).map(_ => (): Unit)
-        )
-    } yield saved
-
-  private def updateSubmissionInDB(eori: String, mrn: String, actionId: String): Future[CancellationStatus] =
+  private def updateSubmissionInDB(eori: String, mrn: String, conversationId: String): Future[CancellationStatus] =
     submissionRepository.findSubmissionByMrn(mrn).flatMap {
       case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationRequestExists)
       case Some(_) =>
-        val newAction = Action(requestType = CancellationRequest, id = actionId)
+        val newAction = Action(requestType = CancellationRequest, id = conversationId)
         submissionRepository.addAction(mrn, newAction).map {
           case Some(_) => CancellationRequested
           case None    => MissingDeclaration

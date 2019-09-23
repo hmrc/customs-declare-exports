@@ -19,7 +19,7 @@ package unit.uk.gov.hmrc.exports.controllers
 import java.time.Instant
 
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers._
+import org.mockito.ArgumentMatchers.{eq => eqRef, _}
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
@@ -74,7 +74,7 @@ class DeclarationControllerSpec
 
         status(result) must be(CREATED)
         contentAsJson(result) mustBe toJson(declaration)
-        theDeclarationCreated.eori mustBe userEori
+        theDeclarationCreated.eori mustBe userEori.value
       }
     }
 
@@ -230,7 +230,7 @@ class DeclarationControllerSpec
       "request is valid" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(Some(declaration)))
+        given(declarationService.findOne(anyString(), any[Eori]())).willReturn(Future.successful(Some(declaration)))
 
         val result: Future[Result] = route(app, get).get
 
@@ -243,13 +243,13 @@ class DeclarationControllerSpec
     "return 404" when {
       "id is not found" in {
         withAuthorizedUser()
-        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(None))
+        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(None))
 
         val result: Future[Result] = route(app, get).get
 
         status(result) must be(NOT_FOUND)
         contentAsString(result) mustBe empty
-        verify(declarationService).findOne("id", userEori)
+        verify(declarationService).findOne(eqRef("id"), eqRef(userEori))
       }
     }
 
@@ -272,7 +272,7 @@ class DeclarationControllerSpec
       "request is valid" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori), withStatus(DeclarationStatus.DRAFT))
-        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(Some(declaration)))
+        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(Some(declaration)))
         given(declarationService.deleteOne(any[ExportsDeclaration])).willReturn(Future.successful((): Unit))
 
         val result: Future[Result] = route(app, delete).get
@@ -288,7 +288,7 @@ class DeclarationControllerSpec
       "declaration is COMPLETE" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori), withStatus(DeclarationStatus.COMPLETE))
-        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(Some(declaration)))
+        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(Some(declaration)))
 
         val result: Future[Result] = route(app, delete).get
 
@@ -302,7 +302,7 @@ class DeclarationControllerSpec
     "return 204" when {
       "id is not found" in {
         withAuthorizedUser()
-        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(None))
+        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(None))
 
         val result: Future[Result] = route(app, delete).get
 
@@ -337,7 +337,7 @@ class DeclarationControllerSpec
           withId("id"),
           withEori(userEori)
         )
-        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(Some(declaration)))
+        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(Some(declaration)))
         given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
           .willReturn(Future.successful(Some(declaration)))
 
@@ -346,7 +346,7 @@ class DeclarationControllerSpec
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(declaration)
         val updatedDeclaration = theDeclarationUpdated
-        updatedDeclaration.eori mustBe userEori
+        updatedDeclaration.eori mustBe userEori.value
         updatedDeclaration.id mustBe "id"
       }
     }
@@ -355,7 +355,7 @@ class DeclarationControllerSpec
       "declaration is not found - on find" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
-        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(None))
+        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(None))
         given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
           .willReturn(Future.successful(None))
 
@@ -374,7 +374,7 @@ class DeclarationControllerSpec
           withId("id"),
           withEori(userEori)
         )
-        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(Some(declaration)))
+        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(Some(declaration)))
         given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
           .willReturn(Future.successful(None))
 
@@ -395,7 +395,7 @@ class DeclarationControllerSpec
           withId("id"),
           withEori(userEori)
         )
-        given(declarationService.findOne(anyString(), anyString())).willReturn(Future.successful(Some(declaration)))
+        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(Some(declaration)))
 
         val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
 

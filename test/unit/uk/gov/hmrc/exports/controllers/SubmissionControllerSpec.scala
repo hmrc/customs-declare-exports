@@ -52,7 +52,7 @@ class SubmissionControllerSpec
 
   "Find All" should {
     val get = FakeRequest("GET", "/submissions")
-    val submission = Submission("id", userEori, "lrn", None, "ducr")
+    val submission = Submission("id", userEori.value, "lrn", None, "ducr")
     val submissions = Seq(submission)
 
     "return 200" when {
@@ -64,7 +64,7 @@ class SubmissionControllerSpec
 
         status(result) mustBe OK
         contentAsJson(result) mustBe toJson(submissions)
-        verify(submissionService).getAllSubmissionsForUser(userEori)
+        verify(submissionService).getAllSubmissionsForUser(userEori.value)
       }
     }
 
@@ -82,7 +82,7 @@ class SubmissionControllerSpec
 
   "Find By ID" should {
     val get = FakeRequest("GET", "/declarations/id/submission")
-    val submission = Submission("id", userEori, "lrn", None, "ducr")
+    val submission = Submission("id", userEori.value, "lrn", None, "ducr")
 
     "return 200" when {
       "request is valid" in {
@@ -93,7 +93,7 @@ class SubmissionControllerSpec
 
         status(result) mustBe OK
         contentAsJson(result) mustBe toJson(submission)
-        verify(submissionService).getSubmission(userEori, "id")
+        verify(submissionService).getSubmission(userEori.value, "id")
       }
     }
 
@@ -106,7 +106,7 @@ class SubmissionControllerSpec
 
         status(result) mustBe NOT_FOUND
         contentAsString(result) mustBe empty
-        verify(submissionService).getSubmission(userEori, "id")
+        verify(submissionService).getSubmission(userEori.value, "id")
       }
     }
 

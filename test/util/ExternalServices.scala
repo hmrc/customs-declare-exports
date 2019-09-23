@@ -55,9 +55,11 @@ trait AuthService extends WireMockRunner {
 
   private def bearerTokenMatcher(bearerToken: String) = equalTo("Bearer " + bearerToken)
 
-  def stubDefaultAuthorisation(): Unit = {
+  def stubAllUnauthorized(): Unit =
     stubFor(post(urlEqualTo(authUrl)).willReturn(aResponse().withStatus(UNAUTHORIZED)))
 
+  def stubDefaultAuthorisation(): Unit = {
+    stubAllUnauthorized()
     stubBearerTokenAuth()
   }
 

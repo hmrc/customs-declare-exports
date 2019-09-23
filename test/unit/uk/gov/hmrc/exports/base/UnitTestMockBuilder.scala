@@ -24,6 +24,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
+import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.{NotificationService, SubmissionService}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -54,7 +55,8 @@ object UnitTestMockBuilder extends MockitoSugar {
     when(submissionRepositoryMock.findSubmissionByUuid(any(), any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.save(any())).thenAnswer(withFutureArg(0))
     when(submissionRepositoryMock.updateMrn(any(), any())).thenReturn(Future.successful(None))
-    when(submissionRepositoryMock.addAction(any(), any())).thenReturn(Future.successful(None))
+    when(submissionRepositoryMock.addAction(any[String](), any())).thenReturn(Future.successful(None))
+    when(submissionRepositoryMock.addAction(any[Submission](), any())).thenReturn(Future.successful(mock[Submission]))
     submissionRepositoryMock
   }
 
