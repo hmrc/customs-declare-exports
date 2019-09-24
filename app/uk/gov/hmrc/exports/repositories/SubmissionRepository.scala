@@ -22,7 +22,7 @@ import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.Cursor.FailOnError
 import reactivemongo.api.ReadPreference
 import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.BSONObjectID
+import reactivemongo.bson.{BSONBoolean, BSONDocument, BSONObjectID}
 import reactivemongo.play.json.commands.JSONFindAndModifyCommand.FindAndModifyResult
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
@@ -42,7 +42,12 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
     ) {
 
   override def indexes: Seq[Index] = Seq(
-    Index(Seq("actions.id" -> IndexType.Ascending), unique = true, name = Some("actionIdIdx")),
+    Index(
+      Seq("actions.id" -> IndexType.Ascending),
+      unique = true,
+      name = Some("actionIdIdx"),
+      partialFilter = Some(BSONDocument(Seq("actions.id" -> BSONDocument("$exists" -> BSONBoolean(true)))))
+    ),
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
     Index(
       Seq("eori" -> IndexType.Ascending, "action.requestTimestamp" -> IndexType.Descending),

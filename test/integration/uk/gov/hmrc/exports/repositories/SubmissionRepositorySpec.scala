@@ -87,6 +87,12 @@ class SubmissionRepositorySpec
         submissionsInDB.head must equal(submission)
       }
     }
+
+    "allow save two submissions with empty actions" in {
+      repo.save(emptySubmission_1).futureValue must be(emptySubmission_1)
+      repo.save(emptySubmission_2).futureValue must be(emptySubmission_2)
+      repo.findAllSubmissionsForEori(eori).futureValue must have length 2
+    }
   }
 
   "Submission Repository on updateMrn" should {
