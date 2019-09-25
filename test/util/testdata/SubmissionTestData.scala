@@ -48,4 +48,9 @@ object SubmissionTestData {
   val uuid: String = UUID.randomUUID().toString
   val uuid_2: String = UUID.randomUUID().toString
   val uuid_3: String = UUID.randomUUID().toString
+
+  val emptySubmission_1 = Submission(uuid = uuid, eori = eori, lrn = lrn, mrn = Some(mrn), ducr = ducr, actions = Seq())
+
+  val emptySubmission_2 =
+    Submission(uuid = uuid_2, eori = eori, lrn = lrn, mrn = Some(mrn_2), ducr = ducr, actions = Seq())
 }
