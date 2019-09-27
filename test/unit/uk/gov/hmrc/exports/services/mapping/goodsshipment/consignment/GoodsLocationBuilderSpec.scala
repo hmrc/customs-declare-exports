@@ -48,12 +48,12 @@ class GoodsLocationBuilderSpec extends WordSpec with Matchers with MockitoSugar 
   }
 
   private def validateGoodsLocation(goodsLocation: GoodsShipment.Consignment.GoodsLocation) = {
-    goodsLocation.getID.getValue should be(GoodsLocationBuilderSpec.identificationOfLocation)
+    goodsLocation.getID.getValue should be(GoodsLocationBuilderSpec.additionalIdentifier)
     goodsLocation.getAddress.getLine.getValue should be(GoodsLocationBuilderSpec.addressLine)
     goodsLocation.getAddress.getCityName.getValue should be(GoodsLocationBuilderSpec.city)
     goodsLocation.getAddress.getPostcodeID.getValue should be(GoodsLocationBuilderSpec.postcode)
     goodsLocation.getAddress.getCountryCode.getValue should be(GoodsLocationBuilderSpec.countryCode)
-    goodsLocation.getName.getValue should be(GoodsLocationBuilderSpec.additionalQualifier)
+    goodsLocation.getName.getValue should be(GoodsLocationBuilderSpec.identificationOfLocation)
     goodsLocation.getTypeCode.getValue should be(GoodsLocationBuilderSpec.typeOfLocation)
     goodsLocation.getAddress.getTypeCode.getValue should be(GoodsLocationBuilderSpec.qualifierOfIdentification)
   }
@@ -68,14 +68,14 @@ object GoodsLocationBuilderSpec {
   val city = "City"
   val typeOfLocation = "T"
   val qualifierOfIdentification = "Y"
-  val additionalQualifier = "9GB1234567ABCDEF"
+  val additionalIdentifier = "9GB1234567ABCDEF"
   var countryCode: String = "GB"
   val correctGoodsLocation = GoodsLocation(
     country = country,
     typeOfLocation = typeOfLocation,
     qualifierOfIdentification = qualifierOfIdentification,
     identificationOfLocation = Some(identificationOfLocation),
-    additionalQualifier = Some(additionalQualifier),
+    additionalIdentifier = Some(additionalIdentifier),
     addressLine = Some(addressLine),
     postCode = Some(postcode),
     city = Some(city)

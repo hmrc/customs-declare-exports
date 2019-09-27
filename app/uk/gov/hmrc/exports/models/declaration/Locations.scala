@@ -32,7 +32,7 @@ case class GoodsLocation(
   typeOfLocation: String,
   qualifierOfIdentification: String,
   identificationOfLocation: Option[String],
-  additionalQualifier: Option[String],
+  additionalIdentifier: Option[String],
   addressLine: Option[String],
   postCode: Option[String],
   city: Option[String]
