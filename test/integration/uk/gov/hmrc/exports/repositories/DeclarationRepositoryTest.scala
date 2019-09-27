@@ -41,6 +41,7 @@ class DeclarationRepositoryTest
     SharedMetricRegistries.clear()
     GuiceApplicationBuilder().injector()
   }
+
   private val repository = injector.instanceOf[DeclarationRepository]
 
   override def afterEach(): Unit = {
