@@ -25,13 +25,13 @@ import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.{CustomsDeclarationsResponse, Eori}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import unit.uk.gov.hmrc.exports.base.UnitSpec
+import unit.uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.Elem
 
-class CustomsDeclarationsConnectorSpec extends UnitSpec with MockitoSugar {
+class CustomsDeclarationsConnectorSpec extends UnitSpec with MockitoSugar with MockMetrics {
 
   val testConversationId = "12345789"
 
@@ -40,7 +40,7 @@ class CustomsDeclarationsConnectorSpec extends UnitSpec with MockitoSugar {
     val appConfig: AppConfig = mock[AppConfig]
     val httpClient: HttpClient = mock[HttpClient]
 
-    val testObj = new CustomsDeclarationsConnector(appConfig, httpClient: HttpClient)
+    val testObj = new CustomsDeclarationsConnector(appConfig, httpClient: HttpClient, metrics)
 
     implicit val hc: HeaderCarrier = mock[HeaderCarrier]
 

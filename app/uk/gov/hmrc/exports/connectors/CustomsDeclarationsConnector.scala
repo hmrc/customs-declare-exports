@@ -17,6 +17,7 @@
 package uk.gov.hmrc.exports.connectors
 
 import com.google.inject.Inject
+import com.kenshoo.play.metrics.Metrics
 import javax.inject.Singleton
 import play.api.Logger
 import play.api.http.{ContentTypes, HeaderNames, Status}
@@ -31,7 +32,7 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: HttpClient)(
+class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: HttpClient, metrics: Metrics)(
   implicit ec: ExecutionContext
 ) {
 
@@ -62,10 +63,13 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
   ): Future[CustomsDeclarationsResponse] =
     post(eori, uri, xml)
 
+  private val postTimer = metrics.defaultRegistry.timer("upstream.customs-declarations.timer")
+
   private[connectors] def post(eori: String, uri: String, body: String)(
     implicit hc: HeaderCarrier
   ): Future[CustomsDeclarationsResponse] = {
     logger.debug(s"CUSTOMS_DECLARATIONS request payload is -> $body")
+    val postStopwatch = postTimer.time()
     httpClient
       .POSTString[CustomsDeclarationsResponse](
         s"${appConfig.customsDeclarationsBaseUrl}$uri",
@@ -87,6 +91,10 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
             case _ => CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, None)
           }
       }
+      .andThen {
+        case _ => postStopwatch.stop()
+      }
+
   }
 
   private def headers(eori: String): Seq[(String, String)] = Seq(
