@@ -32,7 +32,7 @@ class GoodsLocationBuilder @Inject()(countriesService: CountriesService)
     }
 
   private def isDefined(goodsLocation: GoodsLocation) =
-    goodsLocation.additionalQualifier.isDefined ||
+    goodsLocation.additionalIdentifier.isDefined ||
       goodsLocation.postCode.isDefined ||
       goodsLocation.country.nonEmpty ||
       goodsLocation.city.nonEmpty ||
@@ -44,11 +44,10 @@ class GoodsLocationBuilder @Inject()(countriesService: CountriesService)
   private def buildEoriOrAddress(goods: GoodsLocation) = {
     val goodsLocation = new Consignment.GoodsLocation()
 
-    goods.additionalQualifier.foreach { value =>
-      val name = new GoodsLocationNameTextType()
-      name.setValue(value)
-      goodsLocation.setName(name)
-
+    goods.additionalIdentifier.foreach { value =>
+      val id = new GoodsLocationIdentificationIDType()
+      id.setValue(value)
+      goodsLocation.setID(id)
     }
 
     if (goods.typeOfLocation.nonEmpty) {
@@ -58,9 +57,9 @@ class GoodsLocationBuilder @Inject()(countriesService: CountriesService)
     }
 
     goods.identificationOfLocation.foreach { value =>
-      val id = new GoodsLocationIdentificationIDType()
-      id.setValue(value)
-      goodsLocation.setID(id)
+      val name = new GoodsLocationNameTextType()
+      name.setValue(value)
+      goodsLocation.setName(name)
     }
 
     if (goods.addressLine.isDefined || goods.city.isDefined || goods.postCode.isDefined || goods.country.nonEmpty) {
