@@ -54,7 +54,7 @@ trait ExportsDeclarationBuilder {
   )
 
   def aDeclaration(modifiers: ExportsDeclarationModifier*): ExportsDeclaration =
-    modifiers.foldLeft(modelWithDefaults)((current, modifier) => modifier(current))
+    modifiers.foldLeft(modelWithDefaults.copy(id = uuid))((current, modifier) => modifier(current))
 
   def withId(id: String): ExportsDeclarationModifier = _.copy(id = id)
 
