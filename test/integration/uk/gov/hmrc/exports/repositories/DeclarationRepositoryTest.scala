@@ -56,7 +56,7 @@ class DeclarationRepositoryTest
       .toInt
 
   private def givenADeclarationExists(declarations: ExportsDeclaration*): Unit =
-    repository.collection.insert(false).many(declarations).futureValue
+    repository.collection.insert(ordered = true).many(declarations).futureValue
 
   "Create" should {
     "persist the declaration" in {
