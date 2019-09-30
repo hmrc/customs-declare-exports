@@ -16,7 +16,8 @@
 
 package util.testdata
 
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.temporal.ChronoUnit
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.util.UUID
 
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
@@ -134,6 +135,12 @@ trait ExportsDeclarationBuilder {
 
   def withoutRepresentativeDetails(): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(representativeDetails = None))
+
+  def withRepresentativeDetails(
+    eori: Option[String],
+    address: Option[Address],
+    statusCode: Option[String]
+  ): ExportsDeclarationModifier = withRepresentativeDetails(Some(EntityDetails(eori, address)), statusCode)
 
   def withRepresentativeDetails(
     details: Option[EntityDetails],

@@ -1,28 +1,35 @@
+/*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package util
 
-import java.time.Instant
 import java.util.UUID
 
-import org.scalatest.WordSpec
-import play.api.libs.json.Json
 import reactivemongo.api.{MongoConnection, MongoDriver}
-import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
+import uk.gov.hmrc.exports.models.declaration._
+import unit.uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import util.testdata.ExportsDeclarationBuilder
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class SeedMongoSpec extends WordSpec {
-  "Seed Mongo" should {
-    "have correct model of json declaration" in {
-      SeedMongo.json.as[ExportsDeclaration]
-    }
-  }
-}
-
-object SeedMongo extends App with ExportsDeclarationBuilder {
+object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuilder {
 
   import scala.concurrent.ExecutionContext.Implicits._
+  import ExportsDeclaration.Mongo._
 
   val mongoUri = "mongodb://localhost:27017/customs-declare-exports"
 
@@ -30,201 +37,64 @@ object SeedMongo extends App with ExportsDeclarationBuilder {
 
   val parsedUri = MongoConnection.parseURI(mongoUri)
 
-  val json = Json.parse(s"""{
-       |  "id": "93fdb451-552f-4aff-9dd0-e0b7b6c88f02",
-       |  "eori": "GB7172755072243",
-       |  "status": "COMPLETE",
-       |  "createdDateTime": {
-       |    "$$date": ${Instant.parse("2019-09-30T11:46:42.740Z").toEpochMilli}
-       |  },
-       |  "updatedDateTime": {
-       |    "$$date": ${Instant.parse("2019-09-30T11:48:19.315Z").toEpochMilli}
-       |  },
-       |  "choice": "STD",
-       |  "dispatchLocation": {
-       |    "dispatchLocation": "EX"
-       |  },
-       |  "additionalDeclarationType": {
-       |    "additionalDeclarationType": "D"
-       |  },
-       |  "consignmentReferences": {
-       |    "ducr": {
-       |      "ducr": "8GB123453469100-101SHIP1"
-       |    },
-       |    "lrn": "JasTest4"
-       |  },
-       |  "borderTransport": {
-       |    "borderModeOfTransportCode": "1",
-       |    "meansOfTransportOnDepartureType": "11",
-       |    "meansOfTransportOnDepartureIDNumber": "SHIP1"
-       |  },
-       |  "transportDetails": {
-       |    "meansOfTransportCrossingTheBorderNationality": "United Kingdom",
-       |    "container": true,
-       |    "meansOfTransportCrossingTheBorderType": "11",
-       |    "meansOfTransportCrossingTheBorderIDNumber": "BOAT1",
-       |    "paymentMethod": "H"
-       |  },
-       |  "containerData": {
-       |    "containers": [
-       |      {
-       |        "id": "123456",
-       |        "seals": []
-       |      }
-       |    ]
-       |  },
-       |  "parties": {
-       |    "exporterDetails": {
-       |      "details": {
-       |        "eori": "GB717572504502801"
-       |      }
-       |    },
-       |    "consigneeDetails": {
-       |      "details": {
-       |        "address": {
-       |          "fullName": "Bags Export",
-       |          "addressLine": "1 Bags Avenue",
-       |          "townOrCity": "New York",
-       |          "postCode": "NA",
-       |          "country": "United States of America"
-       |        }
-       |      }
-       |    },
-       |    "declarantDetails": {
-       |      "details": {
-       |        "eori": "GB717572504502811"
-       |      }
-       |    },
-       |    "representativeDetails": {
-       |      "details": {
-       |        "eori": "GB717572504502809"
-       |      },
-       |      "statusCode": "3"
-       |    },
-       |    "declarationHoldersData": {
-       |      "holders": [
-       |        {
-       |          "authorisationTypeCode": "AEOC",
-       |          "eori": "GB717572504502811"
-       |        }
-       |      ]
-       |    },
-       |    "carrierDetails": {
-       |      "details": {
-       |        "address": {
-       |          "fullName": "XYZ Carrier",
-       |          "addressLine": "School Road",
-       |          "townOrCity": "London",
-       |          "postCode": "WS1 2AB",
-       |          "country": "United Kingdom"
-       |        }
-       |      }
-       |    }
-       |  },
-       |  "locations": {
-       |    "destinationCountries": {
-       |      "countryOfDispatch": "GB",
-       |      "countriesOfRouting": [
-       |        "GB"
-       |      ],
-       |      "countryOfDestination": "US"
-       |    },
-       |    "goodsLocation": {
-       |      "country": "Angola including Cabinda",
-       |      "typeOfLocation": "B",
-       |      "qualifierOfIdentification": "Y",
-       |      "identificationOfLocation": "FXT"
-       |    },
-       |    "warehouseIdentification": {
-       |      "supervisingCustomsOffice": "GBLBA001",
-       |      "inlandModeOfTransportCode": "1"
-       |    },
-       |    "officeOfExit": {
-       |      "officeId": "GB000054",
-       |      "presentationOfficeId": "GBLBA003",
-       |      "circumstancesCode": "No"
-       |    }
-       |  },
-       |  "items": [
-       |    {
-       |      "id": "ec7c4cb3",
-       |      "sequenceId": 1,
-       |      "procedureCodes": {
-       |        "procedureCode": "1040",
-       |        "additionalProcedureCodes": [
-       |          "000"
-       |        ]
-       |      },
-       |      "fiscalInformation": {
-       |        "onwardSupplyRelief": "No"
-       |      },
-       |      "itemType": {
-       |        "combinedNomenclatureCode": "46021910",
-       |        "taricAdditionalCode": [],
-       |        "nationalAdditionalCode": [],
-       |        "descriptionOfGoods": "Straw for bottles",
-       |        "statisticalValue": "1000"
-       |      },
-       |      "packageInformation": [
-       |        {
-       |          "typesOfPackages": "PK",
-       |          "numberOfPackages": 10,
-       |          "shippingMarks": "RICH123"
-       |        }
-       |      ],
-       |      "commodityMeasure": {
-       |        "supplementaryUnits": "10",
-       |        "netMass": "500",
-       |        "grossMass": "700"
-       |      },
-       |      "additionalInformation": {
-       |        "items": [
-       |          {
-       |            "code": "00400",
-       |            "description": "EXPORTER"
-       |          }
-       |        ]
-       |      },
-       |      "documentsProducedData": {
-       |        "documents": [
-       |          {
-       |            "documentTypeCode": "C501",
-       |            "documentIdentifierAndPart": {
-       |              "documentIdentifier": "GBAEOC71757250450281",
-       |              "documentPart": "1"
-       |            }
-       |          }
-       |        ]
-       |      }
-       |    }
-       |  ],
-       |  "totalNumberOfItems": {
-       |    "totalAmountInvoiced": "56764",
-       |    "exchangeRate": "1.49",
-       |    "totalPackage": "1"
-       |  },
-       |  "previousDocuments": {
-       |    "documents": [
-       |      {
-       |        "documentCategory": "Y",
-       |        "documentType": "IF3",
-       |        "documentReference": "101SHIP2"
-       |      }
-       |    ]
-       |  },
-       |  "natureOfTransaction": {
-       |    "natureType": "1"
-       |  }
-       |}""".stripMargin)
-
-  val declaration = json.as[ExportsDeclaration]
+  val declaration = aDeclaration(
+    withDispatchLocation(),
+    withAdditionalDeclarationType(),
+    withConsignmentReferences(),
+    withBorderTransport("1", "11", Some("SHIP1")),
+    withTransportDetails(),
+    withContainerData(),
+    withExporterDetails(Some("GB717572504502801")),
+    withConsigneeDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "United States of America"))),
+    withDeclarantDetails(Some("GB717572504502811")),
+    withRepresentativeDetails(Some("GB717572504502809"), None, Some("3")),
+    withDeclarationHolders(DeclarationHolder(Some("AEOC"), Some("GB717572504502811"))),
+    withCarrierDetails(None, Some(Address("XYZ Carrier", "School Road", "London", "WS1 2AB", "United Kingdom"))),
+    withDestinationCountries(countriesOfRouting = Seq("FR")),
+    withGoodsLocation(GoodsLocation(
+      country = "Angola including Cabinda",
+      typeOfLocation = "B",
+      qualifierOfIdentification = "Y",
+      identificationOfLocation = Some("FXT"),
+      additionalIdentifier = None,
+      addressLine = None,
+      postCode = None,
+      city = None
+    )),
+    withWarehouseIdentification(
+      supervisingCustomsOffice = Some("GBLBA001"),
+      inlandModeOfTransportCode = Some("1")
+    ),
+    withOfficeOfExit("GB000054", Some("GBLBA003"), Some("No")),
+    withItems(
+      anItem(
+        withProcedureCodes(Some("1040"),Seq("000")),
+        withItemType(combinedNomenclatureCode = "46021910", descriptionOfGoods = "Straw for bottles", statisticalValue = "1000"),
+        withPackageInformation("PK", 10, "RICH123"),
+        withCommodityMeasure(CommodityMeasure(Some("10"), "500", "700")),
+        withAdditionalInformation("00400", "EXPORTER"),
+        withDocumentsProduced(DocumentProduced(
+          Some("C501"),
+          Some(DocumentIdentifierAndPart(Some("GBAEOC71757250450281"), Some("1"))),
+          None,
+          None,
+          None,
+          None,
+          None
+        ))
+      )
+    ),
+    withTotalNumberOfItems(Some("56764"), Some("1.49"), "1"),
+    withPreviousDocuments(PreviousDocument("Y", "IF3", "101SHIP2", None)),
+    withNatureOfTransaction("1")
+  )
 
   val random = new scala.util.Random()
 
   val target = 20000
 
   def generateEori =
-    "GB" + Math.abs(random.nextLong()).toString
+    "GB" + random.nextInt(Int.MaxValue).toString
 
   import reactivemongo.play.json.collection.JSONCollection
 
