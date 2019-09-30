@@ -19,9 +19,9 @@ package util.testdata
 import java.time.{LocalDateTime, ZoneOffset}
 import java.util.UUID
 
-import uk.gov.hmrc.exports.models.{Choice, Eori}
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.exports.models.{Choice, Eori}
 
 //noinspection ScalaStyle
 trait ExportsDeclarationBuilder {
