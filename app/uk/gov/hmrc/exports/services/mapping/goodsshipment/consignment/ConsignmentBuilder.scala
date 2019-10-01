@@ -25,7 +25,6 @@ class ConsignmentBuilder @Inject()(
   goodsLocationBuilder: GoodsLocationBuilder,
   containerCodeBuilder: ContainerCodeBuilder,
   departureTransportMeansBuilder: DepartureTransportMeansBuilder,
-  arrivalTransportMeansBuilder: ArrivalTransportMeansBuilder,
   transportEquipmentBuilder: TransportEquipmentBuilder
 ) {
 
@@ -39,12 +38,11 @@ class ConsignmentBuilder @Inject()(
       transportDetails => containerCodeBuilder.buildThenAdd(transportDetails, consignment)
     )
 
-    exportsCacheModel.locations.warehouseIdentification.foreach(
-      warehouseIdentification => arrivalTransportMeansBuilder.buildThenAdd(warehouseIdentification, consignment)
-    )
+    val warehouseIdentificationOpt = exportsCacheModel.locations.warehouseIdentification
 
     exportsCacheModel.borderTransport.foreach(
-      borderTransport => departureTransportMeansBuilder.buildThenAdd(borderTransport, consignment)
+      borderTransport =>
+        departureTransportMeansBuilder.buildThenAdd(borderTransport, warehouseIdentificationOpt, consignment)
     )
 
     exportsCacheModel.choice match {

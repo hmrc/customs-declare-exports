@@ -17,7 +17,7 @@
 package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.declaration.BorderTransport
+import uk.gov.hmrc.exports.models.declaration.{BorderTransport, WarehouseIdentification}
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.DepartureTransportMeansBuilder
 import util.testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
@@ -29,6 +29,9 @@ class DepartureTransportMeansBuilderSpec extends WordSpec with Matchers with Exp
       val borderModeOfTransportCode = "BCode"
       val meansOfTransportOnDepartureType = "T"
       val meansOfTransportOnDepartureIDNumber = "12345"
+      val inlandModeOfTransport = "1"
+      val warehouseIdentificationOpt: Option[WarehouseIdentification] =
+        Some(WarehouseIdentification(None, None, None, Some(inlandModeOfTransport)))
 
       val builder = new DepartureTransportMeansBuilder
 
@@ -39,15 +42,16 @@ class DepartureTransportMeansBuilderSpec extends WordSpec with Matchers with Exp
           meansOfTransportOnDepartureType,
           Some(meansOfTransportOnDepartureIDNumber)
         ),
+        warehouseIdentificationOpt,
         consignment
       )
 
       val departureTransportMeans = consignment.getDepartureTransportMeans
-      departureTransportMeans.getID.getValue should be(meansOfTransportOnDepartureIDNumber)
-      departureTransportMeans.getIdentificationTypeCode.getValue should be(meansOfTransportOnDepartureType)
-      departureTransportMeans.getName should be(null)
-      departureTransportMeans.getTypeCode should be(null)
-      departureTransportMeans.getModeCode should be(null)
+      departureTransportMeans.getID.getValue shouldBe meansOfTransportOnDepartureIDNumber
+      departureTransportMeans.getIdentificationTypeCode.getValue shouldBe meansOfTransportOnDepartureType
+      departureTransportMeans.getModeCode.getValue shouldBe inlandModeOfTransport
+      departureTransportMeans.getName shouldBe null
+      departureTransportMeans.getTypeCode shouldBe null
     }
   }
 }

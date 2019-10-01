@@ -17,27 +17,42 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.BorderTransport
-import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
-import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
+import uk.gov.hmrc.exports.models.declaration.{BorderTransport, WarehouseIdentification}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment.DepartureTransportMeans
 import wco.datamodel.wco.declaration_ds.dms._2.{
   DepartureTransportMeansIdentificationIDType,
-  DepartureTransportMeansIdentificationTypeCodeType
+  DepartureTransportMeansIdentificationTypeCodeType,
+  DepartureTransportMeansModeCodeType
 }
 
-class DepartureTransportMeansBuilder @Inject()() extends ModifyingBuilder[BorderTransport, GoodsShipment.Consignment] {
-  override def buildThenAdd(model: BorderTransport, consignment: Consignment): Unit =
-    if (isDefined(model)) {
-      consignment.setDepartureTransportMeans(createDepartureTransportMeans(model))
+class DepartureTransportMeansBuilder @Inject()() {
+  def buildThenAdd(
+    borderTransport: BorderTransport,
+    warehouseIdentification: Option[WarehouseIdentification],
+    consignment: Consignment
+  ): Unit =
+    if (isBorderTransportDefined(borderTransport) || isWarehouseIdentificationDefined(warehouseIdentification)) {
+      consignment.setDepartureTransportMeans(createDepartureTransportMeans(borderTransport, warehouseIdentification))
     }
 
-  private def isDefined(borderTransport: BorderTransport): Boolean =
+  private def isBorderTransportDefined(borderTransport: BorderTransport): Boolean =
     borderTransport.meansOfTransportOnDepartureIDNumber.nonEmpty || borderTransport.meansOfTransportOnDepartureType.nonEmpty
 
-  private def createDepartureTransportMeans(borderTransport: BorderTransport): Consignment.DepartureTransportMeans = {
+  private def isWarehouseIdentificationDefined(warehouseIdentification: Option[WarehouseIdentification]): Boolean =
+    warehouseIdentification.flatMap(_.inlandModeOfTransportCode).nonEmpty
+
+  private def createDepartureTransportMeans(
+    borderTransport: BorderTransport,
+    warehouseIdentification: Option[WarehouseIdentification]
+  ): Consignment.DepartureTransportMeans = {
     val departureTransportMeans = new DepartureTransportMeans()
+
+    warehouseIdentification.flatMap(_.inlandModeOfTransportCode).foreach { value =>
+      val modeCodeType = new DepartureTransportMeansModeCodeType()
+      modeCodeType.setValue(value)
+      departureTransportMeans.setModeCode(modeCodeType)
+    }
 
     borderTransport.meansOfTransportOnDepartureIDNumber.foreach { idValue =>
       val id = new DepartureTransportMeansIdentificationIDType()
