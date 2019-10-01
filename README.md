@@ -27,3 +27,20 @@ scalafmt::test      # check compile sources
 test:scalafmt::test # check test sources
 sbt:scalafmt::test  # check .sbt sources
 ```
+
+### Seed mongo
+
+To provide high number of declarations (20 000) in system run
+```
+sbt test:run util.SeedMongo
+```
+Output of program looks
+```
+Inserted 523 - 523 for GB1814503088
+Inserted 788 - 265 for GB966964885
+Inserted 1023 - 235 for GB1795007712
+Inserted 1043 - 20 for GB1822591600
+Inserted 1059 - 16 for GB1713564034
+Inserted 1471 - 412 for GB1026524884
+Inserted 2094 - 623 for GB1585987871
+```

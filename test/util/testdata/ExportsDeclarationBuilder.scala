@@ -19,9 +19,9 @@ package util.testdata
 import java.time.{LocalDateTime, ZoneOffset}
 import java.util.UUID
 
-import uk.gov.hmrc.exports.models.{Choice, Eori}
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.exports.models.{Choice, Eori}
 
 //noinspection ScalaStyle
 trait ExportsDeclarationBuilder {
@@ -30,7 +30,7 @@ trait ExportsDeclarationBuilder {
   protected val VALID_PERSONAL_UCR = "5GB123456789000"
   protected val VALID_DUCR = "5GB123456789000-123ABC456DEFIIIII"
   protected val VALID_LRN = "FG7676767889"
-  private val modelWithDefaults: ExportsDeclaration = ExportsDeclaration(
+  private def modelWithDefaults: ExportsDeclaration = ExportsDeclaration(
     id = uuid,
     eori = "eori",
     status = DeclarationStatus.COMPLETE,
@@ -134,6 +134,12 @@ trait ExportsDeclarationBuilder {
 
   def withoutRepresentativeDetails(): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(representativeDetails = None))
+
+  def withRepresentativeDetails(
+    eori: Option[String],
+    address: Option[Address],
+    statusCode: Option[String]
+  ): ExportsDeclarationModifier = withRepresentativeDetails(Some(EntityDetails(eori, address)), statusCode)
 
   def withRepresentativeDetails(
     details: Option[EntityDetails],

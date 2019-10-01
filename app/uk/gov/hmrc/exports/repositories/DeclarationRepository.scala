@@ -23,6 +23,7 @@ import javax.inject.Inject
 import play.api.libs.json.{JsObject, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.Cursor.FailOnError
+import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.api.{QueryOpts, ReadConcern, ReadPreference}
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.ImplicitBSONHandlers
@@ -42,6 +43,19 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
       ExportsDeclaration.Mongo.format,
       objectIdFormats
     ) {
+
+  override def indexes: Seq[Index] = Seq(
+    Index(Seq("eori" -> IndexType.Ascending, "id" -> IndexType.Ascending), Some("eoriAndIdIdx"), unique = true),
+    Index(
+      Seq("eori" -> IndexType.Ascending, "updateDateTime" -> IndexType.Ascending, "status" -> IndexType.Ascending),
+      Some("eoriAndUpdateTimeAndStatusIdx")
+    ),
+    Index(
+      Seq("eori" -> IndexType.Ascending, "createDateTime" -> IndexType.Ascending, "status" -> IndexType.Ascending),
+      Some("eoriAndCreateTimeAndStatusIdx")
+    ),
+    Index(Seq("updatedDateTime" -> IndexType.Descending, "status" -> IndexType.Ascending), Some("statusAndUpdateIdx"))
+  )
 
   private val findDeclarationTimer = metrics.defaultRegistry.timer("mongo.declaration.find")
 
