@@ -28,14 +28,9 @@ import scala.concurrent.duration.Duration
 
 object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuilder {
 
-  import scala.concurrent.ExecutionContext.Implicits._
   import ExportsDeclaration.Mongo._
 
-  val mongoUri = "mongodb://localhost:27017/customs-declare-exports"
-
-  val driver = MongoDriver()
-
-  val parsedUri = MongoConnection.parseURI(mongoUri)
+  import scala.concurrent.ExecutionContext.Implicits._
 
   val declaration = aDeclaration(
     withDispatchLocation(),
@@ -113,31 +108,30 @@ object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuil
       DeclarationStatus.DRAFT
     }
 
-  val job = parsedUri
-    .map(driver.connection(_, true))
-    .map { t =>
-      val connection = t.get
-      connection.database("customs-declare-exports").map(db => db.collection[JSONCollection]("declarations")).map {
-        collection =>
-          var now = 0
-          while (now < target) {
-            val count = random.nextInt(1000)
-            val eori = generateEori
-            val declarations = Range(0, count).map { _ =>
-              declaration.copy(id = UUID.randomUUID.toString, eori = eori, status = randomStatus)
-            }
-            Await.ready(collection.insert.many(declarations), Duration.Inf)
-            now += count
-            println(s"Inserted $now - $count for $eori")
+  def job(connection: MongoConnection) =
+    connection
+      .database("customs-declare-exports")
+      .map(db => db.collection[JSONCollection]("declarations"))
+      .map { collection =>
+        var now = 0
+        while (now < target) {
+          val count = random.nextInt(1000)
+          val eori = generateEori
+          val declarations = Range(0, count).map { _ =>
+            declaration.copy(id = UUID.randomUUID.toString, eori = eori, status = randomStatus)
           }
-          now
+          Await.ready(collection.insert.many(declarations), Duration.Inf)
+          now += count
+          println(s"Inserted $now - $count for $eori")
+        }
       }
-    }
-    .get
 
-  {
-    Await.ready(job, Duration.Inf)
+  override def main(args: Array[String]): Unit = {
+    val driver = MongoDriver()
+    val parsedUri = MongoConnection.parseURI("mongodb://localhost:27017/customs-declare-exports").get
+    val connection = driver.connection(parsedUri, true).get
+
+    Await.ready(job(connection), Duration.Inf)
     driver.close()
   }
-
 }

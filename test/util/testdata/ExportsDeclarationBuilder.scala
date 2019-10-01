@@ -16,8 +16,7 @@
 
 package util.testdata
 
-import java.time.temporal.ChronoUnit
-import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.time.{LocalDateTime, ZoneOffset}
 import java.util.UUID
 
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
@@ -31,7 +30,7 @@ trait ExportsDeclarationBuilder {
   protected val VALID_PERSONAL_UCR = "5GB123456789000"
   protected val VALID_DUCR = "5GB123456789000-123ABC456DEFIIIII"
   protected val VALID_LRN = "FG7676767889"
-  private val modelWithDefaults: ExportsDeclaration = ExportsDeclaration(
+  private def modelWithDefaults: ExportsDeclaration = ExportsDeclaration(
     id = uuid,
     eori = "eori",
     status = DeclarationStatus.COMPLETE,
@@ -54,7 +53,7 @@ trait ExportsDeclarationBuilder {
   )
 
   def aDeclaration(modifiers: ExportsDeclarationModifier*): ExportsDeclaration =
-    modifiers.foldLeft(modelWithDefaults.copy(id = uuid))((current, modifier) => modifier(current))
+    modifiers.foldLeft(modelWithDefaults)((current, modifier) => modifier(current))
 
   def withId(id: String): ExportsDeclarationModifier = _.copy(id = id)
 
