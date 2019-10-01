@@ -32,14 +32,12 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
   private val mockContainerCodeBuilder = mock[ContainerCodeBuilder]
   private val mockGoodsLocationBuilder = mock[GoodsLocationBuilder]
   private val mockDepartureTransportMeansBuilder = mock[DepartureTransportMeansBuilder]
-  private val mockArrivalTransportMeansBuilder = mock[ArrivalTransportMeansBuilder]
   private val mockTransportEquipmentBuilder = mock[TransportEquipmentBuilder]
 
   private val builder = new ConsignmentBuilder(
     mockGoodsLocationBuilder,
     mockContainerCodeBuilder,
     mockDepartureTransportMeansBuilder,
-    mockArrivalTransportMeansBuilder,
     mockTransportEquipmentBuilder
   )
 
@@ -60,7 +58,6 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
               Some(meansOfTransportOnDepartureIDNumber)
             ),
             withChoice(Choice.StandardDec),
-            withWarehouseIdentification(ArrivalTransportMeansBuilderSpec.correctWarehouseIdentification),
             withTransportDetails(Some("Portugal"), container = true, "40", Some("1234567878ui"), Some("A")),
             withContainerData(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2"))))
           )
@@ -95,12 +92,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
                 Some(meansOfTransportOnDepartureIDNumber)
               )
             ),
-            any[GoodsShipment.Consignment]
-          )
-
-        verify(mockArrivalTransportMeansBuilder)
-          .buildThenAdd(
-            refEq(ArrivalTransportMeansBuilderSpec.correctWarehouseIdentification),
+            any[Option[WarehouseIdentification]],
             any[GoodsShipment.Consignment]
           )
 
