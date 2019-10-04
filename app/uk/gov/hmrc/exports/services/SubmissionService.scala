@@ -66,7 +66,11 @@ class SubmissionService @Inject()(
 
     for {
       // Create the Submission
-      submission <- submissionRepository.findOrCreate(Eori(declaration.eori), declaration.id, Submission(declaration, lrn, ducr))
+      submission <- submissionRepository.findOrCreate(
+        Eori(declaration.eori),
+        declaration.id,
+        Submission(declaration, lrn, ducr)
+      )
 
       // Submit the declaration to the Dec API
       conversationId <- customsDeclarationsConnector.submitDeclaration(declaration.eori, payload)

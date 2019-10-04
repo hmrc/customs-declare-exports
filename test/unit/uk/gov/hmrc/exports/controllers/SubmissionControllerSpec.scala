@@ -44,7 +44,11 @@ class SubmissionControllerSpec
     with MustMatchers with ExportsDeclarationBuilder {
 
   override lazy val app: Application = GuiceApplicationBuilder()
-    .overrides(bind[AuthConnector].to(mockAuthConnector), bind[SubmissionService].to(submissionService), bind[DeclarationService].to(declarationService))
+    .overrides(
+      bind[AuthConnector].to(mockAuthConnector),
+      bind[SubmissionService].to(submissionService),
+      bind[DeclarationService].to(declarationService)
+    )
     .build()
   private val submissionService: SubmissionService = mock[SubmissionService]
   private val declarationService: DeclarationService = mock[DeclarationService]

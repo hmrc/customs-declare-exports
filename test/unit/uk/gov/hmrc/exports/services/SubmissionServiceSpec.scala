@@ -28,13 +28,22 @@ import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration, GoodsLocation, TransportInformationContainer}
+import uk.gov.hmrc.exports.models.declaration.{
+  DeclarationStatus,
+  ExportsDeclaration,
+  GoodsLocation,
+  TransportInformationContainer
+}
 import uk.gov.hmrc.exports.models.{LocalReferenceNumber, SubmissionRequestHeaders}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
 import uk.gov.hmrc.exports.services.{SubmissionService, WcoMapperService}
 import uk.gov.hmrc.http.HeaderCarrier
-import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildCustomsDeclarationsConnectorMock, buildNotificationRepositoryMock, buildSubmissionRepositoryMock}
+import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{
+  buildCustomsDeclarationsConnectorMock,
+  buildNotificationRepositoryMock,
+  buildSubmissionRepositoryMock
+}
 import util.testdata.ExportsTestData._
 import util.testdata.SubmissionTestData._
 import util.testdata.{ExportsDeclarationBuilder, NotificationTestData}
