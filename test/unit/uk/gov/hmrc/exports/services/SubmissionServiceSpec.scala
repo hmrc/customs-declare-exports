@@ -16,7 +16,6 @@
 
 package unit.uk.gov.hmrc.exports.services
 
-import java.time.LocalDateTime
 import java.util.UUID
 
 import com.google.inject.{Guice, Injector}
@@ -27,22 +26,18 @@ import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.models.declaration.{GoodsLocation, TransportInformationContainer}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
-import uk.gov.hmrc.exports.models.declaration.submissions.{SubmissionStatus, _}
+import uk.gov.hmrc.exports.models.declaration.submissions._
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration, GoodsLocation, TransportInformationContainer}
 import uk.gov.hmrc.exports.models.{LocalReferenceNumber, SubmissionRequestHeaders}
-import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
 import uk.gov.hmrc.exports.services.{SubmissionService, WcoMapperService}
 import uk.gov.hmrc.http.HeaderCarrier
-import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{
-  buildCustomsDeclarationsConnectorMock,
-  buildNotificationRepositoryMock,
-  buildSubmissionRepositoryMock
-}
-import util.testdata.{ExportsDeclarationBuilder, NotificationTestData}
+import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildCustomsDeclarationsConnectorMock, buildNotificationRepositoryMock, buildSubmissionRepositoryMock}
 import util.testdata.ExportsTestData._
 import util.testdata.SubmissionTestData._
+import util.testdata.{ExportsDeclarationBuilder, NotificationTestData}
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -58,12 +53,14 @@ class SubmissionServiceSpec
     implicit val hc: HeaderCarrier = mock[HeaderCarrier]
     val customsDeclarationsConnectorMock: CustomsDeclarationsConnector = buildCustomsDeclarationsConnectorMock
     val submissionRepositoryMock: SubmissionRepository = buildSubmissionRepositoryMock
+    val declarationRepositoryMock: DeclarationRepository = mock[DeclarationRepository]
     val notificationRepositoryMock: NotificationRepository = buildNotificationRepositoryMock
     val metaDataBuilder: MetaDataBuilder = mock[MetaDataBuilder]
     val wcoMapperService: WcoMapperService = mock[WcoMapperService]
     val submissionService = new SubmissionService(
       customsDeclarationsConnector = customsDeclarationsConnectorMock,
       submissionRepository = submissionRepositoryMock,
+      declarationRepository = declarationRepositoryMock,
       notificationRepository = notificationRepositoryMock,
       metaDataBuilder = injector.getInstance(classOf[MetaDataBuilder]),
       wcoMapperService = injector.getInstance(classOf[WcoMapperService])
@@ -123,10 +120,24 @@ class SubmissionServiceSpec
       withItems(3)
     )
     "request to upstream service is successful" should {
+
       "create request submission action" in new Test {
+        def theActionAdded: Action = {
+          val captor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])
+          verify(submissionRepositoryMock).addAction(meq(firstSubmission), captor.capture())
+          captor.getValue
+        }
+
+        def theDeclarationUpdated: ExportsDeclaration = {
+          val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
+          verify(declarationRepositoryMock).update(captor.capture())
+          captor.getValue
+        }
+
         val conversationId = UUID.randomUUID().toString
         private val firstSubmission: Submission = mock[Submission]
         when(submissionRepositoryMock.findOrCreate(any(), any(), any())).thenReturn(Future.successful(firstSubmission))
+        when(declarationRepositoryMock.update(any())).thenReturn(Future.successful(Some(declaration)))
         when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any()))
           .thenReturn(Future.successful(conversationId))
         when(submissionRepositoryMock.addAction(any[Submission](), any()))
@@ -134,11 +145,10 @@ class SubmissionServiceSpec
 
         val submission = submissionService.submit(declaration).futureValue
 
-        val actionCaptor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])
-        verify(submissionRepositoryMock).addAction(meq(firstSubmission), actionCaptor.capture())
-        val action = actionCaptor.getValue
+        val action = theActionAdded
         action.id mustEqual conversationId
         action.requestType mustEqual SubmissionRequest
+        theDeclarationUpdated.status mustEqual DeclarationStatus.COMPLETE
       }
     }
     "request to upstream service failed" should {
@@ -153,6 +163,7 @@ class SubmissionServiceSpec
         Await.ready(submissionService.submit(declaration), patienceConfig.timeout)
 
         verify(submissionRepositoryMock, never()).addAction(any[Submission](), any())
+        verify(declarationRepositoryMock, never()).update(any())
       }
     }
 
@@ -163,6 +174,7 @@ class SubmissionServiceSpec
         when(submissionRepositoryMock.findOrCreate(any(), any(), any())).thenReturn(Future.successful(firstSubmission))
         when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any()))
           .thenReturn(Future.successful(conversationId))
+        when(declarationRepositoryMock.update(any())).thenReturn(Future.successful(Some(declaration)))
         when(submissionRepositoryMock.addAction(any[Submission](), any()))
           .thenReturn(Future.successful(firstSubmission))
 

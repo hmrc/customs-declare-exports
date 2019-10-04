@@ -24,7 +24,6 @@ import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.{Choice, Eori}
 
 case class ExportsDeclarationRequest(
-  status: DeclarationStatus,
   createdDateTime: Instant,
   updatedDateTime: Instant,
   sourceId: Option[String] = None,
@@ -45,7 +44,7 @@ case class ExportsDeclarationRequest(
   def toExportsDeclaration(id: String, eori: Eori): ExportsDeclaration = ExportsDeclaration(
     id = id,
     eori = eori.value,
-    status = this.status,
+    status = DeclarationStatus.DRAFT,
     createdDateTime = this.createdDateTime,
     updatedDateTime = this.updatedDateTime,
     sourceId = this.sourceId,

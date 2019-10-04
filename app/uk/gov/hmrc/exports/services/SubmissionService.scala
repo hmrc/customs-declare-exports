@@ -20,10 +20,10 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.Eori
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
@@ -35,6 +35,7 @@ import scala.util.{Failure, Success}
 class SubmissionService @Inject()(
   customsDeclarationsConnector: CustomsDeclarationsConnector,
   submissionRepository: SubmissionRepository,
+  declarationRepository: DeclarationRepository,
   notificationRepository: NotificationRepository,
   metaDataBuilder: MetaDataBuilder,
   wcoMapperService: WcoMapperService
@@ -63,16 +64,22 @@ class SubmissionService @Inject()(
       .getOrElse(throw new IllegalArgumentException("A DUCR is required"))
     val payload = wcoMapperService.toXml(metaData)
 
-    val submission = Submission(declaration, lrn, ducr)
+    for {
+      // Create the Submission
+      submission <- submissionRepository.findOrCreate(Eori(declaration.eori), declaration.id, Submission(declaration, lrn, ducr))
 
-    submissionRepository.findOrCreate(Eori(declaration.eori), declaration.id, submission).flatMap { submission =>
-      customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).flatMap { conversationId =>
-        val action = Action(id = conversationId, requestType = SubmissionRequest)
-        submissionRepository.addAction(submission, action).andThen {
-          case Success(_) => updateMrnFromEarlierNotification(conversationId)
-        }
+      // Submit the declaration to the Dec API
+      conversationId <- customsDeclarationsConnector.submitDeclaration(declaration.eori, payload)
+
+      // Update the declaration status
+      _ <- declarationRepository.update(declaration.copy(status = DeclarationStatus.COMPLETE))
+
+      // Append the "Submission" action
+      action = Action(id = conversationId, requestType = SubmissionRequest)
+      savedSubmission <- submissionRepository.addAction(submission, action).andThen {
+        case Success(_) => updateMrnFromEarlierNotification(conversationId)
       }
-    }
+    } yield savedSubmission
   }
 
   def cancel(eori: String, cancellation: SubmissionCancellation)(
