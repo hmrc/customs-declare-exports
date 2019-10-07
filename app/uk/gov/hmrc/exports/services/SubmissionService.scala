@@ -44,17 +44,6 @@ class SubmissionService @Inject()(
   val logger = Logger(classOf[SubmissionService])
 
   def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] = {
-    def updateMrnFromEarlierNotification(conversationId: String): Future[Seq[Notification]] =
-      notificationRepository.findNotificationsByActionId(conversationId).andThen {
-        case Success(notifications) =>
-          notifications.headOption.foreach(
-            notification =>
-              submissionRepository.updateMrn(conversationId, notification.mrn).andThen {
-                case Failure(e) => Logger.error("Error on updating submission mrn", e)
-            }
-          )
-        case Failure(e) => Logger.error("Error on searching notification by conversation Id", e)
-      }
     val metaData = wcoMapperService.produceMetaData(declaration)
     val lrn = wcoMapperService
       .declarationLrn(metaData)
@@ -65,6 +54,9 @@ class SubmissionService @Inject()(
     val payload = wcoMapperService.toXml(metaData)
 
     for {
+      // Update the Declaration Status
+      _ <- declarationRepository.update(declaration.copy(status = DeclarationStatus.COMPLETE))
+
       // Create the Submission
       submission <- submissionRepository.findOrCreate(
         Eori(declaration.eori),
@@ -73,18 +65,31 @@ class SubmissionService @Inject()(
       )
 
       // Submit the declaration to the Dec API
-      conversationId <- customsDeclarationsConnector.submitDeclaration(declaration.eori, payload)
+      // Revert the declaration status back to DRAFT if it fails
+      conversationId: String <- submit(declaration, payload)
 
-      // Update the declaration status
-      _ <- declarationRepository.update(declaration.copy(status = DeclarationStatus.COMPLETE))
-
-      // Append the "Submission" action
+      // Append the "Submission" action & a MRN if already available
       action = Action(id = conversationId, requestType = SubmissionRequest)
-      savedSubmission <- submissionRepository.addAction(submission, action).andThen {
-        case Success(_) => updateMrnFromEarlierNotification(conversationId)
-      }
-    } yield savedSubmission
+      savedSubmission1 <- submissionRepository.addAction(submission, action)
+      savedSubmission2 <- appendMRNIfAlreadyAvailable(savedSubmission1, conversationId)
+    } yield savedSubmission2
   }
+
+  private def appendMRNIfAlreadyAvailable(submission: Submission, actionId: String): Future[Submission] =
+    notificationRepository.findNotificationsByActionId(actionId).flatMap { notifications =>
+      notifications.headOption match {
+        case Some(notification) => submissionRepository.updateMrn(actionId, notification.mrn).map(_.getOrElse(submission))
+        case None               => Future.successful(submission)
+      }
+    }
+
+  private def submit(declaration: ExportsDeclaration, payload: String)(implicit hc: HeaderCarrier): Future[String] =
+    customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).recoverWith {
+      case throwable: Throwable =>
+        declarationRepository.update(declaration.copy(status = DeclarationStatus.DRAFT)) flatMap { _ =>
+          Future.failed[String](throwable)
+        }
+    }
 
   def cancel(eori: String, cancellation: SubmissionCancellation)(
     implicit hc: HeaderCarrier
