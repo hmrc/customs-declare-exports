@@ -77,7 +77,7 @@ object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuil
         withDocumentsProduced(
           DocumentProduced(
             Some("C501"),
-            Some(DocumentIdentifierAndPart(Some("GBAEOC71757250450281"), Some("1"))),
+            Some("GBAEOC71757250450281"),
             None,
             None,
             None,
