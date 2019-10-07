@@ -46,6 +46,8 @@ import util.testdata.ExportsTestData.{declarantLrnValue, ValidHeaders}
 import scala.concurrent.{Await, Future}
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 import play.api.mvc.Result
 
 import scala.util.control.NonFatal
@@ -60,12 +62,16 @@ object `User has completed declaration` extends Precondition with ExportsDeclara
       withChoice(Choice.StandardDec),
       withId("id"),
       withEori(eori),
-      withStatus(DeclarationStatus.COMPLETE),
+      withStatus(DeclarationStatus.DRAFT),
       withConsignmentReferences(lrn = declarantLrnValue),
       withContainerData(TransportInformationContainer("container123", Seq(Seal("seal1"))))
     )
     val repo = context.get[DeclarationRepository]
     when(repo.find(any(), any())).thenReturn(Future.successful(Some(declaration)))
+    when(repo.update(any()), atLeastOnce()).thenAnswer(new Answer[Future[Option[ExportsDeclaration]]] {
+      override def answer(invocation: InvocationOnMock): Future[Option[ExportsDeclaration]] =
+        Future.successful(Some(invocation.getArgument(0)))
+    })
     context.updated(declaration)
   }
 }
@@ -80,8 +86,8 @@ object `User has no declaration` extends Precondition {
   }
 }
 
-object `User has incomplete declaration` extends Precondition {
-  override def name: String = "User has no declaration"
+object `User has pre-submitted declaration` extends Precondition {
+  override def name: String = "User has pre-submitted declaration"
 
   override def execute(context: ScenarioContext): ScenarioContext = {
     val eori = context.get[Eori]
@@ -89,7 +95,7 @@ object `User has incomplete declaration` extends Precondition {
       withChoice(Choice.StandardDec),
       withId("id"),
       withEori(eori),
-      withStatus(DeclarationStatus.DRAFT),
+      withStatus(DeclarationStatus.COMPLETE),
       withConsignmentReferences(lrn = declarantLrnValue),
       withContainerData(TransportInformationContainer("container123", Seq(Seal("seal1"))))
     )

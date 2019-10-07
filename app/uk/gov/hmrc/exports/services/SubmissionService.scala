@@ -20,10 +20,10 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.Eori
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
@@ -35,6 +35,7 @@ import scala.util.{Failure, Success}
 class SubmissionService @Inject()(
   customsDeclarationsConnector: CustomsDeclarationsConnector,
   submissionRepository: SubmissionRepository,
+  declarationRepository: DeclarationRepository,
   notificationRepository: NotificationRepository,
   metaDataBuilder: MetaDataBuilder,
   wcoMapperService: WcoMapperService
@@ -43,17 +44,6 @@ class SubmissionService @Inject()(
   val logger = Logger(classOf[SubmissionService])
 
   def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] = {
-    def updateMrnFromEarlierNotification(conversationId: String): Future[Seq[Notification]] =
-      notificationRepository.findNotificationsByActionId(conversationId).andThen {
-        case Success(notifications) =>
-          notifications.headOption.foreach(
-            notification =>
-              submissionRepository.updateMrn(conversationId, notification.mrn).andThen {
-                case Failure(e) => Logger.error("Error on updating submission mrn", e)
-            }
-          )
-        case Failure(e) => Logger.error("Error on searching notification by conversation Id", e)
-      }
     val metaData = wcoMapperService.produceMetaData(declaration)
     val lrn = wcoMapperService
       .declarationLrn(metaData)
@@ -63,17 +53,44 @@ class SubmissionService @Inject()(
       .getOrElse(throw new IllegalArgumentException("A DUCR is required"))
     val payload = wcoMapperService.toXml(metaData)
 
-    val submission = Submission(declaration, lrn, ducr)
+    for {
+      // Update the Declaration Status
+      _ <- declarationRepository.update(declaration.copy(status = DeclarationStatus.COMPLETE))
 
-    submissionRepository.findOrCreate(Eori(declaration.eori), declaration.id, submission).flatMap { submission =>
-      customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).flatMap { conversationId =>
-        val action = Action(id = conversationId, requestType = SubmissionRequest)
-        submissionRepository.addAction(submission, action).andThen {
-          case Success(_) => updateMrnFromEarlierNotification(conversationId)
-        }
+      // Create the Submission
+      submission <- submissionRepository.findOrCreate(
+        Eori(declaration.eori),
+        declaration.id,
+        Submission(declaration, lrn, ducr)
+      )
+
+      // Submit the declaration to the Dec API
+      // Revert the declaration status back to DRAFT if it fails
+      conversationId: String <- submit(declaration, payload)
+
+      // Append the "Submission" action & a MRN if already available
+      action = Action(id = conversationId, requestType = SubmissionRequest)
+      savedSubmission1 <- submissionRepository.addAction(submission, action)
+      savedSubmission2 <- appendMRNIfAlreadyAvailable(savedSubmission1, conversationId)
+    } yield savedSubmission2
+  }
+
+  private def appendMRNIfAlreadyAvailable(submission: Submission, actionId: String): Future[Submission] =
+    notificationRepository.findNotificationsByActionId(actionId).flatMap { notifications =>
+      notifications.headOption match {
+        case Some(notification) =>
+          submissionRepository.updateMrn(actionId, notification.mrn).map(_.getOrElse(submission))
+        case None => Future.successful(submission)
       }
     }
-  }
+
+  private def submit(declaration: ExportsDeclaration, payload: String)(implicit hc: HeaderCarrier): Future[String] =
+    customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).recoverWith {
+      case throwable: Throwable =>
+        declarationRepository.update(declaration.copy(status = DeclarationStatus.DRAFT)) flatMap { _ =>
+          Future.failed[String](throwable)
+        }
+    }
 
   def cancel(eori: String, cancellation: SubmissionCancellation)(
     implicit hc: HeaderCarrier

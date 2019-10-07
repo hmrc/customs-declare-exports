@@ -26,7 +26,6 @@ import util.testdata.ExportsDeclarationBuilder
 
 class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsDeclarationBuilder with MockitoSugar {
 
-  private val status = DeclarationStatus.COMPLETE
   private val choice = Choice.StandardDec
   private val createdDate = Instant.MIN
   private val updatedDate = Instant.MAX
@@ -47,7 +46,6 @@ class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsD
   private val natureOfTransaction = mock[NatureOfTransaction]
 
   private val request = ExportsDeclarationRequest(
-    status = status,
     createdDateTime = createdDate,
     updatedDateTime = updatedDate,
     sourceId = Some(sourceId),
@@ -69,7 +67,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsD
   private val declaration = ExportsDeclaration(
     id = id,
     eori = eori,
-    status = status,
+    status = DeclarationStatus.DRAFT,
     createdDateTime = createdDate,
     updatedDateTime = updatedDate,
     sourceId = Some(sourceId),

@@ -431,7 +431,6 @@ class DeclarationControllerSpec
 
   def aDeclarationRequest() =
     ExportsDeclarationRequest(
-      status = DeclarationStatus.COMPLETE,
       createdDateTime = Instant.now(),
       updatedDateTime = Instant.now(),
       choice = Choice.StandardDec

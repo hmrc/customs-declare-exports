@@ -17,57 +17,60 @@
 package unit.uk.gov.hmrc.exports.services
 
 import java.time.LocalDateTime
-import java.util.UUID
 
-import com.google.inject.{Guice, Injector}
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.{any, eq => meq}
+import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
 import org.mockito.Mockito._
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.models.declaration.{GoodsLocation, TransportInformationContainer}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
-import uk.gov.hmrc.exports.models.declaration.submissions.{SubmissionStatus, _}
+import uk.gov.hmrc.exports.models.declaration.submissions._
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.models.{LocalReferenceNumber, SubmissionRequestHeaders}
-import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
 import uk.gov.hmrc.exports.services.{SubmissionService, WcoMapperService}
 import uk.gov.hmrc.http.HeaderCarrier
-import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{
-  buildCustomsDeclarationsConnectorMock,
-  buildNotificationRepositoryMock,
-  buildSubmissionRepositoryMock
-}
-import util.testdata.{ExportsDeclarationBuilder, NotificationTestData}
+import util.testdata.ExportsDeclarationBuilder
 import util.testdata.ExportsTestData._
 import util.testdata.SubmissionTestData._
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
 
 class SubmissionServiceSpec
     extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers with ExportsDeclarationBuilder
-    with Eventually {
+    with Eventually with BeforeAndAfterEach {
 
-  val injector: Injector = Guice.createInjector()
+  private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
+  private val customsDeclarationsConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
+  private val submissionRepository: SubmissionRepository = mock[SubmissionRepository]
+  private val declarationRepository: DeclarationRepository = mock[DeclarationRepository]
+  private val notificationRepository: NotificationRepository = mock[NotificationRepository]
+  private val metaDataBuilder: MetaDataBuilder = mock[MetaDataBuilder]
+  private val wcoMapperService: WcoMapperService = mock[WcoMapperService]
+  private val submissionService = new SubmissionService(
+    customsDeclarationsConnector = customsDeclarationsConnector,
+    submissionRepository = submissionRepository,
+    declarationRepository = declarationRepository,
+    notificationRepository = notificationRepository,
+    metaDataBuilder = metaDataBuilder,
+    wcoMapperService = wcoMapperService
+  )(ExecutionContext.global)
 
-  private trait Test {
-    implicit val hc: HeaderCarrier = mock[HeaderCarrier]
-    val customsDeclarationsConnectorMock: CustomsDeclarationsConnector = buildCustomsDeclarationsConnectorMock
-    val submissionRepositoryMock: SubmissionRepository = buildSubmissionRepositoryMock
-    val notificationRepositoryMock: NotificationRepository = buildNotificationRepositoryMock
-    val metaDataBuilder: MetaDataBuilder = mock[MetaDataBuilder]
-    val wcoMapperService: WcoMapperService = mock[WcoMapperService]
-    val submissionService = new SubmissionService(
-      customsDeclarationsConnector = customsDeclarationsConnectorMock,
-      submissionRepository = submissionRepositoryMock,
-      notificationRepository = notificationRepositoryMock,
-      metaDataBuilder = injector.getInstance(classOf[MetaDataBuilder]),
-      wcoMapperService = injector.getInstance(classOf[WcoMapperService])
-    )(ExecutionContext.global)
+  override def afterEach(): Unit = {
+    reset(
+      customsDeclarationsConnector,
+      submissionRepository,
+      declarationRepository,
+      notificationRepository,
+      metaDataBuilder,
+      wcoMapperService
+    )
+    super.afterEach()
   }
 
   "cancel" should {
@@ -76,33 +79,33 @@ class SubmissionServiceSpec
     val cancellation = SubmissionCancellation("ref-id", "mrn", "description", "reason")
 
     "submit and delegate to repository" when {
-      "submission exists" in new Test {
+      "submission exists" in {
         when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
         when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any()))
+        when(customsDeclarationsConnector.submitCancellation(any(), any())(any()))
           .thenReturn(Future.successful("conv-id"))
-        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
-        when(submissionRepositoryMock.addAction(any[String](), any())).thenReturn(Future.successful(Some(submission)))
+        when(submissionRepository.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
+        when(submissionRepository.addAction(any[String](), any())).thenReturn(Future.successful(Some(submission)))
 
         submissionService.cancel("eori", cancellation).futureValue mustBe CancellationRequested
       }
 
-      "submission is missing" in new Test {
+      "submission is missing" in {
         when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
         when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any()))
+        when(customsDeclarationsConnector.submitCancellation(any(), any())(any()))
           .thenReturn(Future.successful("conv-id"))
-        when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
+        when(submissionRepository.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
 
         submissionService.cancel("eori", cancellation).futureValue mustBe MissingDeclaration
       }
 
-      "submission exists and previously cancelled" in new Test {
+      "submission exists and previously cancelled" in {
         when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
         when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any()))
+        when(customsDeclarationsConnector.submitCancellation(any(), any())(any()))
           .thenReturn(Future.successful("conv-id"))
-        when(submissionRepositoryMock.findSubmissionByMrn(any()))
+        when(submissionRepository.findSubmissionByMrn(any()))
           .thenReturn(Future.successful(Some(submissionCancelled)))
 
         submissionService.cancel("eori", cancellation).futureValue mustBe CancellationRequestExists
@@ -110,128 +113,156 @@ class SubmissionServiceSpec
     }
   }
 
-  "submit" when {
-    val declaration = aDeclaration(
-      withConsignmentReferences(),
-      withDestinationCountries(),
-      withGoodsLocation(GoodsLocation("PL", "type", "id", Some("a"), Some("b"), Some("c"), Some("d"), Some("e"))),
-      withWarehouseIdentification(Some("a"), Some("b"), Some("c"), Some("d")),
-      withOfficeOfExit("id", Some("office"), Some("code")),
-      withContainerData(TransportInformationContainer("id", Seq.empty)),
-      withTotalNumberOfItems(Some("123"), Some("123")),
-      withNatureOfTransaction("nature"),
-      withItems(3)
-    )
-    "request to upstream service is successful" should {
-      "create request submission action" in new Test {
-        val conversationId = UUID.randomUUID().toString
-        private val firstSubmission: Submission = mock[Submission]
-        when(submissionRepositoryMock.findOrCreate(any(), any(), any())).thenReturn(Future.successful(firstSubmission))
-        when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any()))
-          .thenReturn(Future.successful(conversationId))
-        when(submissionRepositoryMock.addAction(any[Submission](), any()))
-          .thenReturn(Future.successful(mock[Submission]))
-
-        val submission = submissionService.submit(declaration).futureValue
-
-        val actionCaptor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])
-        verify(submissionRepositoryMock).addAction(meq(firstSubmission), actionCaptor.capture())
-        val action = actionCaptor.getValue
-        action.id mustEqual conversationId
-        action.requestType mustEqual SubmissionRequest
-      }
-    }
-    "request to upstream service failed" should {
-      "keep action list empty" in new Test {
-        private val firstSubmission: Submission = mock[Submission]
-        when(submissionRepositoryMock.findOrCreate(any(), any(), any())).thenReturn(Future.successful(firstSubmission))
-        when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any()))
-          .thenReturn(Future.failed(new Exception()))
-        when(submissionRepositoryMock.addAction(any[Submission](), any()))
-          .thenReturn(Future.successful(mock[Submission]))
-
-        Await.ready(submissionService.submit(declaration), patienceConfig.timeout)
-
-        verify(submissionRepositoryMock, never()).addAction(any[Submission](), any())
-      }
+  "submit" should {
+    def theActionAdded(): Action = {
+      val captor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])
+      verify(submissionRepository).addAction(any[Submission](), captor.capture())
+      captor.getValue
     }
 
-    "there are notification with conversation id" should {
-      "update submission with linked mrn" in new Test {
-        val conversationId = UUID.randomUUID().toString
-        private val firstSubmission: Submission = mock[Submission]
-        when(submissionRepositoryMock.findOrCreate(any(), any(), any())).thenReturn(Future.successful(firstSubmission))
-        when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any()))
-          .thenReturn(Future.successful(conversationId))
-        when(submissionRepositoryMock.addAction(any[Submission](), any()))
-          .thenReturn(Future.successful(firstSubmission))
+    def theDeclarationUpdated(index: Int = 0): ExportsDeclaration = {
+      val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
+      verify(declarationRepository, atLeastOnce()).update(captor.capture())
+      captor.getAllValues.get(index)
+    }
 
-        private val notification: Notification = NotificationTestData.exampleNotification(conversationId)
-        private val notifications: Seq[Notification] = Seq(notification)
-        when(notificationRepositoryMock.findNotificationsByActionId(conversationId))
-          .thenReturn(Future.successful(notifications))
+    def theSubmissionCreated(): Submission = {
+      val captor: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
+      verify(submissionRepository).findOrCreate(any(), any(), captor.capture())
+      captor.getValue
+    }
 
-        submissionService.submit(declaration).futureValue
+    "submit to the Dec API" when {
+      val declaration = aDeclaration()
+      val notification = Notification("id", "mrn", LocalDateTime.now(), SubmissionStatus.ACCEPTED, Seq.empty, "xml")
+      val submission = Submission(declaration, "lrn", "mrn")
 
-        eventually {
-          verify(submissionRepositoryMock).updateMrn(conversationId, notification.mrn)
+      "valid declaration" in {
+        // Given
+        when(wcoMapperService.produceMetaData(any())).thenReturn(mock[MetaData])
+        when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
+        when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
+        when(wcoMapperService.toXml(any())).thenReturn("xml")
+        when(declarationRepository.update(any())).thenReturn(Future.successful(Some(mock[ExportsDeclaration])))
+        when(submissionRepository.findOrCreate(any(), any(), any())).thenReturn(Future.successful(mock[Submission]))
+        when(customsDeclarationsConnector.submitDeclaration(any(), any())(any()))
+          .thenReturn(Future.successful("conv-id"))
+        when(submissionRepository.addAction(any[Submission](), any())).thenReturn(Future.successful(submission))
+        when(notificationRepository.findNotificationsByActionId(anyString())).thenReturn(Future.successful(Seq.empty))
+
+        // When
+        submissionService.submit(declaration).futureValue mustBe submission
+
+        // Then
+        theSubmissionCreated() mustBe Submission(declaration, "lrn", "ducr")
+
+        val action = theActionAdded()
+        action.id mustBe "conv-id"
+        action.requestType mustBe SubmissionRequest
+
+        theDeclarationUpdated().status mustEqual DeclarationStatus.COMPLETE
+      }
+
+      "existing notification is available" in {
+        // Given
+        when(wcoMapperService.produceMetaData(any())).thenReturn(mock[MetaData])
+        when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
+        when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
+        when(wcoMapperService.toXml(any())).thenReturn("xml")
+        when(declarationRepository.update(any())).thenReturn(Future.successful(Some(mock[ExportsDeclaration])))
+        when(submissionRepository.findOrCreate(any(), any(), any())).thenReturn(Future.successful(mock[Submission]))
+        when(customsDeclarationsConnector.submitDeclaration(any(), any())(any()))
+          .thenReturn(Future.successful("conv-id"))
+        when(submissionRepository.addAction(any[Submission](), any())).thenReturn(Future.successful(mock[Submission]))
+        when(notificationRepository.findNotificationsByActionId(anyString()))
+          .thenReturn(Future.successful(Seq(notification)))
+        when(submissionRepository.updateMrn(any(), any())).thenReturn(Future.successful(Some(submission)))
+
+        // When
+        submissionService.submit(declaration).futureValue mustBe submission
+
+        // Then
+        theSubmissionCreated() mustBe Submission(declaration, "lrn", "ducr")
+
+        val action = theActionAdded()
+        action.id mustBe "conv-id"
+        action.requestType mustBe SubmissionRequest
+
+        theDeclarationUpdated().status mustEqual DeclarationStatus.COMPLETE
+      }
+    }
+
+    "revert declaration to draft" when {
+      "submission to the Dec API fails" in {
+        // Given
+        when(wcoMapperService.produceMetaData(any())).thenReturn(mock[MetaData])
+        when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
+        when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
+        when(wcoMapperService.toXml(any())).thenReturn("xml")
+        when(declarationRepository.update(any())).thenReturn(Future.successful(Some(mock[ExportsDeclaration])))
+        when(submissionRepository.findOrCreate(any(), any(), any())).thenReturn(Future.successful(mock[Submission]))
+        when(customsDeclarationsConnector.submitDeclaration(any(), any())(any()))
+          .thenReturn(Future.failed(new RuntimeException("Some error")))
+
+        val declaration = aDeclaration()
+
+        // When
+        intercept[RuntimeException] {
+          submissionService.submit(declaration).futureValue
+        }
+
+        // Then
+        theSubmissionCreated() mustBe Submission(declaration, "lrn", "ducr")
+
+        verify(submissionRepository, never()).addAction(any[Submission], any[Action])
+
+        theDeclarationUpdated(0).status mustEqual DeclarationStatus.COMPLETE
+        theDeclarationUpdated(1).status mustEqual DeclarationStatus.DRAFT
+      }
+    }
+
+    "throw exception" when {
+      "missing LRN" in {
+        when(wcoMapperService.produceMetaData(any())).thenReturn(mock[MetaData])
+        when(wcoMapperService.declarationLrn(any())).thenReturn(None)
+        when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
+
+        intercept[IllegalArgumentException] {
+          submissionService.submit(aDeclaration()).futureValue
+        }
+      }
+
+      "missing DUCR" in {
+        when(wcoMapperService.produceMetaData(any())).thenReturn(mock[MetaData])
+        when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
+        when(wcoMapperService.declarationDucr(any())).thenReturn(None)
+
+        intercept[IllegalArgumentException] {
+          submissionService.submit(aDeclaration()).futureValue
         }
       }
     }
   }
 
-  "SubmissionService on getAllSubmissionsForUser" should {
+  "Get all Submissions for eori" should {
+    "delegate to repository" in {
+      val response = mock[Seq[Submission]]
+      when(submissionRepository.findAllSubmissionsForEori(any())).thenReturn(Future.successful(response))
 
-    "return empty list if SubmissionRepository does not find any Submission" in new Test {
-      submissionService.getAllSubmissionsForUser(eori).futureValue must equal(Seq.empty)
-    }
+      submissionService.getAllSubmissionsForUser(eori).futureValue mustBe response
 
-    "return all submissions returned by SubmissionRepository" in new Test {
-      when(submissionRepositoryMock.findAllSubmissionsForEori(meq(eori)))
-        .thenReturn(Future.successful(Seq(submission, submission_2)))
-
-      val returnedSubmissions = submissionService.getAllSubmissionsForUser(eori).futureValue
-
-      returnedSubmissions.size must equal(2)
-      returnedSubmissions must contain(submission)
-      returnedSubmissions must contain(submission_2)
-    }
-
-    "call SubmissionRepository.findAllSubmissionsForUser, passing EORI provided" in new Test {
-      submissionService.getAllSubmissionsForUser(eori).futureValue
-
-      verify(submissionRepositoryMock, times(1)).findAllSubmissionsForEori(meq(eori))
+      verify(submissionRepository).findAllSubmissionsForEori(meq(eori))
     }
   }
 
-  "SubmissionService on getSubmission" should {
+  "Get Submission" should {
+    "delegate to repository" in {
+      val response = mock[Option[Submission]]
+      when(submissionRepository.findSubmissionByUuid(any(), any())).thenReturn(Future.successful(response))
 
-    "return empty Option if SubmissionRepository does not find any Submission" in new Test {
-      submissionService.getSubmission(eori, uuid).futureValue must equal(None)
-    }
+      submissionService.getSubmission(eori, uuid).futureValue mustBe response
 
-    "return submission returned by SubmissionRepository" in new Test {
-      when(submissionRepositoryMock.findSubmissionByUuid(meq(eori), meq(uuid)))
-        .thenReturn(Future.successful(Some(submission)))
-
-      val returnedSubmission = submissionService.getSubmission(eori, uuid).futureValue
-
-      returnedSubmission must be(defined)
-      returnedSubmission.get must equal(submission)
-    }
-
-    "call SubmissionRepository.findSubmissionByUuid, passing UUID provided" in new Test {
-      submissionService.getSubmission(eori, uuid).futureValue
-
-      verify(submissionRepositoryMock, times(1)).findSubmissionByUuid(meq(eori), meq(uuid))
+      verify(submissionRepository).findSubmissionByUuid(meq(eori), meq(uuid))
     }
   }
-}
-
-object SubmissionServiceSpec {
-  val validatedHeadersSubmissionRequest: SubmissionRequestHeaders =
-    SubmissionRequestHeaders(LocalReferenceNumber(lrn), Some(ducr))
-
-  val submissionXml: NodeSeq = <submissionXml></submissionXml>
-  val cancellationXml: NodeSeq = <cancellationXml></cancellationXml>
 }
