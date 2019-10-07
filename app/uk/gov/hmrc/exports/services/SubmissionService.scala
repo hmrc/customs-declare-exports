@@ -78,8 +78,9 @@ class SubmissionService @Inject()(
   private def appendMRNIfAlreadyAvailable(submission: Submission, actionId: String): Future[Submission] =
     notificationRepository.findNotificationsByActionId(actionId).flatMap { notifications =>
       notifications.headOption match {
-        case Some(notification) => submissionRepository.updateMrn(actionId, notification.mrn).map(_.getOrElse(submission))
-        case None               => Future.successful(submission)
+        case Some(notification) =>
+          submissionRepository.updateMrn(actionId, notification.mrn).map(_.getOrElse(submission))
+        case None => Future.successful(submission)
       }
     }
 

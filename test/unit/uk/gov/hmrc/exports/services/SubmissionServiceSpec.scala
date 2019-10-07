@@ -62,7 +62,14 @@ class SubmissionServiceSpec
   )(ExecutionContext.global)
 
   override def afterEach(): Unit = {
-    reset(customsDeclarationsConnector, submissionRepository, declarationRepository, notificationRepository, metaDataBuilder, wcoMapperService)
+    reset(
+      customsDeclarationsConnector,
+      submissionRepository,
+      declarationRepository,
+      notificationRepository,
+      metaDataBuilder,
+      wcoMapperService
+    )
     super.afterEach()
   }
 
@@ -75,7 +82,8 @@ class SubmissionServiceSpec
       "submission exists" in {
         when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
         when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
+        when(customsDeclarationsConnector.submitCancellation(any(), any())(any()))
+          .thenReturn(Future.successful("conv-id"))
         when(submissionRepository.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
         when(submissionRepository.addAction(any[String](), any())).thenReturn(Future.successful(Some(submission)))
 
@@ -137,7 +145,8 @@ class SubmissionServiceSpec
         when(wcoMapperService.toXml(any())).thenReturn("xml")
         when(declarationRepository.update(any())).thenReturn(Future.successful(Some(mock[ExportsDeclaration])))
         when(submissionRepository.findOrCreate(any(), any(), any())).thenReturn(Future.successful(mock[Submission]))
-        when(customsDeclarationsConnector.submitDeclaration(any(), any())(any())).thenReturn(Future.successful("conv-id"))
+        when(customsDeclarationsConnector.submitDeclaration(any(), any())(any()))
+          .thenReturn(Future.successful("conv-id"))
         when(submissionRepository.addAction(any[Submission](), any())).thenReturn(Future.successful(submission))
         when(notificationRepository.findNotificationsByActionId(anyString())).thenReturn(Future.successful(Seq.empty))
 
@@ -162,9 +171,11 @@ class SubmissionServiceSpec
         when(wcoMapperService.toXml(any())).thenReturn("xml")
         when(declarationRepository.update(any())).thenReturn(Future.successful(Some(mock[ExportsDeclaration])))
         when(submissionRepository.findOrCreate(any(), any(), any())).thenReturn(Future.successful(mock[Submission]))
-        when(customsDeclarationsConnector.submitDeclaration(any(), any())(any())).thenReturn(Future.successful("conv-id"))
+        when(customsDeclarationsConnector.submitDeclaration(any(), any())(any()))
+          .thenReturn(Future.successful("conv-id"))
         when(submissionRepository.addAction(any[Submission](), any())).thenReturn(Future.successful(mock[Submission]))
-        when(notificationRepository.findNotificationsByActionId(anyString())).thenReturn(Future.successful(Seq(notification)))
+        when(notificationRepository.findNotificationsByActionId(anyString()))
+          .thenReturn(Future.successful(Seq(notification)))
         when(submissionRepository.updateMrn(any(), any())).thenReturn(Future.successful(Some(submission)))
 
         // When
@@ -190,7 +201,8 @@ class SubmissionServiceSpec
         when(wcoMapperService.toXml(any())).thenReturn("xml")
         when(declarationRepository.update(any())).thenReturn(Future.successful(Some(mock[ExportsDeclaration])))
         when(submissionRepository.findOrCreate(any(), any(), any())).thenReturn(Future.successful(mock[Submission]))
-        when(customsDeclarationsConnector.submitDeclaration(any(), any())(any())).thenReturn(Future.failed(new RuntimeException("Some error")))
+        when(customsDeclarationsConnector.submitDeclaration(any(), any())(any()))
+          .thenReturn(Future.failed(new RuntimeException("Some error")))
 
         val declaration = aDeclaration()
 
