@@ -127,9 +127,9 @@ class ExportsSubmissionReceivedSpec
         .And(`User has been authorized`)
     }
 
-    Scenario("authorized user tries to submit draft") {
+    Scenario("authorized user tries to submit pre-submitted declaration") {
       _.Given(`Authorized user`)
-        .And(`User has incomplete declaration`)
+        .And(`User has pre-submitted declaration`)
         .When(`User perform declaration submission`)
         .Then(`Result status` is CONFLICT)
         .And(`No submission was created`)
