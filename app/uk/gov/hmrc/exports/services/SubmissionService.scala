@@ -41,9 +41,13 @@ class SubmissionService @Inject()(
   wcoMapperService: WcoMapperService
 )(implicit executionContext: ExecutionContext) {
 
-  val logger = Logger(classOf[SubmissionService])
+  private val logger = Logger(classOf[SubmissionService])
+
+  private def logProgress(declaration: ExportsDeclaration, message: String): Unit =
+    logger.info(s"Declaration [${declaration.id}]: $message")
 
   def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] = {
+    logProgress(declaration, "Beginning Submission")
     val metaData = wcoMapperService.produceMetaData(declaration)
     val lrn = wcoMapperService
       .declarationLrn(metaData)
@@ -56,6 +60,7 @@ class SubmissionService @Inject()(
     for {
       // Update the Declaration Status
       _ <- declarationRepository.update(declaration.copy(status = DeclarationStatus.COMPLETE))
+      _ = logProgress(declaration, "Marked as COMPLETE")
 
       // Create the Submission
       submission <- submissionRepository.findOrCreate(
@@ -63,15 +68,19 @@ class SubmissionService @Inject()(
         declaration.id,
         Submission(declaration, lrn, ducr)
       )
+      _ = logProgress(declaration, "Found/Created Submission")
 
       // Submit the declaration to the Dec API
       // Revert the declaration status back to DRAFT if it fails
+      _ = logProgress(declaration, "Submitting to the Declaration API")
       conversationId: String <- submit(declaration, payload)
+      _ = logProgress(declaration, "Submitted to the Declaration API Successfully")
 
       // Append the "Submission" action & a MRN if already available
       action = Action(id = conversationId, requestType = SubmissionRequest)
       savedSubmission1 <- submissionRepository.addAction(submission, action)
       savedSubmission2 <- appendMRNIfAlreadyAvailable(savedSubmission1, conversationId)
+      _ = logProgress(declaration, "Submission Complete")
     } yield savedSubmission2
   }
 
@@ -87,7 +96,9 @@ class SubmissionService @Inject()(
   private def submit(declaration: ExportsDeclaration, payload: String)(implicit hc: HeaderCarrier): Future[String] =
     customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).recoverWith {
       case throwable: Throwable =>
+        logProgress(declaration, "Submission failed")
         declarationRepository.update(declaration.copy(status = DeclarationStatus.DRAFT)) flatMap { _ =>
+          logProgress(declaration, "Reverted declaration to DRAFT")
           Future.failed[String](throwable)
         }
     }
@@ -128,5 +139,4 @@ class SubmissionService @Inject()(
 
   private def isSubmissionAlreadyCancelled(submission: Submission): Boolean =
     submission.actions.exists(_.requestType == CancellationRequest)
-
 }
