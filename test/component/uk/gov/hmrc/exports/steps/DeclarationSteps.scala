@@ -18,17 +18,30 @@ package component.uk.gov.hmrc.exports.steps
 
 import java.util.UUID
 
-import component.uk.gov.hmrc.exports.steps.`User has completed declaration`.{aDeclaration, withChoice, withConsignmentReferences, withContainerData, withEori, withId, withStatus}
+import component.uk.gov.hmrc.exports.steps.`User has completed declaration`.{
+  aDeclaration,
+  withChoice,
+  withConsignmentReferences,
+  withContainerData,
+  withEori,
+  withId,
+  withStatus
+}
 import component.uk.gov.hmrc.exports.syntax.{Action, Precondition, ScenarioContext}
 import org.scalatest.concurrent.{AbstractPatienceConfiguration, IntegrationPatience, PatienceConfiguration}
 import play.api.Application
 import play.api.test.FakeRequest
 import uk.gov.hmrc.exports.models.{Choice, Eori}
-import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration, Seal, TransportInformationContainer}
+import uk.gov.hmrc.exports.models.declaration.{
+  DeclarationStatus,
+  ExportsDeclaration,
+  Seal,
+  TransportInformationContainer
+}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import util.stubs.CustomsDeclarationsAPIService
 import util.testdata.ExportsDeclarationBuilder
-import util.testdata.ExportsTestData.{ValidHeaders, declarantLrnValue}
+import util.testdata.ExportsTestData.{declarantLrnValue, ValidHeaders}
 
 import scala.concurrent.{Await, Future}
 import org.mockito.ArgumentMatchers._
@@ -55,8 +68,9 @@ object `User has completed declaration` extends Precondition with ExportsDeclara
     )
     val repo = context.get[DeclarationRepository]
     when(repo.find(any(), any())).thenReturn(Future.successful(Some(declaration)))
-    when(repo.update(any()), atLeastOnce()).thenAnswer(new Answer[Future[Option[ExportsDeclaration]]]{
-      override def answer(invocation: InvocationOnMock): Future[Option[ExportsDeclaration]] = Future.successful(Some(invocation.getArgument(0)))
+    when(repo.update(any()), atLeastOnce()).thenAnswer(new Answer[Future[Option[ExportsDeclaration]]] {
+      override def answer(invocation: InvocationOnMock): Future[Option[ExportsDeclaration]] =
+        Future.successful(Some(invocation.getArgument(0)))
     })
     context.updated(declaration)
   }

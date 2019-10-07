@@ -34,6 +34,7 @@ import util.testdata.ExportsDeclarationBuilder
 import util.testdata.ExportsTestData._
 
 import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
 
 class CustomsDeclarationsConnectorSpec
     extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar with CustomsDeclarationsAPIService
@@ -64,8 +65,8 @@ class CustomsDeclarationsConnectorSpec
 
       "request is processed successfully - 202" in {
 
-        startSubmissionService(ACCEPTED, UUID.randomUUID.toString)
-        await(sendValidXml(expectedSubmissionRequestPayload("123")))
+        startSubmissionService(ACCEPTED, UUID.randomUUID.toString, 120000)
+        await(sendValidXml(expectedSubmissionRequestPayload("123")))(FiniteDuration(125, "s"))
 
         verifyDecServiceWasCalledCorrectly(
           requestBody = expectedSubmissionRequestPayload("123"),
