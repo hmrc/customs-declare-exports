@@ -18,8 +18,8 @@ package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.Mockito.verify
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.models.Choice
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment._
@@ -105,6 +105,20 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
             ),
             any[GoodsShipment.Consignment]
           )
+      }
+    }
+
+    "correctly call TransportEquipmentBuilder" when {
+      "no containers present" in {
+
+        val model: ExportsDeclaration = aDeclaration(withoutContainerData())
+
+        val goodsShipment: Declaration.GoodsShipment = new Declaration.GoodsShipment
+
+        builder.buildThenAdd(model, goodsShipment)
+
+        verify(mockTransportEquipmentBuilder)
+          .buildThenAdd(refEq(TransportInformationContainers(Seq.empty)), any[GoodsShipment.Consignment])
       }
     }
   }

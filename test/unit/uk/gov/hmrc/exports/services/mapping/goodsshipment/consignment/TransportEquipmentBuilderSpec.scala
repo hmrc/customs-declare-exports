@@ -59,5 +59,46 @@ class TransportEquipmentBuilderSpec extends WordSpec with Matchers {
         containerB.getSeal.get(0).getSequenceNumeric.intValue() should be(1)
       }
     }
+
+    "correctly map TransportEquipment instance for Standard journey " when {
+      "container has no seals" in {
+        val builder = new TransportEquipmentBuilder
+        val consignment: GoodsShipment.Consignment = new GoodsShipment.Consignment
+
+        val containers: TransportInformationContainers =
+          TransportInformationContainers(Seq(TransportInformationContainer("container-a", Seq.empty)))
+        builder.buildThenAdd(containers, consignment)
+
+        consignment.getTransportEquipment.size() should be(1)
+
+        val containerA = consignment.getTransportEquipment.get(0)
+        containerA.getSequenceNumeric.intValue() should be(1)
+        containerA.getID.getValue should be("container-a")
+        containerA.getSeal.size() should be(1)
+
+        containerA.getSeal.get(0).getID should be(null)
+        containerA.getSeal.get(0).getSequenceNumeric.intValue() should be(0)
+      }
+    }
+
+    "correctly map TransportEquipment instance for Standard journey " when {
+      "there are no containers" in {
+        val builder = new TransportEquipmentBuilder
+        val consignment: GoodsShipment.Consignment = new GoodsShipment.Consignment
+
+        val containers: TransportInformationContainers = TransportInformationContainers(Seq.empty)
+        builder.buildThenAdd(containers, consignment)
+
+        consignment.getTransportEquipment.size() should be(1)
+
+        val containerA = consignment.getTransportEquipment.get(0)
+        containerA.getSequenceNumeric.intValue() should be(0)
+        containerA.getID should be(null)
+        containerA.getSeal.size() should be(1)
+
+        containerA.getSeal.get(0).getID should be(null)
+        containerA.getSeal.get(0).getSequenceNumeric.intValue() should be(0)
+      }
+    }
   }
 }

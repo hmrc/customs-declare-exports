@@ -68,7 +68,7 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
   private[connectors] def post(eori: String, uri: String, body: String)(
     implicit hc: HeaderCarrier
   ): Future[CustomsDeclarationsResponse] = {
-    logger.debug(s"CUSTOMS_DECLARATIONS request payload is -> $body")
+    logger.info(s"CUSTOMS_DECLARATIONS request payload is -> $body")
     val postStopwatch = postTimer.time()
     httpClient
       .POSTString[CustomsDeclarationsResponse](
