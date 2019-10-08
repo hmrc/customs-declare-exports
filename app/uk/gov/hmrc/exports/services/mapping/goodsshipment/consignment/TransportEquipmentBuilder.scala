@@ -39,9 +39,7 @@ class TransportEquipmentBuilder @Inject()()
   private def createEmptyTransportEquipment = {
     val transportEquipment = new GoodsShipment.Consignment.TransportEquipment()
     transportEquipment.setSequenceNumeric(java.math.BigDecimal.ZERO)
-
     transportEquipment.getSeal.add(createEmptySeal)
-
     transportEquipment
   }
 
