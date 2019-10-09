@@ -15,7 +15,7 @@ class FileReader @Inject()(){
   }
 
   private def read(filename: String): List[String] = {
-    val source = Source.fromFile(filename)
+    val source = Source.fromURL(getClass.getClassLoader.getResource(filename), "UTF-8")
     try {
       source.getLines().toList
     } finally source.close()

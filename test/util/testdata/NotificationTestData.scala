@@ -23,7 +23,8 @@ import java.util.UUID
 import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
-import uk.gov.hmrc.exports.models.declaration.notifications.{ErrorPointer, Notification, NotificationError}
+import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
+import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationError}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import util.testdata.ExportsTestData._
 
@@ -243,7 +244,7 @@ object NotificationTestData {
   val errors = Seq(
     NotificationError(
       validationCode = "CDS12056",
-      pointers = Seq(ErrorPointer(documentSectionCode = "42A", tagId = None))
+      pointer = Pointer(List(PointerSection("42A", PointerSectionType.FIELD)))
     )
   )
 

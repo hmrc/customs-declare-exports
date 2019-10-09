@@ -8,11 +8,11 @@ class FileReaderSpec extends WordSpec with MustMatchers {
 
   "Read lines" should {
     "not skip header by default" in {
-      reader.readLines("/header-file.csv").head mustBe "header-line"
+      reader.readLines("header-file.csv").head mustBe "header-line"
     }
 
     "skip header" in {
-      reader.readLines("/header-file.csv", skipHeaderLine = true).head mustBe "data"
+      reader.readLines("header-file.csv", skipHeaderLine = true).head mustBe "data"
     }
   }
 

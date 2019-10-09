@@ -131,7 +131,7 @@ class NotificationController @Inject()(
       errorsXml.map { singleErrorXml =>
         val validationCode = (singleErrorXml \ "ValidationCode").text
         val pointer =
-          if ((singleErrorXml \ "Pointer").nonEmpty) buildErrorPointers(singleErrorXml) else Pointer(Seq.empty)
+          if ((singleErrorXml \ "Pointer").nonEmpty) buildErrorPointers(singleErrorXml) else Pointer(List.empty)
         NotificationError(validationCode, pointer)
       }
     } else Seq.empty
@@ -139,7 +139,8 @@ class NotificationController @Inject()(
   private def buildErrorPointers(singleErrorXml: Node): Pointer = {
     val pointersXml = singleErrorXml \ "Pointer"
 
-    val pointerSections = pointersXml.map { singlePointerXml =>
+    val pointerSections = pointersXml.flatMap { singlePointerXml =>
+
       /**
        * Document Section Code contains section code e.g. 42A, 67A.
        * One section is one element in the declaration tree e.g. Declaration, GoodsShipment etc. - non optional
@@ -163,8 +164,8 @@ class NotificationController @Inject()(
           Some(PointerSection((singlePointerXml \ "TagID").text, PointerSectionType.FIELD))
         else None
 
-      Seq(documentSectionCode, sequenceNumeric, tagId).flatten
-    }.flatten
+      List(documentSectionCode, sequenceNumeric, tagId).flatten
+    }.toList
 
     Pointer(pointerSections)
   }
