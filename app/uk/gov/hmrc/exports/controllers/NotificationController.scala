@@ -29,7 +29,7 @@ import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.notifications.{ErrorPointer, Notification, NotificationError}
+import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationError}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.services.{NotificationService, SubmissionService}
 
@@ -130,19 +130,42 @@ class NotificationController @Inject()(
       val errorsXml = singleResponseXml \ "Error"
       errorsXml.map { singleErrorXml =>
         val validationCode = (singleErrorXml \ "ValidationCode").text
-        val pointers = buildErrorPointers(singleErrorXml)
-        NotificationError(validationCode = validationCode, pointers = pointers)
+        val pointer =
+          if ((singleErrorXml \ "Pointer").nonEmpty) buildErrorPointers(singleErrorXml) else Pointer(Seq.empty)
+        NotificationError(validationCode, pointer)
       }
     } else Seq.empty
 
-  private def buildErrorPointers(singleErrorXml: Node): Seq[ErrorPointer] =
-    if ((singleErrorXml \ "Pointer").nonEmpty) {
-      val pointersXml = singleErrorXml \ "Pointer"
-      pointersXml.map { singlePointerXml =>
-        val documentSectionCode = (singlePointerXml \ "DocumentSectionCode").text
-        val tagId = if ((singlePointerXml \ "TagID").nonEmpty) Some((singlePointerXml \ "TagID").text) else None
-        ErrorPointer(documentSectionCode = documentSectionCode, tagId = tagId)
-      }
-    } else Seq.empty
+  private def buildErrorPointers(singleErrorXml: Node): Pointer = {
+    val pointersXml = singleErrorXml \ "Pointer"
 
+    val pointerSections = pointersXml.map { singlePointerXml =>
+      /**
+       * Document Section Code contains section code e.g. 42A, 67A.
+       * One section is one element in the declaration tree e.g. Declaration, GoodsShipment etc. - non optional
+       */
+      val documentSectionCode: Option[PointerSection] =
+        Some(PointerSection((singlePointerXml \ "DocumentSectionCode").text, PointerSectionType.FIELD))
+
+      /**
+       * Sequence Numeric define what item is related with error, this is for future implementation - optional
+       */
+      val sequenceNumeric: Option[PointerSection] =
+        if ((singlePointerXml \ "SequenceNumeric").nonEmpty)
+          Some(PointerSection((singlePointerXml \ "SequenceNumeric").text, PointerSectionType.SEQUENCE))
+        else None
+
+      /**
+       * Probably the last element in pointers, is it Important for us? - optional
+       */
+      val tagId: Option[PointerSection] =
+        if ((singlePointerXml \ "TagID").nonEmpty)
+          Some(PointerSection((singlePointerXml \ "TagID").text, PointerSectionType.FIELD))
+        else None
+
+      Seq(documentSectionCode, sequenceNumeric, tagId).flatten
+    }.flatten
+
+    Pointer(pointerSections)
+  }
 }
