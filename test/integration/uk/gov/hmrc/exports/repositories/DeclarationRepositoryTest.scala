@@ -44,8 +44,8 @@ class DeclarationRepositoryTest
 
   private val repository = injector.instanceOf[DeclarationRepository]
 
-  override def afterEach(): Unit = {
-    super.afterEach()
+  override def beforeEach(): Unit = {
+    super.beforeEach()
     repository.removeAll().futureValue
   }
 

@@ -44,8 +44,8 @@ class NotificationRepositorySpec
 
   implicit val ec: ExecutionContext = global
 
-  override def afterEach(): Unit = {
-    super.afterEach()
+  override def beforeEach(): Unit = {
+    super.beforeEach()
     repo.removeAll().futureValue
   }
 

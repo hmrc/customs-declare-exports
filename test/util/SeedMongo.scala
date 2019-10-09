@@ -75,15 +75,7 @@ object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuil
         withCommodityMeasure(CommodityMeasure(Some("10"), "500", "700")),
         withAdditionalInformation("00400", "EXPORTER"),
         withDocumentsProduced(
-          DocumentProduced(
-            Some("C501"),
-            Some(DocumentIdentifierAndPart(Some("GBAEOC71757250450281"), Some("1"))),
-            None,
-            None,
-            None,
-            None,
-            None
-          )
+          DocumentProduced(Some("C501"), Some("GBAEOC71757250450281"), None, None, None, None, None)
         )
       )
     ),

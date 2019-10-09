@@ -159,7 +159,7 @@ object AdditionalDocumentsBuilder {
     GovernmentAgencyGoodsItemAdditionalDocument(
       categoryCode = doc.documentTypeCode.map(_.substring(0, 1)),
       typeCode = doc.documentTypeCode.map(_.substring(1)),
-      id = createAdditionalDocumentId(doc),
+      id = doc.documentIdentifier,
       lpcoExemptionCode = doc.documentStatus,
       name = doc.documentStatusReason,
       submitter =
@@ -176,13 +176,6 @@ object AdditionalDocumentsBuilder {
         ),
       writeOff = createAdditionalDocumentWriteOff(doc)
     )
-
-  private def createAdditionalDocumentId(doc: DocumentProduced): Option[String] =
-    for {
-      documentIdentifierAndPart <- doc.documentIdentifierAndPart
-      documentIdentifier <- documentIdentifierAndPart.documentIdentifier
-      documentPart <- documentIdentifierAndPart.documentPart
-    } yield documentIdentifier + documentPart
 
   private def createAdditionalDocumentWriteOff(doc: DocumentProduced): Option[WriteOff] =
     for {

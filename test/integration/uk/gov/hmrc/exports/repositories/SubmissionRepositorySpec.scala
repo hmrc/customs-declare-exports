@@ -47,9 +47,9 @@ class SubmissionRepositorySpec
 
   implicit val ec: ExecutionContext = global
 
-  override def afterEach(): Unit = {
+  override def beforeEach(): Unit = {
+    super.beforeEach()
     repo.removeAll().futureValue
-    super.afterEach()
   }
 
   "Submission Repository on save" when {

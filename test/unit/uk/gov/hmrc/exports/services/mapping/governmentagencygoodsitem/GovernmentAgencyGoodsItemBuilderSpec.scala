@@ -90,9 +90,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
     correctDocumentsProducedData: DocumentsProduced
   ) {
     val document = correctDocumentsProducedData.documents.head
-    val documentIdentifierAndPart = document.documentIdentifierAndPart.get
-    val identifier = documentIdentifierAndPart.documentIdentifier.getOrElse("") + documentIdentifierAndPart.documentPart
-      .getOrElse("")
+    val identifier = document.documentIdentifier.getOrElse("")
 
     validateAdditionalDocument(
       firstMappedDocument = mappedDocument,
