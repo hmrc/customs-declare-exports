@@ -1,6 +1,9 @@
 package uk.gov.hmrc.exports.models
 
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.exports.models
 import uk.gov.hmrc.exports.models.PointerSectionType.PointerSectionType
+import uk.gov.hmrc.exports.util.EnumJson
 
 case class Pointer(sections: List[PointerSection]) {
   //  Converts a pointer into it's pattern form
@@ -13,6 +16,9 @@ case class Pointer(sections: List[PointerSection]) {
   // e.g. ABC.DEF.GHI (if the pointer doesnt contain a sequence)
   lazy val value: String = sections.map(_.value).mkString(".")
 }
+object Pointer {
+  implicit val format: OFormat[Pointer] = Json.format[Pointer]
+}
 
 case class PointerSection(value: String, `type`: PointerSectionType) {
   lazy val pattern: String = `type` match {
@@ -20,10 +26,14 @@ case class PointerSection(value: String, `type`: PointerSectionType) {
     case PointerSectionType.SEQUENCE => "$"
   }
 }
+object PointerSection {
+  implicit val format: OFormat[PointerSection] = Json.format[PointerSection]
+}
 
 object PointerSectionType extends Enumeration {
   type PointerSectionType = Value
   val FIELD, SEQUENCE = Value
+  implicit val format: Format[models.PointerSectionType.Value] = EnumJson.format(PointerSectionType)
 }
 
 case class PointerPattern(sections: List[PointerPatternSection]) {
