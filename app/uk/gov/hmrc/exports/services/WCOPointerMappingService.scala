@@ -18,9 +18,9 @@ class WCOPointerMappingService @Inject()(fileReader: FileReader) {
   }
 
   def mapWCOPointerToExportsPointer(pointer: Pointer): Option[Pointer] =
-    mappings.find(_.wcoPattern matches pointer.pattern).map(_.applyTo(pointer))
+    mappings.find(_.wcoPattern matches pointer.pattern).map(_.applyToWCOPointer(pointer))
 
-  def mapWCOPointerToExportsPointer(pointers: Seq[Pointer]): Seq[Pointer] =
+  def mapWCOPointerToExportsPointer(pointers: Iterable[Pointer]): Iterable[Pointer] =
     pointers.map(mapWCOPointerToExportsPointer).filter(_.isDefined).flatten
 
 }

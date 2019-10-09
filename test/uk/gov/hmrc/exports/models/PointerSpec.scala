@@ -4,6 +4,8 @@ import org.scalatest.{MustMatchers, WordSpec}
 
 class PointerSpec extends WordSpec with MustMatchers {
 
+  implicit val strs2pointerSectionPatterns: List[String] => List[PointerPatternSection] = _.map(PointerPatternSection(_))
+
   "PointerSection" should {
     val field = PointerSection("ABC", PointerSectionType.FIELD)
     val sequence = PointerSection("123", PointerSectionType.SEQUENCE)
@@ -13,7 +15,7 @@ class PointerSpec extends WordSpec with MustMatchers {
     }
 
     "map sequence to pattern" in {
-      sequence.pattern mustBe "*"
+      sequence.pattern mustBe "$"
     }
 
     "map field to value" in {
@@ -30,10 +32,10 @@ class PointerSpec extends WordSpec with MustMatchers {
     val sequence1 = PointerSection("123", PointerSectionType.SEQUENCE)
     val field2 = PointerSection("DEF", PointerSectionType.FIELD)
     val sequence2 = PointerSection("321", PointerSectionType.SEQUENCE)
-    val pointer = Pointer(Seq(field1, sequence1, field2, sequence2))
+    val pointer = Pointer(List(field1, sequence1, field2, sequence2))
 
     "map to pattern" in {
-      pointer.pattern mustBe PointerPattern(Seq("ABC", "*", "DEF", "*"))
+      pointer.pattern mustBe PointerPattern(List("ABC", "$", "DEF", "$"))
     }
 
     "map to value" in {
@@ -43,19 +45,33 @@ class PointerSpec extends WordSpec with MustMatchers {
 
   "PointerPattern" should {
     "match similar pattern" in {
+      // Same String
       PointerPattern("a.b.c").matches(PointerPattern("a.b.c")) mustBe true
-      PointerPattern("a.*.c").matches(PointerPattern("a.*.c")) mustBe true
+      PointerPattern("a.$.c").matches(PointerPattern("a.$.c")) mustBe true
+      PointerPattern("a.$1.c").matches(PointerPattern("a.$1.c")) mustBe true
+
+      // Same pattern with an un-indexed sequence identifier
+      PointerPattern("a.$1.c").matches(PointerPattern("a.$.c")) mustBe true
+      PointerPattern("a.$.c").matches(PointerPattern("a.$1.c")) mustBe true
     }
 
     "not match different pattern" in {
+      // Different pattern
+      PointerPattern("a.b.c").matches(PointerPattern("x.y.z")) mustBe false
+      PointerPattern("x.y.z").matches(PointerPattern("a.b.c")) mustBe false
+      PointerPattern("a.$1.c").matches(PointerPattern("a.b.$1")) mustBe false
+      PointerPattern("a.$1.c").matches(PointerPattern("a.$2.c")) mustBe false
+
+      // Different Length
       PointerPattern("a.b.c").matches(PointerPattern("a.b")) mustBe false
       PointerPattern("a.b").matches(PointerPattern("a.b.c")) mustBe false
-      PointerPattern("a.*").matches(PointerPattern("a.*.c")) mustBe false
-      PointerPattern("a.*.c").matches(PointerPattern("a.b.*")) mustBe false
+      PointerPattern("a.$1").matches(PointerPattern("a.$1.c")) mustBe false
+
     }
 
     "parse Pattern" in {
-      PointerPattern("a.*.c") mustBe PointerPattern(Seq("a", "*", "c"))
+      PointerPattern("a.$1.c") mustBe PointerPattern(List("a", "$1", "c"))
+      PointerPattern("a.$.c") mustBe PointerPattern(List("a", "$", "c"))
     }
   }
 
