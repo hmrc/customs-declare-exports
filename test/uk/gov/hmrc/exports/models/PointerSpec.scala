@@ -17,6 +17,7 @@
 package uk.gov.hmrc.exports.models
 
 import org.scalatest.{MustMatchers, WordSpec}
+import play.api.libs.json.{JsString, JsSuccess, Json}
 
 class PointerSpec extends WordSpec with MustMatchers {
 
@@ -57,6 +58,14 @@ class PointerSpec extends WordSpec with MustMatchers {
 
     "map to value" in {
       pointer.value mustBe "ABC.123.DEF.321"
+    }
+
+    "serialize to JSON" in {
+      Json.toJson(pointer)(Pointer.format) mustBe JsString("ABC.123.DEF.321")
+    }
+
+    "deserialize from JSON" in {
+      Json.fromJson(JsString("ABC.123.DEF.321"))(Pointer.format) mustBe JsSuccess(pointer)
     }
   }
 

@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.exports.models
 
-import play.api.libs.json.{Format, Json, Reads, Writes}
+import play.api.libs.json.{Format, JsString, Json, OFormat, Reads, Writes}
 import uk.gov.hmrc.exports.models
 import uk.gov.hmrc.exports.models.PointerSectionType.PointerSectionType
+
+import scala.util.{Success, Try}
 
 object PointerSectionType extends Enumeration {
   type PointerSectionType = Value
@@ -48,10 +50,22 @@ case class Pointer(sections: Seq[PointerSection]) {
   // e.g. ABC.DEF.1.GHI  (if the pointer contains a sequence with index 1)
   // e.g. ABC.DEF.GHI (if the pointer doesnt contain a sequence)
   lazy val value: String = sections.map(_.value).mkString(".")
+  override def toString: String = value
 }
 
 object Pointer {
-  implicit val format = Json.format[Pointer]
+  implicit val format: Format[Pointer] = Format(
+    Reads(js => js.validate[JsString].map(string => Pointer(string.value))),
+    Writes(pointer => JsString(pointer.toString))
+  )
+
+  def apply(sections: String): Pointer =
+    Pointer(sections.split("\\.").map { section =>
+      Try(section.toInt) match {
+        case Success(_) => PointerSection(section, PointerSectionType.SEQUENCE)
+        case _          => PointerSection(section, PointerSectionType.FIELD)
+      }
+    })
 }
 
 case class PointerPattern(sections: List[PointerPatternSection]) {
