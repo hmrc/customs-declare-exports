@@ -1,1 +1,3 @@
-wco-pointer,exports-pointer
+wco-pointer, exports-pointer
+# e.g.
+# 42A.26B.$1.ABC, declaration.items.$1.commodityCode
