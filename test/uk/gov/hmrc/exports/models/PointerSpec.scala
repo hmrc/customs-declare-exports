@@ -33,11 +33,29 @@ class PointerSpec extends WordSpec with MustMatchers {
     val pointer = Pointer(Seq(field1, sequence1, field2, sequence2))
 
     "map to pattern" in {
-      pointer.pattern mustBe "ABC.*.DEF.*"
+      pointer.pattern mustBe PointerPattern(Seq("ABC", "*", "DEF", "*"))
     }
 
     "map to value" in {
       pointer.value mustBe "ABC.123.DEF.321"
+    }
+  }
+
+  "PointerPattern" should {
+    "match similar pattern" in {
+      PointerPattern("a.b.c").matches(PointerPattern("a.b.c")) mustBe true
+      PointerPattern("a.*.c").matches(PointerPattern("a.*.c")) mustBe true
+    }
+
+    "not match different pattern" in {
+      PointerPattern("a.b.c").matches(PointerPattern("a.b")) mustBe false
+      PointerPattern("a.b").matches(PointerPattern("a.b.c")) mustBe false
+      PointerPattern("a.*").matches(PointerPattern("a.*.c")) mustBe false
+      PointerPattern("a.*.c").matches(PointerPattern("a.b.*")) mustBe false
+    }
+
+    "parse Pattern" in {
+      PointerPattern("a.*.c") mustBe PointerPattern(Seq("a", "*", "c"))
     }
   }
 
