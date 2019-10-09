@@ -24,7 +24,7 @@ class WCOPointerMappingService @Inject()(fileReader: FileReader) {
 
   private lazy val mappings: Set[PointerMapping] = {
     fileReader
-      .readLines("code-lists/pointer-mapping.csv", skipHeaderLine = true)
+      .readLines("code-lists/pointer-mapping.csv")
       .map(_.split(","))
       .map {
         case Array(wcoPattern, exportsPattern) =>
