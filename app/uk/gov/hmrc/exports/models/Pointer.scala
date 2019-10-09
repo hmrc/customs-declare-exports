@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.models
 
-import play.api.libs.json.{Format, JsString, Json, OFormat, Reads, Writes}
+import play.api.libs.json._
 import uk.gov.hmrc.exports.models
 import uk.gov.hmrc.exports.models.PointerSectionType.PointerSectionType
 
@@ -76,6 +76,8 @@ case class PointerPattern(sections: List[PointerPatternSection]) {
       val statuses = for (i <- sections.indices) yield sections(i).matches(that.sections(i))
       statuses.forall(identity)
     }
+
+  override def toString: String = sections.map(_.value).mkString(".")
 }
 
 object PointerPattern {

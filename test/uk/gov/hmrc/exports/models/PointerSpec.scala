@@ -60,6 +60,10 @@ class PointerSpec extends WordSpec with MustMatchers {
       pointer.value mustBe "ABC.123.DEF.321"
     }
 
+    "map to string" in {
+      pointer.toString mustBe "ABC.123.DEF.321"
+    }
+
     "serialize to JSON" in {
       Json.toJson(pointer)(Pointer.format) mustBe JsString("ABC.123.DEF.321")
     }
@@ -98,6 +102,10 @@ class PointerSpec extends WordSpec with MustMatchers {
     "parse Pattern" in {
       PointerPattern("a.$1.c") mustBe PointerPattern(List("a", "$1", "c"))
       PointerPattern("a.$.c") mustBe PointerPattern(List("a", "$", "c"))
+    }
+
+    "map to string" in {
+      PointerPattern("a.$1.c").toString mustBe "a.$1.c"
     }
   }
 

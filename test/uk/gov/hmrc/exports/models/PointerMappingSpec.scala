@@ -32,7 +32,7 @@ class PointerMappingSpec extends WordSpec with MustMatchers {
       )
       intercept[IllegalArgumentException] {
         mapping.applyToWCOPointer(pointer)
-      }
+      }.getMessage mustBe "Pointer [x.y.z] does not match WCO pattern [a.b.c]"
     }
 
     "map field only pointer" in {
