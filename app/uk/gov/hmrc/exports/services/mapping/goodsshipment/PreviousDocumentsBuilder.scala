@@ -61,10 +61,9 @@ class PreviousDocumentsBuilder @Inject()() extends ModifyingBuilder[PreviousDocu
       previousDocument.setID(id)
     }
 
-    if (document.goodsItemIdentifier.getOrElse("").nonEmpty) {
-      val lineNumeric = new java.math.BigDecimal(document.goodsItemIdentifier.get)
-      previousDocument.setLineNumeric(lineNumeric)
-    }
+    document.goodsItemIdentifier.foreach(
+      identitier => previousDocument.setLineNumeric(new java.math.BigDecimal(identitier))
+    )
 
     if (document.documentType.nonEmpty) {
       val typeCode = new PreviousDocumentTypeCodeType()
