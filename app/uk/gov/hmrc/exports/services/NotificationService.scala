@@ -172,5 +172,4 @@ class NotificationService @Inject()(
 
     Pointer(pointerSections)
   }
-
 }

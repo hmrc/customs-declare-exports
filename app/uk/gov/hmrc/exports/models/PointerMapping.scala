@@ -36,12 +36,12 @@ case class PointerMapping(wcoPattern: PointerPattern, exportsPattern: PointerPat
       } else {
         PointerSection(sectionPattern.value, PointerSectionType.FIELD)
       }
-    }.toList
+    }
     Pointer(sections)
   }
 
-  private def getSequenceMappings(pointer: Pointer): Map[Option[String], String] = {
-    for (i <- pointer.sections.indices) yield {
+  private def getSequenceMappings(pointer: Pointer): Map[Option[String], String] =
+    pointer.sections.indices.map { i =>
       val patternSection = wcoPattern.sections(i)
       if (patternSection.sequential) {
         val pointerSection = pointer.sections(i)
@@ -49,6 +49,5 @@ case class PointerMapping(wcoPattern: PointerPattern, exportsPattern: PointerPat
       } else {
         None
       }
-    }
-  }.filter(_.isDefined).flatten.toMap
+    }.filter(_.isDefined).flatten.toMap
 }
