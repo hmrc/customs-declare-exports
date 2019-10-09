@@ -31,7 +31,7 @@ import uk.gov.hmrc.exports.models.PointerSectionType.{FIELD, SEQUENCE}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.NotificationService
+import uk.gov.hmrc.exports.services.{NotificationService, WCOPointerMappingService}
 import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 import util.testdata.ExportsTestData._
 import util.testdata.NotificationTestData._
@@ -46,9 +46,11 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
   private trait Test {
     val submissionRepositoryMock: SubmissionRepository = buildSubmissionRepositoryMock
     val notificationRepositoryMock: NotificationRepository = buildNotificationRepositoryMock
+    val wcoPointerMappingService: WCOPointerMappingService = mock[WCOPointerMappingService]
     val notificationService = new NotificationService(
-      submissionRepository = submissionRepositoryMock,
-      notificationRepository = notificationRepositoryMock
+      submissionRepositoryMock,
+      notificationRepositoryMock,
+      wcoPointerMappingService
     )(ExecutionContext.global)
   }
 
@@ -284,8 +286,6 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
         </_2_1:Error>
       }
 
-      val pointer = notificationService.buildErrorPointers(inputXml)
-
       val expectedPointer = Pointer(
         Seq(
           PointerSection("42A", FIELD),
@@ -298,7 +298,13 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
         )
       )
 
-      pointer mustBe expectedPointer
+      when(wcoPointerMappingService.mapWCOPointerToExportsPointer(meq(expectedPointer)))
+        .thenReturn(Some(expectedPointer))
+
+      val pointer = notificationService.buildErrorPointers(inputXml)
+
+
+      pointer mustBe Some(expectedPointer)
     }
   }
 }

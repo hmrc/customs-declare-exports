@@ -244,7 +244,7 @@ object NotificationTestData {
   val errors = Seq(
     NotificationError(
       validationCode = "CDS12056",
-      pointer = Pointer(Seq(PointerSection("42A", PointerSectionType.FIELD)))
+      pointer = Some(Pointer(Seq(PointerSection("42A", PointerSectionType.FIELD))))
     )
   )
 

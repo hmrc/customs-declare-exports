@@ -33,7 +33,8 @@ import scala.xml.{Node, NodeSeq}
 @Singleton
 class NotificationService @Inject()(
   submissionRepository: SubmissionRepository,
-  notificationRepository: NotificationRepository
+  notificationRepository: NotificationRepository,
+  wcoPointerMappingService: WCOPointerMappingService
 )(implicit executionContext: ExecutionContext) {
 
   private val logger = Logger(this.getClass)
@@ -135,12 +136,12 @@ class NotificationService @Inject()(
       errorsXml.map { singleErrorXml =>
         val validationCode = (singleErrorXml \ "ValidationCode").text
         val pointer =
-          if ((singleErrorXml \ "Pointer").nonEmpty) buildErrorPointers(singleErrorXml) else Pointer(Seq.empty)
+          if ((singleErrorXml \ "Pointer").nonEmpty) buildErrorPointers(singleErrorXml) else None
         NotificationError(validationCode, pointer)
       }
     } else Seq.empty
 
-  def buildErrorPointers(singleErrorXml: Node): Pointer = {
+  def buildErrorPointers(singleErrorXml: Node): Option[Pointer] = {
     val pointersXml = singleErrorXml \ "Pointer"
 
     val pointerSections = pointersXml.flatMap { singlePointerXml =>
@@ -170,6 +171,6 @@ class NotificationService @Inject()(
       List(documentSectionCode, sequenceNumeric, tagId).flatten
     }.toList
 
-    Pointer(pointerSections)
+    wcoPointerMappingService.mapWCOPointerToExportsPointer(Pointer(pointerSections))
   }
 }
