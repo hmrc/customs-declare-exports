@@ -47,11 +47,10 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
     val submissionRepositoryMock: SubmissionRepository = buildSubmissionRepositoryMock
     val notificationRepositoryMock: NotificationRepository = buildNotificationRepositoryMock
     val wcoPointerMappingService: WCOPointerMappingService = mock[WCOPointerMappingService]
-    val notificationService = new NotificationService(
-      submissionRepositoryMock,
-      notificationRepositoryMock,
-      wcoPointerMappingService
-    )(ExecutionContext.global)
+    val notificationService =
+      new NotificationService(submissionRepositoryMock, notificationRepositoryMock, wcoPointerMappingService)(
+        ExecutionContext.global
+      )
   }
 
   val PositionFunctionCode = "11"
@@ -302,7 +301,6 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
         .thenReturn(Some(expectedPointer))
 
       val pointer = notificationService.buildErrorPointers(inputXml)
-
 
       pointer mustBe Some(expectedPointer)
     }
