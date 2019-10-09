@@ -32,7 +32,7 @@ import uk.gov.hmrc.exports.models.PointerSectionType.WCOPointerSectionType
 case class PointerSection(value: String, `type`: WCOPointerSectionType) {
   lazy val pattern: String = `type` match {
     case PointerSectionType.FIELD    => value
-    case PointerSectionType.SEQUENCE => "*"
+    case PointerSectionType.SEQUENCE => "$"
   }
 }
 
