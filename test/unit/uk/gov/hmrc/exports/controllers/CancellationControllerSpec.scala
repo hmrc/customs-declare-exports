@@ -16,6 +16,7 @@
 
 package unit.uk.gov.hmrc.exports.controllers
 
+import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
@@ -43,6 +44,7 @@ class CancellationControllerSpec
 
   private val submissionService: SubmissionService = mock[SubmissionService]
 
+  SharedMetricRegistries.clear()
   override lazy val app: Application = GuiceApplicationBuilder()
     .overrides(bind[AuthConnector].to(mockAuthConnector), bind[SubmissionService].to(submissionService))
     .build()

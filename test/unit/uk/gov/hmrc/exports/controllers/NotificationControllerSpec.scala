@@ -16,6 +16,7 @@
 
 package unit.uk.gov.hmrc.exports.controllers
 
+import com.codahale.metrics.SharedMetricRegistries
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
@@ -54,6 +55,8 @@ class NotificationControllerSpec
   val getAllNotificationsForUserUri = "/notifications"
   val saveNotificationUri = "/customs-declare-exports/notify"
 
+  SharedMetricRegistries.clear()
+
   private val notificationServiceMock: NotificationService = buildNotificationServiceMock
   private val submissionService: SubmissionService = buildSubmissionServiceMock
   override lazy val app: Application = GuiceApplicationBuilder()
@@ -64,13 +67,11 @@ class NotificationControllerSpec
     )
     .build()
 
-  private lazy val metrics: ExportsMetrics = app.injector.instanceOf[ExportsMetrics]
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
+  override def afterEach(): Unit = {
     reset(mockAuthConnector, notificationServiceMock)
-  }
 
+    super.afterEach()
+  }
   "GET /:id" should {
     "return 200" when {
       "submission found" in {
@@ -204,6 +205,9 @@ class NotificationControllerSpec
         withAuthorizedUser()
         when(notificationServiceMock.saveAll(any())).thenReturn(Future.successful(Right((): Unit)))
 
+        when(notificationServiceMock.buildNotificationsFromRequest(any(), any()))
+          .thenReturn(Seq(notification, notification_2))
+
         routePostSaveNotification(xmlBody = exampleNotificationWithMultipleResponsesXML(mrn)).futureValue
 
         val notificationsCaptor: ArgumentCaptor[Seq[Notification]] = ArgumentCaptor.forClass(classOf[Seq[Notification]])
@@ -211,7 +215,6 @@ class NotificationControllerSpec
 
         notificationsCaptor.getValue.length must equal(2)
       }
-
     }
 
     "NotificationService returns Either.Left" should {
@@ -223,45 +226,6 @@ class NotificationControllerSpec
         val result = routePostSaveNotification()
 
         status(result) must be(INTERNAL_SERVER_ERROR)
-      }
-    }
-
-    pending
-    "Content Type header is empty" should {
-
-      "return UnsupportedMediaType status" in {
-        withAuthorizedUser()
-
-        val result = routePostSaveNotification(headers = headersWithoutContentType)
-
-        status(result) must be(UNSUPPORTED_MEDIA_TYPE)
-      }
-
-      "not call NotificationService" in {
-        withAuthorizedUser()
-
-        routePostSaveNotification(headers = headersWithoutContentType).futureValue
-
-        verifyZeroInteractions(notificationServiceMock)
-      }
-    }
-
-    "cannot parse the payload" should {
-
-      "return Accepted status" in {
-        withAuthorizedUser()
-
-        val result = routePostSaveNotification(xmlBody = exampleNotificationInIncorrectFormatXML(mrn))
-
-        status(result) must be(ACCEPTED)
-      }
-
-      "not call NotificationService" in {
-        withAuthorizedUser()
-
-        routePostSaveNotification(xmlBody = exampleNotificationInIncorrectFormatXML(mrn)).futureValue
-
-        verifyZeroInteractions(notificationServiceMock)
       }
     }
 

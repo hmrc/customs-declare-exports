@@ -26,6 +26,8 @@ import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import reactivemongo.bson.{BSONDocument, BSONInteger, BSONString}
 import reactivemongo.core.errors.DetailedDatabaseException
+import uk.gov.hmrc.exports.models.{Pointer, PointerSection}
+import uk.gov.hmrc.exports.models.PointerSectionType.{FIELD, SEQUENCE}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
@@ -257,6 +259,48 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
     }
   }
 
+  "Notification Service" should {
+
+    "correctly build errors based on the xml" in new Test {
+
+      val inputXml = scala.xml.Utility.trim {
+        <_2_1:Error>
+          <_2_1:ValidationCode>CDS10020  </_2_1:ValidationCode> Domain error: Data element contains invalid value
+          <_2_1:Pointer>
+            <_2_1:DocumentSectionCode>42A</_2_1:DocumentSectionCode> Declaration
+          </_2_1:Pointer>
+          <_2_1:Pointer>
+            <_2_1:DocumentSectionCode>67A</_2_1:DocumentSectionCode> GoodsShipment
+          </_2_1:Pointer>
+          <_2_1:Pointer>
+            <_2_1:SequenceNumeric>1</_2_1:SequenceNumeric>
+            <_2_1:DocumentSectionCode>68A</_2_1:DocumentSectionCode> GovernmentAgencyGoodsItem
+          </_2_1:Pointer>
+          <_2_1:Pointer>
+            <_2_1:SequenceNumeric>2</_2_1:SequenceNumeric>
+            <_2_1:DocumentSectionCode>02A</_2_1:DocumentSectionCode> AdditionalDocument
+            <_2_1:TagID>360</_2_1:TagID> LPCOExemptionCode
+          </_2_1:Pointer>
+        </_2_1:Error>
+      }
+
+      val pointer = notificationService.buildErrorPointers(inputXml)
+
+      val expectedPointer = Pointer(
+        Seq(
+          PointerSection("42A", FIELD),
+          PointerSection("67A", FIELD),
+          PointerSection("68A", FIELD),
+          PointerSection("1", SEQUENCE),
+          PointerSection("02A", FIELD),
+          PointerSection("2", SEQUENCE),
+          PointerSection("360", FIELD)
+        )
+      )
+
+      pointer mustBe expectedPointer
+    }
+  }
 }
 
 object NotificationServiceSpec {
