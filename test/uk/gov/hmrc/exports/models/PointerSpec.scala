@@ -20,7 +20,8 @@ import org.scalatest.{MustMatchers, WordSpec}
 
 class PointerSpec extends WordSpec with MustMatchers {
 
-  implicit val strs2pointerSectionPatterns: List[String] => List[PointerPatternSection] = _.map(PointerPatternSection(_))
+  implicit val strs2pointerSectionPatterns: List[String] => List[PointerPatternSection] =
+    _.map(PointerPatternSection(_))
 
   "PointerSection" should {
     val field = PointerSection("ABC", PointerSectionType.FIELD)

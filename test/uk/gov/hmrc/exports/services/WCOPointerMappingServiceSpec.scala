@@ -29,38 +29,31 @@ class WCOPointerMappingServiceSpec extends WordSpec with MustMatchers with Mocki
   private val fileReader = mock[FileReader]
   private def service = new WCOPointerMappingService(fileReader)
 
-  override def afterEach(): Unit = {
+  override def afterEach(): Unit =
     reset(fileReader)
-  }
 
   "Map pointer" should {
     "find matching pointer" in {
       given(fileReader.readLines(anyString())).willReturn(List("a.b, x.y"))
 
-      val pointer = Pointer(List(
-        PointerSection("a", PointerSectionType.FIELD),
-        PointerSection("b", PointerSectionType.FIELD)
-      ))
+      val pointer =
+        Pointer(List(PointerSection("a", PointerSectionType.FIELD), PointerSection("b", PointerSectionType.FIELD)))
 
       val result = service.mapWCOPointerToExportsPointer(pointer)
       result mustBe defined
-      result.get mustBe Pointer(List(
-        PointerSection("x", PointerSectionType.FIELD),
-        PointerSection("y", PointerSectionType.FIELD)
-      ))
+      result.get mustBe Pointer(
+        List(PointerSection("x", PointerSectionType.FIELD), PointerSection("y", PointerSectionType.FIELD))
+      )
     }
 
     "not find missing pointer" in {
       given(fileReader.readLines(anyString())).willReturn(List("a.b, x.y"))
 
-      val pointer = Pointer(List(
-        PointerSection("x", PointerSectionType.FIELD),
-        PointerSection("x", PointerSectionType.FIELD)
-      ))
+      val pointer =
+        Pointer(List(PointerSection("x", PointerSectionType.FIELD), PointerSection("x", PointerSectionType.FIELD)))
 
       service.mapWCOPointerToExportsPointer(pointer) mustBe None
     }
   }
-
 
 }

@@ -17,19 +17,17 @@
 package uk.gov.hmrc.exports.models
 
 import play.api.libs.json.{Format, Json, Reads, Writes}
-
+import uk.gov.hmrc.exports.models
+import uk.gov.hmrc.exports.models.PointerSectionType.PointerSectionType
 
 object PointerSectionType extends Enumeration {
-  type WCOPointerSectionType = Value
-
+  type PointerSectionType = Value
   val FIELD, SEQUENCE = Value
-
-  implicit val format = Format(Reads.enumNameReads(PointerSectionType), Writes.enumNameWrites)
+  implicit val format: Format[models.PointerSectionType.Value] =
+    Format(Reads.enumNameReads(PointerSectionType), Writes.enumNameWrites)
 }
 
-import uk.gov.hmrc.exports.models.PointerSectionType.WCOPointerSectionType
-
-case class PointerSection(value: String, `type`: WCOPointerSectionType) {
+case class PointerSection(value: String, `type`: PointerSectionType) {
   lazy val pattern: String = `type` match {
     case PointerSectionType.FIELD    => value
     case PointerSectionType.SEQUENCE => "$"
@@ -37,7 +35,6 @@ case class PointerSection(value: String, `type`: WCOPointerSectionType) {
 }
 
 object PointerSection {
-
   implicit val format = Json.format[PointerSection]
 }
 
@@ -54,19 +51,17 @@ case class Pointer(sections: Seq[PointerSection]) {
 }
 
 object Pointer {
-
   implicit val format = Json.format[Pointer]
 }
 
 case class PointerPattern(sections: List[PointerPatternSection]) {
-  def matches(that: PointerPattern): Boolean = {
-    if(sections.size != that.sections.size) {
+  def matches(that: PointerPattern): Boolean =
+    if (sections.size != that.sections.size) {
       false
     } else {
       val statuses = for (i <- sections.indices) yield sections(i).matches(that.sections(i))
       statuses.forall(identity)
     }
-  }
 }
 
 object PointerPattern {
@@ -75,20 +70,18 @@ object PointerPattern {
 
 case class PointerPatternSection(value: String) {
   val sequential: Boolean = value.startsWith("$")
-  val sequenceIndex: Option[String] = if(sequential) {
+  val sequenceIndex: Option[String] = if (sequential) {
     PointerPatternSection.SEQUENCE_REGEX.findFirstMatchIn(value).map(_.group(1)).filter(_.nonEmpty)
   } else None
 
-  def matches(that: PointerPatternSection): Boolean = {
-    if(this.sequential && that.sequential) {
+  def matches(that: PointerPatternSection): Boolean =
+    if (this.sequential && that.sequential) {
       this.sequenceIndex == that.sequenceIndex || this.sequenceIndex.isEmpty || that.sequenceIndex.isEmpty
     } else {
       this.value == that.value
     }
-  }
 }
 
 object PointerPatternSection {
   private val SEQUENCE_REGEX = "^\\$(\\d*)$".r
 }
-

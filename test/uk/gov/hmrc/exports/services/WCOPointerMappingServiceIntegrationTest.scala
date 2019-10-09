@@ -26,27 +26,31 @@ class WCOPointerMappingServiceIntegrationTest extends WordSpec with MustMatchers
 
   "Map to Exports Pointer" should {
     "map valid pointer" in {
-      val pointer = Pointer(List(
-        PointerSection("42A", PointerSectionType.FIELD),
-        PointerSection("67A", PointerSectionType.FIELD),
-        PointerSection("1", PointerSectionType.SEQUENCE),
-        PointerSection("68A", PointerSectionType.FIELD),
-        PointerSection("2", PointerSectionType.SEQUENCE),
-        PointerSection("03A", PointerSectionType.FIELD),
-        PointerSection("226", PointerSectionType.FIELD)
-      ))
+      val pointer = Pointer(
+        List(
+          PointerSection("42A", PointerSectionType.FIELD),
+          PointerSection("67A", PointerSectionType.FIELD),
+          PointerSection("1", PointerSectionType.SEQUENCE),
+          PointerSection("68A", PointerSectionType.FIELD),
+          PointerSection("2", PointerSectionType.SEQUENCE),
+          PointerSection("03A", PointerSectionType.FIELD),
+          PointerSection("226", PointerSectionType.FIELD)
+        )
+      )
 
       val result = service.mapWCOPointerToExportsPointer(pointer)
       result mustBe defined
-      result.get mustBe Pointer(List(
-        PointerSection("declaration", PointerSectionType.FIELD),
-        PointerSection("items", PointerSectionType.FIELD),
-        PointerSection("1", PointerSectionType.SEQUENCE),
-        PointerSection("additionalInformation", PointerSectionType.FIELD),
-        PointerSection("items", PointerSectionType.FIELD),
-        PointerSection("2", PointerSectionType.SEQUENCE),
-        PointerSection("code", PointerSectionType.FIELD)
-      ))
+      result.get mustBe Pointer(
+        List(
+          PointerSection("declaration", PointerSectionType.FIELD),
+          PointerSection("items", PointerSectionType.FIELD),
+          PointerSection("1", PointerSectionType.SEQUENCE),
+          PointerSection("additionalInformation", PointerSectionType.FIELD),
+          PointerSection("items", PointerSectionType.FIELD),
+          PointerSection("2", PointerSectionType.SEQUENCE),
+          PointerSection("code", PointerSectionType.FIELD)
+        )
+      )
     }
   }
 
