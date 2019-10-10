@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
 import com.google.inject.Singleton
 import javax.inject.Inject
 import play.api.Logger
@@ -28,13 +25,10 @@ import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
-import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.notifications.{ErrorPointer, Notification, NotificationError}
-import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.services.{NotificationService, SubmissionService}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.{Node, NodeSeq}
+import scala.xml.NodeSeq
 
 @Singleton
 class NotificationController @Inject()(
@@ -74,7 +68,7 @@ class NotificationController @Inject()(
 
     headerValidator.validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
       case Right(extractedHeaders) =>
-        val allNotifications = buildNotificationsFromRequest(extractedHeaders, request.body)
+        val allNotifications = notificationsService.buildNotificationsFromRequest(extractedHeaders, request.body)
 
         notificationsService.saveAll(allNotifications).map {
           case Right(_) =>
@@ -87,62 +81,4 @@ class NotificationController @Inject()(
       case Left(_) => Future.successful(Accepted)
     }
   }
-
-  private def buildNotificationsFromRequest(
-    notificationApiRequestHeaders: NotificationApiRequestHeaders,
-    notificationXml: NodeSeq
-  ): Seq[Notification] =
-    try {
-      val responsesXml = notificationXml \ "Response"
-
-      responsesXml.map { singleResponseXml =>
-        val mrn = (singleResponseXml \ "Declaration" \ "ID").text
-        val formatter304 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
-        val dateTimeIssued =
-          LocalDateTime.parse((singleResponseXml \ "IssueDateTime" \ "DateTimeString").text, formatter304)
-        val functionCode = (singleResponseXml \ "FunctionCode").text
-
-        val nameCode =
-          if ((singleResponseXml \ "Status").nonEmpty)
-            Some((singleResponseXml \ "Status" \ "NameCode").text)
-          else None
-
-        val errors = buildErrorsFromRequest(singleResponseXml)
-
-        Notification(
-          actionId = notificationApiRequestHeaders.conversationId.value,
-          mrn = mrn,
-          dateTimeIssued = dateTimeIssued,
-          status = SubmissionStatus.retrieve(functionCode, nameCode),
-          errors = errors,
-          payload = notificationXml.toString
-        )
-      }
-
-    } catch {
-      case exc: Throwable =>
-        logger.error(s"There is a problem during parsing notification with exception: ${exc.getMessage}")
-        Seq.empty
-    }
-
-  private def buildErrorsFromRequest(singleResponseXml: Node): Seq[NotificationError] =
-    if ((singleResponseXml \ "Error").nonEmpty) {
-      val errorsXml = singleResponseXml \ "Error"
-      errorsXml.map { singleErrorXml =>
-        val validationCode = (singleErrorXml \ "ValidationCode").text
-        val pointers = buildErrorPointers(singleErrorXml)
-        NotificationError(validationCode = validationCode, pointers = pointers)
-      }
-    } else Seq.empty
-
-  private def buildErrorPointers(singleErrorXml: Node): Seq[ErrorPointer] =
-    if ((singleErrorXml \ "Pointer").nonEmpty) {
-      val pointersXml = singleErrorXml \ "Pointer"
-      pointersXml.map { singlePointerXml =>
-        val documentSectionCode = (singlePointerXml \ "DocumentSectionCode").text
-        val tagId = if ((singlePointerXml \ "TagID").nonEmpty) Some((singlePointerXml \ "TagID").text) else None
-        ErrorPointer(documentSectionCode = documentSectionCode, tagId = tagId)
-      }
-    } else Seq.empty
-
 }

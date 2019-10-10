@@ -18,6 +18,7 @@ package unit.uk.gov.hmrc.exports.controllers
 
 import java.time.Instant
 
+import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{eq => eqRef, _}
 import org.mockito.BDDMockito._
@@ -48,6 +49,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class DeclarationControllerSpec
     extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
     with MustMatchers with ExportsDeclarationBuilder {
+
+  SharedMetricRegistries.clear()
 
   override lazy val app: Application = GuiceApplicationBuilder()
     .overrides(bind[AuthConnector].to(mockAuthConnector), bind[DeclarationService].to(declarationService))
