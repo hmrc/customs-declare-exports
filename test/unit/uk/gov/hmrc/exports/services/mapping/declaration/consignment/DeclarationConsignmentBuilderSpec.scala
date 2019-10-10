@@ -21,17 +21,12 @@ import org.mockito.Mockito._
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.Choice
-import uk.gov.hmrc.exports.services.mapping.declaration.consignment.{
-  DeclarationConsignmentBuilder,
-  FreightBuilder,
-  IteneraryBuilder
-}
+import uk.gov.hmrc.exports.services.mapping.declaration.consignment.{DeclarationConsignmentBuilder, FreightBuilder, IteneraryBuilder}
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentCarrierBuilder
 import util.testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class DeclarationConsignmentBuilderSpec
-    extends WordSpec with Matchers with MockitoSugar with BeforeAndAfterEach with ExportsDeclarationBuilder {
+class DeclarationConsignmentBuilderSpec extends WordSpec with Matchers with MockitoSugar with BeforeAndAfterEach with ExportsDeclarationBuilder {
 
   private val freightBuilder = mock[FreightBuilder]
   private val iteneraryBuilder = mock[IteneraryBuilder]

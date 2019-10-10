@@ -25,8 +25,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.Consignment.Carrier
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class ConsignmentCarrierBuilder @Inject()(countriesService: CountriesService)
-    extends ModifyingBuilder[ExportsDeclaration, Declaration.Consignment] {
+class ConsignmentCarrierBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration.Consignment] {
 
   override def buildThenAdd(model: ExportsDeclaration, consignment: Declaration.Consignment): Unit =
     if (model.choice.equals(Choice.StandardDec)) {
@@ -61,10 +60,7 @@ class ConsignmentCarrierBuilder @Inject()(countriesService: CountriesService)
       }
 
     details.address
-      .filter(
-        address =>
-          address.addressLine.nonEmpty || address.townOrCity.nonEmpty || address.postCode.nonEmpty || address.country.nonEmpty
-      )
+      .filter(address => address.addressLine.nonEmpty || address.townOrCity.nonEmpty || address.postCode.nonEmpty || address.country.nonEmpty)
       .foreach { address =>
         carrier.setAddress(createAddress(address))
       }

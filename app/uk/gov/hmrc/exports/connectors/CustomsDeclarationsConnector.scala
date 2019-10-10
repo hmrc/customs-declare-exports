@@ -32,9 +32,7 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: HttpClient, metrics: Metrics)(
-  implicit ec: ExecutionContext
-) {
+class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: HttpClient, metrics: Metrics)(implicit ec: ExecutionContext) {
 
   private val logger = Logger(this.getClass)
 
@@ -58,24 +56,16 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
       }
     }
 
-  private def postMetaData(eori: String, uri: String, xml: String)(
-    implicit hc: HeaderCarrier
-  ): Future[CustomsDeclarationsResponse] =
+  private def postMetaData(eori: String, uri: String, xml: String)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] =
     post(eori, uri, xml)
 
   private val postTimer = metrics.defaultRegistry.timer("upstream.customs-declarations.timer")
 
-  private[connectors] def post(eori: String, uri: String, body: String)(
-    implicit hc: HeaderCarrier
-  ): Future[CustomsDeclarationsResponse] = {
+  private[connectors] def post(eori: String, uri: String, body: String)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] = {
     logger.debug(s"CUSTOMS_DECLARATIONS request payload is -> $body")
     val postStopwatch = postTimer.time()
     httpClient
-      .POSTString[CustomsDeclarationsResponse](
-        s"${appConfig.customsDeclarationsBaseUrl}$uri",
-        body,
-        headers = headers(eori)
-      )(responseReader, hc, ec)
+      .POSTString[CustomsDeclarationsResponse](s"${appConfig.customsDeclarationsBaseUrl}$uri", body, headers = headers(eori))(responseReader, hc, ec)
       .recover {
         case error: Throwable =>
           logger.error(s"Error during submitting declaration: ${error.getMessage}")

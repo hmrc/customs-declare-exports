@@ -41,9 +41,7 @@ class WCOPointerMappingServiceSpec extends WordSpec with MustMatchers with Mocki
 
       val result = service.mapWCOPointerToExportsPointer(pointer)
       result mustBe defined
-      result.get mustBe Pointer(
-        List(PointerSection("x", PointerSectionType.FIELD), PointerSection("y", PointerSectionType.FIELD))
-      )
+      result.get mustBe Pointer(List(PointerSection("x", PointerSectionType.FIELD), PointerSection("y", PointerSectionType.FIELD)))
     }
 
     "not find missing pointer" in {

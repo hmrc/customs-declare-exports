@@ -53,8 +53,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.xml.NodeSeq
 
-trait CustomsExportsBaseSpec
-    extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar with ScalaFutures with AuthTestSupport {
+trait CustomsExportsBaseSpec extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar with ScalaFutures with AuthTestSupport {
 
   SharedMetricRegistries.clear()
 
@@ -99,15 +98,9 @@ trait CustomsExportsBaseSpec
   implicit lazy val patience: PatienceConfig =
     PatienceConfig(timeout = 5.seconds, interval = 50.milliseconds) // be more patient than the default
 
-  protected def postRequest(
-    uri: String,
-    body: JsValue,
-    headers: Map[String, String] = Map.empty
-  ): FakeRequest[AnyContentAsJson] = {
-    val session: Map[String, String] = Map(
-      SessionKeys.sessionId -> s"session-${UUID.randomUUID()}",
-      SessionKeys.userId -> "Int-ba17b467-90f3-42b6-9570-73be7b78eb2b"
-    )
+  protected def postRequest(uri: String, body: JsValue, headers: Map[String, String] = Map.empty): FakeRequest[AnyContentAsJson] = {
+    val session: Map[String, String] =
+      Map(SessionKeys.sessionId -> s"session-${UUID.randomUUID()}", SessionKeys.userId -> "Int-ba17b467-90f3-42b6-9570-73be7b78eb2b")
 
     FakeRequest("POST", uri)
       .withHeaders((Map(cfg.headerName -> token) ++ headers).toSeq: _*)

@@ -48,9 +48,7 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
     val notificationRepositoryMock: NotificationRepository = buildNotificationRepositoryMock
     val wcoPointerMappingService: WCOPointerMappingService = mock[WCOPointerMappingService]
     val notificationService =
-      new NotificationService(submissionRepositoryMock, notificationRepositoryMock, wcoPointerMappingService)(
-        ExecutionContext.global
-      )
+      new NotificationService(submissionRepositoryMock, notificationRepositoryMock, wcoPointerMappingService)(ExecutionContext.global)
   }
 
   val PositionFunctionCode = "11"
@@ -314,10 +312,7 @@ object NotificationServiceSpec {
       "dateTimeIssuedIdx dup key: { : \"20190514123456Z\" }"
 
   val duplicateKeyNotificationsDatabaseExceptionExample = new DetailedDatabaseException(
-    BSONDocument(
-      "errmsg" -> BSONString(DuplicateKeyDatabaseErrorMessage),
-      "code" -> BSONInteger(DuplicateKeyDatabaseErrorCode)
-    )
+    BSONDocument("errmsg" -> BSONString(DuplicateKeyDatabaseErrorMessage), "code" -> BSONInteger(DuplicateKeyDatabaseErrorCode))
   )
 
   val duplicateKeyNotificationsDatabaseExceptionExampleAnswer: Answer[Future[Boolean]] = new Answer[Future[Boolean]]() {

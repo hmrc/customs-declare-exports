@@ -46,8 +46,7 @@ import scala.util.Random
 import scala.xml.Elem
 
 class NotificationControllerSpec
-    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
-    with MustMatchers {
+    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures with MustMatchers {
 
   import NotificationControllerSpec._
 
@@ -229,10 +228,7 @@ class NotificationControllerSpec
       }
     }
 
-    def routePostSaveNotification(
-      headers: Map[String, String] = validHeaders,
-      xmlBody: Elem = exampleRejectNotificationXML(mrn)
-    ): Future[Result] =
+    def routePostSaveNotification(headers: Map[String, String] = validHeaders, xmlBody: Elem = exampleRejectNotificationXML(mrn)): Future[Result] =
       route(
         app,
         FakeRequest(POST, saveNotificationUri)
@@ -251,9 +247,7 @@ object NotificationControllerSpec {
 
   private lazy val responseFunctionCodes: Seq[String] =
     Seq("01", "02", "03", "05", "06", "07", "08", "09", "10", "11", "16", "17", "18")
-  private lazy val randomResponseFunctionCode: String = responseFunctionCodes(
-    Random.nextInt(responseFunctionCodes.length)
-  )
+  private lazy val randomResponseFunctionCode: String = responseFunctionCodes(Random.nextInt(responseFunctionCodes.length))
   private def dateTimeElement(dateTimeVal: DateTime) =
     Some(ResponseDateTimeElement(DateTimeString("102", dateTimeVal.toString("yyyyMMdd"))))
   val response: Seq[Response] = Seq(

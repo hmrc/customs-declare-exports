@@ -21,18 +21,11 @@ import uk.gov.hmrc.exports.models.declaration.ExportItem
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem.Packaging
-import wco.datamodel.wco.declaration_ds.dms._2.{
-  PackagingMarksNumbersIDType,
-  PackagingQuantityQuantityType,
-  PackagingTypeCodeType
-}
+import wco.datamodel.wco.declaration_ds.dms._2.{PackagingMarksNumbersIDType, PackagingQuantityQuantityType, PackagingTypeCodeType}
 
 class PackagingBuilder @Inject()() extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
 
-  def buildThenAdd(
-    exportItem: ExportItem,
-    wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem
-  ): Unit =
+  def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem): Unit =
     exportItem.packageInformation.zipWithIndex.foreach {
       case (packing, index) =>
         wcoGovernmentAgencyGoodsItem.getPackaging.add(
@@ -40,12 +33,7 @@ class PackagingBuilder @Inject()() extends ModifyingBuilder[ExportItem, GoodsShi
         )
     }
 
-  private def createWcoPackaging(
-    sequenceNumeric: Int,
-    typeCode: String,
-    quantity: Int,
-    markNumber: String
-  ): Packaging = {
+  private def createWcoPackaging(sequenceNumeric: Int, typeCode: String, quantity: Int, markNumber: String): Packaging = {
     val wcoPackaging = new Packaging
 
     val packagingTypeCodeType = new PackagingTypeCodeType

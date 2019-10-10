@@ -25,16 +25,11 @@ import wco.datamodel.wco.declaration_ds.dms._2.{SealIdentificationIDType, Transp
 
 import scala.collection.JavaConverters._
 
-class TransportEquipmentBuilder @Inject()()
-    extends ModifyingBuilder[TransportInformationContainers, GoodsShipment.Consignment] {
+class TransportEquipmentBuilder @Inject()() extends ModifyingBuilder[TransportInformationContainers, GoodsShipment.Consignment] {
   override def buildThenAdd(containersHolder: TransportInformationContainers, consignment: Consignment): Unit =
-    consignment.getTransportEquipment.addAll(
-      containersHolder.containers.zipWithIndex.map(data => createTransportEquipment(data)).toList.asJava
-    )
+    consignment.getTransportEquipment.addAll(containersHolder.containers.zipWithIndex.map(data => createTransportEquipment(data)).toList.asJava)
 
-  private def createTransportEquipment(
-    containerData: (TransportInformationContainer, Int)
-  ): GoodsShipment.Consignment.TransportEquipment = {
+  private def createTransportEquipment(containerData: (TransportInformationContainer, Int)): GoodsShipment.Consignment.TransportEquipment = {
     val transportEquipment = new GoodsShipment.Consignment.TransportEquipment()
     transportEquipment.setSequenceNumeric(new java.math.BigDecimal(containerData._2 + 1))
 

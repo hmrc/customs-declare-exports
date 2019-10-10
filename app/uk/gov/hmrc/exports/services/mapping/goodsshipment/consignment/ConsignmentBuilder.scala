@@ -34,22 +34,17 @@ class ConsignmentBuilder @Inject()(
     exportsCacheModel.locations.goodsLocation
       .foreach(goodsLocation => goodsLocationBuilder.buildThenAdd(goodsLocation, consignment))
 
-    exportsCacheModel.transportDetails.foreach(
-      transportDetails => containerCodeBuilder.buildThenAdd(transportDetails, consignment)
-    )
+    exportsCacheModel.transportDetails.foreach(transportDetails => containerCodeBuilder.buildThenAdd(transportDetails, consignment))
 
     val warehouseIdentificationOpt = exportsCacheModel.locations.warehouseIdentification
 
     exportsCacheModel.borderTransport.foreach(
-      borderTransport =>
-        departureTransportMeansBuilder.buildThenAdd(borderTransport, warehouseIdentificationOpt, consignment)
+      borderTransport => departureTransportMeansBuilder.buildThenAdd(borderTransport, warehouseIdentificationOpt, consignment)
     )
 
     exportsCacheModel.choice match {
       case Choice.StandardDec =>
-        exportsCacheModel.containerData.foreach(
-          containerData => transportEquipmentBuilder.buildThenAdd(containerData, consignment)
-        )
+        exportsCacheModel.containerData.foreach(containerData => transportEquipmentBuilder.buildThenAdd(containerData, consignment))
       case _ =>
     }
 

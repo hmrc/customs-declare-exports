@@ -91,10 +91,6 @@ object CommodityBuilderSpec {
 
   val dangerousGoods = DangerousGoods(Some("identificationTypeCode"))
 
-  val classifications = Classification(
-    Some("classificationsId"),
-    Some("nameCodeId"),
-    Some("identificationTypeCode"),
-    Some("bindingTariffReferenceId")
-  )
+  val classifications =
+    Classification(Some("classificationsId"), Some("nameCodeId"), Some("identificationTypeCode"), Some("bindingTariffReferenceId"))
 }

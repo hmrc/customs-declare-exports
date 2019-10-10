@@ -40,9 +40,7 @@ class GoodsShipmentBuilder @Inject()(
   override def buildThenAdd(exportsCacheModel: ExportsDeclaration, declaration: Declaration): Unit = {
     val goodsShipment = new GoodsShipment()
 
-    exportsCacheModel.natureOfTransaction.foreach(
-      goodsShipmentNatureOfTransactionBuilder.buildThenAdd(_, goodsShipment)
-    )
+    exportsCacheModel.natureOfTransaction.foreach(goodsShipmentNatureOfTransactionBuilder.buildThenAdd(_, goodsShipment))
 
     exportsCacheModel.parties.consigneeDetails
       .foreach(consigneeBuilder.buildThenAdd(_, goodsShipment))
@@ -64,10 +62,7 @@ class GoodsShipmentBuilder @Inject()(
     exportsCacheModel.previousDocuments.foreach(previousDocumentsBuilder.buildThenAdd(_, goodsShipment))
 
     exportsCacheModel.parties.declarationAdditionalActorsData.foreach {
-      _.actors.foreach(
-        declarationAdditionalActor =>
-          aeoMutualRecognitionPartiesBuilder.buildThenAdd(declarationAdditionalActor, goodsShipment)
-      )
+      _.actors.foreach(declarationAdditionalActor => aeoMutualRecognitionPartiesBuilder.buildThenAdd(declarationAdditionalActor, goodsShipment))
     }
 
     exportsCacheModel.items.foreach(governmentAgencyGoodsItemBuilder.buildThenAdd(_, goodsShipment))

@@ -21,8 +21,7 @@ import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.Government
 import unit.uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem
 
-class GovernmentProcedureBuilderSpec
-    extends WordSpec with Matchers with GovernmentAgencyGoodsItemData with ExportsItemBuilder {
+class GovernmentProcedureBuilderSpec extends WordSpec with Matchers with GovernmentAgencyGoodsItemData with ExportsItemBuilder {
 
   val firstProcedureCode = "CUPR"
   val additionalProcedureCode = "ABC"

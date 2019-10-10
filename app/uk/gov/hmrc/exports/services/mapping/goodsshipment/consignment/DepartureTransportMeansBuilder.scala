@@ -27,11 +27,7 @@ import wco.datamodel.wco.declaration_ds.dms._2.{
 }
 
 class DepartureTransportMeansBuilder @Inject()() {
-  def buildThenAdd(
-    borderTransport: BorderTransport,
-    warehouseIdentification: Option[WarehouseIdentification],
-    consignment: Consignment
-  ): Unit =
+  def buildThenAdd(borderTransport: BorderTransport, warehouseIdentification: Option[WarehouseIdentification], consignment: Consignment): Unit =
     if (isBorderTransportDefined(borderTransport) || isWarehouseIdentificationDefined(warehouseIdentification)) {
       consignment.setDepartureTransportMeans(createDepartureTransportMeans(borderTransport, warehouseIdentification))
     }

@@ -39,8 +39,7 @@ import unit.uk.gov.hmrc.exports.base.AuthTestSupport
 import scala.concurrent.Future
 
 class CancellationControllerSpec
-    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
-    with MustMatchers {
+    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures with MustMatchers {
 
   private val submissionService: SubmissionService = mock[SubmissionService]
 
@@ -106,10 +105,7 @@ class CancellationControllerSpec
         val result: Future[Result] = route(app, post.withJsonBody(toJson(payload))).get
 
         status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe Json.obj(
-          "message" -> "Bad Request",
-          "errors" -> Json.arr("/changeReason: error.path.missing")
-        )
+        contentAsJson(result) mustBe Json.obj("message" -> "Bad Request", "errors" -> Json.arr("/changeReason: error.path.missing"))
         verifyZeroInteractions(submissionService)
       }
     }

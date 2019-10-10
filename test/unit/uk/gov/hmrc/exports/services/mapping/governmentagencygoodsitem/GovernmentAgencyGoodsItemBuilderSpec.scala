@@ -27,9 +27,7 @@ import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem._
 import uk.gov.hmrc.wco.dec.Commodity
 import unit.uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
-import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.{
-  GovernmentAgencyGoodsItem => WCOGovernmentAgencyGoodsItem
-}
+import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.{GovernmentAgencyGoodsItem => WCOGovernmentAgencyGoodsItem}
 
 class GovernmentAgencyGoodsItemBuilderSpec
     extends WordSpec with Matchers with GovernmentAgencyGoodsItemData with MockitoSugar with ExportsItemBuilder {
@@ -50,9 +48,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
       val exportItem = anItem(
         withSequenceId(99),
         withCommodityMeasure(CommodityMeasure(Some("2"), "90", "100")),
-        withAdditionalFiscalReferenceData(
-          AdditionalFiscalReferences(Seq(AdditionalFiscalReference("GB", "reference")))
-        ),
+        withAdditionalFiscalReferenceData(AdditionalFiscalReferences(Seq(AdditionalFiscalReference("GB", "reference")))),
         withItemType(
           descriptionOfGoods = "commodityDescription",
           statisticalValue = "123",
@@ -173,9 +169,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
     goodsMeasure.getTariffQuantity.getUnitCode shouldBe defaultMeasureCode
   }
 
-  private def validateAdditionalInformation(
-    additionalInfomation: WCOGovernmentAgencyGoodsItem.AdditionalInformation
-  ) = {
+  private def validateAdditionalInformation(additionalInfomation: WCOGovernmentAgencyGoodsItem.AdditionalInformation) = {
     additionalInfomation.getStatementCode.getValue shouldBe statementCode
     additionalInfomation.getStatementDescription.getValue shouldBe descriptionValue
   }
@@ -196,36 +190,20 @@ class GovernmentAgencyGoodsItemBuilderSpec
 
 object GovernmentAgencyGoodsItemBuilderSpec {
   val firstPackagingJson: JsValue = JsObject(
-    Map(
-      "sequenceNumeric" -> JsNumber(0),
-      "marksNumbersId" -> JsString("mark1"),
-      "quantity" -> JsNumber(2),
-      "typeCode" -> JsString("AA")
-    )
+    Map("sequenceNumeric" -> JsNumber(0), "marksNumbersId" -> JsString("mark1"), "quantity" -> JsNumber(2), "typeCode" -> JsString("AA"))
   )
   val secondPackagingJson: JsValue = JsObject(
-    Map(
-      "sequenceNumeric" -> JsNumber(1),
-      "marksNumbersId" -> JsString("mark2"),
-      "quantity" -> JsNumber(4),
-      "typeCode" -> JsString("AB")
-    )
+    Map("sequenceNumeric" -> JsNumber(1), "marksNumbersId" -> JsString("mark2"), "quantity" -> JsNumber(4), "typeCode" -> JsString("AB"))
   )
   val writeOffQuantityMeasure: JsValue = JsObject(Map("unitCode" -> JsString("KGM"), "value" -> JsString("10")))
   val writeOffAmount: JsValue = JsObject(Map("currencyId" -> JsString("GBP"), "value" -> JsString("100")))
   val writeOff: JsValue = JsObject(Map("quantity" -> writeOffQuantityMeasure, "amount" -> writeOffAmount))
   val dateTimeString: JsValue = JsObject(Map("formatCode" -> JsString("102"), "value" -> JsString("20170101")))
   val dateTimeElement: JsValue = JsObject(Map("dateTimeString" -> dateTimeString))
-  val documentSubmitter: JsValue = JsObject(
-    Map("name" -> JsString("issuingAuthorityName"), "roleCode" -> JsString("SubmitterRoleCode"))
-  )
+  val documentSubmitter: JsValue = JsObject(Map("name" -> JsString("issuingAuthorityName"), "roleCode" -> JsString("SubmitterRoleCode")))
   val amount: JsValue = JsObject(Map("currencyId" -> JsString("GBP"), "value" -> JsString("100")))
-  val additionalInformations: JsValue = JsObject(
-    Map("code" -> JsString("code"), "description" -> JsString("description"))
-  )
-  val firstGovernmentProcedure: JsValue = JsObject(
-    Map("currentCode" -> JsString("CU"), "previousCode" -> JsString("PR"))
-  )
+  val additionalInformations: JsValue = JsObject(Map("code" -> JsString("code"), "description" -> JsString("description")))
+  val firstGovernmentProcedure: JsValue = JsObject(Map("currentCode" -> JsString("CU"), "previousCode" -> JsString("PR")))
   val secondGovernmentProcedure: JsValue = JsObject(Map("currentCode" -> JsString("CC"), "previousCode" -> JsNull))
   val thirdGovernmentProcedure: JsValue = JsObject(Map("currentCode" -> JsString("PR"), "previousCode" -> JsNull))
 
@@ -233,11 +211,7 @@ object GovernmentAgencyGoodsItemBuilderSpec {
   val netWeightMeasureJson: JsValue = JsObject(Map("unitCode" -> JsString("kg"), "value" -> JsString("90")))
   val tariffQuantityJson: JsValue = JsObject(Map("unitCode" -> JsString("kg"), "value" -> JsString("2")))
   val goodsMeasureJson: JsValue = JsObject(
-    Map(
-      "grossMassMeasure" -> grossMassMeasureJson,
-      "netWeightMeasure" -> netWeightMeasureJson,
-      "tariffQuantity" -> tariffQuantityJson
-    )
+    Map("grossMassMeasure" -> grossMassMeasureJson, "netWeightMeasure" -> netWeightMeasureJson, "tariffQuantity" -> tariffQuantityJson)
   )
   val dangerousGoodsJson: JsValue = JsObject(Map("undgid" -> JsString("999")))
   val firstClassificationsJson: JsValue = JsObject(
@@ -285,16 +259,9 @@ object GovernmentAgencyGoodsItemBuilderSpec {
       "commodity" -> commodityJson,
       "additionalInformations" -> JsArray(Seq(additionalInformations)),
       "additionalDocuments" -> JsArray(Seq(additionalDocuments)),
-      "governmentProcedures" -> JsArray(
-        Seq(firstGovernmentProcedure, secondGovernmentProcedure, thirdGovernmentProcedure)
-      ),
+      "governmentProcedures" -> JsArray(Seq(firstGovernmentProcedure, secondGovernmentProcedure, thirdGovernmentProcedure)),
       "packagings" -> JsArray(Seq(firstPackagingJson, secondPackagingJson)),
-      "fiscalReferences" -> JsArray(
-        Seq(
-          Json.toJson(AdditionalFiscalReference("PL", "12345")),
-          Json.toJson(AdditionalFiscalReference("FR", "54321"))
-        )
-      )
+      "fiscalReferences" -> JsArray(Seq(Json.toJson(AdditionalFiscalReference("PL", "12345")), Json.toJson(AdditionalFiscalReference("FR", "54321"))))
     )
   )
 

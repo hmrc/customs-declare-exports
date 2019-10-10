@@ -40,10 +40,7 @@ object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuil
     withTransportDetails(),
     withContainerData(),
     withExporterDetails(Some("GB717572504502801")),
-    withConsigneeDetails(
-      None,
-      Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "United States of America"))
-    ),
+    withConsigneeDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "United States of America"))),
     withDeclarantDetails(Some("GB717572504502811")),
     withRepresentativeDetails(Some("GB717572504502809"), None, Some("3")),
     withDeclarationHolders(DeclarationHolder(Some("AEOC"), Some("GB717572504502811"))),
@@ -66,17 +63,11 @@ object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuil
     withItems(
       anItem(
         withProcedureCodes(Some("1040"), Seq("000")),
-        withItemType(
-          combinedNomenclatureCode = "46021910",
-          descriptionOfGoods = "Straw for bottles",
-          statisticalValue = "1000"
-        ),
+        withItemType(combinedNomenclatureCode = "46021910", descriptionOfGoods = "Straw for bottles", statisticalValue = "1000"),
         withPackageInformation("PK", 10, "RICH123"),
         withCommodityMeasure(CommodityMeasure(Some("10"), "500", "700")),
         withAdditionalInformation("00400", "EXPORTER"),
-        withDocumentsProduced(
-          DocumentProduced(Some("C501"), Some("GBAEOC71757250450281"), None, None, None, None, None)
-        )
+        withDocumentsProduced(DocumentProduced(Some("C501"), Some("GBAEOC71757250450281"), None, None, None, None, None))
       )
     ),
     withTotalNumberOfItems(Some("56764"), Some("1.49"), "1"),

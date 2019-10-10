@@ -24,8 +24,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class GoodsLocationBuilder @Inject()(countriesService: CountriesService)
-    extends ModifyingBuilder[GoodsLocation, GoodsShipment.Consignment] {
+class GoodsLocationBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[GoodsLocation, GoodsShipment.Consignment] {
   override def buildThenAdd(model: GoodsLocation, consignment: Consignment): Unit =
     if (isDefined(model)) {
       consignment.setGoodsLocation(buildEoriOrAddress(model))
@@ -92,9 +91,7 @@ class GoodsLocationBuilder @Inject()(countriesService: CountriesService)
 
     if (goods.country.nonEmpty) {
       val countryCode = new AddressCountryCodeType
-      countryCode.setValue(
-        countriesService.allCountries.find(c => goods.country.contains(c.countryName)).map(_.countryCode).getOrElse("")
-      )
+      countryCode.setValue(countriesService.allCountries.find(c => goods.country.contains(c.countryName)).map(_.countryCode).getOrElse(""))
       goodsAddress.setCountryCode(countryCode)
     }
 

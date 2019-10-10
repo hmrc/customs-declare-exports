@@ -21,9 +21,7 @@ import uk.gov.hmrc.exports.models.declaration.{CommodityMeasure, ExportItem, Ite
 import uk.gov.hmrc.exports.services.mapping.{CachingMappingHelper, ModifyingBuilder}
 import uk.gov.hmrc.wco.dec.Commodity
 import wco.datamodel.wco.dec_dms._2.Declaration
-import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.{
-  GovernmentAgencyGoodsItem => WCOGovernmentAgencyGoodsItem
-}
+import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.{GovernmentAgencyGoodsItem => WCOGovernmentAgencyGoodsItem}
 
 class GovernmentAgencyGoodsItemBuilder @Inject()(
   statisticalValueAmountBuilder: StatisticalValueAmountBuilder,
@@ -54,10 +52,8 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
     combinedCommodity.foreach(commodityBuilder.buildThenAdd(_, wcoGovernmentAgencyGoodsItem))
 
     exportItem.additionalFiscalReferencesData.foreach(
-      _.references.foreach(
-        additionalFiscalReference =>
-          domesticDutyTaxPartyBuilder.buildThenAdd(additionalFiscalReference, wcoGovernmentAgencyGoodsItem)
-      )
+      _.references
+        .foreach(additionalFiscalReference => domesticDutyTaxPartyBuilder.buildThenAdd(additionalFiscalReference, wcoGovernmentAgencyGoodsItem))
     )
 
     goodsShipment.getGovernmentAgencyGoodsItem.add(wcoGovernmentAgencyGoodsItem)

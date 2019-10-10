@@ -32,8 +32,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class NotificationRepositorySpec
-    extends WordSpec with BeforeAndAfterEach with ScalaFutures with MustMatchers with OptionValues
-    with IntegrationPatience {
+    extends WordSpec with BeforeAndAfterEach with ScalaFutures with MustMatchers with OptionValues with IntegrationPatience {
 
   private val injector: Injector = {
     SharedMetricRegistries.clear()

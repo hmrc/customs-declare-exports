@@ -93,19 +93,9 @@ class ConsigneeBuilderSpec extends WordSpec with MockitoSugar with Matchers {
 }
 
 object ConsigneeBuilderSpec {
-  val correctAddress = Address(
-    fullName = "Full Name",
-    addressLine = "Address Line",
-    townOrCity = "Town or City",
-    postCode = "AB12 34CD",
-    country = "Poland"
-  )
+  val correctAddress =
+    Address(fullName = "Full Name", addressLine = "Address Line", townOrCity = "Town or City", postCode = "AB12 34CD", country = "Poland")
 
-  val addressWithEmptyFullname = Address(
-    fullName = "",
-    addressLine = "Address Line",
-    townOrCity = "Town or City",
-    postCode = "AB12 34CD",
-    country = "Poland"
-  )
+  val addressWithEmptyFullname =
+    Address(fullName = "", addressLine = "Address Line", townOrCity = "Town or City", postCode = "AB12 34CD", country = "Poland")
 }

@@ -41,8 +41,8 @@ import util.testdata.ExportsDeclarationBuilder
 import scala.concurrent.Future
 
 class SubmissionControllerSpec
-    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
-    with MustMatchers with ExportsDeclarationBuilder {
+    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures with MustMatchers
+    with ExportsDeclarationBuilder {
 
   SharedMetricRegistries.clear()
   override lazy val app: Application = GuiceApplicationBuilder()

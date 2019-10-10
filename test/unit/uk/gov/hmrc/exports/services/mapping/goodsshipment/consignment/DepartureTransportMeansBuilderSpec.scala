@@ -37,11 +37,7 @@ class DepartureTransportMeansBuilderSpec extends WordSpec with Matchers with Exp
 
       val consignment = new GoodsShipment.Consignment
       builder.buildThenAdd(
-        BorderTransport(
-          borderModeOfTransportCode,
-          meansOfTransportOnDepartureType,
-          Some(meansOfTransportOnDepartureIDNumber)
-        ),
+        BorderTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber)),
         warehouseIdentificationOpt,
         consignment
       )

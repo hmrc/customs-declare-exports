@@ -93,10 +93,7 @@ class NotificationService @Inject()(
         Future.successful(Left(exc.getMessage))
     }
 
-  def buildNotificationsFromRequest(
-    notificationApiRequestHeaders: NotificationApiRequestHeaders,
-    notificationXml: NodeSeq
-  ): Seq[Notification] =
+  def buildNotificationsFromRequest(notificationApiRequestHeaders: NotificationApiRequestHeaders, notificationXml: NodeSeq): Seq[Notification] =
     try {
       val responsesXml = notificationXml \ "Response"
 

@@ -34,8 +34,7 @@ import util.testdata.ExportsDeclarationBuilder
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class DeclarationRepositoryTest
-    extends WordSpec with Matchers with ScalaFutures with BeforeAndAfterEach with ExportsDeclarationBuilder
-    with IntegrationPatience {
+    extends WordSpec with Matchers with ScalaFutures with BeforeAndAfterEach with ExportsDeclarationBuilder with IntegrationPatience {
 
   private val injector = {
     SharedMetricRegistries.clear()
@@ -119,11 +118,7 @@ class DeclarationRepositoryTest
         givenADeclarationExists(declaration1, declaration2, declaration3)
 
         val page = Page(index = 1, size = 10)
-        repository.find(DeclarationSearch(eori1), page, DeclarationSort()).futureValue shouldBe Paginated(
-          Seq(declaration1, declaration2),
-          page,
-          2
-        )
+        repository.find(DeclarationSearch(eori1), page, DeclarationSort()).futureValue shouldBe Paginated(Seq(declaration1, declaration2), page, 2)
       }
 
       "there is multiple pages of results" in {
@@ -133,17 +128,9 @@ class DeclarationRepositoryTest
         givenADeclarationExists(declaration1, declaration2, declaration3)
 
         val page1 = Page(index = 1, size = 2)
-        repository.find(DeclarationSearch(eori), page1, DeclarationSort()).futureValue shouldBe Paginated(
-          Seq(declaration1, declaration2),
-          page1,
-          3
-        )
+        repository.find(DeclarationSearch(eori), page1, DeclarationSort()).futureValue shouldBe Paginated(Seq(declaration1, declaration2), page1, 3)
         val page2 = Page(index = 2, size = 2)
-        repository.find(DeclarationSearch(eori), page2, DeclarationSort()).futureValue shouldBe Paginated(
-          Seq(declaration3),
-          page2,
-          3
-        )
+        repository.find(DeclarationSearch(eori), page2, DeclarationSort()).futureValue shouldBe Paginated(Seq(declaration3), page2, 3)
       }
     }
 
@@ -241,12 +228,7 @@ class DeclarationRepositoryTest
       val draftDeclarationExpired2 = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(2019, 1, 1))
       val draftDeclarationOngoing = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(2019, 3, 1))
       val completedDeclaration = aDeclaration(withStatus(DeclarationStatus.COMPLETE), withUpdateDate(2019, 1, 1))
-      givenADeclarationExists(
-        draftDeclarationExpired1,
-        draftDeclarationExpired2,
-        draftDeclarationOngoing,
-        completedDeclaration
-      )
+      givenADeclarationExists(draftDeclarationExpired1, draftDeclarationExpired2, draftDeclarationOngoing, completedDeclaration)
 
       val count = repository.deleteExpiredDraft(expireDate(2019, 2, 1)).futureValue
 

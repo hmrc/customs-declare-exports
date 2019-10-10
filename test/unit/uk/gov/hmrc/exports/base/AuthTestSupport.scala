@@ -41,23 +41,15 @@ trait AuthTestSupport extends MockitoSugar {
   }
 
   def withAuthorizedUser(user: SignedInUser = newUser(userEori.value, "external1")): Unit =
-    when(
-      mockAuthConnector.authorise(
-        ArgumentMatchers.argThat(cdsEnrollmentMatcher(user)),
-        ArgumentMatchers.eq(allEnrolments)
-      )(any(), any())
-    ).thenReturn(Future.successful(user.enrolments))
+    when(mockAuthConnector.authorise(ArgumentMatchers.argThat(cdsEnrollmentMatcher(user)), ArgumentMatchers.eq(allEnrolments))(any(), any()))
+      .thenReturn(Future.successful(user.enrolments))
 
   def withUnauthorizedUser(error: Throwable): Unit =
     when(mockAuthConnector.authorise(any(), any())(any(), any())).thenReturn(Future.failed(error))
 
   def userWithoutEori(user: SignedInUser = newUser("", externalId = "external1")): Unit =
-    when(
-      mockAuthConnector.authorise(
-        ArgumentMatchers.argThat(cdsEnrollmentMatcher(user)),
-        ArgumentMatchers.eq(allEnrolments)
-      )(any(), any())
-    ).thenReturn(Future.successful(Enrolments(Set())))
+    when(mockAuthConnector.authorise(ArgumentMatchers.argThat(cdsEnrollmentMatcher(user)), ArgumentMatchers.eq(allEnrolments))(any(), any()))
+      .thenReturn(Future.successful(Enrolments(Set())))
 
   def newUser(eori: String, externalId: String): SignedInUser = SignedInUser(
     Credentials("2345235235", "GovernmentGateway"),

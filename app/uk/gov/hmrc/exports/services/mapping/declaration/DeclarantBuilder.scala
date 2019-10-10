@@ -24,8 +24,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.Declarant
 import wco.datamodel.wco.declaration_ds.dms._2.{DeclarantIdentificationIDType, _}
 
-class DeclarantBuilder @Inject()(countriesService: CountriesService)
-    extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class DeclarantBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
     model.parties.declarantDetails

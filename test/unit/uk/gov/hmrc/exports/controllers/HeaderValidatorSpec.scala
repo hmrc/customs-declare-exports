@@ -106,9 +106,7 @@ class HeaderValidatorSpec extends WordSpec with MockitoSugar with MustMatchers {
 
         val result: Either[ErrorResponse, SubmissionRequestHeaders] =
           validator.validateAndExtractSubmissionHeaders(ValidHeaders)
-        result must equal(
-          Right(SubmissionRequestHeaders(LocalReferenceNumber(declarantLrnValue), Some(declarantDucrValue)))
-        )
+        result must equal(Right(SubmissionRequestHeaders(LocalReferenceNumber(declarantLrnValue), Some(declarantDucrValue))))
       }
 
       "return Left ErrorResponse when validateHeaders is called with invalid headers" in new SetUp {

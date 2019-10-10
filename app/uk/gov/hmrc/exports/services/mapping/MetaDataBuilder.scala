@@ -25,13 +25,7 @@ import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 class MetaDataBuilder @Inject()(declarationBuilder: DeclarationBuilder) {
 
-  def buildRequest(
-    functionalReferenceId: String,
-    mrn: String,
-    statementDescription: String,
-    changeReason: String,
-    eori: String
-  ): MetaData = {
+  def buildRequest(functionalReferenceId: String, mrn: String, statementDescription: String, changeReason: String, eori: String): MetaData = {
     val metaData = new MetaData
 
     val element: JAXBElement[Declaration] = new JAXBElement[Declaration](

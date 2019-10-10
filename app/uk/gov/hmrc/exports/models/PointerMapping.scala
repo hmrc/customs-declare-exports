@@ -29,9 +29,7 @@ case class PointerMapping(wcoPattern: PointerPattern, exportsPattern: PointerPat
         PointerSection(
           sequenceKeyValueMap.getOrElse(
             sectionPattern.sequenceIndex,
-            throw new IllegalArgumentException(
-              s"Missing Sequential Sequence Pattern Key [${sectionPattern.sequenceIndex}]"
-            )
+            throw new IllegalArgumentException(s"Missing Sequential Sequence Pattern Key [${sectionPattern.sequenceIndex}]")
           ),
           PointerSectionType.SEQUENCE
         )

@@ -22,8 +22,7 @@ import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class AEOMutualRecognitionPartiesBuilder @Inject()()
-    extends ModifyingBuilder[DeclarationAdditionalActor, GoodsShipment] {
+class AEOMutualRecognitionPartiesBuilder @Inject()() extends ModifyingBuilder[DeclarationAdditionalActor, GoodsShipment] {
 
   override def buildThenAdd(model: DeclarationAdditionalActor, goodsShipment: GoodsShipment): Unit =
     if (isDefined(model))

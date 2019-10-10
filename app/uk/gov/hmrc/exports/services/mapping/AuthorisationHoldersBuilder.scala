@@ -20,10 +20,7 @@ import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.{DeclarationHolder, ExportsDeclaration}
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.AuthorisationHolder
-import wco.datamodel.wco.declaration_ds.dms._2.{
-  AuthorisationHolderCategoryCodeType,
-  AuthorisationHolderIdentificationIDType
-}
+import wco.datamodel.wco.declaration_ds.dms._2.{AuthorisationHolderCategoryCodeType, AuthorisationHolderIdentificationIDType}
 
 import scala.collection.JavaConverters._
 
