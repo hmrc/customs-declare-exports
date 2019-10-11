@@ -93,9 +93,8 @@ class AppConfigSpec extends WordSpec with Matchers with MockitoSugar {
       val clientId = UUID.randomUUID.toString
 
       "return the configured value when explicitly set" in {
-        val configService: AppConfig = appConfig(
-          Configuration("appName" -> appName, "microservice.services.customs-declarations.client-id" -> clientId)
-        )
+        val configService: AppConfig =
+          appConfig(Configuration("appName" -> appName, "microservice.services.customs-declarations.client-id" -> clientId))
 
         configService.developerHubClientId shouldBe clientId
       }

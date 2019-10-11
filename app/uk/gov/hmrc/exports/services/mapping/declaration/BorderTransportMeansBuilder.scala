@@ -28,8 +28,7 @@ import wco.datamodel.wco.declaration_ds.dms._2.{
   BorderTransportMeansRegistrationNationalityCodeType
 }
 
-class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService)
-    extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, t: Declaration): Unit = {
     val transportMeans = new Declaration.BorderTransportMeans()
     val maybeTransport = model.borderTransport.filter(isDefined)

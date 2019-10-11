@@ -16,6 +16,7 @@
 
 package unit.uk.gov.hmrc.exports.controllers
 
+import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
@@ -38,11 +39,11 @@ import unit.uk.gov.hmrc.exports.base.AuthTestSupport
 import scala.concurrent.Future
 
 class CancellationControllerSpec
-    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
-    with MustMatchers {
+    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures with MustMatchers {
 
   private val submissionService: SubmissionService = mock[SubmissionService]
 
+  SharedMetricRegistries.clear()
   override lazy val app: Application = GuiceApplicationBuilder()
     .overrides(bind[AuthConnector].to(mockAuthConnector), bind[SubmissionService].to(submissionService))
     .build()
@@ -104,10 +105,7 @@ class CancellationControllerSpec
         val result: Future[Result] = route(app, post.withJsonBody(toJson(payload))).get
 
         status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe Json.obj(
-          "message" -> "Bad Request",
-          "errors" -> Json.arr("/changeReason: error.path.missing")
-        )
+        contentAsJson(result) mustBe Json.obj("message" -> "Bad Request", "errors" -> Json.arr("/changeReason: error.path.missing"))
         verifyZeroInteractions(submissionService)
       }
     }

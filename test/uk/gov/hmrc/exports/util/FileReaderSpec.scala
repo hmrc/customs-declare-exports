@@ -14,12 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models.declaration.notifications
+package uk.gov.hmrc.exports.util
 
-import play.api.libs.json.Json
+import org.scalatest.{MustMatchers, WordSpec}
 
-case class ErrorPointer(documentSectionCode: String, tagId: Option[String] = None)
+class FileReaderSpec extends WordSpec with MustMatchers {
 
-object ErrorPointer {
-  implicit val format = Json.format[ErrorPointer]
+  private val reader = new FileReader()
+
+  "Read lines" should {
+    "not skip header by default" in {
+      reader.readLines("header-file.csv").head mustBe "header-line"
+    }
+
+    "skip header" in {
+      reader.readLines("header-file.csv", skipHeaderLine = true).head mustBe "data"
+    }
+  }
+
 }

@@ -35,10 +35,7 @@ class TypeCodeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, D
     declaration.setTypeCode(typeCodeType)
   }
 
-  private def createTypeCode(
-    decType: AdditionalDeclarationType,
-    dispatchLocation: Option[DispatchLocation]
-  ): DeclarationTypeCodeType = {
+  private def createTypeCode(decType: AdditionalDeclarationType, dispatchLocation: Option[DispatchLocation]): DeclarationTypeCodeType = {
     val typeCodeType = new DeclarationTypeCodeType()
     dispatchLocation.foreach { data =>
       typeCodeType.setValue(data.dispatchLocation + decType.additionalDeclarationType)

@@ -120,9 +120,7 @@ class SchedulerSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
   private def theSchedule: Schedule = {
     val intervalCaptor: ArgumentCaptor[FiniteDuration] = ArgumentCaptor.forClass(classOf[FiniteDuration])
     val initialDelayCaptor: ArgumentCaptor[FiniteDuration] = ArgumentCaptor.forClass(classOf[FiniteDuration])
-    verify(internalScheduler).schedule(initialDelayCaptor.capture(), intervalCaptor.capture(), any[Runnable])(
-      any[ExecutionContext]
-    )
+    verify(internalScheduler).schedule(initialDelayCaptor.capture(), intervalCaptor.capture(), any[Runnable])(any[ExecutionContext])
     Schedule(initialDelayCaptor.getValue, intervalCaptor.getValue)
   }
   private def whenTheSchedulerStarts(withJobs: Set[ScheduledJob] = Set(job)): Scheduler =

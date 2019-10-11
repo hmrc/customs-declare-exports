@@ -24,14 +24,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class WcoSubmissionService @Inject()(
-  wcoMapperService: WcoMapperService,
-  customsDeclarationsConnector: CustomsDeclarationsConnector
-) {
+class WcoSubmissionService @Inject()(wcoMapperService: WcoMapperService, customsDeclarationsConnector: CustomsDeclarationsConnector) {
 
-  def submit(
-    declaration: ExportsDeclaration
-  )(implicit hc: HeaderCarrier, execution: ExecutionContext): Future[Submission] = {
+  def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier, execution: ExecutionContext): Future[Submission] = {
     val metaData = wcoMapperService.produceMetaData(declaration)
     val lrn = wcoMapperService
       .declarationLrn(metaData)

@@ -26,14 +26,10 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class DeclarationService @Inject()(declarationRepository: DeclarationRepository) {
 
-  def create(
-    declaration: ExportsDeclaration
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[ExportsDeclaration] =
+  def create(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[ExportsDeclaration] =
     declarationRepository.create(declaration)
 
-  def update(
-    declaration: ExportsDeclaration
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[ExportsDeclaration]] =
+  def update(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[ExportsDeclaration]] =
     declarationRepository.update(declaration)
 
   def find(search: DeclarationSearch, pagination: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] =

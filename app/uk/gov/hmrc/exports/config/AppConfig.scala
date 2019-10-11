@@ -25,11 +25,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import scala.concurrent.duration.FiniteDuration
 
 @Singleton
-class AppConfig @Inject()(
-  val runModeConfiguration: Configuration,
-  val environment: Environment,
-  servicesConfig: ServicesConfig
-) {
+class AppConfig @Inject()(val runModeConfiguration: Configuration, val environment: Environment, servicesConfig: ServicesConfig) {
 
   lazy val clock: Clock = Clock.systemUTC()
 

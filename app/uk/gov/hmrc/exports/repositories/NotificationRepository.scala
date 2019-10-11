@@ -29,12 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: ExecutionContext)
-    extends ReactiveRepository[Notification, BSONObjectID](
-      "notifications",
-      mc.mongoConnector.db,
-      Notification.format,
-      objectIdFormats
-    ) {
+    extends ReactiveRepository[Notification, BSONObjectID]("notifications", mc.mongoConnector.db, Notification.format, objectIdFormats) {
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("dateTimeIssued" -> IndexType.Ascending), name = Some("dateTimeIssuedIdx")),

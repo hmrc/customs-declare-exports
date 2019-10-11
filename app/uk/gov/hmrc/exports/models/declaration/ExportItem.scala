@@ -98,11 +98,6 @@ object AdditionalInformations {
   implicit val format: OFormat[AdditionalInformations] = Json.format[AdditionalInformations]
 }
 
-case class DocumentIdentifierAndPart(documentIdentifier: Option[String], documentPart: Option[String])
-object DocumentIdentifierAndPart {
-  implicit val format: OFormat[DocumentIdentifierAndPart] = Json.format[DocumentIdentifierAndPart]
-}
-
 case class Date(day: Option[Int], month: Option[Int], year: Option[Int]) {
   def toLocalDate: LocalDate = LocalDate.of(year.getOrElse(0), month.getOrElse(0), day.getOrElse(0))
 }
@@ -117,7 +112,7 @@ object DocumentWriteOff {
 
 case class DocumentProduced(
   documentTypeCode: Option[String],
-  documentIdentifierAndPart: Option[DocumentIdentifierAndPart],
+  documentIdentifier: Option[String],
   documentStatus: Option[String],
   documentStatusReason: Option[String],
   issuingAuthorityName: Option[String],

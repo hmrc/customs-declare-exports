@@ -22,9 +22,7 @@ import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.AdditionalInformation.Pointer
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
-import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem.{
-  AdditionalInformation => WCOAdditionalInformation
-}
+import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem.{AdditionalInformation => WCOAdditionalInformation}
 import wco.datamodel.wco.declaration_ds.dms._2.{
   AdditionalInformationStatementCodeType,
   AdditionalInformationStatementDescriptionTextType,
@@ -32,13 +30,9 @@ import wco.datamodel.wco.declaration_ds.dms._2.{
   PointerDocumentSectionCodeType
 }
 
-class AdditionalInformationBuilder @Inject()()
-    extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
+class AdditionalInformationBuilder @Inject()() extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
 
-  override def buildThenAdd(
-    exportItem: ExportItem,
-    wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem
-  ): Unit =
+  override def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem): Unit =
     exportItem.additionalInformation.foreach { additionalInformationData =>
       {
         additionalInformationData.items.foreach { additionalInformation =>

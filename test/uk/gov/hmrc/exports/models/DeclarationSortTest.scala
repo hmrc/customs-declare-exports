@@ -30,15 +30,11 @@ class DeclarationSortTest extends PlaySpec {
       }
 
       "sort-by only populated" in {
-        DeclarationSort.bindable.bind("sort", Map("sort-by" -> Seq("updatedDateTime"))) mustBe Some(
-          Right(DeclarationSort(by = SortBy.UPDATED))
-        )
+        DeclarationSort.bindable.bind("sort", Map("sort-by" -> Seq("updatedDateTime"))) mustBe Some(Right(DeclarationSort(by = SortBy.UPDATED)))
       }
 
       "sort-direction only populated" in {
-        DeclarationSort.bindable.bind("sort", Map("sort-direction" -> Seq("des"))) mustBe Some(
-          Right(DeclarationSort(direction = SortDirection.DES))
-        )
+        DeclarationSort.bindable.bind("sort", Map("sort-direction" -> Seq("des"))) mustBe Some(Right(DeclarationSort(direction = SortDirection.DES)))
       }
 
       "nothing populated" in {
@@ -47,9 +43,7 @@ class DeclarationSortTest extends PlaySpec {
 
       "ignore unsupported param values (returning default)" in {
         DeclarationSort.bindable
-          .bind("sort", Map("sort-by" -> Seq("invalue"), "sort-direction" -> Seq("invalid"))) mustBe Some(
-          Right(DeclarationSort())
-        )
+          .bind("sort", Map("sort-by" -> Seq("invalue"), "sort-direction" -> Seq("invalid"))) mustBe Some(Right(DeclarationSort()))
       }
     }
 

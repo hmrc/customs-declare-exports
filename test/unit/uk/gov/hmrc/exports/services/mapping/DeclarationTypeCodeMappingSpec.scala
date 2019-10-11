@@ -29,20 +29,14 @@ class DeclarationTypeCodeMappingSpec extends WordSpec with Matchers {
     "return CodeType with value EXZ for OutsideEU and Standard" in {
       val dispatchLocation = DispatchLocation(AllowedDispatchLocations.OutsideEU)
       val additionalDeclarationTypeCode = AdditionalDeclarationType(AllowedAdditionalDeclarationTypes.Standard)
-      val codeType = additionalDeclarationTypeAndDispatchLocationToDeclarationTypeCode(
-        Some(dispatchLocation),
-        Some(additionalDeclarationTypeCode)
-      )
+      val codeType = additionalDeclarationTypeAndDispatchLocationToDeclarationTypeCode(Some(dispatchLocation), Some(additionalDeclarationTypeCode))
       codeType.getValue should be("EXZ")
     }
 
     "return CodeType with value COY for SpecialFiscalTerritory and Simplified" in {
       val dispatchLocation = DispatchLocation(AllowedDispatchLocations.SpecialFiscalTerritory)
       val additionalDeclarationTypeCode = AdditionalDeclarationType(AllowedAdditionalDeclarationTypes.Simplified)
-      val codeType = additionalDeclarationTypeAndDispatchLocationToDeclarationTypeCode(
-        Some(dispatchLocation),
-        Some(additionalDeclarationTypeCode)
-      )
+      val codeType = additionalDeclarationTypeAndDispatchLocationToDeclarationTypeCode(Some(dispatchLocation), Some(additionalDeclarationTypeCode))
       codeType.getValue should be("COY")
     }
 

@@ -40,8 +40,8 @@ import util.{CustomsDeclarationsAPIConfig, ExternalServicesConfig}
 import scala.concurrent.Future
 
 class ExportsSubmissionReceivedSpec
-    extends TypedFeatureSpec with ScalaFutures with IntegrationPatience with WireMockRunner with MockitoSugar
-    with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach {
+    extends TypedFeatureSpec with ScalaFutures with IntegrationPatience with WireMockRunner with MockitoSugar with GuiceOneAppPerSuite
+    with BeforeAndAfterAll with BeforeAndAfterEach {
 
   val mockSubmissionRepository: SubmissionRepository = mock[SubmissionRepository]
   val mockDeclarationRepository: DeclarationRepository = mock[DeclarationRepository]
@@ -137,19 +137,18 @@ class ExportsSubmissionReceivedSpec
         .And(`User has been authorized`)
     }
 
-    Seq(INTERNAL_SERVER_ERROR, BAD_GATEWAY, GATEWAY_TIMEOUT, NOT_FOUND, UNAUTHORIZED, BAD_REQUEST).foreach {
-      upstreamCode =>
-        Scenario(s"an authorised user tries to submit declaration, but the submission service returns $upstreamCode") {
-          _.Given(`Authorized user`)
-            .And(`User has completed declaration`)
-            .And(`Customs declaration response` is upstreamCode)
-            .When(`User perform declaration submission`)
-            .Then(`Result status` is INTERNAL_SERVER_ERROR)
-            .And(`Submission was created`)
-            .And(`Declaration is submitted to customs-declarations`)
-            .And(`Submission has no action`)
-            .And(`User has been authorized`)
-        }
+    Seq(INTERNAL_SERVER_ERROR, BAD_GATEWAY, GATEWAY_TIMEOUT, NOT_FOUND, UNAUTHORIZED, BAD_REQUEST).foreach { upstreamCode =>
+      Scenario(s"an authorised user tries to submit declaration, but the submission service returns $upstreamCode") {
+        _.Given(`Authorized user`)
+          .And(`User has completed declaration`)
+          .And(`Customs declaration response` is upstreamCode)
+          .When(`User perform declaration submission`)
+          .Then(`Result status` is INTERNAL_SERVER_ERROR)
+          .And(`Submission was created`)
+          .And(`Declaration is submitted to customs-declarations`)
+          .And(`Submission has no action`)
+          .And(`User has been authorized`)
+      }
     }
 
     Scenario("an authorised user tries to submit declaration, but submissions service is down") {

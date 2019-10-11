@@ -30,10 +30,7 @@ class ContainerCodeBuilderSpec extends WordSpec with Matchers {
         val builder = new ContainerCodeBuilder
         val consignment = new GoodsShipment.Consignment
 
-        builder.buildThenAdd(
-          TransportDetails(Some("Portugal"), true, "40", Some("1234567878ui"), Some("A")),
-          consignment
-        )
+        builder.buildThenAdd(TransportDetails(Some("Portugal"), true, "40", Some("1234567878ui"), Some("A")), consignment)
 
         consignment.getContainerCode.getValue should be("1")
       }
@@ -42,10 +39,7 @@ class ContainerCodeBuilderSpec extends WordSpec with Matchers {
         val builder = new ContainerCodeBuilder
         val consignment = new GoodsShipment.Consignment
 
-        builder.buildThenAdd(
-          TransportDetails(Some("Portugal"), false, "40", Some("1234567878ui"), Some("A")),
-          consignment
-        )
+        builder.buildThenAdd(TransportDetails(Some("Portugal"), false, "40", Some("1234567878ui"), Some("A")), consignment)
 
         consignment.getContainerCode.getValue should be("0")
       }

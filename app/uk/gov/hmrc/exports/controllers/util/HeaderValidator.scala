@@ -52,9 +52,7 @@ class HeaderValidator {
         None
     }
 
-  def validateAndExtractSubmissionHeaders(
-    headers: Map[String, String]
-  ): Either[ErrorResponse, SubmissionRequestHeaders] = {
+  def validateAndExtractSubmissionHeaders(headers: Map[String, String]): Either[ErrorResponse, SubmissionRequestHeaders] = {
     val result = for {
       lrn <- extractLrnHeader(headers)
     } yield SubmissionRequestHeaders(LocalReferenceNumber(lrn), extractOptionalDucrHeader(headers))
@@ -67,9 +65,7 @@ class HeaderValidator {
     }
   }
 
-  def validateAndExtractCancellationHeaders(
-    headers: Map[String, String]
-  ): Either[ErrorResponse, CancellationRequestHeaders] = {
+  def validateAndExtractCancellationHeaders(headers: Map[String, String]): Either[ErrorResponse, CancellationRequestHeaders] = {
     val result = for {
       mrn <- extractMrnHeader(headers)
     } yield CancellationRequestHeaders(Mrn(mrn))
@@ -82,9 +78,7 @@ class HeaderValidator {
     }
   }
 
-  def validateAndExtractNotificationHeaders(
-    headers: Map[String, String]
-  ): Either[ErrorResponse, NotificationApiRequestHeaders] = {
+  def validateAndExtractNotificationHeaders(headers: Map[String, String]): Either[ErrorResponse, NotificationApiRequestHeaders] = {
     val result = for {
       authToken <- extractAuthTokenHeader(headers)
       conversationId <- extractConversationIdHeader(headers)

@@ -18,6 +18,7 @@ package unit.uk.gov.hmrc.exports.controllers
 
 import java.time.Instant
 
+import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{eq => eqRef, _}
 import org.mockito.BDDMockito._
@@ -46,8 +47,10 @@ import util.testdata.ExportsDeclarationBuilder
 import scala.concurrent.{ExecutionContext, Future}
 
 class DeclarationControllerSpec
-    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
-    with MustMatchers with ExportsDeclarationBuilder {
+    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures with MustMatchers
+    with ExportsDeclarationBuilder {
+
+  SharedMetricRegistries.clear()
 
   override lazy val app: Application = GuiceApplicationBuilder()
     .overrides(bind[AuthConnector].to(mockAuthConnector), bind[DeclarationService].to(declarationService))
@@ -85,10 +88,7 @@ class DeclarationControllerSpec
         val result: Future[Result] = route(app, post.withJsonBody(payload)).get
 
         status(result) must be(BAD_REQUEST)
-        contentAsJson(result) mustBe Json.obj(
-          "message" -> "Bad Request",
-          "errors" -> Json.arr("/choice: error.path.missing")
-        )
+        contentAsJson(result) mustBe Json.obj("message" -> "Bad Request", "errors" -> Json.arr("/choice: error.path.missing"))
         verifyZeroInteractions(declarationService)
       }
     }
@@ -331,12 +331,7 @@ class DeclarationControllerSpec
       "request is valid" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
-        val declaration = aDeclaration(
-          withStatus(DeclarationStatus.DRAFT),
-          withChoice(Choice.StandardDec),
-          withId("id"),
-          withEori(userEori)
-        )
+        val declaration = aDeclaration(withStatus(DeclarationStatus.DRAFT), withChoice(Choice.StandardDec), withId("id"), withEori(userEori))
         given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(Some(declaration)))
         given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
           .willReturn(Future.successful(Some(declaration)))
@@ -368,12 +363,7 @@ class DeclarationControllerSpec
       "declaration is not found - on update" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
-        val declaration = aDeclaration(
-          withStatus(DeclarationStatus.DRAFT),
-          withChoice(Choice.StandardDec),
-          withId("id"),
-          withEori(userEori)
-        )
+        val declaration = aDeclaration(withStatus(DeclarationStatus.DRAFT), withChoice(Choice.StandardDec), withId("id"), withEori(userEori))
         given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(Some(declaration)))
         given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
           .willReturn(Future.successful(None))
@@ -389,12 +379,7 @@ class DeclarationControllerSpec
       "declaration is COMPLETE" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
-        val declaration = aDeclaration(
-          withStatus(DeclarationStatus.COMPLETE),
-          withChoice(Choice.StandardDec),
-          withId("id"),
-          withEori(userEori)
-        )
+        val declaration = aDeclaration(withStatus(DeclarationStatus.COMPLETE), withChoice(Choice.StandardDec), withId("id"), withEori(userEori))
         given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(Some(declaration)))
 
         val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
@@ -409,10 +394,7 @@ class DeclarationControllerSpec
         val result: Future[Result] = route(app, put.withJsonBody(payload)).get
 
         status(result) must be(BAD_REQUEST)
-        contentAsJson(result) mustBe Json.obj(
-          "message" -> "Bad Request",
-          "errors" -> Json.arr("/choice: error.path.missing")
-        )
+        contentAsJson(result) mustBe Json.obj("message" -> "Bad Request", "errors" -> Json.arr("/choice: error.path.missing"))
         verifyZeroInteractions(declarationService)
       }
     }
@@ -430,11 +412,7 @@ class DeclarationControllerSpec
   }
 
   def aDeclarationRequest() =
-    ExportsDeclarationRequest(
-      createdDateTime = Instant.now(),
-      updatedDateTime = Instant.now(),
-      choice = Choice.StandardDec
-    )
+    ExportsDeclarationRequest(createdDateTime = Instant.now(), updatedDateTime = Instant.now(), choice = Choice.StandardDec)
 
   def theDeclarationCreated: ExportsDeclaration = {
     val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])

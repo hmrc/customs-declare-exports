@@ -54,12 +54,10 @@ object Eori {
 case class ConversationId(value: String) extends AnyVal
 case class AuthToken(value: String) extends AnyVal
 
-case class AuthorizedSubmissionRequest[A](eori: Eori, request: Request[A])
-    extends WrappedRequest[A](request) with HasEori
+case class AuthorizedSubmissionRequest[A](eori: Eori, request: Request[A]) extends WrappedRequest[A](request) with HasEori
 
 case class SubmissionRequestHeaders(lrn: LocalReferenceNumber, ducr: Option[String]) extends HasLocalReferenceNumber
 
 case class CancellationRequestHeaders(mrn: Mrn) extends HasMrn
 
-case class NotificationApiRequestHeaders(authToken: AuthToken, conversationId: ConversationId)
-    extends HasConversationId with HasAuthToken
+case class NotificationApiRequestHeaders(authToken: AuthToken, conversationId: ConversationId) extends HasConversationId with HasAuthToken

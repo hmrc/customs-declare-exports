@@ -29,15 +29,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 // TODO: This needs to be separated from BackendController and be injected instead of inheriting in other controllers
 @Singleton
-class Authenticator @Inject()(override val authConnector: AuthConnector, cc: ControllerComponents)(
-  implicit ec: ExecutionContext
-) extends BackendController(cc) with AuthorisedFunctions {
+class Authenticator @Inject()(override val authConnector: AuthConnector, cc: ControllerComponents)(implicit ec: ExecutionContext)
+    extends BackendController(cc) with AuthorisedFunctions {
 
   private val logger = Logger(this.getClass)
 
-  def authorisedAction[A](
-    bodyParser: BodyParser[A]
-  )(body: AuthorizedSubmissionRequest[A] => Future[Result]): Action[A] =
+  def authorisedAction[A](bodyParser: BodyParser[A])(body: AuthorizedSubmissionRequest[A] => Future[Result]): Action[A] =
     Action.async(bodyParser) { implicit request =>
       authorisedWithEori.flatMap {
         case Right(authorisedRequest) =>
@@ -49,10 +46,7 @@ class Authenticator @Inject()(override val authConnector: AuthConnector, cc: Con
       }
     }
 
-  private def authorisedWithEori[A](
-    implicit hc: HeaderCarrier,
-    request: Request[A]
-  ): Future[Either[ErrorResponse, AuthorizedSubmissionRequest[A]]] =
+  private def authorisedWithEori[A](implicit hc: HeaderCarrier, request: Request[A]): Future[Either[ErrorResponse, AuthorizedSubmissionRequest[A]]] =
     authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments) { enrolments =>
       hasEnrolment(enrolments) match {
         case Some(eori) => Future.successful(Right(AuthorizedSubmissionRequest(Eori(eori.value), request)))

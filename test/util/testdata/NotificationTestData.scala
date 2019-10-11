@@ -23,7 +23,8 @@ import java.util.UUID
 import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
-import uk.gov.hmrc.exports.models.declaration.notifications.{ErrorPointer, Notification, NotificationError}
+import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
+import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationError}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import util.testdata.ExportsTestData._
 
@@ -115,8 +116,7 @@ object NotificationTestData {
   def exampleNotificationWithMultipleResponsesXML(
     mrn: String,
     dateTime_received: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX")),
-    dateTime_accepted: String =
-      LocalDateTime.now().plusHours(1).atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
+    dateTime_accepted: String = LocalDateTime.now().plusHours(1).atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
   ): Elem =
     <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
@@ -240,12 +240,7 @@ object NotificationTestData {
   val functionCode_2: String = randomResponseFunctionCode
   val functionCode_3: String = randomResponseFunctionCode
   val nameCode: Option[String] = None
-  val errors = Seq(
-    NotificationError(
-      validationCode = "CDS12056",
-      pointers = Seq(ErrorPointer(documentSectionCode = "42A", tagId = None))
-    )
-  )
+  val errors = Seq(NotificationError(validationCode = "CDS12056", pointer = Some(Pointer(Seq(PointerSection("42A", PointerSectionType.FIELD))))))
 
   private val payloadExemplaryLength = 300
   val payload = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)

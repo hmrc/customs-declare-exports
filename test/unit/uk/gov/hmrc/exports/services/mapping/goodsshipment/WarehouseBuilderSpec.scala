@@ -31,10 +31,7 @@ class WarehouseBuilderSpec extends WordSpec with Matchers with MockitoSugar {
 
         val builder = new WarehouseBuilder
         val goodsShipment = new GoodsShipment
-        builder.buildThenAdd(
-          WarehouseIdentification(Some("GBWKG001"), Some("R"), Some("1234567GB"), Some("2")),
-          goodsShipment
-        )
+        builder.buildThenAdd(WarehouseIdentification(Some("GBWKG001"), Some("R"), Some("1234567GB"), Some("2")), goodsShipment)
         val warehouse = goodsShipment.getWarehouse
         warehouse.getID.getValue should be("1234567GB")
         warehouse.getTypeCode.getValue should be("R")
@@ -43,10 +40,7 @@ class WarehouseBuilderSpec extends WordSpec with Matchers with MockitoSugar {
       "identificationType is not supplied" in {
         val builder = new WarehouseBuilder
         val goodsShipment = new GoodsShipment
-        builder.buildThenAdd(
-          WarehouseIdentification(Some("GBWKG001"), None, Some("1234567GB"), Some("2")),
-          goodsShipment
-        )
+        builder.buildThenAdd(WarehouseIdentification(Some("GBWKG001"), None, Some("1234567GB"), Some("2")), goodsShipment)
 
         val warehouse = goodsShipment.getWarehouse
         warehouse should be(null)

@@ -45,12 +45,7 @@ class ExporterBuilderSpec extends WordSpec with Matchers with MockitoSugar with 
       }
 
       "no eori" in {
-        val model = aDeclaration(
-          withExporterDetails(
-            eori = None,
-            address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))
-          )
-        )
+        val model = aDeclaration(withExporterDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -68,12 +63,7 @@ class ExporterBuilderSpec extends WordSpec with Matchers with MockitoSugar with 
       }
 
       "unknown country" in {
-        val model = aDeclaration(
-          withExporterDetails(
-            eori = Some("eori"),
-            address = Some(Address("name", "line", "city", "postcode", "unknown"))
-          )
-        )
+        val model = aDeclaration(withExporterDetails(eori = Some("eori"), address = Some(Address("name", "line", "city", "postcode", "unknown"))))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -82,12 +72,8 @@ class ExporterBuilderSpec extends WordSpec with Matchers with MockitoSugar with 
       }
 
       "populated" in {
-        val model = aDeclaration(
-          withExporterDetails(
-            eori = Some("eori"),
-            address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))
-          )
-        )
+        val model =
+          aDeclaration(withExporterDetails(eori = Some("eori"), address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)

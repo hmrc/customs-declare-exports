@@ -20,11 +20,7 @@ import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR, PreviousDocument, PreviousDocuments}
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
-import wco.datamodel.wco.declaration_ds.dms._2.{
-  PreviousDocumentCategoryCodeType,
-  PreviousDocumentIdentificationIDType,
-  PreviousDocumentTypeCodeType
-}
+import wco.datamodel.wco.declaration_ds.dms._2.{PreviousDocumentCategoryCodeType, PreviousDocumentIdentificationIDType, PreviousDocumentTypeCodeType}
 
 class PreviousDocumentsBuilder @Inject()() extends ModifyingBuilder[PreviousDocuments, GoodsShipment] {
   override def buildThenAdd(model: PreviousDocuments, goodsShipment: GoodsShipment): Unit =
@@ -43,10 +39,7 @@ class PreviousDocumentsBuilder @Inject()() extends ModifyingBuilder[PreviousDocu
           doc.documentCategory.nonEmpty
     )
 
-  private def createPreviousDocuments(
-    document: PreviousDocument,
-    previousDocumentsSize: Int
-  ): GoodsShipment.PreviousDocument = {
+  private def createPreviousDocuments(document: PreviousDocument, previousDocumentsSize: Int): GoodsShipment.PreviousDocument = {
     val previousDocument = new GoodsShipment.PreviousDocument()
 
     if (document.documentCategory.nonEmpty) {
@@ -61,10 +54,7 @@ class PreviousDocumentsBuilder @Inject()() extends ModifyingBuilder[PreviousDocu
       previousDocument.setID(id)
     }
 
-    if (document.goodsItemIdentifier.getOrElse("").nonEmpty) {
-      val lineNumeric = new java.math.BigDecimal(document.goodsItemIdentifier.get)
-      previousDocument.setLineNumeric(lineNumeric)
-    }
+    document.goodsItemIdentifier.foreach(identitier => previousDocument.setLineNumeric(new java.math.BigDecimal(identitier)))
 
     if (document.documentType.nonEmpty) {
       val typeCode = new PreviousDocumentTypeCodeType()

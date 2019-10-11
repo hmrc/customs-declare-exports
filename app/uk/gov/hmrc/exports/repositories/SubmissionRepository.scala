@@ -33,12 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: ExecutionContext)
-    extends ReactiveRepository[Submission, BSONObjectID](
-      "submissions",
-      mc.mongoConnector.db,
-      Submission.formats,
-      objectIdFormats
-    ) {
+    extends ReactiveRepository[Submission, BSONObjectID]("submissions", mc.mongoConnector.db, Submission.formats, objectIdFormats) {
 
   override def indexes: Seq[Index] = Seq(
     Index(
@@ -48,10 +43,7 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
       partialFilter = Some(BSONDocument(Seq("actions.id" -> BSONDocument("$exists" -> BSONBoolean(true)))))
     ),
     Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
-    Index(
-      Seq("eori" -> IndexType.Ascending, "action.requestTimestamp" -> IndexType.Descending),
-      name = Some("actionOrderedEori")
-    ),
+    Index(Seq("eori" -> IndexType.Ascending, "action.requestTimestamp" -> IndexType.Descending), name = Some("actionOrderedEori")),
     Index(Seq("updatedDateTime" -> IndexType.Ascending), name = Some("updateTimeIdx"))
   )
 

@@ -42,8 +42,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
 
 class SubmissionServiceSpec
-    extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers with ExportsDeclarationBuilder
-    with Eventually with BeforeAndAfterEach {
+    extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers with ExportsDeclarationBuilder with Eventually with BeforeAndAfterEach {
 
   private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
   private val customsDeclarationsConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
@@ -62,14 +61,7 @@ class SubmissionServiceSpec
   )(ExecutionContext.global)
 
   override def afterEach(): Unit = {
-    reset(
-      customsDeclarationsConnector,
-      submissionRepository,
-      declarationRepository,
-      notificationRepository,
-      metaDataBuilder,
-      wcoMapperService
-    )
+    reset(customsDeclarationsConnector, submissionRepository, declarationRepository, notificationRepository, metaDataBuilder, wcoMapperService)
     super.afterEach()
   }
 

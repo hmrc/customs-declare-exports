@@ -29,8 +29,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 @Singleton
-class PurgeDraftDeclarationsJob @Inject()(appConfig: AppConfig, declarationRepository: DeclarationRepository)
-    extends ScheduledJob {
+class PurgeDraftDeclarationsJob @Inject()(appConfig: AppConfig, declarationRepository: DeclarationRepository) extends ScheduledJob {
 
   private implicit val config: AppConfig = appConfig
   private implicit val carrier: HeaderCarrier = HeaderCarrier()

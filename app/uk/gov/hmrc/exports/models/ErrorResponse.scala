@@ -31,8 +31,7 @@ trait HttpStatusCodeShortDescriptions {
   val InternalServerErrorCode = "INTERNAL_SERVER_ERROR"
 }
 
-case class ErrorResponse(httpStatusCode: Int, errorCode: String, message: String, content: ResponseContents*)
-    extends Error {
+case class ErrorResponse(httpStatusCode: Int, errorCode: String, message: String, content: ResponseContents*) extends Error {
 
   lazy val XmlResult: Result = Status(httpStatusCode)(responseXml).as(ContentTypes.XML)
 

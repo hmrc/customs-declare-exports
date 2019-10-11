@@ -63,10 +63,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
       "eori is empty" in {
         // Given
         val model = aDeclaration(
-          withCarrierDetails(
-            eori = None,
-            address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))
-          ),
+          withCarrierDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))),
           withChoice(Choice.StandardDec)
         )
         val consignment = new Declaration.Consignment()
@@ -81,10 +78,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
       "fully populated" in {
         // Given
         val model = aDeclaration(
-          withCarrierDetails(
-            eori = Some("eori"),
-            address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))
-          ),
+          withCarrierDetails(eori = Some("eori"), address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))),
           withChoice(Choice.StandardDec)
         )
         val consignment = new Declaration.Consignment()
@@ -103,10 +97,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
 
       "empty address components" in {
         // Given
-        val model = aDeclaration(
-          withCarrierDetails(eori = Some("eori"), address = Some(Address("", "", "", "", ""))),
-          withChoice(Choice.StandardDec)
-        )
+        val model = aDeclaration(withCarrierDetails(eori = Some("eori"), address = Some(Address("", "", "", "", ""))), withChoice(Choice.StandardDec))
         val consignment = new Declaration.Consignment()
 
         // When

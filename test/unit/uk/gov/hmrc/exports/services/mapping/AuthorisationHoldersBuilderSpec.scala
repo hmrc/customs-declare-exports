@@ -43,10 +43,7 @@ class AuthorisationHoldersBuilderSpec extends WordSpec with Matchers with Mockit
       "multiple holders" in {
         // Given
         val model = aDeclaration(
-          withDeclarationHolders(
-            DeclarationHolder(Some("auth code1"), Some("eori1")),
-            DeclarationHolder(Some("auth code2"), Some("eori2"))
-          )
+          withDeclarationHolders(DeclarationHolder(Some("auth code1"), Some("eori1")), DeclarationHolder(Some("auth code2"), Some("eori2")))
         )
         val declaration = new Declaration()
 

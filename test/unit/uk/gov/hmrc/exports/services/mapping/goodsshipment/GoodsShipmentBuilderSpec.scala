@@ -104,10 +104,7 @@ class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclar
           .buildThenAdd(refEq(correctConsignmentReferences), any[Declaration.GoodsShipment])
 
         verify(mockWarehouseBuilder)
-          .buildThenAdd(
-            refEq(WarehouseIdentification(Some("GBWKG001"), Some("R"), None, Some("2"))),
-            any[Declaration.GoodsShipment]
-          )
+          .buildThenAdd(refEq(WarehouseIdentification(Some("GBWKG001"), Some("R"), None, Some("2"))), any[Declaration.GoodsShipment])
 
         verify(mockPreviousDocumentBuilder)
           .buildThenAdd(refEq(PreviousDocuments(Seq(correctPreviousDocument))), any[Declaration.GoodsShipment])

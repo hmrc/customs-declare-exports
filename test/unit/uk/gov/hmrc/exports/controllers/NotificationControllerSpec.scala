@@ -16,6 +16,7 @@
 
 package unit.uk.gov.hmrc.exports.controllers
 
+import com.codahale.metrics.SharedMetricRegistries
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
@@ -45,14 +46,15 @@ import scala.util.Random
 import scala.xml.Elem
 
 class NotificationControllerSpec
-    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
-    with MustMatchers {
+    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures with MustMatchers {
 
   import NotificationControllerSpec._
 
   val getSubmissionNotificationsUri = "/submission-notifications/1234"
   val getAllNotificationsForUserUri = "/notifications"
   val saveNotificationUri = "/customs-declare-exports/notify"
+
+  SharedMetricRegistries.clear()
 
   private val notificationServiceMock: NotificationService = buildNotificationServiceMock
   private val submissionService: SubmissionService = buildSubmissionServiceMock
@@ -64,13 +66,11 @@ class NotificationControllerSpec
     )
     .build()
 
-  private lazy val metrics: ExportsMetrics = app.injector.instanceOf[ExportsMetrics]
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
+  override def afterEach(): Unit = {
     reset(mockAuthConnector, notificationServiceMock)
-  }
 
+    super.afterEach()
+  }
   "GET /:id" should {
     "return 200" when {
       "submission found" in {
@@ -204,6 +204,9 @@ class NotificationControllerSpec
         withAuthorizedUser()
         when(notificationServiceMock.saveAll(any())).thenReturn(Future.successful(Right((): Unit)))
 
+        when(notificationServiceMock.buildNotificationsFromRequest(any(), any()))
+          .thenReturn(Seq(notification, notification_2))
+
         routePostSaveNotification(xmlBody = exampleNotificationWithMultipleResponsesXML(mrn)).futureValue
 
         val notificationsCaptor: ArgumentCaptor[Seq[Notification]] = ArgumentCaptor.forClass(classOf[Seq[Notification]])
@@ -211,7 +214,6 @@ class NotificationControllerSpec
 
         notificationsCaptor.getValue.length must equal(2)
       }
-
     }
 
     "NotificationService returns Either.Left" should {
@@ -226,49 +228,7 @@ class NotificationControllerSpec
       }
     }
 
-    pending
-    "Content Type header is empty" should {
-
-      "return UnsupportedMediaType status" in {
-        withAuthorizedUser()
-
-        val result = routePostSaveNotification(headers = headersWithoutContentType)
-
-        status(result) must be(UNSUPPORTED_MEDIA_TYPE)
-      }
-
-      "not call NotificationService" in {
-        withAuthorizedUser()
-
-        routePostSaveNotification(headers = headersWithoutContentType).futureValue
-
-        verifyZeroInteractions(notificationServiceMock)
-      }
-    }
-
-    "cannot parse the payload" should {
-
-      "return Accepted status" in {
-        withAuthorizedUser()
-
-        val result = routePostSaveNotification(xmlBody = exampleNotificationInIncorrectFormatXML(mrn))
-
-        status(result) must be(ACCEPTED)
-      }
-
-      "not call NotificationService" in {
-        withAuthorizedUser()
-
-        routePostSaveNotification(xmlBody = exampleNotificationInIncorrectFormatXML(mrn)).futureValue
-
-        verifyZeroInteractions(notificationServiceMock)
-      }
-    }
-
-    def routePostSaveNotification(
-      headers: Map[String, String] = validHeaders,
-      xmlBody: Elem = exampleRejectNotificationXML(mrn)
-    ): Future[Result] =
+    def routePostSaveNotification(headers: Map[String, String] = validHeaders, xmlBody: Elem = exampleRejectNotificationXML(mrn)): Future[Result] =
       route(
         app,
         FakeRequest(POST, saveNotificationUri)
@@ -287,9 +247,7 @@ object NotificationControllerSpec {
 
   private lazy val responseFunctionCodes: Seq[String] =
     Seq("01", "02", "03", "05", "06", "07", "08", "09", "10", "11", "16", "17", "18")
-  private lazy val randomResponseFunctionCode: String = responseFunctionCodes(
-    Random.nextInt(responseFunctionCodes.length)
-  )
+  private lazy val randomResponseFunctionCode: String = responseFunctionCodes(Random.nextInt(responseFunctionCodes.length))
   private def dateTimeElement(dateTimeVal: DateTime) =
     Some(ResponseDateTimeElement(DateTimeString("102", dateTimeVal.toString("yyyyMMdd"))))
   val response: Seq[Response] = Seq(

@@ -63,11 +63,7 @@ class SubmissionService @Inject()(
       _ = logProgress(declaration, "Marked as COMPLETE")
 
       // Create the Submission
-      submission <- submissionRepository.findOrCreate(
-        Eori(declaration.eori),
-        declaration.id,
-        Submission(declaration, lrn, ducr)
-      )
+      submission <- submissionRepository.findOrCreate(Eori(declaration.eori), declaration.id, Submission(declaration, lrn, ducr))
       _ = logProgress(declaration, "Found/Created Submission")
 
       // Submit the declaration to the Dec API
@@ -103,9 +99,7 @@ class SubmissionService @Inject()(
         }
     }
 
-  def cancel(eori: String, cancellation: SubmissionCancellation)(
-    implicit hc: HeaderCarrier
-  ): Future[CancellationStatus] = {
+  def cancel(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationStatus] = {
     val metadata: MetaData = metaDataBuilder.buildRequest(
       cancellation.functionalReferenceId,
       cancellation.mrn,

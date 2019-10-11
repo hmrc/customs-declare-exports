@@ -19,9 +19,7 @@ package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.ExportItem
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
-import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.{
-  GovernmentAgencyGoodsItem => WCOGovernmentAgencyGoodsItem
-}
+import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.{GovernmentAgencyGoodsItem => WCOGovernmentAgencyGoodsItem}
 import wco.datamodel.wco.declaration_ds.dms._2.GovernmentAgencyGoodsItemStatisticalValueAmountType
 
 class StatisticalValueAmountBuilder @Inject()() extends ModifyingBuilder[ExportItem, WCOGovernmentAgencyGoodsItem] {
@@ -30,9 +28,7 @@ class StatisticalValueAmountBuilder @Inject()() extends ModifyingBuilder[ExportI
 
   def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: WCOGovernmentAgencyGoodsItem): Unit =
     exportItem.itemType.foreach { itemType =>
-      wcoGovernmentAgencyGoodsItem.setStatisticalValueAmount(
-        createWCODecStatisticalValueAmount(itemType.statisticalValue, defaultCurrencyCode)
-      )
+      wcoGovernmentAgencyGoodsItem.setStatisticalValueAmount(createWCODecStatisticalValueAmount(itemType.statisticalValue, defaultCurrencyCode))
     }
 
   private def createWCODecStatisticalValueAmount(amountValue: String, currencyId: String) = {

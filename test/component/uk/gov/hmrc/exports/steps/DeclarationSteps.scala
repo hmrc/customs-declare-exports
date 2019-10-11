@@ -32,12 +32,7 @@ import org.scalatest.concurrent.{AbstractPatienceConfiguration, IntegrationPatie
 import play.api.Application
 import play.api.test.FakeRequest
 import uk.gov.hmrc.exports.models.{Choice, Eori}
-import uk.gov.hmrc.exports.models.declaration.{
-  DeclarationStatus,
-  ExportsDeclaration,
-  Seal,
-  TransportInformationContainer
-}
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration, Seal, TransportInformationContainer}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import util.stubs.CustomsDeclarationsAPIService
 import util.testdata.ExportsDeclarationBuilder

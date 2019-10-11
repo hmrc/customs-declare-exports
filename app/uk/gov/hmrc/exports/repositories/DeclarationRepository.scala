@@ -35,9 +35,8 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: AppConfig, metrics: Metrics)(
-  implicit ec: ExecutionContext
-) extends ReactiveRepository[ExportsDeclaration, BSONObjectID](
+class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: AppConfig, metrics: Metrics)(implicit ec: ExecutionContext)
+    extends ReactiveRepository[ExportsDeclaration, BSONObjectID](
       "declarations",
       mc.mongoConnector.db,
       ExportsDeclaration.Mongo.format,
@@ -68,19 +67,12 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
 
   private val getDeclarationsTimer = metrics.defaultRegistry.timer("mongo.declarations.find")
 
-  def find(
-    search: DeclarationSearch,
-    pagination: Page,
-    sort: DeclarationSort
-  ): Future[Paginated[ExportsDeclaration]] = {
+  def find(search: DeclarationSearch, pagination: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] = {
     val query = Json.toJson(search).as[JsObject]
     val findStopwatch = getDeclarationsTimer.time()
     for {
       results <- collection
-        .find(query, projection = None)(
-          ImplicitBSONHandlers.JsObjectDocumentWriter,
-          ImplicitBSONHandlers.JsObjectDocumentWriter
-        )
+        .find(query, projection = None)(ImplicitBSONHandlers.JsObjectDocumentWriter, ImplicitBSONHandlers.JsObjectDocumentWriter)
         .sort(Json.obj(sort.by.toString -> sort.direction.id))
         .options(QueryOpts(skipN = (pagination.index - 1) * pagination.size, batchSizeN = pagination.size))
         .cursor[ExportsDeclaration](ReadPreference.primaryPreferred)

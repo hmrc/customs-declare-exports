@@ -37,14 +37,8 @@ object SubmissionTestData {
     Submission(uuid = uuid_2, eori = eori, lrn = lrn, mrn = Some(mrn_2), ducr = ducr, actions = Seq(action_2))
   lazy val submission_3: Submission =
     Submission(uuid = uuid_3, eori = eori, lrn = lrn, mrn = Some(mrn_2), ducr = ducr, actions = Seq(action_3))
-  lazy val cancelledSubmission: Submission = Submission(
-    uuid = uuid,
-    eori = eori,
-    lrn = lrn,
-    mrn = Some(mrn),
-    ducr = ducr,
-    actions = Seq(action, actionCancellation)
-  )
+  lazy val cancelledSubmission: Submission =
+    Submission(uuid = uuid, eori = eori, lrn = lrn, mrn = Some(mrn), ducr = ducr, actions = Seq(action, actionCancellation))
   val uuid: String = UUID.randomUUID().toString
   val uuid_2: String = UUID.randomUUID().toString
   val uuid_3: String = UUID.randomUUID().toString

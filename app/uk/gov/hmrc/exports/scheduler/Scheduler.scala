@@ -28,12 +28,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.FiniteDuration
 
 @Singleton
-class Scheduler @Inject()(
-  actorSystem: ActorSystem,
-  appConfig: AppConfig,
-  schedulerDateUtil: SchedulerDateUtil,
-  scheduledJobs: ScheduledJobs
-) {
+class Scheduler @Inject()(actorSystem: ActorSystem, appConfig: AppConfig, schedulerDateUtil: SchedulerDateUtil, scheduledJobs: ScheduledJobs) {
 
   private val logger = Logger(this.getClass)
 

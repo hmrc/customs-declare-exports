@@ -36,8 +36,7 @@ import util.testdata.ExportsTestData._
 import scala.concurrent.Future
 
 class CustomsDeclarationsConnectorSpec
-    extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar with CustomsDeclarationsAPIService
-    with ExportsDeclarationBuilder {
+    extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar with CustomsDeclarationsAPIService with ExportsDeclarationBuilder {
 
   private lazy val connector = app.injector.instanceOf[CustomsDeclarationsConnector]
   private implicit val hc: HeaderCarrier = HeaderCarrier()

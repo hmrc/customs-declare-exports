@@ -17,7 +17,7 @@
 package unit.uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.declaration.{Date, DocumentIdentifierAndPart, DocumentProduced}
+import uk.gov.hmrc.exports.models.declaration.{Date, DocumentProduced}
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.AdditionalDocumentsBuilder
 import uk.gov.hmrc.wco.dec._
 
@@ -60,7 +60,7 @@ class AdditionalDocumentsBuilderSpec extends WordSpec with Matchers with Governm
     "map DocumentProduced to GovernmentAgencyGoodsItemAdditionalDocument" in {
       val doc = DocumentProduced(
         documentTypeCode = Some("DOC"),
-        documentIdentifierAndPart = Some(DocumentIdentifierAndPart(Some("id"), Some("part"))),
+        documentIdentifier = Some("idpart"),
         documentStatus = Some("status"),
         documentStatusReason = Some("reason"),
         issuingAuthorityName = Some("issuingAuthority"),

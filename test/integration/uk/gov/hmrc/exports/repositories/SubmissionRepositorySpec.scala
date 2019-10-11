@@ -36,8 +36,7 @@ import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SubmissionRepositorySpec
-    extends WordSpec with BeforeAndAfterEach with ScalaFutures with MustMatchers with OptionValues
-    with IntegrationPatience {
+    extends WordSpec with BeforeAndAfterEach with ScalaFutures with MustMatchers with OptionValues with IntegrationPatience {
 
   private val injector: Injector = {
     SharedMetricRegistries.clear()
@@ -47,9 +46,9 @@ class SubmissionRepositorySpec
 
   implicit val ec: ExecutionContext = global
 
-  override def afterEach(): Unit = {
+  override def beforeEach(): Unit = {
+    super.beforeEach()
     repo.removeAll().futureValue
-    super.afterEach()
   }
 
   "Submission Repository on save" when {
@@ -71,9 +70,7 @@ class SubmissionRepositorySpec
         val exc = repo.save(secondSubmission).failed.futureValue
 
         exc mustBe an[DatabaseException]
-        exc.getMessage must include(
-          "E11000 duplicate key error collection: customs-declare-exports.submissions index: actionIdIdx dup key"
-        )
+        exc.getMessage must include("E11000 duplicate key error collection: customs-declare-exports.submissions index: actionIdIdx dup key")
       }
 
       "result in having only the first Submission persisted" in {

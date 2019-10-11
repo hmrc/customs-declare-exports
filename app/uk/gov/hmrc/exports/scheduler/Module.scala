@@ -24,7 +24,6 @@ class Module extends play.api.inject.Module {
     Seq(bind[ScheduledJobs].toProvider[ScheduledJobProvider], bind[Scheduler].toSelf.eagerly())
 }
 
-class ScheduledJobProvider @Inject()(purgeDraftDeclarations: PurgeDraftDeclarationsJob)
-    extends Provider[ScheduledJobs] {
+class ScheduledJobProvider @Inject()(purgeDraftDeclarations: PurgeDraftDeclarationsJob) extends Provider[ScheduledJobs] {
   override def get(): ScheduledJobs = ScheduledJobs(Set(purgeDraftDeclarations))
 }

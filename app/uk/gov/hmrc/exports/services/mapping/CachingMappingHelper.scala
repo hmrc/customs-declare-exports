@@ -15,12 +15,7 @@
  */
 
 package uk.gov.hmrc.exports.services.mapping
-import uk.gov.hmrc.exports.models.declaration.IdentificationTypeCodes.{
-  CUSCode,
-  CombinedNomenclatureCode,
-  NationalAdditionalCode,
-  TARICAdditionalCode
-}
+import uk.gov.hmrc.exports.models.declaration.IdentificationTypeCodes.{CUSCode, CombinedNomenclatureCode, NationalAdditionalCode, TARICAdditionalCode}
 import uk.gov.hmrc.exports.models.declaration.{CommodityMeasure, ItemType}
 import uk.gov.hmrc.wco.dec._
 
@@ -35,26 +30,15 @@ class CachingMappingHelper {
     )
 
   def getClassificationsFromItemTypes(itemType: ItemType): Seq[Classification] =
-    Seq(
-      Classification(
-        Some(itemType.combinedNomenclatureCode),
-        identificationTypeCode = Some(CombinedNomenclatureCode.value)
-      )
-    ) ++ itemType.cusCode.map(id => Classification(Some(id), identificationTypeCode = Some(CUSCode.value))) ++
-      itemType.nationalAdditionalCode.map(
-        code => Classification(Some(code), identificationTypeCode = Some(NationalAdditionalCode.value))
-      ) ++ itemType.taricAdditionalCode
+    Seq(Classification(Some(itemType.combinedNomenclatureCode), identificationTypeCode = Some(CombinedNomenclatureCode.value))) ++ itemType.cusCode
+      .map(id => Classification(Some(id), identificationTypeCode = Some(CUSCode.value))) ++
+      itemType.nationalAdditionalCode.map(code => Classification(Some(code), identificationTypeCode = Some(NationalAdditionalCode.value))) ++ itemType.taricAdditionalCode
       .map(code => Classification(Some(code), identificationTypeCode = Some(TARICAdditionalCode.value)))
 
   def mapGoodsMeasure(data: CommodityMeasure) =
     Commodity(
-      goodsMeasure = Some(
-        GoodsMeasure(
-          Some(createMeasure(data.grossMass)),
-          Some(createMeasure(data.netMass)),
-          data.supplementaryUnits.map(createMeasure)
-        )
-      )
+      goodsMeasure =
+        Some(GoodsMeasure(Some(createMeasure(data.grossMass)), Some(createMeasure(data.netMass)), data.supplementaryUnits.map(createMeasure)))
     )
 
   private def createMeasure(unitValue: String) =

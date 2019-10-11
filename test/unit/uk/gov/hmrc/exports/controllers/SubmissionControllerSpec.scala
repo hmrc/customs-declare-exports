@@ -16,6 +16,7 @@
 
 package unit.uk.gov.hmrc.exports.controllers
 
+import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentMatchers.any
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
@@ -40,9 +41,10 @@ import util.testdata.ExportsDeclarationBuilder
 import scala.concurrent.Future
 
 class SubmissionControllerSpec
-    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures
-    with MustMatchers with ExportsDeclarationBuilder {
+    extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures with MustMatchers
+    with ExportsDeclarationBuilder {
 
+  SharedMetricRegistries.clear()
   override lazy val app: Application = GuiceApplicationBuilder()
     .overrides(
       bind[AuthConnector].to(mockAuthConnector),

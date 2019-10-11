@@ -34,12 +34,8 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
   private val mockDepartureTransportMeansBuilder = mock[DepartureTransportMeansBuilder]
   private val mockTransportEquipmentBuilder = mock[TransportEquipmentBuilder]
 
-  private val builder = new ConsignmentBuilder(
-    mockGoodsLocationBuilder,
-    mockContainerCodeBuilder,
-    mockDepartureTransportMeansBuilder,
-    mockTransportEquipmentBuilder
-  )
+  private val builder =
+    new ConsignmentBuilder(mockGoodsLocationBuilder, mockContainerCodeBuilder, mockDepartureTransportMeansBuilder, mockTransportEquipmentBuilder)
 
   "ConsignmentBuilder" should {
 
@@ -52,11 +48,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
         val model: ExportsDeclaration =
           aDeclaration(
             withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
-            withBorderTransport(
-              borderModeOfTransportCode,
-              meansOfTransportOnDepartureType,
-              Some(meansOfTransportOnDepartureIDNumber)
-            ),
+            withBorderTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber)),
             withChoice(Choice.StandardDec),
             withTransportDetails(Some("Portugal"), container = true, "40", Some("1234567878ui"), Some("A")),
             withContainerData(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2"))))
@@ -85,24 +77,14 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
 
         verify(mockDepartureTransportMeansBuilder)
           .buildThenAdd(
-            refEq(
-              BorderTransport(
-                borderModeOfTransportCode,
-                meansOfTransportOnDepartureType,
-                Some(meansOfTransportOnDepartureIDNumber)
-              )
-            ),
+            refEq(BorderTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber))),
             any[Option[WarehouseIdentification]],
             any[GoodsShipment.Consignment]
           )
 
         verify(mockTransportEquipmentBuilder)
           .buildThenAdd(
-            refEq(
-              TransportInformationContainers(
-                Seq(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2"))))
-              )
-            ),
+            refEq(TransportInformationContainers(Seq(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2")))))),
             any[GoodsShipment.Consignment]
           )
       }
