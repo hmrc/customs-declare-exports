@@ -36,40 +36,44 @@ class PointerSpec extends WordSpec with MustMatchers {
       sequence.pattern mustBe "$"
     }
 
-    "map field to value" in {
-      field.value mustBe "ABC"
+    "map field to string" in {
+      field.toString mustBe "ABC"
     }
 
-    "map sequence to value" in {
-      sequence.value mustBe "123"
+    "map sequence to string" in {
+      sequence.toString mustBe "#123"
+    }
+
+    "map field from string" in {
+      PointerSection("ABC") mustBe field
+    }
+
+    "map sequence from string" in {
+      PointerSection("#123") mustBe sequence
     }
   }
 
   "Pointer" should {
     val field1 = PointerSection("ABC", PointerSectionType.FIELD)
     val sequence1 = PointerSection("123", PointerSectionType.SEQUENCE)
-    val field2 = PointerSection("DEF", PointerSectionType.FIELD)
+    val field2 = PointerSection("000", PointerSectionType.FIELD)
     val sequence2 = PointerSection("321", PointerSectionType.SEQUENCE)
     val pointer = Pointer(List(field1, sequence1, field2, sequence2))
 
     "map to pattern" in {
-      pointer.pattern mustBe PointerPattern(List("ABC", "$", "DEF", "$"))
-    }
-
-    "map to value" in {
-      pointer.value mustBe "ABC.123.DEF.321"
+      pointer.pattern mustBe PointerPattern(List("ABC", "$", "000", "$"))
     }
 
     "map to string" in {
-      pointer.toString mustBe "ABC.123.DEF.321"
+      pointer.toString mustBe "ABC.#123.000.#321"
     }
 
     "serialize to JSON" in {
-      Json.toJson(pointer)(Pointer.format) mustBe JsString("ABC.123.DEF.321")
+      Json.toJson(pointer)(Pointer.format) mustBe JsString("ABC.#123.000.#321")
     }
 
     "deserialize from JSON" in {
-      Json.fromJson(JsString("ABC.123.DEF.321"))(Pointer.format) mustBe JsSuccess(pointer)
+      Json.fromJson(JsString("ABC.#123.000.#321"))(Pointer.format) mustBe JsSuccess(pointer)
     }
   }
 
