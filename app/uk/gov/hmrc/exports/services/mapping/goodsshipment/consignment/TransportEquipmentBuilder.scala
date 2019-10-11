@@ -27,7 +27,18 @@ import scala.collection.JavaConverters._
 
 class TransportEquipmentBuilder @Inject()() extends ModifyingBuilder[TransportInformationContainers, GoodsShipment.Consignment] {
   override def buildThenAdd(containersHolder: TransportInformationContainers, consignment: Consignment): Unit =
-    consignment.getTransportEquipment.addAll(containersHolder.containers.zipWithIndex.map(data => createTransportEquipment(data)).toList.asJava)
+    if (containersHolder.containers.isEmpty) {
+      consignment.getTransportEquipment.add(createEmptyTransportEquipment)
+    } else {
+      consignment.getTransportEquipment.addAll(containersHolder.containers.zipWithIndex.map(data => createTransportEquipment(data)).toList.asJava)
+    }
+
+  private def createEmptyTransportEquipment = {
+    val transportEquipment = new GoodsShipment.Consignment.TransportEquipment()
+    transportEquipment.setSequenceNumeric(java.math.BigDecimal.ZERO)
+    transportEquipment.getSeal.add(createEmptySeal)
+    transportEquipment
+  }
 
   private def createTransportEquipment(containerData: (TransportInformationContainer, Int)): GoodsShipment.Consignment.TransportEquipment = {
     val transportEquipment = new GoodsShipment.Consignment.TransportEquipment()
@@ -37,8 +48,18 @@ class TransportEquipmentBuilder @Inject()() extends ModifyingBuilder[TransportIn
     containerID.setValue(containerData._1.id)
     transportEquipment.setID(containerID)
 
-    transportEquipment.getSeal.addAll(containerData._1.seals.zipWithIndex.map(data => createSeal(data)).toList.asJava)
+    if (containerData._1.seals.isEmpty) {
+      transportEquipment.getSeal.add(createEmptySeal)
+    } else {
+      transportEquipment.getSeal.addAll(containerData._1.seals.zipWithIndex.map(data => createSeal(data)).toList.asJava)
+    }
     transportEquipment
+  }
+
+  private def createEmptySeal: Consignment.TransportEquipment.Seal = {
+    val seal = new Consignment.TransportEquipment.Seal
+    seal.setSequenceNumeric(java.math.BigDecimal.ZERO)
+    seal
   }
 
   private def createSeal(sealData: (Seal, Int)): Consignment.TransportEquipment.Seal = {
