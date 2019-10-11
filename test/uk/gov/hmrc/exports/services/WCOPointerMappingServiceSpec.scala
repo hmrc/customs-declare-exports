@@ -34,7 +34,7 @@ class WCOPointerMappingServiceSpec extends WordSpec with MustMatchers with Mocki
 
   "Map pointer" should {
     "find matching pointer" in {
-      given(fileReader.readLines(anyString())).willReturn(List("a.b, x.y"))
+      given(fileReader.readLines(anyString(), anyBoolean())).willReturn(List("a.b, x.y"))
 
       val pointer =
         Pointer(List(PointerSection("a", PointerSectionType.FIELD), PointerSection("b", PointerSectionType.FIELD)))
@@ -45,7 +45,7 @@ class WCOPointerMappingServiceSpec extends WordSpec with MustMatchers with Mocki
     }
 
     "not find missing pointer" in {
-      given(fileReader.readLines(anyString())).willReturn(List("a.b, x.y"))
+      given(fileReader.readLines(anyString(), anyBoolean())).willReturn(List("a.b, x.y"))
 
       val pointer =
         Pointer(List(PointerSection("x", PointerSectionType.FIELD), PointerSection("x", PointerSectionType.FIELD)))

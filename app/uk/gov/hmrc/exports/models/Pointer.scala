@@ -25,8 +25,7 @@ import scala.util.{Success, Try}
 object PointerSectionType extends Enumeration {
   type PointerSectionType = Value
   val FIELD, SEQUENCE = Value
-  implicit val format: Format[models.PointerSectionType.Value] =
-    Format(Reads.enumNameReads(PointerSectionType), Writes.enumNameWrites)
+  implicit val format: Format[models.PointerSectionType.Value] = Format(Reads.enumNameReads(PointerSectionType), Writes.enumNameWrites)
 }
 
 case class PointerSection(value: String, `type`: PointerSectionType) {
@@ -34,10 +33,22 @@ case class PointerSection(value: String, `type`: PointerSectionType) {
     case PointerSectionType.FIELD    => value
     case PointerSectionType.SEQUENCE => "$"
   }
+
+  override def toString: String = `type` match {
+    case PointerSectionType.FIELD    => value
+    case PointerSectionType.SEQUENCE => "#" + value
+  }
 }
 
 object PointerSection {
-  implicit val format = Json.format[PointerSection]
+  private val SEQUENCE_REGEX = "^#(\\d*)$".r
+  implicit val format: Format[PointerSection] =
+    Format[PointerSection](Reads(js => js.validate[String].map(PointerSection(_))), Writes(section => JsString(section.toString)))
+
+  def apply(value: String): PointerSection = SEQUENCE_REGEX.findFirstMatchIn(value).map(_.group(1)) match {
+    case Some(sequence) => PointerSection(sequence, PointerSectionType.SEQUENCE)
+    case _              => PointerSection(value, PointerSectionType.FIELD)
+  }
 }
 
 case class Pointer(sections: Seq[PointerSection]) {
@@ -46,24 +57,17 @@ case class Pointer(sections: Seq[PointerSection]) {
   // e.g. ABC.DEF.GHI (if the pointer doesnt contain a sequence)
   lazy val pattern: PointerPattern = PointerPattern(sections.map(_.pattern).mkString("."))
 
-  // Converts a pointer into its value form
-  // e.g. ABC.DEF.1.GHI  (if the pointer contains a sequence with index 1)
+  // Converts a pointer to it's string form preserving the type
+  // e.g. ABC.DEF.#1.GHI (if the pointer contains a sequence with index 1)
   // e.g. ABC.DEF.GHI (if the pointer doesnt contain a sequence)
-  lazy val value: String = sections.map(_.value).mkString(".")
-  override def toString: String = value
+  override def toString: String = sections.map(_.toString).mkString(".")
 }
 
 object Pointer {
   implicit val format: Format[Pointer] =
-    Format(Reads(js => js.validate[JsString].map(string => Pointer(string.value))), Writes(pointer => JsString(pointer.toString)))
+    Format(Reads(js => js.validate[String].map(Pointer(_))), Writes(pointer => JsString(pointer.toString)))
 
-  def apply(sections: String): Pointer =
-    Pointer(sections.split("\\.").map { section =>
-      Try(section.toInt) match {
-        case Success(_) => PointerSection(section, PointerSectionType.SEQUENCE)
-        case _          => PointerSection(section, PointerSectionType.FIELD)
-      }
-    })
+  def apply(sections: String): Pointer = Pointer(sections.split("\\.").map(PointerSection(_)))
 }
 
 case class PointerPattern(sections: List[PointerPatternSection]) {
