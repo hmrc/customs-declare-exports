@@ -170,7 +170,7 @@ class NotificationService @Inject()(
 
     val wcoPointer = Pointer(pointerSections)
     val exportsPointer = wcoPointerMappingService.mapWCOPointerToExportsPointer(wcoPointer)
-    if(exportsPointer.isEmpty) logger.warn(s"Missing pointer mapping for [${wcoPointer}]")
+    if (exportsPointer.isEmpty) logger.warn(s"Missing pointer mapping for [${wcoPointer}]")
     exportsPointer
   }
 }
