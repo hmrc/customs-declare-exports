@@ -2,5 +2,6 @@
 # e.g.
 # 42A.26B.$1.ABC, declaration.items.$1.commodityCode
 
-42A.D026, declaration.consignmentReferences.lrn
-42A.67A.68A.$1.02A.$2.360, declaration.goodsShipment.governmentAgencyGoodsItem.$1.additionalDocument.$2.code
+42A.D026, 																										declaration.consignmentReferences.lrn
+42A.67A.68A.$1.02A.$2.360, 									declaration.goodsShipment.governmentAgencyGoodsItem.$1.additionalDocument.$2.code
+42A.67A.68A.$1.02A.$2.D005, 								declaration.goodsShipment.governmentAgencyGoodsItem.$1.additionalDocument.$2.id
