@@ -25,10 +25,10 @@ import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.services.mapping.declaration.DeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class MetaDataBuilderTest extends WordSpec with MustMatchers with MockitoSugar {
+class CancellationMetaDataBuilderTest extends WordSpec with MustMatchers with MockitoSugar {
 
   private val declarationBuilder = mock[DeclarationBuilder]
-  private val builder = new MetaDataBuilder(declarationBuilder)
+  private val builder = new CancellationMetaDataBuilder(declarationBuilder)
 
   "Build Request" should {
     val declaration = mock[Declaration]

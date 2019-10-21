@@ -30,7 +30,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.models.{LocalReferenceNumber, SubmissionRequestHeaders}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
+import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
 import uk.gov.hmrc.exports.services.{SubmissionService, WcoMapperService}
 import uk.gov.hmrc.http.HeaderCarrier
 import util.testdata.ExportsDeclarationBuilder
@@ -49,7 +49,7 @@ class SubmissionServiceSpec
   private val submissionRepository: SubmissionRepository = mock[SubmissionRepository]
   private val declarationRepository: DeclarationRepository = mock[DeclarationRepository]
   private val notificationRepository: NotificationRepository = mock[NotificationRepository]
-  private val metaDataBuilder: MetaDataBuilder = mock[MetaDataBuilder]
+  private val metaDataBuilder: CancellationMetaDataBuilder = mock[CancellationMetaDataBuilder]
   private val wcoMapperService: WcoMapperService = mock[WcoMapperService]
   private val submissionService = new SubmissionService(
     customsDeclarationsConnector = customsDeclarationsConnector,
