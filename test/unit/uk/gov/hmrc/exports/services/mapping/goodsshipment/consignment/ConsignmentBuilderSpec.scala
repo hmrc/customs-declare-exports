@@ -20,7 +20,7 @@ import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.Mockito.verify
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.exports.models.Choice
+import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment._
 import util.testdata.ExportsDeclarationBuilder
@@ -49,7 +49,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
           aDeclaration(
             withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
             withBorderTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber)),
-            withChoice(Choice.StandardDec),
+            withType(DeclarationType.STANDARD),
             withTransportDetails(Some("Portugal"), container = true, "40", Some("1234567878ui"), Some("A")),
             withContainerData(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2"))))
           )

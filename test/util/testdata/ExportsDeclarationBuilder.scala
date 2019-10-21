@@ -19,9 +19,10 @@ package util.testdata
 import java.time.{LocalDateTime, ZoneOffset}
 import java.util.UUID
 
+import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.models.{Choice, Eori}
+import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 
 //noinspection ScalaStyle
 trait ExportsDeclarationBuilder {
@@ -37,7 +38,7 @@ trait ExportsDeclarationBuilder {
     createdDateTime = LocalDateTime.of(2019, 1, 1, 0, 0, 0).toInstant(ZoneOffset.UTC),
     updatedDateTime = LocalDateTime.of(2019, 2, 2, 0, 0, 0).toInstant(ZoneOffset.UTC),
     sourceId = None,
-    choice = Choice.StandardDec,
+    `type` = DeclarationType.STANDARD,
     dispatchLocation = None,
     additionalDeclarationType = None,
     consignmentReferences = None,
@@ -65,7 +66,7 @@ trait ExportsDeclarationBuilder {
 
   def withStatus(status: DeclarationStatus): ExportsDeclarationModifier = _.copy(status = status)
 
-  def withChoice(choice: Choice): ExportsDeclarationModifier = _.copy(choice = choice)
+  def withType(`type`: DeclarationType): ExportsDeclarationModifier = _.copy(`type` = `type`)
 
   def withoutAdditionalDeclarationType(): ExportsDeclarationModifier = _.copy(additionalDeclarationType = None)
 

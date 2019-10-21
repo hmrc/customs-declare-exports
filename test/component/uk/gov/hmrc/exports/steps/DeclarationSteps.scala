@@ -20,18 +20,18 @@ import java.util.UUID
 
 import component.uk.gov.hmrc.exports.steps.`User has completed declaration`.{
   aDeclaration,
-  withChoice,
   withConsignmentReferences,
   withContainerData,
   withEori,
   withId,
-  withStatus
+  withStatus,
+  withType
 }
 import component.uk.gov.hmrc.exports.syntax.{Action, Precondition, ScenarioContext}
 import org.scalatest.concurrent.{AbstractPatienceConfiguration, IntegrationPatience, PatienceConfiguration}
 import play.api.Application
 import play.api.test.FakeRequest
-import uk.gov.hmrc.exports.models.{Choice, Eori}
+import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration, Seal, TransportInformationContainer}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import util.stubs.CustomsDeclarationsAPIService
@@ -54,7 +54,7 @@ object `User has completed declaration` extends Precondition with ExportsDeclara
   override def execute(context: ScenarioContext): ScenarioContext = {
     val eori = context.get[Eori]
     val declaration = aDeclaration(
-      withChoice(Choice.StandardDec),
+      withType(DeclarationType.STANDARD),
       withId("id"),
       withEori(eori),
       withStatus(DeclarationStatus.DRAFT),
@@ -87,7 +87,7 @@ object `User has pre-submitted declaration` extends Precondition {
   override def execute(context: ScenarioContext): ScenarioContext = {
     val eori = context.get[Eori]
     val declaration = aDeclaration(
-      withChoice(Choice.StandardDec),
+      withType(DeclarationType.STANDARD),
       withId("id"),
       withEori(eori),
       withStatus(DeclarationStatus.COMPLETE),

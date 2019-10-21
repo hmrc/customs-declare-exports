@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.declaration.consignment
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.Choice
+import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentCarrierBuilder
@@ -29,7 +29,7 @@ class DeclarationConsignmentBuilder @Inject()(
   consignmentCarrierBuilder: ConsignmentCarrierBuilder
 ) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
-    if (model.choice.equals(Choice.StandardDec)) {
+    if (model.`type`.equals(DeclarationType.STANDARD)) {
       val consignment = new Declaration.Consignment()
       freightBuilder.buildThenAdd(model, consignment)
       iteneraryBuilder.buildThenAdd(model, consignment)

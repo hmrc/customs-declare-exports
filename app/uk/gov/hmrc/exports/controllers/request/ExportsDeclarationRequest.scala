@@ -19,15 +19,15 @@ package uk.gov.hmrc.exports.controllers.request
 import java.time.Instant
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
+import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
+import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.models.{Choice, Eori}
 
 case class ExportsDeclarationRequest(
   createdDateTime: Instant,
   updatedDateTime: Instant,
   sourceId: Option[String] = None,
-  choice: Choice,
+  `type`: DeclarationType,
   dispatchLocation: Option[DispatchLocation] = None,
   additionalDeclarationType: Option[AdditionalDeclarationType] = None,
   consignmentReferences: Option[ConsignmentReferences] = None,
@@ -48,7 +48,7 @@ case class ExportsDeclarationRequest(
     createdDateTime = this.createdDateTime,
     updatedDateTime = this.updatedDateTime,
     sourceId = this.sourceId,
-    choice = this.choice,
+    `type` = this.`type`,
     dispatchLocation = this.dispatchLocation,
     additionalDeclarationType = this.additionalDeclarationType,
     consignmentReferences = this.consignmentReferences,

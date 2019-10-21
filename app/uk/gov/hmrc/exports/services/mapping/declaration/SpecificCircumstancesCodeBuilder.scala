@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.Choice
+import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -25,7 +25,7 @@ import wco.datamodel.wco.declaration_ds.dms._2._
 
 class SpecificCircumstancesCodeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
-    if (model.choice.equals(Choice.StandardDec)) {
+    if (model.`type`.equals(DeclarationType.STANDARD)) {
       model.locations.officeOfExit
         .filter(_.circumstancesCode.contains("Yes"))
         .map(_ => createCircumstancesCode)

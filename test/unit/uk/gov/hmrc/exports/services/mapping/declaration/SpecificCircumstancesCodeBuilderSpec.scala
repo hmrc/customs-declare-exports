@@ -17,7 +17,7 @@
 package unit.uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.Choice
+import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.services.mapping.declaration.SpecificCircumstancesCodeBuilder
 import util.testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -29,7 +29,7 @@ class SpecificCircumstancesCodeBuilderSpec extends WordSpec with Matchers with E
     "build then add" when {
 
       "no office of exit" in {
-        val model = aDeclaration(withChoice(Choice.StandardDec), withoutOfficeOfExit())
+        val model = aDeclaration(withType(DeclarationType.STANDARD), withoutOfficeOfExit())
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -37,9 +37,9 @@ class SpecificCircumstancesCodeBuilderSpec extends WordSpec with Matchers with E
         declaration.getSpecificCircumstancesCodeCode should be(null)
       }
 
-      "invalid circumstance choice" in {
+      "invalid circumstance type" in {
         val model =
-          aDeclaration(withChoice(Choice.StandardDec), withOfficeOfExit(circumstancesCode = Some("")))
+          aDeclaration(withType(DeclarationType.STANDARD), withOfficeOfExit(circumstancesCode = Some("")))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -47,8 +47,8 @@ class SpecificCircumstancesCodeBuilderSpec extends WordSpec with Matchers with E
         declaration.getSpecificCircumstancesCodeCode should be(null)
       }
 
-      "choice is not standard" in {
-        val model = aDeclaration(withChoice(Choice.SupplementaryDec), withOfficeOfExit(circumstancesCode = Some("Yes")))
+      "type is not standard" in {
+        val model = aDeclaration(withType(DeclarationType.SUPPLEMENTARY), withOfficeOfExit(circumstancesCode = Some("Yes")))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -56,9 +56,9 @@ class SpecificCircumstancesCodeBuilderSpec extends WordSpec with Matchers with E
         declaration.getSpecificCircumstancesCodeCode should be(null)
       }
 
-      "valid circumstance choice" in {
+      "valid circumstance type" in {
         val model =
-          aDeclaration(withChoice(Choice.StandardDec), withOfficeOfExit(circumstancesCode = Some("Yes")))
+          aDeclaration(withType(DeclarationType.STANDARD), withOfficeOfExit(circumstancesCode = Some("Yes")))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
