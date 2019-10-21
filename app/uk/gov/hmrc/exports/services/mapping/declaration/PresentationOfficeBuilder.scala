@@ -26,11 +26,13 @@ import wco.datamodel.wco.declaration_ds.dms._2._
 
 class PresentationOfficeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
-    if (model.`type`.equals(DeclarationType.STANDARD)) {
-      model.locations.officeOfExit
-        .flatMap(_.presentationOfficeId)
-        .map(createPresentationOffice)
-        .foreach(declaration.setPresentationOffice)
+    model.`type` match {
+      case DeclarationType.STANDARD | DeclarationType.SIMPLIFIED =>
+        model.locations.officeOfExit
+          .flatMap(_.presentationOfficeId)
+          .map(createPresentationOffice)
+          .foreach(declaration.setPresentationOffice)
+      case _ =>
     }
 
   private def createPresentationOffice(value: String): Declaration.PresentationOffice = {

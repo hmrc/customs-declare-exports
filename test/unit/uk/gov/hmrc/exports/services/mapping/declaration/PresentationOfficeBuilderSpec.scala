@@ -18,6 +18,7 @@ package unit.uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.DeclarationType
+import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.services.mapping.declaration.PresentationOfficeBuilder
 import util.testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -27,26 +28,8 @@ class PresentationOfficeBuilderSpec extends WordSpec with Matchers with ExportsD
   "PresentationOfficeBuilder" should {
 
     "build then add" when {
-      "no office of exit" in {
-        val model = aDeclaration(withType(DeclarationType.STANDARD), withoutOfficeOfExit())
-        val declaration = new Declaration()
 
-        builder.buildThenAdd(model, declaration)
-
-        declaration.getPresentationOffice should be(null)
-      }
-
-      "empty presentation office id" in {
-        val model =
-          aDeclaration(withType(DeclarationType.STANDARD), withOfficeOfExit(presentationOfficeId = None))
-        val declaration = new Declaration()
-
-        builder.buildThenAdd(model, declaration)
-
-        declaration.getPresentationOffice should be(null)
-      }
-
-      "type is not standard" in {
+      "type is supplementary" in {
         val model =
           aDeclaration(withType(DeclarationType.SUPPLEMENTARY), withOfficeOfExit(presentationOfficeId = Some("id")))
         val declaration = new Declaration()
@@ -56,14 +39,37 @@ class PresentationOfficeBuilderSpec extends WordSpec with Matchers with ExportsD
         declaration.getPresentationOffice should be(null)
       }
 
-      "populated" in {
-        val model =
-          aDeclaration(withType(DeclarationType.STANDARD), withOfficeOfExit(presentationOfficeId = Some("id")))
-        val declaration = new Declaration()
+      for(declarationType: DeclarationType <- Seq(DeclarationType.STANDARD, DeclarationType.SIMPLIFIED)) {
+        s"Declaration Type $declarationType" when {
+          "no office of exit" in {
+            val model = aDeclaration(withType(declarationType), withoutOfficeOfExit())
+            val declaration = new Declaration()
 
-        builder.buildThenAdd(model, declaration)
+            builder.buildThenAdd(model, declaration)
 
-        declaration.getPresentationOffice.getID.getValue should be("id")
+            declaration.getPresentationOffice should be(null)
+          }
+
+          "empty presentation office id" in {
+            val model =
+              aDeclaration(withType(declarationType), withOfficeOfExit(presentationOfficeId = None))
+            val declaration = new Declaration()
+
+            builder.buildThenAdd(model, declaration)
+
+            declaration.getPresentationOffice should be(null)
+          }
+
+          "populated" in {
+            val model =
+              aDeclaration(withType(declarationType), withOfficeOfExit(presentationOfficeId = Some("id")))
+            val declaration = new Declaration()
+
+            builder.buildThenAdd(model, declaration)
+
+            declaration.getPresentationOffice.getID.getValue should be("id")
+          }
+        }
       }
     }
   }

@@ -17,8 +17,8 @@
 package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import org.mockito.ArgumentMatchers.{any, refEq}
-import org.mockito.Mockito.verify
-import org.scalatest.{Matchers, WordSpec}
+import org.mockito.Mockito.{reset, verify}
+import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.declaration._
@@ -27,24 +27,29 @@ import util.testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder with MockitoSugar {
+class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder with MockitoSugar with BeforeAndAfterEach {
 
-  private val mockContainerCodeBuilder = mock[ContainerCodeBuilder]
-  private val mockGoodsLocationBuilder = mock[GoodsLocationBuilder]
-  private val mockDepartureTransportMeansBuilder = mock[DepartureTransportMeansBuilder]
-  private val mockTransportEquipmentBuilder = mock[TransportEquipmentBuilder]
+  private val containerCodeBuilder = mock[ContainerCodeBuilder]
+  private val goodsLocationBuilder = mock[GoodsLocationBuilder]
+  private val departureTransportMeansBuilder = mock[DepartureTransportMeansBuilder]
+  private val transportEquipmentBuilder = mock[TransportEquipmentBuilder]
 
-  private val builder =
-    new ConsignmentBuilder(mockGoodsLocationBuilder, mockContainerCodeBuilder, mockDepartureTransportMeansBuilder, mockTransportEquipmentBuilder)
+  private val builder = new ConsignmentBuilder(goodsLocationBuilder, containerCodeBuilder, departureTransportMeansBuilder, transportEquipmentBuilder)
+
+
+  override protected def beforeEach(): Unit = {
+    super.beforeEach()
+    reset(containerCodeBuilder, goodsLocationBuilder, departureTransportMeansBuilder, transportEquipmentBuilder)
+  }
 
   "ConsignmentBuilder" should {
 
-    "correctly map to the WCO-DEC GoodsShipment.Consignment instance" when {
-      "correct data is present" in {
-        val borderModeOfTransportCode = "BCode"
-        val meansOfTransportOnDepartureType = "T"
-        val meansOfTransportOnDepartureIDNumber = "12345"
+    "build then add" when {
+      val borderModeOfTransportCode = "BCode"
+      val meansOfTransportOnDepartureType = "T"
+      val meansOfTransportOnDepartureIDNumber = "12345"
 
+      "standard" in {
         val model: ExportsDeclaration =
           aDeclaration(
             withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
@@ -58,10 +63,10 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
 
         builder.buildThenAdd(model, goodsShipment)
 
-        verify(mockGoodsLocationBuilder)
+        verify(goodsLocationBuilder)
           .buildThenAdd(refEq(GoodsLocationBuilderSpec.correctGoodsLocation), any[GoodsShipment.Consignment])
 
-        verify(mockContainerCodeBuilder)
+        verify(containerCodeBuilder)
           .buildThenAdd(
             refEq(
               TransportDetails(
@@ -75,14 +80,59 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
             any[GoodsShipment.Consignment]
           )
 
-        verify(mockDepartureTransportMeansBuilder)
+        verify(departureTransportMeansBuilder)
           .buildThenAdd(
             refEq(BorderTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber))),
             any[Option[WarehouseIdentification]],
             any[GoodsShipment.Consignment]
           )
 
-        verify(mockTransportEquipmentBuilder)
+        verify(transportEquipmentBuilder)
+          .buildThenAdd(
+            refEq(TransportInformationContainers(Seq(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2")))))),
+            any[GoodsShipment.Consignment]
+          )
+      }
+
+      "simplified" in {
+        val model: ExportsDeclaration =
+          aDeclaration(
+            withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
+            withBorderTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber)),
+            withType(DeclarationType.SIMPLIFIED),
+            withTransportDetails(Some("Portugal"), container = true, "40", Some("1234567878ui"), Some("A")),
+            withContainerData(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2"))))
+          )
+
+        val goodsShipment: Declaration.GoodsShipment = new Declaration.GoodsShipment
+
+        builder.buildThenAdd(model, goodsShipment)
+
+        verify(goodsLocationBuilder)
+          .buildThenAdd(refEq(GoodsLocationBuilderSpec.correctGoodsLocation), any[GoodsShipment.Consignment])
+
+        verify(containerCodeBuilder)
+          .buildThenAdd(
+            refEq(
+              TransportDetails(
+                meansOfTransportCrossingTheBorderNationality = Some("Portugal"),
+                container = true,
+                meansOfTransportCrossingTheBorderType = "40",
+                meansOfTransportCrossingTheBorderIDNumber = Some("1234567878ui"),
+                paymentMethod = Some("A")
+              )
+            ),
+            any[GoodsShipment.Consignment]
+          )
+
+        verify(departureTransportMeansBuilder)
+          .buildThenAdd(
+            refEq(BorderTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber))),
+            any[Option[WarehouseIdentification]],
+            any[GoodsShipment.Consignment]
+          )
+
+        verify(transportEquipmentBuilder)
           .buildThenAdd(
             refEq(TransportInformationContainers(Seq(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2")))))),
             any[GoodsShipment.Consignment]
@@ -99,7 +149,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
 
         builder.buildThenAdd(model, goodsShipment)
 
-        verify(mockTransportEquipmentBuilder)
+        verify(transportEquipmentBuilder)
           .buildThenAdd(refEq(TransportInformationContainers(Seq.empty)), any[GoodsShipment.Consignment])
       }
     }

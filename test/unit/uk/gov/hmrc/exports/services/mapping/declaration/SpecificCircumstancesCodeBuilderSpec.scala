@@ -18,6 +18,7 @@ package unit.uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.DeclarationType
+import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.services.mapping.declaration.SpecificCircumstancesCodeBuilder
 import util.testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -27,27 +28,7 @@ class SpecificCircumstancesCodeBuilderSpec extends WordSpec with Matchers with E
   "SpecificCircumstancesCodeBuilder" should {
 
     "build then add" when {
-
-      "no office of exit" in {
-        val model = aDeclaration(withType(DeclarationType.STANDARD), withoutOfficeOfExit())
-        val declaration = new Declaration()
-
-        builder.buildThenAdd(model, declaration)
-
-        declaration.getSpecificCircumstancesCodeCode should be(null)
-      }
-
-      "invalid circumstance type" in {
-        val model =
-          aDeclaration(withType(DeclarationType.STANDARD), withOfficeOfExit(circumstancesCode = Some("")))
-        val declaration = new Declaration()
-
-        builder.buildThenAdd(model, declaration)
-
-        declaration.getSpecificCircumstancesCodeCode should be(null)
-      }
-
-      "type is not standard" in {
+      "type is supplementary" in {
         val model = aDeclaration(withType(DeclarationType.SUPPLEMENTARY), withOfficeOfExit(circumstancesCode = Some("Yes")))
         val declaration = new Declaration()
 
@@ -56,14 +37,37 @@ class SpecificCircumstancesCodeBuilderSpec extends WordSpec with Matchers with E
         declaration.getSpecificCircumstancesCodeCode should be(null)
       }
 
-      "valid circumstance type" in {
-        val model =
-          aDeclaration(withType(DeclarationType.STANDARD), withOfficeOfExit(circumstancesCode = Some("Yes")))
-        val declaration = new Declaration()
+      for(declarationType: DeclarationType <- Seq(DeclarationType.STANDARD, DeclarationType.SIMPLIFIED)) {
+        s"Declaration Type $declarationType" when {
+          "no office of exit" in {
+            val model = aDeclaration(withType(declarationType), withoutOfficeOfExit())
+            val declaration = new Declaration()
 
-        builder.buildThenAdd(model, declaration)
+            builder.buildThenAdd(model, declaration)
 
-        declaration.getSpecificCircumstancesCodeCode.getValue should be("A20")
+            declaration.getSpecificCircumstancesCodeCode should be(null)
+          }
+
+          "invalid circumstance type" in {
+            val model =
+              aDeclaration(withType(declarationType), withOfficeOfExit(circumstancesCode = Some("")))
+            val declaration = new Declaration()
+
+            builder.buildThenAdd(model, declaration)
+
+            declaration.getSpecificCircumstancesCodeCode should be(null)
+          }
+
+          "valid circumstance type" in {
+            val model =
+              aDeclaration(withType(declarationType), withOfficeOfExit(circumstancesCode = Some("Yes")))
+            val declaration = new Declaration()
+
+            builder.buildThenAdd(model, declaration)
+
+            declaration.getSpecificCircumstancesCodeCode.getValue should be("A20")
+          }
+        }
       }
     }
   }

@@ -56,6 +56,21 @@ class DeclarationConsignmentBuilderSpec extends WordSpec with Matchers with Mock
         verify(consignmentCarrierBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
       }
 
+      "simplified journey" in {
+        // Given
+        val model = aDeclaration(withType(DeclarationType.SIMPLIFIED))
+        val declaration = new Declaration()
+
+        // When
+        builder.buildThenAdd(model, declaration)
+
+        // Then
+        declaration.getConsignment should not be null
+        verify(freightBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
+        verify(iteneraryBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
+        verify(consignmentCarrierBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
+      }
+
       "other journey" in {
         // Given
         val model = aDeclaration(withType(DeclarationType.SUPPLEMENTARY))

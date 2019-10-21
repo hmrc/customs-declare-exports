@@ -28,12 +28,14 @@ import wco.datamodel.wco.declaration_ds.dms._2._
 class ConsignmentCarrierBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration.Consignment] {
 
   override def buildThenAdd(model: ExportsDeclaration, consignment: Declaration.Consignment): Unit =
-    if (model.`type`.equals(DeclarationType.STANDARD)) {
-      model.parties.carrierDetails
-        .filter(isDefined)
-        .map(_.details)
-        .map(buildEoriOrAddress)
-        .foreach(consignment.setCarrier)
+    model.`type` match {
+      case DeclarationType.STANDARD | DeclarationType.SIMPLIFIED =>
+        model.parties.carrierDetails
+          .filter(isDefined)
+          .map(_.details)
+          .map(buildEoriOrAddress)
+          .foreach(consignment.setCarrier)
+      case _ =>
     }
 
   private def isDefined(carrierDetails: CarrierDetails) =
