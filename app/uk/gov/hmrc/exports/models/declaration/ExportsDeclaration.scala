@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.models.declaration
 import java.time.Instant
 
 import play.api.libs.json._
-import uk.gov.hmrc.exports.models.Choice
+import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 
 case class ExportsDeclaration(
@@ -29,7 +29,7 @@ case class ExportsDeclaration(
   createdDateTime: Instant,
   updatedDateTime: Instant,
   sourceId: Option[String],
-  choice: Choice,
+  `type`: DeclarationType,
   dispatchLocation: Option[DispatchLocation],
   additionalDeclarationType: Option[AdditionalDeclarationType],
   consignmentReferences: Option[ConsignmentReferences],

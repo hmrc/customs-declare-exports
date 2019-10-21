@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.Choice
+import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.{ExportsDeclaration, OfficeOfExit}
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -25,8 +25,8 @@ import wco.datamodel.wco.dec_dms._2.Declaration.ExitOffice
 import wco.datamodel.wco.declaration_ds.dms._2._
 
 class ExitOfficeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
-  override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit = model.choice match {
-    case Choice.StandardDec | Choice.SupplementaryDec =>
+  override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit = model.`type` match {
+    case DeclarationType.STANDARD | DeclarationType.SUPPLEMENTARY =>
       model.locations.officeOfExit
         .map(build)
         .foreach(declaration.setExitOffice)

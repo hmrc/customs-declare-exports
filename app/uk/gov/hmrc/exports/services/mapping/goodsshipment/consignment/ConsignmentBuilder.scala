@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.Choice
+import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.{ExportsDeclaration, TransportInformationContainers}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
@@ -42,8 +42,8 @@ class ConsignmentBuilder @Inject()(
       borderTransport => departureTransportMeansBuilder.buildThenAdd(borderTransport, warehouseIdentificationOpt, consignment)
     )
 
-    exportsCacheModel.choice match {
-      case Choice.StandardDec =>
+    exportsCacheModel.`type` match {
+      case DeclarationType.STANDARD =>
         transportEquipmentBuilder.buildThenAdd(exportsCacheModel.containerData.getOrElse(TransportInformationContainers(Seq.empty)), consignment)
       case _ =>
     }

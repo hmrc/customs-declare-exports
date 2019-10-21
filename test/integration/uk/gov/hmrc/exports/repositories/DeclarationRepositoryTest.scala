@@ -68,7 +68,7 @@ class DeclarationRepositoryTest
 
   "Update" should {
     "update the declaration" in {
-      val declaration = aDeclaration(withChoice(Choice.StandardDec), withId("id"), withEori("eori"))
+      val declaration = aDeclaration(withType(DeclarationType.STANDARD), withId("id"), withEori("eori"))
       givenADeclarationExists(declaration)
 
       repository.update(declaration).futureValue shouldBe Some(declaration)

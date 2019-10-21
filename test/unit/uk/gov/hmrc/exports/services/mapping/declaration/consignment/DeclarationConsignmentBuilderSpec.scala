@@ -20,7 +20,7 @@ import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.Choice
+import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.services.mapping.declaration.consignment.{DeclarationConsignmentBuilder, FreightBuilder, IteneraryBuilder}
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentCarrierBuilder
 import util.testdata.ExportsDeclarationBuilder
@@ -43,7 +43,7 @@ class DeclarationConsignmentBuilderSpec extends WordSpec with Matchers with Mock
 
       "standard journey" in {
         // Given
-        val model = aDeclaration(withChoice(Choice.StandardDec))
+        val model = aDeclaration(withType(DeclarationType.STANDARD))
         val declaration = new Declaration()
 
         // When
@@ -58,7 +58,7 @@ class DeclarationConsignmentBuilderSpec extends WordSpec with Matchers with Mock
 
       "other journey" in {
         // Given
-        val model = aDeclaration(withChoice(Choice.SupplementaryDec))
+        val model = aDeclaration(withType(DeclarationType.SUPPLEMENTARY))
         val declaration = new Declaration()
 
         // When

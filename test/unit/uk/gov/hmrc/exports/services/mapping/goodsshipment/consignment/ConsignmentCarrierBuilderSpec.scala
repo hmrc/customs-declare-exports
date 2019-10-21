@@ -19,7 +19,7 @@ package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.{Choice, Country}
+import uk.gov.hmrc.exports.models.{Country, DeclarationType}
 import uk.gov.hmrc.exports.models.declaration.Address
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentCarrierBuilder
@@ -50,7 +50,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
       "address is empty" in {
         // Given
         val model =
-          aDeclaration(withCarrierDetails(eori = Some("eori"), address = None), withChoice(Choice.StandardDec))
+          aDeclaration(withCarrierDetails(eori = Some("eori"), address = None), withType(DeclarationType.STANDARD))
         val consignment = new Declaration.Consignment()
 
         // When
@@ -64,7 +64,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
         // Given
         val model = aDeclaration(
           withCarrierDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))),
-          withChoice(Choice.StandardDec)
+          withType(DeclarationType.STANDARD)
         )
         val consignment = new Declaration.Consignment()
 
@@ -79,7 +79,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
         // Given
         val model = aDeclaration(
           withCarrierDetails(eori = Some("eori"), address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))),
-          withChoice(Choice.StandardDec)
+          withType(DeclarationType.STANDARD)
         )
         val consignment = new Declaration.Consignment()
 
@@ -97,7 +97,8 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
 
       "empty address components" in {
         // Given
-        val model = aDeclaration(withCarrierDetails(eori = Some("eori"), address = Some(Address("", "", "", "", ""))), withChoice(Choice.StandardDec))
+        val model =
+          aDeclaration(withCarrierDetails(eori = Some("eori"), address = Some(Address("", "", "", "", ""))), withType(DeclarationType.STANDARD))
         val consignment = new Declaration.Consignment()
 
         // When
@@ -112,7 +113,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
         // Given
         val model = aDeclaration(
           withCarrierDetails(eori = Some("eori"), address = Some(Address("name", "line", "city", "postcode", "other"))),
-          withChoice(Choice.StandardDec)
+          withType(DeclarationType.STANDARD)
         )
         val consignment = new Declaration.Consignment()
 
