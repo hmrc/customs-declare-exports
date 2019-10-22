@@ -24,8 +24,8 @@ object AdditionalDeclarationType extends Enumeration {
     Format(
       Reads(
         _.validate[String]
-          .filter(JsError("Invalid AdditionalDeclarationType"))(value => AdditionalDeclarationType.values.exists(_.toString == value))
-          .map(value => AdditionalDeclarationType.values.find(_.toString == value).get)
+          .filter(s => AdditionalDeclarationType.values.exists(_.toString == s))
+          .map(s => AdditionalDeclarationType.values.find(_.toString == s).get)
       ),
       Writes(v => JsString(v.toString))
     )
