@@ -20,6 +20,7 @@ import java.time.{LocalDateTime, ZoneOffset}
 import java.util.UUID
 
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
+import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
@@ -70,8 +71,8 @@ trait ExportsDeclarationBuilder {
 
   def withoutAdditionalDeclarationType(): ExportsDeclarationModifier = _.copy(additionalDeclarationType = None)
 
-  def withAdditionalDeclarationType(decType: String = "dev-type"): ExportsDeclarationModifier =
-    _.copy(additionalDeclarationType = Some(AdditionalDeclarationType(decType)))
+  def withAdditionalDeclarationType(decType: AdditionalDeclarationType = AdditionalDeclarationType.STANDARD_FRONTIER): ExportsDeclarationModifier =
+    _.copy(additionalDeclarationType = Some(decType))
 
   def withoutDispatchLocation: ExportsDeclarationModifier = _.copy(dispatchLocation = None)
 

@@ -36,7 +36,6 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
 
   private val builder = new ConsignmentBuilder(goodsLocationBuilder, containerCodeBuilder, departureTransportMeansBuilder, transportEquipmentBuilder)
 
-
   override protected def beforeEach(): Unit = {
     super.beforeEach()
     reset(containerCodeBuilder, goodsLocationBuilder, departureTransportMeansBuilder, transportEquipmentBuilder)

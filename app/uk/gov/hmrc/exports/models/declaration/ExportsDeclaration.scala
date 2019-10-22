@@ -20,6 +20,7 @@ import java.time.Instant
 
 import play.api.libs.json._
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
+import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 
 case class ExportsDeclaration(

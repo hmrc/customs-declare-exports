@@ -33,12 +33,12 @@ import scala.util.{Failure, Success}
 
 @Singleton
 class SubmissionService @Inject()(
-                                   customsDeclarationsConnector: CustomsDeclarationsConnector,
-                                   submissionRepository: SubmissionRepository,
-                                   declarationRepository: DeclarationRepository,
-                                   notificationRepository: NotificationRepository,
-                                   metaDataBuilder: CancellationMetaDataBuilder,
-                                   wcoMapperService: WcoMapperService
+  customsDeclarationsConnector: CustomsDeclarationsConnector,
+  submissionRepository: SubmissionRepository,
+  declarationRepository: DeclarationRepository,
+  notificationRepository: NotificationRepository,
+  metaDataBuilder: CancellationMetaDataBuilder,
+  wcoMapperService: WcoMapperService
 )(implicit executionContext: ExecutionContext) {
 
   private val logger = Logger(classOf[SubmissionService])
