@@ -32,7 +32,7 @@ class PresentationOfficeBuilder @Inject()() extends ModifyingBuilder[ExportsDecl
           .flatMap(_.presentationOfficeId)
           .map(createPresentationOffice)
           .foreach(declaration.setPresentationOffice)
-      case _ =>
+      case _ => (): Unit
     }
 
   private def createPresentationOffice(value: String): Declaration.PresentationOffice = {

@@ -36,6 +36,6 @@ class DeclarationConsignmentBuilder @Inject()(
         iteneraryBuilder.buildThenAdd(model, consignment)
         consignmentCarrierBuilder.buildThenAdd(model, consignment)
         declaration.setConsignment(consignment)
-      case _ =>
+      case _ => (): Unit
     }
 }

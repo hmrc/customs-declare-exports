@@ -31,7 +31,7 @@ class SpecificCircumstancesCodeBuilder @Inject()() extends ModifyingBuilder[Expo
           .filter(_.circumstancesCode.contains("Yes"))
           .map(_ => createCircumstancesCode)
           .foreach(declaration.setSpecificCircumstancesCodeCode)
-      case _ =>
+      case _ => (): Unit
     }
 
   private def createCircumstancesCode: DeclarationSpecificCircumstancesCodeCodeType = {

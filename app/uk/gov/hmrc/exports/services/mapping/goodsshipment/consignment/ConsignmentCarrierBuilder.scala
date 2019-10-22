@@ -35,7 +35,7 @@ class ConsignmentCarrierBuilder @Inject()(countriesService: CountriesService) ex
           .map(_.details)
           .map(buildEoriOrAddress)
           .foreach(consignment.setCarrier)
-      case _ =>
+      case _ => (): Unit
     }
 
   private def isDefined(carrierDetails: CarrierDetails) =

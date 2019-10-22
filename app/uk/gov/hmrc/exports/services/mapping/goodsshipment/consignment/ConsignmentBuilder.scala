@@ -45,7 +45,7 @@ class ConsignmentBuilder @Inject()(
     exportsCacheModel.`type` match {
       case DeclarationType.STANDARD | DeclarationType.SIMPLIFIED =>
         transportEquipmentBuilder.buildThenAdd(exportsCacheModel.containerData.getOrElse(TransportInformationContainers(Seq.empty)), consignment)
-      case _ =>
+      case _ => (): Unit
     }
 
     goodsShipment.setConsignment(consignment)
