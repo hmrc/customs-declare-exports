@@ -35,7 +35,7 @@ class AdditionalDeclarationTypeSpec extends WordSpec with MustMatchers {
       Json.fromJson[AdditionalDeclarationType](JsString("D")) mustBe JsSuccess(AdditionalDeclarationType.STANDARD_PRE_LODGED)
       Json.fromJson[AdditionalDeclarationType](JsString("Y")) mustBe JsSuccess(AdditionalDeclarationType.SUPPLEMENTARY_SIMPLIFIED)
       Json.fromJson[AdditionalDeclarationType](JsString("Z")) mustBe JsSuccess(AdditionalDeclarationType.SUPPLEMENTARY_EIDR)
-      Json.fromJson[AdditionalDeclarationType](JsString("other")) mustBe an[JsError]
+      Json.fromJson[AdditionalDeclarationType](JsString("other")) mustBe JsError("Invalid AdditionalDeclarationType")
     }
   }
 
