@@ -17,7 +17,8 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{AdditionalDeclarationType, DispatchLocation, ExportsDeclaration}
+import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
+import uk.gov.hmrc.exports.models.declaration.{DispatchLocation, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.declaration_ds.dms._2.DeclarationTypeCodeType
@@ -38,7 +39,7 @@ class TypeCodeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, D
   private def createTypeCode(decType: AdditionalDeclarationType, dispatchLocation: Option[DispatchLocation]): DeclarationTypeCodeType = {
     val typeCodeType = new DeclarationTypeCodeType()
     dispatchLocation.foreach { data =>
-      typeCodeType.setValue(data.dispatchLocation + decType.additionalDeclarationType)
+      typeCodeType.setValue(data.dispatchLocation + decType.toString)
     }
     typeCodeType
   }

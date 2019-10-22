@@ -25,11 +25,13 @@ import wco.datamodel.wco.declaration_ds.dms._2._
 
 class SpecificCircumstancesCodeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
-    if (model.`type`.equals(DeclarationType.STANDARD)) {
-      model.locations.officeOfExit
-        .filter(_.circumstancesCode.contains("Yes"))
-        .map(_ => createCircumstancesCode)
-        .foreach(declaration.setSpecificCircumstancesCodeCode)
+    model.`type` match {
+      case DeclarationType.STANDARD | DeclarationType.SIMPLIFIED =>
+        model.locations.officeOfExit
+          .filter(_.circumstancesCode.contains("Yes"))
+          .map(_ => createCircumstancesCode)
+          .foreach(declaration.setSpecificCircumstancesCodeCode)
+      case _ => (): Unit
     }
 
   private def createCircumstancesCode: DeclarationSpecificCircumstancesCodeCodeType = {

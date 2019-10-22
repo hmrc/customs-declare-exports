@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclara
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.mapping.MetaDataBuilder
+import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
@@ -37,7 +37,7 @@ class SubmissionService @Inject()(
   submissionRepository: SubmissionRepository,
   declarationRepository: DeclarationRepository,
   notificationRepository: NotificationRepository,
-  metaDataBuilder: MetaDataBuilder,
+  metaDataBuilder: CancellationMetaDataBuilder,
   wcoMapperService: WcoMapperService
 )(implicit executionContext: ExecutionContext) {
 

@@ -18,6 +18,7 @@ package unit.uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.DeclarationType
+import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.services.mapping.declaration.ExitOfficeBuilder
 import util.testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -27,41 +28,24 @@ class ExitOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarati
   "ExitOfficeBuilder" should {
 
     "build then add" when {
-      "standard journey with no data" in {
-        val model = aDeclaration(withType(DeclarationType.STANDARD), withoutOfficeOfExit())
-        val declaration = new Declaration()
+      for (declarationType: DeclarationType <- Seq(DeclarationType.STANDARD, DeclarationType.SUPPLEMENTARY, DeclarationType.SIMPLIFIED)) {
+        s"$declarationType journey with no data" in {
+          val model = aDeclaration(withType(declarationType), withoutOfficeOfExit())
+          val declaration = new Declaration()
 
-        builder.buildThenAdd(model, declaration)
+          builder.buildThenAdd(model, declaration)
 
-        declaration.getExitOffice should be(null)
-      }
+          declaration.getExitOffice should be(null)
+        }
 
-      "supplementary journey with no data" in {
-        val model = aDeclaration(withType(DeclarationType.SUPPLEMENTARY), withoutOfficeOfExit())
-        val declaration = new Declaration()
+        s"$declarationType journey with populated data" in {
+          val model = aDeclaration(withType(declarationType), withOfficeOfExit(officeId = "office-id"))
+          val declaration = new Declaration()
 
-        builder.buildThenAdd(model, declaration)
+          builder.buildThenAdd(model, declaration)
 
-        declaration.getExitOffice should be(null)
-      }
-
-      "standard journey with populated data" in {
-        val model = aDeclaration(withType(DeclarationType.STANDARD), withOfficeOfExit(officeId = "office-id"))
-        val declaration = new Declaration()
-
-        builder.buildThenAdd(model, declaration)
-
-        declaration.getExitOffice.getID.getValue should be("office-id")
-      }
-
-      "supplementary journey with populated data" in {
-        val model =
-          aDeclaration(withType(DeclarationType.SUPPLEMENTARY), withOfficeOfExit(officeId = "office-id"))
-        val declaration = new Declaration()
-
-        builder.buildThenAdd(model, declaration)
-
-        declaration.getExitOffice.getID.getValue should be("office-id")
+          declaration.getExitOffice.getID.getValue should be("office-id")
+        }
       }
     }
   }

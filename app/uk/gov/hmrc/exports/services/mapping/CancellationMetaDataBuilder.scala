@@ -23,7 +23,7 @@ import uk.gov.hmrc.exports.services.mapping.declaration.DeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
-class MetaDataBuilder @Inject()(declarationBuilder: DeclarationBuilder) {
+class CancellationMetaDataBuilder @Inject()(declarationBuilder: DeclarationBuilder) {
 
   def buildRequest(functionalReferenceId: String, mrn: String, statementDescription: String, changeReason: String, eori: String): MetaData = {
     val metaData = new MetaData

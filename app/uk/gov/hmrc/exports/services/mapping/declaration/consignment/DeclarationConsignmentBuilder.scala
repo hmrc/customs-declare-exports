@@ -29,11 +29,13 @@ class DeclarationConsignmentBuilder @Inject()(
   consignmentCarrierBuilder: ConsignmentCarrierBuilder
 ) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
-    if (model.`type`.equals(DeclarationType.STANDARD)) {
-      val consignment = new Declaration.Consignment()
-      freightBuilder.buildThenAdd(model, consignment)
-      iteneraryBuilder.buildThenAdd(model, consignment)
-      consignmentCarrierBuilder.buildThenAdd(model, consignment)
-      declaration.setConsignment(consignment)
+    model.`type` match {
+      case DeclarationType.STANDARD | DeclarationType.SIMPLIFIED =>
+        val consignment = new Declaration.Consignment()
+        freightBuilder.buildThenAdd(model, consignment)
+        iteneraryBuilder.buildThenAdd(model, consignment)
+        consignmentCarrierBuilder.buildThenAdd(model, consignment)
+        declaration.setConsignment(consignment)
+      case _ => (): Unit
     }
 }

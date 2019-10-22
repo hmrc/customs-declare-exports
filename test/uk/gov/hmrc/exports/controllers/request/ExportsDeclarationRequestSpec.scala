@@ -20,6 +20,7 @@ import java.time.Instant
 
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 import util.testdata.ExportsDeclarationBuilder

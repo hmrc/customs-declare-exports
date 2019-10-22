@@ -16,15 +16,21 @@
 
 package uk.gov.hmrc.exports.models.declaration
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json._
 
-case class AdditionalDeclarationType(additionalDeclarationType: String)
-
-object AdditionalDeclarationType {
-  implicit val format: OFormat[AdditionalDeclarationType] = Json.format[AdditionalDeclarationType]
-
-  object AllowedAdditionalDeclarationTypes {
-    val Simplified = "Y"
-    val Standard = "Z"
-  }
+object AdditionalDeclarationType extends Enumeration {
+  type AdditionalDeclarationType = Value
+  implicit val format: Format[AdditionalDeclarationType.Value] =
+    Format(
+      Reads(
+        _.validate[String]
+          .filter(JsError("Invalid AdditionalDeclarationType"))(value => AdditionalDeclarationType.values.exists(_.toString == value))
+          .map(value => AdditionalDeclarationType.values.find(_.toString == value).get)
+      ),
+      Writes(v => JsString(v.toString))
+    )
+  val SUPPLEMENTARY_SIMPLIFIED = Value("Y")
+  val SUPPLEMENTARY_EIDR = Value("Z")
+  val STANDARD_PRE_LODGED = Value("D")
+  val STANDARD_FRONTIER = Value("A")
 }

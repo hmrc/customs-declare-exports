@@ -19,6 +19,7 @@ package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.{Country, DeclarationType}
 import uk.gov.hmrc.exports.models.declaration.Address
 import uk.gov.hmrc.exports.services.CountriesService
@@ -28,100 +29,103 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 
 class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
 
-  val mockCountriesService = mock[CountriesService]
-  when(mockCountriesService.allCountries)
-    .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
+  private val mockCountriesService = mock[CountriesService]
 
   "ConsignmentCarrierBuilderSpec" should {
+    when(mockCountriesService.allCountries).thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
     "build then add" when {
-      "no carrier details" in {
-        // Given
-        val model = aDeclaration(withoutCarrierDetails())
-        val consignment = new Declaration.Consignment()
+      for (declarationType: DeclarationType <- Seq(DeclarationType.SIMPLIFIED, DeclarationType.STANDARD)) {
+        s"Declaration Type ${declarationType}" when {
+          "no carrier details" in {
+            // Given
+            val model = aDeclaration(withType(declarationType), withoutCarrierDetails())
+            val consignment = new Declaration.Consignment()
 
-        // When
-        new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
+            // When
+            new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
-        // Then
-        consignment.getCarrier shouldBe null
-      }
+            // Then
+            consignment.getCarrier shouldBe null
+          }
 
-      "address is empty" in {
-        // Given
-        val model =
-          aDeclaration(withCarrierDetails(eori = Some("eori"), address = None), withType(DeclarationType.STANDARD))
-        val consignment = new Declaration.Consignment()
+          "address is empty" in {
+            // Given
+            val model =
+              aDeclaration(withCarrierDetails(eori = Some("eori"), address = None), withType(declarationType))
+            val consignment = new Declaration.Consignment()
 
-        // When
-        new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
+            // When
+            new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
-        // Then
-        consignment.getCarrier.getAddress shouldBe null
-      }
+            // Then
+            consignment.getCarrier.getAddress shouldBe null
+          }
 
-      "eori is empty" in {
-        // Given
-        val model = aDeclaration(
-          withCarrierDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))),
-          withType(DeclarationType.STANDARD)
-        )
-        val consignment = new Declaration.Consignment()
+          "eori is empty" in {
+            // Given
+            val model = aDeclaration(
+              withCarrierDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))),
+              withType(declarationType)
+            )
+            val consignment = new Declaration.Consignment()
 
-        // When
-        new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
+            // When
+            new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
-        // Then
-        consignment.getCarrier.getID shouldBe null
-      }
+            // Then
+            consignment.getCarrier.getID shouldBe null
+          }
 
-      "fully populated" in {
-        // Given
-        val model = aDeclaration(
-          withCarrierDetails(eori = Some("eori"), address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))),
-          withType(DeclarationType.STANDARD)
-        )
-        val consignment = new Declaration.Consignment()
+          "fully populated" in {
+            // Given
+            val model = aDeclaration(
+              withCarrierDetails(eori = Some("eori"), address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))),
+              withType(declarationType)
+            )
+            val consignment = new Declaration.Consignment()
 
-        // When
-        new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
+            // When
+            new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
-        // Then
-        consignment.getCarrier.getID.getValue shouldBe "eori"
-        consignment.getCarrier.getName.getValue shouldBe "name"
-        consignment.getCarrier.getAddress.getLine.getValue shouldBe "line"
-        consignment.getCarrier.getAddress.getCityName.getValue shouldBe "city"
-        consignment.getCarrier.getAddress.getPostcodeID.getValue shouldBe "postcode"
-        consignment.getCarrier.getAddress.getCountryCode.getValue shouldBe "GB"
-      }
+            // Then
+            consignment.getCarrier.getID.getValue shouldBe "eori"
+            consignment.getCarrier.getName.getValue shouldBe "name"
+            consignment.getCarrier.getAddress.getLine.getValue shouldBe "line"
+            consignment.getCarrier.getAddress.getCityName.getValue shouldBe "city"
+            consignment.getCarrier.getAddress.getPostcodeID.getValue shouldBe "postcode"
+            consignment.getCarrier.getAddress.getCountryCode.getValue shouldBe "GB"
+          }
 
-      "empty address components" in {
-        // Given
-        val model =
-          aDeclaration(withCarrierDetails(eori = Some("eori"), address = Some(Address("", "", "", "", ""))), withType(DeclarationType.STANDARD))
-        val consignment = new Declaration.Consignment()
+          "empty address components" in {
+            // Given
+            val model =
+              aDeclaration(withCarrierDetails(eori = Some("eori"), address = Some(Address("", "", "", "", ""))), withType(declarationType))
+            val consignment = new Declaration.Consignment()
 
-        // When
-        new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
+            // When
+            new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
-        // Then
-        consignment.getCarrier.getName shouldBe null
-        consignment.getCarrier.getAddress shouldBe null
-      }
+            // Then
+            consignment.getCarrier.getName shouldBe null
+            consignment.getCarrier.getAddress shouldBe null
+          }
 
-      "invalid country" in {
-        // Given
-        val model = aDeclaration(
-          withCarrierDetails(eori = Some("eori"), address = Some(Address("name", "line", "city", "postcode", "other"))),
-          withType(DeclarationType.STANDARD)
-        )
-        val consignment = new Declaration.Consignment()
+          "invalid country" in {
+            // Given
+            val model = aDeclaration(
+              withCarrierDetails(eori = Some("eori"), address = Some(Address("name", "line", "city", "postcode", "other"))),
+              withType(declarationType)
+            )
+            val consignment = new Declaration.Consignment()
 
-        // When
-        new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
+            // When
+            new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
-        // Then
-        consignment.getCarrier.getAddress.getCountryCode.getValue shouldBe ""
+            // Then
+            consignment.getCarrier.getAddress.getCountryCode.getValue shouldBe ""
+          }
+        }
       }
     }
   }

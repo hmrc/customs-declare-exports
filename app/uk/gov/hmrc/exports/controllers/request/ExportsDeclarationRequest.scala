@@ -21,6 +21,7 @@ import java.time.Instant
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.Eori
+import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration._
 
 case class ExportsDeclarationRequest(

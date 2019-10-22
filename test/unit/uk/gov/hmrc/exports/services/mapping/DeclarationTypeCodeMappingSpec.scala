@@ -17,7 +17,7 @@
 package unit.uk.gov.hmrc.exports.services.mapping
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AllowedAdditionalDeclarationTypes
+import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DispatchLocation.AllowedDispatchLocations
 import uk.gov.hmrc.exports.models.declaration.{AdditionalDeclarationType, DispatchLocation}
 import wco.datamodel.wco.declaration_ds.dms._2.DeclarationTypeCodeType
@@ -28,20 +28,20 @@ class DeclarationTypeCodeMappingSpec extends WordSpec with Matchers {
 
     "return CodeType with value EXZ for OutsideEU and Standard" in {
       val dispatchLocation = DispatchLocation(AllowedDispatchLocations.OutsideEU)
-      val additionalDeclarationTypeCode = AdditionalDeclarationType(AllowedAdditionalDeclarationTypes.Standard)
+      val additionalDeclarationTypeCode = AdditionalDeclarationType.SUPPLEMENTARY_EIDR
       val codeType = additionalDeclarationTypeAndDispatchLocationToDeclarationTypeCode(Some(dispatchLocation), Some(additionalDeclarationTypeCode))
       codeType.getValue should be("EXZ")
     }
 
     "return CodeType with value COY for SpecialFiscalTerritory and Simplified" in {
       val dispatchLocation = DispatchLocation(AllowedDispatchLocations.SpecialFiscalTerritory)
-      val additionalDeclarationTypeCode = AdditionalDeclarationType(AllowedAdditionalDeclarationTypes.Simplified)
+      val additionalDeclarationTypeCode = AdditionalDeclarationType.SUPPLEMENTARY_SIMPLIFIED
       val codeType = additionalDeclarationTypeAndDispatchLocationToDeclarationTypeCode(Some(dispatchLocation), Some(additionalDeclarationTypeCode))
       codeType.getValue should be("COY")
     }
 
     "return CodeType with value Y for None and Simplified" in {
-      val additionalDeclarationTypeCode = AdditionalDeclarationType(AllowedAdditionalDeclarationTypes.Simplified)
+      val additionalDeclarationTypeCode = AdditionalDeclarationType.SUPPLEMENTARY_SIMPLIFIED
       val codeType =
         additionalDeclarationTypeAndDispatchLocationToDeclarationTypeCode(None, Some(additionalDeclarationTypeCode))
       codeType.getValue should be("Y")
@@ -60,7 +60,7 @@ class DeclarationTypeCodeMappingSpec extends WordSpec with Matchers {
   ): DeclarationTypeCodeType = {
     val declarationTypeCodeType = new DeclarationTypeCodeType
     val typeCode: String = dispatchLocation.map(_.dispatchLocation).getOrElse("") +
-      additionalDeclarationType.map(_.additionalDeclarationType).getOrElse("")
+      additionalDeclarationType.map(_.toString).getOrElse("")
     declarationTypeCodeType.setValue(typeCode)
     declarationTypeCodeType
   }
