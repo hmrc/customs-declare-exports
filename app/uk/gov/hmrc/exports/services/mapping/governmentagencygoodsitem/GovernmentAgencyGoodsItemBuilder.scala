@@ -17,7 +17,9 @@
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{CommodityMeasure, ExportItem, ItemType}
+import uk.gov.hmrc.exports.models.DeclarationType
+import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
+import uk.gov.hmrc.exports.models.declaration.{CommodityMeasure, ExportItem, ExportsDeclaration, ItemType}
 import uk.gov.hmrc.exports.services.mapping.{CachingMappingHelper, ModifyingBuilder}
 import uk.gov.hmrc.wco.dec.Commodity
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -32,42 +34,56 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
   domesticDutyTaxPartyBuilder: DomesticDutyTaxPartyBuilder,
   cachingMappingHelper: CachingMappingHelper,
   commodityBuilder: CommodityBuilder
-) extends ModifyingBuilder[ExportItem, Declaration.GoodsShipment] {
+) extends ModifyingBuilder[ExportsDeclaration, Declaration.GoodsShipment] {
 
-  override def buildThenAdd(exportItem: ExportItem, goodsShipment: Declaration.GoodsShipment): Unit = {
-    val wcoGovernmentAgencyGoodsItem = new WCOGovernmentAgencyGoodsItem
-    wcoGovernmentAgencyGoodsItem.setSequenceNumeric(new java.math.BigDecimal(exportItem.sequenceId))
+  private val journeysWithCommodityMeasurements = Set(DeclarationType.STANDARD, DeclarationType.SUPPLEMENTARY)
 
-    statisticalValueAmountBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
-    packagingBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
-    governmentProcedureBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
-    additionalInformationBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
-    additionalDocumentsBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
+  override def buildThenAdd(exportsCacheModel: ExportsDeclaration, goodsShipment: Declaration.GoodsShipment): Unit =
+    exportsCacheModel.items.foreach(exportItem => {
+      val wcoGovernmentAgencyGoodsItem = new WCOGovernmentAgencyGoodsItem
+      wcoGovernmentAgencyGoodsItem.setSequenceNumeric(new java.math.BigDecimal(exportItem.sequenceId))
 
+      statisticalValueAmountBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
+      packagingBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
+      governmentProcedureBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
+      additionalInformationBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
+      additionalDocumentsBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
+
+      buildCommodityMeasurements(exportItem, wcoGovernmentAgencyGoodsItem, exportsCacheModel.`type`)
+
+      exportItem.additionalFiscalReferencesData.foreach(
+        _.references
+          .foreach(additionalFiscalReference => domesticDutyTaxPartyBuilder.buildThenAdd(additionalFiscalReference, wcoGovernmentAgencyGoodsItem))
+      )
+
+      goodsShipment.getGovernmentAgencyGoodsItem.add(wcoGovernmentAgencyGoodsItem)
+    })
+
+  private def buildCommodityMeasurements(
+    exportItem: ExportItem,
+    wcoGovernmentAgencyGoodsItem: WCOGovernmentAgencyGoodsItem,
+    declarationType: DeclarationType
+  ) = {
     val combinedCommodity = for {
       commodityWithoutGoodsMeasure <- mapItemTypeToCommodity(exportItem.itemType)
-      commodityOnlyGoodsMeasure <- mapCommodityMeasureToCommodity(exportItem.commodityMeasure)
+      commodityOnlyGoodsMeasure = mapCommodityMeasureToCommodity(exportItem.commodityMeasure, declarationType)
     } yield combineCommodities(commodityWithoutGoodsMeasure, commodityOnlyGoodsMeasure)
 
     combinedCommodity.foreach(commodityBuilder.buildThenAdd(_, wcoGovernmentAgencyGoodsItem))
-
-    exportItem.additionalFiscalReferencesData.foreach(
-      _.references
-        .foreach(additionalFiscalReference => domesticDutyTaxPartyBuilder.buildThenAdd(additionalFiscalReference, wcoGovernmentAgencyGoodsItem))
-    )
-
-    goodsShipment.getGovernmentAgencyGoodsItem.add(wcoGovernmentAgencyGoodsItem)
   }
-
   private def mapItemTypeToCommodity(itemType: Option[ItemType]): Option[Commodity] =
     itemType.map({ item =>
       cachingMappingHelper.commodityFromItemTypes(item)
     })
 
-  private def mapCommodityMeasureToCommodity(commodityMeasure: Option[CommodityMeasure]): Option[Commodity] =
-    commodityMeasure.map(measure => cachingMappingHelper.mapGoodsMeasure(measure))
+  private def mapCommodityMeasureToCommodity(commodityMeasure: Option[CommodityMeasure], declarationType: DeclarationType): Option[Commodity] =
+    if (journeysWithCommodityMeasurements.contains(declarationType)) {
+      commodityMeasure.map(measure => cachingMappingHelper.mapGoodsMeasure(measure))
+    } else None
 
-  private def combineCommodities(commodityPart1: Commodity, commodityPart2: Commodity): Commodity =
-    commodityPart1.copy(goodsMeasure = commodityPart2.goodsMeasure)
+  private def combineCommodities(commodityPart1: Commodity, commodityPart2: Option[Commodity]): Commodity =
+    commodityPart2
+      .map(commodityPart2Obj => commodityPart1.copy(goodsMeasure = commodityPart2Obj.goodsMeasure))
+      .getOrElse(commodityPart1)
 
 }

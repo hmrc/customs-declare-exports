@@ -17,9 +17,12 @@
 package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import org.mockito.ArgumentMatchers.{any, refEq}
-import org.mockito.Mockito.verify
+import org.mockito.Mockito
+import org.mockito.Mockito.{verify, verifyZeroInteractions}
+import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.models.DeclarationType
+import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.mapping.goodsshipment._
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentBuilder
@@ -35,7 +38,7 @@ import unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.Goods
 import util.testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder with MockitoSugar {
+class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder with MockitoSugar with BeforeAndAfterEach {
 
   private val mockGoodsShipmentNatureOfTransactionBuilder = mock[GoodsShipmentNatureOfTransactionBuilder]
   private val mockConsigneeBuilder = mock[ConsigneeBuilder]
@@ -47,6 +50,20 @@ class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclar
   private val mockPreviousDocumentBuilder = mock[PreviousDocumentsBuilder]
   private val mockAEOMutualRecognitionPartiesBuilder = mock[AEOMutualRecognitionPartiesBuilder]
   private val governmentAgencyItemBuilder = mock[GovernmentAgencyGoodsItemBuilder]
+
+  override def afterEach: Unit =
+    Mockito.reset(
+      mockGoodsShipmentNatureOfTransactionBuilder,
+      mockConsigneeBuilder,
+      mockConsignmentBuilder,
+      mockDestinationBuilder,
+      mockExportCountryBuilder,
+      governmentAgencyItemBuilder,
+      mockUcrBuilder,
+      mockWarehouseBuilder,
+      mockPreviousDocumentBuilder,
+      mockAEOMutualRecognitionPartiesBuilder
+    )
 
   private def builder = new GoodsShipmentBuilder(
     mockGoodsShipmentNatureOfTransactionBuilder,
@@ -64,55 +81,74 @@ class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclar
   "GoodsShipmentBuilder" should {
 
     "build then add" when {
-      "full declaration" in {
-        val model = aDeclaration(
-          withNatureOfTransaction("1"),
-          withConsigneeDetails(eori = Some("9GB1234567ABCDEF"), address = Some(correctAddress)),
-          withDeclarationAdditionalActors(correctAdditionalActors1, correctAdditionalActors2),
-          withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
-          withDestinationCountries("GB", Seq.empty, "PL"),
-          withWarehouseIdentification(WarehouseIdentification(Some("GBWKG001"), Some("R"), None, Some("2"))),
-          withConsignmentReferences("8GB123456789012-1234567890QWERTYUIO", "123LRN", Some("8GB123456789012")),
-          withPreviousDocuments(correctPreviousDocument),
-          withItem()
-        )
+      "Standard declaration" in {
+        val model: ExportsDeclaration = createDeclaration(DeclarationType.STANDARD)
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
-        verify(mockGoodsShipmentNatureOfTransactionBuilder)
-          .buildThenAdd(refEq(NatureOfTransaction("1")), any[Declaration.GoodsShipment])
 
-        verify(mockConsigneeBuilder)
-          .buildThenAdd(
-            refEq(ConsigneeDetails(EntityDetails(Some("9GB1234567ABCDEF"), Some(ConsigneeBuilderSpec.correctAddress)))),
-            any[Declaration.GoodsShipment]
-          )
-
-        verify(mockConsignmentBuilder)
-          .buildThenAdd(refEq(model), any[Declaration.GoodsShipment])
-
-        verify(mockDestinationBuilder)
-          .buildThenAdd(refEq(DestinationCountries("GB", Seq.empty, "PL")), any[Declaration.GoodsShipment])
+        verifyInterations(model)
 
         verify(mockGoodsShipmentNatureOfTransactionBuilder)
           .buildThenAdd(refEq(NatureOfTransaction("1")), any[Declaration.GoodsShipment])
+      }
+      "Simplified declaration" in {
+        val model: ExportsDeclaration = createDeclaration(DeclarationType.STANDARD)
+        val declaration = new Declaration()
 
-        verify(mockExportCountryBuilder)
-          .buildThenAdd(refEq(DestinationCountries("GB", Seq.empty, "PL")), any[Declaration.GoodsShipment])
+        builder.buildThenAdd(model, declaration)
 
-        verify(mockUcrBuilder)
-          .buildThenAdd(refEq(correctConsignmentReferences), any[Declaration.GoodsShipment])
+        verifyInterations(model)
 
-        verify(mockWarehouseBuilder)
-          .buildThenAdd(refEq(WarehouseIdentification(Some("GBWKG001"), Some("R"), None, Some("2"))), any[Declaration.GoodsShipment])
-
-        verify(mockPreviousDocumentBuilder)
-          .buildThenAdd(refEq(PreviousDocuments(Seq(correctPreviousDocument))), any[Declaration.GoodsShipment])
-
-        verify(governmentAgencyItemBuilder).buildThenAdd(any[ExportItem], any[Declaration.GoodsShipment])
-
+        verifyZeroInteractions(mockGoodsShipmentNatureOfTransactionBuilder)
       }
     }
   }
 
+  private def verifyInterations(model: ExportsDeclaration) = {
+    verify(mockGoodsShipmentNatureOfTransactionBuilder)
+      .buildThenAdd(refEq(NatureOfTransaction("1")), any[Declaration.GoodsShipment])
+
+    verify(mockConsigneeBuilder)
+      .buildThenAdd(
+        refEq(ConsigneeDetails(EntityDetails(Some("9GB1234567ABCDEF"), Some(ConsigneeBuilderSpec.correctAddress)))),
+        any[Declaration.GoodsShipment]
+      )
+
+    verify(mockConsignmentBuilder)
+      .buildThenAdd(refEq(model), any[Declaration.GoodsShipment])
+
+    verify(mockDestinationBuilder)
+      .buildThenAdd(refEq(DestinationCountries("GB", Seq.empty, "PL")), any[Declaration.GoodsShipment])
+
+    verify(mockExportCountryBuilder)
+      .buildThenAdd(refEq(DestinationCountries("GB", Seq.empty, "PL")), any[Declaration.GoodsShipment])
+
+    verify(mockUcrBuilder)
+      .buildThenAdd(refEq(correctConsignmentReferences), any[Declaration.GoodsShipment])
+
+    verify(mockWarehouseBuilder)
+      .buildThenAdd(refEq(WarehouseIdentification(Some("GBWKG001"), Some("R"), None, Some("2"))), any[Declaration.GoodsShipment])
+
+    verify(mockPreviousDocumentBuilder)
+      .buildThenAdd(refEq(PreviousDocuments(Seq(correctPreviousDocument))), any[Declaration.GoodsShipment])
+
+    verify(governmentAgencyItemBuilder).buildThenAdd(any[ExportsDeclaration], any[Declaration.GoodsShipment])
+  }
+
+  private def createDeclaration(declarationType: DeclarationType) = {
+    val model = aDeclaration(
+      withType(declarationType),
+      withNatureOfTransaction("1"),
+      withConsigneeDetails(eori = Some("9GB1234567ABCDEF"), address = Some(correctAddress)),
+      withDeclarationAdditionalActors(correctAdditionalActors1, correctAdditionalActors2),
+      withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
+      withDestinationCountries("GB", Seq.empty, "PL"),
+      withWarehouseIdentification(WarehouseIdentification(Some("GBWKG001"), Some("R"), None, Some("2"))),
+      withConsignmentReferences("8GB123456789012-1234567890QWERTYUIO", "123LRN", Some("8GB123456789012")),
+      withPreviousDocuments(correctPreviousDocument),
+      withItem()
+    )
+    model
+  }
 }

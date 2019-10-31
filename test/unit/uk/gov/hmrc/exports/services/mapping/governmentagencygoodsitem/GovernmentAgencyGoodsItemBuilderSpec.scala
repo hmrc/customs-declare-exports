@@ -17,10 +17,13 @@
 package unit.uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import org.mockito.ArgumentMatchers._
+import org.mockito.Mockito
 import org.mockito.Mockito._
+import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
+import util.testdata.ExportsDeclarationBuilder
 import play.api.libs.json._
+import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem._
@@ -30,7 +33,8 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.{GovernmentAgencyGoodsItem => WCOGovernmentAgencyGoodsItem}
 
 class GovernmentAgencyGoodsItemBuilderSpec
-    extends WordSpec with Matchers with GovernmentAgencyGoodsItemData with MockitoSugar with ExportsItemBuilder {
+    extends WordSpec with Matchers with MockitoSugar with GovernmentAgencyGoodsItemData with ExportsItemBuilder with ExportsDeclarationBuilder
+    with BeforeAndAfterEach {
   val defaultMeasureCode = "KGM"
 
   private val statisticalValueAmountBuilder = mock[StatisticalValueAmountBuilder]
@@ -42,42 +46,96 @@ class GovernmentAgencyGoodsItemBuilderSpec
   private val dutyTaxPartyBuilder = mock[DomesticDutyTaxPartyBuilder]
   private val mockCachingMappingHelper = mock[CachingMappingHelper]
 
+  override def afterEach: Unit =
+    Mockito.reset(
+      statisticalValueAmountBuilder,
+      packagingBuilder,
+      governmentProcedureBuilder,
+      additionalInformationBuilder,
+      additionalDocumentsBuilder,
+      commodityBuilder,
+      dutyTaxPartyBuilder,
+      mockCachingMappingHelper
+    )
+
   "GovernmentAgencyGoodsItemBuilder" should {
 
-    "map ExportItem Correctly" in {
-      val exportItem = anItem(
-        withSequenceId(99),
-        withCommodityMeasure(CommodityMeasure(Some("2"), "90", "100")),
-        withAdditionalFiscalReferenceData(AdditionalFiscalReferences(Seq(AdditionalFiscalReference("GB", "reference")))),
-        withItemType(
-          descriptionOfGoods = "commodityDescription",
-          statisticalValue = "123",
-          combinedNomenclatureCode = "classificationsId",
-          unDangerousGoodsCode = Some("dangerousGoodsCode")
+    "map ExportItem Correctly" when {
+      "on the Supplementary journey" in {
+        val exportItem = anItem(
+          withSequenceId(99),
+          withCommodityMeasure(CommodityMeasure(Some("2"), "90", "100")),
+          withAdditionalFiscalReferenceData(AdditionalFiscalReferences(Seq(AdditionalFiscalReference("GB", "reference")))),
+          withItemType(
+            descriptionOfGoods = "commodityDescription",
+            statisticalValue = "123",
+            combinedNomenclatureCode = "classificationsId",
+            unDangerousGoodsCode = Some("dangerousGoodsCode")
+          )
         )
-      )
+        val exportsDeclaration =
+          aDeclaration(withType(DeclarationType.SUPPLEMENTARY), withItem(exportItem), withOfficeOfExit(presentationOfficeId = Some("id")))
 
-      when(mockCachingMappingHelper.mapGoodsMeasure(any[CommodityMeasure]))
-        .thenReturn(Commodity(description = Some("Some Commodity")))
-      when(mockCachingMappingHelper.commodityFromItemTypes(any[ItemType]))
-        .thenReturn(Commodity(description = Some("Some Commodity")))
+        when(mockCachingMappingHelper.mapGoodsMeasure(any[CommodityMeasure]))
+          .thenReturn(Commodity(description = Some("Some Commodity")))
+        when(mockCachingMappingHelper.commodityFromItemTypes(any[ItemType]))
+          .thenReturn(Commodity(description = Some("Some Commodity")))
 
-      val goodsShipment = new GoodsShipment
-      builder.buildThenAdd(exportItem, goodsShipment)
+        val goodsShipment = new GoodsShipment
+        builder.buildThenAdd(exportsDeclaration, goodsShipment)
 
-      verify(statisticalValueAmountBuilder)
-        .buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
-      verify(packagingBuilder).buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
-      verify(governmentProcedureBuilder).buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
-      verify(additionalInformationBuilder).buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
-      verify(additionalDocumentsBuilder).buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
-      verify(commodityBuilder).buildThenAdd(any[Commodity], any[GoodsShipment.GovernmentAgencyGoodsItem])
-      verify(mockCachingMappingHelper).mapGoodsMeasure(any[CommodityMeasure])
-      verify(mockCachingMappingHelper).commodityFromItemTypes(any[ItemType])
-      verify(dutyTaxPartyBuilder)
-        .buildThenAdd(any[AdditionalFiscalReference], any[GoodsShipment.GovernmentAgencyGoodsItem])
-      goodsShipment.getGovernmentAgencyGoodsItem shouldNot be(empty)
-      goodsShipment.getGovernmentAgencyGoodsItem.get(0).getSequenceNumeric.intValue() shouldBe 99
+        verify(statisticalValueAmountBuilder)
+          .buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
+        verify(packagingBuilder).buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
+        verify(governmentProcedureBuilder).buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
+        verify(additionalInformationBuilder).buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
+        verify(additionalDocumentsBuilder).buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
+        verify(commodityBuilder).buildThenAdd(any[Commodity], any[GoodsShipment.GovernmentAgencyGoodsItem])
+        verify(mockCachingMappingHelper).mapGoodsMeasure(any[CommodityMeasure])
+        verify(mockCachingMappingHelper).commodityFromItemTypes(any[ItemType])
+        verify(dutyTaxPartyBuilder)
+          .buildThenAdd(any[AdditionalFiscalReference], any[GoodsShipment.GovernmentAgencyGoodsItem])
+        goodsShipment.getGovernmentAgencyGoodsItem shouldNot be(empty)
+        goodsShipment.getGovernmentAgencyGoodsItem.get(0).getSequenceNumeric.intValue() shouldBe 99
+      }
+
+      "on the Simplified journey" in {
+        val exportItem = anItem(
+          withSequenceId(99),
+          withCommodityMeasure(CommodityMeasure(Some("2"), "90", "100")),
+          withAdditionalFiscalReferenceData(AdditionalFiscalReferences(Seq(AdditionalFiscalReference("GB", "reference")))),
+          withItemType(
+            descriptionOfGoods = "commodityDescription",
+            statisticalValue = "123",
+            combinedNomenclatureCode = "classificationsId",
+            unDangerousGoodsCode = Some("dangerousGoodsCode")
+          )
+        )
+        val exportsDeclaration =
+          aDeclaration(withType(DeclarationType.SIMPLIFIED), withItem(exportItem), withOfficeOfExit(presentationOfficeId = Some("id")))
+
+        when(mockCachingMappingHelper.mapGoodsMeasure(any[CommodityMeasure]))
+          .thenReturn(Commodity(description = Some("Some Commodity")))
+        when(mockCachingMappingHelper.commodityFromItemTypes(any[ItemType]))
+          .thenReturn(Commodity(description = Some("Some Commodity")))
+
+        val goodsShipment = new GoodsShipment
+        builder.buildThenAdd(exportsDeclaration, goodsShipment)
+
+        verify(statisticalValueAmountBuilder)
+          .buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
+        verify(packagingBuilder).buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
+        verify(governmentProcedureBuilder).buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
+        verify(additionalInformationBuilder).buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
+        verify(additionalDocumentsBuilder).buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
+        verify(commodityBuilder).buildThenAdd(any[Commodity], any[GoodsShipment.GovernmentAgencyGoodsItem])
+        verify(mockCachingMappingHelper, times(0)).mapGoodsMeasure(any[CommodityMeasure])
+        verify(mockCachingMappingHelper).commodityFromItemTypes(any[ItemType])
+        verify(dutyTaxPartyBuilder)
+          .buildThenAdd(any[AdditionalFiscalReference], any[GoodsShipment.GovernmentAgencyGoodsItem])
+        goodsShipment.getGovernmentAgencyGoodsItem shouldNot be(empty)
+        goodsShipment.getGovernmentAgencyGoodsItem.get(0).getSequenceNumeric.intValue() shouldBe 99
+      }
     }
   }
 
