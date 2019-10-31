@@ -18,6 +18,9 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 
+/**
+  * This class is equivalent DepartureTransport class in frontend.
+  */
 case class BorderTransport(
   borderModeOfTransportCode: String,
   meansOfTransportOnDepartureType: String,
