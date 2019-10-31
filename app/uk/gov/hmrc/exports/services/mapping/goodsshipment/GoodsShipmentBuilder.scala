@@ -17,6 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import javax.inject.Inject
+import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentBuilder
@@ -40,7 +41,9 @@ class GoodsShipmentBuilder @Inject()(
   override def buildThenAdd(exportsCacheModel: ExportsDeclaration, declaration: Declaration): Unit = {
     val goodsShipment = new GoodsShipment()
 
-    exportsCacheModel.natureOfTransaction.foreach(goodsShipmentNatureOfTransactionBuilder.buildThenAdd(_, goodsShipment))
+    if (exportsCacheModel.`type` != DeclarationType.SIMPLIFIED) {
+      exportsCacheModel.natureOfTransaction.foreach(goodsShipmentNatureOfTransactionBuilder.buildThenAdd(_, goodsShipment))
+    }
 
     exportsCacheModel.parties.consigneeDetails
       .foreach(consigneeBuilder.buildThenAdd(_, goodsShipment))
@@ -65,7 +68,7 @@ class GoodsShipmentBuilder @Inject()(
       _.actors.foreach(declarationAdditionalActor => aeoMutualRecognitionPartiesBuilder.buildThenAdd(declarationAdditionalActor, goodsShipment))
     }
 
-    exportsCacheModel.items.foreach(governmentAgencyGoodsItemBuilder.buildThenAdd(_, goodsShipment))
+    governmentAgencyGoodsItemBuilder.buildThenAdd(exportsCacheModel, goodsShipment)
 
     declaration.setGoodsShipment(goodsShipment)
   }
