@@ -30,7 +30,6 @@ import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem._
 import uk.gov.hmrc.wco.dec.Commodity
 import unit.uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
-import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.{GovernmentAgencyGoodsItem => WCOGovernmentAgencyGoodsItem}
 
 class GovernmentAgencyGoodsItemBuilderSpec
     extends WordSpec with Matchers with MockitoSugar with GovernmentAgencyGoodsItemData with ExportsItemBuilder with ExportsDeclarationBuilder
@@ -139,49 +138,6 @@ class GovernmentAgencyGoodsItemBuilderSpec
     }
   }
 
-  def validateAdditionalDocumentNew(
-    mappedDocument: WCOGovernmentAgencyGoodsItem.AdditionalDocument,
-    correctDocumentsProducedData: DocumentsProduced
-  ) {
-    val document = correctDocumentsProducedData.documents.head
-    val identifier = document.documentIdentifier.getOrElse("")
-
-    validateAdditionalDocument(
-      firstMappedDocument = mappedDocument,
-      unmappedTypeCode = document.documentTypeCode.getOrElse(""),
-      identifier = identifier,
-      lcpoExemptionCode = document.documentStatus.getOrElse(""),
-      name = document.documentStatusReason.getOrElse(""),
-      submitter = document.issuingAuthorityName.getOrElse(""),
-      unitCode = document.documentWriteOff.get.measurementUnit.getOrElse(""),
-      documentQuantity = document.documentWriteOff.get.documentQuantity.get.bigDecimal
-    )
-  }
-
-  private def validateAdditionalDocument(
-    firstMappedDocument: WCOGovernmentAgencyGoodsItem.AdditionalDocument,
-    unmappedTypeCode: String,
-    identifier: String,
-    lcpoExemptionCode: String,
-    name: String,
-    submitter: String,
-    unitCode: String,
-    documentQuantity: java.math.BigDecimal
-  ) = {
-    firstMappedDocument.getCategoryCode.getValue shouldBe unmappedTypeCode.substring(0, 1)
-    firstMappedDocument.getTypeCode.getValue shouldBe unmappedTypeCode.substring(1)
-    firstMappedDocument.getID.getValue shouldBe identifier
-    firstMappedDocument.getLPCOExemptionCode.getValue shouldBe lcpoExemptionCode
-    firstMappedDocument.getName.getValue shouldBe name
-    firstMappedDocument.getSubmitter.getName.getValue shouldBe submitter
-
-    val writeoff = firstMappedDocument.getWriteOff
-    writeoff.getAmountAmount shouldBe null
-    val writeOffQuantity = writeoff.getQuantityQuantity
-    writeOffQuantity.getUnitCode shouldBe unitCode
-    writeOffQuantity.getValue shouldBe documentQuantity
-  }
-
   private def builder =
     new GovernmentAgencyGoodsItemBuilder(
       statisticalValueAmountBuilder,
@@ -193,57 +149,6 @@ class GovernmentAgencyGoodsItemBuilderSpec
       mockCachingMappingHelper,
       commodityBuilder
     )
-
-  private def validateStatisticalValueAmount(value: java.math.BigDecimal, currencyId: String) = {
-    currencyId should be("GBP")
-    value.compareTo(BigDecimal(itemType.statisticalValue).bigDecimal) should be(0)
-  }
-
-  private def validateGovernmentProcedure(mappedProcedure: WCOGovernmentAgencyGoodsItem.GovernmentProcedure) = {
-    mappedProcedure.getCurrentCode.getValue shouldBe cachedCode.substring(0, 2)
-    mappedProcedure.getPreviousCode.getValue shouldBe cachedCode.substring(2, 4)
-    mappedProcedure
-  }
-
-  private def validatePackaging(packaging: WCOGovernmentAgencyGoodsItem.Packaging) = {
-    packaging.getQuantityQuantity.getValue shouldBe BigDecimal(2).bigDecimal
-    packaging.getMarksNumbersID.getValue shouldBe "mark1"
-    packaging.getTypeCode.getValue shouldBe "AA"
-  }
-
-  private def validateCommodity(mappedCommodity: WCOGovernmentAgencyGoodsItem.Commodity) = {
-    mappedCommodity.getDescription.getValue shouldBe "commodityDescription"
-    mappedCommodity.getDangerousGoods.get(0).getUNDGID.getValue shouldBe "999"
-
-    val goodsMeasure = mappedCommodity.getGoodsMeasure
-
-    goodsMeasure.getNetNetWeightMeasure.getValue shouldBe BigDecimal(90).bigDecimal
-    goodsMeasure.getNetNetWeightMeasure.getUnitCode shouldBe defaultMeasureCode
-
-    goodsMeasure.getGrossMassMeasure.getValue shouldBe BigDecimal(100).bigDecimal
-    goodsMeasure.getGrossMassMeasure.getUnitCode shouldBe defaultMeasureCode
-
-    goodsMeasure.getTariffQuantity.getValue shouldBe BigDecimal(2).bigDecimal
-    goodsMeasure.getTariffQuantity.getUnitCode shouldBe defaultMeasureCode
-  }
-
-  private def validateAdditionalInformation(additionalInfomation: WCOGovernmentAgencyGoodsItem.AdditionalInformation) = {
-    additionalInfomation.getStatementCode.getValue shouldBe statementCode
-    additionalInfomation.getStatementDescription.getValue shouldBe descriptionValue
-  }
-
-  private def validateAdditionalDocuments(firstMappedDocument: WCOGovernmentAgencyGoodsItem.AdditionalDocument) =
-    validateAdditionalDocument(
-      firstMappedDocument = firstMappedDocument,
-      unmappedTypeCode = documentAndAdditionalDocumentTypeCode,
-      identifier = documentIdentifier + documentPart,
-      lcpoExemptionCode = "PND",
-      name = documentStatusReason,
-      submitter = issusingAuthorityName,
-      unitCode = "KGM",
-      documentQuantity = documentQuantity.bigDecimal
-    )
-
 }
 
 object GovernmentAgencyGoodsItemBuilderSpec {

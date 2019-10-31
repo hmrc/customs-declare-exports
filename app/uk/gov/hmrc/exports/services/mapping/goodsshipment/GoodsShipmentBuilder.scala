@@ -38,10 +38,12 @@ class GoodsShipmentBuilder @Inject()(
   aeoMutualRecognitionPartiesBuilder: AEOMutualRecognitionPartiesBuilder
 ) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
+  private val journeyThatRequireNatureOfTransaction = Set(DeclarationType.STANDARD, DeclarationType.SUPPLEMENTARY)
+
   override def buildThenAdd(exportsCacheModel: ExportsDeclaration, declaration: Declaration): Unit = {
     val goodsShipment = new GoodsShipment()
 
-    if (exportsCacheModel.`type` != DeclarationType.SIMPLIFIED) {
+    if (journeyThatRequireNatureOfTransaction.contains(exportsCacheModel.`type`)) {
       exportsCacheModel.natureOfTransaction.foreach(goodsShipmentNatureOfTransactionBuilder.buildThenAdd(_, goodsShipment))
     }
 
@@ -72,5 +74,4 @@ class GoodsShipmentBuilder @Inject()(
 
     declaration.setGoodsShipment(goodsShipment)
   }
-
 }
