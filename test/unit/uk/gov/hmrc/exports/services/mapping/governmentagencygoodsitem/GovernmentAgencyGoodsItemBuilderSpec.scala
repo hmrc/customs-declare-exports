@@ -68,7 +68,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
           withItemType(
             descriptionOfGoods = "commodityDescription",
             statisticalValue = "123",
-            combinedNomenclatureCode = "classificationsId",
+            combinedNomenclatureCode = Some("classificationsId"),
             unDangerousGoodsCode = Some("dangerousGoodsCode")
           )
         )
@@ -106,7 +106,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
           withItemType(
             descriptionOfGoods = "commodityDescription",
             statisticalValue = "123",
-            combinedNomenclatureCode = "classificationsId",
+            combinedNomenclatureCode = Some("classificationsId"),
             unDangerousGoodsCode = Some("dangerousGoodsCode")
           )
         )

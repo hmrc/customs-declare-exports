@@ -44,7 +44,7 @@ object AdditionalFiscalReferences {
 }
 
 case class ItemType(
-  combinedNomenclatureCode: String,
+  combinedNomenclatureCode: Option[String],
   taricAdditionalCode: Seq[String],
   nationalAdditionalCode: Seq[String],
   descriptionOfGoods: String,

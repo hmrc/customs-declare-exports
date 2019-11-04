@@ -46,7 +46,7 @@ trait GovernmentAgencyGoodsItemData {
   val descriptionOfGoods = "descriptionOfGoods"
   val unDangerousGoodsCode = "unDangerousGoodsCode"
   val itemType = ItemType(
-    "combinedNomenclatureCode",
+    Some("combinedNomenclatureCode"),
     Seq("taricAdditionalCodes"),
     Seq("nationalAdditionalCodes"),
     descriptionOfGoods,

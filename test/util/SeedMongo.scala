@@ -63,7 +63,7 @@ object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuil
     withItems(
       anItem(
         withProcedureCodes(Some("1040"), Seq("000")),
-        withItemType(combinedNomenclatureCode = "46021910", descriptionOfGoods = "Straw for bottles", statisticalValue = "1000"),
+        withItemType(combinedNomenclatureCode = Some("46021910"), descriptionOfGoods = "Straw for bottles", statisticalValue = "1000"),
         withPackageInformation("PK", 10, "RICH123"),
         withCommodityMeasure(CommodityMeasure(Some("10"), "500", "700")),
         withAdditionalInformation("00400", "EXPORTER"),
