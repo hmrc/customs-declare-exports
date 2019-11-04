@@ -26,7 +26,7 @@ import wco.datamodel.wco.declaration_ds.dms._2.FreightPaymentMethodCodeType
 class FreightBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration.Consignment] {
 
   override def buildThenAdd(model: ExportsDeclaration, consignment: Declaration.Consignment): Unit =
-    model.transportDetails
+    model.borderTransport
       .flatMap(_.paymentMethod)
       .map(createFreight)
       .foreach(consignment.setFreight)

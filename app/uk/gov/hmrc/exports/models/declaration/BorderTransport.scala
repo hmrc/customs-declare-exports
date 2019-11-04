@@ -18,15 +18,16 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 
-/**
-  * This class is equivalent DepartureTransport class in frontend.
-  */
 case class BorderTransport(
-  borderModeOfTransportCode: String,
-  meansOfTransportOnDepartureType: String,
-  meansOfTransportOnDepartureIDNumber: Option[String]
+  meansOfTransportCrossingTheBorderNationality: Option[String],
+  container: Boolean,
+  meansOfTransportCrossingTheBorderType: String,
+  meansOfTransportCrossingTheBorderIDNumber: Option[String],
+  paymentMethod: Option[String] = None
 )
 
 object BorderTransport {
+
   implicit val formats: OFormat[BorderTransport] = Json.format[BorderTransport]
+
 }

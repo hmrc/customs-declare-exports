@@ -35,7 +35,7 @@ class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with Mockit
 
     "build then add" when {
       "no border transport or transport details" in {
-        val model = aDeclaration(withoutTransportDetails(), withoutBorderTransport())
+        val model = aDeclaration(withoutBorderTransport(), withoutDepartureTransport())
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -45,12 +45,12 @@ class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with Mockit
 
       "transport details only" in {
         val model = aDeclaration(
-          withTransportDetails(
+          withBorderTransport(
             meansOfTransportCrossingTheBorderNationality = Some("United Kingdom"),
             meansOfTransportCrossingTheBorderType = "type",
             meansOfTransportCrossingTheBorderIDNumber = Some("id")
           ),
-          withoutBorderTransport()
+          withoutDepartureTransport()
         )
         val declaration = new Declaration()
 
@@ -63,7 +63,7 @@ class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with Mockit
 
       "invalid nationality" in {
         val model = aDeclaration(
-          withTransportDetails(
+          withBorderTransport(
             meansOfTransportCrossingTheBorderNationality = Some("other"),
             meansOfTransportCrossingTheBorderType = "type",
             meansOfTransportCrossingTheBorderIDNumber = Some("id")
@@ -77,7 +77,7 @@ class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with Mockit
       }
 
       "border transport only" in {
-        val model = aDeclaration(withoutTransportDetails(), withBorderTransport(borderModeOfTransportCode = "code"))
+        val model = aDeclaration(withoutBorderTransport(), withDepartureTransport(borderModeOfTransportCode = "code"))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -87,12 +87,12 @@ class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with Mockit
 
       "fully populated" in {
         val model = aDeclaration(
-          withTransportDetails(
+          withBorderTransport(
             meansOfTransportCrossingTheBorderNationality = Some("United Kingdom"),
             meansOfTransportCrossingTheBorderType = "type",
             meansOfTransportCrossingTheBorderIDNumber = Some("id")
           ),
-          withBorderTransport(borderModeOfTransportCode = "code")
+          withDepartureTransport(borderModeOfTransportCode = "code")
         )
         val declaration = new Declaration()
 
