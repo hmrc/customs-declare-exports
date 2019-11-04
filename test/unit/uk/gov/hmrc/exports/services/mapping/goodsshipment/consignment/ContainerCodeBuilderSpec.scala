@@ -17,7 +17,7 @@
 package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.declaration.TransportDetails
+import uk.gov.hmrc.exports.models.declaration.BorderTransport
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ContainerCodeBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
@@ -30,7 +30,7 @@ class ContainerCodeBuilderSpec extends WordSpec with Matchers {
         val builder = new ContainerCodeBuilder
         val consignment = new GoodsShipment.Consignment
 
-        builder.buildThenAdd(TransportDetails(Some("Portugal"), true, "40", Some("1234567878ui"), Some("A")), consignment)
+        builder.buildThenAdd(BorderTransport(Some("Portugal"), true, "40", Some("1234567878ui"), Some("A")), consignment)
 
         consignment.getContainerCode.getValue should be("1")
       }
@@ -39,7 +39,7 @@ class ContainerCodeBuilderSpec extends WordSpec with Matchers {
         val builder = new ContainerCodeBuilder
         val consignment = new GoodsShipment.Consignment
 
-        builder.buildThenAdd(TransportDetails(Some("Portugal"), false, "40", Some("1234567878ui"), Some("A")), consignment)
+        builder.buildThenAdd(BorderTransport(Some("Portugal"), false, "40", Some("1234567878ui"), Some("A")), consignment)
 
         consignment.getContainerCode.getValue should be("0")
       }

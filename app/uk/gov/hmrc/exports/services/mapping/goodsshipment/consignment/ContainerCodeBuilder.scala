@@ -17,19 +17,19 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.TransportDetails
+import uk.gov.hmrc.exports.models.declaration.BorderTransport
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.declaration_ds.dms._2.ConsignmentContainerCodeType
 
-class ContainerCodeBuilder @Inject()() extends ModifyingBuilder[TransportDetails, GoodsShipment.Consignment] {
-  override def buildThenAdd(model: TransportDetails, consignment: GoodsShipment.Consignment): Unit = {
+class ContainerCodeBuilder @Inject()() extends ModifyingBuilder[BorderTransport, GoodsShipment.Consignment] {
+  override def buildThenAdd(model: BorderTransport, consignment: GoodsShipment.Consignment): Unit = {
     val codeType = new ConsignmentContainerCodeType()
     codeType.setValue(extractContainerCode(model))
     consignment.setContainerCode(codeType)
   }
 
-  private def extractContainerCode(model: TransportDetails) =
+  private def extractContainerCode(model: BorderTransport) =
     if (model.container) "1" else "0"
 
 }
