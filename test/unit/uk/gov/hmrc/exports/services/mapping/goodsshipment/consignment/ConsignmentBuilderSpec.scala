@@ -137,6 +137,51 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
             any[GoodsShipment.Consignment]
           )
       }
+
+      "supplementary" in {
+        val model: ExportsDeclaration =
+          aDeclaration(
+            withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
+            withBorderTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber)),
+            withType(DeclarationType.SUPPLEMENTARY),
+            withTransportDetails(Some("Portugal"), container = true, "40", Some("1234567878ui"), Some("A")),
+            withContainerData(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2"))))
+          )
+
+        val goodsShipment: Declaration.GoodsShipment = new Declaration.GoodsShipment
+
+        builder.buildThenAdd(model, goodsShipment)
+
+        verify(goodsLocationBuilder)
+          .buildThenAdd(refEq(GoodsLocationBuilderSpec.correctGoodsLocation), any[GoodsShipment.Consignment])
+
+        verify(containerCodeBuilder)
+          .buildThenAdd(
+            refEq(
+              TransportDetails(
+                meansOfTransportCrossingTheBorderNationality = Some("Portugal"),
+                container = true,
+                meansOfTransportCrossingTheBorderType = "40",
+                meansOfTransportCrossingTheBorderIDNumber = Some("1234567878ui"),
+                paymentMethod = Some("A")
+              )
+            ),
+            any[GoodsShipment.Consignment]
+          )
+
+        verify(departureTransportMeansBuilder)
+          .buildThenAdd(
+            refEq(BorderTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber))),
+            any[Option[WarehouseIdentification]],
+            any[GoodsShipment.Consignment]
+          )
+
+        verify(transportEquipmentBuilder)
+          .buildThenAdd(
+            refEq(TransportInformationContainers(Seq(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2")))))),
+            any[GoodsShipment.Consignment]
+          )
+      }
     }
 
     "correctly call TransportEquipmentBuilder" when {
