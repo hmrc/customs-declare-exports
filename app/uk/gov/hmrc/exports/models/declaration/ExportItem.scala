@@ -43,11 +43,14 @@ object AdditionalFiscalReferences {
   implicit val format: OFormat[AdditionalFiscalReferences] = Json.format[AdditionalFiscalReferences]
 }
 
+case class CommodityDetails(combinedNomenclatureCode: Option[String], descriptionOfGoods: String)
+object CommodityDetails {
+  implicit val format: OFormat[CommodityDetails] = Json.format[CommodityDetails]
+}
+
 case class ItemType(
-  combinedNomenclatureCode: Option[String],
   taricAdditionalCode: Seq[String],
   nationalAdditionalCode: Seq[String],
-  descriptionOfGoods: String,
   cusCode: Option[String],
   unDangerousGoodsCode: Option[String],
   statisticalValue: String
@@ -135,6 +138,7 @@ case class ExportItem(
   fiscalInformation: Option[FiscalInformation] = None,
   additionalFiscalReferencesData: Option[AdditionalFiscalReferences] = None,
   itemType: Option[ItemType] = None,
+  commodityDetails: Option[CommodityDetails] = None,
   packageInformation: List[PackageInformation] = Nil,
   commodityMeasure: Option[CommodityMeasure] = None,
   additionalInformation: Option[AdditionalInformations] = None,

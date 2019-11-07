@@ -16,21 +16,21 @@
 
 package uk.gov.hmrc.exports.services.mapping
 import uk.gov.hmrc.exports.models.declaration.IdentificationTypeCodes.{CUSCode, CombinedNomenclatureCode, NationalAdditionalCode, TARICAdditionalCode}
-import uk.gov.hmrc.exports.models.declaration.{CommodityMeasure, ItemType}
+import uk.gov.hmrc.exports.models.declaration.{CommodityDetails, CommodityMeasure, ItemType}
 import uk.gov.hmrc.wco.dec._
 
 class CachingMappingHelper {
   val defaultMeasureCode = "KGM"
 
-  def commodityFromItemTypes(itemType: ItemType): Commodity =
+  def commodityFromItemTypes(itemType: ItemType, commodityDetails: CommodityDetails): Commodity =
     Commodity(
-      description = Some(itemType.descriptionOfGoods),
-      classifications = getClassificationsFromItemTypes(itemType),
+      description = Some(commodityDetails.descriptionOfGoods),
+      classifications = getClassificationsFromItemTypes(itemType, commodityDetails),
       dangerousGoods = itemType.unDangerousGoodsCode.map(code => Seq(DangerousGoods(Some(code)))).getOrElse(Seq.empty)
     )
 
-  def getClassificationsFromItemTypes(itemType: ItemType): Seq[Classification] =
-    Seq(Classification(itemType.combinedNomenclatureCode, identificationTypeCode = Some(CombinedNomenclatureCode.value))) ++ itemType.cusCode
+  def getClassificationsFromItemTypes(itemType: ItemType, commodityDetails: CommodityDetails): Seq[Classification] =
+    Seq(Classification(commodityDetails.combinedNomenclatureCode, identificationTypeCode = Some(CombinedNomenclatureCode.value))) ++ itemType.cusCode
       .map(id => Classification(Some(id), identificationTypeCode = Some(CUSCode.value))) ++
       itemType.nationalAdditionalCode.map(code => Classification(Some(code), identificationTypeCode = Some(NationalAdditionalCode.value))) ++ itemType.taricAdditionalCode
       .map(code => Classification(Some(code), identificationTypeCode = Some(TARICAdditionalCode.value)))
