@@ -16,17 +16,17 @@
 
 package uk.gov.hmrc.exports.services.mapping
 import uk.gov.hmrc.exports.models.declaration.IdentificationTypeCodes.{CUSCode, CombinedNomenclatureCode, NationalAdditionalCode, TARICAdditionalCode}
-import uk.gov.hmrc.exports.models.declaration.{CommodityDetails, CommodityMeasure, ItemType}
+import uk.gov.hmrc.exports.models.declaration.{CommodityDetails, CommodityMeasure, ItemType, UNDangerousGoodsCode}
 import uk.gov.hmrc.wco.dec._
 
 class CachingMappingHelper {
   val defaultMeasureCode = "KGM"
 
-  def commodityFromItemTypes(itemType: ItemType, commodityDetails: CommodityDetails): Commodity =
+  def commodityFromItemTypes(itemType: ItemType, commodityDetails: CommodityDetails, dangerousGoodsCode: Option[UNDangerousGoodsCode]): Commodity =
     Commodity(
       description = Some(commodityDetails.descriptionOfGoods),
       classifications = getClassificationsFromItemTypes(itemType, commodityDetails),
-      dangerousGoods = itemType.unDangerousGoodsCode.map(code => Seq(DangerousGoods(Some(code)))).getOrElse(Seq.empty)
+      dangerousGoods = dangerousGoodsCode.flatMap(_.dangerousGoodsCode).map(code => Seq(DangerousGoods(Some(code)))).getOrElse(Seq.empty)
     )
 
   def getClassificationsFromItemTypes(itemType: ItemType, commodityDetails: CommodityDetails): Seq[Classification] =

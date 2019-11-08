@@ -65,15 +65,15 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
     declarationType: DeclarationType
   ) = {
     val combinedCommodity = for {
-      commodityWithoutGoodsMeasure <- mapItemTypeToCommodity(exportItem.itemType, exportItem.commodityDetails)
+      commodityWithoutGoodsMeasure <- mapItemTypeToCommodity(exportItem)
       commodityOnlyGoodsMeasure = mapCommodityMeasureToCommodity(exportItem.commodityMeasure, declarationType)
     } yield combineCommodities(commodityWithoutGoodsMeasure, commodityOnlyGoodsMeasure)
 
     combinedCommodity.foreach(commodityBuilder.buildThenAdd(_, wcoGovernmentAgencyGoodsItem))
   }
-  private def mapItemTypeToCommodity(itemType: Option[ItemType], commodityDetails: Option[CommodityDetails]): Option[Commodity] =
-    (itemType, commodityDetails) match {
-      case (Some(item), Some(details)) => Some(cachingMappingHelper.commodityFromItemTypes(item, details))
+  private def mapItemTypeToCommodity(exportItem: ExportItem): Option[Commodity] =
+    (exportItem.itemType, exportItem.commodityDetails) match {
+      case (Some(item), Some(details)) => Some(cachingMappingHelper.commodityFromItemTypes(item, details, exportItem.dangerousGoodsCode))
       case _                           => None
     }
 
