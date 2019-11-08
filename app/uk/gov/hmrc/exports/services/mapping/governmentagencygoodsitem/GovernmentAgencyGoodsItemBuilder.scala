@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
-import uk.gov.hmrc.exports.models.declaration.{CommodityMeasure, ExportItem, ExportsDeclaration, ItemType}
+import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.mapping.{CachingMappingHelper, ModifyingBuilder}
 import uk.gov.hmrc.wco.dec.Commodity
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -65,16 +65,17 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
     declarationType: DeclarationType
   ) = {
     val combinedCommodity = for {
-      commodityWithoutGoodsMeasure <- mapItemTypeToCommodity(exportItem.itemType)
+      commodityWithoutGoodsMeasure <- mapItemTypeToCommodity(exportItem.itemType, exportItem.commodityDetails)
       commodityOnlyGoodsMeasure = mapCommodityMeasureToCommodity(exportItem.commodityMeasure, declarationType)
     } yield combineCommodities(commodityWithoutGoodsMeasure, commodityOnlyGoodsMeasure)
 
     combinedCommodity.foreach(commodityBuilder.buildThenAdd(_, wcoGovernmentAgencyGoodsItem))
   }
-  private def mapItemTypeToCommodity(itemType: Option[ItemType]): Option[Commodity] =
-    itemType.map({ item =>
-      cachingMappingHelper.commodityFromItemTypes(item)
-    })
+  private def mapItemTypeToCommodity(itemType: Option[ItemType], commodityDetails: Option[CommodityDetails]): Option[Commodity] =
+    (itemType, commodityDetails) match {
+      case (Some(item), Some(details)) => Some(cachingMappingHelper.commodityFromItemTypes(item, details))
+      case _                           => None
+    }
 
   private def mapCommodityMeasureToCommodity(commodityMeasure: Option[CommodityMeasure], declarationType: DeclarationType): Option[Commodity] =
     if (journeysWithCommodityMeasurements.contains(declarationType)) {
