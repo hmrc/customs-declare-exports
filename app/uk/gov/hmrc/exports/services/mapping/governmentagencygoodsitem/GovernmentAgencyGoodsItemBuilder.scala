@@ -73,8 +73,9 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
   }
   private def mapItemTypeToCommodity(exportItem: ExportItem): Option[Commodity] =
     (exportItem.itemType, exportItem.commodityDetails) match {
-      case (Some(item), Some(details)) => Some(cachingMappingHelper.commodityFromItemTypes(item, details, exportItem.dangerousGoodsCode))
-      case _                           => None
+      case (Some(item), Some(details)) =>
+        Some(cachingMappingHelper.commodityFromItemTypes(item, details, exportItem.dangerousGoodsCode, exportItem.cusCode))
+      case _ => None
     }
 
   private def mapCommodityMeasureToCommodity(commodityMeasure: Option[CommodityMeasure], declarationType: DeclarationType): Option[Commodity] =

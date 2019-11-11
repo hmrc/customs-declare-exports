@@ -53,7 +53,12 @@ object UNDangerousGoodsCode {
   implicit val format: OFormat[UNDangerousGoodsCode] = Json.format[UNDangerousGoodsCode]
 }
 
-case class ItemType(taricAdditionalCode: Seq[String], nationalAdditionalCode: Seq[String], cusCode: Option[String], statisticalValue: String)
+case class CUSCode(cusCode: Option[String])
+object CUSCode {
+  implicit val format: OFormat[CUSCode] = Json.format[CUSCode]
+}
+
+case class ItemType(taricAdditionalCode: Seq[String], nationalAdditionalCode: Seq[String], statisticalValue: String)
 object ItemType {
   implicit val format: OFormat[ItemType] = Json.format[ItemType]
 }
@@ -139,6 +144,7 @@ case class ExportItem(
   itemType: Option[ItemType] = None,
   commodityDetails: Option[CommodityDetails] = None,
   dangerousGoodsCode: Option[UNDangerousGoodsCode] = None,
+  cusCode: Option[CUSCode] = None,
   packageInformation: List[PackageInformation] = Nil,
   commodityMeasure: Option[CommodityMeasure] = None,
   additionalInformation: Option[AdditionalInformations] = None,
