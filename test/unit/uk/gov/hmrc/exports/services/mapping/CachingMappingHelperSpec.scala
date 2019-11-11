@@ -17,7 +17,7 @@
 package unit.uk.gov.hmrc.exports.services.mapping
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.declaration.CommodityMeasure
+import uk.gov.hmrc.exports.models.declaration.{CommodityDetails, CommodityMeasure, ItemType, UNDangerousGoodsCode}
 import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper
 
 class CachingMappingHelperSpec extends WordSpec with Matchers {
@@ -41,6 +41,28 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
       goodsMeasure.tariffQuantity shouldBe None
       goodsMeasure.grossMassMeasure.get.value.get shouldBe 100.00
       goodsMeasure.netWeightMeasure.get.value.get shouldBe 100.00
+    }
+
+    "mapCommodity" when {
+      val itemType: ItemType = ItemType(Seq("taricAdditionalCodes"), Seq("nationalAdditionalCodes"), Some("cusCode"), "10")
+      val commodityDetails = CommodityDetails(Some("commodityCode"), "description")
+      val dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("unDangerousGoodsCode")))
+
+      "all values provided" in {
+        val commodity = new CachingMappingHelper().commodityFromItemTypes(itemType, commodityDetails, dangerousGoodsCode)
+
+        commodity.description.get shouldBe "description"
+        commodity.classifications.head.id.get shouldBe "commodityCode"
+        commodity.dangerousGoods.head.undgid.get shouldBe "unDangerousGoodsCode"
+      }
+
+      "UN Dangerous Goods Code not provided" in {
+        val commodity = new CachingMappingHelper().commodityFromItemTypes(itemType, commodityDetails, None)
+
+        commodity.description.get shouldBe "description"
+        commodity.classifications.head.id.get shouldBe "commodityCode"
+        commodity.dangerousGoods shouldBe Seq.empty
+      }
     }
 
   }
