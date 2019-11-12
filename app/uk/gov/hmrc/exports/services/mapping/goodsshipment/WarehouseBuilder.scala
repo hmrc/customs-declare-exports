@@ -30,17 +30,20 @@ class WarehouseBuilder @Inject()() extends ModifyingBuilder[WarehouseIdentificat
     }
 
   private def isDefined(warehouse: WarehouseIdentification): Boolean =
-    warehouse.identificationNumber.isDefined && warehouse.identificationType.isDefined
+    warehouse.identificationNumber.isDefined
 
   private def createWarehouse(data: WarehouseIdentification): Warehouse = {
     val warehouse = new Warehouse()
 
+    val warehouseIdentificationType = data.identificationNumber.map(_.substring(0, 1)).getOrElse("")
+    val warehouseIdentificationNumber = data.identificationNumber.map(_.substring(1)).getOrElse("")
+
     val id = new WarehouseIdentificationIDType()
-    id.setValue(data.identificationNumber.getOrElse(""))
+    id.setValue(warehouseIdentificationNumber)
     warehouse.setID(id)
 
     val typeCode = new WarehouseTypeCodeType()
-    typeCode.setValue(data.identificationType.getOrElse(""))
+    typeCode.setValue(warehouseIdentificationType)
     warehouse.setTypeCode(typeCode)
 
     warehouse
