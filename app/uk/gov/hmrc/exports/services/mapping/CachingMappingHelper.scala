@@ -26,19 +26,25 @@ class CachingMappingHelper {
     itemType: ItemType,
     commodityDetails: CommodityDetails,
     dangerousGoodsCode: Option[UNDangerousGoodsCode],
-    cusCode: Option[CUSCode]
+    cusCode: Option[CUSCode],
+    taricCodes: List[TaricCode]
   ): Commodity =
     Commodity(
       description = Some(commodityDetails.descriptionOfGoods),
-      classifications = getClassificationsFromItemTypes(itemType, commodityDetails, cusCode),
+      classifications = getClassificationsFromItemTypes(itemType, commodityDetails, cusCode, taricCodes),
       dangerousGoods = dangerousGoodsCode.flatMap(_.dangerousGoodsCode).map(code => Seq(DangerousGoods(Some(code)))).getOrElse(Seq.empty)
     )
 
-  def getClassificationsFromItemTypes(itemType: ItemType, commodityDetails: CommodityDetails, cusCode: Option[CUSCode]): Seq[Classification] =
+  def getClassificationsFromItemTypes(
+    itemType: ItemType,
+    commodityDetails: CommodityDetails,
+    cusCode: Option[CUSCode],
+    taricCodes: List[TaricCode]
+  ): Seq[Classification] =
     Seq(Classification(commodityDetails.combinedNomenclatureCode, identificationTypeCode = Some(CombinedNomenclatureCode.value))) ++ cusCode
       .map(code => Classification(code.cusCode, identificationTypeCode = Some(CUSCode.value))) ++
-      itemType.nationalAdditionalCode.map(code => Classification(Some(code), identificationTypeCode = Some(NationalAdditionalCode.value))) ++ itemType.taricAdditionalCode
-      .map(code => Classification(Some(code), identificationTypeCode = Some(TARICAdditionalCode.value)))
+      itemType.nationalAdditionalCode.map(code => Classification(Some(code), identificationTypeCode = Some(NationalAdditionalCode.value))) ++ taricCodes
+      .map(code => Classification(Some(code.taricCode), identificationTypeCode = Some(TARICAdditionalCode.value)))
 
   def mapGoodsMeasure(data: CommodityMeasure) =
     Commodity(
