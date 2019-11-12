@@ -17,7 +17,7 @@
 package unit.uk.gov.hmrc.exports.services.mapping
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.declaration.{CommodityDetails, CommodityMeasure, ItemType, UNDangerousGoodsCode}
+import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper
 
 class CachingMappingHelperSpec extends WordSpec with Matchers {
@@ -44,20 +44,26 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
     }
 
     "mapCommodity" when {
-      val itemType: ItemType = ItemType(Seq("taricAdditionalCodes"), Seq("nationalAdditionalCodes"), Some("cusCode"), "10")
+      val itemType: ItemType = ItemType(Seq("taricAdditionalCodes"), Seq("nationalAdditionalCodes"), "10")
       val commodityDetails = CommodityDetails(Some("commodityCode"), "description")
       val dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("unDangerousGoodsCode")))
+      val cusCode = Some(CUSCode(Some("cusCode")))
 
       "all values provided" in {
-        val commodity = new CachingMappingHelper().commodityFromItemTypes(itemType, commodityDetails, dangerousGoodsCode)
+        val commodity = new CachingMappingHelper().commodityFromItemTypes(itemType, commodityDetails, dangerousGoodsCode, cusCode)
 
         commodity.description.get shouldBe "description"
-        commodity.classifications.head.id.get shouldBe "commodityCode"
         commodity.dangerousGoods.head.undgid.get shouldBe "unDangerousGoodsCode"
+        commodity.classifications.map(c => c.id) shouldBe Seq(
+          Some("commodityCode"),
+          Some("cusCode"),
+          Some("nationalAdditionalCodes"),
+          Some("taricAdditionalCodes")
+        )
       }
 
       "UN Dangerous Goods Code not provided" in {
-        val commodity = new CachingMappingHelper().commodityFromItemTypes(itemType, commodityDetails, None)
+        val commodity = new CachingMappingHelper().commodityFromItemTypes(itemType, commodityDetails, None, None)
 
         commodity.description.get shouldBe "description"
         commodity.classifications.head.id.get shouldBe "commodityCode"

@@ -59,10 +59,9 @@ trait ExportsItemBuilder {
   def withItemType(
     taricAdditionalCodes: Seq[String] = Seq.empty,
     nationalAdditionalCodes: Seq[String] = Seq.empty,
-    cusCode: Option[String] = None,
     statisticalValue: String = ""
   ): ItemModifier =
-    withItemType(ItemType(taricAdditionalCodes, nationalAdditionalCodes, cusCode, statisticalValue))
+    withItemType(ItemType(taricAdditionalCodes, nationalAdditionalCodes, statisticalValue))
 
   def withItemType(data: ItemType): ItemModifier = _.copy(itemType = Some(data))
 

@@ -16,22 +16,27 @@
 
 package uk.gov.hmrc.exports.services.mapping
 import uk.gov.hmrc.exports.models.declaration.IdentificationTypeCodes.{CUSCode, CombinedNomenclatureCode, NationalAdditionalCode, TARICAdditionalCode}
-import uk.gov.hmrc.exports.models.declaration.{CommodityDetails, CommodityMeasure, ItemType, UNDangerousGoodsCode}
+import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.wco.dec._
 
 class CachingMappingHelper {
   val defaultMeasureCode = "KGM"
 
-  def commodityFromItemTypes(itemType: ItemType, commodityDetails: CommodityDetails, dangerousGoodsCode: Option[UNDangerousGoodsCode]): Commodity =
+  def commodityFromItemTypes(
+    itemType: ItemType,
+    commodityDetails: CommodityDetails,
+    dangerousGoodsCode: Option[UNDangerousGoodsCode],
+    cusCode: Option[CUSCode]
+  ): Commodity =
     Commodity(
       description = Some(commodityDetails.descriptionOfGoods),
-      classifications = getClassificationsFromItemTypes(itemType, commodityDetails),
+      classifications = getClassificationsFromItemTypes(itemType, commodityDetails, cusCode),
       dangerousGoods = dangerousGoodsCode.flatMap(_.dangerousGoodsCode).map(code => Seq(DangerousGoods(Some(code)))).getOrElse(Seq.empty)
     )
 
-  def getClassificationsFromItemTypes(itemType: ItemType, commodityDetails: CommodityDetails): Seq[Classification] =
-    Seq(Classification(commodityDetails.combinedNomenclatureCode, identificationTypeCode = Some(CombinedNomenclatureCode.value))) ++ itemType.cusCode
-      .map(id => Classification(Some(id), identificationTypeCode = Some(CUSCode.value))) ++
+  def getClassificationsFromItemTypes(itemType: ItemType, commodityDetails: CommodityDetails, cusCode: Option[CUSCode]): Seq[Classification] =
+    Seq(Classification(commodityDetails.combinedNomenclatureCode, identificationTypeCode = Some(CombinedNomenclatureCode.value))) ++ cusCode
+      .map(code => Classification(code.cusCode, identificationTypeCode = Some(CUSCode.value))) ++
       itemType.nationalAdditionalCode.map(code => Classification(Some(code), identificationTypeCode = Some(NationalAdditionalCode.value))) ++ itemType.taricAdditionalCode
       .map(code => Classification(Some(code), identificationTypeCode = Some(TARICAdditionalCode.value)))
 
