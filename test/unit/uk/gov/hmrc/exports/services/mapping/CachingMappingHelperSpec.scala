@@ -44,14 +44,16 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
     }
 
     "mapCommodity" when {
-      val itemType: ItemType = ItemType(Seq("nationalAdditionalCodes"), "10")
+      val itemType: ItemType = ItemType("10")
       val commodityDetails = CommodityDetails(Some("commodityCode"), "description")
       val dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("unDangerousGoodsCode")))
       val cusCode = Some(CUSCode(Some("cusCode")))
       val taricCodes = List(TaricCode("taricAdditionalCodes"))
+      val nactCodes = List(NactCode("nationalAdditionalCodes"))
 
       "all values provided" in {
-        val commodity = new CachingMappingHelper().commodityFromItemTypes(itemType, commodityDetails, dangerousGoodsCode, cusCode, taricCodes)
+        val commodity =
+          new CachingMappingHelper().commodityFromItemTypes(itemType, commodityDetails, dangerousGoodsCode, cusCode, taricCodes, nactCodes)
 
         commodity.description.get shouldBe "description"
         commodity.dangerousGoods.head.undgid.get shouldBe "unDangerousGoodsCode"
@@ -64,7 +66,7 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
       }
 
       "UN Dangerous Goods Code not provided" in {
-        val commodity = new CachingMappingHelper().commodityFromItemTypes(itemType, commodityDetails, None, None, List.empty)
+        val commodity = new CachingMappingHelper().commodityFromItemTypes(itemType, commodityDetails, None, None, List.empty, List.empty)
 
         commodity.description.get shouldBe "description"
         commodity.classifications.head.id.get shouldBe "commodityCode"

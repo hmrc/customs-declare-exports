@@ -74,7 +74,10 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
   private def mapItemTypeToCommodity(exportItem: ExportItem): Option[Commodity] =
     (exportItem.itemType, exportItem.commodityDetails) match {
       case (Some(item), Some(details)) =>
-        Some(cachingMappingHelper.commodityFromItemTypes(item, details, exportItem.dangerousGoodsCode, exportItem.cusCode, exportItem.taricCodes))
+        Some(
+          cachingMappingHelper
+            .commodityFromItemTypes(item, details, exportItem.dangerousGoodsCode, exportItem.cusCode, exportItem.taricCodes, exportItem.nactCodes)
+        )
       case _ => None
     }
 

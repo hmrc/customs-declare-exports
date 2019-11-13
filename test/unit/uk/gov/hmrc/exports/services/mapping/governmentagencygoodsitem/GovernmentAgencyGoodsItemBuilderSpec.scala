@@ -80,7 +80,8 @@ class GovernmentAgencyGoodsItemBuilderSpec
               any[CommodityDetails],
               any[Option[UNDangerousGoodsCode]],
               any[Option[CUSCode]],
-              any[List[TaricCode]]
+              any[List[TaricCode]],
+              any[List[NactCode]]
             )
         ).thenReturn(Commodity(description = Some("Some Commodity")))
 
@@ -100,7 +101,8 @@ class GovernmentAgencyGoodsItemBuilderSpec
           any[CommodityDetails],
           any[Option[UNDangerousGoodsCode]],
           any[Option[CUSCode]],
-          any[List[TaricCode]]
+          any[List[TaricCode]],
+          any[List[NactCode]]
         )
         verify(dutyTaxPartyBuilder)
           .buildThenAdd(any[AdditionalFiscalReference], any[GoodsShipment.GovernmentAgencyGoodsItem])
@@ -128,7 +130,8 @@ class GovernmentAgencyGoodsItemBuilderSpec
               any[CommodityDetails],
               any[Option[UNDangerousGoodsCode]],
               any[Option[CUSCode]],
-              any[List[TaricCode]]
+              any[List[TaricCode]],
+              any[List[NactCode]]
             )
         ).thenReturn(Commodity(description = Some("Some Commodity")))
 
@@ -148,7 +151,8 @@ class GovernmentAgencyGoodsItemBuilderSpec
           any[CommodityDetails],
           any[Option[UNDangerousGoodsCode]],
           any[Option[CUSCode]],
-          any[List[TaricCode]]
+          any[List[TaricCode]],
+          any[List[NactCode]]
         )
         verify(dutyTaxPartyBuilder)
           .buildThenAdd(any[AdditionalFiscalReference], any[GoodsShipment.GovernmentAgencyGoodsItem])
