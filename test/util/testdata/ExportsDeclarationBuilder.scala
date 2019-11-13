@@ -149,18 +149,20 @@ trait ExportsDeclarationBuilder {
   def withCarrierDetails(eori: Option[String] = None, address: Option[Address] = None): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(carrierDetails = Some(CarrierDetails(EntityDetails(eori, address)))))
 
-  def withoutDestinationCountries(): ExportsDeclarationModifier =
-    cache => cache.copy(locations = cache.locations.copy(destinationCountries = None))
+  def withoutOriginationCountry(): ExportsDeclarationModifier = cache => cache.copy(locations = cache.locations.copy(originationCountry = None))
 
-  def withDestinationCountries(
-    countryOfDispatch: String = "GB",
-    countriesOfRouting: Seq[String] = Seq.empty,
-    countryOfDestination: String = "US"
-  ): ExportsDeclarationModifier =
-    m =>
-      m.copy(
-        locations = m.locations.copy(destinationCountries = Some(DestinationCountries(countryOfDispatch, countriesOfRouting, countryOfDestination)))
-    )
+  def withOriginationCountry(country: String = "GB"): ExportsDeclarationModifier =
+    cache => cache.copy(locations = cache.locations.copy(originationCountry = Some(country)))
+
+  def withoutDestinationCountry(): ExportsDeclarationModifier = cache => cache.copy(locations = cache.locations.copy(destinationCountry = None))
+
+  def withDestinationCountry(country: String = "GB"): ExportsDeclarationModifier =
+    cache => cache.copy(locations = cache.locations.copy(destinationCountry = Some(country)))
+
+  def withoutRoutingCountries(): ExportsDeclarationModifier = cache => cache.copy(locations = cache.locations.copy(routingCountries = Seq.empty))
+
+  def withRoutingCountries(countries: Seq[String] = Seq("GB", "PL")): ExportsDeclarationModifier =
+    cache => cache.copy(locations = cache.locations.copy(routingCountries = countries))
 
   def withoutGoodsLocation(): ExportsDeclarationModifier =
     m => m.copy(locations = m.locations.copy(goodsLocation = None))

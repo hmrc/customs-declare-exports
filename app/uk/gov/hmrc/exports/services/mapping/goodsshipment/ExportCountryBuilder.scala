@@ -17,27 +17,22 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.DestinationCountries
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.ExportCountry
 import wco.datamodel.wco.declaration_ds.dms._2.ExportCountryCountryCodeType
 
-class ExportCountryBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[DestinationCountries, GoodsShipment] {
-  override def buildThenAdd(model: DestinationCountries, goodsShipment: GoodsShipment): Unit =
-    if (isDefined(model)) {
-      goodsShipment.setExportCountry(createExportCountry(model))
-    }
+class ExportCountryBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[String, GoodsShipment] {
+  override def buildThenAdd(originationCountry: String, goodsShipment: GoodsShipment): Unit =
+    if (originationCountry.nonEmpty) goodsShipment.setExportCountry(createExportCountry(originationCountry))
 
-  private def isDefined(country: DestinationCountries): Boolean = country.countryOfDispatch.nonEmpty
-
-  private def createExportCountry(data: DestinationCountries): GoodsShipment.ExportCountry = {
+  private def createExportCountry(originationCountry: String): GoodsShipment.ExportCountry = {
 
     val id = new ExportCountryCountryCodeType()
     id.setValue(
       countriesService.allCountries
-        .find(country => data.countryOfDispatch.contains(country.countryCode))
+        .find(_.countryCode == originationCountry)
         .map(_.countryCode)
         .getOrElse("")
     )

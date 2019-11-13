@@ -45,7 +45,9 @@ object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuil
     withRepresentativeDetails(Some("GB717572504502809"), None, Some("3")),
     withDeclarationHolders(DeclarationHolder(Some("AEOC"), Some("GB717572504502811"))),
     withCarrierDetails(None, Some(Address("XYZ Carrier", "School Road", "London", "WS1 2AB", "United Kingdom"))),
-    withDestinationCountries(countriesOfRouting = Seq("FR")),
+    withOriginationCountry(),
+    withDestinationCountry(),
+    withoutRoutingCountries(),
     withGoodsLocation(
       GoodsLocation(
         country = "Angola including Cabinda",

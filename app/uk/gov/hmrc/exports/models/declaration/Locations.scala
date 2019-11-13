@@ -53,7 +53,10 @@ object OfficeOfExit {
 }
 
 case class Locations(
-  destinationCountries: Option[DestinationCountries] = None,
+  originationCountry: Option[String] = None,
+  destinationCountry: Option[String] = None,
+  hasRoutingCountries: Option[Boolean] = None,
+  routingCountries: Seq[String] = Seq.empty,
   goodsLocation: Option[GoodsLocation] = None,
   warehouseIdentification: Option[WarehouseIdentification] = None,
   officeOfExit: Option[OfficeOfExit] = None
