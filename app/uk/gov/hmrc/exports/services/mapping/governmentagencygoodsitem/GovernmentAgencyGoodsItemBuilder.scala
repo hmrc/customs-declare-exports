@@ -64,28 +64,24 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
     wcoGovernmentAgencyGoodsItem: WCOGovernmentAgencyGoodsItem,
     declarationType: DeclarationType
   ): Unit = {
-    val combinedCommodity = for {
-      commodityWithoutGoodsMeasure <- mapExportItemToCommodity(exportItem)
-      commodityOnlyGoodsMeasure = mapCommodityMeasureToCommodity(exportItem.commodityMeasure, declarationType)
-    } yield combineCommodities(commodityWithoutGoodsMeasure, commodityOnlyGoodsMeasure)
+    val commodityWithoutGoodsMeasure = mapCommodityValuesToCommodity(exportItem)
+    val commodityOnlyGoodsMeasure = mapCommodityMeasureToCommodity(exportItem.commodityMeasure, declarationType)
 
-    combinedCommodity.foreach(commodityBuilder.buildThenAdd(_, wcoGovernmentAgencyGoodsItem))
+    val combinedCommodity = combineCommodities(commodityWithoutGoodsMeasure, commodityOnlyGoodsMeasure)
+
+    commodityBuilder.buildThenAdd(combinedCommodity, wcoGovernmentAgencyGoodsItem)
   }
-  private def mapExportItemToCommodity(exportItem: ExportItem): Option[Commodity] =
-    if (exportItem.commodityDetails.isDefined) {
-      Some(cachingMappingHelper.commodityFromExportItem(exportItem))
-    } else {
-      None
-    }
+  private def mapCommodityValuesToCommodity(exportItem: ExportItem): Commodity =
+    cachingMappingHelper.commodityFromExportItem(exportItem)
 
   private def mapCommodityMeasureToCommodity(commodityMeasure: Option[CommodityMeasure], declarationType: DeclarationType): Option[Commodity] =
     if (journeysWithCommodityMeasurements.contains(declarationType)) {
       commodityMeasure.map(measure => cachingMappingHelper.mapGoodsMeasure(measure))
     } else None
 
-  private def combineCommodities(commodityPart1: Commodity, commodityPart2: Option[Commodity]): Commodity =
-    commodityPart2
-      .map(commodityPart2Obj => commodityPart1.copy(goodsMeasure = commodityPart2Obj.goodsMeasure))
-      .getOrElse(commodityPart1)
+  private def combineCommodities(commodityWithoutGoodsMeasure: Commodity, commodityOnlyGoodsMeasure: Option[Commodity]): Commodity =
+    commodityOnlyGoodsMeasure
+      .map(commodityPart2Obj => commodityWithoutGoodsMeasure.copy(goodsMeasure = commodityPart2Obj.goodsMeasure))
+      .getOrElse(commodityWithoutGoodsMeasure)
 
 }
