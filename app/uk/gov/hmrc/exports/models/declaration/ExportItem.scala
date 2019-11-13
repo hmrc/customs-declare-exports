@@ -58,7 +58,12 @@ object CUSCode {
   implicit val format: OFormat[CUSCode] = Json.format[CUSCode]
 }
 
-case class ItemType(taricAdditionalCode: Seq[String], nationalAdditionalCode: Seq[String], statisticalValue: String)
+case class TaricCode(taricCode: String)
+object TaricCode {
+  implicit val format: OFormat[TaricCode] = Json.format[TaricCode]
+}
+
+case class ItemType(nationalAdditionalCode: Seq[String], statisticalValue: String)
 object ItemType {
   implicit val format: OFormat[ItemType] = Json.format[ItemType]
 }
@@ -145,6 +150,7 @@ case class ExportItem(
   commodityDetails: Option[CommodityDetails] = None,
   dangerousGoodsCode: Option[UNDangerousGoodsCode] = None,
   cusCode: Option[CUSCode] = None,
+  taricCodes: List[TaricCode] = Nil,
   packageInformation: List[PackageInformation] = Nil,
   commodityMeasure: Option[CommodityMeasure] = None,
   additionalInformation: Option[AdditionalInformations] = None,

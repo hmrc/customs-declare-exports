@@ -75,7 +75,13 @@ class GovernmentAgencyGoodsItemBuilderSpec
           .thenReturn(Commodity(description = Some("Some Commodity")))
         when(
           mockCachingMappingHelper
-            .commodityFromItemTypes(any[ItemType], any[CommodityDetails], any[Option[UNDangerousGoodsCode]], any[Option[CUSCode]])
+            .commodityFromItemTypes(
+              any[ItemType],
+              any[CommodityDetails],
+              any[Option[UNDangerousGoodsCode]],
+              any[Option[CUSCode]],
+              any[List[TaricCode]]
+            )
         ).thenReturn(Commodity(description = Some("Some Commodity")))
 
         val goodsShipment = new GoodsShipment
@@ -93,7 +99,8 @@ class GovernmentAgencyGoodsItemBuilderSpec
           any[ItemType],
           any[CommodityDetails],
           any[Option[UNDangerousGoodsCode]],
-          any[Option[CUSCode]]
+          any[Option[CUSCode]],
+          any[List[TaricCode]]
         )
         verify(dutyTaxPartyBuilder)
           .buildThenAdd(any[AdditionalFiscalReference], any[GoodsShipment.GovernmentAgencyGoodsItem])
@@ -116,7 +123,13 @@ class GovernmentAgencyGoodsItemBuilderSpec
           .thenReturn(Commodity(description = Some("Some Commodity")))
         when(
           mockCachingMappingHelper
-            .commodityFromItemTypes(any[ItemType], any[CommodityDetails], any[Option[UNDangerousGoodsCode]], any[Option[CUSCode]])
+            .commodityFromItemTypes(
+              any[ItemType],
+              any[CommodityDetails],
+              any[Option[UNDangerousGoodsCode]],
+              any[Option[CUSCode]],
+              any[List[TaricCode]]
+            )
         ).thenReturn(Commodity(description = Some("Some Commodity")))
 
         val goodsShipment = new GoodsShipment
@@ -134,7 +147,8 @@ class GovernmentAgencyGoodsItemBuilderSpec
           any[ItemType],
           any[CommodityDetails],
           any[Option[UNDangerousGoodsCode]],
-          any[Option[CUSCode]]
+          any[Option[CUSCode]],
+          any[List[TaricCode]]
         )
         verify(dutyTaxPartyBuilder)
           .buildThenAdd(any[AdditionalFiscalReference], any[GoodsShipment.GovernmentAgencyGoodsItem])
