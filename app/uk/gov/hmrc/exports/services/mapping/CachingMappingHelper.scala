@@ -22,29 +22,30 @@ import uk.gov.hmrc.wco.dec._
 class CachingMappingHelper {
   val defaultMeasureCode = "KGM"
 
-  def commodityFromItemTypes(
-    itemType: ItemType,
-    commodityDetails: CommodityDetails,
-    dangerousGoodsCode: Option[UNDangerousGoodsCode],
-    cusCode: Option[CUSCode],
-    taricCodes: List[TaricCode]
-  ): Commodity =
+  def commodityFromExportItem(exportItem: ExportItem): Commodity =
     Commodity(
-      description = Some(commodityDetails.descriptionOfGoods),
-      classifications = getClassificationsFromItemTypes(itemType, commodityDetails, cusCode, taricCodes),
-      dangerousGoods = dangerousGoodsCode.flatMap(_.dangerousGoodsCode).map(code => Seq(DangerousGoods(Some(code)))).getOrElse(Seq.empty)
+      description = exportItem.commodityDetails.map(_.descriptionOfGoods),
+      classifications = getClassifications(
+        exportItem.commodityDetails.flatMap(_.combinedNomenclatureCode),
+        exportItem.cusCode.flatMap(_.cusCode),
+        exportItem.itemType.map(_.nationalAdditionalCode).getOrElse(Seq.empty),
+        exportItem.taricCodes.map(_.taricCode)
+      ),
+      dangerousGoods = exportItem.dangerousGoodsCode.flatMap(_.dangerousGoodsCode).map(code => Seq(DangerousGoods(Some(code)))).getOrElse(Seq.empty)
     )
 
-  def getClassificationsFromItemTypes(
-    itemType: ItemType,
-    commodityDetails: CommodityDetails,
-    cusCode: Option[CUSCode],
-    taricCodes: List[TaricCode]
+  private def getClassifications(
+    commodityCode: Option[String],
+    cusCode: Option[String],
+    nationalAdditionalCodes: Seq[String],
+    taricCodes: Seq[String]
   ): Seq[Classification] =
-    Seq(Classification(commodityDetails.combinedNomenclatureCode, identificationTypeCode = Some(CombinedNomenclatureCode.value))) ++ cusCode
-      .map(code => Classification(code.cusCode, identificationTypeCode = Some(CUSCode.value))) ++
-      itemType.nationalAdditionalCode.map(code => Classification(Some(code), identificationTypeCode = Some(NationalAdditionalCode.value))) ++ taricCodes
-      .map(code => Classification(Some(code.taricCode), identificationTypeCode = Some(TARICAdditionalCode.value)))
+    (
+      commodityCode.map(code => Classification(Some(code), identificationTypeCode = Some(CombinedNomenclatureCode.value))) ++
+        cusCode.map(code => Classification(Some(code), identificationTypeCode = Some(CUSCode.value))) ++
+        nationalAdditionalCodes.map(code => Classification(Some(code), identificationTypeCode = Some(NationalAdditionalCode.value))) ++
+        taricCodes.map(code => Classification(Some(code), identificationTypeCode = Some(TARICAdditionalCode.value)))
+    ).toSeq
 
   def mapGoodsMeasure(data: CommodityMeasure) =
     Commodity(

@@ -63,19 +63,19 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
     exportItem: ExportItem,
     wcoGovernmentAgencyGoodsItem: WCOGovernmentAgencyGoodsItem,
     declarationType: DeclarationType
-  ) = {
+  ): Unit = {
     val combinedCommodity = for {
-      commodityWithoutGoodsMeasure <- mapItemTypeToCommodity(exportItem)
+      commodityWithoutGoodsMeasure <- mapExportItemToCommodity(exportItem)
       commodityOnlyGoodsMeasure = mapCommodityMeasureToCommodity(exportItem.commodityMeasure, declarationType)
     } yield combineCommodities(commodityWithoutGoodsMeasure, commodityOnlyGoodsMeasure)
 
     combinedCommodity.foreach(commodityBuilder.buildThenAdd(_, wcoGovernmentAgencyGoodsItem))
   }
-  private def mapItemTypeToCommodity(exportItem: ExportItem): Option[Commodity] =
-    (exportItem.itemType, exportItem.commodityDetails) match {
-      case (Some(item), Some(details)) =>
-        Some(cachingMappingHelper.commodityFromItemTypes(item, details, exportItem.dangerousGoodsCode, exportItem.cusCode, exportItem.taricCodes))
-      case _ => None
+  private def mapExportItemToCommodity(exportItem: ExportItem): Option[Commodity] =
+    if (exportItem.commodityDetails.isDefined) {
+      Some(cachingMappingHelper.commodityFromExportItem(exportItem))
+    } else {
+      None
     }
 
   private def mapCommodityMeasureToCommodity(commodityMeasure: Option[CommodityMeasure], declarationType: DeclarationType): Option[Commodity] =
