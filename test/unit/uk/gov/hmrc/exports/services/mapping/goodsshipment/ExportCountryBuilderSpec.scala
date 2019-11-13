@@ -20,7 +20,6 @@ import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.Country
-import uk.gov.hmrc.exports.models.declaration.DestinationCountries
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.ExportCountryBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
@@ -38,7 +37,7 @@ class ExportCountryBuilderSpec extends WordSpec with MockitoSugar with Matchers 
         val builder = new ExportCountryBuilder(mockCountriesService)
         val goodsShipment = new GoodsShipment
 
-        builder.buildThenAdd(DestinationCountries("GB", Seq.empty, "PL"), goodsShipment)
+        builder.buildThenAdd("GB", goodsShipment)
 
         val exportCountry = goodsShipment.getExportCountry
         exportCountry.getID.getValue should be("GB")
@@ -48,7 +47,7 @@ class ExportCountryBuilderSpec extends WordSpec with MockitoSugar with Matchers 
         val builder = new ExportCountryBuilder(mockCountriesService)
         val goodsShipment = new GoodsShipment
 
-        builder.buildThenAdd(DestinationCountries("", Seq.empty, ""), goodsShipment)
+        builder.buildThenAdd("", goodsShipment)
 
         val exportCountry = goodsShipment.getExportCountry
         exportCountry should be(null)

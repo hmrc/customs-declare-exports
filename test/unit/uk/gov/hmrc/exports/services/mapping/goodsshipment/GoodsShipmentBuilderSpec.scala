@@ -119,10 +119,10 @@ class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclar
       .buildThenAdd(refEq(model), any[Declaration.GoodsShipment])
 
     verify(mockDestinationBuilder)
-      .buildThenAdd(refEq(DestinationCountries("GB", Seq.empty, "PL")), any[Declaration.GoodsShipment])
+      .buildThenAdd(refEq("GB"), any[Declaration.GoodsShipment])
 
     verify(mockExportCountryBuilder)
-      .buildThenAdd(refEq(DestinationCountries("GB", Seq.empty, "PL")), any[Declaration.GoodsShipment])
+      .buildThenAdd(refEq("GB"), any[Declaration.GoodsShipment])
 
     verify(mockUcrBuilder)
       .buildThenAdd(refEq(correctConsignmentReferences), any[Declaration.GoodsShipment])
@@ -143,7 +143,9 @@ class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclar
       withConsigneeDetails(eori = Some("9GB1234567ABCDEF"), address = Some(correctAddress)),
       withDeclarationAdditionalActors(correctAdditionalActors1, correctAdditionalActors2),
       withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
-      withDestinationCountries("GB", Seq.empty, "PL"),
+      withOriginationCountry(),
+      withDestinationCountry(),
+      withoutRoutingCountries(),
       withWarehouseIdentification(WarehouseIdentification(Some("GBWKG001"), Some("R"), None, Some("2"))),
       withConsignmentReferences("8GB123456789012-1234567890QWERTYUIO", "123LRN", Some("8GB123456789012")),
       withPreviousDocuments(correctPreviousDocument),
