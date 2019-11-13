@@ -18,11 +18,6 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 
-case class DestinationCountries(countryOfDispatch: String, countriesOfRouting: Seq[String], countryOfDestination: String)
-object DestinationCountries {
-  implicit val format: OFormat[DestinationCountries] = Json.format[DestinationCountries]
-}
-
 case class GoodsLocation(
   country: String,
   typeOfLocation: String,
