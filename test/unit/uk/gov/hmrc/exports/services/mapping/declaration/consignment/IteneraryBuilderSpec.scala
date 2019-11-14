@@ -28,7 +28,7 @@ class IteneraryBuilderSpec extends WordSpec with Matchers with ExportsDeclaratio
     "build then add" when {
       "no destination countries" in {
         // Given
-        val model = aDeclaration(withoutDestinationCountries())
+        val model = aDeclaration(withoutOriginationCountry(), withoutDestinationCountry(), withoutRoutingCountries())
         val consignment = new Declaration.Consignment()
 
         // When
@@ -40,7 +40,7 @@ class IteneraryBuilderSpec extends WordSpec with Matchers with ExportsDeclaratio
 
       "multiple routing countries" in {
         // Given
-        val model = aDeclaration(withDestinationCountries(countriesOfRouting = Seq("routing1", "routing2")))
+        val model = aDeclaration(withRoutingCountries(Seq("routing1", "routing2")))
         val consignment = new Declaration.Consignment()
 
         // When

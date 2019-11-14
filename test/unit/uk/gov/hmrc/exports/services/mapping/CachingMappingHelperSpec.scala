@@ -44,19 +44,23 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
     }
 
     "mapCommodity" when {
-      val itemType: ItemType = ItemType("10")
-      val commodityDetails = CommodityDetails(Some("commodityCode"), "description")
-      val dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("unDangerousGoodsCode")))
-      val cusCode = Some(CUSCode(Some("cusCode")))
-      val taricCodes = List(TaricCode("taricAdditionalCodes"))
-      val nactCodes = List(NactCode("nationalAdditionalCodes"))
 
       "all values provided" in {
-        val commodity =
-          new CachingMappingHelper().commodityFromItemTypes(itemType, commodityDetails, dangerousGoodsCode, cusCode, taricCodes, nactCodes)
+        val exportItem = ExportItem(
+          "id",
+          itemType = Some(ItemType("10")),
+          commodityDetails = Some(CommodityDetails(Some("commodityCode"), "description")),
+          dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("unDangerousGoodsCode"))),
+          cusCode = Some(CUSCode(Some("cusCode"))),
+          taricCodes = List(TaricCode("taricAdditionalCodes")),
+          nactCodes = List(NactCode("nationalAdditionalCodes"))
+        )
 
-        commodity.description.get shouldBe "description"
-        commodity.dangerousGoods.head.undgid.get shouldBe "unDangerousGoodsCode"
+        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem)
+
+        commodity.description shouldBe Some("description")
+        commodity.dangerousGoods.size shouldBe 1
+        commodity.dangerousGoods.head.undgid shouldBe Some("unDangerousGoodsCode")
         commodity.classifications.map(c => c.id) shouldBe Seq(
           Some("commodityCode"),
           Some("cusCode"),
@@ -65,13 +69,28 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
         )
       }
 
-      "UN Dangerous Goods Code not provided" in {
-        val commodity = new CachingMappingHelper().commodityFromItemTypes(itemType, commodityDetails, None, None, List.empty, List.empty)
+      "Only commodity code and description provided" in {
+        val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(Some("commodityCode"), "description")))
 
-        commodity.description.get shouldBe "description"
-        commodity.classifications.head.id.get shouldBe "commodityCode"
+        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem)
+
+        commodity.description shouldBe Some("description")
         commodity.dangerousGoods shouldBe Seq.empty
+
+        commodity.classifications.map(c => c.id) shouldBe Seq(Some("commodityCode"))
       }
+
+      "Only description provided" in {
+        val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(None, "description")))
+
+        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem)
+
+        commodity.description shouldBe Some("description")
+        commodity.dangerousGoods shouldBe Seq.empty
+
+        commodity.classifications shouldBe Seq.empty
+      }
+
     }
 
   }

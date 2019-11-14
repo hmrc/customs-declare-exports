@@ -52,10 +52,9 @@ class GoodsShipmentBuilder @Inject()(
 
     consignmentBuilder.buildThenAdd(exportsCacheModel, goodsShipment)
 
-    exportsCacheModel.locations.destinationCountries.foreach { countries =>
-      destinationBuilder.buildThenAdd(countries, goodsShipment)
-      exportCountryBuilder.buildThenAdd(countries, goodsShipment)
-    }
+    exportsCacheModel.locations.destinationCountry.foreach(destinationBuilder.buildThenAdd(_, goodsShipment))
+
+    exportsCacheModel.locations.originationCountry.foreach(exportCountryBuilder.buildThenAdd(_, goodsShipment))
 
     exportsCacheModel.consignmentReferences.foreach(ucrBuilder.buildThenAdd(_, goodsShipment))
 
