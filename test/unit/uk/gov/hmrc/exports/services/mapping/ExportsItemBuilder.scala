@@ -54,12 +54,12 @@ trait ExportsItemBuilder {
       cache.copy(additionalInformation = Some(AdditionalInformations(existing ++ Seq(info1) ++ other)))
     }
 
-  def withoutItemType(): ItemModifier = _.copy(itemType = None)
+  def withoutStatisticalValue(): ItemModifier = _.copy(statisticalValue = None)
 
-  def withItemType(statisticalValue: String = ""): ItemModifier =
-    withItemType(ItemType(statisticalValue))
+  def withStatisticalValue(statisticalValue: String = ""): ItemModifier =
+    withStatisticalValue(StatisticalValue(statisticalValue))
 
-  def withItemType(data: ItemType): ItemModifier = _.copy(itemType = Some(data))
+  def withStatisticalValue(data: StatisticalValue): ItemModifier = _.copy(statisticalValue = Some(data))
 
   def withCommodityDetails(data: CommodityDetails): ItemModifier = _.copy(commodityDetails = Some(data))
 
