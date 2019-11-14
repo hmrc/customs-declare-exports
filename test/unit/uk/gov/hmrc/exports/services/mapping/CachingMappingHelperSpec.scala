@@ -48,11 +48,12 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
       "all values provided" in {
         val exportItem = ExportItem(
           "id",
-          itemType = Some(ItemType(Seq("nationalAdditionalCodes"), "10")),
+          itemType = Some(ItemType("10")),
           commodityDetails = Some(CommodityDetails(Some("commodityCode"), "description")),
           dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("unDangerousGoodsCode"))),
           cusCode = Some(CUSCode(Some("cusCode"))),
-          taricCodes = List(TaricCode("taricAdditionalCodes"))
+          taricCodes = List(TaricCode("taricAdditionalCodes")),
+          nactCodes = List(NactCode("nationalAdditionalCodes"))
         )
 
         val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem)
