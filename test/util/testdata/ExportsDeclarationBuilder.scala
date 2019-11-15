@@ -32,6 +32,10 @@ trait ExportsDeclarationBuilder {
   protected val VALID_PERSONAL_UCR = "5GB123456789000"
   protected val VALID_DUCR = "5GB123456789000-123ABC456DEFIIIII"
   protected val VALID_LRN = "FG7676767889"
+
+  def aDeclaration(modifiers: ExportsDeclarationModifier*): ExportsDeclaration =
+    modifiers.foldLeft(modelWithDefaults)((current, modifier) => modifier(current))
+
   private def modelWithDefaults: ExportsDeclaration = ExportsDeclaration(
     id = uuid,
     eori = "eori",
@@ -54,12 +58,11 @@ trait ExportsDeclarationBuilder {
     natureOfTransaction = None
   )
 
-  def aDeclaration(modifiers: ExportsDeclarationModifier*): ExportsDeclaration =
-    modifiers.foldLeft(modelWithDefaults)((current, modifier) => modifier(current))
-
-  def withId(id: String): ExportsDeclarationModifier = _.copy(id = id)
+  private def uuid: String = UUID.randomUUID().toString
 
   // ************************************************* Builders ********************************************************
+
+  def withId(id: String): ExportsDeclarationModifier = _.copy(id = id)
 
   def withEori(eori: String): ExportsDeclarationModifier = _.copy(eori = eori)
 
@@ -171,25 +174,17 @@ trait ExportsDeclarationBuilder {
     m.copy(locations = m.locations.copy(goodsLocation = Some(goodsLocation)))
   }
 
-  def withoutWarehouseIdentification(): ExportsDeclarationModifier =
-    cache => cache.copy(locations = cache.locations.copy(warehouseIdentification = None))
+  def withWarehouseIdentification(warehouseIdentification: String): ExportsDeclarationModifier = { m =>
+    m.copy(locations = m.locations.copy(warehouseIdentification = Some(WarehouseIdentification(Some(warehouseIdentification)))))
+  }
 
-  def withWarehouseIdentification(warehouseIdentification: WarehouseIdentification): ExportsDeclarationModifier =
-    cache => cache.copy(locations = cache.locations.copy(warehouseIdentification = Some(warehouseIdentification)))
+  def withInlandModeOfTransport(inlandModeOfTransportCode: String): ExportsDeclarationModifier = { m =>
+    m.copy(locations = m.locations.copy(inlandModeOfTransportCode = Some(InlandModeOfTransportCode(Some(inlandModeOfTransportCode)))))
+  }
 
-  def withWarehouseIdentification(
-    supervisingCustomsOffice: Option[String] = None,
-    identificationType: Option[String] = None,
-    identificationNumber: Option[String] = None,
-    inlandModeOfTransportCode: Option[String] = None
-  ): ExportsDeclarationModifier =
-    cache =>
-      cache.copy(
-        locations = cache.locations.copy(
-          warehouseIdentification =
-            Some(WarehouseIdentification(supervisingCustomsOffice, identificationType, identificationNumber, inlandModeOfTransportCode))
-        )
-    )
+  def withSupervisingCustomsOffice(supervisingCustomsOffice: String): ExportsDeclarationModifier = { m =>
+    m.copy(locations = m.locations.copy(supervisingCustomsOffice = Some(SupervisingCustomsOffice(Some(supervisingCustomsOffice)))))
+  }
 
   def withoutOfficeOfExit(): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(officeOfExit = None))
@@ -211,8 +206,6 @@ trait ExportsDeclarationBuilder {
 
   def withItems(count: Int): ExportsDeclarationModifier =
     cache => cache.copy(items = cache.items ++ (1 to count).map(_ => ExportItem(id = uuid)).toSet)
-
-  private def uuid: String = UUID.randomUUID().toString
 
   def withoutTotalNumberOfItems(): ExportsDeclarationModifier = _.copy(totalNumberOfItems = None)
 

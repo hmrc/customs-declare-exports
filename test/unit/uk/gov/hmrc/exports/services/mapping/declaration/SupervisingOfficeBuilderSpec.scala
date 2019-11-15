@@ -26,17 +26,8 @@ class SupervisingOfficeBuilderSpec extends WordSpec with Matchers with ExportsDe
   "SupervisingOfficeBuilder" should {
 
     "build then add" when {
-      "no warehouse identification" in {
-        val model = aDeclaration(withoutWarehouseIdentification())
-        val declaration = new Declaration()
-
-        new SupervisingOfficeBuilder().buildThenAdd(model, declaration)
-
-        declaration.getSupervisingOffice should be(null)
-      }
-
       "missing supervising customs office" in {
-        val model = aDeclaration(withWarehouseIdentification(supervisingCustomsOffice = None))
+        val model = aDeclaration()
         val declaration = new Declaration()
 
         new SupervisingOfficeBuilder().buildThenAdd(model, declaration)
@@ -45,7 +36,7 @@ class SupervisingOfficeBuilderSpec extends WordSpec with Matchers with ExportsDe
       }
 
       "populated" in {
-        val model = aDeclaration(withWarehouseIdentification(supervisingCustomsOffice = Some("value")))
+        val model = aDeclaration(withSupervisingCustomsOffice("value"))
         val declaration = new Declaration()
 
         new SupervisingOfficeBuilder().buildThenAdd(model, declaration)

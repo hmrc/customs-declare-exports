@@ -128,7 +128,7 @@ class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclar
       .buildThenAdd(refEq(correctConsignmentReferences), any[Declaration.GoodsShipment])
 
     verify(mockWarehouseBuilder)
-      .buildThenAdd(refEq(WarehouseIdentification(Some("GBWKG001"), Some("R"), None, Some("2"))), any[Declaration.GoodsShipment])
+      .buildThenAdd(refEq(WarehouseIdentification(Some("RGBWKG001"))), any[Declaration.GoodsShipment])
 
     verify(mockPreviousDocumentBuilder)
       .buildThenAdd(refEq(PreviousDocuments(Seq(correctPreviousDocument))), any[Declaration.GoodsShipment])
@@ -146,7 +146,8 @@ class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclar
       withOriginationCountry(),
       withDestinationCountry(),
       withoutRoutingCountries(),
-      withWarehouseIdentification(WarehouseIdentification(Some("GBWKG001"), Some("R"), None, Some("2"))),
+      withWarehouseIdentification("RGBWKG001"),
+      withInlandModeOfTransport("2"),
       withConsignmentReferences("8GB123456789012-1234567890QWERTYUIO", "123LRN", Some("8GB123456789012")),
       withPreviousDocuments(correctPreviousDocument),
       withItem()

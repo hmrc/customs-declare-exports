@@ -82,7 +82,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
         verify(departureTransportMeansBuilder)
           .buildThenAdd(
             refEq(DepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber))),
-            any[Option[WarehouseIdentification]],
+            any[Option[InlandModeOfTransportCode]],
             any[GoodsShipment.Consignment]
           )
 
@@ -127,7 +127,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
         verify(departureTransportMeansBuilder)
           .buildThenAdd(
             refEq(DepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber))),
-            any[Option[WarehouseIdentification]],
+            any[Option[InlandModeOfTransportCode]],
             any[GoodsShipment.Consignment]
           )
 
@@ -172,7 +172,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
         verify(departureTransportMeansBuilder)
           .buildThenAdd(
             refEq(DepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber))),
-            any[Option[WarehouseIdentification]],
+            any[Option[InlandModeOfTransportCode]],
             any[GoodsShipment.Consignment]
           )
 

@@ -26,16 +26,16 @@ import wco.datamodel.wco.declaration_ds.dms._2._
 class SupervisingOfficeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
-    model.locations.warehouseIdentification
+    model.locations.supervisingCustomsOffice
       .flatMap(_.supervisingCustomsOffice)
       .map(createSupervisingOffice)
       .foreach(declaration.setSupervisingOffice)
 
-  private def createSupervisingOffice(data: String): SupervisingOffice = {
+  private def createSupervisingOffice(office: String): SupervisingOffice = {
     val supervisingOffice = new SupervisingOffice()
 
     val iDType = new SupervisingOfficeIdentificationIDType()
-    iDType.setValue(data)
+    iDType.setValue(office)
     supervisingOffice.setID(iDType)
 
     supervisingOffice
