@@ -60,7 +60,9 @@ object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuil
         city = None
       )
     ),
-    withWarehouseIdentification(supervisingCustomsOffice = Some("GBLBA001"), inlandModeOfTransportCode = Some("1")),
+    withWarehouseIdentification("RGBLBA001"),
+    withSupervisingCustomsOffice("Belfast"),
+    withInlandModeOfTransport("1"),
     withOfficeOfExit("GB000054", Some("GBLBA003"), Some("No")),
     withItems(
       anItem(

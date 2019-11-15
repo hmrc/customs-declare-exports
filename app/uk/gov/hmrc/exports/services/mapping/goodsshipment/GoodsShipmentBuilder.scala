@@ -58,8 +58,7 @@ class GoodsShipmentBuilder @Inject()(
 
     exportsCacheModel.consignmentReferences.foreach(ucrBuilder.buildThenAdd(_, goodsShipment))
 
-    exportsCacheModel.locations.warehouseIdentification
-      .foreach(warehouseBuilder.buildThenAdd(_, goodsShipment))
+    exportsCacheModel.locations.warehouseIdentification.foreach(warehouseBuilder.buildThenAdd(_, goodsShipment))
 
     exportsCacheModel.consignmentReferences.foreach(previousDocumentsBuilder.buildThenAdd(_, goodsShipment))
 

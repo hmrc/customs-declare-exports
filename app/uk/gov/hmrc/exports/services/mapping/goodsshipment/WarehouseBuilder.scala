@@ -24,26 +24,23 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Warehouse
 import wco.datamodel.wco.declaration_ds.dms._2.{WarehouseIdentificationIDType, WarehouseTypeCodeType}
 
 class WarehouseBuilder @Inject()() extends ModifyingBuilder[WarehouseIdentification, GoodsShipment] {
-  override def buildThenAdd(model: WarehouseIdentification, goodsShipment: GoodsShipment): Unit =
-    if (isDefined(model)) {
-      goodsShipment.setWarehouse(createWarehouse(model))
+  override def buildThenAdd(warehouseIdentification: WarehouseIdentification, goodsShipment: GoodsShipment): Unit =
+    if (warehouseIdentification.identificationNumber.nonEmpty) {
+      goodsShipment.setWarehouse(createWarehouse(warehouseIdentification))
     }
 
-  private def isDefined(warehouse: WarehouseIdentification): Boolean =
-    warehouse.identificationNumber.isDefined
-
-  private def createWarehouse(data: WarehouseIdentification): Warehouse = {
+  private def createWarehouse(warehouseIdentification: WarehouseIdentification): Warehouse = {
     val warehouse = new Warehouse()
 
-    val warehouseIdentificationType = data.identificationNumber.map(_.substring(0, 1)).getOrElse("")
-    val warehouseIdentificationNumber = data.identificationNumber.map(_.substring(1)).getOrElse("")
+    val identificationType = warehouseIdentification.identificationNumber.map(typeNumber => typeNumber.headOption.getOrElse(""))
+    val identificationNumber = warehouseIdentification.identificationNumber.map(number => number.tail).getOrElse("")
 
     val id = new WarehouseIdentificationIDType()
-    id.setValue(warehouseIdentificationNumber)
+    id.setValue(identificationNumber)
     warehouse.setID(id)
 
     val typeCode = new WarehouseTypeCodeType()
-    typeCode.setValue(warehouseIdentificationType)
+    typeCode.setValue(identificationType.getOrElse("").toString)
     warehouse.setTypeCode(typeCode)
 
     warehouse

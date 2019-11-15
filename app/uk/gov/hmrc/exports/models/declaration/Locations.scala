@@ -32,19 +32,24 @@ object GoodsLocation {
   implicit val format: OFormat[GoodsLocation] = Json.format[GoodsLocation]
 }
 
-case class WarehouseIdentification(
-  supervisingCustomsOffice: Option[String],
-  identificationType: Option[String],
-  identificationNumber: Option[String],
-  inlandModeOfTransportCode: Option[String]
-)
-object WarehouseIdentification {
-  implicit val format: OFormat[WarehouseIdentification] = Json.format[WarehouseIdentification]
-}
-
 case class OfficeOfExit(officeId: String, presentationOfficeId: Option[String], circumstancesCode: Option[String])
 object OfficeOfExit {
   implicit val format: OFormat[OfficeOfExit] = Json.format[OfficeOfExit]
+}
+
+case class WarehouseIdentification(identificationNumber: Option[String])
+object WarehouseIdentification {
+  implicit val format = Json.format[WarehouseIdentification]
+}
+
+case class SupervisingCustomsOffice(supervisingCustomsOffice: Option[String])
+object SupervisingCustomsOffice {
+  implicit val format = Json.format[SupervisingCustomsOffice]
+}
+
+case class InlandModeOfTransportCode(inlandModeOfTransportCode: Option[String])
+object InlandModeOfTransportCode {
+  implicit val format = Json.format[InlandModeOfTransportCode]
 }
 
 case class Locations(
@@ -53,8 +58,10 @@ case class Locations(
   hasRoutingCountries: Option[Boolean] = None,
   routingCountries: Seq[String] = Seq.empty,
   goodsLocation: Option[GoodsLocation] = None,
+  officeOfExit: Option[OfficeOfExit] = None,
+  supervisingCustomsOffice: Option[SupervisingCustomsOffice] = None,
   warehouseIdentification: Option[WarehouseIdentification] = None,
-  officeOfExit: Option[OfficeOfExit] = None
+  inlandModeOfTransportCode: Option[InlandModeOfTransportCode] = None
 )
 object Locations {
   implicit val format: OFormat[Locations] = Json.format[Locations]

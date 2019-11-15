@@ -17,7 +17,7 @@
 package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.declaration.{DepartureTransport, WarehouseIdentification}
+import uk.gov.hmrc.exports.models.declaration.{DepartureTransport, InlandModeOfTransportCode}
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.DepartureTransportMeansBuilder
 import util.testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
@@ -30,15 +30,13 @@ class DepartureTransportMeansBuilderSpec extends WordSpec with Matchers with Exp
       val meansOfTransportOnDepartureType = "T"
       val meansOfTransportOnDepartureIDNumber = "12345"
       val inlandModeOfTransport = "1"
-      val warehouseIdentificationOpt: Option[WarehouseIdentification] =
-        Some(WarehouseIdentification(None, None, None, Some(inlandModeOfTransport)))
 
       val builder = new DepartureTransportMeansBuilder
 
       val consignment = new GoodsShipment.Consignment
       builder.buildThenAdd(
         DepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber)),
-        warehouseIdentificationOpt,
+        Some(InlandModeOfTransportCode(Some(inlandModeOfTransport))),
         consignment
       )
 

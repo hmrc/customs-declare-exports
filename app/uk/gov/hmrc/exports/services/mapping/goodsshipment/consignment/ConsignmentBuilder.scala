@@ -39,7 +39,8 @@ class ConsignmentBuilder @Inject()(
     val warehouseIdentificationOpt = exportsCacheModel.locations.warehouseIdentification
 
     exportsCacheModel.departureTransport.foreach(
-      departureTransport => departureTransportMeansBuilder.buildThenAdd(departureTransport, warehouseIdentificationOpt, consignment)
+      departureTransport =>
+        departureTransportMeansBuilder.buildThenAdd(departureTransport, exportsCacheModel.locations.inlandModeOfTransportCode, consignment)
     )
 
     exportsCacheModel.`type` match {
