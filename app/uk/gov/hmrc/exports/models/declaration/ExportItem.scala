@@ -68,9 +68,9 @@ object NactCode {
   implicit val format: OFormat[NactCode] = Json.format[NactCode]
 }
 
-case class ItemType(statisticalValue: String)
-object ItemType {
-  implicit val format: OFormat[ItemType] = Json.format[ItemType]
+case class StatisticalValue(statisticalValue: String)
+object StatisticalValue {
+  implicit val format: OFormat[StatisticalValue] = Json.format[StatisticalValue]
 }
 
 sealed abstract class IdentificationTypeCodes(val value: String)
@@ -151,7 +151,7 @@ case class ExportItem(
   procedureCodes: Option[ProcedureCodes] = None,
   fiscalInformation: Option[FiscalInformation] = None,
   additionalFiscalReferencesData: Option[AdditionalFiscalReferences] = None,
-  itemType: Option[ItemType] = None,
+  statisticalValue: Option[StatisticalValue] = None,
   commodityDetails: Option[CommodityDetails] = None,
   dangerousGoodsCode: Option[UNDangerousGoodsCode] = None,
   cusCode: Option[CUSCode] = None,

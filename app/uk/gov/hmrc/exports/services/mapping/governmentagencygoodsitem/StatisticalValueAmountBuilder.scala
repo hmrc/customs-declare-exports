@@ -27,8 +27,10 @@ class StatisticalValueAmountBuilder @Inject()() extends ModifyingBuilder[ExportI
   private val defaultCurrencyCode = "GBP"
 
   def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: WCOGovernmentAgencyGoodsItem): Unit =
-    exportItem.itemType.foreach { itemType =>
-      wcoGovernmentAgencyGoodsItem.setStatisticalValueAmount(createWCODecStatisticalValueAmount(itemType.statisticalValue, defaultCurrencyCode))
+    exportItem.statisticalValue.foreach { statisticalValue =>
+      wcoGovernmentAgencyGoodsItem.setStatisticalValueAmount(
+        createWCODecStatisticalValueAmount(statisticalValue.statisticalValue, defaultCurrencyCode)
+      )
     }
 
   private def createWCODecStatisticalValueAmount(amountValue: String, currencyId: String) = {
