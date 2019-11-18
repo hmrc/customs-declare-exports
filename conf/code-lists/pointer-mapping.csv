@@ -15,6 +15,7 @@
 42A.15A.T006,																							declaration.borderTransport.meansOfTransportCrossingTheBorderIDNumber
 42A.15A.T018,																							declaration.borderTransport.meansOfTransportCrossingTheBorderType
 42A.15A.T014,																							declaration.borderTransport.meansOfTransportCrossingTheBorderNationality
+42A.28A.18A.R012,																			declaration.parties.carrierDetails.details.eori
 42A.28A.18A.R011,																			declaration.parties.carrierDetails.details.address.fullName
 42A.28A.18A.04A.241,                declaration.parties.carrierDetails.details.address.townOrCity
 42A.28A.18A.04A.242,                declaration.parties.carrierDetails.details.address.country
@@ -77,3 +78,14 @@
 42A.67A.43B.L112,																			declaration.locations.warehouseIdentification.identificationType
 42A.97B.G012,																							declaration.locations.warehouseIdentification.supervisingCustomsOffice
 42A.67A.68A.$1.35B.009,													declaration.consignmentReferences.ucr
+
+# Below codes is for support to incorrect consignment references in DMS error
+# For now it's wrong and contains sequence instead of one element
+
+42A.28A.$1.18A.R012,																			declaration.parties.carrierDetails.details.eori
+42A.28A.$1.18A.R011,																			declaration.parties.carrierDetails.details.address.fullName
+42A.28A.$1.18A.04A.241,                declaration.parties.carrierDetails.details.address.townOrCity
+42A.28A.$1.18A.04A.242,                declaration.parties.carrierDetails.details.address.country
+42A.28A.$1.18A.04A.239,                declaration.parties.carrierDetails.details.address.addressLine
+42A.28A.$1.18A.04A.245,                declaration.parties.carrierDetails.details.address.postCode
+42A.28A.$1.62A.098,																				declaration.borderTransport.paymentMethod
