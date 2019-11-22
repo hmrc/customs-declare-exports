@@ -18,12 +18,6 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 
-case class Containers(containers: Seq[Container])
-
-object Containers {
-  implicit val format: OFormat[Containers] = Json.format[Containers]
-}
-
 case class Container(id: String, seals: Seq[Seal])
 
 object Container {
