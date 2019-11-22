@@ -54,8 +54,8 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
             withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
             withDepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber)),
             withType(DeclarationType.STANDARD),
-            withBorderTransport(Some("Portugal"), container = true, "40", Some("1234567878ui"), Some("A")),
-            withContainerData(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2"))))
+            withBorderTransport(Some("Portugal"), "40", Some("1234567878ui"), Some("A")),
+            withContainerData(Container("container", Seq(Seal("seal1"), Seal("seal2"))))
           )
 
         val goodsShipment: Declaration.GoodsShipment = new Declaration.GoodsShipment
@@ -66,18 +66,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
           .buildThenAdd(refEq(GoodsLocationBuilderSpec.correctGoodsLocation), any[GoodsShipment.Consignment])
 
         verify(containerCodeBuilder)
-          .buildThenAdd(
-            refEq(
-              BorderTransport(
-                meansOfTransportCrossingTheBorderNationality = Some("Portugal"),
-                container = true,
-                meansOfTransportCrossingTheBorderType = "40",
-                meansOfTransportCrossingTheBorderIDNumber = Some("1234567878ui"),
-                paymentMethod = Some("A")
-              )
-            ),
-            any[GoodsShipment.Consignment]
-          )
+          .buildThenAdd(refEq(Seq(Container("container", Seq(Seal("seal1"), Seal("seal2"))))), any[GoodsShipment.Consignment])
 
         verify(departureTransportMeansBuilder)
           .buildThenAdd(
@@ -87,10 +76,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
           )
 
         verify(transportEquipmentBuilder)
-          .buildThenAdd(
-            refEq(TransportInformationContainers(Seq(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2")))))),
-            any[GoodsShipment.Consignment]
-          )
+          .buildThenAdd(refEq(Seq(Container("container", Seq(Seal("seal1"), Seal("seal2"))))), any[GoodsShipment.Consignment])
       }
 
       "simplified" in {
@@ -99,8 +85,8 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
             withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
             withDepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber)),
             withType(DeclarationType.SIMPLIFIED),
-            withBorderTransport(Some("Portugal"), container = true, "40", Some("1234567878ui"), Some("A")),
-            withContainerData(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2"))))
+            withBorderTransport(Some("Portugal"), "40", Some("1234567878ui"), Some("A")),
+            withContainerData(Container("container", Seq(Seal("seal1"), Seal("seal2"))))
           )
 
         val goodsShipment: Declaration.GoodsShipment = new Declaration.GoodsShipment
@@ -111,18 +97,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
           .buildThenAdd(refEq(GoodsLocationBuilderSpec.correctGoodsLocation), any[GoodsShipment.Consignment])
 
         verify(containerCodeBuilder)
-          .buildThenAdd(
-            refEq(
-              BorderTransport(
-                meansOfTransportCrossingTheBorderNationality = Some("Portugal"),
-                container = true,
-                meansOfTransportCrossingTheBorderType = "40",
-                meansOfTransportCrossingTheBorderIDNumber = Some("1234567878ui"),
-                paymentMethod = Some("A")
-              )
-            ),
-            any[GoodsShipment.Consignment]
-          )
+          .buildThenAdd(refEq(Seq(Container("container", Seq(Seal("seal1"), Seal("seal2"))))), any[GoodsShipment.Consignment])
 
         verify(departureTransportMeansBuilder)
           .buildThenAdd(
@@ -132,10 +107,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
           )
 
         verify(transportEquipmentBuilder)
-          .buildThenAdd(
-            refEq(TransportInformationContainers(Seq(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2")))))),
-            any[GoodsShipment.Consignment]
-          )
+          .buildThenAdd(refEq(Seq(Container("container", Seq(Seal("seal1"), Seal("seal2"))))), any[GoodsShipment.Consignment])
       }
 
       "supplementary" in {
@@ -144,8 +116,8 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
             withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
             withDepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber)),
             withType(DeclarationType.SUPPLEMENTARY),
-            withBorderTransport(Some("Portugal"), container = true, "40", Some("1234567878ui"), Some("A")),
-            withContainerData(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2"))))
+            withBorderTransport(Some("Portugal"), "40", Some("1234567878ui"), Some("A")),
+            withContainerData(Container("container", Seq(Seal("seal1"), Seal("seal2"))))
           )
 
         val goodsShipment: Declaration.GoodsShipment = new Declaration.GoodsShipment
@@ -156,18 +128,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
           .buildThenAdd(refEq(GoodsLocationBuilderSpec.correctGoodsLocation), any[GoodsShipment.Consignment])
 
         verify(containerCodeBuilder)
-          .buildThenAdd(
-            refEq(
-              BorderTransport(
-                meansOfTransportCrossingTheBorderNationality = Some("Portugal"),
-                container = true,
-                meansOfTransportCrossingTheBorderType = "40",
-                meansOfTransportCrossingTheBorderIDNumber = Some("1234567878ui"),
-                paymentMethod = Some("A")
-              )
-            ),
-            any[GoodsShipment.Consignment]
-          )
+          .buildThenAdd(refEq(Seq(Container("container", Seq(Seal("seal1"), Seal("seal2"))))), any[GoodsShipment.Consignment])
 
         verify(departureTransportMeansBuilder)
           .buildThenAdd(
@@ -177,10 +138,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
           )
 
         verify(transportEquipmentBuilder)
-          .buildThenAdd(
-            refEq(TransportInformationContainers(Seq(TransportInformationContainer("container", Seq(Seal("seal1"), Seal("seal2")))))),
-            any[GoodsShipment.Consignment]
-          )
+          .buildThenAdd(refEq(Seq(Container("container", Seq(Seal("seal1"), Seal("seal2"))))), any[GoodsShipment.Consignment])
       }
     }
 
@@ -194,7 +152,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
         builder.buildThenAdd(model, goodsShipment)
 
         verify(transportEquipmentBuilder)
-          .buildThenAdd(refEq(TransportInformationContainers(Seq.empty)), any[GoodsShipment.Consignment])
+          .buildThenAdd(refEq(Seq.empty), any[GoodsShipment.Consignment])
       }
     }
   }

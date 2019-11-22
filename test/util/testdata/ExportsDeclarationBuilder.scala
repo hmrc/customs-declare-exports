@@ -49,7 +49,7 @@ trait ExportsDeclarationBuilder {
     consignmentReferences = None,
     departureTransport = None,
     borderTransport = None,
-    containerData = None,
+    transportData = None,
     parties = Parties(),
     locations = Locations(),
     items = Set.empty[ExportItem],
@@ -102,10 +102,14 @@ trait ExportsDeclarationBuilder {
       departureTransport = Some(DepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, meansOfTransportOnDepartureIDNumber))
     )
 
-  def withoutContainerData(): ExportsDeclarationModifier = _.copy(containerData = None)
+  def withoutContainerData(): ExportsDeclarationModifier =
+    cache => cache.copy(transportData = Some(cache.transportData.getOrElse(new TransportData).copy(containers = Seq.empty)))
 
-  def withContainerData(data: TransportInformationContainer*): ExportsDeclarationModifier =
-    cache => cache.copy(containerData = Some(TransportInformationContainers(cache.containerData.map(_.containers).getOrElse(Seq.empty) ++ data)))
+  def withContainerData(data: Container*): ExportsDeclarationModifier =
+    cache => {
+      val existingContainers = cache.transportData.map(_.containers).getOrElse(Seq.empty)
+      cache.copy(transportData = Some(cache.transportData.getOrElse(new TransportData).copy(containers = existingContainers ++ data)))
+    }
 
   def withPreviousDocuments(previousDocuments: PreviousDocument*): ExportsDeclarationModifier =
     _.copy(previousDocuments = Some(PreviousDocuments(previousDocuments)))
@@ -228,7 +232,6 @@ trait ExportsDeclarationBuilder {
 
   def withBorderTransport(
     meansOfTransportCrossingTheBorderNationality: Option[String] = None,
-    container: Boolean = false,
     meansOfTransportCrossingTheBorderType: String = "",
     meansOfTransportCrossingTheBorderIDNumber: Option[String] = None,
     paymentMethod: Option[String] = None
@@ -237,7 +240,6 @@ trait ExportsDeclarationBuilder {
       borderTransport = Some(
         BorderTransport(
           meansOfTransportCrossingTheBorderNationality = meansOfTransportCrossingTheBorderNationality,
-          container = container,
           meansOfTransportCrossingTheBorderType = meansOfTransportCrossingTheBorderType,
           meansOfTransportCrossingTheBorderIDNumber = meansOfTransportCrossingTheBorderIDNumber,
           paymentMethod = paymentMethod
