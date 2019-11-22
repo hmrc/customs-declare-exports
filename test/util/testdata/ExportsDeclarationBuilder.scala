@@ -233,19 +233,22 @@ trait ExportsDeclarationBuilder {
   def withBorderTransport(
     meansOfTransportCrossingTheBorderNationality: Option[String] = None,
     meansOfTransportCrossingTheBorderType: String = "",
-    meansOfTransportCrossingTheBorderIDNumber: Option[String] = None,
-    paymentMethod: Option[String] = None
+    meansOfTransportCrossingTheBorderIDNumber: Option[String] = None
   ): ExportsDeclarationModifier =
     _.copy(
       borderTransport = Some(
         BorderTransport(
           meansOfTransportCrossingTheBorderNationality = meansOfTransportCrossingTheBorderNationality,
           meansOfTransportCrossingTheBorderType = meansOfTransportCrossingTheBorderType,
-          meansOfTransportCrossingTheBorderIDNumber = meansOfTransportCrossingTheBorderIDNumber,
-          paymentMethod = paymentMethod
+          meansOfTransportCrossingTheBorderIDNumber = meansOfTransportCrossingTheBorderIDNumber
         )
       )
     )
+
+  def withTransportPayment(payment: Option[String]): ExportsDeclarationModifier = cache => {
+    val transportData = cache.transportData.getOrElse(new TransportData())
+    cache.copy(transportData = Some(transportData.copy(transportPayment = Some(TransportPayment(payment)))))
+  }
 
   def withUpdateDate(year: Int, month: Int, dayOfMonth: Int): ExportsDeclarationModifier =
     _.copy(updatedDateTime = LocalDateTime.of(year, month, dayOfMonth, 10, 0, 0).toInstant(ZoneOffset.UTC))

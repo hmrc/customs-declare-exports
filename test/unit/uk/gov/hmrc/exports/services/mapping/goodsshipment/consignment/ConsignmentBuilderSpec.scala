@@ -54,7 +54,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
             withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
             withDepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber)),
             withType(DeclarationType.STANDARD),
-            withBorderTransport(Some("Portugal"), "40", Some("1234567878ui"), Some("A")),
+            withBorderTransport(Some("Portugal"), "40", Some("1234567878ui")),
             withContainerData(Container("container", Seq(Seal("seal1"), Seal("seal2"))))
           )
 
@@ -85,7 +85,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
             withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
             withDepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber)),
             withType(DeclarationType.SIMPLIFIED),
-            withBorderTransport(Some("Portugal"), "40", Some("1234567878ui"), Some("A")),
+            withBorderTransport(Some("Portugal"), "40", Some("1234567878ui")),
             withContainerData(Container("container", Seq(Seal("seal1"), Seal("seal2"))))
           )
 
@@ -116,7 +116,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
             withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
             withDepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber)),
             withType(DeclarationType.SUPPLEMENTARY),
-            withBorderTransport(Some("Portugal"), "40", Some("1234567878ui"), Some("A")),
+            withBorderTransport(Some("Portugal"), "40", Some("1234567878ui")),
             withContainerData(Container("container", Seq(Seal("seal1"), Seal("seal2"))))
           )
 

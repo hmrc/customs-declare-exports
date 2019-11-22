@@ -21,8 +21,7 @@ import play.api.libs.json.{Json, OFormat}
 case class BorderTransport(
   meansOfTransportCrossingTheBorderNationality: Option[String],
   meansOfTransportCrossingTheBorderType: String,
-  meansOfTransportCrossingTheBorderIDNumber: Option[String],
-  paymentMethod: Option[String] = None
+  meansOfTransportCrossingTheBorderIDNumber: Option[String]
 )
 
 object BorderTransport {
