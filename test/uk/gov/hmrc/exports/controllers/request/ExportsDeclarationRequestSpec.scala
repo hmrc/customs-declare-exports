@@ -38,7 +38,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsD
   private val consignmentReferences = mock[ConsignmentReferences]
   private val departureTransport = mock[DepartureTransport]
   private val borderTransport = mock[BorderTransport]
-  private val transportData = mock[TransportData]
+  private val transportInformation = mock[TransportInformation]
   private val parties = mock[Parties]
   private val locations = mock[Locations]
   private val item = mock[ExportItem]
@@ -56,7 +56,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsD
     consignmentReferences = Some(consignmentReferences),
     departureTransport = Some(departureTransport),
     borderTransport = Some(borderTransport),
-    transportData = Some(transportData),
+    transportInformation = Some(transportInformation),
     parties = parties,
     locations = locations,
     items = Set(item),
@@ -78,7 +78,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsD
     consignmentReferences = Some(consignmentReferences),
     departureTransport = Some(departureTransport),
     borderTransport = Some(borderTransport),
-    transportData = Some(transportData),
+    transportInformation = Some(transportInformation),
     parties = parties,
     locations = locations,
     items = Set(item),

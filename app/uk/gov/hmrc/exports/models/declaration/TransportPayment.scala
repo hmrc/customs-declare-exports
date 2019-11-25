@@ -21,6 +21,6 @@ case class TransportPayment(paymentMethod: Option[String] = None)
 
 object TransportPayment {
 
-  implicit val formats: OFormat[TransportPayment] = Json.format[TransportPayment]
+  implicit val format: OFormat[TransportPayment] = Json.format[TransportPayment]
 
 }

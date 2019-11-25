@@ -36,7 +36,7 @@ case class ExportsDeclaration(
   consignmentReferences: Option[ConsignmentReferences],
   departureTransport: Option[DepartureTransport],
   borderTransport: Option[BorderTransport],
-  transportData: Option[TransportData] = None,
+  transportInformation: Option[TransportInformation] = None,
   parties: Parties,
   locations: Locations,
   items: Set[ExportItem],

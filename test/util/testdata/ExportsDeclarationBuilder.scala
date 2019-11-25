@@ -49,7 +49,7 @@ trait ExportsDeclarationBuilder {
     consignmentReferences = None,
     departureTransport = None,
     borderTransport = None,
-    transportData = None,
+    transportInformation = None,
     parties = Parties(),
     locations = Locations(),
     items = Set.empty[ExportItem],
@@ -103,12 +103,14 @@ trait ExportsDeclarationBuilder {
     )
 
   def withoutContainerData(): ExportsDeclarationModifier =
-    cache => cache.copy(transportData = Some(cache.transportData.getOrElse(new TransportData).copy(containers = Seq.empty)))
+    cache => cache.copy(transportInformation = Some(cache.transportInformation.getOrElse(new TransportInformation).copy(containers = Seq.empty)))
 
   def withContainerData(data: Container*): ExportsDeclarationModifier =
     cache => {
-      val existingContainers = cache.transportData.map(_.containers).getOrElse(Seq.empty)
-      cache.copy(transportData = Some(cache.transportData.getOrElse(new TransportData).copy(containers = existingContainers ++ data)))
+      val existingContainers = cache.transportInformation.map(_.containers).getOrElse(Seq.empty)
+      cache.copy(
+        transportInformation = Some(cache.transportInformation.getOrElse(new TransportInformation).copy(containers = existingContainers ++ data))
+      )
     }
 
   def withPreviousDocuments(previousDocuments: PreviousDocument*): ExportsDeclarationModifier =
@@ -246,8 +248,8 @@ trait ExportsDeclarationBuilder {
     )
 
   def withTransportPayment(payment: Option[String]): ExportsDeclarationModifier = cache => {
-    val transportData = cache.transportData.getOrElse(new TransportData())
-    cache.copy(transportData = Some(transportData.copy(transportPayment = Some(TransportPayment(payment)))))
+    val transportInformation = cache.transportInformation.getOrElse(new TransportInformation())
+    cache.copy(transportInformation = Some(transportInformation.copy(transportPayment = Some(TransportPayment(payment)))))
   }
 
   def withUpdateDate(year: Int, month: Int, dayOfMonth: Int): ExportsDeclarationModifier =
