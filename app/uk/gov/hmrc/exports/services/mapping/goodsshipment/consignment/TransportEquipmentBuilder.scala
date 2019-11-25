@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{Seal, TransportInformationContainer, TransportInformationContainers}
+import uk.gov.hmrc.exports.models.declaration.{Container, Seal}
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment
@@ -25,12 +25,12 @@ import wco.datamodel.wco.declaration_ds.dms._2.{SealIdentificationIDType, Transp
 
 import scala.collection.JavaConverters._
 
-class TransportEquipmentBuilder @Inject()() extends ModifyingBuilder[TransportInformationContainers, GoodsShipment.Consignment] {
-  override def buildThenAdd(containersHolder: TransportInformationContainers, consignment: Consignment): Unit =
-    if (containersHolder.containers.isEmpty) {
+class TransportEquipmentBuilder @Inject()() extends ModifyingBuilder[Seq[Container], GoodsShipment.Consignment] {
+  override def buildThenAdd(containersHolder: Seq[Container], consignment: Consignment): Unit =
+    if (containersHolder.isEmpty) {
       consignment.getTransportEquipment.add(createEmptyTransportEquipment)
     } else {
-      consignment.getTransportEquipment.addAll(containersHolder.containers.zipWithIndex.map(data => createTransportEquipment(data)).toList.asJava)
+      consignment.getTransportEquipment.addAll(containersHolder.zipWithIndex.map(data => createTransportEquipment(data)).toList.asJava)
     }
 
   private def createEmptyTransportEquipment = {
@@ -40,7 +40,7 @@ class TransportEquipmentBuilder @Inject()() extends ModifyingBuilder[TransportIn
     transportEquipment
   }
 
-  private def createTransportEquipment(containerData: (TransportInformationContainer, Int)): GoodsShipment.Consignment.TransportEquipment = {
+  private def createTransportEquipment(containerData: (Container, Int)): GoodsShipment.Consignment.TransportEquipment = {
     val transportEquipment = new GoodsShipment.Consignment.TransportEquipment()
     transportEquipment.setSequenceNumeric(new java.math.BigDecimal(containerData._2 + 1))
 

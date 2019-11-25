@@ -17,7 +17,7 @@
 package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.declaration.{Seal, TransportInformationContainer, TransportInformationContainers}
+import uk.gov.hmrc.exports.models.declaration.{Container, Seal}
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.TransportEquipmentBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
@@ -29,13 +29,8 @@ class TransportEquipmentBuilderSpec extends WordSpec with Matchers {
         val builder = new TransportEquipmentBuilder
         val consignment: GoodsShipment.Consignment = new GoodsShipment.Consignment
 
-        val containers: TransportInformationContainers =
-          TransportInformationContainers(
-            Seq(
-              TransportInformationContainer("container-a", Seq(Seal("seal-1a"), Seal("seal-2a"))),
-              TransportInformationContainer("container-b", Seq(Seal("seal-b")))
-            )
-          )
+        val containers = Seq(Container("container-a", Seq(Seal("seal-1a"), Seal("seal-2a"))), Container("container-b", Seq(Seal("seal-b"))))
+
         builder.buildThenAdd(containers, consignment)
 
         consignment.getTransportEquipment.size() should be(2)
@@ -65,8 +60,7 @@ class TransportEquipmentBuilderSpec extends WordSpec with Matchers {
         val builder = new TransportEquipmentBuilder
         val consignment: GoodsShipment.Consignment = new GoodsShipment.Consignment
 
-        val containers: TransportInformationContainers =
-          TransportInformationContainers(Seq(TransportInformationContainer("container-a", Seq.empty)))
+        val containers = Seq(Container("container-a", Seq.empty))
         builder.buildThenAdd(containers, consignment)
 
         consignment.getTransportEquipment.size() should be(1)
@@ -86,7 +80,7 @@ class TransportEquipmentBuilderSpec extends WordSpec with Matchers {
         val builder = new TransportEquipmentBuilder
         val consignment: GoodsShipment.Consignment = new GoodsShipment.Consignment
 
-        val containers: TransportInformationContainers = TransportInformationContainers(Seq.empty)
+        val containers = Seq.empty
         builder.buildThenAdd(containers, consignment)
 
         consignment.getTransportEquipment.size() should be(1)

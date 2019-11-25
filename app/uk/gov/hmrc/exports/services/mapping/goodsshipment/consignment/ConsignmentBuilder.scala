@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.DeclarationType
-import uk.gov.hmrc.exports.models.declaration.{ExportsDeclaration, TransportInformationContainers}
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class ConsignmentBuilder @Inject()(
@@ -34,9 +34,9 @@ class ConsignmentBuilder @Inject()(
     exportsCacheModel.locations.goodsLocation
       .foreach(goodsLocation => goodsLocationBuilder.buildThenAdd(goodsLocation, consignment))
 
-    exportsCacheModel.borderTransport.foreach(borderTransport => containerCodeBuilder.buildThenAdd(borderTransport, consignment))
-
-    val warehouseIdentificationOpt = exportsCacheModel.locations.warehouseIdentification
+    exportsCacheModel.transportInformation.foreach(
+      transportInformation => containerCodeBuilder.buildThenAdd(transportInformation.containers, consignment)
+    )
 
     exportsCacheModel.departureTransport.foreach(
       departureTransport =>
@@ -45,7 +45,7 @@ class ConsignmentBuilder @Inject()(
 
     exportsCacheModel.`type` match {
       case DeclarationType.STANDARD | DeclarationType.SIMPLIFIED | DeclarationType.SUPPLEMENTARY =>
-        transportEquipmentBuilder.buildThenAdd(exportsCacheModel.containerData.getOrElse(TransportInformationContainers(Seq.empty)), consignment)
+        transportEquipmentBuilder.buildThenAdd(exportsCacheModel.transportInformation.map(_.containers).getOrElse(Seq.empty), consignment)
       case _ => (): Unit
     }
 

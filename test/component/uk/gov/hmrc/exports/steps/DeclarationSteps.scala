@@ -18,33 +18,22 @@ package component.uk.gov.hmrc.exports.steps
 
 import java.util.UUID
 
-import component.uk.gov.hmrc.exports.steps.`User has completed declaration`.{
-  aDeclaration,
-  withConsignmentReferences,
-  withContainerData,
-  withEori,
-  withId,
-  withStatus,
-  withType
-}
 import component.uk.gov.hmrc.exports.syntax.{Action, Precondition, ScenarioContext}
-import org.scalatest.concurrent.{AbstractPatienceConfiguration, IntegrationPatience, PatienceConfiguration}
-import play.api.Application
-import play.api.test.FakeRequest
-import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
-import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration, Seal, TransportInformationContainer}
-import uk.gov.hmrc.exports.repositories.DeclarationRepository
-import util.stubs.CustomsDeclarationsAPIService
-import util.testdata.ExportsDeclarationBuilder
-import util.testdata.ExportsTestData.{declarantLrnValue, ValidHeaders}
-
-import scala.concurrent.{Await, Future}
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
+import org.scalatest.concurrent.{IntegrationPatience, PatienceConfiguration}
+import play.api.Application
 import play.api.mvc.Result
+import play.api.test.FakeRequest
+import uk.gov.hmrc.exports.models.declaration.{Container, DeclarationStatus, ExportsDeclaration, Seal}
+import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
+import uk.gov.hmrc.exports.repositories.DeclarationRepository
+import util.testdata.ExportsDeclarationBuilder
+import util.testdata.ExportsTestData.{declarantLrnValue, ValidHeaders}
 
+import scala.concurrent.{Await, Future}
 import scala.util.control.NonFatal
 
 object `User has completed declaration` extends Precondition with ExportsDeclarationBuilder {
@@ -59,7 +48,7 @@ object `User has completed declaration` extends Precondition with ExportsDeclara
       withEori(eori),
       withStatus(DeclarationStatus.DRAFT),
       withConsignmentReferences(lrn = declarantLrnValue),
-      withContainerData(TransportInformationContainer("container123", Seq(Seal("seal1"))))
+      withContainerData(Container("container123", Seq(Seal("seal1"))))
     )
     val repo = context.get[DeclarationRepository]
     when(repo.find(any(), any())).thenReturn(Future.successful(Some(declaration)))
@@ -81,7 +70,7 @@ object `User has no declaration` extends Precondition {
   }
 }
 
-object `User has pre-submitted declaration` extends Precondition {
+object `User has pre-submitted declaration` extends Precondition with ExportsDeclarationBuilder {
   override def name: String = "User has pre-submitted declaration"
 
   override def execute(context: ScenarioContext): ScenarioContext = {
@@ -92,7 +81,7 @@ object `User has pre-submitted declaration` extends Precondition {
       withEori(eori),
       withStatus(DeclarationStatus.COMPLETE),
       withConsignmentReferences(lrn = declarantLrnValue),
-      withContainerData(TransportInformationContainer("container123", Seq(Seal("seal1"))))
+      withContainerData(Container("container123", Seq(Seal("seal1"))))
     )
     val repo = context.get[DeclarationRepository]
     when(repo.find(any(), any())).thenReturn(Future.successful(Some(declaration)))
@@ -104,7 +93,7 @@ object `User perform declaration submission` extends Action with PatienceConfigu
   import play.api.test.Helpers._
   override def execute(context: ScenarioContext): ScenarioContext = {
     val declarationId = context.maybe[ExportsDeclaration].map(_.id).getOrElse(UUID.randomUUID().toString)
-    val endpoint = s"/declarations/${declarationId}/submission"
+    val endpoint = s"/declarations/$declarationId/submission"
     val request = FakeRequest("POST", endpoint).withHeaders(ValidHeaders.toSeq: _*)
     val application = context.get[Application]
     val outcome = route(application, request).get

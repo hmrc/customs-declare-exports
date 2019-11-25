@@ -15,17 +15,10 @@
  */
 
 package uk.gov.hmrc.exports.models.declaration
+import play.api.libs.json.Json
 
-import play.api.libs.json.{Json, OFormat}
+case class TransportInformation(transportPayment: Option[TransportPayment] = None, containers: Seq[Container] = Seq.empty)
 
-case class TransportInformationContainers(containers: Seq[TransportInformationContainer])
-
-object TransportInformationContainers {
-  implicit val format: OFormat[TransportInformationContainers] = Json.format[TransportInformationContainers]
-}
-
-case class TransportInformationContainer(id: String, seals: Seq[Seal])
-
-object TransportInformationContainer {
-  implicit val format: OFormat[TransportInformationContainer] = Json.format[TransportInformationContainer]
+object TransportInformation {
+  implicit val format = Json.format[TransportInformation]
 }

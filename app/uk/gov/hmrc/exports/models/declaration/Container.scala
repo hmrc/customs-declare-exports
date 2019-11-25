@@ -18,14 +18,8 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 
-case class BorderTransport(
-  meansOfTransportCrossingTheBorderNationality: Option[String],
-  meansOfTransportCrossingTheBorderType: String,
-  meansOfTransportCrossingTheBorderIDNumber: Option[String]
-)
+case class Container(id: String, seals: Seq[Seal])
 
-object BorderTransport {
-
-  implicit val formats: OFormat[BorderTransport] = Json.format[BorderTransport]
-
+object Container {
+  implicit val format: OFormat[Container] = Json.format[Container]
 }

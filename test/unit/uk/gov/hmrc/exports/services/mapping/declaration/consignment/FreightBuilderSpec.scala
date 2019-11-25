@@ -29,7 +29,7 @@ class FreightBuilderSpec extends WordSpec with Matchers with ExportsDeclarationB
     "build then add" when {
       "no transport details" in {
         // Given
-        val model: ExportsDeclaration = aDeclaration(withoutBorderTransport())
+        val model: ExportsDeclaration = aDeclaration()
         val consignment = new Declaration.Consignment()
 
         // When
@@ -41,7 +41,7 @@ class FreightBuilderSpec extends WordSpec with Matchers with ExportsDeclarationB
 
       "payment method is empty" in {
         // Given
-        val model = aDeclaration(withBorderTransport(paymentMethod = None))
+        val model = aDeclaration(withTransportPayment(None))
         val consignment = new Declaration.Consignment()
 
         // When
@@ -53,7 +53,7 @@ class FreightBuilderSpec extends WordSpec with Matchers with ExportsDeclarationB
 
       "payment method is populated" in {
         // Given
-        val model = aDeclaration(withBorderTransport(paymentMethod = Some("method")))
+        val model = aDeclaration(withTransportPayment(Some("method")))
         val consignment = new Declaration.Consignment()
 
         // When
