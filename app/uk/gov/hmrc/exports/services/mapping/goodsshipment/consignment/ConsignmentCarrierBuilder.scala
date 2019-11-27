@@ -29,7 +29,7 @@ class ConsignmentCarrierBuilder @Inject()(countriesService: CountriesService) ex
 
   override def buildThenAdd(model: ExportsDeclaration, consignment: Declaration.Consignment): Unit =
     model.`type` match {
-      case DeclarationType.STANDARD | DeclarationType.SIMPLIFIED =>
+      case DeclarationType.STANDARD | DeclarationType.SIMPLIFIED | DeclarationType.OCCASIONAL =>
         model.parties.carrierDetails
           .filter(isDefined)
           .map(_.details)

@@ -18,9 +18,10 @@ package unit.uk.gov.hmrc.exports.services.mapping.declaration.consignment
 
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.models.DeclarationType
+import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.services.mapping.declaration.consignment.{DeclarationConsignmentBuilder, FreightBuilder, IteneraryBuilder}
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentCarrierBuilder
 import util.testdata.ExportsDeclarationBuilder
@@ -41,34 +42,21 @@ class DeclarationConsignmentBuilderSpec extends WordSpec with Matchers with Mock
 
     "build then add" when {
 
-      "standard journey" in {
-        // Given
-        val model = aDeclaration(withType(DeclarationType.STANDARD))
-        val declaration = new Declaration()
+      for (declarationType: DeclarationType <- Seq(DeclarationType.STANDARD, DeclarationType.SIMPLIFIED, DeclarationType.OCCASIONAL)) {
+        s"$declarationType journey" in {
+          // Given
+          val model = aDeclaration(withType(declarationType))
+          val declaration = new Declaration()
 
-        // When
-        builder.buildThenAdd(model, declaration)
+          // When
+          builder.buildThenAdd(model, declaration)
 
-        // Then
-        declaration.getConsignment should not be null
-        verify(freightBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
-        verify(iteneraryBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
-        verify(consignmentCarrierBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
-      }
-
-      "simplified journey" in {
-        // Given
-        val model = aDeclaration(withType(DeclarationType.SIMPLIFIED))
-        val declaration = new Declaration()
-
-        // When
-        builder.buildThenAdd(model, declaration)
-
-        // Then
-        declaration.getConsignment should not be null
-        verify(freightBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
-        verify(iteneraryBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
-        verify(consignmentCarrierBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
+          // Then
+          declaration.getConsignment should not be null
+          verify(freightBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
+          verify(iteneraryBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
+          verify(consignmentCarrierBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
+        }
       }
 
       "other journey" in {
