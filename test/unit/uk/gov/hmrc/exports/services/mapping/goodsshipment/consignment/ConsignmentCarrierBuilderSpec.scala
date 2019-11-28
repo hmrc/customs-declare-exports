@@ -35,7 +35,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
     when(mockCountriesService.allCountries).thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
     "build then add" when {
-      for (declarationType: DeclarationType <- Seq(DeclarationType.SIMPLIFIED, DeclarationType.STANDARD)) {
+      for (declarationType: DeclarationType <- Seq(DeclarationType.SIMPLIFIED, DeclarationType.STANDARD, DeclarationType.OCCASIONAL)) {
         s"Declaration Type ${declarationType}" when {
           "no carrier details" in {
             // Given

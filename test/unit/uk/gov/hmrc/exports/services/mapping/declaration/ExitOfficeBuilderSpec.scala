@@ -28,7 +28,12 @@ class ExitOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarati
   "ExitOfficeBuilder" should {
 
     "build then add" when {
-      for (declarationType: DeclarationType <- Seq(DeclarationType.STANDARD, DeclarationType.SUPPLEMENTARY, DeclarationType.SIMPLIFIED)) {
+      for (declarationType: DeclarationType <- Seq(
+             DeclarationType.STANDARD,
+             DeclarationType.SUPPLEMENTARY,
+             DeclarationType.SIMPLIFIED,
+             DeclarationType.OCCASIONAL
+           )) {
         s"$declarationType journey with no data" in {
           val model = aDeclaration(withType(declarationType), withoutOfficeOfExit())
           val declaration = new Declaration()

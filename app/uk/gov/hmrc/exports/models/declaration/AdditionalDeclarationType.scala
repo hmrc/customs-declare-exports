@@ -35,4 +35,6 @@ object AdditionalDeclarationType extends Enumeration {
   val STANDARD_FRONTIER = Value("A")
   val SIMPLIFIED_FRONTIER = Value("C")
   val SIMPLIFIED_PRE_LODGED = Value("F")
+  val OCCASIONAL_FRONTIER = Value("B")
+  val OCCASIONAL_PRE_LODGED = Value("E")
 }

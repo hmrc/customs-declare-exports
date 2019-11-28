@@ -21,5 +21,5 @@ import uk.gov.hmrc.exports.util.EnumJson
 object DeclarationType extends Enumeration {
   type DeclarationType = Value
   implicit val format: Format[DeclarationType.Value] = EnumJson.format(DeclarationType)
-  val STANDARD, SUPPLEMENTARY, SIMPLIFIED = Value
+  val STANDARD, SUPPLEMENTARY, SIMPLIFIED, OCCASIONAL = Value
 }

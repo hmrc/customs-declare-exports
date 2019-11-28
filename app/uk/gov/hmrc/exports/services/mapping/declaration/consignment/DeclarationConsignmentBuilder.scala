@@ -30,7 +30,7 @@ class DeclarationConsignmentBuilder @Inject()(
 ) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
     model.`type` match {
-      case DeclarationType.STANDARD | DeclarationType.SIMPLIFIED =>
+      case DeclarationType.STANDARD | DeclarationType.SIMPLIFIED | DeclarationType.OCCASIONAL =>
         val consignment = new Declaration.Consignment()
         freightBuilder.buildThenAdd(model, consignment)
         iteneraryBuilder.buildThenAdd(model, consignment)
