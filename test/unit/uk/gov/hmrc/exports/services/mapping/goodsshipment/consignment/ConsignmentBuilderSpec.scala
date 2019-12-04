@@ -53,7 +53,8 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
              DeclarationType.STANDARD,
              DeclarationType.SUPPLEMENTARY,
              DeclarationType.SIMPLIFIED,
-             DeclarationType.OCCASIONAL
+             DeclarationType.OCCASIONAL,
+             DeclarationType.CLEARANCE
            )) {
         s"for $declarationType declaration" in {
           val model: ExportsDeclaration =

@@ -17,11 +17,11 @@
 package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import org.mockito.Mockito.when
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
-import uk.gov.hmrc.exports.models.{Country, DeclarationType}
 import uk.gov.hmrc.exports.models.declaration.Address
+import uk.gov.hmrc.exports.models.{Country, DeclarationType}
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentCarrierBuilder
 import util.testdata.ExportsDeclarationBuilder
@@ -35,7 +35,12 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
     when(mockCountriesService.allCountries).thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
     "build then add" when {
-      for (declarationType: DeclarationType <- Seq(DeclarationType.SIMPLIFIED, DeclarationType.STANDARD, DeclarationType.OCCASIONAL)) {
+      for (declarationType: DeclarationType <- Seq(
+             DeclarationType.SIMPLIFIED,
+             DeclarationType.STANDARD,
+             DeclarationType.OCCASIONAL,
+             DeclarationType.CLEARANCE
+           )) {
         s"Declaration Type ${declarationType}" when {
           "no carrier details" in {
             // Given
