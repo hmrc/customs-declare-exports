@@ -42,7 +42,12 @@ class DeclarationConsignmentBuilderSpec extends WordSpec with Matchers with Mock
 
     "build then add" when {
 
-      for (declarationType: DeclarationType <- Seq(DeclarationType.STANDARD, DeclarationType.SIMPLIFIED, DeclarationType.OCCASIONAL)) {
+      for (declarationType: DeclarationType <- Seq(
+             DeclarationType.STANDARD,
+             DeclarationType.SIMPLIFIED,
+             DeclarationType.OCCASIONAL,
+             DeclarationType.CLEARANCE
+           )) {
         s"$declarationType journey" in {
           // Given
           val model = aDeclaration(withType(declarationType))

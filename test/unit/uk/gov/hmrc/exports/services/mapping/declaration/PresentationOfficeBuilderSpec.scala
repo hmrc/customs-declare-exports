@@ -39,7 +39,12 @@ class PresentationOfficeBuilderSpec extends WordSpec with Matchers with ExportsD
         declaration.getPresentationOffice should be(null)
       }
 
-      for (declarationType: DeclarationType <- Seq(DeclarationType.STANDARD, DeclarationType.SIMPLIFIED, DeclarationType.OCCASIONAL)) {
+      for (declarationType: DeclarationType <- Seq(
+             DeclarationType.STANDARD,
+             DeclarationType.SIMPLIFIED,
+             DeclarationType.OCCASIONAL,
+             DeclarationType.CLEARANCE
+           )) {
         s"Declaration Type $declarationType" when {
           "no office of exit" in {
             val model = aDeclaration(withType(declarationType), withoutOfficeOfExit())

@@ -36,7 +36,7 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
   commodityBuilder: CommodityBuilder
 ) extends ModifyingBuilder[ExportsDeclaration, Declaration.GoodsShipment] {
 
-  private val journeysWithCommodityMeasurements = Set(DeclarationType.STANDARD, DeclarationType.SUPPLEMENTARY)
+  private val journeysWithCommodityMeasurements = Set(DeclarationType.STANDARD, DeclarationType.SUPPLEMENTARY, DeclarationType.CLEARANCE)
 
   override def buildThenAdd(exportsCacheModel: ExportsDeclaration, goodsShipment: Declaration.GoodsShipment): Unit =
     exportsCacheModel.items.foreach(exportItem => {

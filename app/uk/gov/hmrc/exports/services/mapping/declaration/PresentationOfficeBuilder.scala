@@ -27,7 +27,7 @@ import wco.datamodel.wco.declaration_ds.dms._2._
 class PresentationOfficeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
     model.`type` match {
-      case DeclarationType.STANDARD | DeclarationType.SIMPLIFIED | DeclarationType.OCCASIONAL =>
+      case DeclarationType.STANDARD | DeclarationType.SIMPLIFIED | DeclarationType.OCCASIONAL | DeclarationType.CLEARANCE =>
         model.locations.officeOfExit
           .flatMap(_.presentationOfficeId)
           .map(createPresentationOffice)

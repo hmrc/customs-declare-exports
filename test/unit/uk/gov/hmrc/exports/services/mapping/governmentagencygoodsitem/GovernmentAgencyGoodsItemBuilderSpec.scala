@@ -61,7 +61,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
   "GovernmentAgencyGoodsItemBuilder" should {
 
     "map ExportItem Correctly" when {
-      for (declarationType: DeclarationType <- Seq(DeclarationType.STANDARD, DeclarationType.SUPPLEMENTARY)) {
+      for (declarationType: DeclarationType <- Seq(DeclarationType.STANDARD, DeclarationType.SUPPLEMENTARY, DeclarationType.CLEARANCE)) {
         s"on the $declarationType journey" in {
           val exportItem = anItem(
             withSequenceId(99),

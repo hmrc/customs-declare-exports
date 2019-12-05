@@ -32,7 +32,8 @@ class ExitOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarati
              DeclarationType.STANDARD,
              DeclarationType.SUPPLEMENTARY,
              DeclarationType.SIMPLIFIED,
-             DeclarationType.OCCASIONAL
+             DeclarationType.OCCASIONAL,
+             DeclarationType.CLEARANCE
            )) {
         s"$declarationType journey with no data" in {
           val model = aDeclaration(withType(declarationType), withoutOfficeOfExit())
