@@ -69,8 +69,6 @@ object MeansOfTransport {
   private val reverseLookup: Map[String, MeansOfTransport] =
     allowedMeansOfTransportTypeCodes.map(entry => entry.value -> entry)(collection.breakOut)
 
-
-
   implicit val format: Format[MeansOfTransport] =
     Format(StringReads.collect(JsonValidationError("error.value.unknown"))(reverseLookup), Writes(mode => StringWrites.writes(mode.value)))
 }

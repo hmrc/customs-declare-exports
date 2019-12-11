@@ -25,7 +25,7 @@ class MeansOfTransportSpec extends WordSpec with MustMatchers {
   "Means of transport" must {
     Seq("10", "11", "20", "30", "40", "41", "80", "81").foreach { code =>
       s"have format for code '$code'" in {
-        JsString(code).validate[MeansOfTransport] mustBe a [JsSuccess[_]]
+        JsString(code).validate[MeansOfTransport] mustBe a[JsSuccess[_]]
       }
     }
 

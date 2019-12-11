@@ -94,24 +94,24 @@ object ExportsDeclaration {
     )
 
   def version2(
-                id: String,
-                eori: String,
-                status: DeclarationStatus,
-                createdDateTime: Instant,
-                updatedDateTime: Instant,
-                sourceId: Option[String],
-                `type`: DeclarationType,
-                dispatchLocation: Option[DispatchLocation],
-                additionalDeclarationType: Option[AdditionalDeclarationType],
-                consignmentReferences: Option[ConsignmentReferences],
-                transport: Transport,
-                parties: Parties,
-                locations: Locations,
-                items: Set[ExportItem],
-                totalNumberOfItems: Option[TotalNumberOfItems],
-                previousDocuments: Option[PreviousDocuments],
-                natureOfTransaction: Option[NatureOfTransaction]
-              ): ExportsDeclaration = {
+    id: String,
+    eori: String,
+    status: DeclarationStatus,
+    createdDateTime: Instant,
+    updatedDateTime: Instant,
+    sourceId: Option[String],
+    `type`: DeclarationType,
+    dispatchLocation: Option[DispatchLocation],
+    additionalDeclarationType: Option[AdditionalDeclarationType],
+    consignmentReferences: Option[ConsignmentReferences],
+    transport: Transport,
+    parties: Parties,
+    locations: Locations,
+    items: Set[ExportItem],
+    totalNumberOfItems: Option[TotalNumberOfItems],
+    previousDocuments: Option[PreviousDocuments],
+    natureOfTransaction: Option[NatureOfTransaction]
+  ): ExportsDeclaration = {
 
     val departureTransport = (transport.borderModeOfTransportCode, transport.meansOfTransportOnDepartureType) match {
       case (Some(code), Some(meansOfTransportType)) =>
@@ -123,7 +123,7 @@ object ExportsDeclaration {
       BorderTransport(transport.meansOfTransportCrossingTheBorderNationality, meansType.value, transport.meansOfTransportOnDepartureIDNumber)
     }
 
-    val transportInformation = if(transport.transportPayment.isDefined || transport.containers.nonEmpty) {
+    val transportInformation = if (transport.transportPayment.isDefined || transport.containers.nonEmpty) {
       Some(TransportInformation(transport.transportPayment, transport.containers))
     } else {
       None
@@ -198,7 +198,7 @@ object ExportsDeclaration {
         (__ \ "totalNumberOfItems").readNullable[TotalNumberOfItems] and
         (__ \ "previousDocuments").readNullable[PreviousDocuments] and
         (__ \ "natureOfTransaction").readNullable[NatureOfTransaction]
-      ).apply(ExportsDeclaration.version2 _)
+    ).apply(ExportsDeclaration.version2 _)
 
     val writesVersion1: OWrites[ExportsDeclaration] = OWrites[ExportsDeclaration] { declaration =>
       val values = Seq(
@@ -227,7 +227,7 @@ object ExportsDeclaration {
 
     val bothReads: Reads[ExportsDeclaration] = (__ \ "transport").readNullable[Transport].flatMap[ExportsDeclaration] {
       case Some(_) => readsVersion2
-      case None => readsVersion1
+      case None    => readsVersion1
     }
 
     implicit val format: OFormat[ExportsDeclaration] = OFormat(bothReads, writesVersion1)

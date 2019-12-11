@@ -24,7 +24,7 @@ class ModeOfTransportSpec extends WordSpec with MustMatchers {
   "Mode of Transport" must {
     Seq("1", "2", "3", "4", "5", "7", "8", "9").foreach { code =>
       s"have format for mode '$code'" in {
-        JsString(code).validate[ModeOfTransport] mustBe a [JsSuccess[_]]
+        JsString(code).validate[ModeOfTransport] mustBe a[JsSuccess[_]]
       }
     }
 
