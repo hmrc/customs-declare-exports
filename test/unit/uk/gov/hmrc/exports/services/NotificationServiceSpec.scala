@@ -33,9 +33,9 @@ import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, S
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.{NotificationService, WCOPointerMappingService}
 import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder._
-import util.testdata.ExportsTestData._
-import util.testdata.NotificationTestData._
-import util.testdata.SubmissionTestData._
+import testdata.ExportsTestData._
+import testdata.NotificationTestData._
+import testdata.SubmissionTestData._
 
 import scala.concurrent.{ExecutionContext, Future}
 

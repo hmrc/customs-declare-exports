@@ -18,7 +18,7 @@ package unit.uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.services.mapping.declaration.FunctionalReferenceIdBuilder
-import util.testdata.ExportsDeclarationBuilder
+import testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class FunctionalReferenceIdentificationBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {

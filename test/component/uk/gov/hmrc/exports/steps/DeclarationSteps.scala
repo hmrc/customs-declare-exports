@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package component.uk.gov.hmrc.exports.steps
+package uk.gov.hmrc.exports.steps
 
 import java.util.UUID
 
@@ -30,8 +30,8 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.exports.models.declaration.{Container, DeclarationStatus, ExportsDeclaration, Seal}
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
-import util.testdata.ExportsDeclarationBuilder
-import util.testdata.ExportsTestData.{declarantLrnValue, ValidHeaders}
+import testdata.ExportsDeclarationBuilder
+import testdata.ExportsTestData.{declarantLrnValue, ValidHeaders}
 
 import scala.concurrent.{Await, Future}
 import scala.util.control.NonFatal

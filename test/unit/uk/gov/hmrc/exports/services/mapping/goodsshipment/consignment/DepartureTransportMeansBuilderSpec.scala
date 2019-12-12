@@ -19,7 +19,7 @@ package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.declaration.{DepartureTransport, InlandModeOfTransportCode}
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.DepartureTransportMeansBuilder
-import util.testdata.ExportsDeclarationBuilder
+import testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class DepartureTransportMeansBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {

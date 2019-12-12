@@ -25,8 +25,8 @@ import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.exports.repositories.NotificationRepository
-import util.testdata.ExportsTestData._
-import util.testdata.NotificationTestData._
+import testdata.ExportsTestData._
+import testdata.NotificationTestData._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global

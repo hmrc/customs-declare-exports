@@ -42,7 +42,7 @@ import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.services.DeclarationService
 import uk.gov.hmrc.http.HeaderCarrier
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
-import util.testdata.ExportsDeclarationBuilder
+import testdata.ExportsDeclarationBuilder
 
 import scala.concurrent.{ExecutionContext, Future}
 

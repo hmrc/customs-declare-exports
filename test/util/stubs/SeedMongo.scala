@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package util
+package stubs
 
 import java.util.UUID
 
 import reactivemongo.api.{MongoConnection, MongoDriver}
 import uk.gov.hmrc.exports.models.declaration._
 import unit.uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
-import util.testdata.ExportsDeclarationBuilder
+import testdata.ExportsDeclarationBuilder
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration

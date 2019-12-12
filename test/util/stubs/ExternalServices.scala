@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package util
+package stubs
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import integration.uk.gov.hmrc.exports.base.WireMockRunner
 import play.api.http.Status
 import play.api.libs.json.{JsArray, Json}
 import play.api.test.Helpers.{AUTHORIZATION, OK}
@@ -25,7 +24,7 @@ import play.mvc.Http.Status._
 import uk.gov.hmrc.auth.core.Enrolment
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.exports.models.Eori
-import util.testdata.ExportsTestData._
+import testdata.ExportsTestData._
 
 trait AuditService extends WireMockRunner {
 

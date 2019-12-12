@@ -4,8 +4,7 @@ import sbt._
 
 object AppDependencies {
 
-  private val wireMockVersion = "2.24.1"
-  private val testScope = "test,it"
+  private val testScope = "test, it, component"
 
   val compile = Seq(
     "uk.gov.hmrc" %% "simple-reactivemongo" % "7.20.0-play-26",
@@ -18,29 +17,10 @@ object AppDependencies {
 
   def test(scope: String = "test") = Seq(
     "org.scalatest" %% "scalatest" % "3.0.8" % testScope,
-    "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % "test",
-    "com.github.tomakehurst" % "wiremock" % wireMockVersion % testScope exclude("org.apache.httpcomponents","httpclient") exclude("org.apache.httpcomponents","httpcore"),
+    "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % testScope,
+    "com.github.tomakehurst" % "wiremock-jre8" % "2.25.1" % testScope,
     "org.pegdown" % "pegdown" % "1.6.0" % testScope,
     "com.typesafe.play" %% "play-test" % PlayVersion.current % testScope,
     "org.mockito" % "mockito-core" % "3.0.0" % "test"
-  )
-
-  val jettyVersion = "9.2.26.v20180806"
-
-  val jettyOverrides = Set(
-    "org.eclipse.jetty" % "jetty-server" % jettyVersion % IntegrationTest,
-    "org.eclipse.jetty" % "jetty-servlet" % jettyVersion % IntegrationTest,
-    "org.eclipse.jetty" % "jetty-security" % jettyVersion % IntegrationTest,
-    "org.eclipse.jetty" % "jetty-servlets" % jettyVersion % IntegrationTest,
-    "org.eclipse.jetty" % "jetty-continuation" % jettyVersion % IntegrationTest,
-    "org.eclipse.jetty" % "jetty-webapp" % jettyVersion % IntegrationTest,
-    "org.eclipse.jetty" % "jetty-xml" % jettyVersion % IntegrationTest,
-    "org.eclipse.jetty" % "jetty-client" % jettyVersion % IntegrationTest,
-    "org.eclipse.jetty" % "jetty-http" % jettyVersion % IntegrationTest,
-    "org.eclipse.jetty" % "jetty-io" % jettyVersion % IntegrationTest,
-    "org.eclipse.jetty" % "jetty-util" % jettyVersion % IntegrationTest,
-    "org.eclipse.jetty.websocket" % "websocket-api" % jettyVersion % IntegrationTest,
-    "org.eclipse.jetty.websocket" % "websocket-common" % jettyVersion % IntegrationTest,
-    "org.eclipse.jetty.websocket" % "websocket-client" % jettyVersion % IntegrationTest
   )
 }

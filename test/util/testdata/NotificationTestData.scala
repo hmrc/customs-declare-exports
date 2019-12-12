@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package util.testdata
+package testdata
 
 import java.time.format.DateTimeFormatter.ofPattern
 import java.time.{LocalDateTime, ZoneId}
@@ -26,7 +26,7 @@ import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationError}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
-import util.testdata.ExportsTestData._
+import testdata.ExportsTestData._
 
 import scala.util.Random
 import scala.xml.Elem

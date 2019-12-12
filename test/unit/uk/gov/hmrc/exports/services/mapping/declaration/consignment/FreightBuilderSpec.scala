@@ -19,7 +19,7 @@ package unit.uk.gov.hmrc.exports.services.mapping.declaration.consignment
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.mapping.declaration.consignment.FreightBuilder
-import util.testdata.ExportsDeclarationBuilder
+import testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class FreightBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {

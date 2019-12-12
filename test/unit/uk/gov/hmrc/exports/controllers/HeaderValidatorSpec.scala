@@ -21,7 +21,7 @@ import org.scalatest.{MustMatchers, WordSpec}
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.http.HeaderCarrier
-import util.testdata.ExportsTestData._
+import testdata.ExportsTestData._
 
 class HeaderValidatorSpec extends WordSpec with MockitoSugar with MustMatchers {
 

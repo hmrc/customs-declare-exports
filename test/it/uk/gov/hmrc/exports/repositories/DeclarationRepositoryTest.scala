@@ -29,7 +29,7 @@ import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo.format
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
-import util.testdata.ExportsDeclarationBuilder
+import testdata.ExportsDeclarationBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

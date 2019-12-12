@@ -29,8 +29,8 @@ import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
-import util.testdata.ExportsTestData._
-import util.testdata.SubmissionTestData._
+import testdata.ExportsTestData._
+import testdata.SubmissionTestData._
 
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.ExecutionContext.Implicits.global

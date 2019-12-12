@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package component.uk.gov.hmrc.exports.steps
+package uk.gov.hmrc.exports.steps
 
 import component.uk.gov.hmrc.exports.syntax.{Postcondition, Precondition, ScenarioContext}
-import util.AuthService
-import util.testdata.ExportsTestData.declarantEori
+import stubs.AuthService
+import testdata.ExportsTestData.declarantEori
 
 object `Authorized user` extends Precondition with AuthService {
   def name = "Authorized user"

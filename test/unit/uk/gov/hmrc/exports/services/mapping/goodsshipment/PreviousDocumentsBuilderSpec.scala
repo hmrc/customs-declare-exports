@@ -20,7 +20,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.declaration.{PreviousDocument, PreviousDocuments}
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.PreviousDocumentsBuilder
-import util.testdata.ExportsDeclarationBuilder
+import testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class PreviousDocumentsBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {

@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package component.uk.gov.hmrc.exports.steps
+package uk.gov.hmrc.exports.steps
 
 import java.util.UUID
 
 import component.uk.gov.hmrc.exports.syntax.{Postcondition, Precondition, ScenarioContext}
 import org.scalatest.concurrent.{Eventually, IntegrationPatience}
+import stubs.{CustomsDeclarationsAPIConfig, CustomsDeclarationsAPIService}
 import uk.gov.hmrc.exports.models.Eori
-import util.CustomsDeclarationsAPIConfig
-import util.stubs.CustomsDeclarationsAPIService
 
 object `Customs declaration is fully operational` extends Precondition with CustomsDeclarationsAPIService {
 

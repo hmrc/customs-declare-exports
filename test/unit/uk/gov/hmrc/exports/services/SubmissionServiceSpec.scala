@@ -33,9 +33,9 @@ import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepo
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
 import uk.gov.hmrc.exports.services.{SubmissionService, WcoMapperService}
 import uk.gov.hmrc.http.HeaderCarrier
-import util.testdata.ExportsDeclarationBuilder
-import util.testdata.ExportsTestData._
-import util.testdata.SubmissionTestData._
+import testdata.ExportsDeclarationBuilder
+import testdata.ExportsTestData._
+import testdata.SubmissionTestData._
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import scala.concurrent.{ExecutionContext, Future}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package component.uk.gov.hmrc.exports.steps
+package uk.gov.hmrc.exports.steps
 
 import java.security.GeneralSecurityException
 
@@ -34,7 +34,7 @@ import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
-import util.testdata.ExportsTestData.ValidHeaders
+import testdata.ExportsTestData.ValidHeaders
 
 import scala.concurrent.{Await, Future}
 

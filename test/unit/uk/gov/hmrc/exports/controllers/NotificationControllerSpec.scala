@@ -38,8 +38,8 @@ import uk.gov.hmrc.exports.services.{NotificationService, SubmissionService}
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
 import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildNotificationServiceMock, buildSubmissionServiceMock}
-import util.testdata.NotificationTestData._
-import util.testdata.SubmissionTestData.submission
+import testdata.NotificationTestData._
+import testdata.SubmissionTestData.submission
 
 import scala.concurrent.Future
 import scala.util.Random

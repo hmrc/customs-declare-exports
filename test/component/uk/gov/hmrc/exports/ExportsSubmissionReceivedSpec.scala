@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package component.uk.gov.hmrc.exports
+package uk.gov.hmrc.exports
 
 import com.codahale.metrics.SharedMetricRegistries
-import component.uk.gov.hmrc.exports.steps._
 import component.uk.gov.hmrc.exports.syntax._
-import integration.uk.gov.hmrc.exports.base.WireMockRunner
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
@@ -32,10 +30,12 @@ import play.api.Application
 import play.api.http.Status.{NOT_FOUND, _}
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
+import stubs.{CustomsDeclarationsAPIConfig, WireMockRunner}
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
-import util.testdata.ExportsTestData._
-import util.{CustomsDeclarationsAPIConfig, ExternalServicesConfig}
+import testdata.ExportsTestData._
+import stubs.ExternalServicesConfig
+import uk.gov.hmrc.exports.steps._
 
 import scala.concurrent.Future
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package component.uk.gov.hmrc.exports.steps
+package uk.gov.hmrc.exports.steps
 
 import component.uk.gov.hmrc.exports.syntax.{Postcondition, ScenarioContext}
 import org.scalatest.MustMatchers

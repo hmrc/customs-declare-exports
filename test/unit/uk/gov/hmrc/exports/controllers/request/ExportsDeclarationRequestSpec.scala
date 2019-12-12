@@ -23,7 +23,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
-import util.testdata.ExportsDeclarationBuilder
+import testdata.ExportsDeclarationBuilder
 
 class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsDeclarationBuilder with MockitoSugar {
 
