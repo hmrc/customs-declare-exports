@@ -65,7 +65,7 @@ lazy val microservice = Project(appName, file("."))
       (baseDirectory in ComponentTest).value / "test/component",
       (baseDirectory in Test).value / "test/util"
     ),
-    addTestReportOption(ComponentTest, "comp-test-reports"),
+    addTestReportOption(ComponentTest, "int-test-reports"),
     testGrouping in ComponentTest := oneForkedJvmPerTest((definedTests in ComponentTest).value),
     parallelExecution in ComponentTest := false
   )
