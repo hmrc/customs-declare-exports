@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package component.uk.gov.hmrc.exports.steps
+package uk.gov.hmrc.exports.steps
 
 import component.uk.gov.hmrc.exports.syntax.{Precondition, ScenarioContext}
 import uk.gov.hmrc.exports.repositories.NotificationRepository
@@ -23,7 +23,7 @@ import org.mockito.ArgumentMatchers._
 
 import scala.concurrent.Future
 
-import util.testdata.NotificationTestData._
+import testdata.NotificationTestData._
 
 object `Notification came earlier than request is finished` extends Precondition {
   override def name: String = "Notification came earlier than request is finished"

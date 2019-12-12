@@ -28,7 +28,7 @@ import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Eori, Pag
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService, WcoSubmissionService}
 import uk.gov.hmrc.http.HeaderCarrier
-import util.testdata.ExportsDeclarationBuilder
+import testdata.ExportsDeclarationBuilder
 
 import scala.concurrent.ExecutionContext.Implicits
 import scala.concurrent.Future

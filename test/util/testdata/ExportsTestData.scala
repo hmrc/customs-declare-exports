@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package util.testdata
+package testdata
 
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
@@ -23,7 +23,7 @@ import play.api.http.{ContentTypes, HeaderNames}
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames._
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.wco.dec.{DateTimeString, MetaData, ResponseDateTimeElement, Declaration => WcoDeclaration}
-import util.testdata.TestDataHelper.randomAlphanumericString
+import testdata.TestDataHelper.randomAlphanumericString
 
 object ExportsTestData {
 

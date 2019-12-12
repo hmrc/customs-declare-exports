@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.models.declaration.Address
 import uk.gov.hmrc.exports.models.{Country, DeclarationType}
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentCarrierBuilder
-import util.testdata.ExportsDeclarationBuilder
+import testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {

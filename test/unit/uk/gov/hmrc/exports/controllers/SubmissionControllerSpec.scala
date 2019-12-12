@@ -36,7 +36,7 @@ import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
-import util.testdata.ExportsDeclarationBuilder
+import testdata.ExportsDeclarationBuilder
 
 import scala.concurrent.Future
 

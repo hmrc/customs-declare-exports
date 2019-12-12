@@ -14,24 +14,23 @@
  * limitations under the License.
  */
 
-package integration.uk.gov.hmrc.exports.connector
+package uk.gov.hmrc.exports.connector
 
 import java.util.UUID
 
-import integration.uk.gov.hmrc.exports.base.IntegrationTestSpec
 import integration.uk.gov.hmrc.exports.util.TestModule
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
+import stubs.{CustomsDeclarationsAPIConfig, CustomsDeclarationsAPIService}
+import stubs.ExternalServicesConfig.{Host, Port}
+import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
-import util.CustomsDeclarationsAPIConfig
-import util.ExternalServicesConfig.{Host, Port}
-import util.stubs.CustomsDeclarationsAPIService
-import util.testdata.ExportsDeclarationBuilder
-import util.testdata.ExportsTestData._
+import testdata.ExportsDeclarationBuilder
+import testdata.ExportsTestData._
 
 import scala.concurrent.Future
 

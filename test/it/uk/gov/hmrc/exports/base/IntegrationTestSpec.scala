@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package integration.uk.gov.hmrc.exports.base
+package uk.gov.hmrc.exports.base
 
 import com.codahale.metrics.SharedMetricRegistries
 import com.google.inject.AbstractModule
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import play.api.inject.guice.GuiceableModule
+import stubs.WireMockRunner
 import unit.uk.gov.hmrc.exports.base.UnitSpec
 
 object IntegrationTestModule extends AbstractModule {

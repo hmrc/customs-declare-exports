@@ -20,7 +20,7 @@ import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.services.mapping.declaration.ExitOfficeBuilder
-import util.testdata.ExportsDeclarationBuilder
+import testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class ExitOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {

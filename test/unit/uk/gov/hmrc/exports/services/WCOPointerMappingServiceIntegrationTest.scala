@@ -27,14 +27,16 @@ class WCOPointerMappingServiceIntegrationTest extends WordSpec with MustMatchers
   "Map to Exports Pointer" should {
     "map valid pointer" in {
       val pointer = Pointer(
+        // 42A.67A.68A.$1.02A.$2.D005
+        // declaration.items.$1.documentProduced.$2.documentIdentifier
         List(
           PointerSection("42A", PointerSectionType.FIELD),
           PointerSection("67A", PointerSectionType.FIELD),
-          PointerSection("1", PointerSectionType.SEQUENCE),
           PointerSection("68A", PointerSectionType.FIELD),
+          PointerSection("1", PointerSectionType.SEQUENCE),
+          PointerSection("02A", PointerSectionType.FIELD),
           PointerSection("2", PointerSectionType.SEQUENCE),
-          PointerSection("03A", PointerSectionType.FIELD),
-          PointerSection("226", PointerSectionType.FIELD)
+          PointerSection("D005", PointerSectionType.FIELD)
         )
       )
 
@@ -45,10 +47,9 @@ class WCOPointerMappingServiceIntegrationTest extends WordSpec with MustMatchers
           PointerSection("declaration", PointerSectionType.FIELD),
           PointerSection("items", PointerSectionType.FIELD),
           PointerSection("1", PointerSectionType.SEQUENCE),
-          PointerSection("additionalInformation", PointerSectionType.FIELD),
-          PointerSection("items", PointerSectionType.FIELD),
+          PointerSection("documentProduced", PointerSectionType.FIELD),
           PointerSection("2", PointerSectionType.SEQUENCE),
-          PointerSection("code", PointerSectionType.FIELD)
+          PointerSection("documentIdentifier", PointerSectionType.FIELD)
         )
       )
     }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package util
+package stubs
 
 object CustomsDeclarationsAPIConfig {
   val apiVersion: String = "1.0"

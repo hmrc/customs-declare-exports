@@ -18,7 +18,7 @@ package unit.uk.gov.hmrc.exports.services.mapping.declaration.consignment
 
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.services.mapping.declaration.consignment.IteneraryBuilder
-import util.testdata.ExportsDeclarationBuilder
+import testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class IteneraryBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {

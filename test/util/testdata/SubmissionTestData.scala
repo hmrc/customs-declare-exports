@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package util.testdata
+package testdata
 
 import java.time.LocalDateTime
 import java.util.UUID
 
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest, Submission, SubmissionRequest}
-import util.testdata.ExportsTestData._
+import testdata.ExportsTestData._
 
 object SubmissionTestData {
 

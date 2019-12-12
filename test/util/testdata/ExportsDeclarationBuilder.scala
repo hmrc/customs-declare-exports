@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package util.testdata
+package testdata
 
 import java.time.{LocalDateTime, ZoneOffset}
 import java.util.UUID
