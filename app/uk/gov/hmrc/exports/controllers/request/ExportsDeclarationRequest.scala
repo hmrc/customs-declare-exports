@@ -123,7 +123,7 @@ object ExportsDeclarationRequest {
     val departureTransport = Some(
       DepartureTransport(
         transport.borderModeOfTransportCode.getOrElse(""),
-        transport.meansOfTransportCrossingTheBorderType.getOrElse(""),
+        transport.meansOfTransportOnDepartureType.getOrElse(""),
         transport.meansOfTransportOnDepartureIDNumber.getOrElse("")
       )
     )
