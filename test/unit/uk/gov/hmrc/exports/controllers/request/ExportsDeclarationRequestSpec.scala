@@ -18,14 +18,16 @@ package uk.gov.hmrc.exports.controllers.request
 
 import java.time.Instant
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{Matchers, MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.libs.json.Json
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 import testdata.ExportsDeclarationBuilder
+import unit.uk.gov.hmrc.exports.models.declaration.ExportsDeclarationSpec
 
-class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsDeclarationBuilder with MockitoSugar {
+class ExportsDeclarationRequestSpec extends WordSpec with MustMatchers with ExportsDeclarationBuilder with MockitoSugar {
 
   private val `type` = DeclarationType.STANDARD
   private val createdDate = Instant.MIN
@@ -89,8 +91,30 @@ class ExportsDeclarationRequestSpec extends WordSpec with Matchers with ExportsD
 
   "Request" should {
     "map to ExportsDeclaration" in {
-      request.toExportsDeclaration(id, Eori(eori)) shouldBe declaration
+      request.toExportsDeclaration(id, Eori(eori)) mustBe declaration
     }
+  }
+
+  "have json format that parse declaration in vesion 1" in {
+    Json
+      .parse(ExportsDeclarationSpec.declarationVersion1)
+      .validate[ExportsDeclarationRequest]
+      .fold(error => fail(s"Could not parse - $error"), declaration => {
+        declaration.borderTransport mustNot be(empty)
+        declaration.departureTransport mustNot be(empty)
+        declaration.transportInformation mustNot be(empty)
+      })
+  }
+
+  "have json format that parse declaration in version 2" in {
+    Json
+      .parse(ExportsDeclarationSpec.declarationVersion2)
+      .validate[ExportsDeclarationRequest]
+      .fold(error => fail(s"Could not parse - $error"), declaration => {
+        declaration.borderTransport mustNot be(empty)
+        declaration.departureTransport mustNot be(empty)
+        declaration.transportInformation mustNot be(empty)
+      })
   }
 
 }

@@ -96,7 +96,7 @@ trait ExportsDeclarationBuilder {
   def withDepartureTransport(
     borderModeOfTransportCode: String = "",
     meansOfTransportOnDepartureType: String = "",
-    meansOfTransportOnDepartureIDNumber: Option[String] = None
+    meansOfTransportOnDepartureIDNumber: String = ""
   ): ExportsDeclarationModifier =
     _.copy(
       departureTransport = Some(DepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, meansOfTransportOnDepartureIDNumber))
