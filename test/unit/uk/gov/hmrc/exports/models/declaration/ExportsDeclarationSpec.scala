@@ -18,6 +18,8 @@ package unit.uk.gov.hmrc.exports.models.declaration
 
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json.Json
+import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
+import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 
 class ExportsDeclarationSpec extends WordSpec with MustMatchers {
@@ -26,37 +28,16 @@ class ExportsDeclarationSpec extends WordSpec with MustMatchers {
 
     import ExportsDeclaration.REST._
 
-    "have json format that parse declaration in vesion 1" in {
-      Json
-        .parse(ExportsDeclarationSpec.declarationVersion1)
-        .validate[ExportsDeclaration]
-        .fold(error => fail(s"Could not parse - $error"), declaration => {
-          declaration.borderTransport mustNot be(empty)
-          declaration.departureTransport mustNot be(empty)
-          declaration.transportInformation mustNot be(empty)
-        })
-    }
-
-    "have json format that parse declaration in version 2" in {
-      Json
-        .parse(ExportsDeclarationSpec.declarationVersion2)
-        .validate[ExportsDeclaration]
-        .fold(error => fail(s"Could not parse - $error"), declaration => {
-          declaration.borderTransport mustNot be(empty)
-          declaration.departureTransport mustNot be(empty)
-          declaration.transportInformation mustNot be(empty)
-        })
-    }
-
     "have json writes that produce object which could be parsed by first version of reads" in {
       val declaration = Json
         .parse(ExportsDeclarationSpec.declarationVersion2)
-        .as[ExportsDeclaration]
+        .as(ExportsDeclarationRequest.format)
+        .toExportsDeclaration("1", Eori("GB12345678"))
 
       val json = Json.toJson(declaration)
 
       json
-        .validate(ExportsDeclaration.REST.readsVersion1)
+        .validate(ExportsDeclarationRequest.format)
         .fold(error => fail(s"Could not parse - $error"), declaration => {
           declaration.borderTransport mustNot be(empty)
           declaration.departureTransport mustNot be(empty)

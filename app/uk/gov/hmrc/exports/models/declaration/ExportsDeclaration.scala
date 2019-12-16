@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.models.declaration
 
 import java.time.Instant
 
+import org.slf4j.LoggerFactory
 import play.api.libs.json._
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
@@ -50,153 +51,13 @@ case class ExportsDeclaration(
 
 object ExportsDeclaration {
 
-  def version1(
-    id: String,
-    eori: String,
-    status: DeclarationStatus,
-    createdDateTime: Instant,
-    updatedDateTime: Instant,
-    sourceId: Option[String],
-    `type`: DeclarationType,
-    dispatchLocation: Option[DispatchLocation],
-    additionalDeclarationType: Option[AdditionalDeclarationType],
-    consignmentReferences: Option[ConsignmentReferences],
-    departureTransport: Option[DepartureTransport],
-    borderTransport: Option[BorderTransport],
-    transportInformation: Option[TransportInformation],
-    parties: Parties,
-    locations: Locations,
-    items: Set[ExportItem],
-    totalNumberOfItems: Option[TotalNumberOfItems],
-    previousDocuments: Option[PreviousDocuments],
-    natureOfTransaction: Option[NatureOfTransaction]
-  ): ExportsDeclaration =
-    new ExportsDeclaration(
-      id,
-      eori,
-      status,
-      createdDateTime,
-      updatedDateTime,
-      sourceId,
-      `type`,
-      dispatchLocation,
-      additionalDeclarationType,
-      consignmentReferences,
-      departureTransport,
-      borderTransport,
-      transportInformation,
-      parties,
-      locations,
-      items,
-      totalNumberOfItems,
-      previousDocuments,
-      natureOfTransaction
-    )
-
-  def version2(
-    id: String,
-    eori: String,
-    status: DeclarationStatus,
-    createdDateTime: Instant,
-    updatedDateTime: Instant,
-    sourceId: Option[String],
-    `type`: DeclarationType,
-    dispatchLocation: Option[DispatchLocation],
-    additionalDeclarationType: Option[AdditionalDeclarationType],
-    consignmentReferences: Option[ConsignmentReferences],
-    transport: Transport,
-    parties: Parties,
-    locations: Locations,
-    items: Set[ExportItem],
-    totalNumberOfItems: Option[TotalNumberOfItems],
-    previousDocuments: Option[PreviousDocuments],
-    natureOfTransaction: Option[NatureOfTransaction]
-  ): ExportsDeclaration = {
-
-    val departureTransport = Some(
-      DepartureTransport(
-        transport.borderModeOfTransportCode.getOrElse(""),
-        transport.meansOfTransportCrossingTheBorderType.getOrElse(""),
-        transport.meansOfTransportOnDepartureIDNumber
-      )
-    )
-
-    val borderTransport = transport.meansOfTransportCrossingTheBorderType.map { meansType =>
-      BorderTransport(transport.meansOfTransportCrossingTheBorderNationality, meansType, transport.meansOfTransportOnDepartureIDNumber)
-    }
-
-    val transportInformation = Some(TransportInformation(transport.transportPayment, transport.containers))
-
-    new ExportsDeclaration(
-      id,
-      eori,
-      status,
-      createdDateTime,
-      updatedDateTime,
-      sourceId,
-      `type`,
-      dispatchLocation,
-      additionalDeclarationType,
-      consignmentReferences,
-      departureTransport,
-      borderTransport,
-      transportInformation,
-      parties,
-      locations,
-      items,
-      totalNumberOfItems,
-      previousDocuments,
-      natureOfTransaction
-    )
-  }
+  private val logger = LoggerFactory.getLogger("declaration.serializers")
 
   object REST {
 
     import play.api.libs.json._
     import play.api.libs.json.Json._
     import play.api.libs.functional.syntax._
-
-    val readsVersion1: Reads[ExportsDeclaration] = (
-      (__ \ "id").read[String] and
-        (__ \ "eori").read[String] and
-        (__ \ "status").read[DeclarationStatus.Value] and
-        (__ \ "createdDateTime").read[Instant] and
-        (__ \ "updatedDateTime").read[Instant] and
-        (__ \ "sourceId").readNullable[String] and
-        (__ \ "type").read[DeclarationType.Value] and
-        (__ \ "dispatchLocation").readNullable[DispatchLocation] and
-        (__ \ "additionalDeclarationType").readNullable[AdditionalDeclarationType.Value] and
-        (__ \ "consignmentReferences").readNullable[ConsignmentReferences] and
-        (__ \ "departureTransport").readNullable[DepartureTransport] and
-        (__ \ "borderTransport").readNullable[BorderTransport] and
-        (__ \ "transportInformation").readNullable[TransportInformation] and
-        (__ \ "parties").read[Parties] and
-        (__ \ "locations").read[Locations] and
-        (__ \ "items").read[Set[ExportItem]] and
-        (__ \ "totalNumberOfItems").readNullable[TotalNumberOfItems] and
-        (__ \ "previousDocuments").readNullable[PreviousDocuments] and
-        (__ \ "natureOfTransaction").readNullable[NatureOfTransaction]
-    ).apply(ExportsDeclaration.version1 _)
-
-    val readsVersion2: Reads[ExportsDeclaration] = (
-      (__ \ "id").read[String] and
-        (__ \ "eori").read[String] and
-        (__ \ "status").read[DeclarationStatus.Value] and
-        (__ \ "createdDateTime").read[Instant] and
-        (__ \ "updatedDateTime").read[Instant] and
-        (__ \ "sourceId").readNullable[String] and
-        (__ \ "type").read[DeclarationType.Value] and
-        (__ \ "dispatchLocation").readNullable[DispatchLocation] and
-        (__ \ "additionalDeclarationType").readNullable[AdditionalDeclarationType.Value] and
-        (__ \ "consignmentReferences").readNullable[ConsignmentReferences] and
-        (__ \ "transport").read[Transport] and
-        (__ \ "parties").read[Parties] and
-        (__ \ "locations").read[Locations] and
-        (__ \ "items").read[Set[ExportItem]] and
-        (__ \ "totalNumberOfItems").readNullable[TotalNumberOfItems] and
-        (__ \ "previousDocuments").readNullable[PreviousDocuments] and
-        (__ \ "natureOfTransaction").readNullable[NatureOfTransaction]
-    ).apply(ExportsDeclaration.version2 _)
 
     val writesVersion1: OWrites[ExportsDeclaration] = OWrites[ExportsDeclaration] { declaration =>
       val values = Seq(
@@ -223,12 +84,7 @@ object ExportsDeclaration {
       JsObject(values.flatten)
     }
 
-    val bothReads: Reads[ExportsDeclaration] = (__ \ "transport").readNullable[Transport].flatMap[ExportsDeclaration] {
-      case Some(_) => readsVersion2
-      case None    => readsVersion1
-    }
-
-    implicit val format: OFormat[ExportsDeclaration] = OFormat(bothReads, writesVersion1)
+    implicit val writes = writesVersion1
   }
 
   object Mongo {

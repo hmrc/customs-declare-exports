@@ -51,9 +51,9 @@ class DepartureTransportMeansBuilder @Inject()() {
       departureTransportMeans.setModeCode(modeCodeType)
     }
 
-    departureTransport.meansOfTransportOnDepartureIDNumber.foreach { idValue =>
+    if (departureTransport.meansOfTransportOnDepartureIDNumber.nonEmpty) {
       val id = new DepartureTransportMeansIdentificationIDType()
-      id.setValue(idValue)
+      id.setValue(departureTransport.meansOfTransportOnDepartureIDNumber)
       departureTransportMeans.setID(id)
     }
 

@@ -18,11 +18,7 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 
-case class DepartureTransport(
-  borderModeOfTransportCode: String,
-  meansOfTransportOnDepartureType: String,
-  meansOfTransportOnDepartureIDNumber: Option[String]
-)
+case class DepartureTransport(borderModeOfTransportCode: String, meansOfTransportOnDepartureType: String, meansOfTransportOnDepartureIDNumber: String)
 
 object DepartureTransport {
   implicit val formats: OFormat[DepartureTransport] = Json.format[DepartureTransport]
