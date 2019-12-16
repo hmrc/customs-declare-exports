@@ -23,7 +23,6 @@ import reactivemongo.api.Cursor.FailOnError
 import reactivemongo.api.ReadPreference
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONBoolean, BSONDocument, BSONObjectID}
-import reactivemongo.play.json.commands.JSONFindAndModifyCommand.FindAndModifyResult
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission}
 import uk.gov.hmrc.mongo.ReactiveRepository
@@ -93,11 +92,9 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
 
   private def performUpdate(query: JsObject, update: JsObject): Future[Option[Submission]] =
     findAndUpdate(query, update, fetchNewObject = true).map { updateResult =>
-      if (updateResult.value.isEmpty) logDatabaseUpdateError(updateResult)
+      if (updateResult.value.isEmpty) {
+        updateResult.lastError.foreach(_.err.foreach(errorMsg => logger.error(s"Problem during database update: $errorMsg")))
+      }
       updateResult.result[Submission]
     }
-
-  private def logDatabaseUpdateError(res: FindAndModifyResult): Unit =
-    res.lastError.foreach(_.err.foreach(errorMsg => logger.error(s"Problem during database update: $errorMsg")))
-
 }
