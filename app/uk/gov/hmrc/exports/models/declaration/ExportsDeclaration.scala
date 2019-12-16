@@ -113,21 +113,19 @@ object ExportsDeclaration {
     natureOfTransaction: Option[NatureOfTransaction]
   ): ExportsDeclaration = {
 
-    val departureTransport = (transport.borderModeOfTransportCode, transport.meansOfTransportOnDepartureType) match {
-      case (Some(code), Some(meansOfTransportType)) =>
-        Some(DepartureTransport(code, meansOfTransportType, transport.meansOfTransportOnDepartureIDNumber))
-      case _ => None
-    }
+    val departureTransport = Some(
+      DepartureTransport(
+        transport.borderModeOfTransportCode.getOrElse(""),
+        transport.meansOfTransportCrossingTheBorderType.getOrElse(""),
+        transport.meansOfTransportOnDepartureIDNumber
+      )
+    )
 
     val borderTransport = transport.meansOfTransportCrossingTheBorderType.map { meansType =>
       BorderTransport(transport.meansOfTransportCrossingTheBorderNationality, meansType, transport.meansOfTransportOnDepartureIDNumber)
     }
 
-    val transportInformation = if (transport.transportPayment.isDefined || transport.containers.nonEmpty) {
-      Some(TransportInformation(transport.transportPayment, transport.containers))
-    } else {
-      None
-    }
+    val transportInformation = Some(TransportInformation(transport.transportPayment, transport.containers))
 
     new ExportsDeclaration(
       id,
