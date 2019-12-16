@@ -60,7 +60,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
           val model: ExportsDeclaration =
             aDeclaration(
               withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
-              withDepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber)),
+              withDepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, meansOfTransportOnDepartureIDNumber),
               withType(declarationType),
               withBorderTransport(Some("Portugal"), "40", Some("1234567878ui")),
               withContainerData(Container("container", Seq(Seal("seal1"), Seal("seal2"))))
@@ -78,7 +78,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
 
           verify(departureTransportMeansBuilder)
             .buildThenAdd(
-              refEq(DepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, Some(meansOfTransportOnDepartureIDNumber))),
+              refEq(DepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, meansOfTransportOnDepartureIDNumber)),
               any[Option[InlandModeOfTransportCode]],
               any[GoodsShipment.Consignment]
             )

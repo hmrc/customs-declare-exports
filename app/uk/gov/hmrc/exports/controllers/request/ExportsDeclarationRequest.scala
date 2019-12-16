@@ -18,13 +18,10 @@ package uk.gov.hmrc.exports.controllers.request
 
 import java.time.Instant
 
-import play.api.libs.json.{__, Json, OFormat, Reads}
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
-import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
-import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.logger
 import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 
 case class ExportsDeclarationRequest(
   createdDateTime: Instant,
@@ -157,8 +154,8 @@ object ExportsDeclarationRequest {
     )
   }
 
-  import play.api.libs.json._
   import play.api.libs.functional.syntax._
+  import play.api.libs.json._
 
   val readsVersion1: Reads[ExportsDeclarationRequest] = (
     (__ \ "createdDateTime").read[Instant] and

@@ -36,7 +36,7 @@ object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuil
     withDispatchLocation(),
     withAdditionalDeclarationType(),
     withConsignmentReferences(),
-    withDepartureTransport("1", "11", Some("SHIP1")),
+    withDepartureTransport("1", "11", "SHIP1"),
     withBorderTransport(),
     withContainerData(),
     withExporterDetails(Some("GB717572504502801")),

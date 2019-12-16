@@ -18,9 +18,7 @@ package uk.gov.hmrc.exports.models.declaration
 
 import java.time.Instant
 
-import org.slf4j.LoggerFactory
 import play.api.libs.json._
-import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
@@ -51,13 +49,9 @@ case class ExportsDeclaration(
 
 object ExportsDeclaration {
 
-  private val logger = LoggerFactory.getLogger("declaration.serializers")
-
   object REST {
 
     import play.api.libs.json._
-    import play.api.libs.json.Json._
-    import play.api.libs.functional.syntax._
 
     val writesVersion1: OWrites[ExportsDeclaration] = OWrites[ExportsDeclaration] { declaration =>
       val values = Seq(
