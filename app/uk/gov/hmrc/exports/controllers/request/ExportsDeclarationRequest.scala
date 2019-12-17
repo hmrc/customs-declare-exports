@@ -129,7 +129,7 @@ object ExportsDeclarationRequest {
     )
 
     val borderTransport = transport.meansOfTransportCrossingTheBorderType.map { meansType =>
-      BorderTransport(transport.meansOfTransportCrossingTheBorderNationality, meansType, transport.meansOfTransportOnDepartureIDNumber)
+      BorderTransport(transport.meansOfTransportCrossingTheBorderNationality, meansType, transport.meansOfTransportCrossingTheBorderIDNumber)
     }
 
     val transportInformation = Some(TransportInformation(transport.transportPayment, transport.containers))
