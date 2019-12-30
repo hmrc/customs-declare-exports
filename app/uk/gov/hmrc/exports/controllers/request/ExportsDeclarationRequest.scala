@@ -65,23 +65,6 @@ object ExportsDeclarationRequest {
   import play.api.libs.functional.syntax._
   import play.api.libs.json._
 
-  val readsVersion2: Reads[ExportsDeclarationRequest] = (
-    (__ \ "createdDateTime").read[Instant] and
-      (__ \ "updatedDateTime").read[Instant] and
-      (__ \ "sourceId").readNullable[String] and
-      (__ \ "type").read[DeclarationType.Value] and
-      (__ \ "dispatchLocation").readNullable[DispatchLocation] and
-      (__ \ "additionalDeclarationType").readNullable[AdditionalDeclarationType.Value] and
-      (__ \ "consignmentReferences").readNullable[ConsignmentReferences] and
-      (__ \ "transport").read[Transport] and
-      (__ \ "parties").read[Parties] and
-      (__ \ "locations").read[Locations] and
-      (__ \ "items").read[Set[ExportItem]] and
-      (__ \ "totalNumberOfItems").readNullable[TotalNumberOfItems] and
-      (__ \ "previousDocuments").readNullable[PreviousDocuments] and
-      (__ \ "natureOfTransaction").readNullable[NatureOfTransaction]
-  ).apply(ExportsDeclarationRequest.apply _)
-
   implicit val format
-    : OFormat[ExportsDeclarationRequest] = OFormat(readsVersion2, Json.writes[ExportsDeclarationRequest]) // writes are used only for logging
+    : OFormat[ExportsDeclarationRequest] = Json.format[ExportsDeclarationRequest] // writes are used only for logging
 }
