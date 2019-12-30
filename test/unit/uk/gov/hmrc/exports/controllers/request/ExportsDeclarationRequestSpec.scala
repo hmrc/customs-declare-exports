@@ -92,7 +92,6 @@ class ExportsDeclarationRequestSpec extends WordSpec with MustMatchers with Expo
     }
   }
 
-
   "have json format that parse declaration in version 2" in {
     Json
       .parse(ExportsDeclarationSpec.declarationVersion2)

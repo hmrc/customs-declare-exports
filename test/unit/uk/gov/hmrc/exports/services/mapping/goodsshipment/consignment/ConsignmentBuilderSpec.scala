@@ -17,33 +17,19 @@
 package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import com.google.inject.Guice
-import org.mockito.ArgumentMatchers.{any, refEq}
-import org.mockito.Mockito.{reset, verify}
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
+import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment._
-import testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
-import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class ConsignmentBuilderSpec extends WordSpec with MustMatchers with ExportsDeclarationBuilder with MockitoSugar with BeforeAndAfterEach {
-
-  private val containerCodeBuilder = mock[ContainerCodeBuilder]
-  private val goodsLocationBuilder = mock[GoodsLocationBuilder]
-  private val departureTransportMeansBuilder = mock[DepartureTransportMeansBuilder]
-  private val transportEquipmentBuilder = mock[TransportEquipmentBuilder]
-
   private val injector = Guice.createInjector()
 
   private val builder = injector.getInstance(classOf[ConsignmentBuilder])
-
-  override protected def afterEach(): Unit = {
-    reset(containerCodeBuilder, goodsLocationBuilder, departureTransportMeansBuilder, transportEquipmentBuilder)
-    super.afterEach()
-  }
 
   "ConsignmentBuilder" should {
 
@@ -74,8 +60,6 @@ class ConsignmentBuilderSpec extends WordSpec with MustMatchers with ExportsDecl
           builder.buildThenAdd(model, goodsShipment)
 
           val consignment = goodsShipment.getConsignment
-
-          println(consignment)
 
           consignment.getGoodsLocation mustNot be(null)
           consignment.getContainerCode mustNot be(null)

@@ -40,11 +40,7 @@ class DepartureTransportMeansBuilderSpec extends WordSpec with Matchers with Exp
       )
 
       val consignment = new GoodsShipment.Consignment
-      builder.buildThenAdd(
-        transport,
-        Some(InlandModeOfTransportCode(Some(inlandModeOfTransport))),
-        consignment
-      )
+      builder.buildThenAdd(transport, Some(InlandModeOfTransportCode(Some(inlandModeOfTransport))), consignment)
 
       val departureTransportMeans = consignment.getDepartureTransportMeans
       departureTransportMeans.getID.getValue shouldBe meansOfTransportOnDepartureIDNumber

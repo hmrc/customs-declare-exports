@@ -20,14 +20,14 @@ import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.{DepartureTransport, InlandModeOfTransportCode, Transport}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment.DepartureTransportMeans
-import wco.datamodel.wco.declaration_ds.dms._2.{DepartureTransportMeansIdentificationIDType, DepartureTransportMeansIdentificationTypeCodeType, DepartureTransportMeansModeCodeType}
+import wco.datamodel.wco.declaration_ds.dms._2.{
+  DepartureTransportMeansIdentificationIDType,
+  DepartureTransportMeansIdentificationTypeCodeType,
+  DepartureTransportMeansModeCodeType
+}
 
 class DepartureTransportMeansBuilder @Inject()() {
-  def buildThenAdd(
-    transport: Transport,
-    inlandModeOfTransportCode: Option[InlandModeOfTransportCode],
-    consignment: Consignment
-  ): Unit =
+  def buildThenAdd(transport: Transport, inlandModeOfTransportCode: Option[InlandModeOfTransportCode], consignment: Consignment): Unit =
     if (transport.hasDepartureTransportDetails || inlandModeOfTransportCode.nonEmpty) {
       consignment.setDepartureTransportMeans(createDepartureTransportMeans(transport, inlandModeOfTransportCode))
     }
@@ -55,7 +55,6 @@ class DepartureTransportMeansBuilder @Inject()() {
       identificationTypeCode.setValue(value)
       departureTransportMeans.setIdentificationTypeCode(identificationTypeCode)
     }
-
 
     departureTransportMeans
   }

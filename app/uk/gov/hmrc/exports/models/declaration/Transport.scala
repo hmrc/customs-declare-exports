@@ -28,19 +28,16 @@ case class Transport(
   meansOfTransportCrossingTheBorderType: Option[String] = None,
   meansOfTransportCrossingTheBorderIDNumber: Option[String] = None
 ) {
-  def hasBorderTransportDetails: Boolean = {
+  def hasBorderTransportDetails: Boolean =
     meansOfTransportCrossingTheBorderIDNumber.isDefined ||
       meansOfTransportCrossingTheBorderType.nonEmpty ||
       meansOfTransportCrossingTheBorderNationality.nonEmpty
-  }
 
-  def hasDepartureTransportCode: Boolean = {
+  def hasDepartureTransportCode: Boolean =
     borderModeOfTransportCode.nonEmpty
-  }
 
-  def hasDepartureTransportDetails: Boolean = {
+  def hasDepartureTransportDetails: Boolean =
     meansOfTransportOnDepartureIDNumber.nonEmpty || meansOfTransportOnDepartureType.nonEmpty
-  }
 }
 
 object Transport {

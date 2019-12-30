@@ -21,7 +21,12 @@ import uk.gov.hmrc.exports.models.declaration.{BorderTransport, DepartureTranspo
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
-import wco.datamodel.wco.declaration_ds.dms._2.{BorderTransportMeansIdentificationIDType, BorderTransportMeansIdentificationTypeCodeType, BorderTransportMeansModeCodeType, BorderTransportMeansRegistrationNationalityCodeType}
+import wco.datamodel.wco.declaration_ds.dms._2.{
+  BorderTransportMeansIdentificationIDType,
+  BorderTransportMeansIdentificationTypeCodeType,
+  BorderTransportMeansModeCodeType,
+  BorderTransportMeansRegistrationNationalityCodeType
+}
 
 class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, t: Declaration): Unit = {
@@ -29,17 +34,16 @@ class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) 
     val transport = model.transport
     val hasDeparture = transport.hasDepartureTransportCode
     val hasBorder = transport.hasBorderTransportDetails
-    if(hasDeparture || hasBorder){
-      if(hasDeparture) {
+    if (hasDeparture || hasBorder) {
+      if (hasDeparture) {
         appendDepartureTransport(transport, transportMeans)
       }
-      if(hasBorder){
+      if (hasBorder) {
         appendBorderTransport(transport, transportMeans)
       }
       t.setBorderTransportMeans(transportMeans)
     }
   }
-
 
   private def appendBorderTransport(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit = {
     data.meansOfTransportCrossingTheBorderIDNumber.foreach { value =>
@@ -67,11 +71,10 @@ class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) 
     }
   }
 
-  private def appendDepartureTransport(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit = {
+  private def appendDepartureTransport(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit =
     data.borderModeOfTransportCode.foreach { code =>
       val modeCode = new BorderTransportMeansModeCodeType()
       modeCode.setValue(code)
       transportMeans.setModeCode(modeCode)
     }
-  }
 }
