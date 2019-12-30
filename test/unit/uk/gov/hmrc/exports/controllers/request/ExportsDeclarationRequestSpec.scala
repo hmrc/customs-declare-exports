@@ -41,6 +41,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with MustMatchers with Expo
   private val departureTransport = mock[DepartureTransport]
   private val borderTransport = mock[BorderTransport]
   private val transportInformation = mock[TransportInformation]
+  private val transport = mock[Transport]
   private val parties = mock[Parties]
   private val locations = mock[Locations]
   private val item = mock[ExportItem]
@@ -56,9 +57,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with MustMatchers with Expo
     dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),
     consignmentReferences = Some(consignmentReferences),
-    departureTransport = Some(departureTransport),
-    borderTransport = Some(borderTransport),
-    transportInformation = Some(transportInformation),
+    transport = transport,
     parties = parties,
     locations = locations,
     items = Set(item),
@@ -78,9 +77,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with MustMatchers with Expo
     dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),
     consignmentReferences = Some(consignmentReferences),
-    departureTransport = Some(departureTransport),
-    borderTransport = Some(borderTransport),
-    transportInformation = Some(transportInformation),
+    transport = transport,
     parties = parties,
     locations = locations,
     items = Set(item),
@@ -95,25 +92,15 @@ class ExportsDeclarationRequestSpec extends WordSpec with MustMatchers with Expo
     }
   }
 
-  "have json format that parse declaration in vesion 1" in {
-    Json
-      .parse(ExportsDeclarationSpec.declarationVersion1)
-      .validate[ExportsDeclarationRequest]
-      .fold(error => fail(s"Could not parse - $error"), declaration => {
-        declaration.borderTransport mustNot be(empty)
-        declaration.departureTransport mustNot be(empty)
-        declaration.transportInformation mustNot be(empty)
-      })
-  }
 
   "have json format that parse declaration in version 2" in {
     Json
       .parse(ExportsDeclarationSpec.declarationVersion2)
       .validate[ExportsDeclarationRequest]
       .fold(error => fail(s"Could not parse - $error"), declaration => {
-        declaration.borderTransport mustNot be(empty)
-        declaration.departureTransport mustNot be(empty)
-        declaration.transportInformation mustNot be(empty)
+        declaration.transport.borderModeOfTransportCode mustNot be(empty)
+        declaration.transport.meansOfTransportOnDepartureType mustNot be(empty)
+        declaration.transport.transportPayment mustNot be(empty)
       })
   }
 

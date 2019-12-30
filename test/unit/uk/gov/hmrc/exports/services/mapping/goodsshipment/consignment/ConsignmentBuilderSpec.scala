@@ -16,9 +16,10 @@
 
 package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
+import com.google.inject.Guice
 import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.Mockito.{reset, verify}
-import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
+import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
@@ -28,14 +29,16 @@ import testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder with MockitoSugar with BeforeAndAfterEach {
+class ConsignmentBuilderSpec extends WordSpec with MustMatchers with ExportsDeclarationBuilder with MockitoSugar with BeforeAndAfterEach {
 
   private val containerCodeBuilder = mock[ContainerCodeBuilder]
   private val goodsLocationBuilder = mock[GoodsLocationBuilder]
   private val departureTransportMeansBuilder = mock[DepartureTransportMeansBuilder]
   private val transportEquipmentBuilder = mock[TransportEquipmentBuilder]
 
-  private val builder = new ConsignmentBuilder(goodsLocationBuilder, containerCodeBuilder, departureTransportMeansBuilder, transportEquipmentBuilder)
+  private val injector = Guice.createInjector()
+
+  private val builder = injector.getInstance(classOf[ConsignmentBuilder])
 
   override protected def afterEach(): Unit = {
     reset(containerCodeBuilder, goodsLocationBuilder, departureTransportMeansBuilder, transportEquipmentBuilder)
@@ -70,21 +73,14 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
 
           builder.buildThenAdd(model, goodsShipment)
 
-          verify(goodsLocationBuilder)
-            .buildThenAdd(refEq(GoodsLocationBuilderSpec.correctGoodsLocation), any[GoodsShipment.Consignment])
+          val consignment = goodsShipment.getConsignment
 
-          verify(containerCodeBuilder)
-            .buildThenAdd(refEq(Seq(Container("container", Seq(Seal("seal1"), Seal("seal2"))))), any[GoodsShipment.Consignment])
+          println(consignment)
 
-          verify(departureTransportMeansBuilder)
-            .buildThenAdd(
-              refEq(DepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, meansOfTransportOnDepartureIDNumber)),
-              any[Option[InlandModeOfTransportCode]],
-              any[GoodsShipment.Consignment]
-            )
-
-          verify(transportEquipmentBuilder)
-            .buildThenAdd(refEq(Seq(Container("container", Seq(Seal("seal1"), Seal("seal2"))))), any[GoodsShipment.Consignment])
+          consignment.getGoodsLocation mustNot be(null)
+          consignment.getContainerCode mustNot be(null)
+          consignment.getDepartureTransportMeans mustNot be(null)
+          consignment.getTransportEquipment mustNot be(null)
         }
       }
 
@@ -99,8 +95,7 @@ class ConsignmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarat
 
         builder.buildThenAdd(model, goodsShipment)
 
-        verify(transportEquipmentBuilder)
-          .buildThenAdd(refEq(Seq.empty), any[GoodsShipment.Consignment])
+        goodsShipment.getConsignment.getTransportEquipment.get(0).getSequenceNumeric.intValue() mustEqual 0
       }
     }
   }

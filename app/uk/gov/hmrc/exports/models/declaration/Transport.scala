@@ -27,7 +27,21 @@ case class Transport(
   meansOfTransportCrossingTheBorderNationality: Option[String] = None,
   meansOfTransportCrossingTheBorderType: Option[String] = None,
   meansOfTransportCrossingTheBorderIDNumber: Option[String] = None
-)
+) {
+  def hasBorderTransportDetails: Boolean = {
+    meansOfTransportCrossingTheBorderIDNumber.isDefined ||
+      meansOfTransportCrossingTheBorderType.nonEmpty ||
+      meansOfTransportCrossingTheBorderNationality.nonEmpty
+  }
+
+  def hasDepartureTransportCode: Boolean = {
+    borderModeOfTransportCode.nonEmpty
+  }
+
+  def hasDepartureTransportDetails: Boolean = {
+    meansOfTransportOnDepartureIDNumber.nonEmpty || meansOfTransportOnDepartureType.nonEmpty
+  }
+}
 
 object Transport {
   implicit val format: OFormat[Transport] = Json.format[Transport]

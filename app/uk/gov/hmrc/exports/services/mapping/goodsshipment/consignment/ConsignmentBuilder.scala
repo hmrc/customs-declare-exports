@@ -34,19 +34,14 @@ class ConsignmentBuilder @Inject()(
     exportsCacheModel.locations.goodsLocation
       .foreach(goodsLocation => goodsLocationBuilder.buildThenAdd(goodsLocation, consignment))
 
-    exportsCacheModel.transportInformation.foreach(
-      transportInformation => containerCodeBuilder.buildThenAdd(transportInformation.containers, consignment)
-    )
+    containerCodeBuilder.buildThenAdd(exportsCacheModel.transport.containers, consignment)
 
-    exportsCacheModel.departureTransport.foreach(
-      departureTransport =>
-        departureTransportMeansBuilder.buildThenAdd(departureTransport, exportsCacheModel.locations.inlandModeOfTransportCode, consignment)
-    )
+    departureTransportMeansBuilder.buildThenAdd(exportsCacheModel.transport, exportsCacheModel.locations.inlandModeOfTransportCode, consignment)
 
     exportsCacheModel.`type` match {
       case DeclarationType.STANDARD | DeclarationType.SIMPLIFIED | DeclarationType.SUPPLEMENTARY | DeclarationType.OCCASIONAL |
           DeclarationType.CLEARANCE =>
-        transportEquipmentBuilder.buildThenAdd(exportsCacheModel.transportInformation.map(_.containers).getOrElse(Seq.empty), consignment)
+        transportEquipmentBuilder.buildThenAdd(exportsCacheModel.transport.containers, consignment)
       case _ => (): Unit
     }
 

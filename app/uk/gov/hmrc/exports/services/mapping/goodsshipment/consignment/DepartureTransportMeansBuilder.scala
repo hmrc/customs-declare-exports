@@ -17,30 +17,23 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{DepartureTransport, InlandModeOfTransportCode}
+import uk.gov.hmrc.exports.models.declaration.{DepartureTransport, InlandModeOfTransportCode, Transport}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment.DepartureTransportMeans
-import wco.datamodel.wco.declaration_ds.dms._2.{
-  DepartureTransportMeansIdentificationIDType,
-  DepartureTransportMeansIdentificationTypeCodeType,
-  DepartureTransportMeansModeCodeType
-}
+import wco.datamodel.wco.declaration_ds.dms._2.{DepartureTransportMeansIdentificationIDType, DepartureTransportMeansIdentificationTypeCodeType, DepartureTransportMeansModeCodeType}
 
 class DepartureTransportMeansBuilder @Inject()() {
   def buildThenAdd(
-    departureTransport: DepartureTransport,
+    transport: Transport,
     inlandModeOfTransportCode: Option[InlandModeOfTransportCode],
     consignment: Consignment
   ): Unit =
-    if (isBorderTransportDefined(departureTransport) || inlandModeOfTransportCode.nonEmpty) {
-      consignment.setDepartureTransportMeans(createDepartureTransportMeans(departureTransport, inlandModeOfTransportCode))
+    if (transport.hasDepartureTransportDetails || inlandModeOfTransportCode.nonEmpty) {
+      consignment.setDepartureTransportMeans(createDepartureTransportMeans(transport, inlandModeOfTransportCode))
     }
 
-  private def isBorderTransportDefined(departureTransport: DepartureTransport): Boolean =
-    departureTransport.meansOfTransportOnDepartureIDNumber.nonEmpty || departureTransport.meansOfTransportOnDepartureType.nonEmpty
-
   private def createDepartureTransportMeans(
-    departureTransport: DepartureTransport,
+    transport: Transport,
     inlandModeOfTransportCode: Option[InlandModeOfTransportCode]
   ): Consignment.DepartureTransportMeans = {
     val departureTransportMeans = new DepartureTransportMeans()
@@ -51,17 +44,18 @@ class DepartureTransportMeansBuilder @Inject()() {
       departureTransportMeans.setModeCode(modeCodeType)
     }
 
-    if (departureTransport.meansOfTransportOnDepartureIDNumber.nonEmpty) {
+    transport.meansOfTransportOnDepartureIDNumber.foreach { value =>
       val id = new DepartureTransportMeansIdentificationIDType()
-      id.setValue(departureTransport.meansOfTransportOnDepartureIDNumber)
+      id.setValue(value)
       departureTransportMeans.setID(id)
     }
 
-    if (departureTransport.meansOfTransportOnDepartureType.nonEmpty) {
+    transport.meansOfTransportOnDepartureType.foreach { value =>
       val identificationTypeCode = new DepartureTransportMeansIdentificationTypeCodeType()
-      identificationTypeCode.setValue(departureTransport.meansOfTransportOnDepartureType)
+      identificationTypeCode.setValue(value)
       departureTransportMeans.setIdentificationTypeCode(identificationTypeCode)
     }
+
 
     departureTransportMeans
   }

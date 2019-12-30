@@ -34,9 +34,7 @@ case class ExportsDeclaration(
   dispatchLocation: Option[DispatchLocation],
   additionalDeclarationType: Option[AdditionalDeclarationType],
   consignmentReferences: Option[ConsignmentReferences],
-  departureTransport: Option[DepartureTransport],
-  borderTransport: Option[BorderTransport],
-  transportInformation: Option[TransportInformation],
+  transport: Transport,
   parties: Parties,
   locations: Locations,
   items: Set[ExportItem],
@@ -65,9 +63,7 @@ object ExportsDeclaration {
         declaration.dispatchLocation.map("dispatchLocation" -> Json.toJson(_)),
         declaration.additionalDeclarationType.map("additionalDeclarationType" -> Json.toJson(_)),
         declaration.consignmentReferences.map("consignmentReferences" -> Json.toJson(_)),
-        declaration.departureTransport.map("departureTransport" -> Json.toJson(_)),
-        declaration.borderTransport.map("borderTransport" -> Json.toJson(_)),
-        declaration.transportInformation.map("transportInformation" -> Json.toJson(_)),
+        Some("transport" -> Json.toJson(declaration.transport)),
         Some("parties" -> Json.toJson(declaration.parties)),
         Some("locations" -> Json.toJson(declaration.locations)),
         Some("items" -> Json.toJson(declaration.items)),
@@ -78,7 +74,7 @@ object ExportsDeclaration {
       JsObject(values.flatten)
     }
 
-    implicit val writes = writesVersion1
+    implicit val writes: OWrites[ExportsDeclaration] = writesVersion1
   }
 
   object Mongo {

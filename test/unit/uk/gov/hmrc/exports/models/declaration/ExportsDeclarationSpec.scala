@@ -39,9 +39,9 @@ class ExportsDeclarationSpec extends WordSpec with MustMatchers {
       json
         .validate(ExportsDeclarationRequest.format)
         .fold(error => fail(s"Could not parse - $error"), declaration => {
-          declaration.borderTransport mustNot be(empty)
-          declaration.departureTransport mustNot be(empty)
-          declaration.transportInformation mustNot be(empty)
+          declaration.transport.borderModeOfTransportCode mustNot be(empty)
+          declaration.transport.meansOfTransportOnDepartureType mustNot be(empty)
+          declaration.transport.transportPayment mustNot be(empty)
         })
     }
   }
