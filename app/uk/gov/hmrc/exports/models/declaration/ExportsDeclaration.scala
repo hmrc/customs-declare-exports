@@ -34,9 +34,7 @@ case class ExportsDeclaration(
   dispatchLocation: Option[DispatchLocation],
   additionalDeclarationType: Option[AdditionalDeclarationType],
   consignmentReferences: Option[ConsignmentReferences],
-  departureTransport: Option[DepartureTransport],
-  borderTransport: Option[BorderTransport],
-  transportInformation: Option[TransportInformation],
+  transport: Transport,
   parties: Parties,
   locations: Locations,
   items: Set[ExportItem],
@@ -53,32 +51,7 @@ object ExportsDeclaration {
 
     import play.api.libs.json._
 
-    val writesVersion1: OWrites[ExportsDeclaration] = OWrites[ExportsDeclaration] { declaration =>
-      val values = Seq(
-        Some("id" -> Json.toJson(declaration.id)),
-        Some("eori" -> Json.toJson(declaration.eori)),
-        Some("status" -> Json.toJson(declaration.status)),
-        Some("createdDateTime" -> Json.toJson(declaration.createdDateTime)),
-        Some("updatedDateTime" -> Json.toJson(declaration.updatedDateTime)),
-        declaration.sourceId.map(source => "sourceId" -> Json.toJson(source)),
-        Some("type" -> Json.toJson(declaration.`type`)),
-        declaration.dispatchLocation.map("dispatchLocation" -> Json.toJson(_)),
-        declaration.additionalDeclarationType.map("additionalDeclarationType" -> Json.toJson(_)),
-        declaration.consignmentReferences.map("consignmentReferences" -> Json.toJson(_)),
-        declaration.departureTransport.map("departureTransport" -> Json.toJson(_)),
-        declaration.borderTransport.map("borderTransport" -> Json.toJson(_)),
-        declaration.transportInformation.map("transportInformation" -> Json.toJson(_)),
-        Some("parties" -> Json.toJson(declaration.parties)),
-        Some("locations" -> Json.toJson(declaration.locations)),
-        Some("items" -> Json.toJson(declaration.items)),
-        declaration.totalNumberOfItems.map("totalNumberOfItems" -> Json.toJson(_)),
-        declaration.previousDocuments.map("previousDocuments" -> Json.toJson(_)),
-        declaration.natureOfTransaction.map("natureOfTransaction" -> Json.toJson(_))
-      )
-      JsObject(values.flatten)
-    }
-
-    implicit val writes = writesVersion1
+    implicit val writes: OWrites[ExportsDeclaration] = Json.writes[ExportsDeclaration]
   }
 
   object Mongo {
