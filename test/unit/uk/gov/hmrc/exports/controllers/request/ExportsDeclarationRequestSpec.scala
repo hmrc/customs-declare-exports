@@ -94,7 +94,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with MustMatchers with Expo
 
   "have json format that parse declaration in version 2" in {
     Json
-      .parse(ExportsDeclarationSpec.declarationVersion2)
+      .parse(ExportsDeclarationSpec.declarationAsString)
       .validate[ExportsDeclarationRequest]
       .fold(error => fail(s"Could not parse - $error"), declaration => {
         declaration.transport.borderModeOfTransportCode mustNot be(empty)

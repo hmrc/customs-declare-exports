@@ -65,6 +65,5 @@ object ExportsDeclarationRequest {
   import play.api.libs.functional.syntax._
   import play.api.libs.json._
 
-  implicit val format
-    : OFormat[ExportsDeclarationRequest] = Json.format[ExportsDeclarationRequest] // writes are used only for logging
+  implicit val format: OFormat[ExportsDeclarationRequest] = Json.format[ExportsDeclarationRequest] // writes are used only for logging
 }

@@ -30,7 +30,7 @@ class ExportsDeclarationSpec extends WordSpec with MustMatchers {
 
     "have json writes that produce object which could be parsed by first version of reads" in {
       val declaration = Json
-        .parse(ExportsDeclarationSpec.declarationVersion2)
+        .parse(ExportsDeclarationSpec.declarationAsString)
         .as(ExportsDeclarationRequest.format)
         .toExportsDeclaration("1", Eori("GB12345678"))
 
@@ -48,7 +48,7 @@ class ExportsDeclarationSpec extends WordSpec with MustMatchers {
 }
 
 object ExportsDeclarationSpec {
-  val declarationVersion2: String =
+  val declarationAsString: String =
     """{
       |  "id": "6f31582e-bfd5-4b27-90be-2dca6e236b20",
       |  "eori": "GB7172755078551",

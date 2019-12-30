@@ -51,7 +51,6 @@ object ExportsDeclaration {
 
     import play.api.libs.json._
 
-
     implicit val writes: OWrites[ExportsDeclaration] = Json.writes[ExportsDeclaration]
   }
 
