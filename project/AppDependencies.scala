@@ -7,7 +7,7 @@ object AppDependencies {
   private val testScope = "test, it, component"
 
   val compile = Seq(
-    "uk.gov.hmrc" %% "simple-reactivemongo" % "7.21.0-play-26",
+    "uk.gov.hmrc" %% "simple-reactivemongo" % "7.22.0-play-26",
     ws,
     "uk.gov.hmrc" %% "bootstrap-play-26" % "0.45.0",
     "uk.gov.hmrc" %% "wco-dec" % "0.31.0",
