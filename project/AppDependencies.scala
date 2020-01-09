@@ -9,8 +9,8 @@ object AppDependencies {
   val compile = Seq(
     "uk.gov.hmrc" %% "simple-reactivemongo" % "7.22.0-play-26",
     ws,
-    "uk.gov.hmrc" %% "bootstrap-play-26" % "0.45.0",
-    "uk.gov.hmrc" %% "wco-dec" % "0.31.0",
+    "uk.gov.hmrc" %% "bootstrap-play-26" % "1.3.0",
+    "uk.gov.hmrc" %% "wco-dec" % "0.33.0",
     "uk.gov.hmrc" %% "logback-json-logger" % "4.6.0",
     "com.typesafe.play" %% "play-json-joda" % "2.6.10"
   )
