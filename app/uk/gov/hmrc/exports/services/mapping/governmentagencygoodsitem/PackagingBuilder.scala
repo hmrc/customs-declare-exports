@@ -26,11 +26,10 @@ import wco.datamodel.wco.declaration_ds.dms._2.{PackagingMarksNumbersIDType, Pac
 class PackagingBuilder @Inject()() extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
 
   def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem): Unit =
-    exportItem.packageInformation.zipWithIndex.foreach {
+    exportItem.packageInformation.getOrElse(List.empty).zipWithIndex.foreach {
       case (packing, index) =>
-        wcoGovernmentAgencyGoodsItem.getPackaging.add(
-          createWcoPackaging(index, packing.typesOfPackages, packing.numberOfPackages, packing.shippingMarks)
-        )
+        wcoGovernmentAgencyGoodsItem.getPackaging
+          .add(createWcoPackaging(index, packing.typesOfPackages, packing.numberOfPackages, packing.shippingMarks))
     }
 
   private def createWcoPackaging(sequenceNumeric: Int, typeCode: String, quantity: Int, markNumber: String): Packaging = {

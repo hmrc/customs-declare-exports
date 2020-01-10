@@ -28,8 +28,8 @@ class CachingMappingHelper {
       classifications = getClassifications(
         exportItem.commodityDetails.flatMap(_.combinedNomenclatureCode),
         exportItem.cusCode.flatMap(_.cusCode),
-        exportItem.nactCodes.map(_.nactCode),
-        exportItem.taricCodes.map(_.taricCode)
+        exportItem.nactCodes.map(_.map(_.nactCode)).getOrElse(List.empty),
+        exportItem.taricCodes.map(_.map(_.taricCode)).getOrElse(List.empty)
       ),
       dangerousGoods = exportItem.dangerousGoodsCode.flatMap(_.dangerousGoodsCode).map(code => Seq(DangerousGoods(Some(code)))).getOrElse(Seq.empty)
     )

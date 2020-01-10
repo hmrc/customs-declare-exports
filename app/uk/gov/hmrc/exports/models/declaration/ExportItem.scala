@@ -155,9 +155,9 @@ case class ExportItem(
   commodityDetails: Option[CommodityDetails] = None,
   dangerousGoodsCode: Option[UNDangerousGoodsCode] = None,
   cusCode: Option[CUSCode] = None,
-  taricCodes: List[TaricCode] = Nil,
-  nactCodes: List[NactCode] = Nil,
-  packageInformation: List[PackageInformation] = Nil,
+  taricCodes: Option[List[TaricCode]] = None,
+  nactCodes: Option[List[NactCode]] = None,
+  packageInformation: Option[List[PackageInformation]] = None,
   commodityMeasure: Option[CommodityMeasure] = None,
   additionalInformation: Option[AdditionalInformations] = None,
   documentsProducedData: Option[DocumentsProduced] = None

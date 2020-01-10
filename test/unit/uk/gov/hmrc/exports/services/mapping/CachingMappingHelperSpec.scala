@@ -52,8 +52,8 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
           commodityDetails = Some(CommodityDetails(Some("commodityCode"), "description")),
           dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("unDangerousGoodsCode"))),
           cusCode = Some(CUSCode(Some("cusCode"))),
-          taricCodes = List(TaricCode("taricAdditionalCodes")),
-          nactCodes = List(NactCode("nationalAdditionalCodes"))
+          taricCodes = Some(List(TaricCode("taricAdditionalCodes"))),
+          nactCodes = Some(List(NactCode("nationalAdditionalCodes")))
         )
 
         val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem)
