@@ -111,10 +111,10 @@ trait ExportsDeclarationBuilder {
     )
 
   def withoutContainerData(): ExportsDeclarationModifier =
-    declaration => declaration.copy(transport = declaration.transport.copy(containers = Seq.empty))
+    declaration => declaration.copy(transport = declaration.transport.copy(containers = None))
 
   def withContainerData(data: Container*): ExportsDeclarationModifier =
-    declaration => declaration.copy(transport = declaration.transport.copy(containers = data))
+    declaration => declaration.copy(transport = declaration.transport.copy(containers = Some(data)))
 
   def withPreviousDocuments(previousDocuments: PreviousDocument*): ExportsDeclarationModifier =
     _.copy(previousDocuments = Some(PreviousDocuments(previousDocuments)))

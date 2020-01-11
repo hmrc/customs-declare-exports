@@ -63,16 +63,20 @@ trait ExportsItemBuilder {
 
   def withCommodityDetails(data: CommodityDetails): ItemModifier = _.copy(commodityDetails = Some(data))
 
-  def withoutPackageInformation(): ItemModifier = _.copy(packageInformation = List.empty)
+  def withoutPackageInformation(): ItemModifier = _.copy(packageInformation = None)
 
   def withPackageInformation(first: PackageInformation, others: PackageInformation*): ItemModifier =
     withPackageInformation(List(first) ++ others.toList)
 
   def withPackageInformation(informations: List[PackageInformation]): ItemModifier =
-    _.copy(packageInformation = informations)
+    _.copy(packageInformation = Some(informations))
 
   def withPackageInformation(typesOfPackages: String = "", numberOfPackages: Int = 0, shippingMarks: String = ""): ItemModifier =
-    cache => cache.copy(packageInformation = cache.packageInformation :+ PackageInformation(typesOfPackages, numberOfPackages, shippingMarks))
+    cache =>
+      cache.copy(
+        packageInformation =
+          Some(cache.packageInformation.getOrElse(List.empty) :+ PackageInformation(typesOfPackages, numberOfPackages, shippingMarks))
+    )
 
   def withDocumentsProduced(first: DocumentProduced, docs: DocumentProduced*): ItemModifier = cache => {
     val existing = cache.documentsProducedData.map(_.documents).getOrElse(Seq.empty)
