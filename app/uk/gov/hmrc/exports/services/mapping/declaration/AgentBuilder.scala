@@ -44,7 +44,7 @@ class AgentBuilder @Inject()(countriesService: CountriesService) extends Modifyi
     data.details.foreach(
       details =>
         details.eori match {
-          case Some(eori) =>
+          case Some(eori) if eori.nonEmpty =>
             val agentId = new AgentIdentificationIDType()
             agentId.setValue(details.eori.get)
             agent.setID(agentId)

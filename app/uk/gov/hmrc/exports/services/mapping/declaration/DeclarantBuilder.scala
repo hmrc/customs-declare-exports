@@ -37,7 +37,7 @@ class DeclarantBuilder @Inject()(countriesService: CountriesService) extends Mod
     val declarant = new Declarant
 
     declarantDetails.details.eori match {
-      case Some(eori) =>
+      case Some(eori) if eori.nonEmpty =>
         val declarantIdentificationIDType = new DeclarantIdentificationIDType
         declarantIdentificationIDType.setValue(eori)
         declarant.setID(declarantIdentificationIDType)
