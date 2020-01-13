@@ -50,7 +50,7 @@ class ConsignmentCarrierBuilder @Inject()(countriesService: CountriesService) ex
         val carrierId = new CarrierIdentificationIDType()
         carrierId.setValue(eori)
         carrier.setID(carrierId)
-      case None =>
+      case _ =>
         details.address
           .filter(_.fullName.nonEmpty)
           .foreach { address =>

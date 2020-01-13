@@ -41,7 +41,7 @@ class DeclarantBuilder @Inject()(countriesService: CountriesService) extends Mod
         val declarantIdentificationIDType = new DeclarantIdentificationIDType
         declarantIdentificationIDType.setValue(eori)
         declarant.setID(declarantIdentificationIDType)
-      case None =>
+      case _ =>
         declarantDetails.details.address.foreach(address => {
           val declarantNameTextType = new DeclarantNameTextType
           declarantNameTextType.setValue(address.fullName)

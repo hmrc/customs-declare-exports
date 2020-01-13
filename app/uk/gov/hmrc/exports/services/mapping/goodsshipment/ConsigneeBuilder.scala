@@ -41,7 +41,7 @@ class ConsigneeBuilder @Inject()(countriesService: CountriesService) extends Mod
         val id = new ConsigneeIdentificationIDType()
         id.setValue(eori)
         consignee.setID(id)
-      case None =>
+      case _ =>
         details.address.foreach { address =>
           if (address.fullName.nonEmpty) {
             val name = new ConsigneeNameTextType()

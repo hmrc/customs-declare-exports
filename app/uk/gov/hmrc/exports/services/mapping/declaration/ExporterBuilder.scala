@@ -43,7 +43,7 @@ class ExporterBuilder @Inject()(countriesService: CountriesService) extends Modi
         val exporterIdentificationIDType = new ExporterIdentificationIDType
         exporterIdentificationIDType.setValue(eori)
         exporter.setID(exporterIdentificationIDType)
-      case None =>
+      case _ =>
         details.address.foreach(address => {
           val exporterNameTextType = new ExporterNameTextType
           exporterNameTextType.setValue(address.fullName)

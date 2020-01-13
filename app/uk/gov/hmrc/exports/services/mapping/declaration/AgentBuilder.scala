@@ -48,7 +48,7 @@ class AgentBuilder @Inject()(countriesService: CountriesService) extends Modifyi
             val agentId = new AgentIdentificationIDType()
             agentId.setValue(details.eori.get)
             agent.setID(agentId)
-          case None =>
+          case _ =>
             val agentAddress = new Agent.Address()
 
             details.address.foreach {
