@@ -63,7 +63,7 @@ class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with
       }
 
       "unknown country" in {
-        val model = aDeclaration(withDeclarantDetails(eori = Some("eori"), address = Some(Address("name", "line", "city", "postcode", "unknown"))))
+        val model = aDeclaration(withDeclarantDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "unknown"))))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -78,12 +78,9 @@ class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getDeclarant.getAddress.getLine.getValue should be("line")
-        declaration.getDeclarant.getAddress.getCityName.getValue should be("city")
-        declaration.getDeclarant.getAddress.getPostcodeID.getValue should be("postcode")
-        declaration.getDeclarant.getAddress.getCountryCode.getValue should be("GB")
-        declaration.getDeclarant.getName.getValue should be("name")
         declaration.getDeclarant.getID.getValue should be("eori")
+        declaration.getDeclarant.getAddress should be(null)
+        declaration.getDeclarant.getName should be(null)
       }
     }
   }

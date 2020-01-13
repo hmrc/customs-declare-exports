@@ -38,18 +38,19 @@ class ExporterBuilder @Inject()(countriesService: CountriesService) extends Modi
   private def createExporter(details: EntityDetails): Exporter = {
     val exporter = new Exporter()
 
-    details.eori.foreach(eori => {
-      val exporterIdentificationIDType = new ExporterIdentificationIDType
-      exporterIdentificationIDType.setValue(eori)
-      exporter.setID(exporterIdentificationIDType)
-    })
-
-    details.address.foreach(address => {
-      val exporterNameTextType = new ExporterNameTextType
-      exporterNameTextType.setValue(address.fullName)
-      exporter.setName(exporterNameTextType)
-      exporter.setAddress(mapAddress(address))
-    })
+    details.eori match {
+      case Some(eori) if eori.nonEmpty =>
+        val exporterIdentificationIDType = new ExporterIdentificationIDType
+        exporterIdentificationIDType.setValue(eori)
+        exporter.setID(exporterIdentificationIDType)
+      case None =>
+        details.address.foreach(address => {
+          val exporterNameTextType = new ExporterNameTextType
+          exporterNameTextType.setValue(address.fullName)
+          exporter.setName(exporterNameTextType)
+          exporter.setAddress(mapAddress(address))
+        })
+    }
 
     exporter
   }
