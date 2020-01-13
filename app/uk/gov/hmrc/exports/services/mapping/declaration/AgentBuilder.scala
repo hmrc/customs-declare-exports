@@ -41,46 +41,47 @@ class AgentBuilder @Inject()(countriesService: CountriesService) extends Modifyi
 
     agent.setFunctionCode(setStatusCode(data))
 
-    data.details.map(
+    data.details.foreach(
       details =>
-        if (details.eori.isDefined) {
-          val agentId = new AgentIdentificationIDType()
-          agentId.setValue(details.eori.get)
-          agent.setID(agentId)
-        } else {
+        details.eori match {
+          case Some(eori) if eori.nonEmpty =>
+            val agentId = new AgentIdentificationIDType()
+            agentId.setValue(details.eori.get)
+            agent.setID(agentId)
+          case _ =>
+            val agentAddress = new Agent.Address()
 
-          val agentAddress = new Agent.Address()
+            details.address.foreach {
+              address =>
+                val agentName = new AgentNameTextType()
+                agentName.setValue(address.fullName)
 
-          details.address.map {
-            address =>
-              val agentName = new AgentNameTextType()
-              agentName.setValue(address.fullName)
+                val line = new AddressLineTextType()
+                line.setValue(address.addressLine)
 
-              val line = new AddressLineTextType()
-              line.setValue(address.addressLine)
+                val city = new AddressCityNameTextType
+                city.setValue(address.townOrCity)
 
-              val city = new AddressCityNameTextType
-              city.setValue(address.townOrCity)
+                val postcode = new AddressPostcodeIDType()
+                postcode.setValue(address.postCode)
 
-              val postcode = new AddressPostcodeIDType()
-              postcode.setValue(address.postCode)
+                val countryCode = new AddressCountryCodeType
+                countryCode.setValue(
+                  countriesService.allCountries
+                    .find(country => address.country.contains(country.countryName))
+                    .map(_.countryCode)
+                    .getOrElse("")
+                )
 
-              val countryCode = new AddressCountryCodeType
-              countryCode.setValue(
-                countriesService.allCountries
-                  .find(country => address.country.contains(country.countryName))
-                  .map(_.countryCode)
-                  .getOrElse("")
-              )
+                agent.setName(agentName)
+                agentAddress.setLine(line)
+                agentAddress.setCityName(city)
+                agentAddress.setCountryCode(countryCode)
+                agentAddress.setPostcodeID(postcode)
+            }
 
-              agent.setName(agentName)
-              agentAddress.setLine(line)
-              agentAddress.setCityName(city)
-              agentAddress.setCountryCode(countryCode)
-              agentAddress.setPostcodeID(postcode)
-          }
+            agent.setAddress(agentAddress)
 
-          agent.setAddress(agentAddress)
       }
     )
     agent

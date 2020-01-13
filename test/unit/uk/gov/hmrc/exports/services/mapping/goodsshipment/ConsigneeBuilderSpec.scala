@@ -62,6 +62,19 @@ class ConsigneeBuilderSpec extends WordSpec with MockitoSugar with Matchers {
         goodsShipment.getConsignee.getAddress.getPostcodeID.getValue should be("AB12 34CD")
       }
 
+      "both eori and address is supplied " in {
+        val builder = new ConsigneeBuilder(mockCountriesService)
+
+        val goodsShipment = new GoodsShipment
+        val details = ConsigneeDetails(EntityDetails(Some("9GB1234567ABCDEF"), Some(ConsigneeBuilderSpec.correctAddress)))
+
+        builder.buildThenAdd(details, goodsShipment)
+
+        goodsShipment.getConsignee.getID.getValue should be("9GB1234567ABCDEF")
+        goodsShipment.getConsignee.getName should be(null)
+        goodsShipment.getConsignee.getAddress should be(null)
+      }
+
       "empty data is supplied " in {
         val builder = new ConsigneeBuilder(mockCountriesService)
 

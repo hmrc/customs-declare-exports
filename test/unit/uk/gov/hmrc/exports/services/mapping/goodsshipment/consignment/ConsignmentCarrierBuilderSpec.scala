@@ -95,11 +95,8 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
 
             // Then
             consignment.getCarrier.getID.getValue shouldBe "eori"
-            consignment.getCarrier.getName.getValue shouldBe "name"
-            consignment.getCarrier.getAddress.getLine.getValue shouldBe "line"
-            consignment.getCarrier.getAddress.getCityName.getValue shouldBe "city"
-            consignment.getCarrier.getAddress.getPostcodeID.getValue shouldBe "postcode"
-            consignment.getCarrier.getAddress.getCountryCode.getValue shouldBe "GB"
+            consignment.getCarrier.getName shouldBe null
+            consignment.getCarrier.getAddress shouldBe null
           }
 
           "empty address components" in {
@@ -112,6 +109,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
             new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
             // Then
+            consignment.getCarrier.getID.getValue shouldBe "eori"
             consignment.getCarrier.getName shouldBe null
             consignment.getCarrier.getAddress shouldBe null
           }
@@ -119,7 +117,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
           "invalid country" in {
             // Given
             val model = aDeclaration(
-              withCarrierDetails(eori = Some("eori"), address = Some(Address("name", "line", "city", "postcode", "other"))),
+              withCarrierDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "other"))),
               withType(declarationType)
             )
             val consignment = new Declaration.Consignment()

@@ -17,13 +17,13 @@
 package unit.uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.mockito.Mockito.when
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
+import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.Address
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.declaration.DeclarantBuilder
-import testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
@@ -63,11 +63,12 @@ class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with
       }
 
       "unknown country" in {
-        val model = aDeclaration(withDeclarantDetails(eori = Some("eori"), address = Some(Address("name", "line", "city", "postcode", "unknown"))))
+        val model = aDeclaration(withDeclarantDetails(eori = Some(""), address = Some(Address("name", "line", "city", "postcode", "unknown"))))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
 
+        declaration.getDeclarant.getID should be(null)
         declaration.getDeclarant.getAddress.getCountryCode.getValue should be("")
       }
 
@@ -78,12 +79,9 @@ class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getDeclarant.getAddress.getLine.getValue should be("line")
-        declaration.getDeclarant.getAddress.getCityName.getValue should be("city")
-        declaration.getDeclarant.getAddress.getPostcodeID.getValue should be("postcode")
-        declaration.getDeclarant.getAddress.getCountryCode.getValue should be("GB")
-        declaration.getDeclarant.getName.getValue should be("name")
         declaration.getDeclarant.getID.getValue should be("eori")
+        declaration.getDeclarant.getAddress should be(null)
+        declaration.getDeclarant.getName should be(null)
       }
     }
   }

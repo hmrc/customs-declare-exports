@@ -45,27 +45,27 @@ class ConsignmentCarrierBuilder @Inject()(countriesService: CountriesService) ex
   private def buildEoriOrAddress(details: EntityDetails) = {
     val carrier = new Declaration.Consignment.Carrier
 
-    details.eori
-      .filter(_.nonEmpty)
-      .foreach { value =>
+    details.eori match {
+      case Some(eori) if eori.nonEmpty =>
         val carrierId = new CarrierIdentificationIDType()
-        carrierId.setValue(value)
+        carrierId.setValue(eori)
         carrier.setID(carrierId)
-      }
+      case _ =>
+        details.address
+          .filter(_.fullName.nonEmpty)
+          .foreach { address =>
+            val carrierName = new CarrierNameTextType()
+            carrierName.setValue(address.fullName)
+            carrier.setName(carrierName)
+          }
 
-    details.address
-      .filter(_.fullName.nonEmpty)
-      .foreach { address =>
-        val carrierName = new CarrierNameTextType()
-        carrierName.setValue(address.fullName)
-        carrier.setName(carrierName)
-      }
+        details.address
+          .filter(address => address.addressLine.nonEmpty || address.townOrCity.nonEmpty || address.postCode.nonEmpty || address.country.nonEmpty)
+          .foreach { address =>
+            carrier.setAddress(createAddress(address))
+          }
+    }
 
-    details.address
-      .filter(address => address.addressLine.nonEmpty || address.townOrCity.nonEmpty || address.postCode.nonEmpty || address.country.nonEmpty)
-      .foreach { address =>
-        carrier.setAddress(createAddress(address))
-      }
     carrier
   }
 

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{ConsigneeDetails, EntityDetails}
+import uk.gov.hmrc.exports.models.declaration.{Address, ConsigneeDetails, EntityDetails}
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
@@ -36,52 +36,58 @@ class ConsigneeBuilder @Inject()(countriesService: CountriesService) extends Mod
   private def createConsignee(details: EntityDetails): GoodsShipment.Consignee = {
     val consignee = new GoodsShipment.Consignee()
 
-    details.eori.foreach { eori =>
-      val id = new ConsigneeIdentificationIDType()
-      id.setValue(eori)
-      consignee.setID(id)
-    }
+    details.eori match {
+      case Some(eori) if eori.nonEmpty =>
+        val id = new ConsigneeIdentificationIDType()
+        id.setValue(eori)
+        consignee.setID(id)
+      case _ =>
+        details.address.foreach { address =>
+          if (address.fullName.nonEmpty) {
+            val name = new ConsigneeNameTextType()
+            name.setValue(address.fullName)
+            consignee.setName(name)
+          }
 
-    details.address.foreach { address =>
-      val consigneeAddress = new GoodsShipment.Consignee.Address()
-
-      if (address.fullName.nonEmpty) {
-        val name = new ConsigneeNameTextType()
-        name.setValue(address.fullName)
-        consignee.setName(name)
-      }
-
-      if (address.addressLine.nonEmpty) {
-        val line = new AddressLineTextType()
-        line.setValue(address.addressLine)
-        consigneeAddress.setLine(line)
-      }
-
-      if (address.townOrCity.nonEmpty) {
-        val city = new AddressCityNameTextType
-        city.setValue(address.townOrCity)
-        consigneeAddress.setCityName(city)
-      }
-
-      if (address.postCode.nonEmpty) {
-        val postcode = new AddressPostcodeIDType()
-        postcode.setValue(address.postCode)
-        consigneeAddress.setPostcodeID(postcode)
-      }
-
-      if (address.country.nonEmpty) {
-        val countryCode = new AddressCountryCodeType
-        countryCode.setValue(
-          countriesService.allCountries
-            .find(country => address.country.contains(country.countryName))
-            .map(_.countryCode)
-            .getOrElse("")
-        )
-        consigneeAddress.setCountryCode(countryCode)
-      }
-      consignee.setAddress(consigneeAddress)
+          consignee.setAddress(createAddress(address))
+        }
     }
 
     consignee
+  }
+
+  private def createAddress(address: Address) = {
+    val consigneeAddress = new GoodsShipment.Consignee.Address()
+
+    if (address.addressLine.nonEmpty) {
+      val line = new AddressLineTextType()
+      line.setValue(address.addressLine)
+      consigneeAddress.setLine(line)
+    }
+
+    if (address.townOrCity.nonEmpty) {
+      val city = new AddressCityNameTextType
+      city.setValue(address.townOrCity)
+      consigneeAddress.setCityName(city)
+    }
+
+    if (address.postCode.nonEmpty) {
+      val postcode = new AddressPostcodeIDType()
+      postcode.setValue(address.postCode)
+      consigneeAddress.setPostcodeID(postcode)
+    }
+
+    if (address.country.nonEmpty) {
+      val countryCode = new AddressCountryCodeType
+      countryCode.setValue(
+        countriesService.allCountries
+          .find(country => address.country.contains(country.countryName))
+          .map(_.countryCode)
+          .getOrElse("")
+      )
+      consigneeAddress.setCountryCode(countryCode)
+
+    }
+    consigneeAddress
   }
 }

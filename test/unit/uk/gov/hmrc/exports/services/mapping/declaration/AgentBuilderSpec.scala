@@ -90,6 +90,38 @@ class AgentBuilderSpec extends WordSpec with Matchers with MockitoSugar with Exp
         agent.getAddress.getPostcodeID.getValue should be("AB12 34CD")
         agent.getFunctionCode.getValue should be("2")
       }
+      "both eori and Address is supplied" in {
+        val model =
+          aDeclaration(
+            withRepresentativeDetails(
+              details = Some(
+                EntityDetails(
+                  eori = Some("9GB1234567ABCDEF"),
+                  address = Some(
+                    Address(
+                      fullName = "Full Name",
+                      addressLine = "Address Line",
+                      townOrCity = "Town or City",
+                      postCode = "AB12 34CD",
+                      country = "Poland"
+                    )
+                  )
+                )
+              ),
+              statusCode = Some(RepresentativeDetails.DirectRepresentative)
+            )
+          )
+        val agentBuilder = new AgentBuilder(mockCountriesService)
+        val emptyDeclaration = new Declaration
+
+        agentBuilder.buildThenAdd(model, emptyDeclaration)
+        val agent: Declaration.Agent = emptyDeclaration.getAgent
+
+        agent.getID.getValue should be("9GB1234567ABCDEF")
+        agent.getName should be(null)
+        agent.getAddress should be(null)
+        agent.getFunctionCode.getValue should be("2")
+      }
     }
   }
 

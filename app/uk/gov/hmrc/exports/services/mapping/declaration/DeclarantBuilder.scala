@@ -36,18 +36,19 @@ class DeclarantBuilder @Inject()(countriesService: CountriesService) extends Mod
 
     val declarant = new Declarant
 
-    declarantDetails.details.eori.foreach(eori => {
-      val declarantIdentificationIDType = new DeclarantIdentificationIDType
-      declarantIdentificationIDType.setValue(eori)
-      declarant.setID(declarantIdentificationIDType)
-    })
-
-    declarantDetails.details.address.foreach(address => {
-      val declarantNameTextType = new DeclarantNameTextType
-      declarantNameTextType.setValue(address.fullName)
-      declarant.setName(declarantNameTextType)
-      declarant.setAddress(mapAddress(address))
-    })
+    declarantDetails.details.eori match {
+      case Some(eori) if eori.nonEmpty =>
+        val declarantIdentificationIDType = new DeclarantIdentificationIDType
+        declarantIdentificationIDType.setValue(eori)
+        declarant.setID(declarantIdentificationIDType)
+      case _ =>
+        declarantDetails.details.address.foreach(address => {
+          val declarantNameTextType = new DeclarantNameTextType
+          declarantNameTextType.setValue(address.fullName)
+          declarant.setName(declarantNameTextType)
+          declarant.setAddress(mapAddress(address))
+        })
+    }
 
     declarant
   }
