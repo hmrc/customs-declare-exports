@@ -26,13 +26,14 @@ class TotalPackageQuantityBuilder @Inject()() extends ModifyingBuilder[ExportsDe
 
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
     model.totalNumberOfItems
-      .map(createGoodsItemQuantity)
+      .flatMap(createGoodsItemQuantity)
       .foreach(declaration.setTotalPackageQuantity)
 
-  private def createGoodsItemQuantity(data: TotalNumberOfItems): DeclarationTotalPackageQuantityType = {
-    val packageQuantityType = new DeclarationTotalPackageQuantityType()
+  private def createGoodsItemQuantity(data: TotalNumberOfItems): Option[DeclarationTotalPackageQuantityType] =
+    data.totalPackage.map { totalPackage =>
+      val packageQuantityType = new DeclarationTotalPackageQuantityType()
 
-    packageQuantityType.setValue(new java.math.BigDecimal(data.totalPackage))
-    packageQuantityType
-  }
+      packageQuantityType.setValue(new java.math.BigDecimal(totalPackage))
+      packageQuantityType
+    }
 }

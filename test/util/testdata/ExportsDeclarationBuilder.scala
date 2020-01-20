@@ -223,7 +223,7 @@ trait ExportsDeclarationBuilder {
     exchangeRate: Option[String] = None,
     totalPackage: String = "1"
   ): ExportsDeclarationModifier =
-    _.copy(totalNumberOfItems = Some(TotalNumberOfItems(totalAmountInvoiced, exchangeRate, totalPackage)))
+    _.copy(totalNumberOfItems = Some(TotalNumberOfItems(totalAmountInvoiced, exchangeRate, Some(totalPackage))))
 
   def withoutNatureOfTransaction(): ExportsDeclarationModifier = _.copy(natureOfTransaction = None)
 
