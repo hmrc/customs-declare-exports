@@ -32,7 +32,7 @@ class WarehouseBuilder @Inject()() extends ModifyingBuilder[WarehouseIdentificat
   private def createWarehouse(warehouseIdentification: WarehouseIdentification): Warehouse = {
     val warehouse = new Warehouse()
 
-    val identificationType = warehouseIdentification.identificationNumber.map(typeNumber => typeNumber.headOption.getOrElse(""))
+    val identificationType = warehouseIdentification.identificationNumber.map(typeNumber => typeNumber.take(1))
     val identificationNumber = warehouseIdentification.identificationNumber.map(number => number.tail).getOrElse("")
 
     val id = new WarehouseIdentificationIDType()
