@@ -37,7 +37,7 @@ case class ExportsDeclaration(
   transport: Transport,
   parties: Parties,
   locations: Locations,
-  items: Set[ExportItem],
+  items: Seq[ExportItem],
   totalNumberOfItems: Option[TotalNumberOfItems],
   previousDocuments: Option[PreviousDocuments],
   natureOfTransaction: Option[NatureOfTransaction]

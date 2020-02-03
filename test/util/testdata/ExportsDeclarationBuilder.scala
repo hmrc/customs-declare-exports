@@ -50,7 +50,7 @@ trait ExportsDeclarationBuilder {
     transport = Transport(),
     parties = Parties(),
     locations = Locations(),
-    items = Set.empty[ExportItem],
+    items = Seq.empty,
     totalNumberOfItems = None,
     previousDocuments = None,
     natureOfTransaction = None
@@ -205,13 +205,13 @@ trait ExportsDeclarationBuilder {
   ): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(officeOfExit = Some(OfficeOfExit(officeId, presentationOfficeId, circumstancesCode))))
 
-  def withoutItems(): ExportsDeclarationModifier = _.copy(items = Set.empty)
+  def withoutItems(): ExportsDeclarationModifier = _.copy(items = Seq.empty)
 
   def withItem(item: ExportItem = ExportItem(uuid)): ExportsDeclarationModifier =
-    m => m.copy(items = m.items + item)
+    m => m.copy(items = m.items :+ item)
 
   def withItems(item1: ExportItem, others: ExportItem*): ExportsDeclarationModifier =
-    _.copy(items = Set(item1) ++ others)
+    _.copy(items = Seq(item1) ++ others)
 
   def withItems(count: Int): ExportsDeclarationModifier =
     cache => cache.copy(items = cache.items ++ (1 to count).map(_ => ExportItem(id = uuid)).toSet)
