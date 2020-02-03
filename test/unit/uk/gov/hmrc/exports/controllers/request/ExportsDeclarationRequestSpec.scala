@@ -60,7 +60,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with MustMatchers with Expo
     transport = transport,
     parties = parties,
     locations = locations,
-    items = Set(item),
+    items = Seq(item),
     totalNumberOfItems = Some(totalNumberOfItems),
     previousDocuments = Some(previousDocuments),
     natureOfTransaction = Some(natureOfTransaction)
@@ -80,7 +80,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with MustMatchers with Expo
     transport = transport,
     parties = parties,
     locations = locations,
-    items = Set(item),
+    items = Seq(item),
     totalNumberOfItems = Some(totalNumberOfItems),
     previousDocuments = Some(previousDocuments),
     natureOfTransaction = Some(natureOfTransaction)
