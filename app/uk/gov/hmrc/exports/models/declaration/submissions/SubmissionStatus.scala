@@ -26,12 +26,17 @@ object SubmissionStatus extends Enumeration {
   AWAITING_EXIT_RESULTS, UNKNOWN = Value
 
   def retrieve(functionCode: String, nameCode: Option[String] = None): SubmissionStatus =
-    getStatusOrUnknown(functionCode + nameCode.getOrElse(""))
+    getStatusOrUnknown(functionCode, nameCode)
 
-  private def getStatusOrUnknown(searchKey: String): SubmissionStatus =
-    codesMap.get(searchKey) match {
-      case Some(status) => status
-      case None         => UNKNOWN
+  private def getStatusOrUnknown(functionCode: String, nameCode: Option[String]): SubmissionStatus =
+    (functionCode, nameCode) match {
+      case ("11", Some("39")) => CUSTOMS_POSITION_GRANTED
+      case ("11", Some("41")) => CUSTOMS_POSITION_DENIED
+      case _ =>
+        codesMap.get(functionCode) match {
+          case Some(status) => status
+          case None         => UNKNOWN
+        }
     }
 
   private val codesMap: Map[String, SubmissionStatus] = Map(

@@ -43,6 +43,9 @@ class SubmissionStatusSpec extends WordSpec with MustMatchers {
       retrieve("18") must be(SubmissionStatus.AWAITING_EXIT_RESULTS)
       retrieve("UnknownStatus") must be(SubmissionStatus.UNKNOWN)
       retrieve("WrongStatus") must be(SubmissionStatus.UNKNOWN)
+      retrieve("11", Some("39")) must be(SubmissionStatus.CUSTOMS_POSITION_GRANTED)
+      retrieve("11", Some("41")) must be(SubmissionStatus.CUSTOMS_POSITION_DENIED)
+
     }
   }
 }
