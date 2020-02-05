@@ -24,16 +24,6 @@ object SubmissionStatus extends Enumeration {
   val PENDING, REQUESTED_CANCELLATION, ACCEPTED, RECEIVED, REJECTED, UNDERGOING_PHYSICAL_CHECK, ADDITIONAL_DOCUMENTS_REQUIRED, AMENDED, RELEASED,
   CLEARED, CANCELLED, CUSTOMS_POSITION_GRANTED, CUSTOMS_POSITION_DENIED, GOODS_HAVE_EXITED_THE_COMMUNITY, DECLARATION_HANDLED_EXTERNALLY,
   AWAITING_EXIT_RESULTS, UNKNOWN = Value
-
-  def retrieve(functionCode: String, nameCode: Option[String] = None): SubmissionStatus =
-    getStatusOrUnknown(functionCode + nameCode.getOrElse(""))
-
-  private def getStatusOrUnknown(searchKey: String): SubmissionStatus =
-    codesMap.get(searchKey) match {
-      case Some(status) => status
-      case None         => UNKNOWN
-    }
-
   private val codesMap: Map[String, SubmissionStatus] = Map(
     "Pending" -> PENDING,
     "Cancellation Requested" -> REQUESTED_CANCELLATION,
@@ -53,4 +43,16 @@ object SubmissionStatus extends Enumeration {
     "18" -> AWAITING_EXIT_RESULTS,
     "UnknownStatus" -> UNKNOWN
   )
+
+  def retrieve(functionCode: String, nameCode: Option[String] = None): SubmissionStatus =
+    getStatusOrUnknown(buildSearchKey(functionCode, nameCode))
+
+  private def getStatusOrUnknown(searchKey: String) =
+    codesMap.get(searchKey) match {
+      case Some(status) => status
+      case None         => UNKNOWN
+    }
+
+  private def buildSearchKey(functionCode: String, nameCode: Option[String]) =
+    if (functionCode == "11") functionCode + nameCode.getOrElse("") else functionCode
 }

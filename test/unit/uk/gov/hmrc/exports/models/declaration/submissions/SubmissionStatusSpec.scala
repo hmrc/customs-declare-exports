@@ -43,6 +43,16 @@ class SubmissionStatusSpec extends WordSpec with MustMatchers {
       retrieve("18") must be(SubmissionStatus.AWAITING_EXIT_RESULTS)
       retrieve("UnknownStatus") must be(SubmissionStatus.UNKNOWN)
       retrieve("WrongStatus") must be(SubmissionStatus.UNKNOWN)
+      retrieve("11", Some("39")) must be(SubmissionStatus.CUSTOMS_POSITION_GRANTED)
+      retrieve("11", Some("41")) must be(SubmissionStatus.CUSTOMS_POSITION_DENIED)
+
+    }
+
+    "ignore name codes when function code not 11" in {
+
+      retrieve("06", Some("xx")) must be(SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED)
+      retrieve("16", Some("yy")) must be(SubmissionStatus.GOODS_HAVE_EXITED_THE_COMMUNITY)
+
     }
   }
 }
