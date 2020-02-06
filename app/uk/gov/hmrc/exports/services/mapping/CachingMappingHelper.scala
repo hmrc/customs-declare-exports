@@ -15,16 +15,17 @@
  */
 
 package uk.gov.hmrc.exports.services.mapping
+import com.sun.org.glassfish.gmbal.Description
+import uk.gov.hmrc.exports.models.declaration.{CommodityMeasure, ExportItem}
 import uk.gov.hmrc.exports.models.declaration.IdentificationTypeCodes.{CUSCode, CombinedNomenclatureCode, NationalAdditionalCode, TARICAdditionalCode}
-import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.wco.dec._
+import uk.gov.hmrc.wco.dec.{Classification, Commodity, DangerousGoods, GoodsMeasure, Measure}
 
 class CachingMappingHelper {
   val defaultMeasureCode = "KGM"
 
   def commodityFromExportItem(exportItem: ExportItem): Commodity =
     Commodity(
-      description = exportItem.commodityDetails.map(_.descriptionOfGoods),
+      description = exportItem.commodityDetails.map(commodityDetails => strip((commodityDetails.descriptionOfGoods))),
       classifications = getClassifications(
         exportItem.commodityDetails.flatMap(_.combinedNomenclatureCode),
         exportItem.cusCode.flatMap(_.cusCode),
@@ -33,6 +34,9 @@ class CachingMappingHelper {
       ),
       dangerousGoods = exportItem.dangerousGoodsCode.flatMap(_.dangerousGoodsCode).map(code => Seq(DangerousGoods(Some(code)))).getOrElse(Seq.empty)
     )
+
+
+  private def strip(description: String): String = description.replaceAll("(\\r\\n)|\\r|\\n", " " )
 
   private def getClassifications(
     commodityCode: Option[String],
