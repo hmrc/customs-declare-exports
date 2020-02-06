@@ -30,6 +30,7 @@ class AppConfigSpec extends WordSpec with Matchers with MockitoSugar {
   private val validAppConfig: Config =
     ConfigFactory.parseString("""
       |urls.login="http://localhost:9949/auth-login-stub/gg-sign-in"
+      |mongodb.uri="mongodb://localhost:27017/customs-declare-exports"
       |microservice.services.auth.host=localhostauth
       |microservice.services.auth.port=9988
       |microservice.services.customs-declarations.host=remotedec-api
@@ -40,9 +41,12 @@ class AppConfigSpec extends WordSpec with Matchers with MockitoSugar {
       |microservice.services.customs-declarations.bearer-token=Bearer DummyBearerToken
     """.stripMargin)
 
+  private val invalidAppConfig: Config = ConfigFactory.parseString("""
+      |mongodb.uri="mongodb://localhost:27017/customs-declare-exports"
+      |""".stripMargin)
   private val emptyAppConfig: Config = ConfigFactory.parseString("")
   private val validServicesConfiguration = Configuration(validAppConfig)
-  private val emptyServicesConfiguration = Configuration(emptyAppConfig)
+  private val invalidServicesConfiguration = Configuration(invalidAppConfig)
 
   val environment = Environment.simple()
 
@@ -64,7 +68,7 @@ class AppConfigSpec extends WordSpec with Matchers with MockitoSugar {
     }
 
     "throw an exception when mandatory configuration is invalid" in {
-      val configService: AppConfig = appConfig(emptyServicesConfiguration)
+      val configService: AppConfig = appConfig(invalidServicesConfiguration)
 
       val caught: RuntimeException = intercept[RuntimeException](configService.authUrl)
       caught.getMessage shouldBe "Could not find config auth.host"
@@ -94,7 +98,13 @@ class AppConfigSpec extends WordSpec with Matchers with MockitoSugar {
 
       "return the configured value when explicitly set" in {
         val configService: AppConfig =
-          appConfig(Configuration("appName" -> appName, "microservice.services.customs-declarations.client-id" -> clientId))
+          appConfig(
+            Configuration(
+              "appName" -> appName,
+              "microservice.services.customs-declarations.client-id" -> clientId,
+              "mongodb.uri" -> "mongodb://localhost:27017/customs-declare-exports"
+            )
+          )
 
         configService.developerHubClientId shouldBe clientId
       }
