@@ -22,8 +22,8 @@ import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper
 
 class CachingMappingHelperSpec extends WordSpec with Matchers {
 
-  "CchingMappingHelper" should {
-    "amapGoodsMeasure correctly When tariffQuantity grossMassMeasure netWeightMeasure provided" in {
+  "CachingMappingHelper" should {
+    "mapGoodsMeasure correctly When tariffQuantity grossMassMeasure netWeightMeasure provided" in {
 
       val commodityMeasure = CommodityMeasure(Some("10"), "100.00", "100.00")
       val goodsMeasure = new CachingMappingHelper().mapGoodsMeasure(commodityMeasure).goodsMeasure.get

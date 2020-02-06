@@ -15,17 +15,19 @@
  */
 
 package uk.gov.hmrc.exports.services.mapping
-import com.sun.org.glassfish.gmbal.Description
-import uk.gov.hmrc.exports.models.declaration.{CommodityMeasure, ExportItem}
+
 import uk.gov.hmrc.exports.models.declaration.IdentificationTypeCodes.{CUSCode, CombinedNomenclatureCode, NationalAdditionalCode, TARICAdditionalCode}
-import uk.gov.hmrc.wco.dec.{Classification, Commodity, DangerousGoods, GoodsMeasure, Measure}
+import uk.gov.hmrc.exports.models.declaration.{CommodityMeasure, ExportItem}
+import uk.gov.hmrc.wco.dec._
 
 class CachingMappingHelper {
   val defaultMeasureCode = "KGM"
 
-  def commodityFromExportItem(exportItem: ExportItem): Commodity =
+  def commodityFromExportItem(exportItem: ExportItem): Commodity = {
+    def removeCarrageReturns(description: String): String = description.replaceAll("(\\r\\n)|\\r|\\n", " ")
+
     Commodity(
-      description = exportItem.commodityDetails.map(commodityDetails => strip((commodityDetails.descriptionOfGoods))),
+      description = exportItem.commodityDetails.map(commodityDetails => removeCarrageReturns((commodityDetails.descriptionOfGoods))),
       classifications = getClassifications(
         exportItem.commodityDetails.flatMap(_.combinedNomenclatureCode),
         exportItem.cusCode.flatMap(_.cusCode),
@@ -34,22 +36,20 @@ class CachingMappingHelper {
       ),
       dangerousGoods = exportItem.dangerousGoodsCode.flatMap(_.dangerousGoodsCode).map(code => Seq(DangerousGoods(Some(code)))).getOrElse(Seq.empty)
     )
-
-
-  private def strip(description: String): String = description.replaceAll("(\\r\\n)|\\r|\\n", " " )
+  }
 
   private def getClassifications(
-    commodityCode: Option[String],
-    cusCode: Option[String],
-    nationalAdditionalCodes: Seq[String],
-    taricCodes: Seq[String]
-  ): Seq[Classification] =
+                                  commodityCode: Option[String],
+                                  cusCode: Option[String],
+                                  nationalAdditionalCodes: Seq[String],
+                                  taricCodes: Seq[String]
+                                ): Seq[Classification] =
     (
       commodityCode.map(code => Classification(Some(code), identificationTypeCode = Some(CombinedNomenclatureCode.value))) ++
         cusCode.map(code => Classification(Some(code), identificationTypeCode = Some(CUSCode.value))) ++
         nationalAdditionalCodes.map(code => Classification(Some(code), identificationTypeCode = Some(NationalAdditionalCode.value))) ++
         taricCodes.map(code => Classification(Some(code), identificationTypeCode = Some(TARICAdditionalCode.value)))
-    ).toSeq
+      ).toSeq
 
   def mapGoodsMeasure(data: CommodityMeasure) =
     Commodity(
