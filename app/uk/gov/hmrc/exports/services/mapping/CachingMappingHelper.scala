@@ -24,10 +24,10 @@ class CachingMappingHelper {
   val defaultMeasureCode = "KGM"
 
   def commodityFromExportItem(exportItem: ExportItem): Commodity = {
-    def removeCarrageReturns(description: String): String = description.replaceAll("(\\r\\n)|\\r|\\n", " ")
+    def removeCarriageReturns(description: String): String = description.replaceAll("(\\r\\n)|\\r|\\n", " ")
 
     Commodity(
-      description = exportItem.commodityDetails.map(commodityDetails => removeCarrageReturns((commodityDetails.descriptionOfGoods))),
+      description = exportItem.commodityDetails.map(commodityDetails => removeCarriageReturns((commodityDetails.descriptionOfGoods))),
       classifications = getClassifications(
         exportItem.commodityDetails.flatMap(_.combinedNomenclatureCode),
         exportItem.cusCode.flatMap(_.cusCode),
