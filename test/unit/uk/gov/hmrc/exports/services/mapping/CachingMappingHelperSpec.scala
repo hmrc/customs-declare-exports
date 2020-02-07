@@ -80,6 +80,12 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
         commodity.classifications.map(c => c.id) shouldBe Seq(Some("commodityCode"))
       }
 
+      "Only commodity description stripped of new lines" in {
+        val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(None, s"description with\na new\r\nline")))
+        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem)
+        commodity.description shouldBe Some("description with a new line")
+      }
+
       "Only description provided" in {
         val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(None, "description")))
 
