@@ -86,7 +86,6 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
         commodity.description shouldBe Some("description with a new line")
       }
 
-
       "Only description provided" in {
         val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(None, "description")))
 

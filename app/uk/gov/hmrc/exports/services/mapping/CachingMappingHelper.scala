@@ -39,17 +39,17 @@ class CachingMappingHelper {
   }
 
   private def getClassifications(
-                                  commodityCode: Option[String],
-                                  cusCode: Option[String],
-                                  nationalAdditionalCodes: Seq[String],
-                                  taricCodes: Seq[String]
-                                ): Seq[Classification] =
+    commodityCode: Option[String],
+    cusCode: Option[String],
+    nationalAdditionalCodes: Seq[String],
+    taricCodes: Seq[String]
+  ): Seq[Classification] =
     (
       commodityCode.map(code => Classification(Some(code), identificationTypeCode = Some(CombinedNomenclatureCode.value))) ++
         cusCode.map(code => Classification(Some(code), identificationTypeCode = Some(CUSCode.value))) ++
         nationalAdditionalCodes.map(code => Classification(Some(code), identificationTypeCode = Some(NationalAdditionalCode.value))) ++
         taricCodes.map(code => Classification(Some(code), identificationTypeCode = Some(TARICAdditionalCode.value)))
-      ).toSeq
+    ).toSeq
 
   def mapGoodsMeasure(data: CommodityMeasure) =
     Commodity(
