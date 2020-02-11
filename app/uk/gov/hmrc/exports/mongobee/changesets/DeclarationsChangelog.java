@@ -18,37 +18,13 @@ package uk.gov.hmrc.exports.mongobee.changesets;
 
 import com.github.mongobee.changeset.ChangeLog;
 import com.github.mongobee.changeset.ChangeSet;
-import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import org.bson.Document;
 
 @ChangeLog
 public class DeclarationsChangelog {
     private String collection = "declarations";
 
-    @ChangeSet(order = "001", id = "CEDS-2111 Change declaration types to APPLES", author = "Paulo Monteiro")
-    public void updateAllDeclarationTypeToApples(DB db) {
-        Document query = new Document("type", "STANDARD");
-        Document update = new Document("$set", new Document("additionalDeclarationType", "APPLES"));
-        db.getCollection(collection).update(new BasicDBObject(query), new BasicDBObject(update), false, true);
-    }
-
-    @ChangeSet(order = "002", id = "CEDS-2111 Move LRN to root of document", author = "Paulo Monteiro")
-    public void moveLRNToRootOfDocument(DB db) {
-
-        Document query = new Document("consignmentReferences.lrn", new Document("$exists", true));
-        DBCursor cursor = db.getCollection(collection).find(new BasicDBObject(query));
-        while (cursor.hasNext()) {
-            DBObject dbObject = cursor.next();
-
-            BasicDBObject consignmentReferences = (BasicDBObject) dbObject.get("consignmentReferences");
-            Document updateSet = new Document("$set", new Document("lrn", consignmentReferences).get("lrn"));
-            db.getCollection(collection).update(new BasicDBObject(query), new BasicDBObject(updateSet), false, true);
-
-            Document updateUnset = new Document("$unset", new Document("consignmentReferences.lrn", null));
-            db.getCollection(collection).update(new BasicDBObject(query), new BasicDBObject(updateUnset), false, true);
-        }
+    @ChangeSet(order = "001", id = "Exports DB Baseline", author = "Paulo Monteiro")
+    public void dbBaseline(DB db) {
     }
 }
