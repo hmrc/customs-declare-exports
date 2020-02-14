@@ -28,7 +28,7 @@ import scala.concurrent.duration.FiniteDuration
 @Singleton
 class AppConfig @Inject()(val runModeConfiguration: Configuration, val environment: Environment, servicesConfig: ServicesConfig) {
 
-  MongobeeConfig(loadConfig("mongodb.uri"))
+//  MongobeeConfig(loadConfig("mongodb.uri"))
 
   lazy val clock: Clock = Clock.systemUTC()
 
