@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.mongobee.changesets;
+package uk.gov.hmrc.exports.mongock.changesets;
 
-import com.github.mongobee.changeset.ChangeLog;
-import com.github.mongobee.changeset.ChangeSet;
-import com.mongodb.DB;
+import com.github.cloudyrock.mongock.ChangeLog;
+import com.github.cloudyrock.mongock.ChangeSet;
+import com.mongodb.client.MongoDatabase;
 
 @ChangeLog
-public class DeclarationsChangelog {
+public class CacheChangelog {
     private String collection = "declarations";
 
     @ChangeSet(order = "001", id = "Exports DB Baseline", author = "Paulo Monteiro")
-    public void dbBaseline(DB db) {
+    public void dbBaseline(MongoDatabase db) {
     }
 }

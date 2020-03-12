@@ -14,17 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.mongobee
+package uk.gov.hmrc.exports.mongock
 
-import com.github.mongobee.Mongobee
+import com.github.cloudyrock.mongock.MongockBuilder
 import com.google.inject.Singleton
+import com.mongodb.{MongoClient, MongoClientURI}
 
 @Singleton
-case class MongobeeConfig(mongoURI: String) {
-  val runner = new Mongobee(mongoURI)
+case class MongockConfig(mongoURI: String) {
 
-  runner.setDbName("customs-declare-exports")
-  runner.setChangeLogsScanPackage("uk.gov.hmrc.exports.mongobee.changesets")
+  val uri = new MongoClientURI(mongoURI.replaceAllLiterally("sslEnabled", "ssl"))
+
+  val client = new MongoClient(uri)
+
+  val runner = new MongockBuilder(client, uri.getDatabase, "mongock.changesets")
+    .setLockQuickConfig()
+    .build()
 
   runner.execute()
+  runner.close()
 }

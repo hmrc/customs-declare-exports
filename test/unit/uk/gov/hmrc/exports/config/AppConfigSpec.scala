@@ -41,12 +41,9 @@ class AppConfigSpec extends WordSpec with Matchers with MockitoSugar {
       |microservice.services.customs-declarations.bearer-token=Bearer DummyBearerToken
     """.stripMargin)
 
-  private val invalidAppConfig: Config = ConfigFactory.parseString("""
-      |mongodb.uri="mongodb://localhost:27017/customs-declare-exports"
-      |""".stripMargin)
   private val emptyAppConfig: Config = ConfigFactory.parseString("")
   private val validServicesConfiguration = Configuration(validAppConfig)
-  private val invalidServicesConfiguration = Configuration(invalidAppConfig)
+  private val invalidServicesConfiguration = Configuration(emptyAppConfig)
 
   val environment = Environment.simple()
 
