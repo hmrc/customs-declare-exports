@@ -39,6 +39,12 @@ class AppConfigSpec extends WordSpec with Matchers with MockitoSugar {
       |microservice.services.customs-declarations.submit-uri=/declarations
       |microservice.services.customs-declarations.cancel-uri=/declarations/cancel
       |microservice.services.customs-declarations.bearer-token=Bearer DummyBearerToken
+      |microservice.services.customs-declarations-information.host=localhostd
+      |microservice.services.customs-declarations-information.port=9834
+      |microservice.services.customs-declarations-information.api-version=1.0
+      |microservice.services.customs-declarations-information.bearer-token=Bearer cdi-bearer-token
+      |microservice.services.customs-declarations-information.client-id=cdi-client-id
+      |microservice.services.customs-declarations-information.fetch-mrn-status=/mrn/ID/status
     """.stripMargin)
 
   private val emptyAppConfig: Config = ConfigFactory.parseString("")
@@ -62,6 +68,11 @@ class AppConfigSpec extends WordSpec with Matchers with MockitoSugar {
       configService.cancelDeclarationUri shouldBe "/declarations/cancel"
       configService.customsDeclarationsBaseUrl shouldBe "http://remotedec-api:6000"
       configService.notificationBearerToken shouldBe "Bearer DummyBearerToken"
+      configService.cdiApiVersion shouldBe "1.0"
+      configService.cdiBearerToken shouldBe "Bearer cdi-bearer-token"
+      configService.cdiClientID shouldBe "cdi-client-id"
+      configService.fetchMrnStatus shouldBe "/mrn/ID/status"
+      configService.customsDeclarationsInformationBaseUrl shouldBe "http://localhostd:9834"
     }
 
     "throw an exception when mandatory configuration is invalid" in {
@@ -87,6 +98,25 @@ class AppConfigSpec extends WordSpec with Matchers with MockitoSugar {
 
       val caught6: RuntimeException = intercept[RuntimeException](configService.cancelDeclarationUri)
       caught6.getMessage shouldBe "Could not find config key 'microservice.services.customs-declarations.cancel-uri'"
+    }
+
+    "throw an exception when mandatory customs-declaration-information configuration is invalid" in {
+      val configService: AppConfig = appConfig(invalidServicesConfiguration)
+
+      val caught: RuntimeException = intercept[RuntimeException](configService.customsDeclarationsInformationBaseUrl)
+      caught.getMessage shouldBe "Could not find config customs-declarations-information.host"
+
+      val caught1: RuntimeException = intercept[RuntimeException](configService.cdiApiVersion)
+      caught1.getMessage shouldBe "Could not find config key 'microservice.services.customs-declarations-information.api-version'"
+
+      val caught2: RuntimeException = intercept[RuntimeException](configService.fetchMrnStatus)
+      caught2.getMessage shouldBe "Could not find config key 'microservice.services.customs-declarations-information.fetch-mrn-status'"
+
+      val caught3: RuntimeException = intercept[RuntimeException](configService.cdiBearerToken)
+      caught3.getMessage shouldBe "Could not find config key 'microservice.services.customs-declarations-information.bearer-token'"
+
+      val caught6: RuntimeException = intercept[RuntimeException](configService.cdiClientID)
+      caught6.getMessage shouldBe "Could not find config key 'microservice.services.customs-declarations-information.client-id'"
     }
 
     "developerHubClientId" should {
