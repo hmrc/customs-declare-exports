@@ -65,6 +65,15 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, val environme
     LocalTime.parse(servicesConfig.getString("scheduler.purge-draft-declarations.run-time")),
     servicesConfig.getDuration("scheduler.purge-draft-declarations.interval").asInstanceOf[FiniteDuration]
   )
+
+  lazy val customsDeclarationsInformationBaseUrl = servicesConfig.baseUrl("customs-declarations-information")
+  lazy val fetchMrnStatus = servicesConfig.getString("microservice.services.customs-declarations-information.fetch-mrn-status")
+
+  lazy val cdiApiVersion = servicesConfig.getString("microservice.services.customs-declarations-information.api-version")
+
+  lazy val cdiClientID = servicesConfig.getString("microservice.services.customs-declarations-information.client-id")
+
+  lazy val cdiBearerToken = servicesConfig.getString("microservice.services.customs-declarations-information.bearer-token")
 }
 
 case class JobConfig(elapseTime: LocalTime, interval: FiniteDuration)
