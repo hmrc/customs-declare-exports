@@ -10,6 +10,7 @@ GET         /declarations/:id/submission/notifications    uk.gov.hmrc.exports.co
 GET         /submissions                                  uk.gov.hmrc.exports.controllers.SubmissionController.findAll()
 POST        /cancellations                                uk.gov.hmrc.exports.controllers.CancellationController.create()
 GET         /notifications                                uk.gov.hmrc.exports.controllers.NotificationController.getAllNotificationsForUser()
+GET         /ead/:mrn                                     uk.gov.hmrc.exports.controllers.ead.EADController.findByMrn(mrn: String)
 
 # XML Based
 POST        /customs-declare-exports/notify               uk.gov.hmrc.exports.controllers.NotificationController.saveNotification()
