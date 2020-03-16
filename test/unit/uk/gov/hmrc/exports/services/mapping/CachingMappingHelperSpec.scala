@@ -25,8 +25,8 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
   "CachingMappingHelper" should {
     "mapGoodsMeasure correctly When tariffQuantity grossMassMeasure netWeightMeasure provided" in {
 
-      val commodityMeasure = CommodityMeasure(Some("10"), "100.00", "100.00")
-      val goodsMeasure = new CachingMappingHelper().mapGoodsMeasure(commodityMeasure).goodsMeasure.get
+      val commodityMeasure = CommodityMeasure(Some("10"), Some("100.00"), Some("100.00"))
+      val goodsMeasure = new CachingMappingHelper().mapGoodsMeasure(commodityMeasure).flatMap(_.goodsMeasure).get
 
       goodsMeasure.tariffQuantity.get.value.get shouldBe 10
       goodsMeasure.grossMassMeasure.get.value.get shouldBe 100.00
@@ -35,12 +35,19 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
 
     "mapGoodsMeasure correctly When grossMassMeasure netWeightMeasure provided but no tariffQuantity" in {
 
-      val commodityMeasure = CommodityMeasure(None, "100.00", "100.00")
+      val commodityMeasure = CommodityMeasure(None, Some("100.00"), Some("100.00"))
 
-      val goodsMeasure = new CachingMappingHelper().mapGoodsMeasure(commodityMeasure).goodsMeasure.get
+      val goodsMeasure = new CachingMappingHelper().mapGoodsMeasure(commodityMeasure).flatMap(_.goodsMeasure).get
       goodsMeasure.tariffQuantity shouldBe None
       goodsMeasure.grossMassMeasure.get.value.get shouldBe 100.00
       goodsMeasure.netWeightMeasure.get.value.get shouldBe 100.00
+    }
+
+    "mapGoodsMeasure correctly When no fields are provided" in {
+
+      val commodityMeasure = CommodityMeasure(None, None, None)
+
+      new CachingMappingHelper().mapGoodsMeasure(commodityMeasure) shouldBe None
     }
 
     "mapCommodity" when {
