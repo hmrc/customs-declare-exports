@@ -44,6 +44,7 @@ class CustomsDeclarationsInformationConnector @Inject()(mrnStatusParser: MrnStat
             logger.debug(s"CUSTOMS_DECLARATIONS_INFORMATION fetch MRN status response ${response.body}")
             Some(mrnStatusParser.parse(xml.XML.loadString(response.body)))
           case status =>
+            logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION fetch MRN status response ${response.body}")
             throw new InternalServerException(s"Customs Declarations Service returned [$status]")
         }
       }
