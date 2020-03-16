@@ -43,7 +43,6 @@ class CustomsDeclarationsInformationConnectorSpec
           "microservice.services.customs-declarations-information.host" -> Host,
           "microservice.services.customs-declarations-information.port" -> Port,
           "microservice.services.customs-declarations-information.submit-uri" -> "/mrn/ID/status",
-          "microservice.services.customs-declarations-information.bearer-token" -> "Bearer authToken",
           "microservice.services.customs-declarations-information.api-version" -> "1.0"
         )
       )

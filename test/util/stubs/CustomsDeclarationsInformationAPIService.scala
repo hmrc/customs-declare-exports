@@ -22,7 +22,6 @@ import play.api.http.ContentTypes
 import play.api.mvc.Codec
 import play.api.test.Helpers.{ACCEPT, CONTENT_TYPE}
 import stubs.CustomsDeclarationsInformationAPIConfig.{fetchMrnStatusUrl, id}
-import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
 import uk.gov.hmrc.exports.models.ead.parsers.MrnStatusParserTestData
 
 trait CustomsDeclarationsInformationAPIService extends WireMockRunner {
@@ -41,7 +40,6 @@ trait CustomsDeclarationsInformationAPIService extends WireMockRunner {
       getRequestedFor(urlMatching(fetchMrnStatusUrl.replace(id, mrn)))
         .withHeader(CONTENT_TYPE, equalTo(ContentTypes.XML(Codec.utf_8)))
         .withHeader(ACCEPT, equalTo(s"application/vnd.hmrc.$expectedApiVersion+xml"))
-        .withHeader(CustomsHeaderNames.Authorization, equalTo(expectedBearerToken))
     )
   }
 }

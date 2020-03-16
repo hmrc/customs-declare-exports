@@ -52,7 +52,6 @@ class CustomsDeclarationsInformationConnector @Inject()(mrnStatusParser: MrnStat
   private def headers(): Seq[(String, String)] = Seq(
     "X-Client-ID" -> appConfig.cdiClientID,
     HeaderNames.ACCEPT -> s"application/vnd.hmrc.${appConfig.cdiApiVersion}+xml",
-    HeaderNames.AUTHORIZATION -> appConfig.cdiBearerToken,
     HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
     HeaderNames.CACHE_CONTROL -> "no-cache"
   )
