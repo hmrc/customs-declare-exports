@@ -44,6 +44,7 @@ class CustomsDeclarationsInformationConnector @Inject()(mrnStatusParser: MrnStat
             logger.debug(s"CUSTOMS_DECLARATIONS_INFORMATION fetch MRN status response ${response.body}")
             Some(mrnStatusParser.parse(xml.XML.loadString(response.body)))
           case status =>
+            logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION fetch MRN status response ${response.body}")
             throw new InternalServerException(s"Customs Declarations Service returned [$status]")
         }
       }
@@ -51,7 +52,6 @@ class CustomsDeclarationsInformationConnector @Inject()(mrnStatusParser: MrnStat
   private def headers(): Seq[(String, String)] = Seq(
     "X-Client-ID" -> appConfig.cdiClientID,
     HeaderNames.ACCEPT -> s"application/vnd.hmrc.${appConfig.cdiApiVersion}+xml",
-    HeaderNames.AUTHORIZATION -> appConfig.cdiBearerToken,
     HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
     HeaderNames.CACHE_CONTROL -> "no-cache"
   )
