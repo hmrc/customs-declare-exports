@@ -24,7 +24,7 @@ class MrnStatusParserSpec extends WordSpec with MustMatchers with OptionValues {
     "create a MrnStatus instance once all data is provided" in {
       val mrnStatus = new MrnStatusParser().parse(MrnStatusParserTestData.mrnStatusWithAllData("20GB2A57QTFF8X8PA0"))
       mrnStatus.mrn mustBe "20GB2A57QTFF8X8PA0"
-      mrnStatus.ucr mustBe Some("20GBAKZ81EQJ2WXYZ")
+      mrnStatus.ucr mustBe Some("18GBAKZ81EQJ2FGVR")
       mrnStatus.eori mustBe "GB123456789012000"
       mrnStatus.versionId mustBe "1"
       mrnStatus.declarationType mustBe "IMZ"
@@ -55,7 +55,7 @@ class MrnStatusParserSpec extends WordSpec with MustMatchers with OptionValues {
     "create a MrnStatus instance when partial data is provided" in {
       val mrnStatus = new MrnStatusParser().parse(MrnStatusParserTestData.mrnStatusWithSelectedFields("20GB2A57QTFF8X8PA0"))
       mrnStatus.mrn mustBe "20GB2A57QTFF8X8PA0"
-      mrnStatus.ucr mustBe None
+      mrnStatus.ucr mustBe Some("8GB123456765080-101SHIP1")
       mrnStatus.eori mustBe "GB7172755049242"
       mrnStatus.versionId mustBe "1"
       mrnStatus.declarationType mustBe "EXD"
