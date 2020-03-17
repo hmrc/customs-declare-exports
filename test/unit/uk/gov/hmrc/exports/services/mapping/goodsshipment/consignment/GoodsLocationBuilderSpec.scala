@@ -48,11 +48,7 @@ class GoodsLocationBuilderSpec extends WordSpec with Matchers with MockitoSugar 
   }
 
   private def validateGoodsLocation(goodsLocation: GoodsShipment.Consignment.GoodsLocation) = {
-    goodsLocation.getID.getValue should be(GoodsLocationBuilderSpec.additionalIdentifier)
-    goodsLocation.getAddress.getLine.getValue should be(GoodsLocationBuilderSpec.addressLine)
-    goodsLocation.getAddress.getCityName.getValue should be(GoodsLocationBuilderSpec.city)
-    goodsLocation.getAddress.getPostcodeID.getValue should be(GoodsLocationBuilderSpec.postcode)
-    goodsLocation.getAddress.getCountryCode.getValue should be(GoodsLocationBuilderSpec.countryCode)
+    goodsLocation.getAddress.getCountryCode.getValue should be(GoodsLocationBuilderSpec.country)
     goodsLocation.getName.getValue should be(GoodsLocationBuilderSpec.identificationOfLocation)
     goodsLocation.getTypeCode.getValue should be(GoodsLocationBuilderSpec.typeOfLocation)
     goodsLocation.getAddress.getTypeCode.getValue should be(GoodsLocationBuilderSpec.qualifierOfIdentification)
@@ -61,23 +57,14 @@ class GoodsLocationBuilderSpec extends WordSpec with Matchers with MockitoSugar 
 }
 
 object GoodsLocationBuilderSpec {
-  val identificationOfLocation = "LOC"
-  val country = "United Kingdom"
-  val addressLine = "Street and Number"
-  val postcode = "Postcode"
-  val city = "City"
-  val typeOfLocation = "T"
+  val identificationOfLocation = "EMAEMAEMA"
+  val country = "GB"
+  val typeOfLocation = "A"
   val qualifierOfIdentification = "Y"
-  val additionalIdentifier = "9GB1234567ABCDEF"
-  var countryCode: String = "GB"
   val correctGoodsLocation = GoodsLocation(
     country = country,
     typeOfLocation = typeOfLocation,
     qualifierOfIdentification = qualifierOfIdentification,
-    identificationOfLocation = Some(identificationOfLocation),
-    additionalIdentifier = Some(additionalIdentifier),
-    addressLine = Some(addressLine),
-    postCode = Some(postcode),
-    city = Some(city)
+    identificationOfLocation = Some(identificationOfLocation)
   )
 }

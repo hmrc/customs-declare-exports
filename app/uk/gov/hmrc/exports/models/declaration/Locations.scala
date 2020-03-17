@@ -18,16 +18,7 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 
-case class GoodsLocation(
-  country: String,
-  typeOfLocation: String,
-  qualifierOfIdentification: String,
-  identificationOfLocation: Option[String],
-  additionalIdentifier: Option[String],
-  addressLine: Option[String],
-  postCode: Option[String],
-  city: Option[String]
-)
+case class GoodsLocation(country: String, typeOfLocation: String, qualifierOfIdentification: String, identificationOfLocation: Option[String])
 object GoodsLocation {
   implicit val format: OFormat[GoodsLocation] = Json.format[GoodsLocation]
 }

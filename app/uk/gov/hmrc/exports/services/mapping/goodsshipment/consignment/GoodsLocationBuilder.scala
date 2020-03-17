@@ -31,23 +31,13 @@ class GoodsLocationBuilder @Inject()(countriesService: CountriesService) extends
     }
 
   private def isDefined(goodsLocation: GoodsLocation) =
-    goodsLocation.additionalIdentifier.isDefined ||
-      goodsLocation.postCode.isDefined ||
-      goodsLocation.country.nonEmpty ||
-      goodsLocation.city.nonEmpty ||
-      goodsLocation.addressLine.nonEmpty ||
+    goodsLocation.country.nonEmpty ||
       goodsLocation.identificationOfLocation.nonEmpty ||
       goodsLocation.qualifierOfIdentification.nonEmpty ||
       goodsLocation.typeOfLocation.nonEmpty
 
-  private def buildEoriOrAddress(goods: GoodsLocation) = {
+  private def buildEoriOrAddress(goods: GoodsLocation): Consignment.GoodsLocation = {
     val goodsLocation = new Consignment.GoodsLocation()
-
-    goods.additionalIdentifier.foreach { value =>
-      val id = new GoodsLocationIdentificationIDType()
-      id.setValue(value)
-      goodsLocation.setID(id)
-    }
 
     if (goods.typeOfLocation.nonEmpty) {
       val goodsTypeCode = new GoodsLocationTypeCodeType()
@@ -61,7 +51,7 @@ class GoodsLocationBuilder @Inject()(countriesService: CountriesService) extends
       goodsLocation.setName(name)
     }
 
-    if (goods.addressLine.isDefined || goods.city.isDefined || goods.postCode.isDefined || goods.country.nonEmpty) {
+    if (goods.country.nonEmpty) {
       goodsLocation.setAddress(createAddress(goods))
     }
 
@@ -71,27 +61,9 @@ class GoodsLocationBuilder @Inject()(countriesService: CountriesService) extends
   private def createAddress(goods: GoodsLocation): Consignment.GoodsLocation.Address = {
     val goodsAddress = new Consignment.GoodsLocation.Address()
 
-    goods.addressLine.foreach { value =>
-      val line = new AddressLineTextType()
-      line.setValue(value)
-      goodsAddress.setLine(line)
-    }
-
-    goods.city.foreach { value =>
-      val city = new AddressCityNameTextType
-      city.setValue(value)
-      goodsAddress.setCityName(city)
-    }
-
-    goods.postCode.foreach { value =>
-      val postcode = new AddressPostcodeIDType()
-      postcode.setValue(value)
-      goodsAddress.setPostcodeID(postcode)
-    }
-
     if (goods.country.nonEmpty) {
       val countryCode = new AddressCountryCodeType
-      countryCode.setValue(countriesService.allCountries.find(c => goods.country.contains(c.countryName)).map(_.countryCode).getOrElse(""))
+      countryCode.setValue(goods.country)
       goodsAddress.setCountryCode(countryCode)
     }
 
