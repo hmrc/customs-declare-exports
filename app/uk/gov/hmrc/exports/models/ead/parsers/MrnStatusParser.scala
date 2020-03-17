@@ -29,13 +29,18 @@ class MrnStatusParser {
   private val timeStampFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssz")
   private val displayFormatter = DateTimeFormatter.ofPattern("dd MMMM yyyy 'at' hh:mma")
 
+  def getDucr(documents: NodeSeq): Option[String] =
+    documents
+      .find(doc => (doc \ XmlTags.typeCode).text == "DCR")
+      .map(doc => (doc \ XmlTags.id).text)
+
   def parse(responseXml: NodeSeq): MrnStatus =
     MrnStatus(
       mrn = (responseXml \ XmlTags.declarationStatusDetails \ declaration \ id).text,
       versionId = (responseXml \ declarationStatusDetails \ declaration \ versionId).text,
       eori = (responseXml \ declarationStatusDetails \ declaration \ submitter \ id).text,
       declarationType = ((responseXml \ declarationStatusDetails \ declaration)(1) \ typeCode).text,
-      ucr = StringOption(((responseXml \ declarationStatusDetails \ declaration)(1) \ goodsShipment \ ucr \ traderAssignedReferenceID).text),
+      ucr = getDucr(((responseXml \ declarationStatusDetails \ declaration)(1) \ goodsShipment) \ previousDocument),
       receivedDateTime = timeFormatter((responseXml \ declarationStatusDetails \ declaration \ receivedDateTime \ dateTimeString).text),
       releasedDateTime =
         StringOption((responseXml \ declarationStatusDetails \ declaration \ goodsReleasedDateTime \ dateTimeString).text).map(timeFormatter),
