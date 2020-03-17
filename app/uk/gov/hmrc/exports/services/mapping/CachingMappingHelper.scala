@@ -53,12 +53,9 @@ class CachingMappingHelper {
 
   def mapGoodsMeasure(data: CommodityMeasure): Option[Commodity] = data match {
     case CommodityMeasure(None, None, None) => None
-    case _ =>
+    case CommodityMeasure(supplementaryUnits, netMass, grossMass) =>
       Some(
-        Commodity(
-          goodsMeasure =
-            Some(GoodsMeasure(data.grossMass.map(createMeasure), data.netMass.map(createMeasure), data.supplementaryUnits.map(createMeasure)))
-        )
+        Commodity(goodsMeasure = Some(GoodsMeasure(grossMass.map(createMeasure), netMass.map(createMeasure), supplementaryUnits.map(createMeasure))))
       )
   }
 
