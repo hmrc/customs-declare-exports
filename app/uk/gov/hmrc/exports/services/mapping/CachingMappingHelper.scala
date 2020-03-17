@@ -51,11 +51,13 @@ class CachingMappingHelper {
         taricCodes.map(code => Classification(Some(code), identificationTypeCode = Some(TARICAdditionalCode.value)))
     ).toSeq
 
-  def mapGoodsMeasure(data: CommodityMeasure) =
-    Commodity(
-      goodsMeasure =
-        Some(GoodsMeasure(Some(createMeasure(data.grossMass)), Some(createMeasure(data.netMass)), data.supplementaryUnits.map(createMeasure)))
-    )
+  def mapGoodsMeasure(data: CommodityMeasure): Option[Commodity] = data match {
+    case CommodityMeasure(None, None, None) => None
+    case CommodityMeasure(supplementaryUnits, netMass, grossMass) =>
+      Some(
+        Commodity(goodsMeasure = Some(GoodsMeasure(grossMass.map(createMeasure), netMass.map(createMeasure), supplementaryUnits.map(createMeasure))))
+      )
+  }
 
   private def createMeasure(unitValue: String) =
     try {

@@ -76,7 +76,7 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
 
   private def mapCommodityMeasureToCommodity(commodityMeasure: Option[CommodityMeasure], declarationType: DeclarationType): Option[Commodity] =
     if (journeysWithCommodityMeasurements.contains(declarationType)) {
-      commodityMeasure.map(measure => cachingMappingHelper.mapGoodsMeasure(measure))
+      commodityMeasure.flatMap(measure => cachingMappingHelper.mapGoodsMeasure(measure))
     } else None
 
   private def combineCommodities(commodityPart1: Commodity, commodityPart2: Option[Commodity]): Commodity =

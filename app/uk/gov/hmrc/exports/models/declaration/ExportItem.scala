@@ -100,7 +100,7 @@ object PackageInformation {
   implicit val format: OFormat[PackageInformation] = Json.format[PackageInformation]
 }
 
-case class CommodityMeasure(supplementaryUnits: Option[String], netMass: String, grossMass: String)
+case class CommodityMeasure(supplementaryUnits: Option[String], netMass: Option[String], grossMass: Option[String])
 object CommodityMeasure {
   implicit val format: OFormat[CommodityMeasure] = Json.format[CommodityMeasure]
 }
