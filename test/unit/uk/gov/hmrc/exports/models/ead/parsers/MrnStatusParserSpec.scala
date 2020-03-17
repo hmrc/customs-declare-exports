@@ -37,19 +37,17 @@ class MrnStatusParserSpec extends WordSpec with MustMatchers with OptionValues {
       mrnStatus.irc mustBe Some("000")
       mrnStatus.goodsItemQuantity mustBe "100"
       mrnStatus.totalPackageQuantity mustBe "10"
-      mrnStatus.previousDocuments.length mustBe 6
-      mrnStatus.previousDocuments.head.id mustBe "18GBAKZ81EQJ2FGVR"
-      mrnStatus.previousDocuments.head.typeCode mustBe "DCR"
-      mrnStatus.previousDocuments(1).id mustBe "18GBAKZ81EQJ2FGVA"
+      mrnStatus.previousDocuments.length mustBe 5
+      mrnStatus.previousDocuments.head.id mustBe "18GBAKZ81EQJ2FGVA"
+      mrnStatus.previousDocuments.head.typeCode mustBe "MCR"
+      mrnStatus.previousDocuments(1).id mustBe "18GBAKZ81EQJ2FGVB"
       mrnStatus.previousDocuments(1).typeCode mustBe "MCR"
-      mrnStatus.previousDocuments(2).id mustBe "18GBAKZ81EQJ2FGVB"
-      mrnStatus.previousDocuments(2).typeCode mustBe "MCR"
-      mrnStatus.previousDocuments(3).id mustBe "18GBAKZ81EQJ2FGVC"
-      mrnStatus.previousDocuments(3).typeCode mustBe "DCR"
-      mrnStatus.previousDocuments(4).id mustBe "18GBAKZ81EQJ2FGVD"
+      mrnStatus.previousDocuments(2).id mustBe "18GBAKZ81EQJ2FGVC"
+      mrnStatus.previousDocuments(2).typeCode mustBe "DCR"
+      mrnStatus.previousDocuments(3).id mustBe "18GBAKZ81EQJ2FGVD"
+      mrnStatus.previousDocuments(3).typeCode mustBe "MCR"
+      mrnStatus.previousDocuments(4).id mustBe "18GBAKZ81EQJ2FGVE"
       mrnStatus.previousDocuments(4).typeCode mustBe "MCR"
-      mrnStatus.previousDocuments(5).id mustBe "18GBAKZ81EQJ2FGVE"
-      mrnStatus.previousDocuments(5).typeCode mustBe "MCR"
     }
 
     "create a MrnStatus instance when partial data is provided" in {
@@ -68,9 +66,7 @@ class MrnStatusParserSpec extends WordSpec with MustMatchers with OptionValues {
       mrnStatus.irc mustBe None
       mrnStatus.goodsItemQuantity mustBe "1"
       mrnStatus.totalPackageQuantity mustBe "1.0"
-      mrnStatus.previousDocuments.length mustBe 1
-      mrnStatus.previousDocuments.head.id mustBe "8GB123456765080-101SHIP1"
-      mrnStatus.previousDocuments.head.typeCode mustBe "DCR"
+      mrnStatus.previousDocuments.length mustBe 0
     }
 
     "create a MrnStatus instance when partial data is provided with no previous documents" in {

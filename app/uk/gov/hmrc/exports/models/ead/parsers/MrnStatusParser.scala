@@ -34,13 +34,14 @@ class MrnStatusParser {
       .find(doc => (doc \ XmlTags.typeCode).text == "DCR")
       .map(doc => (doc \ XmlTags.id).text)
 
-  def parse(responseXml: NodeSeq): MrnStatus =
+  def parse(responseXml: NodeSeq): MrnStatus = {
+    val mainUcr = getDucr(((responseXml \ declarationStatusDetails \ declaration)(1) \ goodsShipment) \ previousDocument)
     MrnStatus(
       mrn = (responseXml \ XmlTags.declarationStatusDetails \ declaration \ id).text,
       versionId = (responseXml \ declarationStatusDetails \ declaration \ versionId).text,
       eori = (responseXml \ declarationStatusDetails \ declaration \ submitter \ id).text,
       declarationType = ((responseXml \ declarationStatusDetails \ declaration)(1) \ typeCode).text,
-      ucr = getDucr(((responseXml \ declarationStatusDetails \ declaration)(1) \ goodsShipment) \ previousDocument),
+      ucr = mainUcr,
       receivedDateTime = timeFormatter((responseXml \ declarationStatusDetails \ declaration \ receivedDateTime \ dateTimeString).text),
       releasedDateTime =
         StringOption((responseXml \ declarationStatusDetails \ declaration \ goodsReleasedDateTime \ dateTimeString).text).map(timeFormatter),
@@ -52,15 +53,18 @@ class MrnStatusParser {
       irc = StringOption((responseXml \ declarationStatusDetails \ declaration \ irc).text),
       totalPackageQuantity = ((responseXml \ declarationStatusDetails \ declaration)(1) \ totalPackageQuantity).text,
       goodsItemQuantity = ((responseXml \ declarationStatusDetails \ declaration)(1) \ goodsItemQuantity).text,
-      previousDocuments = previousDocuments(((responseXml \ declarationStatusDetails \ declaration)(1) \ goodsShipment) \ previousDocument)
+      previousDocuments = previousDocuments(((responseXml \ declarationStatusDetails \ declaration)(1) \ goodsShipment) \ previousDocument, mainUcr)
     )
+  }
 
-  private def previousDocuments(documents: NodeSeq): Seq[PreviousDocument] =
-    documents.map { doc =>
-      val id = (doc \ XmlTags.id).text
-      val typeCode = (doc \ XmlTags.typeCode).text
-      PreviousDocument(id, typeCode)
-    }
+  private def previousDocuments(documents: NodeSeq, mainUcr: Option[String]): Seq[PreviousDocument] =
+    documents
+      .filter(doc => (doc \ XmlTags.id).text != mainUcr.getOrElse())
+      .map { doc =>
+        val id = (doc \ XmlTags.id).text
+        val typeCode = (doc \ XmlTags.typeCode).text
+        PreviousDocument(id, typeCode)
+      }
 
   private def timeFormatter(zonedDateTime: String): String = timeFormatter(ZonedDateTime.parse(zonedDateTime, timeStampFormatter))
 
