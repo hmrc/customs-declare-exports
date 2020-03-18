@@ -49,7 +49,7 @@ public class CacheChangelog {
 
                 String countryName = (String) ((Map) ((Map) document.get("locations")).get("goodsLocation")).get("country");
 
-                ((Map) ((Map) document.get("locations")).get("goodsLocation")).put("country", service.findCountryCode(countryName));
+                ((Map) ((Map) document.get("locations")).get("goodsLocation")).put("country", service.findCountryCodeOrReturnCountryName(countryName));
 
                 Map<String, String> queryIndexes = ImmutableMap.of("id", (String) document.get("id"), "eori", (String) document.get("eori"));
                 BasicDBObject objectToBeUpdated = new BasicDBObject(queryIndexes);
