@@ -18,7 +18,13 @@ package uk.gov.hmrc.exports.mongock.changesets;
 
 import com.github.cloudyrock.mongock.ChangeLog;
 import com.github.cloudyrock.mongock.ChangeSet;
+import com.mongodb.BasicDBObject;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
+import uk.gov.hmrc.exports.services.CountriesService;
+
+import java.util.Map;
 
 @ChangeLog
 public class CacheChangelog {
@@ -26,5 +32,28 @@ public class CacheChangelog {
 
     @ChangeSet(order = "001", id = "Exports DB Baseline", author = "Paulo Monteiro")
     public void dbBaseline(MongoDatabase db) {
+    }
+
+    @ChangeSet(order = "002", id = "CEDS-2231 Change country name to country code for location page", author = "Patryk Rudnicki")
+    public void updateAllCountriesNameToCodesForLocationPage(MongoDatabase db) {
+        Document query = new Document();
+        CountriesService service = new CountriesService();
+
+        FindIterable<Document> documents = db.getCollection(collection).find(new BasicDBObject(query));
+
+        for (Document document : documents) {
+            if (document.get("locations") != null &&
+                ((Map) document.get("locations")).get("goodsLocation") != null &&
+                ((Map) ((Map) document.get("locations")).get("goodsLocation")).get("country") != null) {
+
+                String countryName = (String) ((Map) ((Map) document.get("locations")).get("goodsLocation")).get("country");
+
+                ((Map) ((Map) document.get("locations")).get("goodsLocation")).put("country", service.findCountryCode(countryName));
+
+                BasicDBObject objectToBeUpdated = new BasicDBObject(new Document("id", document.get("id")));
+
+                db.getCollection(collection).replaceOne(objectToBeUpdated, document);
+            }
+        }
     }
 }

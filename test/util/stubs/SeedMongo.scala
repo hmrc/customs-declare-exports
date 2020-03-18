@@ -49,16 +49,7 @@ object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuil
     withDestinationCountry(),
     withoutRoutingCountries(),
     withGoodsLocation(
-      GoodsLocation(
-        country = "Angola including Cabinda",
-        typeOfLocation = "B",
-        qualifierOfIdentification = "Y",
-        identificationOfLocation = Some("FXT"),
-        additionalIdentifier = None,
-        addressLine = None,
-        postCode = None,
-        city = None
-      )
+      GoodsLocation(country = "GB", typeOfLocation = "B", qualifierOfIdentification = "Y", identificationOfLocation = Some("FXTFXTFXT"))
     ),
     withWarehouseIdentification("RGBLBA001"),
     withSupervisingCustomsOffice("Belfast"),
