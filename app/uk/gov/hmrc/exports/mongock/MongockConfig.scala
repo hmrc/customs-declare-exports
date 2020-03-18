@@ -28,7 +28,6 @@ case class MongockConfig(mongoURI: String) {
   val client = new MongoClient(uri)
 
   val runner = new MongockBuilder(client, uri.getDatabase, "uk.gov.hmrc.exports.mongock.changesets")
-    .setLockQuickConfig()
     .build()
 
   runner.execute()

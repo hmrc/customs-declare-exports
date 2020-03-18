@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.mongock.changesets;
 
 import com.github.cloudyrock.mongock.ChangeLog;
 import com.github.cloudyrock.mongock.ChangeSet;
+import com.google.common.collect.ImmutableMap;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoDatabase;
@@ -50,7 +51,8 @@ public class CacheChangelog {
 
                 ((Map) ((Map) document.get("locations")).get("goodsLocation")).put("country", service.findCountryCode(countryName));
 
-                BasicDBObject objectToBeUpdated = new BasicDBObject(new Document("id", document.get("id")));
+                Map<String, String> queryIndexes = ImmutableMap.of("id", (String) document.get("id"), "eori", (String) document.get("eori"));
+                BasicDBObject objectToBeUpdated = new BasicDBObject(queryIndexes);
 
                 db.getCollection(collection).replaceOne(objectToBeUpdated, document);
             }
