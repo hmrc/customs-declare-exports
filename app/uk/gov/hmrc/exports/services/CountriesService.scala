@@ -41,7 +41,5 @@ class CountriesService @Inject()() {
 
   private def countryCode: String => String = cc => cc.split(":")(1).trim
 
-  def findCountryCode(countryName: String): String = allCountries.find(_.countryName == countryName).map(_.countryCode).getOrElse("")
-
   val allCountries: List[Country] = countries
 }

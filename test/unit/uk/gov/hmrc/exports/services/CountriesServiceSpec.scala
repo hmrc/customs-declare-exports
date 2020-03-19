@@ -21,10 +21,12 @@ import uk.gov.hmrc.exports.models.Country
 
 class CountriesServiceSpec extends WordSpec with MustMatchers {
 
+  val countriesService = new CountriesService()
+
   "Countries" should {
 
     "give all countries with codes in alphabetical order of country name" in {
-      val countriesService = new CountriesService()
+
       val threeCountries =
         countriesService.allCountries.filter(c => c.countryName == "Afghanistan" || c.countryName == "Mayotte" || c.countryName == "Zimbabwe")
       threeCountries mustBe List(Country("Afghanistan", "AF"), Country("Mayotte", "YT"), Country("Zimbabwe", "ZW"))
