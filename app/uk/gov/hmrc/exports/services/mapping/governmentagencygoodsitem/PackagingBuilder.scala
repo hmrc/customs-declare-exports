@@ -32,22 +32,33 @@ class PackagingBuilder @Inject()() extends ModifyingBuilder[ExportItem, GoodsShi
           .add(createWcoPackaging(index, packing.typesOfPackages, packing.numberOfPackages, packing.shippingMarks))
     }
 
-  private def createWcoPackaging(sequenceNumeric: Int, typeCode: String, quantity: Int, markNumber: String): Packaging = {
+  private def createWcoPackaging(
+    sequenceNumeric: Int,
+    typeCodeOpt: Option[String],
+    quantityOpt: Option[Int],
+    markNumberOpt: Option[String]
+  ): Packaging = {
     val wcoPackaging = new Packaging
 
-    val packagingTypeCodeType = new PackagingTypeCodeType
-    packagingTypeCodeType.setValue(typeCode)
-    wcoPackaging.setTypeCode(packagingTypeCodeType)
+    typeCodeOpt.foreach { typeCode =>
+      val packagingTypeCodeType = new PackagingTypeCodeType
+      packagingTypeCodeType.setValue(typeCode)
+      wcoPackaging.setTypeCode(packagingTypeCodeType)
+    }
 
-    val packagingQuantityQuantityType = new PackagingQuantityQuantityType
-    //TODO noticed here that quantity type in old scala wco is not captured.. no cannot set :-
-    // packagingQuantityQuantityType.setUnitCode(????)
-    packagingQuantityQuantityType.setValue(new java.math.BigDecimal(quantity))
-    wcoPackaging.setQuantityQuantity(packagingQuantityQuantityType)
+    quantityOpt.foreach { quantity =>
+      val packagingQuantityQuantityType = new PackagingQuantityQuantityType
+      //TODO noticed here that quantity type in old scala wco is not captured.. no cannot set :-
+      // packagingQuantityQuantityType.setUnitCode(????)
+      packagingQuantityQuantityType.setValue(new java.math.BigDecimal(quantity))
+      wcoPackaging.setQuantityQuantity(packagingQuantityQuantityType)
+    }
 
-    val packagingMarksNumbersIDType = new PackagingMarksNumbersIDType
-    packagingMarksNumbersIDType.setValue(markNumber)
-    wcoPackaging.setMarksNumbersID(packagingMarksNumbersIDType)
+    markNumberOpt.foreach { markNumber =>
+      val packagingMarksNumbersIDType = new PackagingMarksNumbersIDType
+      packagingMarksNumbersIDType.setValue(markNumber)
+      wcoPackaging.setMarksNumbersID(packagingMarksNumbersIDType)
+    }
 
     wcoPackaging.setSequenceNumeric(new java.math.BigDecimal(sequenceNumeric))
 

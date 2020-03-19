@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
+package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.PackagingBuilder
 import unit.uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class PackagingBuilderSpec extends WordSpec with Matchers with ExportsItemBuilder {
 
+  private def builder = new PackagingBuilder()
+
   "PackageBuilder" should {
 
     "build then add" when {
+
       "empty list" in {
         val model = anItem(withoutPackageInformation())
         val wcoItem = new GoodsShipment.GovernmentAgencyGoodsItem()
@@ -36,7 +38,7 @@ class PackagingBuilderSpec extends WordSpec with Matchers with ExportsItemBuilde
       }
 
       "populated list" in {
-        val model = anItem(withPackageInformation("types", 123, "marks"))
+        val model = anItem(withPackageInformation(Some("types"), Some(123), Some("marks")))
         val wcoItem = new GoodsShipment.GovernmentAgencyGoodsItem()
 
         builder.buildThenAdd(model, wcoItem)
@@ -50,5 +52,4 @@ class PackagingBuilderSpec extends WordSpec with Matchers with ExportsItemBuilde
     }
   }
 
-  private def builder = new PackagingBuilder()
 }

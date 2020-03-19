@@ -71,7 +71,11 @@ trait ExportsItemBuilder {
   def withPackageInformation(informations: List[PackageInformation]): ItemModifier =
     _.copy(packageInformation = Some(informations))
 
-  def withPackageInformation(typesOfPackages: String = "", numberOfPackages: Int = 0, shippingMarks: String = ""): ItemModifier =
+  def withPackageInformation(
+    typesOfPackages: Option[String] = None,
+    numberOfPackages: Option[Int] = None,
+    shippingMarks: Option[String] = None
+  ): ItemModifier =
     cache =>
       cache.copy(
         packageInformation =
