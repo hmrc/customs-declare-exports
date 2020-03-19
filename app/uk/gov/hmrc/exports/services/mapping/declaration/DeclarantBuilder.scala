@@ -17,14 +17,13 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{Address, DeclarantDetails, ExportsDeclaration}
-import uk.gov.hmrc.exports.services.CountriesService
+import uk.gov.hmrc.exports.models.declaration.{DeclarantDetails, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.Declarant
 import wco.datamodel.wco.declaration_ds.dms._2.{DeclarantIdentificationIDType, _}
 
-class DeclarantBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class DeclarantBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
     model.parties.declarantDetails
@@ -36,52 +35,16 @@ class DeclarantBuilder @Inject()(countriesService: CountriesService) extends Mod
 
     val declarant = new Declarant
 
-    declarantDetails.details.eori match {
-      case Some(eori) if eori.nonEmpty =>
+    declarantDetails.details.flatMap(_.eori).foreach { eori =>
+      if (eori.nonEmpty) {
         val declarantIdentificationIDType = new DeclarantIdentificationIDType
         declarantIdentificationIDType.setValue(eori)
         declarant.setID(declarantIdentificationIDType)
-      case _ =>
-        declarantDetails.details.address.foreach(address => {
-          val declarantNameTextType = new DeclarantNameTextType
-          declarantNameTextType.setValue(address.fullName)
-          declarant.setName(declarantNameTextType)
-          declarant.setAddress(mapAddress(address))
-        })
+      }
     }
 
     declarant
   }
 
-  private def mapAddress(address: Address): Declarant.Address = {
-    val declarantAddress = new Declarant.Address
-
-    val addressLineTextType = new AddressLineTextType
-    addressLineTextType.setValue(address.addressLine)
-
-    val addressCityNameTextType = new AddressCityNameTextType
-    addressCityNameTextType.setValue(address.townOrCity)
-
-    val addressPostcodeIDType = new AddressPostcodeIDType
-    addressPostcodeIDType.setValue(address.postCode)
-
-    val addressCountryCodeType = new AddressCountryCodeType
-    addressCountryCodeType.setValue(deriveCountryCode(address.country))
-
-    declarantAddress.setLine(addressLineTextType)
-    declarantAddress.setCityName(addressCityNameTextType)
-    declarantAddress.setPostcodeID(addressPostcodeIDType)
-    declarantAddress.setCountryCode(addressCountryCodeType)
-
-    declarantAddress
-  }
-
-  private def deriveCountryCode(addressCountry: String): String =
-    countriesService.allCountries
-      .find(country => addressCountry.contains(country.countryName))
-      .map(_.countryCode)
-      .getOrElse("")
-
-  private def isDefined(declarantDetails: DeclarantDetails): Boolean =
-    declarantDetails.details.eori.isDefined || declarantDetails.details.address.isDefined
+  private def isDefined(declarantDetails: DeclarantDetails): Boolean = declarantDetails.details.flatMap(_.eori).isDefined
 }

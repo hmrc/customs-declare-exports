@@ -134,8 +134,11 @@ trait ExportsDeclarationBuilder {
   def withoutDeclarantDetails(): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(declarantDetails = None))
 
-  def withDeclarantDetails(eori: Option[String] = None, address: Option[Address] = None): ExportsDeclarationModifier =
-    cache => cache.copy(parties = cache.parties.copy(declarantDetails = Some(DeclarantDetails(EntityDetails(eori, address)))))
+  def withEmptyDeclarantDetails(): ExportsDeclarationModifier =
+    cache => cache.copy(parties = cache.parties.copy(declarantDetails = Some(DeclarantDetails(None))))
+
+  def withDeclarantDetails(eori: Option[String] = None): ExportsDeclarationModifier =
+    cache => cache.copy(parties = cache.parties.copy(declarantDetails = Some(DeclarantDetails(Some(EntityDetails(eori, None))))))
 
   def withoutRepresentativeDetails(): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(representativeDetails = None))

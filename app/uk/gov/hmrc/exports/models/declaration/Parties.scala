@@ -19,31 +19,37 @@ package uk.gov.hmrc.exports.models.declaration
 import play.api.libs.json.{Json, OFormat}
 
 case class EntityDetails(eori: Option[String], address: Option[Address])
+
 object EntityDetails {
   implicit val format: OFormat[EntityDetails] = Json.format[EntityDetails]
 }
 
 case class Address(fullName: String, addressLine: String, townOrCity: String, postCode: String, country: String)
+
 object Address {
   implicit val format: OFormat[Address] = Json.format[Address]
 }
 
 case class ExporterDetails(details: EntityDetails)
+
 object ExporterDetails {
   implicit val format: OFormat[ExporterDetails] = Json.format[ExporterDetails]
 }
 
 case class ConsigneeDetails(details: EntityDetails)
+
 object ConsigneeDetails {
   implicit val format: OFormat[ConsigneeDetails] = Json.format[ConsigneeDetails]
 }
 
-case class DeclarantDetails(details: EntityDetails)
+case class DeclarantDetails(details: Option[EntityDetails])
+
 object DeclarantDetails {
   implicit val format: OFormat[DeclarantDetails] = Json.format[DeclarantDetails]
 }
 
 case class RepresentativeDetails(details: Option[EntityDetails], statusCode: Option[String])
+
 object RepresentativeDetails {
   implicit val format: OFormat[RepresentativeDetails] = Json.format[RepresentativeDetails]
   val Declarant = "1"
@@ -52,11 +58,13 @@ object RepresentativeDetails {
 }
 
 case class DeclarationAdditionalActors(actors: Seq[DeclarationAdditionalActor])
+
 object DeclarationAdditionalActors {
   implicit val format: OFormat[DeclarationAdditionalActors] = Json.format[DeclarationAdditionalActors]
 }
 
 case class DeclarationAdditionalActor(eori: Option[String], partyType: Option[String])
+
 object DeclarationAdditionalActor {
   implicit val format: OFormat[DeclarationAdditionalActor] = Json.format[DeclarationAdditionalActor]
 }

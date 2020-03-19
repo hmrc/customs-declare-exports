@@ -16,75 +16,57 @@
 
 package unit.uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.mockito.Mockito.when
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
-import uk.gov.hmrc.exports.models.Country
-import uk.gov.hmrc.exports.models.declaration.Address
-import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.declaration.DeclarantBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
 
-  val mockCountriesService = mock[CountriesService]
-  when(mockCountriesService.allCountries)
-    .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
+  private def builder = new DeclarantBuilder()
 
   "DeclarantBuilder" should {
 
     "build then add" when {
+
       "no declarant details" in {
         val model = aDeclaration(withoutDeclarantDetails())
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getDeclarant should be(null)
+        declaration.getDeclarant shouldBe null
+      }
+
+      "empty declarant details" in {
+
+        val model = aDeclaration(withEmptyDeclarantDetails())
+        val declaration = new Declaration()
+
+        builder.buildThenAdd(model, declaration)
+
+        declaration.getDeclarant shouldBe null
       }
 
       "no eori" in {
-        val model = aDeclaration(withDeclarantDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))))
+        val model = aDeclaration(withDeclarantDetails(eori = None))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getDeclarant.getID should be(null)
-      }
-
-      "no address" in {
-        val model = aDeclaration(withDeclarantDetails(eori = Some("eori"), address = None))
-        val declaration = new Declaration()
-
-        builder.buildThenAdd(model, declaration)
-
-        declaration.getDeclarant.getAddress should be(null)
-      }
-
-      "unknown country" in {
-        val model = aDeclaration(withDeclarantDetails(eori = Some(""), address = Some(Address("name", "line", "city", "postcode", "unknown"))))
-        val declaration = new Declaration()
-
-        builder.buildThenAdd(model, declaration)
-
-        declaration.getDeclarant.getID should be(null)
-        declaration.getDeclarant.getAddress.getCountryCode.getValue should be("")
+        declaration.getDeclarant shouldBe null
       }
 
       "populated" in {
         val model =
-          aDeclaration(withDeclarantDetails(eori = Some("eori"), address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))))
+          aDeclaration(withDeclarantDetails(eori = Some("eori")))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getDeclarant.getID.getValue should be("eori")
-        declaration.getDeclarant.getAddress should be(null)
-        declaration.getDeclarant.getName should be(null)
+        declaration.getDeclarant.getID.getValue shouldBe "eori"
       }
     }
   }
-
-  private def builder = new DeclarantBuilder(mockCountriesService)
 }
