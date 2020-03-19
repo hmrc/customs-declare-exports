@@ -26,7 +26,7 @@ import org.bson.Document
 import uk.gov.hmrc.exports.services.CountriesService
 
 @ChangeLog
-class ScalaCacheChangeLog {
+class CacheChangeLog {
 
   private val collection = "declarations"
 
@@ -34,31 +34,38 @@ class ScalaCacheChangeLog {
   def dbBaseline(db: MongoDatabase): Unit = {}
 
   @ChangeSet(order = "002", id = "CEDS-2231 Change country name to country code for location page", author = "Patryk Rudnicki")
-  def updateAllCountriesNameToCodesForLocationPage(db: MongoDatabase) = {
-    val queryParams: ImmutableMap[String, AnyRef] = ImmutableMap.of("locations.goodsLocation.country", ImmutableMap.of("$exists", true, "$ne", ""))
+  def updateAllCountriesNameToCodesForLocationPage(db: MongoDatabase): Unit = {
+    val queryParams: ImmutableMap[String, AnyRef] =
+      ImmutableMap.of("locations.goodsLocation.country", ImmutableMap.of("$exists", true, "$ne", ""))
     val query: Document = new Document(queryParams)
-    val service: CountriesService = new CountriesService
 
     import scala.collection.JavaConversions._
-    val documents = db.getCollection(collection).find(new BasicDBObject(query)).toSeq
-    documents.foreach { document =>
-      val countryName: String = document
-        .get("locations", classOf[Map[String, Map[String, String]]])
-        .get("goodsLocation")
-        .asInstanceOf[Map[String, String]]
-        .get("country")
 
-      document
+    val documents = db.getCollection(collection).find(new BasicDBObject(query)).toSeq
+
+    documents.foreach { document =>
+      val goodsLocation = document
         .get("locations", classOf[Map[String, Map[String, String]]])
         .get("goodsLocation")
         .asInstanceOf[Map[String, String]]
-        .put("country", service.findCountryCodeOrReturnCountryName(countryName))
+
+      val countryName: String = goodsLocation.get("country")
+
+      goodsLocation.put("country", findCountryCode(countryName))
 
       // update document on MongoDB
       val queryIndexes: Map[String, String] =
         ImmutableMap.of("id", document.get("id").asInstanceOf[String], "eori", document.get("eori").asInstanceOf[String])
+
       val objectToBeUpdated: BasicDBObject = new BasicDBObject(queryIndexes)
+
       db.getCollection(collection).replaceOne(objectToBeUpdated, document)
     }
+  }
+
+  private def findCountryCode(countryName: String): String = {
+    val service: CountriesService = new CountriesService
+
+    service.allCountries.find(_.countryName == countryName).map(_.countryCode).getOrElse(countryName)
   }
 }

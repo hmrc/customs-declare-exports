@@ -31,15 +31,5 @@ class CountriesServiceSpec extends WordSpec with MustMatchers {
         countriesService.allCountries.filter(c => c.countryName == "Afghanistan" || c.countryName == "Mayotte" || c.countryName == "Zimbabwe")
       threeCountries mustBe List(Country("Afghanistan", "AF"), Country("Mayotte", "YT"), Country("Zimbabwe", "ZW"))
     }
-
-    "should return country code if input is a correct country name" in {
-
-      countriesService.findCountryCodeOrReturnCountryName("France") mustBe "FR"
-    }
-
-    "should return input country name without any changes if country doesn't exist" in {
-
-      countriesService.findCountryCodeOrReturnCountryName("Country") mustBe "Country"
-    }
   }
 }
