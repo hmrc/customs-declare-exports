@@ -19,9 +19,9 @@ package stubs
 import java.util.UUID
 
 import reactivemongo.api.{MongoConnection, MongoDriver}
+import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.models.declaration._
 import unit.uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
-import testdata.ExportsDeclarationBuilder
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -60,7 +60,7 @@ object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuil
         withProcedureCodes(Some("1040"), Seq("000")),
         withStatisticalValue(statisticalValue = "1000"),
         withCommodityDetails(CommodityDetails(combinedNomenclatureCode = Some("46021910"), descriptionOfGoods = "Straw for bottles")),
-        withPackageInformation("PK", 10, "RICH123"),
+        withPackageInformation(Some("PK"), Some(10), Some("RICH123")),
         withCommodityMeasure(CommodityMeasure(Some("10"), Some("500"), Some("700"))),
         withAdditionalInformation("00400", "EXPORTER"),
         withDocumentsProduced(DocumentProduced(Some("C501"), Some("GBAEOC71757250450281"), None, None, None, None, None))

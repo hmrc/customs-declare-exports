@@ -95,7 +95,7 @@ object IdentificationTypeCodes {
   }
 }
 
-case class PackageInformation(typesOfPackages: String, numberOfPackages: Int, shippingMarks: String)
+case class PackageInformation(typesOfPackages: Option[String], numberOfPackages: Option[Int], shippingMarks: Option[String])
 object PackageInformation {
   implicit val format: OFormat[PackageInformation] = Json.format[PackageInformation]
 }
@@ -105,7 +105,7 @@ object CommodityMeasure {
   implicit val format: OFormat[CommodityMeasure] = Json.format[CommodityMeasure]
 }
 
-case class AdditionalInformation(code: String, description: String) {}
+case class AdditionalInformation(code: String, description: String)
 object AdditionalInformation {
   implicit val format: OFormat[AdditionalInformation] = Json.format[AdditionalInformation]
 }
