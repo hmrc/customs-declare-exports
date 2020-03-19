@@ -68,14 +68,16 @@ class GovernmentAgencyGoodsItemBuilderSpec
             withCommodityMeasure(CommodityMeasure(Some("2"), Some("90"), Some("100"))),
             withAdditionalFiscalReferenceData(AdditionalFiscalReferences(Seq(AdditionalFiscalReference("GB", "reference")))),
             withStatisticalValue(statisticalValue = "123"),
-            withCommodityDetails(CommodityDetails(combinedNomenclatureCode = Some("classificationsId"), descriptionOfGoods = "commodityDescription"))
+            withCommodityDetails(
+              CommodityDetails(combinedNomenclatureCode = Some("classificationsId"), descriptionOfGoods = Some("commodityDescription"))
+            )
           )
           val exportsDeclaration =
             aDeclaration(withType(declarationType), withItem(exportItem), withOfficeOfExit(presentationOfficeId = Some("id")))
 
           when(mockCachingMappingHelper.mapGoodsMeasure(any[CommodityMeasure]))
             .thenReturn(Some(Commodity(description = Some("Some Commodity"))))
-          when(mockCachingMappingHelper.commodityFromExportItem(any[ExportItem])).thenReturn(Commodity(description = Some("Some Commodity")))
+          when(mockCachingMappingHelper.commodityFromExportItem(any[ExportItem])).thenReturn(Some(Commodity(description = Some("Some Commodity"))))
 
           val goodsShipment = new GoodsShipment
           builder.buildThenAdd(exportsDeclaration, goodsShipment)
@@ -103,14 +105,16 @@ class GovernmentAgencyGoodsItemBuilderSpec
             withCommodityMeasure(CommodityMeasure(Some("2"), Some("90"), Some("100"))),
             withAdditionalFiscalReferenceData(AdditionalFiscalReferences(Seq(AdditionalFiscalReference("GB", "reference")))),
             withStatisticalValue(statisticalValue = "123"),
-            withCommodityDetails(CommodityDetails(combinedNomenclatureCode = Some("classificationsId"), descriptionOfGoods = "commodityDescription"))
+            withCommodityDetails(
+              CommodityDetails(combinedNomenclatureCode = Some("classificationsId"), descriptionOfGoods = Some("commodityDescription"))
+            )
           )
           val exportsDeclaration =
             aDeclaration(withType(declarationType), withItem(exportItem), withOfficeOfExit(presentationOfficeId = Some("id")))
 
           when(mockCachingMappingHelper.mapGoodsMeasure(any[CommodityMeasure]))
             .thenReturn(Some(Commodity(description = Some("Some Commodity"))))
-          when(mockCachingMappingHelper.commodityFromExportItem(any[ExportItem])).thenReturn(Commodity(description = Some("Some Commodity")))
+          when(mockCachingMappingHelper.commodityFromExportItem(any[ExportItem])).thenReturn(Some(Commodity(description = Some("Some Commodity"))))
 
           val goodsShipment = new GoodsShipment
           builder.buildThenAdd(exportsDeclaration, goodsShipment)

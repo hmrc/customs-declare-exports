@@ -43,7 +43,7 @@ object AdditionalFiscalReferences {
   implicit val format: OFormat[AdditionalFiscalReferences] = Json.format[AdditionalFiscalReferences]
 }
 
-case class CommodityDetails(combinedNomenclatureCode: Option[String], descriptionOfGoods: String)
+case class CommodityDetails(combinedNomenclatureCode: Option[String], descriptionOfGoods: Option[String])
 object CommodityDetails {
   implicit val format: OFormat[CommodityDetails] = Json.format[CommodityDetails]
 }
