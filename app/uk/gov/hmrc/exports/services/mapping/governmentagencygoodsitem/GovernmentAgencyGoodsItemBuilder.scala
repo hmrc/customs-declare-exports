@@ -72,7 +72,7 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
     combinedCommodity.foreach(commodityBuilder.buildThenAdd(_, wcoGovernmentAgencyGoodsItem))
   }
   private def mapExportItemToCommodity(exportItem: ExportItem): Option[Commodity] =
-    exportItem.commodityDetails.map(_ => cachingMappingHelper.commodityFromExportItem(exportItem))
+    exportItem.commodityDetails.flatMap(_ => cachingMappingHelper.commodityFromExportItem(exportItem))
 
   private def mapCommodityMeasureToCommodity(commodityMeasure: Option[CommodityMeasure], declarationType: DeclarationType): Option[Commodity] =
     if (journeysWithCommodityMeasurements.contains(declarationType)) {

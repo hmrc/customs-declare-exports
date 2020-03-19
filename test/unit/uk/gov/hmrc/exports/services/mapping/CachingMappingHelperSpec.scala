@@ -19,6 +19,7 @@ package unit.uk.gov.hmrc.exports.services.mapping
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper
+import uk.gov.hmrc.wco.dec.DangerousGoods
 
 class CachingMappingHelperSpec extends WordSpec with Matchers {
 
@@ -56,14 +57,14 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
         val exportItem = ExportItem(
           "id",
           statisticalValue = Some(StatisticalValue("10")),
-          commodityDetails = Some(CommodityDetails(Some("commodityCode"), "description")),
+          commodityDetails = Some(CommodityDetails(Some("commodityCode"), Some("description"))),
           dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("unDangerousGoodsCode"))),
           cusCode = Some(CUSCode(Some("cusCode"))),
           taricCodes = Some(List(TaricCode("taricAdditionalCodes"))),
           nactCodes = Some(List(NactCode("nationalAdditionalCodes")))
         )
 
-        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem)
+        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
 
         commodity.description shouldBe Some("description")
         commodity.dangerousGoods.size shouldBe 1
@@ -77,9 +78,9 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
       }
 
       "Only commodity code and description provided" in {
-        val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(Some("commodityCode"), "description")))
+        val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(Some("commodityCode"), Some("description"))))
 
-        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem)
+        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
 
         commodity.description shouldBe Some("description")
         commodity.dangerousGoods shouldBe Seq.empty
@@ -88,20 +89,46 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
       }
 
       "Only commodity description stripped of new lines" in {
-        val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(None, s"description with\na new\r\nline")))
-        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem)
+        val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(None, Some(s"description with\na new\r\nline"))))
+        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
         commodity.description shouldBe Some("description with a new line")
       }
 
       "Only description provided" in {
-        val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(None, "description")))
+        val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(None, Some("description"))))
 
-        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem)
+        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
 
         commodity.description shouldBe Some("description")
         commodity.dangerousGoods shouldBe Seq.empty
 
         commodity.classifications shouldBe Seq.empty
+      }
+
+      "No commodity code or description provided" in {
+        val exportItem = ExportItem("id", commodityDetails = None)
+
+        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem)
+
+        commodity shouldBe None
+      }
+
+      "No commodity code or description provided, but cusCode and dangerousGoods provided" in {
+        val exportItem = ExportItem(
+          "id",
+          commodityDetails = None,
+          cusCode = Some(CUSCode(Some("cusCode"))),
+          dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("dangerousCode")))
+        )
+
+        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
+
+        commodity.description shouldBe None
+        commodity.dangerousGoods.size shouldBe 1
+        commodity.dangerousGoods.head.undgid shouldBe Some("dangerousCode")
+
+        commodity.classifications.size shouldBe 1
+        commodity.classifications.head.id shouldBe Some("cusCode")
       }
 
     }

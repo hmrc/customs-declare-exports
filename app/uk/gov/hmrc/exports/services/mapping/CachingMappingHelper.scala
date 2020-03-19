@@ -23,20 +23,25 @@ import uk.gov.hmrc.wco.dec._
 class CachingMappingHelper {
   val defaultMeasureCode = "KGM"
 
-  def commodityFromExportItem(exportItem: ExportItem): Commodity = {
-    def removeCarriageReturns(description: String): String = description.replaceAll("(\\r\\n)|\\r|\\n", " ")
+  def commodityFromExportItem(exportItem: ExportItem): Option[Commodity] = {
+    def removeCarriageReturns(description: Option[String]): Option[String] = description.map(_.replaceAll("(\\r\\n)|\\r|\\n", " "))
 
-    Commodity(
-      description = exportItem.commodityDetails.map(commodityDetails => removeCarriageReturns((commodityDetails.descriptionOfGoods))),
-      classifications = getClassifications(
-        exportItem.commodityDetails.flatMap(_.combinedNomenclatureCode),
-        exportItem.cusCode.flatMap(_.cusCode),
-        exportItem.nactCodes.map(_.map(_.nactCode)).getOrElse(List.empty),
-        exportItem.taricCodes.map(_.map(_.taricCode)).getOrElse(List.empty)
-      ),
-      dangerousGoods = exportItem.dangerousGoodsCode.flatMap(_.dangerousGoodsCode).map(code => Seq(DangerousGoods(Some(code)))).getOrElse(Seq.empty)
-    )
+    Some(
+      Commodity(
+        description = exportItem.commodityDetails.flatMap(commodityDetails => removeCarriageReturns(commodityDetails.descriptionOfGoods)),
+        classifications = getClassifications(
+          exportItem.commodityDetails.flatMap(_.combinedNomenclatureCode),
+          exportItem.cusCode.flatMap(_.cusCode),
+          exportItem.nactCodes.map(_.map(_.nactCode)).getOrElse(List.empty),
+          exportItem.taricCodes.map(_.map(_.taricCode)).getOrElse(List.empty)
+        ),
+        dangerousGoods = exportItem.dangerousGoodsCode.flatMap(_.dangerousGoodsCode).map(code => Seq(DangerousGoods(Some(code)))).getOrElse(Seq.empty)
+      )
+    ).filter(isCommodityNonEmpty)
   }
+
+  private def isCommodityNonEmpty(commodity: Commodity): Boolean =
+    commodity.classifications.nonEmpty || commodity.dangerousGoods.nonEmpty || commodity.description.nonEmpty
 
   private def getClassifications(
     commodityCode: Option[String],
@@ -65,5 +70,4 @@ class CachingMappingHelper {
     } catch {
       case _: NumberFormatException => Measure(Some(defaultMeasureCode), value = Some(BigDecimal(0)))
     }
-
 }
