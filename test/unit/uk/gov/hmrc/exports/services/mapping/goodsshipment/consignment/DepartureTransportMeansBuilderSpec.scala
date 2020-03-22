@@ -17,9 +17,9 @@
 package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.declaration.{DepartureTransport, InlandModeOfTransportCode, Transport}
-import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.DepartureTransportMeansBuilder
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.models.declaration.{InlandModeOfTransportCode, Transport}
+import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.DepartureTransportMeansBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class DepartureTransportMeansBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
@@ -45,6 +45,31 @@ class DepartureTransportMeansBuilderSpec extends WordSpec with Matchers with Exp
       val departureTransportMeans = consignment.getDepartureTransportMeans
       departureTransportMeans.getID.getValue shouldBe meansOfTransportOnDepartureIDNumber
       departureTransportMeans.getIdentificationTypeCode.getValue shouldBe meansOfTransportOnDepartureType
+      departureTransportMeans.getModeCode.getValue shouldBe inlandModeOfTransport
+      departureTransportMeans.getName shouldBe null
+      departureTransportMeans.getTypeCode shouldBe null
+    }
+
+    "not map inapplicable DepartureTransportMeans" in {
+      val borderModeOfTransportCode = "BCode"
+      val meansOfTransportOnDepartureType = Transport.optionNone
+      val meansOfTransportOnDepartureIDNumber = "ignore"
+      val inlandModeOfTransport = "1"
+
+      val builder = new DepartureTransportMeansBuilder
+
+      val transport = Transport(
+        borderModeOfTransportCode = Some(borderModeOfTransportCode),
+        meansOfTransportOnDepartureType = Some(meansOfTransportOnDepartureType),
+        meansOfTransportOnDepartureIDNumber = Some(meansOfTransportOnDepartureIDNumber)
+      )
+
+      val consignment = new GoodsShipment.Consignment
+      builder.buildThenAdd(transport, Some(InlandModeOfTransportCode(Some(inlandModeOfTransport))), consignment)
+
+      val departureTransportMeans = consignment.getDepartureTransportMeans
+      departureTransportMeans.getID shouldBe null
+      departureTransportMeans.getIdentificationTypeCode shouldBe null
       departureTransportMeans.getModeCode.getValue shouldBe inlandModeOfTransport
       departureTransportMeans.getName shouldBe null
       departureTransportMeans.getTypeCode shouldBe null

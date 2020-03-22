@@ -42,4 +42,7 @@ case class Transport(
 
 object Transport {
   implicit val format: OFormat[Transport] = Json.format[Transport]
+
+  val optionNone = "option_none"
+  def typeApplicable(value: String): Boolean = value != optionNone
 }
