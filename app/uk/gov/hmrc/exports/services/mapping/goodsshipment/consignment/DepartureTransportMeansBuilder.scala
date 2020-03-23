@@ -44,17 +44,17 @@ class DepartureTransportMeansBuilder @Inject()() {
       departureTransportMeans.setModeCode(modeCodeType)
     }
 
-    transport.meansOfTransportOnDepartureType.foreach { transportType =>
-      if (Transport.typeApplicable(transportType)) {
-        val identificationTypeCode = new DepartureTransportMeansIdentificationTypeCodeType()
-        identificationTypeCode.setValue(transportType)
-        departureTransportMeans.setIdentificationTypeCode(identificationTypeCode)
+    if (transport.isMeansOfTransportOnDepartureDefined) {
+      transport.meansOfTransportOnDepartureIDNumber.foreach { value =>
+        val id = new DepartureTransportMeansIdentificationIDType()
+        id.setValue(value)
+        departureTransportMeans.setID(id)
+      }
 
-        transport.meansOfTransportOnDepartureIDNumber.foreach { value =>
-          val id = new DepartureTransportMeansIdentificationIDType()
-          id.setValue(value)
-          departureTransportMeans.setID(id)
-        }
+      transport.meansOfTransportOnDepartureType.foreach { value =>
+        val identificationTypeCode = new DepartureTransportMeansIdentificationTypeCodeType()
+        identificationTypeCode.setValue(value)
+        departureTransportMeans.setIdentificationTypeCode(identificationTypeCode)
       }
     }
 
