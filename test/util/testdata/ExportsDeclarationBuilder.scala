@@ -163,17 +163,20 @@ trait ExportsDeclarationBuilder {
 
   def withoutOriginationCountry(): ExportsDeclarationModifier = cache => cache.copy(locations = cache.locations.copy(originationCountry = None))
 
-  def withOriginationCountry(country: String = "GB"): ExportsDeclarationModifier =
+  def withOriginationCountry(country: Country = Country(Some("GB"))): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(originationCountry = Some(country)))
 
   def withoutDestinationCountry(): ExportsDeclarationModifier = cache => cache.copy(locations = cache.locations.copy(destinationCountry = None))
 
-  def withDestinationCountry(country: String = "GB"): ExportsDeclarationModifier =
+  def withEmptyDestinationCountry(): ExportsDeclarationModifier =
+    cache => cache.copy(locations = cache.locations.copy(destinationCountry = Some(Country(None))))
+
+  def withDestinationCountry(country: Country = Country(Some("GB"))): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(destinationCountry = Some(country)))
 
   def withoutRoutingCountries(): ExportsDeclarationModifier = cache => cache.copy(locations = cache.locations.copy(routingCountries = Seq.empty))
 
-  def withRoutingCountries(countries: Seq[String] = Seq("GB", "PL")): ExportsDeclarationModifier =
+  def withRoutingCountries(countries: Seq[Country] = Seq(Country(Some("GB")), Country(Some("PL")))): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(routingCountries = countries))
 
   def withoutGoodsLocation(): ExportsDeclarationModifier =

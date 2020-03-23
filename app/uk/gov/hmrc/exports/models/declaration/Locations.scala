@@ -18,42 +18,54 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 
+case class Country(code: Option[String])
+
+object Country {
+  implicit val format = Json.format[Country]
+}
+
 case class GoodsLocation(country: String, typeOfLocation: String, qualifierOfIdentification: String, identificationOfLocation: Option[String])
+
 object GoodsLocation {
   implicit val format: OFormat[GoodsLocation] = Json.format[GoodsLocation]
 }
 
 case class OfficeOfExit(officeId: Option[String], presentationOfficeId: Option[String], circumstancesCode: Option[String])
+
 object OfficeOfExit {
   implicit val format: OFormat[OfficeOfExit] = Json.format[OfficeOfExit]
 }
 
 case class WarehouseIdentification(identificationNumber: Option[String])
+
 object WarehouseIdentification {
   implicit val format = Json.format[WarehouseIdentification]
 }
 
 case class SupervisingCustomsOffice(supervisingCustomsOffice: Option[String])
+
 object SupervisingCustomsOffice {
   implicit val format = Json.format[SupervisingCustomsOffice]
 }
 
 case class InlandModeOfTransportCode(inlandModeOfTransportCode: Option[String])
+
 object InlandModeOfTransportCode {
   implicit val format = Json.format[InlandModeOfTransportCode]
 }
 
 case class Locations(
-  originationCountry: Option[String] = None,
-  destinationCountry: Option[String] = None,
+  originationCountry: Option[Country] = None,
+  destinationCountry: Option[Country] = None,
   hasRoutingCountries: Option[Boolean] = None,
-  routingCountries: Seq[String] = Seq.empty,
+  routingCountries: Seq[Country] = Seq.empty,
   goodsLocation: Option[GoodsLocation] = None,
   officeOfExit: Option[OfficeOfExit] = None,
   supervisingCustomsOffice: Option[SupervisingCustomsOffice] = None,
   warehouseIdentification: Option[WarehouseIdentification] = None,
   inlandModeOfTransportCode: Option[InlandModeOfTransportCode] = None
 )
+
 object Locations {
   implicit val format: OFormat[Locations] = Json.format[Locations]
 }
