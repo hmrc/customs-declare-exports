@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
+package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import org.scalatest.{Matchers, WordSpec}
 import testdata.ExportsDeclarationBuilder
-import uk.gov.hmrc.exports.models.declaration.{InlandModeOfTransportCode, Transport}
-import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.DepartureTransportMeansBuilder
+import uk.gov.hmrc.exports.models.declaration.{InlandModeOfTransportCode, ModeOfTransportCode, Transport}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class DepartureTransportMeansBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+
   "DepartureTransportMeansBuilder" should {
 
     "correctly map DepartureTransportMeans instance using new model" in {
-      val borderModeOfTransportCode = "BCode"
+      val borderModeOfTransportCode = ModeOfTransportCode.Maritime
       val meansOfTransportOnDepartureType = "T"
       val meansOfTransportOnDepartureIDNumber = "12345"
-      val inlandModeOfTransport = "1"
+      val inlandModeOfTransport = ModeOfTransportCode.Rail
 
       val builder = new DepartureTransportMeansBuilder
 
@@ -45,16 +45,16 @@ class DepartureTransportMeansBuilderSpec extends WordSpec with Matchers with Exp
       val departureTransportMeans = consignment.getDepartureTransportMeans
       departureTransportMeans.getID.getValue shouldBe meansOfTransportOnDepartureIDNumber
       departureTransportMeans.getIdentificationTypeCode.getValue shouldBe meansOfTransportOnDepartureType
-      departureTransportMeans.getModeCode.getValue shouldBe inlandModeOfTransport
+      departureTransportMeans.getModeCode.getValue shouldBe inlandModeOfTransport.value
       departureTransportMeans.getName shouldBe null
       departureTransportMeans.getTypeCode shouldBe null
     }
 
     "not map inapplicable DepartureTransportMeans" in {
-      val borderModeOfTransportCode = "BCode"
+      val borderModeOfTransportCode = ModeOfTransportCode.Maritime
       val meansOfTransportOnDepartureType = Transport.optionNone
       val meansOfTransportOnDepartureIDNumber = "ignore"
-      val inlandModeOfTransport = "1"
+      val inlandModeOfTransport = ModeOfTransportCode.Rail
 
       val builder = new DepartureTransportMeansBuilder
 
@@ -70,7 +70,7 @@ class DepartureTransportMeansBuilderSpec extends WordSpec with Matchers with Exp
       val departureTransportMeans = consignment.getDepartureTransportMeans
       departureTransportMeans.getID shouldBe null
       departureTransportMeans.getIdentificationTypeCode shouldBe null
-      departureTransportMeans.getModeCode.getValue shouldBe inlandModeOfTransport
+      departureTransportMeans.getModeCode.getValue shouldBe inlandModeOfTransport.value
       departureTransportMeans.getName shouldBe null
       departureTransportMeans.getTypeCode shouldBe null
     }

@@ -36,7 +36,7 @@ object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuil
     withDispatchLocation(),
     withAdditionalDeclarationType(),
     withConsignmentReferences(),
-    withDepartureTransport("1", "11", "SHIP1"),
+    withDepartureTransport(ModeOfTransportCode.Maritime, "11", "SHIP1"),
     withBorderTransport(),
     withContainerData(),
     withExporterDetails(Some("GB717572504502801")),
@@ -53,7 +53,7 @@ object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuil
     ),
     withWarehouseIdentification("RGBLBA001"),
     withSupervisingCustomsOffice("Belfast"),
-    withInlandModeOfTransport("1"),
+    withInlandModeOfTransport(ModeOfTransportCode.Maritime),
     withOfficeOfExit(Some("GB000054"), Some("GBLBA003"), Some("No")),
     withItems(
       anItem(

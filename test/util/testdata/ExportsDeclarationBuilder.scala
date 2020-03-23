@@ -97,7 +97,7 @@ trait ExportsDeclarationBuilder {
     )
 
   def withDepartureTransport(
-    borderModeOfTransportCode: String = "",
+    borderModeOfTransportCode: ModeOfTransportCode = ModeOfTransportCode.Empty,
     meansOfTransportOnDepartureType: String = "",
     meansOfTransportOnDepartureIDNumber: String = ""
   ): ExportsDeclarationModifier =
@@ -190,7 +190,7 @@ trait ExportsDeclarationBuilder {
     m.copy(locations = m.locations.copy(warehouseIdentification = Some(WarehouseIdentification(Some(warehouseIdentification)))))
   }
 
-  def withInlandModeOfTransport(inlandModeOfTransportCode: String): ExportsDeclarationModifier = { m =>
+  def withInlandModeOfTransport(inlandModeOfTransportCode: ModeOfTransportCode = ModeOfTransportCode.Empty): ExportsDeclarationModifier = { m =>
     m.copy(locations = m.locations.copy(inlandModeOfTransportCode = Some(InlandModeOfTransportCode(Some(inlandModeOfTransportCode)))))
   }
 

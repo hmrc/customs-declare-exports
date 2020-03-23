@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping.declaration
+package uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.mockito.Mockito.when
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.Country
-import uk.gov.hmrc.exports.services.CountriesService
-import uk.gov.hmrc.exports.services.mapping.declaration.BorderTransportMeansBuilder
+import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.models.Country
+import uk.gov.hmrc.exports.models.declaration.ModeOfTransportCode
+import uk.gov.hmrc.exports.services.CountriesService
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
@@ -34,6 +34,7 @@ class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with Mockit
   "BorderTransportMeansBuilder" should {
 
     "build then add" when {
+
       "no border transport or transport details" in {
         val model = aDeclaration(withoutBorderTransport(), withoutDepartureTransport())
         val declaration = new Declaration()
@@ -77,12 +78,21 @@ class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with Mockit
       }
 
       "border transport only" in {
-        val model = aDeclaration(withoutBorderTransport(), withDepartureTransport(borderModeOfTransportCode = "code"))
+        val model = aDeclaration(withoutBorderTransport(), withDepartureTransport(ModeOfTransportCode.Maritime))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getBorderTransportMeans.getModeCode.getValue should be("code")
+        declaration.getBorderTransportMeans.getModeCode.getValue should be("1")
+      }
+
+      "border transport is Empty" in {
+        val model = aDeclaration(withoutBorderTransport(), withDepartureTransport(ModeOfTransportCode.Empty))
+        val declaration = new Declaration()
+
+        builder.buildThenAdd(model, declaration)
+
+        declaration.getBorderTransportMeans.getModeCode should be(null)
       }
 
       "fully populated" in {
@@ -92,7 +102,7 @@ class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with Mockit
             meansOfTransportCrossingTheBorderType = "type",
             meansOfTransportCrossingTheBorderIDNumber = Some("id")
           ),
-          withDepartureTransport(borderModeOfTransportCode = "code")
+          withDepartureTransport(borderModeOfTransportCode = ModeOfTransportCode.Road)
         )
         val declaration = new Declaration()
 
@@ -101,7 +111,7 @@ class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with Mockit
         declaration.getBorderTransportMeans.getID.getValue should be("id")
         declaration.getBorderTransportMeans.getIdentificationTypeCode.getValue should be("type")
         declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue should be("GB")
-        declaration.getBorderTransportMeans.getModeCode.getValue should be("code")
+        declaration.getBorderTransportMeans.getModeCode.getValue should be("3")
       }
     }
   }
