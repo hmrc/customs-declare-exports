@@ -199,7 +199,7 @@ trait ExportsDeclarationBuilder {
     cache => cache.copy(locations = cache.locations.copy(officeOfExit = None))
 
   def withOfficeOfExit(
-    officeId: String = "",
+    officeId: Option[String] = None,
     presentationOfficeId: Option[String] = None,
     circumstancesCode: Option[String] = None
   ): ExportsDeclarationModifier =

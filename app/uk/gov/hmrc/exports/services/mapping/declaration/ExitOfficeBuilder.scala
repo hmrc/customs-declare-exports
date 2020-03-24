@@ -29,13 +29,14 @@ class ExitOfficeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration,
     case DeclarationType.STANDARD | DeclarationType.SUPPLEMENTARY | DeclarationType.SIMPLIFIED | DeclarationType.OCCASIONAL |
         DeclarationType.CLEARANCE =>
       model.locations.officeOfExit
-        .map(build)
+        .flatMap(_.officeId)
+        .map(createExitOffice)
         .foreach(declaration.setExitOffice)
   }
 
-  private def build(data: OfficeOfExit): Declaration.ExitOffice = {
+  private def createExitOffice(value: String): Declaration.ExitOffice = {
     val officeIdentificationIDType = new ExitOfficeIdentificationIDType()
-    officeIdentificationIDType.setValue(data.officeId)
+    officeIdentificationIDType.setValue(value)
 
     val exitOffice = new ExitOffice()
     exitOffice.setID(officeIdentificationIDType)
