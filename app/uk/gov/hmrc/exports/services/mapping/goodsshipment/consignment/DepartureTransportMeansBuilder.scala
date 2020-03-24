@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{DepartureTransport, InlandModeOfTransportCode, Transport}
+import uk.gov.hmrc.exports.models.declaration.{InlandModeOfTransportCode, Transport}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment.DepartureTransportMeans
 import wco.datamodel.wco.declaration_ds.dms._2.{
@@ -44,16 +44,18 @@ class DepartureTransportMeansBuilder @Inject()() {
       departureTransportMeans.setModeCode(modeCodeType)
     }
 
-    transport.meansOfTransportOnDepartureIDNumber.foreach { value =>
-      val id = new DepartureTransportMeansIdentificationIDType()
-      id.setValue(value)
-      departureTransportMeans.setID(id)
-    }
+    if (transport.isMeansOfTransportOnDepartureDefined) {
+      transport.meansOfTransportOnDepartureIDNumber.foreach { value =>
+        val id = new DepartureTransportMeansIdentificationIDType()
+        id.setValue(value)
+        departureTransportMeans.setID(id)
+      }
 
-    transport.meansOfTransportOnDepartureType.foreach { value =>
-      val identificationTypeCode = new DepartureTransportMeansIdentificationTypeCodeType()
-      identificationTypeCode.setValue(value)
-      departureTransportMeans.setIdentificationTypeCode(identificationTypeCode)
+      transport.meansOfTransportOnDepartureType.foreach { value =>
+        val identificationTypeCode = new DepartureTransportMeansIdentificationTypeCodeType()
+        identificationTypeCode.setValue(value)
+        departureTransportMeans.setIdentificationTypeCode(identificationTypeCode)
+      }
     }
 
     departureTransportMeans

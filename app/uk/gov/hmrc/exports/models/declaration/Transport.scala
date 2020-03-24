@@ -38,8 +38,12 @@ case class Transport(
 
   def hasDepartureTransportDetails: Boolean =
     meansOfTransportOnDepartureIDNumber.nonEmpty || meansOfTransportOnDepartureType.nonEmpty
+
+  def isMeansOfTransportOnDepartureDefined: Boolean = meansOfTransportOnDepartureType.exists(_ != Transport.optionNone)
 }
 
 object Transport {
   implicit val format: OFormat[Transport] = Json.format[Transport]
+
+  val optionNone = "option_none"
 }
