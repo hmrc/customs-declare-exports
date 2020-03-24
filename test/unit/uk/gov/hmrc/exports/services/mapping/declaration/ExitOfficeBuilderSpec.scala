@@ -45,12 +45,25 @@ class ExitOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarati
         }
 
         s"$declarationType journey with populated data" in {
-          val model = aDeclaration(withType(declarationType), withOfficeOfExit(officeId = "office-id"))
+          val model = aDeclaration(withType(declarationType), withOfficeOfExit(officeId = Some("office-id")))
           val declaration = new Declaration()
 
           builder.buildThenAdd(model, declaration)
 
           declaration.getExitOffice.getID.getValue should be("office-id")
+        }
+      }
+    }
+
+    "build then add for clearance request with no office id" when {
+      for (declarationType: DeclarationType <- Seq(DeclarationType.CLEARANCE)) {
+        s"$declarationType journey with populated data" in {
+          val model = aDeclaration(withType(declarationType), withOfficeOfExit(officeId = None))
+          val declaration = new Declaration()
+
+          builder.buildThenAdd(model, declaration)
+
+          declaration.getExitOffice should be(null)
         }
       }
     }
