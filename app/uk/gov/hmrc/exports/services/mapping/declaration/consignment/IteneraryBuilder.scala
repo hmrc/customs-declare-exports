@@ -28,7 +28,7 @@ import scala.collection.JavaConverters._
 class IteneraryBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration.Consignment] {
 
   def buildThenAdd(model: ExportsDeclaration, consignment: Declaration.Consignment): Unit = {
-    val itineraries = model.locations.routingCountries.zipWithIndex.map {
+    val itineraries = model.locations.routingCountries.flatMap(_.code).zipWithIndex.map {
       case (countryCode, idx) => createItenerary(idx, countryCode)
     }
     consignment.getItinerary.addAll(itineraries.toList.asJava)

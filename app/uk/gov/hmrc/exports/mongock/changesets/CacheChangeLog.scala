@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableMap
 import com.mongodb.BasicDBObject
 import com.mongodb.client.MongoDatabase
 import org.bson.Document
+import scala.collection.JavaConversions._
 import uk.gov.hmrc.exports.services.CountriesService
 
 @ChangeLog
@@ -38,8 +39,6 @@ class CacheChangeLog {
     val queryParams: ImmutableMap[String, AnyRef] =
       ImmutableMap.of("locations.goodsLocation.country", ImmutableMap.of("$exists", true, "$ne", ""))
     val query: Document = new Document(queryParams)
-
-    import scala.collection.JavaConversions._
 
     val documents = db.getCollection(collection).find(new BasicDBObject(query)).toSeq
 
@@ -67,5 +66,81 @@ class CacheChangeLog {
     val service: CountriesService = new CountriesService
 
     service.allCountries.find(_.countryName == countryName).map(_.countryCode).getOrElse(countryName)
+  }
+
+  @ChangeSet(order = "003", id = "CEDS-2247 Change origination country structure", author = "Patryk Rudnicki")
+  def changeOriginationCountryStructure(db: MongoDatabase): Unit = {
+    val queryParams: ImmutableMap[String, AnyRef] =
+      ImmutableMap.of("locations.originationCountry", ImmutableMap.of("$exists", true, "$ne", ""))
+    val query: Document = new Document(queryParams)
+
+    val documents = db.getCollection(collection).find(new BasicDBObject(query)).toSeq
+
+    documents.foreach { document =>
+      val locations = document.get("locations", classOf[Map[String, String]])
+      val originationCountry: String = locations.get("originationCountry")
+
+      val queryIndexes: Map[String, String] =
+        ImmutableMap.of("id", document.get("id").asInstanceOf[String], "eori", document.get("eori").asInstanceOf[String])
+
+      val objectToBeUpdated: BasicDBObject = new BasicDBObject(queryIndexes)
+
+      val codeElement = ImmutableMap.of("code", originationCountry)
+      val setUpdate = ImmutableMap.of("$set", ImmutableMap.of("locations.originationCountry", codeElement))
+      val setUpdateObj = new BasicDBObject(setUpdate)
+
+      db.getCollection(collection).findOneAndUpdate(objectToBeUpdated, setUpdateObj)
+    }
+  }
+
+  @ChangeSet(order = "004", id = "CEDS-2247 Change destination country structure", author = "Patryk Rudnicki")
+  def changeDestinationCountryStructure(db: MongoDatabase): Unit = {
+    val queryParams: ImmutableMap[String, AnyRef] =
+      ImmutableMap.of("locations.destinationCountry", ImmutableMap.of("$exists", true, "$ne", ""))
+    val query: Document = new Document(queryParams)
+
+    val documents = db.getCollection(collection).find(new BasicDBObject(query)).toSeq
+
+    documents.foreach { document =>
+      val locations = document.get("locations", classOf[Map[String, String]])
+      val destinationCountry: String = locations.get("destinationCountry")
+
+      val queryIndexes: Map[String, String] =
+        ImmutableMap.of("id", document.get("id").asInstanceOf[String], "eori", document.get("eori").asInstanceOf[String])
+
+      val objectToBeUpdated: BasicDBObject = new BasicDBObject(queryIndexes)
+
+      val codeElement = ImmutableMap.of("code", destinationCountry)
+      val setUpdate = ImmutableMap.of("$set", ImmutableMap.of("locations.destinationCountry", codeElement))
+      val setUpdateObj = new BasicDBObject(setUpdate)
+
+      db.getCollection(collection).findOneAndUpdate(objectToBeUpdated, setUpdateObj)
+    }
+  }
+
+  @ChangeSet(order = "005", id = "CEDS-2247 Change routing countries structure", author = "Patryk Rudnicki")
+  def changeRoutingCountriesStructure(db: MongoDatabase): Unit = {
+    val queryParams: ImmutableMap[String, AnyRef] =
+      ImmutableMap.of("locations.routingCountries", ImmutableMap.of("$exists", true, "$ne", ""))
+    val query: Document = new Document(queryParams)
+
+    val documents = db.getCollection(collection).find(new BasicDBObject(query)).toSeq
+
+    documents.foreach { document =>
+      val locations = document.get("locations", classOf[Map[String, java.util.List[String]]])
+      val routingCountries: Seq[String] = locations.get("routingCountries")
+
+      val queryIndexes: Map[String, String] =
+        ImmutableMap.of("id", document.get("id").asInstanceOf[String], "eori", document.get("eori").asInstanceOf[String])
+
+      val objectToBeUpdated: BasicDBObject = new BasicDBObject(queryIndexes)
+
+      val updatedRoutingCountries = routingCountries.map(ImmutableMap.of("code", _)).toArray
+
+      val setUpdate = ImmutableMap.of("$set", ImmutableMap.of("locations.routingCountries", updatedRoutingCountries))
+      val setUpdateObj = new BasicDBObject(setUpdate)
+
+      db.getCollection(collection).findOneAndUpdate(objectToBeUpdated, setUpdateObj)
+    }
   }
 }

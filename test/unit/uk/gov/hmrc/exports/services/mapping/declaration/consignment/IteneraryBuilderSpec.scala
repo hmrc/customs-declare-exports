@@ -19,6 +19,7 @@ package unit.uk.gov.hmrc.exports.services.mapping.declaration.consignment
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.services.mapping.declaration.consignment.IteneraryBuilder
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.models.declaration.Country
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class IteneraryBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
@@ -26,7 +27,9 @@ class IteneraryBuilderSpec extends WordSpec with Matchers with ExportsDeclaratio
   "IteneraryBuilder" should {
 
     "build then add" when {
+
       "no destination countries" in {
+
         // Given
         val model = aDeclaration(withoutOriginationCountry(), withoutDestinationCountry(), withoutRoutingCountries())
         val consignment = new Declaration.Consignment()
@@ -38,9 +41,23 @@ class IteneraryBuilderSpec extends WordSpec with Matchers with ExportsDeclaratio
         consignment.getItinerary shouldBe empty
       }
 
-      "multiple routing countries" in {
+      "with empty destination country" in {
+
         // Given
-        val model = aDeclaration(withRoutingCountries(Seq("routing1", "routing2")))
+        val model = aDeclaration(withoutOriginationCountry(), withEmptyDestinationCountry(), withoutRoutingCountries())
+        val consignment = new Declaration.Consignment()
+
+        // When
+        new IteneraryBuilder().buildThenAdd(model, consignment)
+
+        // Then
+        consignment.getItinerary shouldBe empty
+      }
+
+      "multiple routing countries" in {
+
+        // Given
+        val model = aDeclaration(withRoutingCountries(Seq(Country(Some("GB")), Country(Some("FR")))))
         val consignment = new Declaration.Consignment()
 
         // When
@@ -50,8 +67,8 @@ class IteneraryBuilderSpec extends WordSpec with Matchers with ExportsDeclaratio
         consignment.getItinerary should have(size(2))
         consignment.getItinerary.get(0).getSequenceNumeric.intValue shouldBe 0
         consignment.getItinerary.get(1).getSequenceNumeric.intValue shouldBe 1
-        consignment.getItinerary.get(0).getRoutingCountryCode.getValue shouldBe "routing1"
-        consignment.getItinerary.get(1).getRoutingCountryCode.getValue shouldBe "routing2"
+        consignment.getItinerary.get(0).getRoutingCountryCode.getValue shouldBe "GB"
+        consignment.getItinerary.get(1).getRoutingCountryCode.getValue shouldBe "FR"
       }
     }
   }
