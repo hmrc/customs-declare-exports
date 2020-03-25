@@ -34,7 +34,7 @@ class ConsignmentBuilderSpec extends WordSpec with MustMatchers with ExportsDecl
   "ConsignmentBuilder" should {
 
     "build then add" when {
-      val borderModeOfTransportCode = "BCode"
+      val borderModeOfTransportCode = ModeOfTransportCode.Maritime
       val meansOfTransportOnDepartureType = "T"
       val meansOfTransportOnDepartureIDNumber = "12345"
 

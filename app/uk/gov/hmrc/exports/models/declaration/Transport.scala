@@ -21,7 +21,7 @@ import play.api.libs.json.{Json, OFormat}
 case class Transport(
   transportPayment: Option[TransportPayment] = None,
   containers: Option[Seq[Container]] = None,
-  borderModeOfTransportCode: Option[String] = None,
+  borderModeOfTransportCode: Option[ModeOfTransportCode] = None,
   meansOfTransportOnDepartureType: Option[String] = None,
   meansOfTransportOnDepartureIDNumber: Option[String] = None,
   meansOfTransportCrossingTheBorderNationality: Option[String] = None,

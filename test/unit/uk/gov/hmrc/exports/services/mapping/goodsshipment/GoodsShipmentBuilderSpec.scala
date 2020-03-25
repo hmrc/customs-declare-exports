@@ -21,21 +21,18 @@ import org.mockito.Mockito
 import org.mockito.Mockito.{verify, verifyZeroInteractions}
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
+import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.mapping.goodsshipment._
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentBuilder
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.GovernmentAgencyGoodsItemBuilder
-import unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.AEOMutualRecognitionPartiesBuilderSpec.{
-  correctAdditionalActors1,
-  correctAdditionalActors2
-}
+import unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.AEOMutualRecognitionPartiesBuilderSpec._
 import unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.ConsigneeBuilderSpec.correctAddress
 import unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.PreviousDocumentsBuilderSpec.correctPreviousDocument
 import unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.UCRBuilderSpec.correctConsignmentReferences
 import unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.GoodsLocationBuilderSpec
-import testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder with MockitoSugar with BeforeAndAfterEach {
@@ -147,7 +144,7 @@ class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclar
       withDestinationCountry(),
       withoutRoutingCountries(),
       withWarehouseIdentification("RGBWKG001"),
-      withInlandModeOfTransport("2"),
+      withInlandModeOfTransport(ModeOfTransportCode.Rail),
       withConsignmentReferences("8GB123456789012-1234567890QWERTYUIO", "123LRN", Some("8GB123456789012")),
       withPreviousDocuments(correctPreviousDocument),
       withItem()

@@ -17,16 +17,11 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{BorderTransport, DepartureTransport, ExportsDeclaration, Transport}
+import uk.gov.hmrc.exports.models.declaration.{ExportsDeclaration, Transport}
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
-import wco.datamodel.wco.declaration_ds.dms._2.{
-  BorderTransportMeansIdentificationIDType,
-  BorderTransportMeansIdentificationTypeCodeType,
-  BorderTransportMeansModeCodeType,
-  BorderTransportMeansRegistrationNationalityCodeType
-}
+import wco.datamodel.wco.declaration_ds.dms._2._
 
 class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, t: Declaration): Unit = {
@@ -72,9 +67,11 @@ class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) 
   }
 
   private def appendDepartureTransport(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit =
-    data.borderModeOfTransportCode.foreach { code =>
-      val modeCode = new BorderTransportMeansModeCodeType()
-      modeCode.setValue(code)
-      transportMeans.setModeCode(modeCode)
+    data.borderModeOfTransportCode.foreach { modeOfTransportCode =>
+      if (modeOfTransportCode.isDefined) {
+        val modeCode = new BorderTransportMeansModeCodeType()
+        modeCode.setValue(modeOfTransportCode.value)
+        transportMeans.setModeCode(modeCode)
+      }
     }
 }

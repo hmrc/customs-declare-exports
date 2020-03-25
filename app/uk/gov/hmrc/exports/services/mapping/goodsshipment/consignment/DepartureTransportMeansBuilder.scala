@@ -20,11 +20,7 @@ import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.{InlandModeOfTransportCode, Transport}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment.DepartureTransportMeans
-import wco.datamodel.wco.declaration_ds.dms._2.{
-  DepartureTransportMeansIdentificationIDType,
-  DepartureTransportMeansIdentificationTypeCodeType,
-  DepartureTransportMeansModeCodeType
-}
+import wco.datamodel.wco.declaration_ds.dms._2._
 
 class DepartureTransportMeansBuilder @Inject()() {
   def buildThenAdd(transport: Transport, inlandModeOfTransportCode: Option[InlandModeOfTransportCode], consignment: Consignment): Unit =
@@ -38,9 +34,9 @@ class DepartureTransportMeansBuilder @Inject()() {
   ): Consignment.DepartureTransportMeans = {
     val departureTransportMeans = new DepartureTransportMeans()
 
-    inlandModeOfTransportCode.flatMap(_.inlandModeOfTransportCode).foreach { value =>
+    inlandModeOfTransportCode.flatMap(_.inlandModeOfTransportCode).foreach { inlandModeOfTransportCode =>
       val modeCodeType = new DepartureTransportMeansModeCodeType()
-      modeCodeType.setValue(value)
+      modeCodeType.setValue(inlandModeOfTransportCode.value)
       departureTransportMeans.setModeCode(modeCodeType)
     }
 

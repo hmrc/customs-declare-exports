@@ -48,7 +48,7 @@ object SupervisingCustomsOffice {
   implicit val format = Json.format[SupervisingCustomsOffice]
 }
 
-case class InlandModeOfTransportCode(inlandModeOfTransportCode: Option[String])
+case class InlandModeOfTransportCode(inlandModeOfTransportCode: Option[ModeOfTransportCode])
 
 object InlandModeOfTransportCode {
   implicit val format = Json.format[InlandModeOfTransportCode]
