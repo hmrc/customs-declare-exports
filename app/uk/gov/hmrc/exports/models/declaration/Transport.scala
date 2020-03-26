@@ -18,10 +18,16 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 
+case class TransportLeavingTheBorder(code: Option[ModeOfTransportCode] = None)
+
+object TransportLeavingTheBorder {
+  implicit val format = Json.format[TransportLeavingTheBorder]
+}
+
 case class Transport(
   transportPayment: Option[TransportPayment] = None,
   containers: Option[Seq[Container]] = None,
-  borderModeOfTransportCode: Option[ModeOfTransportCode] = None,
+  borderModeOfTransportCode: Option[TransportLeavingTheBorder] = None,
   meansOfTransportOnDepartureType: Option[String] = None,
   meansOfTransportOnDepartureIDNumber: Option[String] = None,
   meansOfTransportCrossingTheBorderNationality: Option[String] = None,

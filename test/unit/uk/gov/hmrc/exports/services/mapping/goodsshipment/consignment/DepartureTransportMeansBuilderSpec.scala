@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import org.scalatest.{Matchers, WordSpec}
 import testdata.ExportsDeclarationBuilder
-import uk.gov.hmrc.exports.models.declaration.{InlandModeOfTransportCode, ModeOfTransportCode, Transport}
+import uk.gov.hmrc.exports.models.declaration.{InlandModeOfTransportCode, ModeOfTransportCode, Transport, TransportLeavingTheBorder}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class DepartureTransportMeansBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
@@ -26,7 +26,7 @@ class DepartureTransportMeansBuilderSpec extends WordSpec with Matchers with Exp
   "DepartureTransportMeansBuilder" should {
 
     "correctly map DepartureTransportMeans instance using new model" in {
-      val borderModeOfTransportCode = ModeOfTransportCode.Maritime
+      val borderModeOfTransportCode = TransportLeavingTheBorder(Some(ModeOfTransportCode.Maritime))
       val meansOfTransportOnDepartureType = "T"
       val meansOfTransportOnDepartureIDNumber = "12345"
       val inlandModeOfTransport = ModeOfTransportCode.Rail
@@ -51,7 +51,7 @@ class DepartureTransportMeansBuilderSpec extends WordSpec with Matchers with Exp
     }
 
     "not map inapplicable DepartureTransportMeans" in {
-      val borderModeOfTransportCode = ModeOfTransportCode.Maritime
+      val borderModeOfTransportCode = TransportLeavingTheBorder(Some(ModeOfTransportCode.Maritime))
       val meansOfTransportOnDepartureType = Transport.optionNone
       val meansOfTransportOnDepartureIDNumber = "ignore"
       val inlandModeOfTransport = ModeOfTransportCode.Rail

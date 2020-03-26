@@ -32,7 +32,7 @@ object ModeOfTransportCode {
   case object FixedTransportInstallations extends ModeOfTransportCode("7")
   case object InlandWaterway extends ModeOfTransportCode("8")
   case object Unknown extends ModeOfTransportCode("9")
-  case object Empty extends ModeOfTransportCode("")
+  case object Empty extends ModeOfTransportCode("no-code")
 
   def apply(code: String): ModeOfTransportCode = reverseLookup.getOrElse(code, Empty)
 

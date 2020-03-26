@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.models.declaration
+package uk.gov.hmrc.exports.models.declaration
 
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.Eori
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 
 class ExportsDeclarationSpec extends WordSpec with MustMatchers {
 
@@ -80,7 +79,9 @@ object ExportsDeclarationSpec {
       |    "meansOfTransportCrossingTheBorderNationality": "United Kingdom",
       |    "meansOfTransportCrossingTheBorderType": "11",
       |    "meansOfTransportCrossingTheBorderIDNumber": "Boaty McBoatface",
-      |    "borderModeOfTransportCode": "1",
+      |    "borderModeOfTransportCode": {
+      |       "code": "1"
+      |    },
       |    "meansOfTransportOnDepartureType": "11",
       |    "meansOfTransportOnDepartureIDNumber": "SHIP1"
       |  },

@@ -18,14 +18,13 @@ package uk.gov.hmrc.exports.controllers.request
 
 import java.time.Instant
 
-import org.scalatest.{Matchers, MustMatchers, WordSpec}
+import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.Json
+import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
-import testdata.ExportsDeclarationBuilder
-import unit.uk.gov.hmrc.exports.models.declaration.ExportsDeclarationSpec
 
 class ExportsDeclarationRequestSpec extends WordSpec with MustMatchers with ExportsDeclarationBuilder with MockitoSugar {
 
