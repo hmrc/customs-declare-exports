@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.models.declaration
 import play.api.libs.json.{JsString, JsonValidationError, Reads, Writes}
 
 sealed abstract class ModeOfTransportCode(val value: String) {
-  def isDefined: Boolean = this != ModeOfTransportCode.Empty
+  def isValidCode: Boolean = this != ModeOfTransportCode.Empty
 }
 
 object ModeOfTransportCode {

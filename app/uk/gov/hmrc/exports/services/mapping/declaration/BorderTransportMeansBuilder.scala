@@ -70,7 +70,8 @@ class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) 
     for {
       transportLeavingTheBorder <- data.borderModeOfTransportCode
       modeOfTransportCode <- transportLeavingTheBorder.code
-    } if (modeOfTransportCode.isDefined) {
+      if modeOfTransportCode.isValidCode
+    } {
       val modeCode = new BorderTransportMeansModeCodeType()
       modeCode.setValue(modeOfTransportCode.value)
       transportMeans.setModeCode(modeCode)
