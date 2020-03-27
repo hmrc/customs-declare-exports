@@ -28,7 +28,6 @@ import play.api.Logger
 import scala.collection.JavaConversions._
 import uk.gov.hmrc.exports.services.CountriesService
 
-@ChangeLog
 class CacheChangeLog {
 
   private val collection = "declarations"

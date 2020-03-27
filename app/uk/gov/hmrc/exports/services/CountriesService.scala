@@ -16,9 +16,13 @@
 
 package uk.gov.hmrc.exports.services
 
+import java.util
+
 import javax.inject.Inject
 import play.api.libs.json._
 import uk.gov.hmrc.exports.models.Country
+
+import scala.collection.JavaConverters._
 
 class CountriesService @Inject()() {
 
@@ -42,4 +46,5 @@ class CountriesService @Inject()() {
   private def countryCode: String => String = cc => cc.split(":")(1).trim
 
   val allCountries: List[Country] = countries
+  val allCountriesAsJava: util.List[Country] = countries.asJava
 }
