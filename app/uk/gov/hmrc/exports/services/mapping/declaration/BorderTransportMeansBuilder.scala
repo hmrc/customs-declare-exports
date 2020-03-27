@@ -67,11 +67,14 @@ class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) 
   }
 
   private def appendDepartureTransport(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit =
-    data.borderModeOfTransportCode.foreach { modeOfTransportCode =>
-      if (modeOfTransportCode.isDefined) {
-        val modeCode = new BorderTransportMeansModeCodeType()
-        modeCode.setValue(modeOfTransportCode.value)
-        transportMeans.setModeCode(modeCode)
-      }
+    for {
+      transportLeavingTheBorder <- data.borderModeOfTransportCode
+      modeOfTransportCode <- transportLeavingTheBorder.code
+      if modeOfTransportCode.isValidCode
+    } {
+      val modeCode = new BorderTransportMeansModeCodeType()
+      modeCode.setValue(modeOfTransportCode.value)
+      transportMeans.setModeCode(modeCode)
     }
+
 }
