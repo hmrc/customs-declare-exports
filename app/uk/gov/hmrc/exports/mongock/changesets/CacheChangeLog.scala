@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.mongock.changesets
 
-import java.util.Map
+import java.util
 
 import com.github.cloudyrock.mongock.{ChangeLog, ChangeSet}
 import com.google.common.collect.ImmutableMap
@@ -24,10 +24,11 @@ import com.mongodb.BasicDBObject
 import com.mongodb.client.MongoDatabase
 import org.bson.Document
 import play.api.Logger
-
-import scala.collection.JavaConversions._
 import uk.gov.hmrc.exports.services.CountriesService
 
+import scala.collection.JavaConversions._
+
+@ChangeLog
 class CacheChangeLog {
 
   private val collection = "declarations"
@@ -47,16 +48,16 @@ class CacheChangeLog {
 
     documents.foreach { document =>
       val goodsLocation = document
-        .get("locations", classOf[Map[String, Map[String, String]]])
+        .get("locations", classOf[util.Map[String, util.Map[String, String]]])
         .get("goodsLocation")
-        .asInstanceOf[Map[String, String]]
+        .asInstanceOf[util.Map[String, String]]
 
       val countryName: String = goodsLocation.get("country")
 
       goodsLocation.put("country", findCountryCode(countryName))
 
       // update document on MongoDB
-      val queryIndexes: Map[String, String] =
+      val queryIndexes: util.Map[String, String] =
         ImmutableMap.of("id", document.get("id").asInstanceOf[String], "eori", document.get("eori").asInstanceOf[String])
 
       val objectToBeUpdated: BasicDBObject = new BasicDBObject(queryIndexes)
@@ -80,10 +81,10 @@ class CacheChangeLog {
     val documents = db.getCollection(collection).find(new BasicDBObject(query)).toSeq
 
     documents.foreach { document =>
-      val locations = document.get("locations", classOf[Map[String, String]])
+      val locations = document.get("locations", classOf[util.Map[String, String]])
       val originationCountry: String = locations.get("originationCountry")
 
-      val queryIndexes: Map[String, String] =
+      val queryIndexes: util.Map[String, String] =
         ImmutableMap.of("id", document.get("id").asInstanceOf[String], "eori", document.get("eori").asInstanceOf[String])
 
       val objectToBeUpdated: BasicDBObject = new BasicDBObject(queryIndexes)
@@ -108,10 +109,10 @@ class CacheChangeLog {
     logger.info(s"[${documents.size}] documents found")
 
     documents.foreach { document =>
-      val locations = document.get("locations", classOf[Map[String, String]])
+      val locations = document.get("locations", classOf[util.Map[String, String]])
       val destinationCountry: String = locations.get("destinationCountry")
 
-      val queryIndexes: Map[String, String] =
+      val queryIndexes: util.Map[String, String] =
         ImmutableMap.of("id", document.get("id").asInstanceOf[String], "eori", document.get("eori").asInstanceOf[String])
 
       val objectToBeUpdated: BasicDBObject = new BasicDBObject(queryIndexes)
@@ -137,10 +138,10 @@ class CacheChangeLog {
     logger.info(s"[${documents.size}] documents found")
 
     documents.foreach { document =>
-      val locations = document.get("locations", classOf[Map[String, java.util.List[String]]])
+      val locations = document.get("locations", classOf[util.Map[String, java.util.List[String]]])
       val routingCountries: Seq[String] = locations.get("routingCountries")
 
-      val queryIndexes: Map[String, String] =
+      val queryIndexes: util.Map[String, String] =
         ImmutableMap.of("id", document.get("id").asInstanceOf[String], "eori", document.get("eori").asInstanceOf[String])
 
       val objectToBeUpdated: BasicDBObject = new BasicDBObject(queryIndexes)
