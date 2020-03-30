@@ -146,7 +146,8 @@ public class JavaCacheChangeLog {
                 .find(and(
                         not(elemMatch("locations.routingCountries", exists("code", true))),
                         exists("locations.routingCountries"),
-                        type("locations.routingCountries", "array")))
+                        type("locations.routingCountries", "array"),
+                        not(size("locations.routingCountries", 0))))
                 .forEach((Consumer<Document>) document -> {
                     // Retrieve indexes
                     String documentId = (String) document.get(INDEX_ID);
