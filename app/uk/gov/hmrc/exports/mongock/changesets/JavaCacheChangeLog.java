@@ -54,7 +54,8 @@ public class JavaCacheChangeLog {
                 .find(and(
                         exists("locations.goodsLocation.country"),
                         type("locations.goodsLocation.country", "string"),
-                        ne("locations.goodsLocation.country", "")))
+                        ne("locations.goodsLocation.country", ""),
+                        regex("locations.goodsLocation.country","^.{3,}$" )))
                 .forEach((Consumer<Document>) document -> {
                     // Retrieve indexes
                     String documentId = (String) document.get(INDEX_ID);
