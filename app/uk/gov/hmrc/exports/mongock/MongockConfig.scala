@@ -27,7 +27,12 @@ case class MongockConfig(mongoURI: String) {
 
   val client = new MongoClient(uri)
 
+  val lockAcquiredForMinutes = 3
+  val maxWaitingForLockMinutes = 5
+  val maxTries = 10
+
   val runner = new MongockBuilder(client, uri.getDatabase, "uk.gov.hmrc.exports.mongock.changesets")
+    .setLockConfig(lockAcquiredForMinutes, maxWaitingForLockMinutes, maxTries)
     .build()
 
   runner.execute()
