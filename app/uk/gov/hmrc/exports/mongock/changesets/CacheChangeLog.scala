@@ -21,17 +21,18 @@ import java.util
 import com.github.cloudyrock.mongock.{ChangeLog, ChangeSet}
 import com.google.common.collect.ImmutableMap
 import com.mongodb.BasicDBObject
-import com.mongodb.client.MongoDatabase
+import com.mongodb.client.model.Filters._
+import com.mongodb.client.model.Updates.rename
+import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
+import org.mongodb.scala.model.Filters
 import play.api.Logger
 import uk.gov.hmrc.exports.services.CountriesService
 
 import scala.collection.JavaConversions._
 
-@ChangeLog
+@ChangeLog(order = "001")
 class CacheChangeLog {
-
-  private val collection = "declarations"
 
   private val logger = Logger(this.getClass)
 
@@ -40,11 +41,13 @@ class CacheChangeLog {
 
   @ChangeSet(order = "002", id = "CEDS-2231 Change country name to country code for location page", author = "Patryk Rudnicki")
   def updateAllCountriesNameToCodesForLocationPage(db: MongoDatabase): Unit = {
+
+    logger.info("Applying 'CEDS-2231 Change country name to country code for location page'... ")
     val queryParams: ImmutableMap[String, AnyRef] =
       ImmutableMap.of("locations.goodsLocation.country", ImmutableMap.of("$exists", true, "$ne", ""))
     val query: Document = new Document(queryParams)
 
-    val documents = db.getCollection(collection).find(new BasicDBObject(query)).toSeq
+    val documents = getDeclarationsCollection(db).find(new BasicDBObject(query))
 
     documents.foreach { document =>
       val goodsLocation = document
@@ -62,8 +65,11 @@ class CacheChangeLog {
 
       val objectToBeUpdated: BasicDBObject = new BasicDBObject(queryIndexes)
 
-      db.getCollection(collection).replaceOne(objectToBeUpdated, document)
+      logger.info(s"Applying [2] changes to ${document.get("id")}")
+      getDeclarationsCollection(db).replaceOne(objectToBeUpdated, document)
     }
+
+    logger.info("Applying 'CEDS-2231 Change country name to country code for location page'... Done.")
   }
 
   private def findCountryCode(countryName: String): String = {
@@ -74,11 +80,13 @@ class CacheChangeLog {
 
   @ChangeSet(order = "003", id = "CEDS-2247 Change origination country structure", author = "Patryk Rudnicki")
   def changeOriginationCountryStructure(db: MongoDatabase): Unit = {
+
+    logger.info("Applying 'CEDS-2247 Change origination country structure'... ")
     val queryParams: ImmutableMap[String, AnyRef] =
       ImmutableMap.of("locations.originationCountry", ImmutableMap.of("$exists", true, "$ne", ""))
     val query: Document = new Document(queryParams)
 
-    val documents = db.getCollection(collection).find(new BasicDBObject(query)).toSeq
+    val documents = getDeclarationsCollection(db).find(new BasicDBObject(query))
 
     documents.foreach { document =>
       val locations = document.get("locations", classOf[util.Map[String, String]])
@@ -93,19 +101,21 @@ class CacheChangeLog {
       val setUpdate = ImmutableMap.of("$set", ImmutableMap.of("locations.originationCountry", codeElement))
       val setUpdateObj = new BasicDBObject(setUpdate)
 
-      db.getCollection(collection).findOneAndUpdate(objectToBeUpdated, setUpdateObj)
+      logger.info(s"Applying [3] changes to ${document.get("id")}")
+      getDeclarationsCollection(db).findOneAndUpdate(objectToBeUpdated, setUpdateObj)
     }
+    logger.info("Applying 'CEDS-2247 Change origination country structure'... Done.")
   }
 
   @ChangeSet(order = "004", id = "CEDS-2247 Change destination country structure", author = "Patryk Rudnicki")
   def changeDestinationCountryStructure(db: MongoDatabase): Unit = {
-    logger.info("Applying 'CEDS-2247 Change destination country structure' db migrations... ")
 
+    logger.info("Applying 'CEDS-2247 Change destination country structure' db migrations... ")
     val queryParams: ImmutableMap[String, AnyRef] =
       ImmutableMap.of("locations.destinationCountry", ImmutableMap.of("$exists", true, "$ne", ""))
     val query: Document = new Document(queryParams)
 
-    val documents = db.getCollection(collection).find(new BasicDBObject(query)).toSeq
+    val documents = getDeclarationsCollection(db).find(new BasicDBObject(query))
     logger.info(s"[${documents.size}] documents found")
 
     documents.foreach { document =>
@@ -121,20 +131,20 @@ class CacheChangeLog {
       val setUpdate = ImmutableMap.of("$set", ImmutableMap.of("locations.destinationCountry", codeElement))
       val setUpdateObj = new BasicDBObject(setUpdate)
       logger.info(s"Applying [4] changes to ${document.get("id")}")
-      db.getCollection(collection).findOneAndUpdate(objectToBeUpdated, setUpdateObj)
-      logger.info(s"Applied [4] changes to ${document.get("id")}")
+      getDeclarationsCollection(db).findOneAndUpdate(objectToBeUpdated, setUpdateObj)
     }
     logger.info("Applying 'CEDS-2247 Change destination country structure' db migrations... Done.")
   }
 
   @ChangeSet(order = "005", id = "CEDS-2247 Change routing countries structure", author = "Patryk Rudnicki")
   def changeRoutingCountriesStructure(db: MongoDatabase): Unit = {
+
     logger.info("Applying 'CEDS-2247 Change routing countries structure... ")
     val queryParams: ImmutableMap[String, AnyRef] =
       ImmutableMap.of("locations.routingCountries", ImmutableMap.of("$exists", true, "$ne", ""))
     val query: Document = new Document(queryParams)
 
-    val documents = db.getCollection(collection).find(new BasicDBObject(query)).toSeq
+    val documents = getDeclarationsCollection(db).find(new BasicDBObject(query))
     logger.info(s"[${documents.size}] documents found")
 
     documents.foreach { document =>
@@ -152,9 +162,27 @@ class CacheChangeLog {
       val setUpdateObj = new BasicDBObject(setUpdate)
 
       logger.info(s"Applying [5] changes to ${document.get("id")}")
-      db.getCollection(collection).findOneAndUpdate(objectToBeUpdated, setUpdateObj)
-      logger.info(s"Applied [5] changes to ${document.get("id")}")
+      getDeclarationsCollection(db).findOneAndUpdate(objectToBeUpdated, setUpdateObj)
     }
     logger.info("Applying 'CEDS-2247 Change routing countries structure... Done.")
+  }
+
+  @ChangeSet(order = "006", id = "CEDS-2250 Add one structure level to /transport/borderModeOfTransportCode", author = "Maciej Rewera")
+  def updateTransportBorderModeOfTransportCode(db: MongoDatabase): Unit = {
+
+    logger.info("Applying 'CEDS-2250 Add one structure level to /transport/borderModeOfTransportCode'...")
+
+    getDeclarationsCollection(db).updateMany(
+      and(exists("transport.borderModeOfTransportCode"), not(Filters.eq("transport.borderModeOfTransportCode", ""))),
+      rename("transport.borderModeOfTransportCode", "temp")
+    )
+    getDeclarationsCollection(db).updateMany(and(exists("temp")), rename("temp", "transport.borderModeOfTransportCode.code"))
+
+    logger.info("Applying 'CEDS-2250 Add one structure level to /transport/borderModeOfTransportCode'... Done.")
+  }
+
+  private def getDeclarationsCollection(db: MongoDatabase): MongoCollection[Document] = {
+    val collectionName = "declarations"
+    db.getCollection(collectionName)
   }
 }
