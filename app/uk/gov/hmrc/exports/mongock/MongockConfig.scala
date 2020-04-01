@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.mongock
 
-import com.github.cloudyrock.mongock.MongockBuilder
+import com.github.cloudyrock.mongock.{Mongock, MongockBuilder}
 import com.google.inject.Singleton
 import com.mongodb.{MongoClient, MongoClientURI}
 
@@ -31,7 +31,7 @@ case class MongockConfig(mongoURI: String) {
   val maxWaitingForLockMinutes = 5
   val maxTries = 10
 
-  val runner = new MongockBuilder(client, uri.getDatabase, "uk.gov.hmrc.exports.mongock.changesets")
+  val runner: Mongock = new MongockBuilder(client, uri.getDatabase, "uk.gov.hmrc.exports.mongock.changesets")
     .setLockConfig(lockAcquiredForMinutes, maxWaitingForLockMinutes, maxTries)
     .build()
 

@@ -35,7 +35,11 @@ class CacheChangeLog {
     logger.info("Applying 'CEDS-2250 Add one structure level to /transport/borderModeOfTransportCode'...")
 
     getDeclarationsCollection(db).updateMany(
-      and(exists("transport.borderModeOfTransportCode"), not(Filters.eq("transport.borderModeOfTransportCode", ""))),
+      and(
+        exists("transport.borderModeOfTransportCode"),
+        not(Filters.eq("transport.borderModeOfTransportCode", "")),
+        not(exists("transport.borderModeOfTransportCode.code"))
+      ),
       rename("transport.borderModeOfTransportCode", "temp")
     )
     getDeclarationsCollection(db).updateMany(exists("temp"), rename("temp", "transport.borderModeOfTransportCode.code"))
