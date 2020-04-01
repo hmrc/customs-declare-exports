@@ -35,7 +35,7 @@ import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Updates.set;
 import static com.mongodb.client.model.Updates.unset;
 
-@ChangeLog
+@ChangeLog(order = "001")
 public class JavaCacheChangeLog {
 
     private final Logger LOGGER = Logger.getLogger(this.getClass().getName());
