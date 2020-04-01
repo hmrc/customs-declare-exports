@@ -16,156 +16,18 @@
 
 package uk.gov.hmrc.exports.mongock.changesets
 
-import java.util.{Map => JMap}
-
 import com.github.cloudyrock.mongock.{ChangeLog, ChangeSet}
-import com.google.common.collect.ImmutableMap
-import com.mongodb.BasicDBObject
 import com.mongodb.client.model.Filters._
 import com.mongodb.client.model.Updates.rename
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
 import org.mongodb.scala.model.Filters
 import play.api.Logger
-import uk.gov.hmrc.exports.services.CountriesService
 
-import scala.collection.JavaConversions._
-
-@ChangeLog(order = "001")
+@ChangeLog(order = "002")
 class CacheChangeLog {
 
   private val logger = Logger(this.getClass)
-
-  @ChangeSet(order = "001", id = "Exports DB Baseline", author = "Paulo Monteiro")
-  def dbBaseline(db: MongoDatabase): Unit = {}
-
-  @ChangeSet(order = "002", id = "CEDS-2231 Change country name to country code for location page", author = "Patryk Rudnicki")
-  def updateAllCountriesNameToCodesForLocationPage(db: MongoDatabase): Unit = {
-
-    logger.info("Applying 'CEDS-2231 Change country name to country code for location page'... ")
-    val queryParams: ImmutableMap[String, AnyRef] =
-      ImmutableMap.of("locations.goodsLocation.country", ImmutableMap.of("$exists", true, "$ne", ""))
-    val query: Document = new Document(queryParams)
-
-    val documents = getDeclarationsCollection(db).find(new BasicDBObject(query))
-
-    documents.foreach { document =>
-      val goodsLocation = document
-        .get("locations", classOf[JMap[String, JMap[String, String]]])
-        .get("goodsLocation")
-        .asInstanceOf[JMap[String, String]]
-
-      val countryName: String = goodsLocation.get("country")
-
-      goodsLocation.put("country", findCountryCode(countryName))
-
-      // update document on MongoDB
-      val queryIndexes: JMap[String, String] =
-        ImmutableMap.of("id", document.get("id").asInstanceOf[String], "eori", document.get("eori").asInstanceOf[String])
-
-      val objectToBeUpdated: BasicDBObject = new BasicDBObject(queryIndexes)
-
-      logger.info(s"Applying [2] changes to ${document.get("id")}")
-      getDeclarationsCollection(db).replaceOne(objectToBeUpdated, document)
-    }
-
-    logger.info("Applying 'CEDS-2231 Change country name to country code for location page'... Done.")
-  }
-
-  private def findCountryCode(countryName: String): String = {
-    val service: CountriesService = new CountriesService
-
-    service.allCountries.find(_.countryName == countryName).map(_.countryCode).getOrElse(countryName)
-  }
-
-  @ChangeSet(order = "003", id = "CEDS-2247 Change origination country structure", author = "Patryk Rudnicki")
-  def changeOriginationCountryStructure(db: MongoDatabase): Unit = {
-
-    logger.info("Applying 'CEDS-2247 Change origination country structure'... ")
-    val queryParams: ImmutableMap[String, AnyRef] =
-      ImmutableMap.of("locations.originationCountry", ImmutableMap.of("$exists", true, "$ne", ""))
-    val query: Document = new Document(queryParams)
-
-    val documents = getDeclarationsCollection(db).find(new BasicDBObject(query))
-
-    documents.foreach { document =>
-      val locations = document.get("locations", classOf[JMap[String, String]])
-      val originationCountry: String = locations.get("originationCountry")
-
-      val queryIndexes: JMap[String, String] =
-        ImmutableMap.of("id", document.get("id").asInstanceOf[String], "eori", document.get("eori").asInstanceOf[String])
-
-      val objectToBeUpdated: BasicDBObject = new BasicDBObject(queryIndexes)
-
-      val codeElement = ImmutableMap.of("code", originationCountry)
-      val setUpdate = ImmutableMap.of("$set", ImmutableMap.of("locations.originationCountry", codeElement))
-      val setUpdateObj = new BasicDBObject(setUpdate)
-
-      logger.info(s"Applying [3] changes to ${document.get("id")}")
-      getDeclarationsCollection(db).findOneAndUpdate(objectToBeUpdated, setUpdateObj)
-    }
-    logger.info("Applying 'CEDS-2247 Change origination country structure'... Done.")
-  }
-
-  @ChangeSet(order = "004", id = "CEDS-2247 Change destination country structure", author = "Patryk Rudnicki")
-  def changeDestinationCountryStructure(db: MongoDatabase): Unit = {
-
-    logger.info("Applying 'CEDS-2247 Change destination country structure' db migrations... ")
-    val queryParams: ImmutableMap[String, AnyRef] =
-      ImmutableMap.of("locations.destinationCountry", ImmutableMap.of("$exists", true, "$ne", ""))
-    val query: Document = new Document(queryParams)
-
-    val documents = getDeclarationsCollection(db).find(new BasicDBObject(query))
-    logger.info(s"[${documents.size}] documents found")
-
-    documents.foreach { document =>
-      val locations = document.get("locations", classOf[JMap[String, String]])
-      val destinationCountry: String = locations.get("destinationCountry")
-
-      val queryIndexes: JMap[String, String] =
-        ImmutableMap.of("id", document.get("id").asInstanceOf[String], "eori", document.get("eori").asInstanceOf[String])
-
-      val objectToBeUpdated: BasicDBObject = new BasicDBObject(queryIndexes)
-
-      val codeElement = ImmutableMap.of("code", destinationCountry)
-      val setUpdate = ImmutableMap.of("$set", ImmutableMap.of("locations.destinationCountry", codeElement))
-      val setUpdateObj = new BasicDBObject(setUpdate)
-      logger.info(s"Applying [4] changes to ${document.get("id")}")
-      getDeclarationsCollection(db).findOneAndUpdate(objectToBeUpdated, setUpdateObj)
-    }
-    logger.info("Applying 'CEDS-2247 Change destination country structure' db migrations... Done.")
-  }
-
-  @ChangeSet(order = "005", id = "CEDS-2247 Change routing countries structure", author = "Patryk Rudnicki")
-  def changeRoutingCountriesStructure(db: MongoDatabase): Unit = {
-
-    logger.info("Applying 'CEDS-2247 Change routing countries structure... ")
-    val queryParams: ImmutableMap[String, AnyRef] =
-      ImmutableMap.of("locations.routingCountries", ImmutableMap.of("$exists", true, "$ne", ""))
-    val query: Document = new Document(queryParams)
-
-    val documents = getDeclarationsCollection(db).find(new BasicDBObject(query))
-    logger.info(s"[${documents.size}] documents found")
-
-    documents.foreach { document =>
-      val locations = document.get("locations", classOf[JMap[String, java.util.List[String]]])
-      val routingCountries: Seq[String] = locations.get("routingCountries")
-
-      val queryIndexes: JMap[String, String] =
-        ImmutableMap.of("id", document.get("id").asInstanceOf[String], "eori", document.get("eori").asInstanceOf[String])
-
-      val objectToBeUpdated: BasicDBObject = new BasicDBObject(queryIndexes)
-
-      val updatedRoutingCountries = routingCountries.map(ImmutableMap.of("code", _)).toArray
-
-      val setUpdate = ImmutableMap.of("$set", ImmutableMap.of("locations.routingCountries", updatedRoutingCountries))
-      val setUpdateObj = new BasicDBObject(setUpdate)
-
-      logger.info(s"Applying [5] changes to ${document.get("id")}")
-      getDeclarationsCollection(db).findOneAndUpdate(objectToBeUpdated, setUpdateObj)
-    }
-    logger.info("Applying 'CEDS-2247 Change routing countries structure... Done.")
-  }
 
   @ChangeSet(order = "006", id = "CEDS-2250 Add one structure level to /transport/borderModeOfTransportCode", author = "Maciej Rewera")
   def updateTransportBorderModeOfTransportCode(db: MongoDatabase): Unit = {
@@ -176,7 +38,7 @@ class CacheChangeLog {
       and(exists("transport.borderModeOfTransportCode"), not(Filters.eq("transport.borderModeOfTransportCode", ""))),
       rename("transport.borderModeOfTransportCode", "temp")
     )
-    getDeclarationsCollection(db).updateMany(and(exists("temp")), rename("temp", "transport.borderModeOfTransportCode.code"))
+    getDeclarationsCollection(db).updateMany(exists("temp"), rename("temp", "transport.borderModeOfTransportCode.code"))
 
     logger.info("Applying 'CEDS-2250 Add one structure level to /transport/borderModeOfTransportCode'... Done.")
   }

@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.exports.mongock.changesets;
 
+import com.github.cloudyrock.mongock.ChangeLog;
 import com.github.cloudyrock.mongock.ChangeSet;
 import com.google.common.collect.ImmutableMap;
 import com.mongodb.client.MongoCollection;
@@ -34,6 +35,7 @@ import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Updates.set;
 import static com.mongodb.client.model.Updates.unset;
 
+@ChangeLog(order = "001")
 public class JavaCacheChangeLog {
 
     private final Logger LOGGER = Logger.getLogger(this.getClass().getName());
