@@ -55,7 +55,7 @@ public class JavaCacheChangeLog {
                         exists("locations.goodsLocation.country"),
                         type("locations.goodsLocation.country", "string"),
                         ne("locations.goodsLocation.country", ""),
-                        regex("locations.goodsLocation.country","^.{3,}$" )))
+                        regex("locations.goodsLocation.country", "^.{3,}$")))
                 .forEach((Consumer<Document>) document -> {
                     // Retrieve indexes
                     String documentId = (String) document.get(INDEX_ID);
@@ -110,7 +110,7 @@ public class JavaCacheChangeLog {
 
     @ChangeSet(order = "004", id = "CEDS-2247 Change destination country structure", author = "Patryk Rudnicki")
     public void changeDestinationCountryStructure(MongoDatabase db) {
-        LOGGER.info("Applying 'CEDS-2247 Change destination country structure' db migrations... ");
+        LOGGER.info("Applying 'CEDS-2247 Change destination country structure' db migration... ");
         getCollection(db)
                 .find(and(
                         exists("locations.destinationCountry"),
@@ -141,13 +141,13 @@ public class JavaCacheChangeLog {
 
     @ChangeSet(order = "005", id = "CEDS-2247 Change routing countries structure", author = "Patryk Rudnicki")
     public void changeRoutingCountriesStructure(MongoDatabase db) {
-        LOGGER.info("Applying 'CEDS-2247 Change routing countries structure... ");
+        LOGGER.info("Applying 'CEDS-2247 Change routing countries structure' db migration... ");
         getCollection(db)
                 .find(and(
                         not(elemMatch("locations.routingCountries", exists("code", true))),
                         exists("locations.routingCountries"),
-                        type("locations.routingCountries", "array"),
-                        not(size("locations.routingCountries", 0))))
+                        not(size("locations.routingCountries", 0))
+                ))
                 .forEach((Consumer<Document>) document -> {
                     // Retrieve indexes
                     String documentId = (String) document.get(INDEX_ID);
