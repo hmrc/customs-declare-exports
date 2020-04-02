@@ -32,7 +32,6 @@ class CacheChangeLogSpec extends WordSpec with MustMatchers with GuiceOneServerP
     client.getDatabase(DatabaseName)
   }
 
-  private val javaChangeLog = new JavaCacheChangeLog()
   private val changeLog = new CacheChangeLog()
 
   override def beforeEach(): Unit = {
@@ -53,27 +52,27 @@ class CacheChangeLogSpec extends WordSpec with MustMatchers with GuiceOneServerP
 
       "running ChangeSet no. 001" in {
 
-        runTest(testDataBeforeChangeSet_1, testDataAfterChangeSet_1)(javaChangeLog.dbBaseline)
+        runTest(testDataBeforeChangeSet_1, testDataAfterChangeSet_1)(changeLog.dbBaseline)
       }
 
       "running ChangeSet no. 002" in {
 
-        runTest(testDataBeforeChangeSet_2, testDataAfterChangeSet_2)(javaChangeLog.updateAllCountriesNameToCodesForLocationPage)
+        runTest(testDataBeforeChangeSet_2, testDataAfterChangeSet_2)(changeLog.updateAllCountriesNameToCodesForLocationPage)
       }
 
       "running ChangeSet no. 003" in {
 
-        runTest(testDataBeforeChangeSet_3, testDataAfterChangeSet_3)(javaChangeLog.changeOriginationCountryStructure)
+        runTest(testDataBeforeChangeSet_3, testDataAfterChangeSet_3)(changeLog.changeOriginationCountryStructure)
       }
 
       "running ChangeSet no. 004" in {
 
-        runTest(testDataBeforeChangeSet_4, testDataAfterChangeSet_4)(javaChangeLog.changeDestinationCountryStructure)
+        runTest(testDataBeforeChangeSet_4, testDataAfterChangeSet_4)(changeLog.changeDestinationCountryStructure)
       }
 
       "running ChangeSet no. 005" in {
 
-        runTest(testDataBeforeChangeSet_5, testDataAfterChangeSet_5)(javaChangeLog.changeRoutingCountriesStructure)
+        runTest(testDataBeforeChangeSet_5, testDataAfterChangeSet_5)(changeLog.changeRoutingCountriesStructure)
       }
 
       "running ChangeSet no. 006" in {
@@ -86,27 +85,27 @@ class CacheChangeLogSpec extends WordSpec with MustMatchers with GuiceOneServerP
 
       "running ChangeSet no. 001" in {
 
-        runTest(testDataAfterChangeSet_1, testDataAfterChangeSet_1)(javaChangeLog.dbBaseline)
+        runTest(testDataAfterChangeSet_1, testDataAfterChangeSet_1)(changeLog.dbBaseline)
       }
 
       "running ChangeSet no. 002" in {
 
-        runTest(testDataAfterChangeSet_2, testDataAfterChangeSet_2)(javaChangeLog.updateAllCountriesNameToCodesForLocationPage)
+        runTest(testDataAfterChangeSet_2, testDataAfterChangeSet_2)(changeLog.updateAllCountriesNameToCodesForLocationPage)
       }
 
       "running ChangeSet no. 003" in {
 
-        runTest(testDataAfterChangeSet_3, testDataAfterChangeSet_3)(javaChangeLog.changeOriginationCountryStructure)
+        runTest(testDataAfterChangeSet_3, testDataAfterChangeSet_3)(changeLog.changeOriginationCountryStructure)
       }
 
       "running ChangeSet no. 004" in {
 
-        runTest(testDataAfterChangeSet_4, testDataAfterChangeSet_4)(javaChangeLog.changeDestinationCountryStructure)
+        runTest(testDataAfterChangeSet_4, testDataAfterChangeSet_4)(changeLog.changeDestinationCountryStructure)
       }
 
       "running ChangeSet no. 005" in {
 
-        runTest(testDataAfterChangeSet_5, testDataAfterChangeSet_5)(javaChangeLog.changeRoutingCountriesStructure)
+        runTest(testDataAfterChangeSet_5, testDataAfterChangeSet_5)(changeLog.changeRoutingCountriesStructure)
       }
 
       "running ChangeSet no. 006" in {
