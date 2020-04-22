@@ -18,13 +18,17 @@ package uk.gov.hmrc.exports.models
 
 import play.api.libs.json._
 
-case class Paginated[T](results: Seq[T], page: Page, total: Long)
+case class Paginated[T](currentPageElements: Seq[T], page: Page, total: Long)
 object Paginated {
   def apply[T](results: T*): Paginated[T] = Paginated[T](results, Page(), results.size)
   def empty[T](page: Page) = Paginated(Seq.empty[T], page, 0)
 
   implicit def writes[T](implicit fmt: Writes[T]): Writes[Paginated[T]] = new Writes[Paginated[T]] {
     override def writes(paged: Paginated[T]): JsValue =
-      Json.obj("results" -> JsArray(paged.results.map(fmt.writes)), "page" -> Json.toJson(paged.page), "total" -> JsNumber(paged.total))
+      Json.obj(
+        "currentPageElements" -> JsArray(paged.currentPageElements.map(fmt.writes)),
+        "page" -> Json.toJson(paged.page),
+        "total" -> JsNumber(paged.total)
+      )
   }
 }

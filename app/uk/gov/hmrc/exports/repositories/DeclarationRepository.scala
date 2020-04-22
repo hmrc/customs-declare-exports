@@ -81,7 +81,7 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
       total <- collection.count(Some(query), limit = Some(0), skip = 0, hint = None, readConcern = ReadConcern.Local)
     } yield {
       findStopwatch.stop()
-      Paginated(results = results, page = pagination, total = total)
+      Paginated(currentPageElements = results, page = pagination, total = total)
     }
   }
 
