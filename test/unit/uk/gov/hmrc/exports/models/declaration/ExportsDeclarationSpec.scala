@@ -155,7 +155,7 @@ object ExportsDeclarationSpec {
       |    },
       |    "officeOfExit": {
       |      "officeId": "GB000054",
-      |      "circumstancesCode": "No"
+      |      "isUkOfficeOfExit": "Yes"
       |    },
       |    "supervisingCustomsOffice": {
       |      "supervisingCustomsOffice": "GBLBA001"
