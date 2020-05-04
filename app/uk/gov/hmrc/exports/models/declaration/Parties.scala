@@ -43,7 +43,7 @@ object DeclarantDetails {
   implicit val format: OFormat[DeclarantDetails] = Json.format[DeclarantDetails]
 }
 
-case class RepresentativeDetails(details: Option[EntityDetails], statusCode: Option[String])
+case class RepresentativeDetails(details: Option[EntityDetails], statusCode: Option[String], representingOtherAgent: Option[String])
 object RepresentativeDetails {
   implicit val format: OFormat[RepresentativeDetails] = Json.format[RepresentativeDetails]
   val Declarant = "1"
