@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{Address, EntityDetails, ExporterDetails, ExportsDeclaration}
+import uk.gov.hmrc.exports.models.declaration.{Address, EntityDetails, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -25,15 +25,16 @@ import wco.datamodel.wco.dec_dms._2.Declaration.Exporter
 import wco.datamodel.wco.declaration_ds.dms._2._
 
 class ExporterBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
-  override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
-    model.parties.exporterDetails
-      .filter(isDefined)
-      .map(_.details)
+  override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit = {
+
+    val declarentDetailsIfExporter: Option[EntityDetails] =
+      model.parties.declarantIsExporter.flatMap(answer => if (answer.isExporter) model.parties.declarantDetails.map(_.details) else None)
+
+    declarentDetailsIfExporter
+      .orElse(model.parties.exporterDetails.map(_.details))
       .map(createExporter)
       .foreach(declaration.setExporter)
-
-  private def isDefined(exporterDetails: ExporterDetails): Boolean =
-    exporterDetails.details.eori.isDefined || exporterDetails.details.address.isDefined
+  }
 
   private def createExporter(details: EntityDetails): Exporter = {
     val exporter = new Exporter()

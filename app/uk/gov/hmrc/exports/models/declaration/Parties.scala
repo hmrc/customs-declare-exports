@@ -43,7 +43,9 @@ object DeclarantDetails {
   implicit val format: OFormat[DeclarantDetails] = Json.format[DeclarantDetails]
 }
 
-case class DeclarantIsExporter(answer: String)
+case class DeclarantIsExporter(answer: String) {
+  def isExporter: Boolean = answer == "Yes"
+}
 object DeclarantIsExporter {
   implicit val format: OFormat[DeclarantIsExporter] = Json.format[DeclarantIsExporter]
 }

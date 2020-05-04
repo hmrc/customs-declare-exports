@@ -17,13 +17,13 @@
 package unit.uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.mockito.Mockito.when
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
+import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.Address
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.declaration.ExporterBuilder
-import testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class ExporterBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
@@ -81,6 +81,40 @@ class ExporterBuilderSpec extends WordSpec with Matchers with MockitoSugar with 
         declaration.getExporter.getID.getValue should be("eori")
         declaration.getExporter.getName should be(null)
         declaration.getExporter.getAddress should be(null)
+      }
+
+      "declarant is exporter and exporter details not provided" in {
+        val model =
+          aDeclaration(withoutExporterDetails(), withDeclarantDetails(eori = Some("dec_eori")), withDeclarantIsExporter())
+        val declaration = new Declaration()
+
+        builder.buildThenAdd(model, declaration)
+
+        declaration.getExporter.getID.getValue should be("dec_eori")
+      }
+
+      "declarant is exporter and exporter details are ignored" in {
+        val model =
+          aDeclaration(withExporterDetails(eori = Some("exporter_eori")), withDeclarantDetails(eori = Some("dec_eori")), withDeclarantIsExporter())
+        val declaration = new Declaration()
+
+        builder.buildThenAdd(model, declaration)
+
+        declaration.getExporter.getID.getValue should be("dec_eori")
+      }
+
+      "declarant is not exporter and exporter details used" in {
+        val model =
+          aDeclaration(
+            withExporterDetails(eori = Some("exporter_eori")),
+            withDeclarantDetails(eori = Some("dec_eori")),
+            withDeclarantIsExporter("No")
+          )
+        val declaration = new Declaration()
+
+        builder.buildThenAdd(model, declaration)
+
+        declaration.getExporter.getID.getValue should be("exporter_eori")
       }
     }
   }
