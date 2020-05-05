@@ -19,7 +19,10 @@ package uk.gov.hmrc.exports.models.declaration.notifications
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.models.Pointer
 
-case class NotificationError(validationCode: String, pointer: Option[Pointer])
+case class NotificationError(validationCode: String, pointer: Option[Pointer], url: Option[String] = None) {
+
+  def addUrl(url: Option[String]): NotificationError = this.copy(url = url)
+}
 
 object NotificationError {
   implicit val format = Json.format[NotificationError]

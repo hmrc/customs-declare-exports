@@ -14,7 +14,8 @@ object AppDependencies {
     "uk.gov.hmrc"                    %%  "logback-json-logger"   % "4.6.0",
     "com.typesafe.play"              %%  "play-json-joda"        % "2.6.10",
     "com.github.cloudyrock.mongock"  %  "mongock-core"           % "2.0.2",
-    "org.mongodb.scala"              %% "mongo-scala-driver"     % "2.9.0"
+    "org.mongodb.scala"              %% "mongo-scala-driver"     % "2.9.0",
+    "com.github.tototoshi"           %% "scala-csv"              % "1.3.6"
   )
 
   def test(scope: String = "test") = Seq(

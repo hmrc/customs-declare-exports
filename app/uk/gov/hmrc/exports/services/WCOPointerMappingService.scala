@@ -16,27 +16,47 @@
 
 package uk.gov.hmrc.exports.services
 
-import javax.inject.Inject
+import com.github.tototoshi.csv.CSVReader
+import play.api.Logger
 import uk.gov.hmrc.exports.models.{Pointer, PointerMapping, PointerPattern}
-import uk.gov.hmrc.exports.util.FileReader
 
-class WCOPointerMappingService @Inject()(fileReader: FileReader) {
+import scala.io.Source
 
-  private lazy val mappings: Set[PointerMapping] = {
-    fileReader
-      .readLines("code-lists/pointer-mapping.csv")
-      .map(_.split(","))
-      .map {
-        case Array(wcoPattern, exportsPattern) =>
-          PointerMapping(PointerPattern(wcoPattern.trim), PointerPattern(exportsPattern.trim))
-      }
-      .toSet
+object WCOPointerMappingService {
+
+  private val logger = Logger(this.getClass)
+
+  private val mappings: Set[PointerMapping] = {
+    val reader =
+      CSVReader.open(Source.fromURL(getClass.getClassLoader.getResource("code-lists/pointer-mapping.csv"), "UTF-8"))
+
+    val errors: List[List[String]] = reader.all()
+
+    errors.map {
+      case List(wcoPattern, exportsPattern, url) =>
+        PointerMapping(PointerPattern(wcoPattern.trim), PointerPattern(exportsPattern.trim), applyUrl(url))
+    }.toSet
   }
 
+  private def applyUrl(url: String): Option[String] =
+    if (url.isEmpty) None else Some(url)
+
+  def getUrlBasedOnErrorPointer(pointer: Pointer): Option[String] =
+    mappings.find(_.exportsPattern matches pointer.pattern) match {
+      case Some(pointerMapping) if pointerMapping.url.isDefined => pointerMapping.url
+      case _ =>
+        logger.warn("There is no url for pointer: " + pointer)
+        None
+    }
+
   def mapWCOPointerToExportsPointer(pointer: Pointer): Option[Pointer] =
-    mappings.find(_.wcoPattern matches pointer.pattern).map(_.applyToWCOPointer(pointer))
+    mappings.find(_.wcoPattern matches pointer.pattern) match {
+      case Some(pointerMapping) => Some(pointerMapping.applyToWCOPointer(pointer))
+      case _ =>
+        logger.warn("There is no exports pointer for: " + Pointer)
+        None
+    }
 
   def mapWCOPointerToExportsPointer(pointers: Iterable[Pointer]): Iterable[Pointer] =
     pointers.map(mapWCOPointerToExportsPointer).filter(_.isDefined).flatten
-
 }

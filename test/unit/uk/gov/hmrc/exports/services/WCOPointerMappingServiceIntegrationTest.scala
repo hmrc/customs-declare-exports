@@ -22,8 +22,6 @@ import uk.gov.hmrc.exports.util.FileReader
 
 class WCOPointerMappingServiceIntegrationTest extends WordSpec with MustMatchers {
 
-  private val service = new WCOPointerMappingService(new FileReader())
-
   "Map to Exports Pointer" should {
     "map valid pointer" in {
       val pointer = Pointer(
@@ -40,7 +38,7 @@ class WCOPointerMappingServiceIntegrationTest extends WordSpec with MustMatchers
         )
       )
 
-      val result = service.mapWCOPointerToExportsPointer(pointer)
+      val result = WCOPointerMappingService.mapWCOPointerToExportsPointer(pointer)
       result mustBe defined
       result.get mustBe Pointer(
         List(
@@ -54,5 +52,4 @@ class WCOPointerMappingServiceIntegrationTest extends WordSpec with MustMatchers
       )
     }
   }
-
 }

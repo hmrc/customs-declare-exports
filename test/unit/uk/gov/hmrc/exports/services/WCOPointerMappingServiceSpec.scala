@@ -16,41 +16,31 @@
 
 package uk.gov.hmrc.exports.services
 
-import org.mockito.ArgumentMatchers._
-import org.mockito.BDDMockito._
-import org.mockito.Mockito.reset
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
-import uk.gov.hmrc.exports.util.FileReader
 
 class WCOPointerMappingServiceSpec extends WordSpec with MustMatchers with MockitoSugar with BeforeAndAfterEach {
 
-  private val fileReader = mock[FileReader]
-  private def service = new WCOPointerMappingService(fileReader)
-
-  override def afterEach(): Unit =
-    reset(fileReader)
-
   "Map pointer" should {
     "find matching pointer" in {
-      given(fileReader.readLines(anyString(), anyBoolean())).willReturn(List("a.b, x.y"))
 
       val pointer =
-        Pointer(List(PointerSection("a", PointerSectionType.FIELD), PointerSection("b", PointerSectionType.FIELD)))
+        Pointer(List(PointerSection("42A", PointerSectionType.FIELD), PointerSection("017", PointerSectionType.FIELD)))
 
-      val result = service.mapWCOPointerToExportsPointer(pointer)
+      val result = WCOPointerMappingService.mapWCOPointerToExportsPointer(pointer)
       result mustBe defined
-      result.get mustBe Pointer(List(PointerSection("x", PointerSectionType.FIELD), PointerSection("y", PointerSectionType.FIELD)))
+      result.get mustBe Pointer(
+        List(PointerSection("declaration", PointerSectionType.FIELD), PointerSection("functionCode", PointerSectionType.FIELD))
+      )
     }
 
     "not find missing pointer" in {
-      given(fileReader.readLines(anyString(), anyBoolean())).willReturn(List("a.b, x.y"))
 
       val pointer =
         Pointer(List(PointerSection("x", PointerSectionType.FIELD), PointerSection("x", PointerSectionType.FIELD)))
 
-      service.mapWCOPointerToExportsPointer(pointer) mustBe None
+      WCOPointerMappingService.mapWCOPointerToExportsPointer(pointer) mustBe None
     }
   }
 
