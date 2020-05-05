@@ -21,8 +21,7 @@ import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.Status
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.models.{CustomsDeclarationsResponse, Eori}
+import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import unit.uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}

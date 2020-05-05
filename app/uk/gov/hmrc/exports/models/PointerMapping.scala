@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.models
 
-case class PointerMapping(wcoPattern: PointerPattern, exportsPattern: PointerPattern) {
+case class PointerMapping(wcoPattern: PointerPattern, exportsPattern: PointerPattern, url: Option[String]) {
 
   def applyToWCOPointer(pointer: Pointer): Pointer = {
     if (!wcoPattern.matches(pointer.pattern))

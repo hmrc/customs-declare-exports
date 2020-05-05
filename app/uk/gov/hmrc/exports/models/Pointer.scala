@@ -20,8 +20,6 @@ import play.api.libs.json._
 import uk.gov.hmrc.exports.models
 import uk.gov.hmrc.exports.models.PointerSectionType.PointerSectionType
 
-import scala.util.{Success, Try}
-
 object PointerSectionType extends Enumeration {
   type PointerSectionType = Value
   val FIELD, SEQUENCE = Value

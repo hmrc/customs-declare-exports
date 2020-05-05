@@ -16,6 +16,8 @@
 
 package unit.uk.gov.hmrc.exports.services
 
+import java.time.LocalDateTime
+
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito.{times, verify, verifyZeroInteractions, when}
 import org.mockito.invocation.InvocationOnMock
@@ -29,7 +31,7 @@ import reactivemongo.core.errors.DetailedDatabaseException
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection}
 import uk.gov.hmrc.exports.models.PointerSectionType.{FIELD, SEQUENCE}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest, SubmissionStatus}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.{NotificationService, WCOPointerMappingService}
 import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder._
@@ -46,9 +48,8 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
   private trait Test {
     val submissionRepositoryMock: SubmissionRepository = buildSubmissionRepositoryMock
     val notificationRepositoryMock: NotificationRepository = buildNotificationRepositoryMock
-    val wcoPointerMappingService: WCOPointerMappingService = mock[WCOPointerMappingService]
     val notificationService =
-      new NotificationService(submissionRepositoryMock, notificationRepositoryMock, wcoPointerMappingService)(ExecutionContext.global)
+      new NotificationService(submissionRepositoryMock, notificationRepositoryMock)(ExecutionContext.global)
   }
 
   val PositionFunctionCode = "11"
@@ -133,8 +134,8 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
   }
 
   "Get Notifications" should {
-    val notifications = mock[Seq[Notification]]
-    val submission = Submission("id", "eori", "lrn", None, "ducr", Seq(Action("id1", SubmissionRequest)))
+    val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", Seq(Action("id1", SubmissionRequest)))
+    val notifications = Seq(Notification("id1", "mrn", LocalDateTime.now(), SubmissionStatus.ACCEPTED, Seq.empty, ""))
 
     "retrieve by conversation IDs" in new Test {
       when(notificationRepositoryMock.findNotificationsByActionIds(any[Seq[String]]))
@@ -285,18 +286,14 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
 
       val expectedPointer = Pointer(
         Seq(
-          PointerSection("42A", FIELD),
-          PointerSection("67A", FIELD),
-          PointerSection("68A", FIELD),
+          PointerSection("declaration", FIELD),
+          PointerSection("items", FIELD),
           PointerSection("1", SEQUENCE),
-          PointerSection("02A", FIELD),
+          PointerSection("documentProduced", FIELD),
           PointerSection("2", SEQUENCE),
-          PointerSection("360", FIELD)
+          PointerSection("documentStatus", FIELD)
         )
       )
-
-      when(wcoPointerMappingService.mapWCOPointerToExportsPointer(meq(expectedPointer)))
-        .thenReturn(Some(expectedPointer))
 
       val pointer = notificationService.buildErrorPointers(inputXml)
 

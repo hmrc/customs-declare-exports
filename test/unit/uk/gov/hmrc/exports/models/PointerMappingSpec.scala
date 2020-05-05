@@ -22,7 +22,7 @@ class PointerMappingSpec extends WordSpec with MustMatchers {
 
   "Apply To" should {
     "throw exception when pointer does not match WCO pattern" in {
-      val mapping = PointerMapping(PointerPattern("a.b.c"), PointerPattern("x.y.z"))
+      val mapping = PointerMapping(PointerPattern("a.b.c"), PointerPattern("x.y.z"), None)
       val pointer = Pointer(
         List(
           PointerSection("x", PointerSectionType.FIELD),
@@ -37,7 +37,7 @@ class PointerMappingSpec extends WordSpec with MustMatchers {
 
     "map field only pointer" in {
       // Given
-      val mapping = PointerMapping(PointerPattern("a.b.c"), PointerPattern("x.y.z"))
+      val mapping = PointerMapping(PointerPattern("a.b.c"), PointerPattern("x.y.z"), None)
       val pointer = Pointer(
         List(
           PointerSection("a", PointerSectionType.FIELD),
@@ -59,7 +59,7 @@ class PointerMappingSpec extends WordSpec with MustMatchers {
     "map sequence based pointer" when {
       "only single sequence element" in {
         // Given
-        val mapping = PointerMapping(PointerPattern("a.$.c"), PointerPattern("x.$.z"))
+        val mapping = PointerMapping(PointerPattern("a.$.c"), PointerPattern("x.$.z"), None)
         val pointer = Pointer(
           List(
             PointerSection("a", PointerSectionType.FIELD),
@@ -80,7 +80,7 @@ class PointerMappingSpec extends WordSpec with MustMatchers {
 
       "multiple sequence elements" in {
         // Given
-        val mapping = PointerMapping(PointerPattern("a.$1.$2"), PointerPattern("x.$1.$2"))
+        val mapping = PointerMapping(PointerPattern("a.$1.$2"), PointerPattern("x.$1.$2"), None)
         val pointer = Pointer(
           List(
             PointerSection("a", PointerSectionType.FIELD),
@@ -102,7 +102,7 @@ class PointerMappingSpec extends WordSpec with MustMatchers {
       "differing sequence elements" when {
         "later sequence identifier is ignored" in {
           // Given
-          val mapping = PointerMapping(PointerPattern("a.$1.$2"), PointerPattern("x.$1.z"))
+          val mapping = PointerMapping(PointerPattern("a.$1.$2"), PointerPattern("x.$1.z"), None)
           val pointer = Pointer(
             List(
               PointerSection("a", PointerSectionType.FIELD),
@@ -123,7 +123,7 @@ class PointerMappingSpec extends WordSpec with MustMatchers {
 
         "earlier sequence identifier is ignored" in {
           // Given
-          val mapping = PointerMapping(PointerPattern("a.$1.$2"), PointerPattern("x.$2.z"))
+          val mapping = PointerMapping(PointerPattern("a.$1.$2"), PointerPattern("x.$2.z"), None)
           val pointer = Pointer(
             List(
               PointerSection("a", PointerSectionType.FIELD),

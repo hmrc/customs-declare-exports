@@ -31,18 +31,23 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.{Node, NodeSeq}
 
 @Singleton
-class NotificationService @Inject()(
-  submissionRepository: SubmissionRepository,
-  notificationRepository: NotificationRepository,
-  wcoPointerMappingService: WCOPointerMappingService
-)(implicit executionContext: ExecutionContext) {
+class NotificationService @Inject()(submissionRepository: SubmissionRepository, notificationRepository: NotificationRepository)(
+  implicit executionContext: ExecutionContext
+) {
 
   private val logger = Logger(this.getClass)
   private val databaseDuplicateKeyErrorCode = 11000
 
   def getNotifications(submission: Submission): Future[Seq[Notification]] = {
     val conversationIds = submission.actions.map(_.id)
-    notificationRepository.findNotificationsByActionIds(conversationIds)
+    notificationRepository.findNotificationsByActionIds(conversationIds).map { notifications =>
+      notifications.map { notification =>
+        notification.copy(errors = notification.errors.map { error =>
+          val url = error.pointer.flatMap(WCOPointerMappingService.getUrlBasedOnErrorPointer(_))
+          error.addUrl(url)
+        })
+      }
+    }
   }
 
   def getAllNotificationsForUser(eori: String): Future[Seq[Notification]] =
@@ -169,7 +174,7 @@ class NotificationService @Inject()(
     }.toList
 
     val wcoPointer = Pointer(pointerSections)
-    val exportsPointer = wcoPointerMappingService.mapWCOPointerToExportsPointer(wcoPointer)
+    val exportsPointer = WCOPointerMappingService.mapWCOPointerToExportsPointer(wcoPointer)
     if (exportsPointer.isEmpty) logger.warn(s"Missing pointer mapping for [${wcoPointer}]")
     exportsPointer
   }
