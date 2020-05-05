@@ -43,6 +43,13 @@ object DeclarantDetails {
   implicit val format: OFormat[DeclarantDetails] = Json.format[DeclarantDetails]
 }
 
+case class DeclarantIsExporter(answer: String) {
+  def isExporter: Boolean = answer == "Yes"
+}
+object DeclarantIsExporter {
+  implicit val format: OFormat[DeclarantIsExporter] = Json.format[DeclarantIsExporter]
+}
+
 case class RepresentativeDetails(details: Option[EntityDetails], statusCode: Option[String], representingOtherAgent: Option[String])
 object RepresentativeDetails {
   implicit val format: OFormat[RepresentativeDetails] = Json.format[RepresentativeDetails]
@@ -80,6 +87,7 @@ case class Parties(
   exporterDetails: Option[ExporterDetails] = None,
   consigneeDetails: Option[ConsigneeDetails] = None,
   declarantDetails: Option[DeclarantDetails] = None,
+  declarantIsExporter: Option[DeclarantIsExporter] = None,
   representativeDetails: Option[RepresentativeDetails] = None,
   declarationAdditionalActorsData: Option[DeclarationAdditionalActors] = None,
   declarationHoldersData: Option[DeclarationHolders] = None,
