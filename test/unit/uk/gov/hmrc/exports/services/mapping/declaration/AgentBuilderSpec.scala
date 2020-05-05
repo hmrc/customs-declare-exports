@@ -17,13 +17,13 @@
 package unit.uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.mockito.Mockito.when
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
+import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.{Address, EntityDetails, RepresentativeDetails}
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.declaration.AgentBuilder
-import testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class AgentBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
@@ -121,6 +121,28 @@ class AgentBuilderSpec extends WordSpec with Matchers with MockitoSugar with Exp
         agent.getName should be(null)
         agent.getAddress should be(null)
         agent.getFunctionCode.getValue should be("2")
+      }
+      "declarant not representing another agent" in {
+        val model =
+          aDeclaration(
+            withRepresentativeDetails(
+              details = None,
+              statusCode = Some(RepresentativeDetails.DirectRepresentative),
+              representingAnotherAgent = Some("No")
+            ),
+            withDeclarantDetails(eori = Some("DEC_EORI"))
+          )
+
+        val agentBuilder = new AgentBuilder(mockCountriesService)
+        val emptyDeclaration = new Declaration
+
+        agentBuilder.buildThenAdd(model, emptyDeclaration)
+        val agent: Declaration.Agent = emptyDeclaration.getAgent
+
+        agent.getID.getValue should be("DEC_EORI")
+        agent.getName should be(null)
+        agent.getAddress should be(null)
+        agent.getFunctionCode.getValue should be(RepresentativeDetails.DirectRepresentative)
       }
     }
   }

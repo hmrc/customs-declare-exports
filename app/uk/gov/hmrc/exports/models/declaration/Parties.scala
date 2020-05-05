@@ -50,7 +50,9 @@ object DeclarantIsExporter {
   implicit val format: OFormat[DeclarantIsExporter] = Json.format[DeclarantIsExporter]
 }
 
-case class RepresentativeDetails(details: Option[EntityDetails], statusCode: Option[String], representingOtherAgent: Option[String])
+case class RepresentativeDetails(details: Option[EntityDetails], statusCode: Option[String], representingOtherAgent: Option[String]) {
+  def isRepresentingOtherAgent = representingOtherAgent.contains("Yes")
+}
 object RepresentativeDetails {
   implicit val format: OFormat[RepresentativeDetails] = Json.format[RepresentativeDetails]
   val Declarant = "1"
