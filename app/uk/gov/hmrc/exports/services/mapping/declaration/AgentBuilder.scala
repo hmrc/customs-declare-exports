@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{ExportsDeclaration, RepresentativeDetails}
+import uk.gov.hmrc.exports.models.declaration.{EntityDetails, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -28,20 +28,17 @@ class AgentBuilder @Inject()(countriesService: CountriesService) extends Modifyi
 
   override def buildThenAdd(exportsCacheModel: ExportsDeclaration, declaration: Declaration): Unit =
     exportsCacheModel.parties.representativeDetails.foreach { representativeDetails =>
-      if (isDefined(representativeDetails)) {
-        declaration.setAgent(createAgent(representativeDetails))
-      }
+      if (representativeDetails.isRepresentingOtherAgent) {
+        declaration.setAgent(createAgent(representativeDetails.details, representativeDetails.statusCode))
+      } else declaration.setAgent(createAgent(exportsCacheModel.parties.declarantDetails.map(_.details), representativeDetails.statusCode))
     }
 
-  def isDefined(representativeDetails: RepresentativeDetails): Boolean =
-    representativeDetails.details.exists(details => details.eori.isDefined || details.address.isDefined)
-
-  private def createAgent(data: RepresentativeDetails): Declaration.Agent = {
+  private def createAgent(details: Option[EntityDetails], statusCode: Option[String]): Declaration.Agent = {
     val agent = new Declaration.Agent()
 
-    agent.setFunctionCode(setStatusCode(data))
+    agent.setFunctionCode(createFunctionCode(statusCode))
 
-    data.details.foreach(
+    details.foreach(
       details =>
         details.eori match {
           case Some(eori) if eori.nonEmpty =>
@@ -86,8 +83,9 @@ class AgentBuilder @Inject()(countriesService: CountriesService) extends Modifyi
     )
     agent
   }
-  private def setStatusCode(data: RepresentativeDetails) =
-    data.statusCode.map { value =>
+
+  private def createFunctionCode(data: Option[String]) =
+    data.map { value =>
       val functionCodeType = new AgentFunctionCodeType()
       functionCodeType.setValue(value)
       functionCodeType
