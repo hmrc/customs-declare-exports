@@ -17,10 +17,10 @@
 package unit.uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.scalatest.{Matchers, WordSpec}
+import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.services.mapping.declaration.ExitOfficeBuilder
-import testdata.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class ExitOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
@@ -44,8 +44,10 @@ class ExitOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarati
           declaration.getExitOffice should be(null)
         }
 
-        s"$declarationType journey with populated data" in {
-          val model = aDeclaration(withType(declarationType), withOfficeOfExit(officeId = Some("office-id")))
+        s"$declarationType journey with 'Office of Exit' data" in {
+          val model =
+            aDeclaration(withType(declarationType), withOfficeOfExit(officeId = Some("office-id"), isUkOfficeOfExit = Some("Yes")))
+
           val declaration = new Declaration()
 
           builder.buildThenAdd(model, declaration)

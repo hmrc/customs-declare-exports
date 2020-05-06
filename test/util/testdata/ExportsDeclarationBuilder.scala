@@ -220,9 +220,13 @@ trait ExportsDeclarationBuilder {
   def withOfficeOfExit(
     officeId: Option[String] = None,
     presentationOfficeId: Option[String] = None,
-    circumstancesCode: Option[String] = None
+    circumstancesCode: Option[String] = None,
+    isUkOfficeOfExit: Option[String] = Some("No")
   ): ExportsDeclarationModifier =
-    cache => cache.copy(locations = cache.locations.copy(officeOfExit = Some(OfficeOfExit(officeId, presentationOfficeId, circumstancesCode))))
+    cache =>
+      cache.copy(
+        locations = cache.locations.copy(officeOfExit = Some(OfficeOfExit(officeId, presentationOfficeId, circumstancesCode, isUkOfficeOfExit)))
+    )
 
   def withoutItems(): ExportsDeclarationModifier = _.copy(items = Seq.empty)
 
