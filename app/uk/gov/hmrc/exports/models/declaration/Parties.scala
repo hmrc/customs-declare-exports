@@ -38,6 +38,11 @@ object ConsigneeDetails {
   implicit val format: OFormat[ConsigneeDetails] = Json.format[ConsigneeDetails]
 }
 
+case class ConsignorDetails(details: EntityDetails)
+object ConsignorDetails {
+  implicit val format: OFormat[ConsignorDetails] = Json.format[ConsignorDetails]
+}
+
 case class DeclarantDetails(details: EntityDetails)
 object DeclarantDetails {
   implicit val format: OFormat[DeclarantDetails] = Json.format[DeclarantDetails]
@@ -88,6 +93,7 @@ object CarrierDetails {
 case class Parties(
   exporterDetails: Option[ExporterDetails] = None,
   consigneeDetails: Option[ConsigneeDetails] = None,
+  consignorDetails: Option[ConsignorDetails] = None,
   declarantDetails: Option[DeclarantDetails] = None,
   declarantIsExporter: Option[DeclarantIsExporter] = None,
   representativeDetails: Option[RepresentativeDetails] = None,

@@ -39,6 +39,7 @@ class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclar
 
   private val mockGoodsShipmentNatureOfTransactionBuilder = mock[GoodsShipmentNatureOfTransactionBuilder]
   private val mockConsigneeBuilder = mock[ConsigneeBuilder]
+  private val mockConsignorBuilder = mock[ConsignorBuilder]
   private val mockConsignmentBuilder = mock[ConsignmentBuilder]
   private val mockDestinationBuilder = mock[DestinationBuilder]
   private val mockExportCountryBuilder = mock[ExportCountryBuilder]
@@ -52,6 +53,7 @@ class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclar
     Mockito.reset(
       mockGoodsShipmentNatureOfTransactionBuilder,
       mockConsigneeBuilder,
+      mockConsignorBuilder,
       mockConsignmentBuilder,
       mockDestinationBuilder,
       mockExportCountryBuilder,
@@ -65,6 +67,7 @@ class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclar
   private def builder = new GoodsShipmentBuilder(
     mockGoodsShipmentNatureOfTransactionBuilder,
     mockConsigneeBuilder,
+    mockConsignorBuilder,
     mockConsignmentBuilder,
     mockDestinationBuilder,
     mockExportCountryBuilder,
@@ -112,6 +115,12 @@ class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclar
         any[Declaration.GoodsShipment]
       )
 
+    verify(mockConsignorBuilder)
+      .buildThenAdd(
+        refEq(ConsignorDetails(EntityDetails(Some("9GB1234567ABCDEG"), Some(ConsignorBuilderSpec.correctAddress)))),
+        any[Declaration.GoodsShipment]
+      )
+
     verify(mockConsignmentBuilder)
       .buildThenAdd(refEq(model), any[Declaration.GoodsShipment])
 
@@ -138,6 +147,7 @@ class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclar
       withType(declarationType),
       withNatureOfTransaction("1"),
       withConsigneeDetails(eori = Some("9GB1234567ABCDEF"), address = Some(correctAddress)),
+      withConsignorDetails(eori = Some("9GB1234567ABCDEG"), address = Some(ConsignorBuilderSpec.correctAddress)),
       withDeclarationAdditionalActors(correctAdditionalActors1, correctAdditionalActors2),
       withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
       withOriginationCountry(),
