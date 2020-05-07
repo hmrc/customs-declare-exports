@@ -95,6 +95,12 @@ object CarrierDetails {
   implicit val format: OFormat[CarrierDetails] = Json.format[CarrierDetails]
 }
 
+case class YesNoAnswer(answer: String)
+
+object YesNoAnswer {
+  implicit val format: OFormat[YesNoAnswer] = Json.format[YesNoAnswer]
+}
+
 case class Parties(
   exporterDetails: Option[ExporterDetails] = None,
   isExs: Option[IsExs] = None,
@@ -105,7 +111,8 @@ case class Parties(
   representativeDetails: Option[RepresentativeDetails] = None,
   declarationAdditionalActorsData: Option[DeclarationAdditionalActors] = None,
   declarationHoldersData: Option[DeclarationHolders] = None,
-  carrierDetails: Option[CarrierDetails] = None
+  carrierDetails: Option[CarrierDetails] = None,
+  isEntryIntoDeclarantsRecords: Option[YesNoAnswer] = None
 )
 object Parties {
   implicit val format: OFormat[Parties] = Json.format[Parties]
