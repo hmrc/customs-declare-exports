@@ -17,6 +17,7 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.exports.models.Eori
 
 case class EntityDetails(eori: Option[String], address: Option[Address])
 object EntityDetails {
@@ -96,9 +97,13 @@ object CarrierDetails {
 }
 
 case class YesNoAnswer(answer: String)
-
 object YesNoAnswer {
   implicit val format: OFormat[YesNoAnswer] = Json.format[YesNoAnswer]
+}
+
+case class PersonPresentingGoodsDetails(eori: Eori)
+object PersonPresentingGoodsDetails {
+  implicit val format: OFormat[PersonPresentingGoodsDetails] = Json.format[PersonPresentingGoodsDetails]
 }
 
 case class Parties(
@@ -112,7 +117,8 @@ case class Parties(
   declarationAdditionalActorsData: Option[DeclarationAdditionalActors] = None,
   declarationHoldersData: Option[DeclarationHolders] = None,
   carrierDetails: Option[CarrierDetails] = None,
-  isEntryIntoDeclarantsRecords: Option[YesNoAnswer] = None
+  isEntryIntoDeclarantsRecords: Option[YesNoAnswer] = None,
+  personPresentingGoodsDetails: Option[PersonPresentingGoodsDetails] = None
 )
 object Parties {
   implicit val format: OFormat[Parties] = Json.format[Parties]
