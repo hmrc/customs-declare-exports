@@ -16,19 +16,20 @@
 
 package uk.gov.hmrc.exports.models.declaration.submissions
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
-import play.api.libs.json.Json
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{Json, Reads, _}
 
-/**
-  * Action class
-  *
-  * @param id unique id of the Action.  This is the converstationId from customs-notifications
-  * @param requestType the request type
-  * @param requestTimestamp timestamp (defaults to now)
-  */
-case class Action(id: String, requestType: RequestType, requestTimestamp: LocalDateTime = LocalDateTime.now())
+case class Action(id: String, requestType: RequestType, requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")))
 
 object Action {
-  implicit val format = Json.format[Action]
+  implicit val readLocalDateTimeFromString: Reads[ZonedDateTime] = implicitly[Reads[LocalDateTime]]
+    .map(ZonedDateTime.of(_, ZoneId.of("UTC")))
+
+  implicit val writes = Json.writes[Action]
+  implicit val reads: Reads[Action] =
+    ((__ \ "id").read[String] and
+      (__ \ "requestType").read[RequestType] and
+      ((__ \ "requestTimestamp").read[ZonedDateTime] or (__ \ "requestTimestamp").read[ZonedDateTime](readLocalDateTimeFromString)))(Action.apply _)
 }
