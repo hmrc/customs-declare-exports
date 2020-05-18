@@ -5,15 +5,18 @@ import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import com.mongodb.{MongoClient, MongoClientURI}
 import org.bson.Document
+import org.mockito.Mockito
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import stubs.TestMongoDB
 import stubs.TestMongoDB.mongoConfiguration
+import uk.gov.hmrc.exports.models.generators.IdGenerator
 import uk.gov.hmrc.exports.mongock.changesets.CacheChangeLogSpec._
 
-class CacheChangeLogSpec extends WordSpec with MustMatchers with GuiceOneServerPerSuite with BeforeAndAfterEach {
+class CacheChangeLogSpec extends WordSpec with MustMatchers with GuiceOneServerPerSuite with BeforeAndAfterEach with MockitoSugar {
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
@@ -34,9 +37,13 @@ class CacheChangeLogSpec extends WordSpec with MustMatchers with GuiceOneServerP
 
   private val changeLog = new CacheChangeLog()
 
+  private val idGenerator = mock[IdGenerator[String]]
+  changeLog.setIdGenerator(idGenerator)
+
   override def beforeEach(): Unit = {
     super.beforeEach()
     mongoDatabase.getCollection(CollectionName).drop()
+    Mockito.when(idGenerator.generateId()).thenReturn(testId)
   }
 
   override def afterEach(): Unit = {
@@ -79,6 +86,11 @@ class CacheChangeLogSpec extends WordSpec with MustMatchers with GuiceOneServerP
 
         runTest(testDataBeforeChangeSet_6, testDataAfterChangeSet_6)(changeLog.updateTransportBorderModeOfTransportCode)
       }
+
+      "running ChangeSet no. 007" in {
+
+        runTest(testDataBeforeChangeSet_7, testDataAfterChangeSet_7)(changeLog.addIdFieldToPackageInformation)
+      }
     }
 
     "not change data already migrated" when {
@@ -112,6 +124,11 @@ class CacheChangeLogSpec extends WordSpec with MustMatchers with GuiceOneServerP
 
         runTest(testDataAfterChangeSet_6, testDataAfterChangeSet_6)(changeLog.updateTransportBorderModeOfTransportCode)
       }
+
+      "running ChangeSet no. 007" in {
+
+        runTest(testDataAfterChangeSet_7, testDataAfterChangeSet_7)(changeLog.addIdFieldToPackageInformation)
+      }
     }
   }
 
@@ -140,6 +157,8 @@ class CacheChangeLogSpec extends WordSpec with MustMatchers with GuiceOneServerP
 }
 
 object CacheChangeLogSpec {
+
+  private val testId: String = "1234567890"
 
   val testDataBeforeChangeSet_1: String = """{
       |    "_id": "3414ac6d-13ba-415c-9ac0-f5ffb3fc2fed",
@@ -1234,5 +1253,190 @@ object CacheChangeLogSpec {
       |    "natureType": "1"
       |  }
       |}""".stripMargin
+
+  val testDataBeforeChangeSet_7: String = testDataAfterChangeSet_6
+  val testDataAfterChangeSet_7: String = s"""{
+                                           |  "_id": "3414ac6d-13ba-415c-9ac0-f5ffb3fc2fed",
+                                           |  "id": "3414ac6d-13ba-415c-9ac0-f5ffb3fc2fed",
+                                           |  "eori": "GB21885355487467",
+                                           |  "status": "COMPLETE",
+                                           |  "createdDateTime": {
+                                           |    "$$date": 1585653005745
+                                           |  },
+                                           |  "updatedDateTime": {
+                                           |    "$$date": 1585653072661
+                                           |  },
+                                           |  "type": "STANDARD",
+                                           |  "dispatchLocation": {
+                                           |    "dispatchLocation": "EX"
+                                           |  },
+                                           |  "additionalDeclarationType": "D",
+                                           |  "consignmentReferences": {
+                                           |    "ducr": {
+                                           |      "ducr": "8GB123456486556-101SHIP1"
+                                           |    },
+                                           |    "lrn": "QSLRN5914100"
+                                           |  },
+                                           |  "transport": {
+                                           |    "transportPayment": {
+                                           |      "paymentMethod": "H"
+                                           |    },
+                                           |    "containers": [
+                                           |      {
+                                           |        "id": "123456",
+                                           |        "seals": []
+                                           |      }
+                                           |    ],
+                                           |    "borderModeOfTransportCode": { "code": "1" },
+                                           |    "meansOfTransportOnDepartureType": "11",
+                                           |    "meansOfTransportOnDepartureIDNumber": "123456754323356",
+                                           |    "meansOfTransportCrossingTheBorderNationality": "United Kingdom",
+                                           |    "meansOfTransportCrossingTheBorderType": "11",
+                                           |    "meansOfTransportCrossingTheBorderIDNumber": "Superfast Hawk Millenium"
+                                           |  },
+                                           |  "parties": {
+                                           |    "exporterDetails": {
+                                           |      "details": {
+                                           |        "eori": "GB717572504502801"
+                                           |      }
+                                           |    },
+                                           |    "consigneeDetails": {
+                                           |      "details": {
+                                           |        "address": {
+                                           |          "fullName": "Bags Export",
+                                           |          "addressLine": "1 Bags Avenue",
+                                           |          "townOrCity": "New York",
+                                           |          "postCode": "10001",
+                                           |          "country": "United States of America"
+                                           |        }
+                                           |      }
+                                           |    },
+                                           |    "declarantDetails": {
+                                           |      "details": {
+                                           |        "eori": "GB717572504502811"
+                                           |      }
+                                           |    },
+                                           |    "representativeDetails": {},
+                                           |    "declarationAdditionalActorsData": {
+                                           |      "actors": []
+                                           |    },
+                                           |    "declarationHoldersData": {
+                                           |      "holders": [
+                                           |        {
+                                           |          "authorisationTypeCode": "AEOC",
+                                           |          "eori": "GB717572504502811"
+                                           |        }
+                                           |      ]
+                                           |    },
+                                           |    "carrierDetails": {
+                                           |      "details": {
+                                           |        "address": {
+                                           |          "fullName": "XYZ Carrier",
+                                           |          "addressLine": "School Road",
+                                           |          "townOrCity": "London",
+                                           |          "postCode": "WS1 2AB",
+                                           |          "country": "United Kingdom"
+                                           |        }
+                                           |      }
+                                           |    }
+                                           |  },
+                                           |  "locations": {
+                                           |    "destinationCountry": {
+                                           |      "code": "AL"
+                                           |    },
+                                           |    "hasRoutingCountries": true,
+                                           |    "routingCountries": [
+                                           |      { "code": "DZ" },
+                                           |      { "code": "AL" }
+                                           |    ],
+                                           |    "goodsLocation": {
+                                           |      "country": "AF",
+                                           |      "typeOfLocation": "A",
+                                           |      "qualifierOfIdentification": "U",
+                                           |      "identificationOfLocation": "FXTFXTFXT",
+                                           |      "additionalIdentifier": "123"
+                                           |    },
+                                           |    "officeOfExit": {
+                                           |      "officeId": "GB000434",
+                                           |      "circumstancesCode": "No"
+                                           |    },
+                                           |    "supervisingCustomsOffice": {
+                                           |      "supervisingCustomsOffice": "GBLBA001"
+                                           |    },
+                                           |    "warehouseIdentification": {},
+                                           |    "inlandModeOfTransportCode": {
+                                           |      "inlandModeOfTransportCode": "1"
+                                           |    },
+                                           |    "originationCountry": {
+                                           |      "code": "AF"
+                                           |    }
+                                           |  },
+                                           |  "items": [
+                                           |    {
+                                           |      "id": "8af3g619",
+                                           |      "sequenceId": 1,
+                                           |      "procedureCodes": {
+                                           |        "procedureCode": "1040",
+                                           |        "additionalProcedureCodes": [
+                                           |          "000"
+                                           |        ]
+                                           |      },
+                                           |      "fiscalInformation": {
+                                           |        "onwardSupplyRelief": "No"
+                                           |      },
+                                           |      "statisticalValue": {
+                                           |        "statisticalValue": "1000"
+                                           |      },
+                                           |      "commodityDetails": {
+                                           |        "combinedNomenclatureCode": "46021910",
+                                           |        "descriptionOfGoods": "Straw for bottles"
+                                           |      },
+                                           |      "dangerousGoodsCode": {},
+                                           |      "cusCode": {},
+                                           |      "taricCodes": [],
+                                           |      "nactCodes": [],
+                                           |      "packageInformation": [
+                                           |        {
+                                           |          "id": "$testId",
+                                           |          "typesOfPackages": "PK",
+                                           |          "numberOfPackages": 10,
+                                           |          "shippingMarks": "Shipping description"
+                                           |        }
+                                           |      ],
+                                           |      "commodityMeasure": {
+                                           |        "supplementaryUnits": "10",
+                                           |        "netMass": "500",
+                                           |        "grossMass": "700"
+                                           |      },
+                                           |      "additionalInformation": {
+                                           |        "items": [
+                                           |          {
+                                           |            "code": "00400",
+                                           |            "description": "EXPORTER"
+                                           |          }
+                                           |        ]
+                                           |      },
+                                           |      "documentsProducedData": {
+                                           |        "documents": [
+                                           |          {
+                                           |            "documentTypeCode": "C501",
+                                           |            "documentIdentifier": "GBAEOC717572504502811"
+                                           |          }
+                                           |        ]
+                                           |      }
+                                           |    }
+                                           |  ],
+                                           |  "totalNumberOfItems": {
+                                           |    "totalAmountInvoiced": "56764",
+                                           |    "exchangeRate": "1.49",
+                                           |    "totalPackage": "1"
+                                           |  },
+                                           |  "previousDocuments": {
+                                           |    "documents": []
+                                           |  },
+                                           |  "natureOfTransaction": {
+                                           |    "natureType": "1"
+                                           |  }
+                                           |}""".stripMargin
 
 }

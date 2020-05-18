@@ -78,8 +78,10 @@ trait ExportsItemBuilder {
   ): ItemModifier =
     cache =>
       cache.copy(
-        packageInformation =
-          Some(cache.packageInformation.getOrElse(List.empty) :+ PackageInformation(typesOfPackages, numberOfPackages, shippingMarks))
+        packageInformation = Some(
+          cache.packageInformation
+            .getOrElse(List.empty) :+ PackageInformation("1234567890", typesOfPackages, numberOfPackages, shippingMarks)
+        )
     )
 
   def withDocumentsProduced(first: DocumentProduced, docs: DocumentProduced*): ItemModifier = cache => {

@@ -192,6 +192,7 @@ object ExportsDeclarationSpec {
       |      "nactCodes": [],
       |      "packageInformation": [
       |        {
+      |          "id": "12345678",
       |          "typesOfPackages": "PK",
       |          "numberOfPackages": 10,
       |          "shippingMarks": "RICH123"
