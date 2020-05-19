@@ -16,7 +16,7 @@
 
 package unit.uk.gov.hmrc.exports.services
 
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime, ZoneOffset, ZonedDateTime}
 
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
@@ -24,22 +24,20 @@ import org.mockito.Mockito._
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
+import testdata.ExportsDeclarationBuilder
+import testdata.ExportsTestData._
+import testdata.SubmissionTestData._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models.{LocalReferenceNumber, SubmissionRequestHeaders}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
 import uk.gov.hmrc.exports.services.{SubmissionService, WcoMapperService}
 import uk.gov.hmrc.http.HeaderCarrier
-import testdata.ExportsDeclarationBuilder
-import testdata.ExportsTestData._
-import testdata.SubmissionTestData._
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.NodeSeq
 
 class SubmissionServiceSpec
     extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers with ExportsDeclarationBuilder with Eventually with BeforeAndAfterEach {
@@ -126,7 +124,7 @@ class SubmissionServiceSpec
 
     "submit to the Dec API" when {
       val declaration = aDeclaration()
-      val notification = Notification("id", "mrn", LocalDateTime.now(), SubmissionStatus.ACCEPTED, Seq.empty, "xml")
+      val notification = Notification("id", "mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneOffset.UTC), SubmissionStatus.ACCEPTED, Seq.empty, "xml")
       val submission = Submission(declaration, "lrn", "mrn")
 
       "valid declaration" in {

@@ -17,7 +17,8 @@
 package testdata
 
 import java.time.format.DateTimeFormatter.ofPattern
-import java.time.{LocalDateTime, ZoneId}
+import java.time.temporal.ChronoUnit.MINUTES
+import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 import java.util.UUID
 
 import play.api.http.{ContentTypes, HeaderNames}
@@ -233,9 +234,9 @@ object NotificationTestData {
   private lazy val functionCodesRandomised: Iterator[String] = Random.shuffle(functionCodes).toIterator
   private def randomResponseFunctionCode: String = functionCodesRandomised.next()
 
-  val dateTimeIssued: LocalDateTime = LocalDateTime.now()
-  val dateTimeIssued_2: LocalDateTime = dateTimeIssued.plusMinutes(3)
-  val dateTimeIssued_3: LocalDateTime = dateTimeIssued_2.plusMinutes(3)
+  val dateTimeIssued: ZonedDateTime = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"))
+  val dateTimeIssued_2: ZonedDateTime = dateTimeIssued.plus(3, MINUTES)
+  val dateTimeIssued_3: ZonedDateTime = dateTimeIssued_2.plus(3, MINUTES)
   val functionCode: String = randomResponseFunctionCode
   val functionCode_2: String = randomResponseFunctionCode
   val functionCode_3: String = randomResponseFunctionCode

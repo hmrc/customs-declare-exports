@@ -16,7 +16,7 @@
 
 package unit.uk.gov.hmrc.exports.services
 
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime, ZoneId, ZoneOffset, ZonedDateTime}
 
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito.{times, verify, verifyZeroInteractions, when}
@@ -28,16 +28,16 @@ import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import reactivemongo.bson.{BSONDocument, BSONInteger, BSONString}
 import reactivemongo.core.errors.DetailedDatabaseException
-import uk.gov.hmrc.exports.models.{Pointer, PointerSection}
-import uk.gov.hmrc.exports.models.PointerSectionType.{FIELD, SEQUENCE}
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest, SubmissionStatus}
-import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.{NotificationService, WCOPointerMappingService}
-import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 import testdata.ExportsTestData._
 import testdata.NotificationTestData._
 import testdata.SubmissionTestData._
+import uk.gov.hmrc.exports.models.PointerSectionType.{FIELD, SEQUENCE}
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest, SubmissionStatus}
+import uk.gov.hmrc.exports.models.{Pointer, PointerSection}
+import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.services.NotificationService
+import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -135,7 +135,8 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
 
   "Get Notifications" should {
     val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", Seq(Action("id1", SubmissionRequest)))
-    val notifications = Seq(Notification("id1", "mrn", LocalDateTime.now(), SubmissionStatus.ACCEPTED, Seq.empty, ""))
+    val notifications =
+      Seq(Notification("id1", "mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), SubmissionStatus.ACCEPTED, Seq.empty, ""))
 
     "retrieve by conversation IDs" in new Test {
       when(notificationRepositoryMock.findNotificationsByActionIds(any[Seq[String]]))

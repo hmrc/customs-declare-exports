@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.services
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneId, ZoneOffset, ZonedDateTime}
 import java.time.format.DateTimeFormatter
 
 import javax.inject.{Inject, Singleton}
@@ -106,7 +106,7 @@ class NotificationService @Inject()(submissionRepository: SubmissionRepository, 
         val mrn = (singleResponseXml \ "Declaration" \ "ID").text
         val formatter304 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
         val dateTimeIssued =
-          LocalDateTime.parse((singleResponseXml \ "IssueDateTime" \ "DateTimeString").text, formatter304)
+          ZonedDateTime.of(LocalDateTime.parse((singleResponseXml \ "IssueDateTime" \ "DateTimeString").text, formatter304), ZoneId.of("UTC"))
         val functionCode = (singleResponseXml \ "FunctionCode").text
 
         val nameCode =
