@@ -17,24 +17,28 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{Address, ConsignorDetails, EntityDetails}
+import uk.gov.hmrc.exports.models.declaration.{Address, ConsignorDetails, EntityDetails, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
-import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
+import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class ConsignorBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[ConsignorDetails, GoodsShipment] {
+class ConsignmentConsignorBuilder @Inject()(countriesService: CountriesService)
+    extends ModifyingBuilder[ExportsDeclaration, Declaration.Consignment] {
 
-  override def buildThenAdd(consignorDetails: ConsignorDetails, goodsShipment: GoodsShipment) =
-    if (isDefined(consignorDetails))
-      goodsShipment.setConsignor(createConsignor(consignorDetails.details))
+  override def buildThenAdd(model: ExportsDeclaration, consignment: Declaration.Consignment) =
+    model.parties.consignorDetails
+      .filter(isDefined)
+      .map(_.details)
+      .map(createConsignor)
+      .foreach(consignment.setConsignor)
 
   private def isDefined(consignorDetails: ConsignorDetails): Boolean =
     consignorDetails.details.eori.getOrElse("").nonEmpty ||
       consignorDetails.details.address.isDefined
 
-  private def createConsignor(details: EntityDetails): GoodsShipment.Consignor = {
-    val consignor = new GoodsShipment.Consignor()
+  private def createConsignor(details: EntityDetails): Declaration.Consignment.Consignor = {
+    val consignor = new Declaration.Consignment.Consignor()
 
     details.eori match {
       case Some(eori) if eori.nonEmpty =>
@@ -56,7 +60,7 @@ class ConsignorBuilder @Inject()(countriesService: CountriesService) extends Mod
   }
 
   private def createAddress(address: Address) = {
-    val consignorAddress = new GoodsShipment.Consignor.Address()
+    val consignorAddress = new Declaration.Consignment.Consignor.Address()
 
     if (address.addressLine.nonEmpty) {
       val line = new AddressLineTextType()

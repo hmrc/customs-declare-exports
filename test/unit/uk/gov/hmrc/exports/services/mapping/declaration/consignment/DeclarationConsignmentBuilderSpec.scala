@@ -25,6 +25,7 @@ import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.services.mapping.declaration.consignment.{DeclarationConsignmentBuilder, FreightBuilder, IteneraryBuilder}
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentCarrierBuilder
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.services.mapping.goodsshipment.ConsignmentConsignorBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class DeclarationConsignmentBuilderSpec extends WordSpec with Matchers with MockitoSugar with BeforeAndAfterEach with ExportsDeclarationBuilder {
@@ -32,11 +33,12 @@ class DeclarationConsignmentBuilderSpec extends WordSpec with Matchers with Mock
   private val freightBuilder = mock[FreightBuilder]
   private val iteneraryBuilder = mock[IteneraryBuilder]
   private val consignmentCarrierBuilder = mock[ConsignmentCarrierBuilder]
+  private val consignorBuilder = mock[ConsignmentConsignorBuilder]
 
   override def afterEach(): Unit =
     reset(freightBuilder, iteneraryBuilder, consignmentCarrierBuilder)
 
-  private def builder = new DeclarationConsignmentBuilder(freightBuilder, iteneraryBuilder, consignmentCarrierBuilder)
+  private def builder = new DeclarationConsignmentBuilder(freightBuilder, iteneraryBuilder, consignmentCarrierBuilder, consignorBuilder)
 
   "DeclarationConsignmentBuilder" should {
 
@@ -61,6 +63,7 @@ class DeclarationConsignmentBuilderSpec extends WordSpec with Matchers with Mock
           verify(freightBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
           verify(iteneraryBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
           verify(consignmentCarrierBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
+          verify(consignorBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
         }
       }
 
@@ -77,6 +80,7 @@ class DeclarationConsignmentBuilderSpec extends WordSpec with Matchers with Mock
         verify(freightBuilder, never()).buildThenAdd(refEq(model), any[Declaration.Consignment])
         verify(iteneraryBuilder, never()).buildThenAdd(refEq(model), any[Declaration.Consignment])
         verify(consignmentCarrierBuilder, never()).buildThenAdd(refEq(model), any[Declaration.Consignment])
+        verify(consignorBuilder, never()).buildThenAdd(refEq(model), any[Declaration.Consignment])
       }
     }
   }
