@@ -22,8 +22,10 @@ import com.github.cloudyrock.mongock.{ChangeLog, ChangeSet}
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.{BsonType, Document}
 import org.mongodb.scala.model.Filters.{eq => feq, ne => fne, _}
+import org.mongodb.scala.model.UpdateOneModel
 import org.mongodb.scala.model.Updates.{rename, set}
 import play.api.Logger
+import uk.gov.hmrc.exports.models.generators.{IdGenerator, StringIdGenerator}
 import uk.gov.hmrc.exports.services.CountriesService
 
 import scala.collection.JavaConversions._
@@ -35,6 +37,10 @@ class CacheChangeLog {
 
   private val INDEX_ID = "id"
   private val INDEX_EORI = "eori"
+
+  private var idGenerator: IdGenerator[String] = new StringIdGenerator
+  private[changesets] def setIdGenerator(newIdGenerator: IdGenerator[String]): Unit =
+    this.idGenerator = newIdGenerator
 
   @ChangeSet(order = "001", id = "Exports DB Baseline", author = "Paulo Monteiro")
   def dbBaseline(db: MongoDatabase): Unit = {}
@@ -135,6 +141,50 @@ class CacheChangeLog {
     getDeclarationsCollection(db).updateMany(exists("temp"), rename("temp", "transport.borderModeOfTransportCode.code"))
 
     logger.info("Applying 'CEDS-2250 Add one structure level to /transport/borderModeOfTransportCode' db migration... Done.")
+  }
+
+  @ChangeSet(order = "007", id = "CEDS-2387 Add ID field to /items/packageInformation", author = "Maciej Rewera", runAlways = true)
+  def addIdFieldToPackageInformation(db: MongoDatabase): Unit = {
+
+    logger.info("Applying 'CEDS-2387 Add ID field to /items/packageInformation' db migration...")
+
+    val documents: Iterable[Document] = getDeclarationsCollection(db).find(
+      and(
+        exists("items"),
+        not(size("items", 0)),
+        exists("items.packageInformation"),
+        not(size("items.packageInformation", 0)),
+        not(exists("items.packageInformation.id"))
+      )
+    )
+
+    val batchSize = 1000
+    documents.grouped(batchSize).foreach { documentsBatch =>
+      val requests = documentsBatch.toSeq.map { document =>
+        val items = document.get("items", classOf[util.List[Document]])
+        val itemsUpdated: util.List[Document] = items.map(updateItem)
+
+        val documentId = document.get(INDEX_ID).asInstanceOf[String]
+        val eori = document.get(INDEX_EORI).asInstanceOf[String]
+        val filter = and(feq(INDEX_ID, documentId), feq(INDEX_EORI, eori))
+        val update = set[util.List[Document]]("items", itemsUpdated)
+
+        new UpdateOneModel[Document](filter, update)
+      }
+
+      getDeclarationsCollection(db).bulkWrite(requests)
+    }
+
+    logger.info("Applying 'CEDS-2387 Add ID field to /items/packageInformation' db migration... Done.")
+  }
+
+  private def updateItem(itemDocument: Document): Document = {
+    val packageInformationElems = itemDocument.get("packageInformation", classOf[util.List[Document]])
+
+    val packageInformationElemsUpdated = packageInformationElems.map(_.append("id", idGenerator.generateId()))
+
+    itemDocument.updated("packageInformation", packageInformationElemsUpdated)
+    new Document(itemDocument)
   }
 
   private def getDeclarationsCollection(db: MongoDatabase): MongoCollection[Document] = {

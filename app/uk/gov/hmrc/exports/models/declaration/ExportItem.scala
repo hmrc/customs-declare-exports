@@ -95,7 +95,13 @@ object IdentificationTypeCodes {
   }
 }
 
-case class PackageInformation(typesOfPackages: Option[String], numberOfPackages: Option[Int], shippingMarks: Option[String])
+case class PackageInformation(id: String, typesOfPackages: Option[String], numberOfPackages: Option[Int], shippingMarks: Option[String]) {
+  override def equals(obj: Any): Boolean = obj match {
+    case PackageInformation(_, `typesOfPackages`, `numberOfPackages`, `shippingMarks`) => true
+    case _                                                                             => false
+  }
+  override def hashCode(): Int = (typesOfPackages, numberOfPackages, shippingMarks).##
+}
 object PackageInformation {
   implicit val format: OFormat[PackageInformation] = Json.format[PackageInformation]
 }
