@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.mongock.changesets
 import java.util
 
 import com.github.cloudyrock.mongock.{ChangeLog, ChangeSet}
-import com.mongodb.client.{FindIterable, MongoCollection, MongoDatabase}
+import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.{BsonType, Document}
 import org.mongodb.scala.model.Filters.{eq => feq, ne => fne, _}
 import org.mongodb.scala.model.UpdateOneModel
@@ -149,7 +149,7 @@ class CacheChangeLog {
     logger.info("Applying 'CEDS-2387 Add ID field to /items/packageInformation' db migration...")
 
     val batchSize = 500
-    val documents: FindIterable[Document] = getDeclarationsCollection(db)
+    val documents: Iterable[Document] = getDeclarationsCollection(db)
       .find(
         and(
           exists("items"),
