@@ -148,7 +148,7 @@ class CacheChangeLog {
 
     logger.info("Applying 'CEDS-2387 Add ID field to /items/packageInformation' db migration...")
 
-    val batchSize = 100
+    val batchSize = 10
     val documents: Iterable[Document] = getDeclarationsCollection(db)
       .find(
         and(
