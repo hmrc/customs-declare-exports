@@ -32,7 +32,7 @@ case class MongockConfig @Inject()(appConfig: AppConfig, actorSystem: ActorSyste
   implicit ec: ExecutionContext
 ) {
 
-  val cancellable = actorSystem.scheduler.scheduleOnce(0.seconds) {
+  val migrationTask = actorSystem.scheduler.scheduleOnce(0.seconds) {
     val uri = new MongoClientURI(appConfig.mongodbUri.replaceAllLiterally("sslEnabled", "ssl"))
 
     val client = new MongoClient(uri)
@@ -49,6 +49,6 @@ case class MongockConfig @Inject()(appConfig: AppConfig, actorSystem: ActorSyste
     runner.close()
   }
 
-  applicationLifecycle.addStopHook(() => Future.successful(cancellable))
+  applicationLifecycle.addStopHook(() => Future.successful(migrationTask))
 
 }
