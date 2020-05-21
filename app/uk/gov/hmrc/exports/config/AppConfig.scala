@@ -20,7 +20,6 @@ import java.time.{Clock, LocalTime}
 
 import com.google.inject.{Inject, Singleton}
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.exports.mongock.MongockConfig
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.duration.FiniteDuration
@@ -35,7 +34,7 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, val environme
       .getOptional[String](key)
       .getOrElse(throw new Exception(s"Missing configuration key: $key"))
 
-  runModeConfiguration.getOptional[String]("mongodb.uri").map(MongockConfig(_))
+  lazy val mongodbUri: String = runModeConfiguration.get[String]("mongodb.uri")
 
   lazy val authUrl: String = servicesConfig.baseUrl("auth")
 

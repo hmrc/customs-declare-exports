@@ -16,25 +16,39 @@
 
 package uk.gov.hmrc.exports.mongock
 
+import akka.actor.ActorSystem
 import com.github.cloudyrock.mongock.{Mongock, MongockBuilder}
 import com.google.inject.Singleton
 import com.mongodb.{MongoClient, MongoClientURI}
+import javax.inject.Inject
+import play.api.inject.ApplicationLifecycle
+import uk.gov.hmrc.exports.config.AppConfig
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-case class MongockConfig(mongoURI: String) {
+case class MongockConfig @Inject()(appConfig: AppConfig, actorSystem: ActorSystem, applicationLifecycle: ApplicationLifecycle)(
+  implicit ec: ExecutionContext
+) {
 
-  val uri = new MongoClientURI(mongoURI.replaceAllLiterally("sslEnabled", "ssl"))
+  val migrationTask = actorSystem.scheduler.scheduleOnce(0.seconds) {
+    val uri = new MongoClientURI(appConfig.mongodbUri.replaceAllLiterally("sslEnabled", "ssl"))
 
-  val client = new MongoClient(uri)
+    val client = new MongoClient(uri)
 
-  val lockAcquiredForMinutes = 3
-  val maxWaitingForLockMinutes = 5
-  val maxTries = 10
+    val lockAcquiredForMinutes = 3
+    val maxWaitingForLockMinutes = 5
+    val maxTries = 10
 
-  val runner: Mongock = new MongockBuilder(client, uri.getDatabase, "uk.gov.hmrc.exports.mongock.changesets")
-    .setLockConfig(lockAcquiredForMinutes, maxWaitingForLockMinutes, maxTries)
-    .build()
+    val runner: Mongock = new MongockBuilder(client, uri.getDatabase, "uk.gov.hmrc.exports.mongock.changesets")
+      .setLockConfig(lockAcquiredForMinutes, maxWaitingForLockMinutes, maxTries)
+      .build()
 
-  runner.execute()
-  runner.close()
+    runner.execute()
+    runner.close()
+  }
+
+  applicationLifecycle.addStopHook(() => Future.successful(migrationTask))
+
 }
