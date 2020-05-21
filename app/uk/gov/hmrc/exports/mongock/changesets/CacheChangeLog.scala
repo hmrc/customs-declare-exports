@@ -148,31 +148,37 @@ class CacheChangeLog {
 
     logger.info("Applying 'CEDS-2387 Add ID field to /items/packageInformation' db migration...")
 
-    val documents: Iterable[Document] = getDeclarationsCollection(db).find(
-      and(
-        exists("items"),
-        not(size("items", 0)),
-        exists("items.packageInformation"),
-        not(size("items.packageInformation", 0)),
-        not(exists("items.packageInformation.id"))
+    val batchSize = 500
+    val documents: Iterable[Document] = getDeclarationsCollection(db)
+      .find(
+        and(
+          exists("items"),
+          not(size("items", 0)),
+          exists("items.packageInformation"),
+          not(size("items.packageInformation", 0)),
+          not(exists("items.packageInformation.id"))
+        )
       )
-    )
+      .batchSize(batchSize)
 
-    val batchSize = 1000
-    documents.grouped(batchSize).foreach { documentsBatch =>
-      val requests = documentsBatch.toSeq.map { document =>
-        val items = document.get("items", classOf[util.List[Document]])
-        val itemsUpdated: util.List[Document] = items.map(updateItem)
+    documents.grouped(batchSize).zipWithIndex.foreach {
+      case (documentsBatch, idx) =>
+        logger.info(s"ChangeSet 007. Updating batch no. $idx...")
 
-        val documentId = document.get(INDEX_ID).asInstanceOf[String]
-        val eori = document.get(INDEX_EORI).asInstanceOf[String]
-        val filter = and(feq(INDEX_ID, documentId), feq(INDEX_EORI, eori))
-        val update = set[util.List[Document]]("items", itemsUpdated)
+        val requests = documentsBatch.map { document =>
+          val items = document.get("items", classOf[util.List[Document]])
+          val itemsUpdated: util.List[Document] = items.map(updateItem)
 
-        new UpdateOneModel[Document](filter, update)
-      }
+          val documentId = document.get(INDEX_ID).asInstanceOf[String]
+          val eori = document.get(INDEX_EORI).asInstanceOf[String]
+          val filter = and(feq(INDEX_ID, documentId), feq(INDEX_EORI, eori))
+          val update = set[util.List[Document]]("items", itemsUpdated)
 
-      getDeclarationsCollection(db).bulkWrite(requests)
+          new UpdateOneModel[Document](filter, update)
+        }.toSeq
+
+        getDeclarationsCollection(db).bulkWrite(requests)
+        logger.info(s"ChangeSet 007. Updated batch no. $idx")
     }
 
     logger.info("Applying 'CEDS-2387 Add ID field to /items/packageInformation' db migration... Done.")
