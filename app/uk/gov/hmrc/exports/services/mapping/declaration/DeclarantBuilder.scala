@@ -17,7 +17,8 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{Address, DeclarantDetails, ExportsDeclaration}
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
+import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -27,12 +28,31 @@ import wco.datamodel.wco.declaration_ds.dms._2.{DeclarantIdentificationIDType, _
 class DeclarantBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
-    model.parties.declarantDetails
-      .filter(isDefined)
-      .map(details => mapToWCODeclarant(details))
-      .foreach(declaration.setDeclarant)
+    if (isEidrWithPersonPresentingGoodsDetails(model))
+      model.parties.personPresentingGoodsDetails
+        .map(mapPersonPresentingGoodsDetailsToWCODeclarant)
+        .foreach(declaration.setDeclarant)
+    else
+      model.parties.declarantDetails
+        .filter(isDefined)
+        .map(details => mapDeclarantDetailsToWCODeclarant(details))
+        .foreach(declaration.setDeclarant)
 
-  private def mapToWCODeclarant(declarantDetails: DeclarantDetails): Declarant = {
+  private def isEidrWithPersonPresentingGoodsDetails(model: ExportsDeclaration): Boolean =
+    model.parties.isEntryIntoDeclarantsRecords.contains(YesNoAnswer(YesNoAnswers.yes)) && model.parties.personPresentingGoodsDetails.isDefined
+
+  private def mapPersonPresentingGoodsDetailsToWCODeclarant(personPresentingGoodsDetails: PersonPresentingGoodsDetails): Declarant = {
+
+    val declarant = new Declarant
+
+    val declarantIdentificationIDType = new DeclarantIdentificationIDType
+    declarantIdentificationIDType.setValue(personPresentingGoodsDetails.eori.value)
+    declarant.setID(declarantIdentificationIDType)
+
+    declarant
+  }
+
+  private def mapDeclarantDetailsToWCODeclarant(declarantDetails: DeclarantDetails): Declarant = {
 
     val declarant = new Declarant
 

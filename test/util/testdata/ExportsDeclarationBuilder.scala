@@ -145,6 +145,18 @@ trait ExportsDeclarationBuilder {
   def withConsignorDetails(eori: Option[String], address: Option[Address]): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(consignorDetails = Some(ConsignorDetails(EntityDetails(eori, address)))))
 
+  def withoutIsEntryIntoDeclarantsRecords(): ExportsDeclarationModifier =
+    cache => cache.copy(parties = cache.parties.copy(isEntryIntoDeclarantsRecords = None))
+
+  def withIsEntryIntoDeclarantsRecords(answer: String = "Yes"): ExportsDeclarationModifier =
+    cache => cache.copy(parties = cache.parties.copy(isEntryIntoDeclarantsRecords = Some(YesNoAnswer(answer))))
+
+  def withoutPersonPresentingGoodsDetails(): ExportsDeclarationModifier =
+    cache => cache.copy(parties = cache.parties.copy(personPresentingGoodsDetails = None))
+
+  def withPersonPresentingGoodsDetails(eori: Eori): ExportsDeclarationModifier =
+    cache => cache.copy(parties = cache.parties.copy(personPresentingGoodsDetails = Some(PersonPresentingGoodsDetails(eori))))
+
   def withoutDeclarantDetails(): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(declarantDetails = None))
 

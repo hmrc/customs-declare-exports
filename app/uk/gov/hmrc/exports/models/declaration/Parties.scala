@@ -99,6 +99,11 @@ object CarrierDetails {
 case class YesNoAnswer(answer: String)
 object YesNoAnswer {
   implicit val format: OFormat[YesNoAnswer] = Json.format[YesNoAnswer]
+
+  object YesNoAnswers {
+    val yes = "Yes"
+    val no = "No"
+  }
 }
 
 case class PersonPresentingGoodsDetails(eori: Eori)
