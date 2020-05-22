@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping.declaration
+package uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.mockito.Mockito.when
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
-import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.Address
+import uk.gov.hmrc.exports.models.{Country, Eori}
 import uk.gov.hmrc.exports.services.CountriesService
-import uk.gov.hmrc.exports.services.mapping.declaration.DeclarantBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
@@ -32,56 +31,104 @@ class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with
   when(mockCountriesService.allCountries)
     .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
-  "DeclarantBuilder" should {
+  "DeclarantBuilder" when {
 
-    "build then add" when {
-      "no declarant details" in {
-        val model = aDeclaration(withoutDeclarantDetails())
-        val declaration = new Declaration()
+    "declaration contains no PersonPresentingGoodsDetails" should {
 
-        builder.buildThenAdd(model, declaration)
+      "build then add" when {
+        "no declarant details" in {
+          val model = aDeclaration(withoutPersonPresentingGoodsDetails(), withoutDeclarantDetails())
+          val declaration = new Declaration()
 
-        declaration.getDeclarant should be(null)
+          builder.buildThenAdd(model, declaration)
+
+          declaration.getDeclarant should be(null)
+        }
+
+        "no eori" in {
+          val model = aDeclaration(
+            withoutPersonPresentingGoodsDetails(),
+            withDeclarantDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "United Kingdom")))
+          )
+          val declaration = new Declaration()
+
+          builder.buildThenAdd(model, declaration)
+
+          declaration.getDeclarant.getID should be(null)
+        }
+
+        "no address" in {
+          val model = aDeclaration(withoutPersonPresentingGoodsDetails(), withDeclarantDetails(eori = Some("eori"), address = None))
+          val declaration = new Declaration()
+
+          builder.buildThenAdd(model, declaration)
+
+          declaration.getDeclarant.getAddress should be(null)
+        }
+
+        "unknown country" in {
+          val model = aDeclaration(
+            withoutPersonPresentingGoodsDetails(),
+            withDeclarantDetails(eori = Some(""), address = Some(Address("name", "line", "city", "postcode", "unknown")))
+          )
+          val declaration = new Declaration()
+
+          builder.buildThenAdd(model, declaration)
+
+          declaration.getDeclarant.getID should be(null)
+          declaration.getDeclarant.getAddress.getCountryCode.getValue should be("")
+        }
+
+        "populated" in {
+          val model =
+            aDeclaration(
+              withoutPersonPresentingGoodsDetails(),
+              withDeclarantDetails(eori = Some("eori"), address = Some(Address("name", "line", "city", "postcode", "United Kingdom")))
+            )
+          val declaration = new Declaration()
+
+          builder.buildThenAdd(model, declaration)
+
+          declaration.getDeclarant.getID.getValue should be("eori")
+          declaration.getDeclarant.getAddress should be(null)
+          declaration.getDeclarant.getName should be(null)
+        }
       }
+    }
 
-      "no eori" in {
-        val model = aDeclaration(withDeclarantDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))))
-        val declaration = new Declaration()
+    "declaration contains PersonPresentingGoodsDetails" should {
 
-        builder.buildThenAdd(model, declaration)
+      "use PersonPresentingGoods EORI instead of Declarant" when {
 
-        declaration.getDeclarant.getID should be(null)
-      }
+        "both elements are present in the model" in {
+          val model =
+            aDeclaration(
+              withIsEntryIntoDeclarantsRecords(),
+              withPersonPresentingGoodsDetails(eori = Eori("PersonPresentingGoodsEori")),
+              withDeclarantDetails(eori = Some("eori"), address = None)
+            )
+          val declaration = new Declaration()
 
-      "no address" in {
-        val model = aDeclaration(withDeclarantDetails(eori = Some("eori"), address = None))
-        val declaration = new Declaration()
+          builder.buildThenAdd(model, declaration)
 
-        builder.buildThenAdd(model, declaration)
+          declaration.getDeclarant.getID.getValue should be("PersonPresentingGoodsEori")
+          declaration.getDeclarant.getAddress should be(null)
+        }
 
-        declaration.getDeclarant.getAddress should be(null)
-      }
+        "DeclarantDetails is empty" in {
+          val model =
+            aDeclaration(
+              withIsEntryIntoDeclarantsRecords(),
+              withPersonPresentingGoodsDetails(eori = Eori("PersonPresentingGoodsEori")),
+              withoutDeclarantDetails()
+            )
+          val declaration = new Declaration()
 
-      "unknown country" in {
-        val model = aDeclaration(withDeclarantDetails(eori = Some(""), address = Some(Address("name", "line", "city", "postcode", "unknown"))))
-        val declaration = new Declaration()
+          builder.buildThenAdd(model, declaration)
 
-        builder.buildThenAdd(model, declaration)
-
-        declaration.getDeclarant.getID should be(null)
-        declaration.getDeclarant.getAddress.getCountryCode.getValue should be("")
-      }
-
-      "populated" in {
-        val model =
-          aDeclaration(withDeclarantDetails(eori = Some("eori"), address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))))
-        val declaration = new Declaration()
-
-        builder.buildThenAdd(model, declaration)
-
-        declaration.getDeclarant.getID.getValue should be("eori")
-        declaration.getDeclarant.getAddress should be(null)
-        declaration.getDeclarant.getName should be(null)
+          declaration.getDeclarant.getID.getValue should be("PersonPresentingGoodsEori")
+          declaration.getDeclarant.getAddress should be(null)
+        }
       }
     }
   }
