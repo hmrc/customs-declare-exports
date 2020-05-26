@@ -26,6 +26,9 @@ import wco.datamodel.wco.declaration_ds.dms._2.{SealIdentificationIDType, Transp
 import scala.collection.JavaConverters._
 
 class TransportEquipmentBuilder @Inject()() extends ModifyingBuilder[Seq[Container], GoodsShipment.Consignment] {
+
+  import TransportEquipmentBuilder._
+
   override def buildThenAdd(containersHolder: Seq[Container], consignment: Consignment): Unit =
     if (containersHolder.isEmpty) {
       consignment.getTransportEquipment.add(createEmptyTransportEquipment)
@@ -33,10 +36,10 @@ class TransportEquipmentBuilder @Inject()() extends ModifyingBuilder[Seq[Contain
       consignment.getTransportEquipment.addAll(containersHolder.zipWithIndex.map(data => createTransportEquipment(data)).toList.asJava)
     }
 
-  private def createEmptyTransportEquipment = {
+  private def createEmptyTransportEquipment: Consignment.TransportEquipment = {
     val transportEquipment = new GoodsShipment.Consignment.TransportEquipment()
     transportEquipment.setSequenceNumeric(java.math.BigDecimal.ZERO)
-    transportEquipment.getSeal.add(createEmptySeal)
+    transportEquipment.getSeal.add(createSeal(emptySeal))
     transportEquipment
   }
 
@@ -49,17 +52,11 @@ class TransportEquipmentBuilder @Inject()() extends ModifyingBuilder[Seq[Contain
     transportEquipment.setID(containerID)
 
     if (containerData._1.seals.isEmpty) {
-      transportEquipment.getSeal.add(createEmptySeal)
+      transportEquipment.getSeal.add(createSeal(emptySeal))
     } else {
       transportEquipment.getSeal.addAll(containerData._1.seals.zipWithIndex.map(data => createSeal(data)).toList.asJava)
     }
     transportEquipment
-  }
-
-  private def createEmptySeal: Consignment.TransportEquipment.Seal = {
-    val seal = new Consignment.TransportEquipment.Seal
-    seal.setSequenceNumeric(java.math.BigDecimal.ZERO)
-    seal
   }
 
   private def createSeal(sealData: (Seal, Int)): Consignment.TransportEquipment.Seal = {
@@ -73,4 +70,10 @@ class TransportEquipmentBuilder @Inject()() extends ModifyingBuilder[Seq[Contain
 
     seal
   }
+
+  private val emptySeal: (Seal, Int) = (Seal(nosealsId), 0)
+}
+
+object TransportEquipmentBuilder {
+  val nosealsId = "NOSEALS"
 }
