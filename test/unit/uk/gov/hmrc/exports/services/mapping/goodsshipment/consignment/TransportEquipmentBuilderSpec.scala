@@ -70,8 +70,8 @@ class TransportEquipmentBuilderSpec extends WordSpec with Matchers {
         containerA.getID.getValue should be("container-a")
         containerA.getSeal.size() should be(1)
 
-        containerA.getSeal.get(0).getID should be(null)
-        containerA.getSeal.get(0).getSequenceNumeric.intValue() should be(0)
+        containerA.getSeal.get(0).getID.getValue should be(TransportEquipmentBuilder.nosealsId)
+        containerA.getSeal.get(0).getSequenceNumeric.intValue() should be(1)
       }
     }
 
@@ -90,8 +90,8 @@ class TransportEquipmentBuilderSpec extends WordSpec with Matchers {
         containerA.getID should be(null)
         containerA.getSeal.size() should be(1)
 
-        containerA.getSeal.get(0).getID should be(null)
-        containerA.getSeal.get(0).getSequenceNumeric.intValue() should be(0)
+        containerA.getSeal.get(0).getID.getValue should be(TransportEquipmentBuilder.nosealsId)
+        containerA.getSeal.get(0).getSequenceNumeric.intValue() should be(1)
       }
     }
   }
