@@ -148,8 +148,10 @@ class CacheChangeLog {
 
     logger.info("Applying 'CEDS-2387 Add ID field to /items/packageInformation' db migration...")
 
-    val batchSize = 10
-    val documents: Iterable[Document] = getDeclarationsCollection(db)
+    val queryBatchSize = 2
+    val updateBatchSize = 10
+
+    getDeclarationsCollection(db)
       .find(
         and(
           exists("items"),
@@ -159,13 +161,9 @@ class CacheChangeLog {
           not(exists("items.packageInformation.id"))
         )
       )
-      .batchSize(batchSize)
-
-    documents.grouped(batchSize).zipWithIndex.foreach {
-      case (documentsBatch, idx) =>
-        logger.info(s"ChangeSet 007. Updating batch no. $idx...")
-
-        val requests = documentsBatch.map { document =>
+      .batchSize(queryBatchSize)
+      .toIterator
+      .map { document =>
           val items = document.get("items", classOf[util.List[Document]])
           val itemsUpdated: util.List[Document] = items.map(updateItem)
           logger.debug(s"Items updated: $itemsUpdated")
@@ -177,11 +175,16 @@ class CacheChangeLog {
           logger.debug(s"[filter: $filter] [update: $update]")
 
           new UpdateOneModel[Document](filter, update)
-        }.toSeq
+      }
+      .grouped(updateBatchSize)
+      .zipWithIndex
+      .foreach {
+        case (requests, idx) =>
+          logger.info(s"ChangeSet 007. Updating batch no. $idx...")
 
-        getDeclarationsCollection(db).bulkWrite(requests)
-        logger.info(s"ChangeSet 007. Updated batch no. $idx")
-    }
+          getDeclarationsCollection(db).bulkWrite(requests)
+          logger.info(s"ChangeSet 007. Updated batch no. $idx")
+      }
 
     logger.info("Applying 'CEDS-2387 Add ID field to /items/packageInformation' db migration... Done.")
   }
