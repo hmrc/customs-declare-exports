@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.mongock
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Cancellable}
 import com.github.cloudyrock.mongock.{Mongock, MongockBuilder}
 import com.google.inject.Singleton
 import com.mongodb.{MongoClient, MongoClientURI}
@@ -24,15 +24,20 @@ import javax.inject.Inject
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.exports.config.AppConfig
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 case class MongockConfig @Inject()(appConfig: AppConfig, actorSystem: ActorSystem, applicationLifecycle: ApplicationLifecycle)(
-  implicit ec: ExecutionContext
+  implicit mec: MigrationExecutionContext
 ) {
 
-  val migrationTask = actorSystem.scheduler.scheduleOnce(0.seconds) {
+  val migrationTask: Cancellable = actorSystem.scheduler.scheduleOnce(0.seconds) {
+    migrateWithMongock()
+  }
+  applicationLifecycle.addStopHook(() => Future.successful(migrationTask.cancel()))
+
+  private def migrateWithMongock() = {
     val uri = new MongoClientURI(appConfig.mongodbUri.replaceAllLiterally("sslEnabled", "ssl"))
 
     val client = new MongoClient(uri)
@@ -48,7 +53,5 @@ case class MongockConfig @Inject()(appConfig: AppConfig, actorSystem: ActorSyste
     runner.execute()
     runner.close()
   }
-
-  applicationLifecycle.addStopHook(() => Future.successful(migrationTask))
 
 }
