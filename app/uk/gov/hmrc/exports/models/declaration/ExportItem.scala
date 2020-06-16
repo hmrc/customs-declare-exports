@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.models.declaration
 import java.time.LocalDate
 
 import play.api.libs.json._
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 
 case class ProcedureCodes(procedureCode: Option[String], additionalProcedureCodes: Seq[String]) {
   def extractProcedureCode(): (Option[String], Option[String]) =
@@ -116,9 +117,12 @@ object AdditionalInformation {
   implicit val format: OFormat[AdditionalInformation] = Json.format[AdditionalInformation]
 }
 
-case class AdditionalInformations(items: Seq[AdditionalInformation])
+case class AdditionalInformations(isRequired: Option[YesNoAnswer], items: Seq[AdditionalInformation])
 object AdditionalInformations {
   implicit val format: OFormat[AdditionalInformations] = Json.format[AdditionalInformations]
+
+  def apply(items: Seq[AdditionalInformation]): AdditionalInformations =
+    new AdditionalInformations(Some(if (items.nonEmpty) YesNoAnswer(YesNoAnswers.yes) else YesNoAnswer(YesNoAnswers.no)), items)
 }
 
 case class Date(day: Option[Int], month: Option[Int], year: Option[Int]) {
