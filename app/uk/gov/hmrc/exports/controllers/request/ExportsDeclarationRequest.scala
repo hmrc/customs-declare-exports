@@ -19,11 +19,13 @@ package uk.gov.hmrc.exports.controllers.request
 import java.time.Instant
 
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
+import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 
 case class ExportsDeclarationRequest(
+  status: DeclarationStatus,
   createdDateTime: Instant,
   updatedDateTime: Instant,
   sourceId: Option[String] = None,
@@ -42,7 +44,7 @@ case class ExportsDeclarationRequest(
   def toExportsDeclaration(id: String, eori: Eori): ExportsDeclaration = ExportsDeclaration(
     id = id,
     eori = eori.value,
-    status = DeclarationStatus.DRAFT,
+    status = if(this.status != DeclarationStatus.COMPLETE) this.status else DeclarationStatus.DRAFT,
     createdDateTime = this.createdDateTime,
     updatedDateTime = this.updatedDateTime,
     sourceId = this.sourceId,
@@ -62,7 +64,6 @@ case class ExportsDeclarationRequest(
 
 object ExportsDeclarationRequest {
 
-  import play.api.libs.functional.syntax._
   import play.api.libs.json._
 
   implicit val format: OFormat[ExportsDeclarationRequest] = Json.format[ExportsDeclarationRequest] // writes are used only for logging
