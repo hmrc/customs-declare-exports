@@ -25,7 +25,6 @@ import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatu
 import uk.gov.hmrc.exports.models.declaration._
 
 case class ExportsDeclarationRequest(
-  status: DeclarationStatus,
   createdDateTime: Instant,
   updatedDateTime: Instant,
   sourceId: Option[String] = None,
@@ -44,7 +43,7 @@ case class ExportsDeclarationRequest(
   def toExportsDeclaration(id: String, eori: Eori): ExportsDeclaration = ExportsDeclaration(
     id = id,
     eori = eori.value,
-    status = if(this.status != DeclarationStatus.COMPLETE) this.status else DeclarationStatus.DRAFT,
+    status = consignmentReferences.map(_ => DeclarationStatus.DRAFT).getOrElse(DeclarationStatus.INITIAL),
     createdDateTime = this.createdDateTime,
     updatedDateTime = this.updatedDateTime,
     sourceId = this.sourceId,
