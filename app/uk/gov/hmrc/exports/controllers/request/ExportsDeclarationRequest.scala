@@ -43,7 +43,7 @@ case class ExportsDeclarationRequest(
   def toExportsDeclaration(id: String, eori: Eori): ExportsDeclaration = ExportsDeclaration(
     id = id,
     eori = eori.value,
-    status = consignmentReferences.map(_ => DeclarationStatus.DRAFT).getOrElse(DeclarationStatus.CANDIDATE),
+    status = consignmentReferences.map(_ => DeclarationStatus.DRAFT).getOrElse(DeclarationStatus.INITIAL),
     createdDateTime = this.createdDateTime,
     updatedDateTime = this.updatedDateTime,
     sourceId = this.sourceId,

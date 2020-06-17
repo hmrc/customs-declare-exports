@@ -91,7 +91,7 @@ class ExportsDeclarationRequestSpec extends WordSpec with MustMatchers with Expo
     }
 
     "set initial state for declaration without references" in {
-      request.copy(consignmentReferences = None).toExportsDeclaration(id, Eori(eori)).status mustBe DeclarationStatus.CANDIDATE
+      request.copy(consignmentReferences = None).toExportsDeclaration(id, Eori(eori)).status mustBe DeclarationStatus.INITIAL
     }
   }
 
