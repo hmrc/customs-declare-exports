@@ -89,6 +89,10 @@ class ExportsDeclarationRequestSpec extends WordSpec with MustMatchers with Expo
     "map to ExportsDeclaration" in {
       request.toExportsDeclaration(id, Eori(eori)) mustBe declaration
     }
+
+    "set initial state for declaration without references" in {
+      request.copy(consignmentReferences = None).toExportsDeclaration(id, Eori(eori)).status mustBe DeclarationStatus.INITIAL
+    }
   }
 
   "have json format that parse declaration in version 2" in {
