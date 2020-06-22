@@ -70,10 +70,10 @@
 42A.67A.68A.$1.23A.93A.$2.142,declaration.items.$1.packageInformation.$2.shippingMarks,
 42A.67A.68A.$1.23A.93A.$2.144,declaration.items.$1.packageInformation.$2.numberOfPackages,
 42A.67A.68A.$1.23A.93A.$2.141,declaration.items.$1.packageInformation.$2.typesOfPackages,
-42A.67A.99A.$1.D031,declaration.previousDocuments.$1.documentCategory,/customs-declare-exports/declaration/previous-documents
-42A.67A.99A.$1.D018,declaration.previousDocuments.$1.documentReference,/customs-declare-exports/declaration/previous-documents
-42A.67A.99A.$1.D019,declaration.previousDocuments.$1.documentType,/customs-declare-exports/declaration/previous-documents
-42A.67A.99A.$1.171,declaration.previousDocuments.$1.goodsItemIdentifier,/customs-declare-exports/declaration/previous-documents
+42A.67A.99A.$1.D031,declaration.previousDocuments.$1.documentCategory,/customs-declare-exports/declaration/previous-documents-list
+42A.67A.99A.$1.D018,declaration.previousDocuments.$1.documentReference,/customs-declare-exports/declaration/previous-documents-list
+42A.67A.99A.$1.D019,declaration.previousDocuments.$1.documentType,/customs-declare-exports/declaration/previous-documents-list
+42A.67A.99A.$1.171,declaration.previousDocuments.$1.goodsItemIdentifier,/customs-declare-exports/declaration/previous-documents-list
 42A.67A.43B.L019,declaration.locations.warehouseIdentification.identificationNumber,
 42A.67A.43B.L112,declaration.locations.warehouseIdentification.identificationType,
 42A.97B.G012,declaration.locations.warehouseIdentification.supervisingCustomsOffice,
