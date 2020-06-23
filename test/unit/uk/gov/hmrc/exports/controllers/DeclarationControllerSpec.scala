@@ -266,8 +266,8 @@ class DeclarationControllerSpec
     }
   }
 
-  "GET /:id/clone" should {
-    val get = FakeRequest("GET", "/declarations/id/clone")
+  "POST /:id/clone" should {
+    val post = FakeRequest("POST", "/declarations/id/clone")
 
     "return 201" when {
       "request is valid" in {
@@ -278,7 +278,7 @@ class DeclarationControllerSpec
         given(declarationService.create(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
           .willReturn(Future.successful(declarationClone))
 
-        val result: Future[Result] = route(app, get).get
+        val result: Future[Result] = route(app, post).get
 
         status(result) must be(CREATED)
         contentAsJson(result) mustBe toJson(CloneResponse("Cloned", "new-id"))
@@ -294,7 +294,7 @@ class DeclarationControllerSpec
         withAuthorizedUser()
         given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(None))
 
-        val result: Future[Result] = route(app, get).get
+        val result: Future[Result] = route(app, post).get
 
         status(result) must be(NOT_FOUND)
         contentAsString(result) mustBe empty
@@ -306,7 +306,7 @@ class DeclarationControllerSpec
       "unauthorized" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result: Future[Result] = route(app, get).get
+        val result: Future[Result] = route(app, post).get
 
         status(result) must be(UNAUTHORIZED)
         verifyZeroInteractions(declarationService)
