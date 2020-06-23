@@ -2,6 +2,7 @@
 POST        /declarations                                 uk.gov.hmrc.exports.controllers.DeclarationController.create()
 GET         /declarations                                 uk.gov.hmrc.exports.controllers.DeclarationController.findAll(status: Option[String] ?= None, page: uk.gov.hmrc.exports.models.Page ?= uk.gov.hmrc.exports.models.Page(), sort: uk.gov.hmrc.exports.models.DeclarationSort ?= uk.gov.hmrc.exports.models.DeclarationSort())
 PUT         /declarations/:id                             uk.gov.hmrc.exports.controllers.DeclarationController.update(id: String)
+GET         /declarations/:id/clone                       uk.gov.hmrc.exports.controllers.DeclarationController.cloneByID(id: String)
 GET         /declarations/:id                             uk.gov.hmrc.exports.controllers.DeclarationController.findByID(id: String)
 DELETE      /declarations/:id                             uk.gov.hmrc.exports.controllers.DeclarationController.deleteByID(id: String)
 GET         /declarations/:id/submission                  uk.gov.hmrc.exports.controllers.SubmissionController.findByID(id: String)
