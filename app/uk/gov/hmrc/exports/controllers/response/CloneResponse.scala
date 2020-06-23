@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.controllers.response
 
 import play.api.libs.json.{Json, OFormat}
 
-case class CloneResponse(message: String, id: String)
+case class CloneResponse(declarationId: String)
 
 object CloneResponse {
   implicit val format: OFormat[CloneResponse] = Json.format[CloneResponse]

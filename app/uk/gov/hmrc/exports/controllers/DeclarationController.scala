@@ -92,7 +92,7 @@ class DeclarationController @Inject()(
         declarationService
           .create(declaration.createClone)
           .map(logPayload("Clone declaration", _))
-          .map(clone => Created(CloneResponse("Cloned", clone.id)))
+          .map(clone => Created(CloneResponse(clone.id)))
       case None =>
         logPayload("Clone declaration", s"Declaration [$id] - Not Found")
         Future.successful(NotFound)

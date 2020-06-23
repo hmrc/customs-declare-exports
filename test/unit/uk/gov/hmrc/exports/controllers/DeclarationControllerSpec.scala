@@ -281,7 +281,7 @@ class DeclarationControllerSpec
         val result: Future[Result] = route(app, post).get
 
         status(result) must be(CREATED)
-        contentAsJson(result) mustBe toJson(CloneResponse("Cloned", "new-id"))
+        contentAsJson(result) mustBe toJson(CloneResponse("new-id"))
         verify(declarationService).findOne("id", userEori)
 
         theDeclarationCloned.consignmentReferences mustBe None
