@@ -164,17 +164,17 @@ class CacheChangeLog {
       .batchSize(queryBatchSize)
       .toIterator
       .map { document =>
-          val items = document.get("items", classOf[util.List[Document]])
-          val itemsUpdated: util.List[Document] = items.map(updateItem)
-          logger.debug(s"Items updated: $itemsUpdated")
+        val items = document.get("items", classOf[util.List[Document]])
+        val itemsUpdated: util.List[Document] = items.map(updateItem)
+        logger.debug(s"Items updated: $itemsUpdated")
 
-          val documentId = document.get(INDEX_ID).asInstanceOf[String]
-          val eori = document.get(INDEX_EORI).asInstanceOf[String]
-          val filter = and(feq(INDEX_ID, documentId), feq(INDEX_EORI, eori))
-          val update = set[util.List[Document]]("items", itemsUpdated)
-          logger.debug(s"[filter: $filter] [update: $update]")
+        val documentId = document.get(INDEX_ID).asInstanceOf[String]
+        val eori = document.get(INDEX_EORI).asInstanceOf[String]
+        val filter = and(feq(INDEX_ID, documentId), feq(INDEX_EORI, eori))
+        val update = set[util.List[Document]]("items", itemsUpdated)
+        logger.debug(s"[filter: $filter] [update: $update]")
 
-          new UpdateOneModel[Document](filter, update)
+        new UpdateOneModel[Document](filter, update)
       }
       .grouped(updateBatchSize)
       .zipWithIndex

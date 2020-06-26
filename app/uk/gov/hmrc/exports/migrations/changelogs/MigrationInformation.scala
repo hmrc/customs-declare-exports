@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.mongock
+package uk.gov.hmrc.exports.migrations.changelogs
 
-//class MongockModule extends SimpleModule(bind[MongockConfig].toSelf.eagerly())
+case class MigrationInformation(id: String, order: Int, author: String, runAlways: Boolean = false)
+
+object MigrationInformation {
+  implicit val ordering: Ordering[MigrationInformation] = Ordering.by(_.order)
+}

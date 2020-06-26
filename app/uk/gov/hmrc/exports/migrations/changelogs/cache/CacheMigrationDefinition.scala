@@ -14,6 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.mongock
+package uk.gov.hmrc.exports.migrations.changelogs.cache
 
-//class MongockModule extends SimpleModule(bind[MongockConfig].toSelf.eagerly())
+import com.mongodb.client.{MongoCollection, MongoDatabase}
+import org.bson.Document
+import uk.gov.hmrc.exports.migrations.changelogs.MigrationDefinition
+
+abstract class CacheMigrationDefinition extends MigrationDefinition {
+
+  protected val INDEX_ID = "id"
+  protected val INDEX_EORI = "eori"
+
+  protected def getDeclarationsCollection(db: MongoDatabase): MongoCollection[Document] = {
+    val collectionName = "declarations"
+    db.getCollection(collectionName)
+  }
+}

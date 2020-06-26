@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.mongock
+package uk.gov.hmrc.exports.migrations
 
-//class MongockModule extends SimpleModule(bind[MongockConfig].toSelf.eagerly())
+sealed abstract class LockStatus(val name: String)
+
+object LockStatus {
+  case object LockHeld extends LockStatus("LockHeld")
+}

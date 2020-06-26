@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.mongock
+package uk.gov.hmrc.exports.migrations
 
-//class MongockModule extends SimpleModule(bind[MongockConfig].toSelf.eagerly())
+import play.api.inject._
+
+class ExportsMigrationModule extends SimpleModule(bind[MigrationRunner].toSelf.eagerly())

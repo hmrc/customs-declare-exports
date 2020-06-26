@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.mongock
+package uk.gov.hmrc.exports.migrations.changelogs
 
-//class MongockModule extends SimpleModule(bind[MongockConfig].toSelf.eagerly())
+import com.mongodb.client.MongoDatabase
+
+trait MigrationDefinition {
+  val migrationInformation: MigrationInformation
+  def migrationFunction(db: MongoDatabase): Unit
+}
+
+object MigrationDefinition {
+  implicit val ordering: Ordering[MigrationDefinition] = Ordering.by(_.migrationInformation)
+}

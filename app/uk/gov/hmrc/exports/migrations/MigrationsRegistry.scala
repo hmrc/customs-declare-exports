@@ -14,6 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.mongock
+package uk.gov.hmrc.exports.migrations
 
-//class MongockModule extends SimpleModule(bind[MongockConfig].toSelf.eagerly())
+import uk.gov.hmrc.exports.migrations.changelogs.MigrationDefinition
+import uk.gov.hmrc.exports.migrations.changelogs.cache._
+
+class MigrationsRegistry {
+  val migrations: Seq[MigrationDefinition] = Seq(
+    new Baseline(),
+    new UpdateAllCountriesNameToCodesForLocationPage(),
+    new ChangeOriginationCountryStructure(),
+    new ChangeDestinationCountryStructure(),
+    new ChangeRoutingCountriesStructure(),
+    new UpdateTransportBorderModeOfTransportCode(),
+    new AddIdFieldToPackageInformation()
+  )
+}

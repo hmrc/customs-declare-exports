@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.mongock
+package uk.gov.hmrc.exports.migrations.exceptions
 
-//class MongockModule extends SimpleModule(bind[MongockConfig].toSelf.eagerly())
+class LockCheckException(message: String) extends RuntimeException(message)

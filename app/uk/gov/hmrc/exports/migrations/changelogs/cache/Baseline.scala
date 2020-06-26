@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.mongock
+package uk.gov.hmrc.exports.migrations.changelogs.cache
 
-//class MongockModule extends SimpleModule(bind[MongockConfig].toSelf.eagerly())
+import com.mongodb.client.MongoDatabase
+import uk.gov.hmrc.exports.migrations.changelogs.MigrationInformation
+
+class Baseline extends CacheMigrationDefinition {
+
+  override val migrationInformation: MigrationInformation = MigrationInformation(id = "Exports DB Baseline", order = 1, author = "Paulo Monteiro")
+
+  override def migrationFunction(db: MongoDatabase): Unit = {}
+}
