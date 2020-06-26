@@ -34,15 +34,16 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{status, _}
+import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
+import uk.gov.hmrc.exports.controllers.response.CloneResponse
+import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.services.DeclarationService
 import uk.gov.hmrc.http.HeaderCarrier
 import unit.uk.gov.hmrc.exports.base.AuthTestSupport
-import testdata.ExportsDeclarationBuilder
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -265,6 +266,54 @@ class DeclarationControllerSpec
     }
   }
 
+  "POST /:id/clone" should {
+    val post = FakeRequest("POST", "/declarations/id/clone")
+
+    "return 201" when {
+      "request is valid" in {
+        withAuthorizedUser()
+        val declarationSource = aDeclaration(withId("id"), withEori(userEori), withConsignmentReferences(), withStatus(DeclarationStatus.COMPLETE))
+        given(declarationService.findOne(anyString(), any[Eori]())).willReturn(Future.successful(Some(declarationSource)))
+        val declarationClone = declarationSource.copy(id = "new-id")
+        given(declarationService.create(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
+          .willReturn(Future.successful(declarationClone))
+
+        val result: Future[Result] = route(app, post).get
+
+        status(result) must be(CREATED)
+        contentAsJson(result) mustBe toJson(CloneResponse("new-id"))
+        verify(declarationService).findOne("id", userEori)
+
+        theDeclarationCloned.consignmentReferences mustBe None
+        theDeclarationCloned.status mustBe DeclarationStatus.INITIAL
+      }
+    }
+
+    "return 404" when {
+      "id is not found" in {
+        withAuthorizedUser()
+        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(None))
+
+        val result: Future[Result] = route(app, post).get
+
+        status(result) must be(NOT_FOUND)
+        contentAsString(result) mustBe empty
+        verify(declarationService).findOne(eqRef("id"), eqRef(userEori))
+      }
+    }
+
+    "return 401" when {
+      "unauthorized" in {
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        val result: Future[Result] = route(app, post).get
+
+        status(result) must be(UNAUTHORIZED)
+        verifyZeroInteractions(declarationService)
+      }
+    }
+  }
+
   "DELETE /:id" should {
     val delete = FakeRequest("DELETE", "/declarations/id")
 
@@ -415,6 +464,12 @@ class DeclarationControllerSpec
     ExportsDeclarationRequest(createdDateTime = Instant.now(), updatedDateTime = Instant.now(), `type` = DeclarationType.STANDARD)
 
   def theDeclarationCreated: ExportsDeclaration = {
+    val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
+    verify(declarationService).create(captor.capture())(any[HeaderCarrier], any[ExecutionContext])
+    captor.getValue
+  }
+
+  def theDeclarationCloned: ExportsDeclaration = {
     val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
     verify(declarationService).create(captor.capture())(any[HeaderCarrier], any[ExecutionContext])
     captor.getValue

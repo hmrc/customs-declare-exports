@@ -24,7 +24,7 @@ import play.api.libs.json.{Json, Writes}
 import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
-import uk.gov.hmrc.exports.controllers.response.ErrorResponse
+import uk.gov.hmrc.exports.controllers.response.{CloneResponse, ErrorResponse}
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
 import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Page}
@@ -86,6 +86,19 @@ class DeclarationController @Inject()(
     }
   }
 
+  def cloneByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    declarationService.findOne(id, request.eori).flatMap {
+      case Some(declaration) =>
+        declarationService
+          .create(declaration.createClone)
+          .map(logPayload("Clone declaration", _))
+          .map(clone => Created(CloneResponse(clone.id)))
+      case None =>
+        logPayload("Clone declaration", s"Declaration [$id] - Not Found")
+        Future.successful(NotFound)
+    }
+  }
+
   def deleteByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     declarationService.findOne(id, request.eori).flatMap {
       case Some(declaration) if declaration.status == DeclarationStatus.COMPLETE =>
@@ -96,7 +109,7 @@ class DeclarationController @Inject()(
   }
 
   private def logPayload[T](prefix: String, payload: T)(implicit wts: Writes[T]): T = {
-    logger.debug(s"Create Request Received: ${Json.toJson(payload)}")
+    logger.debug(s"$prefix: ${Json.toJson(payload)}")
     payload
   }
 
