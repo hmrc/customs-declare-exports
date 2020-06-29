@@ -29,29 +29,21 @@ import uk.gov.hmrc.exports.models.generators.{IdGenerator, StringIdGenerator}
 
 import scala.collection.JavaConversions._
 
-class AddIdFieldToPackageInformation extends CacheMigrationDefinition {
+class ChangePackageInformationId extends CacheMigrationDefinition {
 
   private val logger = Logger(this.getClass)
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(id = "CEDS-2387 Add ID field to /items/packageInformation", order = 7, author = "Maciej Rewera", runAlways = true)
+    MigrationInformation(id = "CEDS-2557 Change /items/packageInformation/id", order = 8, author = "Maciej Rewera", runAlways = true)
 
   override def migrationFunction(db: MongoDatabase): Unit = {
-    logger.info("Applying 'CEDS-2387 Add ID field to /items/packageInformation' db migration...")
+    logger.info(s"Applying '${migrationInformation.id}' db migration...")
 
-    val queryBatchSize = 2
-    val updateBatchSize = 10
+    val queryBatchSize = 10
+    val updateBatchSize = 100
 
     getDeclarationsCollection(db)
-      .find(
-        and(
-          exists("items"),
-          not(size("items", 0)),
-          exists("items.packageInformation"),
-          not(size("items.packageInformation", 0)),
-          not(exists("items.packageInformation.id"))
-        )
-      )
+      .find(and(exists("items"), not(size("items", 0)), exists("items.packageInformation"), not(size("items.packageInformation", 0))))
       .batchSize(queryBatchSize)
       .toIterator
       .map { document =>
@@ -71,20 +63,20 @@ class AddIdFieldToPackageInformation extends CacheMigrationDefinition {
       .zipWithIndex
       .foreach {
         case (requests, idx) =>
-          logger.info(s"ChangeSet 007. Updating batch no. $idx...")
+          logger.info(s"Updating batch no. $idx...")
 
           getDeclarationsCollection(db).bulkWrite(requests)
-          logger.info(s"ChangeSet 007. Updated batch no. $idx")
+          logger.info(s"Updated batch no. $idx")
       }
 
-    logger.info("Applying 'CEDS-2387 Add ID field to /items/packageInformation' db migration... Done.")
+    logger.info(s"Applying '${migrationInformation.id}' db migration... Done.")
   }
 
   private def updateItem(itemDocument: Document): Document = {
     val packageInformationElems = itemDocument.get("packageInformation", classOf[util.List[Document]])
     val idGenerator: IdGenerator[String] = new StringIdGenerator
 
-    val packageInformationElemsUpdated = packageInformationElems.map(_.append("id", idGenerator.generateId()))
+    val packageInformationElemsUpdated = packageInformationElems.map(_.put("id", idGenerator.generateId()))
 
     itemDocument.updated("packageInformation", packageInformationElemsUpdated)
     new Document(itemDocument)
