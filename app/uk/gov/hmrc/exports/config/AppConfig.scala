@@ -20,6 +20,7 @@ import java.time.{Clock, LocalTime}
 
 import com.google.inject.{Inject, Singleton}
 import play.api.{Configuration, Environment}
+import uk.gov.hmrc.exports.config.AppConfig.JobConfig
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.duration.FiniteDuration
@@ -75,4 +76,6 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, val environme
   lazy val cdiBearerToken = servicesConfig.getString("microservice.services.customs-declarations-information.bearer-token")
 }
 
-case class JobConfig(elapseTime: LocalTime, interval: FiniteDuration)
+object AppConfig {
+  case class JobConfig(elapseTime: LocalTime, interval: FiniteDuration)
+}
