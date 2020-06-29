@@ -23,8 +23,8 @@ import uk.gov.hmrc.exports.migrations.exceptions.{ExportsMigrationException, Loc
 
 object ExportsMigrationTool {
 
-  private val lockCollectionName = "ExportsMigrationLock"
-  private val changeEntryCollectionName = "ExportsMigrationChangeEntry"
+  private val lockCollectionName = "exportsMigrationLock"
+  private val changeEntryCollectionName = "exportsMigrationChangeLog"
 
   def apply(mongoDatabase: MongoDatabase): ExportsMigrationTool = {
     val lockRepository = new LockRepository(lockCollectionName, mongoDatabase)
