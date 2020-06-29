@@ -21,6 +21,7 @@ import com.github.cloudyrock.mongock.{Mongock, MongockBuilder}
 import com.google.inject.Singleton
 import com.mongodb.{MongoClient, MongoClientURI}
 import javax.inject.Inject
+import play.api.Logger
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.exports.config.{AppConfig, ExportsMigrationConfig}
 import uk.gov.hmrc.exports.mongock.MigrationExecutionContext
@@ -36,15 +37,20 @@ class MigrationRunner @Inject()(
   applicationLifecycle: ApplicationLifecycle
 )(implicit mec: MigrationExecutionContext) {
 
+  private val logger = Logger(this.getClass)
+
   private val uri = new MongoClientURI(appConfig.mongodbUri.replaceAllLiterally("sslEnabled", "ssl"))
   private val client = new MongoClient(uri)
   private val db = client.getDatabase(uri.getDatabase)
 
   val migrationTask: Cancellable = actorSystem.scheduler.scheduleOnce(0.seconds) {
-    if (exportsMigrationConfig.isExportsMigrationEnabled)
+    if (exportsMigrationConfig.isExportsMigrationEnabled) {
+      logger.info("Exports Migration feature enabled. Starting migration with ExportsMigrationTool")
       migrateWithExportsMigrationTool()
-    else
+    } else {
+      logger.info("Exports Migration feature disabled. Starting migration with Mongock")
       migrateWithMongock()
+    }
   }
   applicationLifecycle.addStopHook(() => Future.successful(migrationTask.cancel()))
 
