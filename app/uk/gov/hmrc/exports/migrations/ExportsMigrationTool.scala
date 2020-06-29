@@ -27,9 +27,13 @@ object ExportsMigrationTool {
   private val changeEntryCollectionName = "exportsMigrationChangeLog"
 
   def apply(mongoDatabase: MongoDatabase): ExportsMigrationTool = {
+    val migrationsRegistry = new MigrationsRegistry
+    ExportsMigrationTool(mongoDatabase, migrationsRegistry)
+  }
+
+  def apply(mongoDatabase: MongoDatabase, migrationsRegistry: MigrationsRegistry): ExportsMigrationTool = {
     val lockRepository = new LockRepository(lockCollectionName, mongoDatabase)
     val lockManager = new LockManager(lockRepository, new TimeUtils)
-    val migrationsRegistry = new MigrationsRegistry
     val changeEntryRepository = new ChangeEntryRepository(changeEntryCollectionName, mongoDatabase)
 
     new ExportsMigrationTool(lockManager, migrationsRegistry, changeEntryRepository, mongoDatabase)

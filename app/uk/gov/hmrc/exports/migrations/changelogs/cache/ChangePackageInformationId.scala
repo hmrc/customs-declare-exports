@@ -18,20 +18,23 @@ package uk.gov.hmrc.exports.migrations.changelogs.cache
 
 import java.util
 
-import com.mongodb.client.MongoDatabase
+import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
 import org.mongodb.scala.model.Filters.{and, exists, not, size, eq => feq}
 import org.mongodb.scala.model.UpdateOneModel
 import org.mongodb.scala.model.Updates.set
 import play.api.Logger
-import uk.gov.hmrc.exports.migrations.changelogs.MigrationInformation
+import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.generators.{IdGenerator, StringIdGenerator}
 
 import scala.collection.JavaConversions._
 
-class ChangePackageInformationId extends CacheMigrationDefinition {
+class ChangePackageInformationId extends MigrationDefinition {
 
   private val logger = Logger(this.getClass)
+
+  private val INDEX_ID = "id"
+  private val INDEX_EORI = "eori"
 
   override val migrationInformation: MigrationInformation =
     MigrationInformation(id = "CEDS-2557 Change /items/packageInformation/id", order = 8, author = "Maciej Rewera", runAlways = true)
@@ -80,6 +83,11 @@ class ChangePackageInformationId extends CacheMigrationDefinition {
 
     itemDocument.updated("packageInformation", packageInformationElemsUpdated)
     new Document(itemDocument)
+  }
+
+  private def getDeclarationsCollection(db: MongoDatabase): MongoCollection[Document] = {
+    val collectionName = "declarations"
+    db.getCollection(collectionName)
   }
 
 }
