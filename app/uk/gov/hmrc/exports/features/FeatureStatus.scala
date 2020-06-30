@@ -14,8 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.mongock
+package uk.gov.hmrc.exports.features
 
-import play.api.inject._
+import play.api.mvc.PathBindable
 
-class MongockModule extends SimpleModule(bind[MongockConfig].toSelf.eagerly())
+object FeatureStatus extends Enumeration {
+  type FeatureStatus = Value
+  val enabled, disabled, suspended = Value
+
+  implicit object featureStatusPathStringBinder
+      extends PathBindable.Parsing[FeatureStatus.FeatureStatus](
+        withName,
+        _.toString,
+        (k: String, e: Exception) => "Cannot parse %s as FeatureStatus: %s".format(k, e.getMessage)
+      )
+}
