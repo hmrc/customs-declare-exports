@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.migrations
+package uk.gov.hmrc.exports.migrations.repositories
 
 import java.util.Date
 
 import com.mongodb.client.MongoDatabase
+import com.mongodb.client.model.Filters.{and, lt, or, eq => feq}
 import com.mongodb.client.model.{Filters, UpdateOptions}
 import com.mongodb.client.result.UpdateResult
 import com.mongodb.{DuplicateKeyException, ErrorCategory, MongoWriteException}
@@ -26,28 +27,28 @@ import org.bson.Document
 import org.bson.conversions.Bson
 import uk.gov.hmrc.exports.migrations.exceptions.LockPersistenceException
 
-class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRepository(db, collectionName, Array(LockEntry.KEY_FIELD)) {
+class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRepository(db, collectionName, Array(LockEntry.KeyField)) {
 
   /**
     * If there is a lock in the database with the same key, updates it if either is expired or both share the same owner.
     * If there is no lock with the same key, it's inserted.
     *
     * @param newLock lock to replace the existing one or be inserted.
-    * @throws LockPersistenceException if there is a lock in database with same key, but is expired and belong to
-    *                                  another owner or cannot insert/update the lock for any other reason
+    * @throws LockPersistenceException if there is a lock in database with same key, but belongs to another owner
+    *                                   and is not expired or cannot insert/update the lock for any other reason
     */
   private[migrations] def insertUpdate(newLock: LockEntry): Unit =
-    insertUpdate(newLock, false)
+    insertUpdate(newLock, onlyIfSameOwner = false)
 
   /**
-    * If there is a lock in the database with the same key and owner, updates it.Otherwise throws a LockPersistenceException
+    * If there is a lock in the database with the same key and owner, updates it. Otherwise throws a LockPersistenceException
     *
     * @param newLock lock to replace the existing one.
     * @throws LockPersistenceException if there is no lock in the database with the same key and owner or cannot update
     *                                  the lock for any other reason
     */
   private[migrations] def updateIfSameOwner(newLock: LockEntry): Unit =
-    insertUpdate(newLock, true)
+    insertUpdate(newLock, onlyIfSameOwner = true)
 
   /**
     * Retrieves a lock by key
@@ -56,13 +57,13 @@ class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRep
     * @return LockEntry
     */
   private[migrations] def findByKey(lockKey: String): LockEntry = {
-    val result: Document = collection.find(new Document().append(LockEntry.KEY_FIELD, lockKey)).first
+    val result: Document = collection.find(new Document().append(LockEntry.KeyField, lockKey)).first
     if (result != null) {
       new LockEntry(
-        result.getString(LockEntry.KEY_FIELD),
-        result.getString(LockEntry.STATUS_FIELD),
-        result.getString(LockEntry.OWNER_FIELD),
-        result.getDate(LockEntry.EXPIRES_AT_FIELD)
+        result.getString(LockEntry.KeyField),
+        result.getString(LockEntry.StatusField),
+        result.getString(LockEntry.OwnerField),
+        result.getDate(LockEntry.ExpiresAtField)
       )
     } else {
       null
@@ -76,10 +77,10 @@ class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRep
     * @param owner   lock owner
     */
   private[migrations] def removeByKeyAndOwner(lockKey: String, owner: String): Unit =
-    collection.deleteMany(Filters.and(Filters.eq(LockEntry.KEY_FIELD, lockKey), Filters.eq(LockEntry.OWNER_FIELD, owner)))
+    collection.deleteMany(and(Filters.eq(LockEntry.KeyField, lockKey), Filters.eq(LockEntry.OwnerField, owner)))
 
-  private def insertUpdate(newLock: LockEntry, onlyIfSameOwner: Boolean): Unit = {
-    var lockHeld: Boolean = false
+  private def insertUpdate(newLock: LockEntry, onlyIfSameOwner: Boolean): Unit =
+//    var lockHeld: Boolean = false
     try {
       val acquireLockQuery: Bson = getAcquireLockQuery(newLock.key, newLock.owner, onlyIfSameOwner)
       val result: UpdateResult = collection.updateMany(
@@ -87,30 +88,35 @@ class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRep
         new Document().append("$set", newLock.buildFullDBObject),
         new UpdateOptions().upsert(!onlyIfSameOwner)
       )
-      lockHeld = result.getModifiedCount <= 0 && result.getUpsertedId == null
+      if (result.getModifiedCount <= 0 && result.getUpsertedId == null)
+        throw new LockPersistenceException("Lock is held")
     } catch {
-      case ex: MongoWriteException =>
-        lockHeld = ex.getError.getCategory eq ErrorCategory.DUPLICATE_KEY
-        if (!lockHeld) {
-          throw ex
-        }
+      case ex: MongoWriteException if ex.getError.getCategory == ErrorCategory.DUPLICATE_KEY =>
+        throw new LockPersistenceException("Lock is held")
       case _: DuplicateKeyException =>
-        lockHeld = true
+        throw new LockPersistenceException("Lock is held")
+
+//      case ex: MongoWriteException =>
+//        lockHeld = ex.getError.getCategory eq ErrorCategory.DUPLICATE_KEY
+//        if (!lockHeld) {
+//          throw ex
+//        }
+//      case _: DuplicateKeyException =>
+//        lockHeld = true
     }
-    if (lockHeld) {
-      throw new LockPersistenceException("Lock is held")
-    }
-  }
+//    if (lockHeld) {
+//      throw new LockPersistenceException("Lock is held")
+//    }
 
   private def getAcquireLockQuery(lockKey: String, owner: String, onlyIfSameOwner: Boolean): Bson = {
-    val expiresAtCond: Bson = Filters.lt(LockEntry.EXPIRES_AT_FIELD, new Date)
-    val ownerCond: Bson = Filters.eq(LockEntry.OWNER_FIELD, owner)
+    val expiresAtCond: Bson = lt(LockEntry.ExpiresAtField, new Date)
+    val ownerCond: Bson = feq(LockEntry.OwnerField, owner)
     val orCond: Bson = if (onlyIfSameOwner) {
-      Filters.or(ownerCond)
+      or(ownerCond)
     } else {
-      Filters.or(expiresAtCond, ownerCond)
+      or(expiresAtCond, ownerCond)
     }
-    Filters.and(Filters.eq(LockEntry.KEY_FIELD, lockKey), Filters.eq(LockEntry.STATUS_FIELD, LockStatus.LockHeld.name), orCond)
+    and(feq(LockEntry.KeyField, lockKey), feq(LockEntry.StatusField, LockStatus.LockHeld.name), orCond)
   }
 
 }

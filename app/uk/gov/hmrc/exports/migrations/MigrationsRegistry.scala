@@ -17,8 +17,9 @@
 package uk.gov.hmrc.exports.migrations
 
 import uk.gov.hmrc.exports.migrations.changelogs.MigrationDefinition
-import uk.gov.hmrc.exports.migrations.changelogs.cache._
 
-class MigrationsRegistry {
-  val migrations: Seq[MigrationDefinition] = Seq(new ChangePackageInformationId())
+case class MigrationsRegistry(migrations: Seq[MigrationDefinition] = Seq.empty) {
+
+  def register(definition: MigrationDefinition): MigrationsRegistry =
+    this.copy(migrations = this.migrations :+ definition)
 }

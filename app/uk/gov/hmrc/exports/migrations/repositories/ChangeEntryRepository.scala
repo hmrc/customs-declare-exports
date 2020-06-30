@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.migrations
+package uk.gov.hmrc.exports.migrations.repositories
 
 import com.mongodb.client.MongoDatabase
 import org.bson.Document
-import uk.gov.hmrc.exports.migrations.ChangeEntry.{KEY_AUTHOR, KEY_CHANGEID}
+import uk.gov.hmrc.exports.migrations.repositories.ChangeEntry.{KeyAuthor, KeyChangeId}
 
 class ChangeEntryRepository(collectionName: String, mongoDatabase: MongoDatabase)
-    extends MongoRepository(mongoDatabase, collectionName, Array(KEY_AUTHOR, KEY_CHANGEID)) {
+    extends MongoRepository(mongoDatabase, collectionName, Array(KeyAuthor, KeyChangeId)) {
 
   private[migrations] def isNewChange(changeEntry: ChangeEntry) = {
     val entry = collection.find(buildSearchQueryDBObject(changeEntry)).first
@@ -31,6 +31,6 @@ class ChangeEntryRepository(collectionName: String, mongoDatabase: MongoDatabase
   private[migrations] def save(changeEntry: ChangeEntry): Unit =
     collection.insertOne(changeEntry.buildFullDBObject)
 
-  private def buildSearchQueryDBObject(entry: ChangeEntry) = new Document().append(KEY_CHANGEID, entry.changeId).append(KEY_AUTHOR, entry.author)
+  private def buildSearchQueryDBObject(entry: ChangeEntry) = new Document().append(KeyChangeId, entry.changeId).append(KeyAuthor, entry.author)
 
 }

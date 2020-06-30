@@ -38,7 +38,7 @@ class ExportsMigrationToolDummySpec extends WordSpec with MockitoSugar with Befo
   "ExportsMigrationTool" should {
     "finish this test to increase coverage" in {
 
-      val exportsMigrationTool = ExportsMigrationTool(mongoDatabase)
+      val exportsMigrationTool = ExportsMigrationTool(mongoDatabase, MigrationsRegistry(Seq.empty), 1)
 
       exportsMigrationTool.execute()
     }
