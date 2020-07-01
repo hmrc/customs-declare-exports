@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.{AdditionalInformation, ExportItem}
+import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper._
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.AdditionalInformation.Pointer
@@ -77,7 +78,7 @@ class AdditionalInformationBuilder @Inject()() extends ModifyingBuilder[ExportIt
 
     if (info.description.nonEmpty) {
       val additionalInformationStatementDescriptionTextType = new AdditionalInformationStatementDescriptionTextType
-      additionalInformationStatementDescriptionTextType.setValue(info.description)
+      additionalInformationStatementDescriptionTextType.setValue(stripCarriageReturns(info.description))
       wcoAdditionalInformation.setStatementDescription(additionalInformationStatementDescriptionTextType)
     }
 
