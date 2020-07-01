@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.{DocumentProduced, ExportItem}
+import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper._
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import uk.gov.hmrc.wco.dec._
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
@@ -35,7 +35,7 @@ class AdditionalDocumentsBuilder @Inject()() extends ModifyingBuilder[ExportItem
 
   def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem): Unit =
     exportItem.documentsProducedData.foreach {
-      _.documents.map(AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument(_)).foreach { goodsItemAdditionalDocument =>
+      _.documents.map(AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument).foreach { goodsItemAdditionalDocument =>
         wcoGovernmentAgencyGoodsItem.getAdditionalDocument
           .add(AdditionalDocumentsBuilder.createAdditionalDocument(goodsItemAdditionalDocument))
       }
@@ -147,7 +147,7 @@ object AdditionalDocumentsBuilder {
       id = doc.documentIdentifier,
       lpcoExemptionCode = doc.documentStatus,
       name = doc.documentStatusReason,
-      submitter = doc.issuingAuthorityName.map(name => GovernmentAgencyGoodsItemAdditionalDocumentSubmitter(name = Some(name))),
+      submitter = doc.issuingAuthorityName.map(name => GovernmentAgencyGoodsItemAdditionalDocumentSubmitter(name = Some(stripCarriageReturns(name)))),
       effectiveDateTime = doc.dateOfValidity
         .map(
           date => DateTimeElement(DateTimeString(formatCode = dateTimeCode, value = date.toLocalDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"))))

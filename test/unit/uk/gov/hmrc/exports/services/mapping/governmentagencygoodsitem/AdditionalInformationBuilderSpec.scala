@@ -16,8 +16,8 @@
 
 package unit.uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
+import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatest.{Matchers, MustMatchers, WordSpec}
 import uk.gov.hmrc.exports.models.declaration.AdditionalInformation
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.AdditionalInformationBuilder
 import unit.uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
@@ -54,6 +54,18 @@ class AdditionalInformationBuilderSpec extends WordSpec with Matchers with Mocki
         .get(0)
         .getStatementDescription
         .getValue shouldBe additionalInformation.description
+    }
+
+    "remove new-lines from additional information description" in {
+      val exportItem = anItem(withAdditionalInformation(additionalInformation.copy(description = "some\ndescription")))
+      val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
+
+      builder.buildThenAdd(exportItem, governmentAgencyGoodsItem)
+
+      governmentAgencyGoodsItem.getAdditionalInformation
+        .get(0)
+        .getStatementDescription
+        .getValue shouldBe "some description"
     }
   }
 

@@ -23,12 +23,12 @@ import uk.gov.hmrc.wco.dec._
 class CachingMappingHelper {
   val defaultMeasureCode = "KGM"
 
-  def commodityFromExportItem(exportItem: ExportItem): Option[Commodity] = {
-    def removeCarriageReturns(description: Option[String]): Option[String] = description.map(_.replaceAll("(\\r\\n)|\\r|\\n", " "))
+  import CachingMappingHelper._
 
+  def commodityFromExportItem(exportItem: ExportItem): Option[Commodity] =
     Some(
       Commodity(
-        description = exportItem.commodityDetails.flatMap(commodityDetails => removeCarriageReturns(commodityDetails.descriptionOfGoods)),
+        description = exportItem.commodityDetails.flatMap(_.descriptionOfGoods.map(stripCarriageReturns)),
         classifications = getClassifications(
           exportItem.commodityDetails.flatMap(_.combinedNomenclatureCode),
           exportItem.cusCode.flatMap(_.cusCode),
@@ -38,7 +38,6 @@ class CachingMappingHelper {
         dangerousGoods = exportItem.dangerousGoodsCode.flatMap(_.dangerousGoodsCode).map(code => Seq(DangerousGoods(Some(code)))).getOrElse(Seq.empty)
       )
     ).filter(isCommodityNonEmpty)
-  }
 
   private def isCommodityNonEmpty(commodity: Commodity): Boolean =
     commodity.classifications.nonEmpty || commodity.dangerousGoods.nonEmpty || commodity.description.nonEmpty
@@ -70,4 +69,9 @@ class CachingMappingHelper {
     } catch {
       case _: NumberFormatException => Measure(Some(defaultMeasureCode), value = Some(BigDecimal(0)))
     }
+}
+
+object CachingMappingHelper {
+
+  def stripCarriageReturns(value: String): String = value.replaceAll("(\\r\\n)|\\r|\\n", " ")
 }

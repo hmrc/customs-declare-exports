@@ -63,7 +63,7 @@ class AdditionalDocumentsBuilderSpec extends WordSpec with Matchers with Governm
         documentIdentifier = Some("idpart"),
         documentStatus = Some("status"),
         documentStatusReason = Some("reason"),
-        issuingAuthorityName = Some("issuingAuthority"),
+        issuingAuthorityName = Some("Issuing\nAuthority\rName"),
         dateOfValidity = Some(Date(Some(10), Some(4), Some(2017))),
         documentWriteOff = None
       )
@@ -76,6 +76,7 @@ class AdditionalDocumentsBuilderSpec extends WordSpec with Matchers with Governm
       additionalDoc.lpcoExemptionCode shouldBe Some("status")
       additionalDoc.name shouldBe Some("reason")
       additionalDoc.effectiveDateTime shouldBe Some(DateTimeElement(DateTimeString("102", "20170410")))
+      additionalDoc.submitter.flatMap(_.name) shouldBe Some("Issuing Authority Name")
     }
   }
 }
