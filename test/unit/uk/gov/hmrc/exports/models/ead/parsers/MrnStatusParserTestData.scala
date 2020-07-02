@@ -31,7 +31,7 @@ object MrnStatusParserTestData {
     <p:DeclarationStatusDetails>
       <p:Declaration>
         <p:AcceptanceDateTime>
-          <p1:DateTimeString formatCode="304">20190702110757Z</p1:DateTimeString>
+          <p1:DateTimeString formatCode="304">20190102110757Z</p1:DateTimeString>
         </p:AcceptanceDateTime>
         <p:ID>{mrn}</p:ID>
         <p:VersionID>1</p:VersionID>
