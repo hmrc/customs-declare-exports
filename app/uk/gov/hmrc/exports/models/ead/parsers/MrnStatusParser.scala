@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.models.ead.parsers
 
-import java.time.ZonedDateTime
+import java.time.{ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
 
 import uk.gov.hmrc.exports.models.ead.XmlTags._
@@ -65,8 +65,9 @@ class MrnStatusParser {
         val typeCode = (doc \ XmlTags.typeCode).text
         PreviousDocument(id, typeCode)
       }
-
-  private def timeFormatter(zonedDateTime: String): String = timeFormatter(ZonedDateTime.parse(zonedDateTime, timeStampFormatter))
+  private def timeFormatter(zonedDateTime: String): String = timeFormatter(
+    ZonedDateTime.parse(zonedDateTime, timeStampFormatter).withZoneSameInstant(ZoneId.of("Europe/London"))
+  )
 
   private def timeFormatter(zonedDateTime: ZonedDateTime): String =
     displayFormatter

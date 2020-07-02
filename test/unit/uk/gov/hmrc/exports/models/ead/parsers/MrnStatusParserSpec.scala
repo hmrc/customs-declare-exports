@@ -28,9 +28,9 @@ class MrnStatusParserSpec extends WordSpec with MustMatchers with OptionValues {
       mrnStatus.eori mustBe "GB123456789012000"
       mrnStatus.versionId mustBe "1"
       mrnStatus.declarationType mustBe "IMZ"
-      mrnStatus.acceptanceDateTime mustBe Some("02 July 2019 at 11:07am")
-      mrnStatus.receivedDateTime mustBe "02 July 2019 at 11:08am"
-      mrnStatus.releasedDateTime mustBe Some("02 July 2019 at 11:09am")
+      mrnStatus.acceptanceDateTime mustBe Some("02 January 2019 at 11:07am")
+      mrnStatus.receivedDateTime mustBe "02 July 2019 at 12:08pm"
+      mrnStatus.releasedDateTime mustBe Some("02 July 2019 at 12:09pm")
       mrnStatus.createdDateTime mustNot be(empty)
       mrnStatus.roe mustBe "6"
       mrnStatus.ics mustBe "15"
