@@ -26,6 +26,13 @@ object LockEntry {
   private[migrations] val StatusField: String = "status"
   private[migrations] val OwnerField: String = "owner"
   private[migrations] val ExpiresAtField: String = "expiresAt"
+
+  def apply(document: Document): LockEntry = LockEntry(
+    document.getString(LockEntry.KeyField),
+    document.getString(LockEntry.StatusField),
+    document.getString(LockEntry.OwnerField),
+    document.getDate(LockEntry.ExpiresAtField)
+  )
 }
 
 case class LockEntry(key: String, status: String, owner: String, expiresAt: Date) {

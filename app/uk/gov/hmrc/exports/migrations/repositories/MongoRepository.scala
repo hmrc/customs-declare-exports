@@ -21,7 +21,7 @@ import com.mongodb.client.model.IndexOptions
 import org.bson.Document
 import play.api.Logger
 
-import scala.collection.JavaConversions._
+import scala.collection.convert.WrapAsScala.asScalaIterator
 
 abstract class MongoRepository private[migrations] (val mongoDatabase: MongoDatabase, val collectionName: String, val uniqueFields: Array[String]) {
 
@@ -31,22 +31,31 @@ abstract class MongoRepository private[migrations] (val mongoDatabase: MongoData
   private[migrations] val collection = mongoDatabase.getCollection(collectionName)
   private[migrations] val fullCollectionName = collection.getNamespace.getDatabaseName + "." + collection.getNamespace.getCollectionName
 
+  private lazy val indexes: Seq[Document] = asScalaIterator(collection.listIndexes.iterator()).toSeq
+
   private[migrations] def ensureIndex(): Unit =
     if (!this.ensuredCollectionIndex) {
-      collection.listIndexes.find(isIndexUnique) match {
-        case None =>
+      indexes.size match {
+        case 0 =>
           createRequiredUniqueIndex()
           logger.debug(s"Index in collection ${getCollectionName} was created")
-        case Some(index) if !isIndexUnique(index) =>
-          dropIndex(index)
-          createRequiredUniqueIndex()
-          logger.debug(s"Index in collection ${getCollectionName} was recreated")
         case _ =>
-          logger.debug(s"Index in collection ${getCollectionName} already exists")
+          indexes.filter(!isIndexUnique(_)).foreach(dropIndex)
+
+          if (indexes.exists(isIndexUnique)) {
+            logger.debug(s"Index in collection ${getCollectionName} already exists")
+          } else {
+            createRequiredUniqueIndex()
+            logger.debug(s"Index in collection ${getCollectionName} was recreated")
+          }
       }
       this.ensuredCollectionIndex = true
     }
 
+  // Index is considered unique when:
+  // 1. Every uniqueField value is equal 1
+  // 2. "ns" field contains fullCollectionName
+  // 3. "unique" field is true
   private def isIndexUnique(index: Document): Boolean = {
     val key = index.get("key").asInstanceOf[Document]
     for (uniqueField <- uniqueFields) {

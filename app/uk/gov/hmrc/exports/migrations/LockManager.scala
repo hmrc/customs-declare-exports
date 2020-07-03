@@ -103,9 +103,9 @@ class LockManager(
       updateStatus(null)
       throw new LockManagerException("MaxTries(" + config.lockMaxTries + ") reached")
     }
-    val currentLock = repository.findByKey(DefaultKey)
+    val currentLockOpt = repository.findByKey(DefaultKey)
     // Check for ownership
-    if (currentLock != null && !currentLock.isOwner(lockOwner)) {
+    currentLockOpt.filterNot(_.isOwner(lockOwner)).foreach { currentLock =>
       val currentLockExpiresAt = currentLock.expiresAt
       logger.info(s"Lock is taken by other process until: ${currentLockExpiresAt}")
       if (!acquiringLock) throw new LockManagerException("Lock held by other process. Cannot ensure lock")

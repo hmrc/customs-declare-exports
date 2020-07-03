@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.exports.migrations
 
+import java.util.Date
+
 import com.mongodb.client.MongoDatabase
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
@@ -48,6 +50,7 @@ class ExportsMigrationToolSpec extends WordSpec with MockitoSugar with MustMatch
 
     super.afterEach()
   }
+
   "ExportsMigrationTool on execute" should {
 
     "call LockManager acquireLockDefault method" in {
@@ -88,20 +91,22 @@ class ExportsMigrationToolSpec extends WordSpec with MockitoSugar with MustMatch
         override def migrationFunction(db: MongoDatabase): Unit = {}
       }
 
-      "call ChangeEntryRepository isNewChange method" in {
+      "call ChangeEntryRepository findAll method" in {
 
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition))
-        when(changeEntryRepository.isNewChange(any())).thenReturn(true)
+//        when(changeEntryRepository.isNewChange(any())).thenReturn(true)
+        when(changeEntryRepository.findAll()).thenReturn(List.empty)
 
         exportsMigrationTool().execute()
 
-        verify(changeEntryRepository).isNewChange(any[ChangeEntry])
+        verify(changeEntryRepository).findAll()
       }
 
       "call LockManager ensureLockDefault" in {
 
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition))
-        when(changeEntryRepository.isNewChange(any())).thenReturn(true)
+//        when(changeEntryRepository.isNewChange(any())).thenReturn(true)
+        when(changeEntryRepository.findAll()).thenReturn(List.empty)
 
         exportsMigrationTool().execute()
 
@@ -111,7 +116,8 @@ class ExportsMigrationToolSpec extends WordSpec with MockitoSugar with MustMatch
       "call ChangeEntryRepository save method" in {
 
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition))
-        when(changeEntryRepository.isNewChange(any())).thenReturn(true)
+//        when(changeEntryRepository.isNewChange(any())).thenReturn(true)
+        when(changeEntryRepository.findAll()).thenReturn(List.empty)
 
         exportsMigrationTool().execute()
 
@@ -126,21 +132,27 @@ class ExportsMigrationToolSpec extends WordSpec with MockitoSugar with MustMatch
         override val migrationInformation: MigrationInformation = testMigrationInformation
         override def migrationFunction(db: MongoDatabase): Unit = {}
       }
+      val currentChangeEntry = ChangeEntry(
+        changeId = testMigrationInformation.id,
+        author = testMigrationInformation.author,
+        timestamp = new Date(),
+        changeLogClass = "testChangeLogClass"
+      )
 
-      "call ChangeEntryRepository isNewChange method" in {
+      "call ChangeEntryRepository findAll method" in {
 
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition))
-        when(changeEntryRepository.isNewChange(any())).thenReturn(false)
+        when(changeEntryRepository.findAll()).thenReturn(List(currentChangeEntry.buildFullDBObject))
 
         exportsMigrationTool().execute()
 
-        verify(changeEntryRepository).isNewChange(any[ChangeEntry])
+        verify(changeEntryRepository).findAll()
       }
 
       "call LockManager ensureLockDefault" in {
 
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition))
-        when(changeEntryRepository.isNewChange(any())).thenReturn(false)
+        when(changeEntryRepository.findAll()).thenReturn(List(currentChangeEntry.buildFullDBObject))
 
         exportsMigrationTool().execute()
 
@@ -150,7 +162,7 @@ class ExportsMigrationToolSpec extends WordSpec with MockitoSugar with MustMatch
       "not call ChangeEntryRepository save method" in {
 
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition))
-        when(changeEntryRepository.isNewChange(any())).thenReturn(false)
+        when(changeEntryRepository.findAll()).thenReturn(List(currentChangeEntry.buildFullDBObject))
 
         exportsMigrationTool().execute()
 
@@ -171,7 +183,8 @@ class ExportsMigrationToolSpec extends WordSpec with MockitoSugar with MustMatch
         when(migrationDefinition_3.migrationInformation).thenReturn(testMigrationInformation(3))
 
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition_2, migrationDefinition_3, migrationDefinition_1))
-        when(changeEntryRepository.isNewChange(any())).thenReturn(true)
+//        when(changeEntryRepository.isNewChange(any())).thenReturn(true)
+        when(changeEntryRepository.findAll()).thenReturn(List.empty)
 
         exportsMigrationTool().execute()
 

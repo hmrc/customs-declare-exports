@@ -20,14 +20,36 @@ import java.util.Date
 
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Filters.{and, lt, or, eq => feq}
-import com.mongodb.client.model.{Filters, UpdateOptions}
+import com.mongodb.client.model.UpdateOptions
 import com.mongodb.client.result.UpdateResult
 import com.mongodb.{DuplicateKeyException, ErrorCategory, MongoWriteException}
 import org.bson.Document
 import org.bson.conversions.Bson
 import uk.gov.hmrc.exports.migrations.exceptions.LockPersistenceException
+import uk.gov.hmrc.exports.migrations.repositories.LockEntry.{ExpiresAtField, KeyField, OwnerField, StatusField}
 
-class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRepository(db, collectionName, Array(LockEntry.KeyField)) {
+import scala.collection.convert.WrapAsScala.asScalaIterator
+
+class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRepository(db, collectionName, Array(KeyField)) {
+
+  /**
+    * Retrieves a lock by key
+    *
+    * @param lockKey key
+    * @return LockEntry
+    */
+  private[migrations] def findByKey(lockKey: String): Option[LockEntry] =
+    asScalaIterator(collection.find(new Document().append(KeyField, lockKey)).iterator).toSeq.headOption
+      .map(LockEntry(_))
+
+  /**
+    * Removes from database all the locks with the same key (only can be one) and owner
+    *
+    * @param lockKey lock key
+    * @param owner   lock owner
+    */
+  private[migrations] def removeByKeyAndOwner(lockKey: String, owner: String): Unit =
+    collection.deleteMany(and(feq(KeyField, lockKey), feq(OwnerField, owner)))
 
   /**
     * If there is a lock in the database with the same key, updates it if either is expired or both share the same owner.
@@ -50,37 +72,7 @@ class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRep
   private[migrations] def updateIfSameOwner(newLock: LockEntry): Unit =
     insertUpdate(newLock, onlyIfSameOwner = true)
 
-  /**
-    * Retrieves a lock by key
-    *
-    * @param lockKey key
-    * @return LockEntry
-    */
-  private[migrations] def findByKey(lockKey: String): LockEntry = {
-    val result: Document = collection.find(new Document().append(LockEntry.KeyField, lockKey)).first
-    if (result != null) {
-      new LockEntry(
-        result.getString(LockEntry.KeyField),
-        result.getString(LockEntry.StatusField),
-        result.getString(LockEntry.OwnerField),
-        result.getDate(LockEntry.ExpiresAtField)
-      )
-    } else {
-      null
-    }
-  }
-
-  /**
-    * Removes from database all the locks with the same key(only can be one) and owner
-    *
-    * @param lockKey lock key
-    * @param owner   lock owner
-    */
-  private[migrations] def removeByKeyAndOwner(lockKey: String, owner: String): Unit =
-    collection.deleteMany(and(Filters.eq(LockEntry.KeyField, lockKey), Filters.eq(LockEntry.OwnerField, owner)))
-
   private def insertUpdate(newLock: LockEntry, onlyIfSameOwner: Boolean): Unit =
-//    var lockHeld: Boolean = false
     try {
       val acquireLockQuery: Bson = getAcquireLockQuery(newLock.key, newLock.owner, onlyIfSameOwner)
       val result: UpdateResult = collection.updateMany(
@@ -95,28 +87,17 @@ class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRep
         throw new LockPersistenceException("Lock is held")
       case _: DuplicateKeyException =>
         throw new LockPersistenceException("Lock is held")
-
-//      case ex: MongoWriteException =>
-//        lockHeld = ex.getError.getCategory eq ErrorCategory.DUPLICATE_KEY
-//        if (!lockHeld) {
-//          throw ex
-//        }
-//      case _: DuplicateKeyException =>
-//        lockHeld = true
     }
-//    if (lockHeld) {
-//      throw new LockPersistenceException("Lock is held")
-//    }
 
   private def getAcquireLockQuery(lockKey: String, owner: String, onlyIfSameOwner: Boolean): Bson = {
-    val expiresAtCond: Bson = lt(LockEntry.ExpiresAtField, new Date)
-    val ownerCond: Bson = feq(LockEntry.OwnerField, owner)
+    val expiresAtCond: Bson = lt(ExpiresAtField, new Date)
+    val ownerCond: Bson = feq(OwnerField, owner)
     val orCond: Bson = if (onlyIfSameOwner) {
       or(ownerCond)
     } else {
       or(expiresAtCond, ownerCond)
     }
-    and(feq(LockEntry.KeyField, lockKey), feq(LockEntry.StatusField, LockStatus.LockHeld.name), orCond)
+    and(feq(KeyField, lockKey), feq(StatusField, LockStatus.LockHeld.name), orCond)
   }
 
 }

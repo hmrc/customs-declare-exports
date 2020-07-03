@@ -16,17 +16,19 @@
 
 package uk.gov.hmrc.exports.migrations.repositories
 
-import com.mongodb.client.MongoDatabase
+import com.mongodb.client.MongoCursor
+import com.mongodb.{ServerAddress, ServerCursor}
 import org.bson.Document
-import uk.gov.hmrc.exports.migrations.repositories.ChangeEntry.{KeyAuthor, KeyChangeId}
 
-import scala.collection.convert.WrapAsScala.asScalaIterator
+object TestObjectsBuilder {
+  def buildMongoCursor(elements: Seq[Document]): MongoCursor[Document] = new MongoCursor[Document] {
+    private val iterator = elements.iterator
 
-class ChangeEntryRepository(collectionName: String, mongoDatabase: MongoDatabase)
-    extends MongoRepository(mongoDatabase, collectionName, Array(KeyAuthor, KeyChangeId)) {
-
-  private[migrations] def findAll(): List[Document] = asScalaIterator(collection.find().iterator()).toList
-
-  private[migrations] def save(changeEntry: ChangeEntry): Unit = collection.insertOne(changeEntry.buildFullDBObject)
-
+    override def close(): Unit = ???
+    override def hasNext: Boolean = iterator.hasNext
+    override def next(): Document = iterator.next
+    override def tryNext(): Document = ???
+    override def getServerCursor: ServerCursor = ???
+    override def getServerAddress: ServerAddress = ???
+  }
 }

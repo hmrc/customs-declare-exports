@@ -113,7 +113,7 @@ class LockManagerSpec extends WordSpec with MockitoSugar with MustMatchers with 
           when(timeUtils.currentTimePlusMillis(any())).thenReturn(newLockExpiryDate)
           val currentLock = LockEntry(DefaultKey, LockStatus.LockHeld.name, "OtherLockOwner", currentLockExpiryDate)
           when(lockRepository.insertUpdate(any())).thenThrow(new LockPersistenceException("Lock is held"))
-          when(lockRepository.findByKey(anyString())).thenReturn(currentLock)
+          when(lockRepository.findByKey(anyString())).thenReturn(Some(currentLock))
 
           val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, config)
 
@@ -127,7 +127,7 @@ class LockManagerSpec extends WordSpec with MockitoSugar with MustMatchers with 
           when(timeUtils.currentTimePlusMillis(any())).thenReturn(newLockExpiryDate)
           val currentLock = LockEntry(DefaultKey, LockStatus.LockHeld.name, "OtherLockOwner", currentLockExpiryDate)
           when(lockRepository.insertUpdate(any())).thenThrow(new LockPersistenceException("Lock is held"))
-          when(lockRepository.findByKey(anyString())).thenReturn(currentLock)
+          when(lockRepository.findByKey(anyString())).thenReturn(Some(currentLock))
 
           val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, config)
 
@@ -141,7 +141,7 @@ class LockManagerSpec extends WordSpec with MockitoSugar with MustMatchers with 
           val currentLockExpiryDate = new Date(newLockExpiryDate.getTime + 10 * config.lockMaxWaitMillis)
           val currentLock = LockEntry(DefaultKey, LockStatus.LockHeld.name, "OtherLockOwner", currentLockExpiryDate)
           when(lockRepository.insertUpdate(any())).thenThrow(new LockPersistenceException("Lock is held"))
-          when(lockRepository.findByKey(anyString())).thenReturn(currentLock)
+          when(lockRepository.findByKey(anyString())).thenReturn(Some(currentLock))
 
           val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, config)
 
@@ -213,7 +213,7 @@ class LockManagerSpec extends WordSpec with MockitoSugar with MustMatchers with 
             when(lockRefreshChecker.needsRefreshLock(any())).thenReturn(true)
             when(timeUtils.currentTimePlusMillis(any())).thenReturn(newLockExpiryDate)
             when(lockRepository.updateIfSameOwner(any())).thenThrow(new LockPersistenceException("Lock is held"))
-            when(lockRepository.findByKey(anyString())).thenReturn(null)
+            when(lockRepository.findByKey(anyString())).thenReturn(None)
 
             val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, config)
 
@@ -227,7 +227,7 @@ class LockManagerSpec extends WordSpec with MockitoSugar with MustMatchers with 
             when(lockRefreshChecker.needsRefreshLock(any())).thenReturn(true)
             when(timeUtils.currentTimePlusMillis(any())).thenReturn(newLockExpiryDate)
             when(lockRepository.updateIfSameOwner(any())).thenThrow(new LockPersistenceException("Lock is held"))
-            when(lockRepository.findByKey(anyString())).thenReturn(null)
+            when(lockRepository.findByKey(anyString())).thenReturn(None)
 
             val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, config)
 
@@ -243,7 +243,7 @@ class LockManagerSpec extends WordSpec with MockitoSugar with MustMatchers with 
             when(timeUtils.currentTimePlusMillis(any())).thenReturn(newLockExpiryDate)
             val currentLock = LockEntry(DefaultKey, LockStatus.LockHeld.name, "OtherLockOwner", currentLockExpiryDate)
             when(lockRepository.updateIfSameOwner(any())).thenThrow(new LockPersistenceException("Lock is held"))
-            when(lockRepository.findByKey(anyString())).thenReturn(currentLock)
+            when(lockRepository.findByKey(anyString())).thenReturn(Some(currentLock))
 
             val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, config)
 
@@ -258,7 +258,7 @@ class LockManagerSpec extends WordSpec with MockitoSugar with MustMatchers with 
             when(timeUtils.currentTimePlusMillis(any())).thenReturn(newLockExpiryDate)
             val currentLock = LockEntry(DefaultKey, LockStatus.LockHeld.name, "OtherLockOwner", currentLockExpiryDate)
             when(lockRepository.updateIfSameOwner(any())).thenThrow(new LockPersistenceException("Lock is held"))
-            when(lockRepository.findByKey(anyString())).thenReturn(currentLock)
+            when(lockRepository.findByKey(anyString())).thenReturn(Some(currentLock))
 
             val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, config)
 

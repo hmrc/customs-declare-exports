@@ -21,6 +21,7 @@ import play.api.Logger
 import uk.gov.hmrc.exports.migrations.LockManager.LockManagerConfig
 import uk.gov.hmrc.exports.migrations.changelogs.MigrationDefinition
 import uk.gov.hmrc.exports.migrations.exceptions.{ExportsMigrationException, LockManagerException}
+import uk.gov.hmrc.exports.migrations.repositories.ChangeEntry.{KeyAuthor, KeyChangeId}
 import uk.gov.hmrc.exports.migrations.repositories.{ChangeEntry, ChangeEntryRepository, LockRefreshChecker, LockRepository}
 
 object ExportsMigrationTool {
@@ -89,7 +90,7 @@ class ExportsMigrationTool(
     val changeEntry = ChangeEntry(migrDefinition.migrationInformation)
 
     try {
-      if (changeEntryRepository.isNewChange(changeEntry)) {
+      if (isNewChange(changeEntry)) {
         lockManager.ensureLockDefault()
         migrDefinition.migrationFunction(database)
         changeEntryRepository.save(changeEntry)
@@ -107,6 +108,12 @@ class ExportsMigrationTool(
     } catch {
       case exc: ExportsMigrationException => logger.error(exc.getMessage)
     }
+  }
+
+  private def isNewChange(changeEntry: ChangeEntry): Boolean = !isExistingChange(changeEntry)
+
+  private def isExistingChange(changeEntry: ChangeEntry): Boolean = changeEntryRepository.findAll().exists { doc =>
+    doc.get(KeyChangeId) == changeEntry.changeId && doc.get(KeyAuthor) == changeEntry.author
   }
 
   private def isRunAlways(migrationDefinition: MigrationDefinition): Boolean = migrationDefinition.migrationInformation.runAlways
