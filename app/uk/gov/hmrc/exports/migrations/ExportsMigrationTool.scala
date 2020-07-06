@@ -87,7 +87,7 @@ class ExportsMigrationTool(
   }
 
   private def executeIfNewOrRunAlways(migrDefinition: MigrationDefinition): Unit = {
-    val changeEntry = ChangeEntry(migrDefinition.migrationInformation)
+    val changeEntry = ChangeEntry(migrDefinition)
 
     try {
       if (isNewChange(changeEntry)) {

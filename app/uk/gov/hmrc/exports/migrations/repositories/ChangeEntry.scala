@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.migrations.repositories
 import java.util.Date
 
 import org.bson.Document
-import uk.gov.hmrc.exports.migrations.changelogs.MigrationInformation
+import uk.gov.hmrc.exports.migrations.changelogs.MigrationDefinition
 import uk.gov.hmrc.exports.migrations.repositories.ChangeEntry._
 
 object ChangeEntry {
@@ -28,11 +28,11 @@ object ChangeEntry {
   private[migrations] val KeyTimestamp: String = "timestamp"
   private[migrations] val KeyChangeLogClass: String = "changeLogClass"
 
-  def apply(migrationInformation: MigrationInformation): ChangeEntry = ChangeEntry(
-    changeId = migrationInformation.id,
-    author = migrationInformation.author,
+  def apply(migrationDefinition: MigrationDefinition): ChangeEntry = ChangeEntry(
+    changeId = migrationDefinition.migrationInformation.id,
+    author = migrationDefinition.migrationInformation.author,
     timestamp = new Date(),
-    changeLogClass = migrationInformation.getClass.getSimpleName
+    changeLogClass = migrationDefinition.getClass.getSimpleName
   )
 }
 
