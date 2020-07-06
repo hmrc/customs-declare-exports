@@ -18,7 +18,6 @@ package uk.gov.hmrc.exports.migrations
 
 import com.mongodb.client.MongoDatabase
 import play.api.Logger
-import uk.gov.hmrc.exports.migrations.LockManager.LockManagerConfig
 import uk.gov.hmrc.exports.migrations.changelogs.MigrationDefinition
 import uk.gov.hmrc.exports.migrations.exceptions.{ExportsMigrationException, LockManagerException}
 import uk.gov.hmrc.exports.migrations.repositories.ChangeEntry.{KeyAuthor, KeyChangeId}
@@ -29,11 +28,11 @@ object ExportsMigrationTool {
   private val lockCollectionName = "exportsMigrationLock"
   private val changeEntryCollectionName = "exportsMigrationChangeLog"
 
-  def apply(mongoDatabase: MongoDatabase, migrationsRegistry: MigrationsRegistry, maxTries: Int): ExportsMigrationTool = {
+  def apply(mongoDatabase: MongoDatabase, migrationsRegistry: MigrationsRegistry, lockManagerConfig: LockManagerConfig): ExportsMigrationTool = {
     val lockRepository = new LockRepository(lockCollectionName, mongoDatabase)
     val timeUtils = new TimeUtils
     val lockRefreshChecker = new LockRefreshChecker(timeUtils)
-    val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, LockManagerConfig(maxTries))
+    val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, lockManagerConfig)
     val changeEntryRepository = new ChangeEntryRepository(changeEntryCollectionName, mongoDatabase)
 
     lockRepository.ensureIndex()

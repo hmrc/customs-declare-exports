@@ -23,7 +23,7 @@ import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
 import org.mockito.Mockito._
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.exports.migrations.LockManager.{DefaultKey, LockManagerConfig}
+import uk.gov.hmrc.exports.migrations.LockManager.DefaultKey
 import uk.gov.hmrc.exports.migrations.exceptions.{LockManagerException, LockPersistenceException}
 import uk.gov.hmrc.exports.migrations.repositories.{LockEntry, LockRefreshChecker, LockRepository, LockStatus}
 

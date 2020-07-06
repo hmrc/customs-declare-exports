@@ -55,6 +55,17 @@ class MigrationRunner @Inject()(
   }
   applicationLifecycle.addStopHook(() => Future.successful(migrationTask.cancel()))
 
+  private def migrateWithExportsMigrationTool(): Unit = {
+    val lockManagerConfig = LockManagerConfig(lockMaxTries = 10, lockMaxWaitMillis = minutesToMillis(5), lockAcquiredForMillis = minutesToMillis(3))
+    val migrationsRegistry = MigrationsRegistry()
+    val migrationTool = ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig)
+
+    migrationTool.execute()
+    client.close()
+  }
+
+  private def minutesToMillis(minutes: Int): Long = minutes * 60L * 1000L
+
   private def migrateWithMongock(): Unit = {
     val lockAcquiredForMinutes = 3
     val maxWaitingForLockMinutes = 5
@@ -66,15 +77,6 @@ class MigrationRunner @Inject()(
 
     runner.execute()
     runner.close()
-  }
-
-  private def migrateWithExportsMigrationTool(): Unit = {
-    val maxTries = 10
-    val migrationsRegistry = MigrationsRegistry(Seq(new ChangePackageInformationId()))
-    val migrationTool = ExportsMigrationTool(db, migrationsRegistry, maxTries)
-
-    migrationTool.execute()
-    client.close()
   }
 
 }

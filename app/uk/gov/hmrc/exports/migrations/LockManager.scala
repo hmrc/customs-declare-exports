@@ -28,13 +28,6 @@ object LockManager {
   val MinLockAcquiredForMillis: Long = 2L * 60L * 1000L // 2 minutes
   val LockRefreshMarginMillis: Long = 60L * 1000L // 1 minute
   val MinimumSleepThreadMillisDefault: Long = 500L
-
-  case class LockManagerConfig(
-    lockMaxTries: Int = 1,
-    lockMaxWaitMillis: Long = MinLockAcquiredForMillis + 60L * 1000L,
-    lockAcquiredForMillis: Long = MinLockAcquiredForMillis,
-    minimumSleepThreadMillis: Long = MinimumSleepThreadMillisDefault
-  )
 }
 
 class LockManager(
@@ -115,7 +108,7 @@ class LockManager(
 
   private def waitForLock(expiresAtMillis: Date): Unit = {
     val diffMillis = expiresAtMillis.getTime - timeUtils.currentTime.getTime
-    val sleepingMillis = (if (diffMillis > 0) diffMillis else 0) + MinimumSleepThreadMillisDefault
+    val sleepingMillis = (if (diffMillis > 0) diffMillis else 0) + config.minimumSleepThreadMillis
     try {
       if (sleepingMillis > config.lockMaxWaitMillis)
         throw new LockManagerException(maxWaitExceededErrorMsg(sleepingMillis))
