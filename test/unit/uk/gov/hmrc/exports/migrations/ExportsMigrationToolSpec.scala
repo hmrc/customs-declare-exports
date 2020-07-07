@@ -94,7 +94,6 @@ class ExportsMigrationToolSpec extends WordSpec with MockitoSugar with MustMatch
       "call ChangeEntryRepository findAll method" in {
 
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition))
-//        when(changeEntryRepository.isNewChange(any())).thenReturn(true)
         when(changeEntryRepository.findAll()).thenReturn(List.empty)
 
         exportsMigrationTool().execute()
@@ -105,7 +104,6 @@ class ExportsMigrationToolSpec extends WordSpec with MockitoSugar with MustMatch
       "call LockManager ensureLockDefault" in {
 
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition))
-//        when(changeEntryRepository.isNewChange(any())).thenReturn(true)
         when(changeEntryRepository.findAll()).thenReturn(List.empty)
 
         exportsMigrationTool().execute()
@@ -116,7 +114,6 @@ class ExportsMigrationToolSpec extends WordSpec with MockitoSugar with MustMatch
       "call ChangeEntryRepository save method" in {
 
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition))
-//        when(changeEntryRepository.isNewChange(any())).thenReturn(true)
         when(changeEntryRepository.findAll()).thenReturn(List.empty)
 
         exportsMigrationTool().execute()
@@ -183,7 +180,6 @@ class ExportsMigrationToolSpec extends WordSpec with MockitoSugar with MustMatch
         when(migrationDefinition_3.migrationInformation).thenReturn(testMigrationInformation(3))
 
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition_2, migrationDefinition_3, migrationDefinition_1))
-//        when(changeEntryRepository.isNewChange(any())).thenReturn(true)
         when(changeEntryRepository.findAll()).thenReturn(List.empty)
 
         exportsMigrationTool().execute()
