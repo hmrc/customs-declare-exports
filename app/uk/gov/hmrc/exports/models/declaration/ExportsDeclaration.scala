@@ -17,7 +17,6 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import java.time.Instant
-import java.util.UUID
 
 import play.api.libs.json._
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
@@ -44,14 +43,6 @@ case class ExportsDeclaration(
   natureOfTransaction: Option[NatureOfTransaction]
 ) {
   def isCompleted: Boolean = status == DeclarationStatus.COMPLETE
-
-  def createClone: ExportsDeclaration = this.copy(
-    id = UUID.randomUUID().toString,
-    createdDateTime = Instant.now(),
-    updatedDateTime = Instant.now(),
-    consignmentReferences = None,
-    status = DeclarationStatus.INITIAL
-  )
 }
 
 object ExportsDeclaration {
