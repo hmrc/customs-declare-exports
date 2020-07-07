@@ -16,8 +16,33 @@
 
 package uk.gov.hmrc.exports.migrations
 
-sealed abstract class LockStatus(val name: String)
+import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
 
-object LockStatus {
-  case object LockHeld extends LockStatus("LockHeld")
+class TimeUtilsSpec extends WordSpec with MustMatchers with MockitoSugar {
+
+  private val timeUtils = new TimeUtils
+
+  "TimeUtils on minutesToMillis" should {
+
+    "correctly convert to milliseconds" in {
+
+      val minutes = 13
+      val expectedOutput = 780000
+
+      timeUtils.minutesToMillis(minutes) mustBe expectedOutput
+    }
+  }
+
+  "TimeUtils on millisToMinutes" should {
+
+    "correctly convert to minutes" in {
+
+      val millis = 120000
+      val expectedOutput = 2
+
+      timeUtils.millisToMinutes(millis) mustBe expectedOutput
+    }
+  }
+
 }

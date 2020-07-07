@@ -19,22 +19,24 @@ package uk.gov.hmrc.exports.migrations
 import com.mongodb.client.MongoDatabase
 import play.api.Logger
 import uk.gov.hmrc.exports.migrations.changelogs.MigrationDefinition
-import uk.gov.hmrc.exports.migrations.exceptions.{ExportsMigrationException, LockCheckException}
+import uk.gov.hmrc.exports.migrations.exceptions.{ExportsMigrationException, LockManagerException}
+import uk.gov.hmrc.exports.migrations.repositories.ChangeEntry.{KeyAuthor, KeyChangeId}
+import uk.gov.hmrc.exports.migrations.repositories.{ChangeEntry, ChangeEntryRepository, LockRefreshChecker, LockRepository}
 
 object ExportsMigrationTool {
 
   private val lockCollectionName = "exportsMigrationLock"
   private val changeEntryCollectionName = "exportsMigrationChangeLog"
 
-  def apply(mongoDatabase: MongoDatabase): ExportsMigrationTool = {
-    val migrationsRegistry = new MigrationsRegistry
-    ExportsMigrationTool(mongoDatabase, migrationsRegistry)
-  }
-
-  def apply(mongoDatabase: MongoDatabase, migrationsRegistry: MigrationsRegistry): ExportsMigrationTool = {
+  def apply(mongoDatabase: MongoDatabase, migrationsRegistry: MigrationsRegistry, lockManagerConfig: LockManagerConfig): ExportsMigrationTool = {
     val lockRepository = new LockRepository(lockCollectionName, mongoDatabase)
-    val lockManager = new LockManager(lockRepository, new TimeUtils)
+    val timeUtils = new TimeUtils
+    val lockRefreshChecker = new LockRefreshChecker(timeUtils)
+    val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, lockManagerConfig)
     val changeEntryRepository = new ChangeEntryRepository(changeEntryCollectionName, mongoDatabase)
+
+    lockRepository.ensureIndex()
+    changeEntryRepository.ensureIndex()
 
     new ExportsMigrationTool(lockManager, migrationsRegistry, changeEntryRepository, mongoDatabase)
   }
@@ -60,7 +62,7 @@ class ExportsMigrationTool(
         lockManager.acquireLockDefault()
         executeMigration()
       } catch {
-        case lockEx: LockCheckException =>
+        case lockEx: LockManagerException =>
           if (throwExceptionIfCannotObtainLock) {
             logger.error(lockEx.getMessage)
             throw new ExportsMigrationException(lockEx.getMessage)
@@ -84,15 +86,17 @@ class ExportsMigrationTool(
   }
 
   private def executeIfNewOrRunAlways(migrDefinition: MigrationDefinition): Unit = {
-    val changeEntry = ChangeEntry(migrDefinition.migrationInformation)
+    val changeEntry = ChangeEntry(migrDefinition)
 
     try {
-      if (changeEntryRepository.isNewChange(changeEntry)) {
+      if (isNewChange(changeEntry)) {
+        lockManager.ensureLockDefault()
         migrDefinition.migrationFunction(database)
         changeEntryRepository.save(changeEntry)
         logger.info(s"${changeEntry} applied")
 
       } else if (isRunAlways(migrDefinition)) {
+        lockManager.ensureLockDefault()
         migrDefinition.migrationFunction(database)
         logger.info(s"${changeEntry} re-applied")
 
@@ -103,6 +107,12 @@ class ExportsMigrationTool(
     } catch {
       case exc: ExportsMigrationException => logger.error(exc.getMessage)
     }
+  }
+
+  private def isNewChange(changeEntry: ChangeEntry): Boolean = !isExistingChange(changeEntry)
+
+  private def isExistingChange(changeEntry: ChangeEntry): Boolean = changeEntryRepository.findAll().exists { doc =>
+    doc.get(KeyChangeId) == changeEntry.changeId && doc.get(KeyAuthor) == changeEntry.author
   }
 
   private def isRunAlways(migrationDefinition: MigrationDefinition): Boolean = migrationDefinition.migrationInformation.runAlways

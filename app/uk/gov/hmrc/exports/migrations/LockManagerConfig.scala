@@ -16,20 +16,11 @@
 
 package uk.gov.hmrc.exports.migrations
 
-import java.util.Date
+import uk.gov.hmrc.exports.migrations.LockManager.{MinLockAcquiredForMillis, MinimumSleepThreadMillisDefault}
 
-class TimeUtils {
-
-  private[migrations] def currentTimePlusMillis(millis: Long): Date =
-    new Date(System.currentTimeMillis + millis)
-
-  private[migrations] def currentTime: Date =
-    new Date(System.currentTimeMillis)
-
-  private[migrations] def minutesToMillis(minutes: Long): Long =
-    minutes * 60 * 1000
-
-  private[migrations] def millisToMinutes(millis: Long): Long =
-    millis / (60 * 1000)
-
-}
+case class LockManagerConfig(
+  lockMaxTries: Int = 1,
+  lockMaxWaitMillis: Long = MinLockAcquiredForMillis + 60L * 1000L,
+  lockAcquiredForMillis: Long = MinLockAcquiredForMillis,
+  minimumSleepThreadMillis: Long = MinimumSleepThreadMillisDefault
+)

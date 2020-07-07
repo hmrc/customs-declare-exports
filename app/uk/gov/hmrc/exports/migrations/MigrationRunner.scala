@@ -24,6 +24,7 @@ import javax.inject.Inject
 import play.api.Logger
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.exports.config.{AppConfig, ExportsMigrationConfig}
+import uk.gov.hmrc.exports.migrations.changelogs.cache.ChangePackageInformationId
 import uk.gov.hmrc.exports.mongock.MigrationExecutionContext
 
 import scala.concurrent.Future
@@ -54,6 +55,17 @@ class MigrationRunner @Inject()(
   }
   applicationLifecycle.addStopHook(() => Future.successful(migrationTask.cancel()))
 
+  private def migrateWithExportsMigrationTool(): Unit = {
+    val lockManagerConfig = LockManagerConfig(lockMaxTries = 10, lockMaxWaitMillis = minutesToMillis(5), lockAcquiredForMillis = minutesToMillis(3))
+    val migrationsRegistry = MigrationsRegistry()
+    val migrationTool = ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig)
+
+    migrationTool.execute()
+    client.close()
+  }
+
+  private def minutesToMillis(minutes: Int): Long = minutes * 60L * 1000L
+
   private def migrateWithMongock(): Unit = {
     val lockAcquiredForMinutes = 3
     val maxWaitingForLockMinutes = 5
@@ -65,13 +77,6 @@ class MigrationRunner @Inject()(
 
     runner.execute()
     runner.close()
-  }
-
-  private def migrateWithExportsMigrationTool(): Unit = {
-    val migrationTool = ExportsMigrationTool(db)
-
-    migrationTool.execute()
-    client.close()
   }
 
 }

@@ -14,25 +14,32 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.migrations
+package uk.gov.hmrc.exports.migrations.repositories
 
 import java.util.Date
 
 import org.bson.Document
-import uk.gov.hmrc.exports.migrations.LockEntry._
+import uk.gov.hmrc.exports.migrations.repositories.LockEntry._
 
 object LockEntry {
-  private[migrations] val KEY_FIELD: String = "key"
-  private[migrations] val STATUS_FIELD: String = "status"
-  private[migrations] val OWNER_FIELD: String = "owner"
-  private[migrations] val EXPIRES_AT_FIELD: String = "expiresAt"
+  private[migrations] val KeyField: String = "key"
+  private[migrations] val StatusField: String = "status"
+  private[migrations] val OwnerField: String = "owner"
+  private[migrations] val ExpiresAtField: String = "expiresAt"
+
+  def apply(document: Document): LockEntry = LockEntry(
+    document.getString(LockEntry.KeyField),
+    document.getString(LockEntry.StatusField),
+    document.getString(LockEntry.OwnerField),
+    document.getDate(LockEntry.ExpiresAtField)
+  )
 }
 
 case class LockEntry(key: String, status: String, owner: String, expiresAt: Date) {
 
   private[migrations] def buildFullDBObject: Document = {
     val entry: Document = new Document
-    entry.append(KEY_FIELD, this.key).append(STATUS_FIELD, this.status).append(OWNER_FIELD, this.owner).append(EXPIRES_AT_FIELD, this.expiresAt)
+    entry.append(KeyField, this.key).append(StatusField, this.status).append(OwnerField, this.owner).append(ExpiresAtField, this.expiresAt)
   }
 
   private[migrations] def isOwner(owner: String): Boolean = this.owner == owner

@@ -14,50 +14,60 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.migrations
+package uk.gov.hmrc.exports.migrations.repositories
 
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.IndexOptions
 import org.bson.Document
 import play.api.Logger
 
-import scala.collection.JavaConversions._
+import scala.collection.convert.WrapAsScala.asScalaIterator
 
 abstract class MongoRepository private[migrations] (val mongoDatabase: MongoDatabase, val collectionName: String, val uniqueFields: Array[String]) {
 
   private val logger = Logger(this.getClass)
+  private var ensuredCollectionIndex = false
+
   private[migrations] val collection = mongoDatabase.getCollection(collectionName)
   private[migrations] val fullCollectionName = collection.getNamespace.getDatabaseName + "." + collection.getNamespace.getCollectionName
-  private var ensuredCollectionIndex = false
+
+  private lazy val indexes: Seq[Document] = asScalaIterator(collection.listIndexes.iterator()).toSeq
 
   private[migrations] def ensureIndex(): Unit =
     if (!this.ensuredCollectionIndex) {
-      val index = findRequiredUniqueIndex
-      if (index == null) {
-        createRequiredUniqueIndex()
-        logger.debug(s"Index in collection ${getCollectionName} was created")
-      } else if (!isUniqueIndex(index)) {
-        dropIndex(index)
-        createRequiredUniqueIndex()
-        logger.debug(s"Index in collection ${getCollectionName} was recreated")
+      indexes.size match {
+        case 0 =>
+          createRequiredUniqueIndex()
+          logger.debug(s"Index in collection ${getCollectionName} was created")
+        case _ =>
+          indexes.filter(!isIndexUnique(_)).foreach(dropIndex)
+
+          if (indexes.exists(isIndexUnique)) {
+            logger.debug(s"Index in collection ${getCollectionName} already exists")
+          } else {
+            createRequiredUniqueIndex()
+            logger.debug(s"Index in collection ${getCollectionName} was recreated")
+          }
       }
       this.ensuredCollectionIndex = true
     }
 
+  // Index is considered unique when:
+  // 1. Every uniqueField value is equal 1
+  // 2. "ns" field contains fullCollectionName
+  // 3. "unique" field is true
+  private def isIndexUnique(index: Document): Boolean = {
+    val key = index.get("key").asInstanceOf[Document]
+    for (uniqueField <- uniqueFields) {
+      if (key.getInteger(uniqueField, 0) != 1) return false
+    }
+    fullCollectionName == index.getString("ns") && index.getBoolean("unique", false)
+  }
+
   private[migrations] def createRequiredUniqueIndex(): Unit =
     collection.createIndex(getIndexDocument(uniqueFields), new IndexOptions().unique(true))
 
-  private[migrations] def findRequiredUniqueIndex: Document = {
-    val indexes = collection.listIndexes
-    for (index <- indexes) {
-      if (isUniqueIndex(index)) return index
-    }
-    null
-  }
-
-  private def getCollectionName = collection.getNamespace.getCollectionName
-
-  private def getIndexDocument(uniqueFields: Array[String]) = {
+  private def getIndexDocument(uniqueFields: Array[String]): Document = {
     val indexDocument = new Document
     for (field <- uniqueFields) {
       indexDocument.append(field, 1)
@@ -65,13 +75,7 @@ abstract class MongoRepository private[migrations] (val mongoDatabase: MongoData
     indexDocument
   }
 
-  private[migrations] def isUniqueIndex(index: Document): Boolean = {
-    val key = index.get("key").asInstanceOf[Document]
-    for (uniqueField <- uniqueFields) {
-      if (key.getInteger(uniqueField, 0) != 1) return false
-    }
-    fullCollectionName == index.getString("ns") && index.getBoolean("unique", false)
-  }
+  private def getCollectionName = collection.getNamespace.getCollectionName
 
   private[migrations] def dropIndex(index: Document): Unit =
     collection.dropIndex(index.get("name").toString)

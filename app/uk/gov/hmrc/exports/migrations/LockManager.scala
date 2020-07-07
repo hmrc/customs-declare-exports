@@ -20,53 +20,27 @@ import java.util.{Date, UUID}
 
 import play.api.Logger
 import uk.gov.hmrc.exports.migrations.LockManager._
-import uk.gov.hmrc.exports.migrations.exceptions.{LockCheckException, LockPersistenceException}
+import uk.gov.hmrc.exports.migrations.exceptions.{LockManagerException, LockPersistenceException}
+import uk.gov.hmrc.exports.migrations.repositories.{LockEntry, LockRefreshChecker, LockRepository, LockStatus}
 
 object LockManager {
-  private val MIN_LOCK_ACQUIRED_FOR_MILLIS = 2L * 60L * 1000L // 2 minutes
-  private val LOCK_REFRESH_MARGIN = 60L * 1000L // 1 minute
-  private val DefaultKey = "DEFAULT_LOCK"
-  private val MINIMUM_SLEEP_THREAD = 500L
-
-  //long debug/info/error messages
-
-  private val EXPIRATION_ARG_ERROR_MSG = "Lock expiration period must be greater than %d ms"
+  val DefaultKey: String = "DEFAULT_LOCK"
+  val MinLockAcquiredForMillis: Long = 2L * 60L * 1000L // 2 minutes
+  val LockRefreshMarginMillis: Long = 60L * 1000L // 1 minute
+  val MinimumSleepThreadMillisDefault: Long = 500L
 }
 
-class LockManager(val repository: LockRepository, val timeUtils: TimeUtils) {
-  //static constants
+class LockManager(
+  val repository: LockRepository,
+  val lockRefreshChecker: LockRefreshChecker,
+  val timeUtils: TimeUtils,
+  val config: LockManagerConfig
+) {
+
   private val logger = Logger(this.getClass)
+  private val lockOwner = UUID.randomUUID.toString
 
-  /**
-    * Owner of the lock
-    */
-  private val owner = UUID.randomUUID.toString
-
-  /**
-    * <p>Maximum time it will wait for the lock in each try.</p>
-    * <p>Default 3 minutes</p>
-    */
-  private var lockMaxWaitMillis = MIN_LOCK_ACQUIRED_FOR_MILLIS + (60 * 1000)
-
-  /**
-    * Maximum number of times it will try to take the lock if it's owned by some one else
-    */
-  private var lockMaxTries = 1
-
-  /**
-    * <p>The period of time for which the lock will be owned.</p>
-    * <p>Default 2 minutes</p>
-    */
-  private var lockAcquiredForMillis = MIN_LOCK_ACQUIRED_FOR_MILLIS
-
-  /**
-    * Moment when will mandatory to acquire the lock again.
-    */
   private var lockExpiresAt: Date = _
-
-  /**
-    * Number of tries
-    */
   private var tries = 0
 
   def acquireLockDefault(): Unit = acquireLock(DefaultKey)
@@ -74,17 +48,39 @@ class LockManager(val repository: LockRepository, val timeUtils: TimeUtils) {
   private def acquireLock(lockKey: String): Unit = {
     var keepLooping = true
     do try {
-      logger.info("Mongbee trying to acquire the lock")
-      val newLockExpiresAt = timeUtils.currentTimePlusMillis(lockAcquiredForMillis)
-      val lockEntry = new LockEntry(lockKey, LockStatus.LockHeld.name, owner, newLockExpiresAt)
+      logger.info("ExportsMigrationTool trying to acquire the lock")
+      val newLockExpiresAt = timeUtils.currentTimePlusMillis(config.lockAcquiredForMillis)
+      val lockEntry = new LockEntry(lockKey, LockStatus.LockHeld.name, lockOwner, newLockExpiresAt)
       repository.insertUpdate(lockEntry)
-      logger.info(s"Mongbee acquired the lock until: ${newLockExpiresAt}")
       updateStatus(newLockExpiresAt)
+      logger.info(s"ExportsMigrationTool acquired the lock until: ${newLockExpiresAt}")
       keepLooping = false
     } catch {
       case _: LockPersistenceException =>
         handleLockException(true)
     } while ({
+      keepLooping
+    })
+  }
+
+  private[migrations] def ensureLockDefault(): Unit = ensureLock(DefaultKey)
+
+  private def ensureLock(lockKey: String): Unit = {
+    var keepLooping = true
+    // The first check will pass when there is no lock in the DB,
+    // but later it is not created, so it ends up in a loop doing nothing useful until lockMaxTries
+    do if (lockRefreshChecker.needsRefreshLock(lockExpiresAt)) try {
+      logger.info("ExportsMigrationTool trying to refresh the lock")
+      val lockExpiresAtTemp = timeUtils.currentTimePlusMillis(config.lockAcquiredForMillis)
+      val lockEntry = new LockEntry(lockKey, LockStatus.LockHeld.name, lockOwner, lockExpiresAtTemp)
+      repository.updateIfSameOwner(lockEntry)
+      updateStatus(lockExpiresAtTemp)
+      logger.info(s"ExportsMigrationTool refreshed the lock until: ${lockExpiresAtTemp}")
+      keepLooping = false
+    } catch {
+      case _: LockPersistenceException =>
+        handleLockException(false)
+    } else keepLooping = false while ({
       keepLooping
     })
   }
@@ -96,25 +92,26 @@ class LockManager(val repository: LockRepository, val timeUtils: TimeUtils) {
 
   private def handleLockException(acquiringLock: Boolean): Unit = {
     this.tries += 1
-    if (this.tries >= lockMaxTries) {
+    if (this.tries >= config.lockMaxTries) {
       updateStatus(null)
-      throw new LockCheckException("MaxTries(" + lockMaxTries + ") reached")
+      throw new LockManagerException("MaxTries(" + config.lockMaxTries + ") reached")
     }
-    val currentLock = repository.findByKey(DefaultKey)
-    if (currentLock != null && !currentLock.isOwner(owner)) {
+    val currentLockOpt = repository.findByKey(DefaultKey)
+    // Check for ownership
+    currentLockOpt.filterNot(_.isOwner(lockOwner)).foreach { currentLock =>
       val currentLockExpiresAt = currentLock.expiresAt
       logger.info(s"Lock is taken by other process until: ${currentLockExpiresAt}")
-      if (!acquiringLock) throw new LockCheckException("Lock held by other process. Cannot ensure lock")
+      if (!acquiringLock) throw new LockManagerException("Lock held by other process. Cannot ensure lock")
       waitForLock(currentLockExpiresAt)
     }
   }
 
   private def waitForLock(expiresAtMillis: Date): Unit = {
     val diffMillis = expiresAtMillis.getTime - timeUtils.currentTime.getTime
-    val sleepingMillis = (if (diffMillis > 0) diffMillis else 0) + MINIMUM_SLEEP_THREAD
+    val sleepingMillis = (if (diffMillis > 0) diffMillis else 0) + config.minimumSleepThreadMillis
     try {
-      if (sleepingMillis > lockMaxWaitMillis)
-        throw new LockCheckException(maxWaitExceededErrorMsg(sleepingMillis))
+      if (sleepingMillis > config.lockMaxWaitMillis)
+        throw new LockManagerException(maxWaitExceededErrorMsg(sleepingMillis))
 
       logger.info(goingToSleepMsg(sleepingMillis))
       Thread.sleep(sleepingMillis)
@@ -126,16 +123,16 @@ class LockManager(val repository: LockRepository, val timeUtils: TimeUtils) {
   }
 
   private def maxWaitExceededErrorMsg(sleepingMillis: Long): String =
-    s"Waiting time required(${sleepingMillis} ms) to take the lock is longer than maxWaitingTime(${lockMaxWaitMillis} ms)"
+    s"Waiting time required (${sleepingMillis} ms) to take the lock is longer than maxWaitingTime (${config.lockMaxWaitMillis} ms)"
 
-  private def goingToSleepMsg(sleepingMillis: Long) =
-    s"ExportsMigrationTool is going to sleep to wait for the lock:  ${sleepingMillis} ms(${timeUtils.millisToMinutes(sleepingMillis)} minutes)"
+  private def goingToSleepMsg(sleepingMillis: Long): String =
+    s"ExportsMigrationTool is going to sleep to wait for the lock:  ${sleepingMillis} ms (${timeUtils.millisToMinutes(sleepingMillis)} minutes)"
 
   def releaseLockDefault(): Unit = releaseLock(DefaultKey)
 
   private def releaseLock(lockKey: String): Unit = {
     logger.info("ExportsMigrationTool is trying to release the lock.")
-    repository.removeByKeyAndOwner(lockKey, this.owner)
+    repository.removeByKeyAndOwner(lockKey, this.lockOwner)
     this.lockExpiresAt = null
     logger.info("ExportsMigrationTool released the lock")
   }

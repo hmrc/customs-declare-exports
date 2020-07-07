@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.migrations
+package uk.gov.hmrc.exports.migrations.repositories
 
 import java.util.Date
 
 import org.bson.Document
-import uk.gov.hmrc.exports.migrations.ChangeEntry._
-import uk.gov.hmrc.exports.migrations.changelogs.MigrationInformation
+import uk.gov.hmrc.exports.migrations.changelogs.MigrationDefinition
+import uk.gov.hmrc.exports.migrations.repositories.ChangeEntry._
 
 object ChangeEntry {
-  private[migrations] val KEY_CHANGEID: String = "changeId"
-  private[migrations] val KEY_AUTHOR: String = "author"
-  private[migrations] val KEY_TIMESTAMP: String = "timestamp"
-  private[migrations] val KEY_CHANGELOGCLASS: String = "changeLogClass"
+  private[migrations] val KeyChangeId: String = "changeId"
+  private[migrations] val KeyAuthor: String = "author"
+  private[migrations] val KeyTimestamp: String = "timestamp"
+  private[migrations] val KeyChangeLogClass: String = "changeLogClass"
 
-  def apply(migrationInformation: MigrationInformation): ChangeEntry = ChangeEntry(
-    changeId = migrationInformation.id,
-    author = migrationInformation.author,
+  def apply(migrationDefinition: MigrationDefinition): ChangeEntry = ChangeEntry(
+    changeId = migrationDefinition.migrationInformation.id,
+    author = migrationDefinition.migrationInformation.author,
     timestamp = new Date(),
-    changeLogClass = migrationInformation.getClass.getSimpleName
+    changeLogClass = migrationDefinition.getClass.getSimpleName
   )
 }
 
@@ -41,9 +41,9 @@ case class ChangeEntry(changeId: String, author: String, timestamp: Date, change
   private[migrations] def buildFullDBObject: Document = {
     val entry: Document = new Document
     entry
-      .append(KEY_CHANGEID, this.changeId)
-      .append(KEY_AUTHOR, this.author)
-      .append(KEY_TIMESTAMP, this.timestamp)
-      .append(KEY_CHANGELOGCLASS, this.changeLogClass)
+      .append(KeyChangeId, this.changeId)
+      .append(KeyAuthor, this.author)
+      .append(KeyTimestamp, this.timestamp)
+      .append(KeyChangeLogClass, this.changeLogClass)
   }
 }

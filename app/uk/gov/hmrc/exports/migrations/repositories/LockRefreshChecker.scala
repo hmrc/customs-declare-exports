@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.migrations.exceptions
+package uk.gov.hmrc.exports.migrations.repositories
 
-class LockCheckException(message: String) extends RuntimeException(message)
+import java.util.Date
+
+import uk.gov.hmrc.exports.migrations.LockManager.LockRefreshMarginMillis
+import uk.gov.hmrc.exports.migrations.TimeUtils
+
+class LockRefreshChecker(private val timeUtils: TimeUtils) {
+  def needsRefreshLock(lockExpiresAt: Date): Boolean =
+    lockExpiresAt == null ||
+      timeUtils.currentTime.compareTo(new Date(lockExpiresAt.getTime - timeUtils.minutesToMillis(LockRefreshMarginMillis))) >= 0
+
+}

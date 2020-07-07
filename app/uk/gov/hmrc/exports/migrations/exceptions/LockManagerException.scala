@@ -14,22 +14,6 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.migrations
+package uk.gov.hmrc.exports.migrations.exceptions
 
-import java.util.Date
-
-class TimeUtils {
-
-  private[migrations] def currentTimePlusMillis(millis: Long): Date =
-    new Date(System.currentTimeMillis + millis)
-
-  private[migrations] def currentTime: Date =
-    new Date(System.currentTimeMillis)
-
-  private[migrations] def minutesToMillis(minutes: Long): Long =
-    minutes * 60 * 1000
-
-  private[migrations] def millisToMinutes(millis: Long): Long =
-    millis / (60 * 1000)
-
-}
+class LockManagerException(message: String) extends RuntimeException(message)
