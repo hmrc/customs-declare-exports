@@ -104,16 +104,16 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
         logger.debug(s"Response: ${response.status} => ${response.body}")
         getHttpResponseStatusType(response) match {
           case ApplicationErrorStatus =>
-            throw Upstream4xxResponse(
+            throw UpstreamErrorResponse(
               message = "Invalid request made to Customs Declarations API",
-              upstreamResponseCode = response.status,
+              statusCode = response.status,
               reportAs = Status.INTERNAL_SERVER_ERROR,
-              headers = response.allHeaders
+              headers = response.headers
             )
           case ServerErrorStatus =>
-            throw Upstream5xxResponse(
+            throw UpstreamErrorResponse(
               message = "Customs Declarations API unable to service request",
-              upstreamResponseCode = response.status,
+              statusCode = response.status,
               reportAs = Status.INTERNAL_SERVER_ERROR
             )
           case _ =>
@@ -123,9 +123,9 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
                 response
                   .header("X-Conversation-ID")
                   .getOrElse(
-                    throw Upstream5xxResponse(
+                    throw UpstreamErrorResponse(
                       message = "Conversation ID missing from Customs Declaration API response",
-                      upstreamResponseCode = response.status,
+                      statusCode = response.status,
                       reportAs = Status.INTERNAL_SERVER_ERROR
                     )
                   )
