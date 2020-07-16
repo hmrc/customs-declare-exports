@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.exports.models.ead.parsers
 
-import java.time.{ZoneId, ZonedDateTime}
-import java.time.format.DateTimeFormatter
+import java.time.ZonedDateTime
 
 import uk.gov.hmrc.exports.models.ead.XmlTags._
 import uk.gov.hmrc.exports.models.ead.{MrnStatus, PreviousDocument, XmlTags}
@@ -25,9 +24,6 @@ import uk.gov.hmrc.exports.models.ead.{MrnStatus, PreviousDocument, XmlTags}
 import scala.xml.NodeSeq
 
 class MrnStatusParser {
-
-  private val timeStampFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssz")
-  private val displayFormatter = DateTimeFormatter.ofPattern("dd MMMM yyyy 'at' hh:mma")
 
   def getDucr(documents: NodeSeq): Option[String] =
     documents
@@ -42,12 +38,12 @@ class MrnStatusParser {
       eori = (responseXml \ declarationStatusDetails \ declaration \ submitter \ id).text,
       declarationType = ((responseXml \ declarationStatusDetails \ declaration)(1) \ typeCode).text,
       ucr = mainUcr,
-      receivedDateTime = timeFormatter((responseXml \ declarationStatusDetails \ declaration \ receivedDateTime \ dateTimeString).text),
+      receivedDateTime = DateParser.zonedDateTime((responseXml \ declarationStatusDetails \ declaration \ receivedDateTime \ dateTimeString).text),
       releasedDateTime =
-        StringOption((responseXml \ declarationStatusDetails \ declaration \ goodsReleasedDateTime \ dateTimeString).text).map(timeFormatter),
+        DateParser.optionZonedDateTime((responseXml \ declarationStatusDetails \ declaration \ goodsReleasedDateTime \ dateTimeString).text),
       acceptanceDateTime =
-        StringOption((responseXml \ declarationStatusDetails \ declaration \ acceptanceDateTime \ dateTimeString).text).map(timeFormatter),
-      createdDateTime = timeFormatter(ZonedDateTime.now()),
+        DateParser.optionZonedDateTime((responseXml \ declarationStatusDetails \ declaration \ acceptanceDateTime \ dateTimeString).text),
+      createdDateTime = ZonedDateTime.now(),
       roe = (responseXml \ declarationStatusDetails \ declaration \ roe).text,
       ics = (responseXml \ declarationStatusDetails \ declaration \ ics).text,
       irc = StringOption((responseXml \ declarationStatusDetails \ declaration \ irc).text),
@@ -65,14 +61,5 @@ class MrnStatusParser {
         val typeCode = (doc \ XmlTags.typeCode).text
         PreviousDocument(id, typeCode)
       }
-  private def timeFormatter(zonedDateTime: String): String = timeFormatter(
-    ZonedDateTime.parse(zonedDateTime, timeStampFormatter).withZoneSameInstant(ZoneId.of("Europe/London"))
-  )
-
-  private def timeFormatter(zonedDateTime: ZonedDateTime): String =
-    displayFormatter
-      .format(zonedDateTime)
-      .replace("AM", "am")
-      .replace("PM", "pm")
 
 }
