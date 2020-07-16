@@ -16,6 +16,10 @@
 
 package uk.gov.hmrc.exports.models.ead
 
+import java.time.{LocalDateTime, ZonedDateTime}
+
+import uk.gov.hmrc.exports.models.ead.parsers.DateParser.{formatter304, zoneUTC}
+
 object MrnStatusSpec {
   val completeMrnStatus = MrnStatus(
     mrn = "18GB9JLC3CU1LFGVR2",
@@ -23,10 +27,10 @@ object MrnStatusSpec {
     eori = "GB123456789012000",
     declarationType = "IMZ",
     ucr = Some("20GBAKZ81EQJ2WXYZ"),
-    receivedDateTime = "02 July 2019 at 11:07am",
-    releasedDateTime = Some("02 July 2019 at 11:07am"),
-    acceptanceDateTime = Some("02 July 2019 at 11:07am"),
-    createdDateTime = "10 March 2020 at 01:13am",
+    receivedDateTime = ZonedDateTime.of(LocalDateTime.parse("20190702110700Z", formatter304), zoneUTC),
+    releasedDateTime = Some(ZonedDateTime.of(LocalDateTime.parse("20190702110700Z", formatter304), zoneUTC)),
+    acceptanceDateTime = Some(ZonedDateTime.of(LocalDateTime.parse("20190702110700Z", formatter304), zoneUTC)),
+    createdDateTime = ZonedDateTime.of(LocalDateTime.parse("20200310011300Z", formatter304), zoneUTC),
     roe = "6",
     ics = "15",
     irc = Some("000"),
