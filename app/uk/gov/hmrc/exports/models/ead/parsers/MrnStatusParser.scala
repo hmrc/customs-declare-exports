@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.exports.models.ead.parsers
 
-import java.time.{ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
+import java.time.{ZoneId, ZonedDateTime}
 
 import uk.gov.hmrc.exports.models.ead.XmlTags._
 import uk.gov.hmrc.exports.models.ead.{MrnStatus, PreviousDocument, XmlTags}
@@ -27,7 +27,7 @@ import scala.xml.NodeSeq
 class MrnStatusParser {
 
   private val timeStampFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssz")
-  private val displayFormatter = DateTimeFormatter.ofPattern("dd MMMM yyyy 'at' hh:mma")
+  private val displayFormatter = DateTimeFormatter.ofPattern("dd MMMM yyyy 'at' h:mma")
 
   def getDucr(documents: NodeSeq): Option[String] =
     documents

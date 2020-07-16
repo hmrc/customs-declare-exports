@@ -30,7 +30,7 @@ class MrnStatusParserSpec extends WordSpec with MustMatchers with OptionValues {
       mrnStatus.declarationType mustBe "IMZ"
       mrnStatus.acceptanceDateTime mustBe Some("02 January 2019 at 11:07am")
       mrnStatus.receivedDateTime mustBe "02 July 2019 at 12:08pm"
-      mrnStatus.releasedDateTime mustBe Some("02 July 2019 at 12:09pm")
+      mrnStatus.releasedDateTime mustBe Some("02 July 2019 at 2:09pm")
       mrnStatus.createdDateTime mustNot be(empty)
       mrnStatus.roe mustBe "6"
       mrnStatus.ics mustBe "15"

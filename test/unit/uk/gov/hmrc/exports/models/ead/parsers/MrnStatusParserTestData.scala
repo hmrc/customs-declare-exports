@@ -39,7 +39,7 @@ object MrnStatusParserTestData {
           <p:DateTimeString formatCode="304">20190702110857Z</p:DateTimeString>
         </p:ReceivedDateTime>
         <p:GoodsReleasedDateTime>
-          <p:DateTimeString formatCode="304">20190702110957Z</p:DateTimeString>
+          <p:DateTimeString formatCode="304">20190702130957Z</p:DateTimeString>
         </p:GoodsReleasedDateTime>
         <p:ROE>6</p:ROE>
         <p:ICS>15</p:ICS>
