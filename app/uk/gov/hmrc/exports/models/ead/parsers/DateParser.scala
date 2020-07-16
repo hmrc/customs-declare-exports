@@ -21,10 +21,10 @@ import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
 object DateParser {
 
-  val formatter304 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
-  val zoneUTC = ZoneId.of("UTC")
+  val formatter304: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssz")
+  val zoneUTC: ZoneId = ZoneId.of("UTC")
 
-  def zonedDateTime(datetime: String) = ZonedDateTime.of(LocalDateTime.parse(datetime, formatter304), zoneUTC)
+  def zonedDateTime(datetime: String): ZonedDateTime = ZonedDateTime.of(LocalDateTime.parse(datetime, formatter304), zoneUTC)
 
-  def optionZonedDateTime(datetime: String) = if (datetime.nonEmpty) Some(zonedDateTime(datetime)) else None
+  def optionZonedDateTime(datetime: String): Option[ZonedDateTime] = if (datetime.nonEmpty) Some(zonedDateTime(datetime)) else None
 }

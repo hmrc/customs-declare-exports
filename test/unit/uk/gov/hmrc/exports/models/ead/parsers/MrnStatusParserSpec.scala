@@ -30,11 +30,8 @@ class MrnStatusParserSpec extends WordSpec with MustMatchers with OptionValues {
       mrnStatus.eori mustBe "GB123456789012000"
       mrnStatus.versionId mustBe "1"
       mrnStatus.declarationType mustBe "IMZ"
-      // 20190102110757Z
       mrnStatus.acceptanceDateTime mustBe Some(ZonedDateTime.of(2019, 1, 2, 11, 7, 57, 0, DateParser.zoneUTC))
-      // 20190702110857Z
       mrnStatus.receivedDateTime mustBe ZonedDateTime.of(2019, 7, 2, 11, 8, 57, 0, DateParser.zoneUTC)
-      // 20190702130957Z
       mrnStatus.releasedDateTime mustBe Some(ZonedDateTime.of(2019, 7, 2, 13, 9, 57, 0, DateParser.zoneUTC))
       mrnStatus.createdDateTime mustNot be(None)
       mrnStatus.roe mustBe "6"
@@ -63,7 +60,6 @@ class MrnStatusParserSpec extends WordSpec with MustMatchers with OptionValues {
       mrnStatus.versionId mustBe "1"
       mrnStatus.declarationType mustBe "EXD"
       mrnStatus.acceptanceDateTime mustBe None
-      // 20200227114305Z
       mrnStatus.receivedDateTime mustBe ZonedDateTime.of(2020, 2, 27, 11, 43, 5, 0, DateParser.zoneUTC)
       mrnStatus.releasedDateTime mustBe None
       mrnStatus.createdDateTime mustNot be(None)
@@ -83,7 +79,6 @@ class MrnStatusParserSpec extends WordSpec with MustMatchers with OptionValues {
       mrnStatus.versionId mustBe "1"
       mrnStatus.declarationType mustBe "EXD"
       mrnStatus.acceptanceDateTime mustBe None
-      // 20200227114305Z
       mrnStatus.receivedDateTime mustBe ZonedDateTime.of(2020, 2, 27, 11, 43, 5, 0, DateParser.zoneUTC)
       mrnStatus.releasedDateTime mustBe None
       mrnStatus.createdDateTime mustNot be(None)
