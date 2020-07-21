@@ -12,14 +12,14 @@ addSbtPlugin("uk.gov.hmrc" % "sbt-distributables" % "2.0.0")
 
 addSbtPlugin("uk.gov.hmrc" % "sbt-artifactory" % "1.3.0")
 
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.6.23")
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.7.5")
 
 addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "1.0.0")
 
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.1")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.6.1")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-digest" % "1.1.2")
+addSbtPlugin("com.typesafe.sbt" % "sbt-digest" % "1.1.4")
 
-addSbtPlugin("com.lucidchart" % "sbt-scalafmt" % "1.16")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.0")
 
 addSbtPlugin("uk.gov.hmrc" % "sbt-git-stamp" % "6.1.0")

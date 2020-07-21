@@ -20,7 +20,8 @@ lazy val ComponentTest = config("component") extend Test
 
 def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] = {
   tests map {
-    test => Group(test.name, Seq(test), SubProcess(ForkOptions(runJVMOptions = Seq("-Dtest.name=" + test.name))))
+    //test => Group(test.name, Seq(test), SubProcess(ForkOptions(runJVMOptions = Seq("-Dtest.name=" + test.name))))
+    test => Group(test.name, Seq(test), SubProcess(ForkOptions()))
   }
 }
 
@@ -30,7 +31,7 @@ lazy val microservice = Project(appName, file("."))
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
     majorVersion := 0,
-    scalaVersion := "2.12.8"
+    scalaVersion := "2.12.11"
   )
   .settings(publishingSettings: _*)
   .configs(IntegrationTest)
@@ -43,32 +44,32 @@ lazy val microservice = Project(appName, file("."))
     scoverageSettings
   )
   .settings(
-    unmanagedSourceDirectories in Test := Seq(
-      (baseDirectory in Test).value / "test/unit",
-      (baseDirectory in Test).value / "test/util"
+    Test / unmanagedSourceDirectories := Seq(
+      (Test / baseDirectory).value / "test/unit",
+      (Test / baseDirectory).value / "test/util"
     ),
     addTestReportOption(Test, "test-reports")
   )
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(
-    Keys.fork in IntegrationTest := false,
-    unmanagedSourceDirectories in IntegrationTest := Seq(
-      (baseDirectory in IntegrationTest).value / "test/it",
-      (baseDirectory in Test).value / "test/util"
+    IntegrationTest / Keys.fork := false,
+    IntegrationTest / unmanagedSourceDirectories := Seq(
+      (IntegrationTest / baseDirectory).value / "test/it",
+      (Test / baseDirectory).value / "test/util"
     ),
     addTestReportOption(IntegrationTest, "int-test-reports"),
-    testGrouping in IntegrationTest := oneForkedJvmPerTest((definedTests in IntegrationTest).value),
-    parallelExecution in IntegrationTest := false
+    IntegrationTest / testGrouping := oneForkedJvmPerTest((definedTests in IntegrationTest).value),
+    IntegrationTest / parallelExecution := false
   )
   .settings(
     Keys.fork in ComponentTest := false,
-    unmanagedSourceDirectories in ComponentTest := Seq(
-      (baseDirectory in ComponentTest).value / "test/component",
-      (baseDirectory in Test).value / "test/util"
+    ComponentTest / unmanagedSourceDirectories := Seq(
+      (ComponentTest / baseDirectory).value / "test/component",
+      (Test / baseDirectory).value / "test/util"
     ),
     addTestReportOption(ComponentTest, "int-test-reports"),
-    testGrouping in ComponentTest := oneForkedJvmPerTest((definedTests in ComponentTest).value),
-    parallelExecution in ComponentTest := false
+    ComponentTest / testGrouping := oneForkedJvmPerTest((definedTests in ComponentTest).value),
+    ComponentTest / parallelExecution := false
   )
 
 lazy val scoverageSettings: Seq[Setting[_]] = Seq(

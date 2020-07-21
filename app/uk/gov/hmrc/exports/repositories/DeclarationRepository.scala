@@ -27,7 +27,6 @@ import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.api.{QueryOpts, ReadConcern, ReadPreference}
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.ImplicitBSONHandlers
-import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.mongo.ReactiveRepository
@@ -35,7 +34,7 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: AppConfig, metrics: Metrics)(implicit ec: ExecutionContext)
+class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, metrics: Metrics)(implicit ec: ExecutionContext)
     extends ReactiveRepository[ExportsDeclaration, BSONObjectID](
       "declarations",
       mc.mongoConnector.db,
