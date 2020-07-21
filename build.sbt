@@ -87,4 +87,4 @@ lazy val scoverageSettings: Seq[Setting[_]] = Seq(
   parallelExecution in Test := false
 )
 
-lazy val commonSettings: Seq[Setting[_]] = scalaSettings ++ publishingSettings ++ defaultSettings() ++ gitStampSettings
+lazy val commonSettings: Seq[Setting[_]] = publishingSettings ++ defaultSettings() ++ gitStampSettings
