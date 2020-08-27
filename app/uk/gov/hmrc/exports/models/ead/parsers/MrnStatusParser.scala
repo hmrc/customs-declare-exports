@@ -55,7 +55,7 @@ class MrnStatusParser {
 
   private def previousDocuments(documents: NodeSeq, mainUcr: Option[String]): Seq[PreviousDocument] =
     documents
-      .filter(doc => (doc \ XmlTags.id).text != mainUcr.getOrElse())
+      .filter(doc => (doc \ XmlTags.id).text != mainUcr.getOrElse((): Unit))
       .map { doc =>
         val id = (doc \ XmlTags.id).text
         val typeCode = (doc \ XmlTags.typeCode).text

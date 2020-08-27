@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.config
+package uk.gov.hmrc.exports.config
 
 import java.util.UUID
 
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.Mode.Test
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.play.bootstrap.config.{RunMode, ServicesConfig}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 class AppConfigSpec extends WordSpec with Matchers with MockitoSugar {
   private val validAppConfig: Config =
@@ -53,8 +51,7 @@ class AppConfigSpec extends WordSpec with Matchers with MockitoSugar {
 
   val environment = Environment.simple()
 
-  private def runMode(conf: Configuration): RunMode = new RunMode(conf, Test)
-  private def servicesConfig(conf: Configuration) = new ServicesConfig(conf, runMode(conf))
+  private def servicesConfig(conf: Configuration) = new ServicesConfig(conf)
   private def appConfig(conf: Configuration) = new AppConfig(conf, environment, servicesConfig(conf))
 
   "AppConfig" should {
@@ -79,10 +76,10 @@ class AppConfigSpec extends WordSpec with Matchers with MockitoSugar {
       val configService: AppConfig = appConfig(invalidServicesConfiguration)
 
       val caught: RuntimeException = intercept[RuntimeException](configService.authUrl)
-      caught.getMessage shouldBe "Could not find config auth.host"
+      caught.getMessage shouldBe "Could not find config key 'auth.host'"
 
       val caught1: RuntimeException = intercept[RuntimeException](configService.customsDeclarationsBaseUrl)
-      caught1.getMessage shouldBe "Could not find config customs-declarations.host"
+      caught1.getMessage shouldBe "Could not find config key 'customs-declarations.host'"
 
       val caught2: Exception = intercept[Exception](configService.loginUrl)
       caught2.getMessage shouldBe "Missing configuration key: urls.login"
@@ -104,7 +101,7 @@ class AppConfigSpec extends WordSpec with Matchers with MockitoSugar {
       val configService: AppConfig = appConfig(invalidServicesConfiguration)
 
       val caught: RuntimeException = intercept[RuntimeException](configService.customsDeclarationsInformationBaseUrl)
-      caught.getMessage shouldBe "Could not find config customs-declarations-information.host"
+      caught.getMessage shouldBe "Could not find config key 'customs-declarations-information.host'"
 
       val caught1: RuntimeException = intercept[RuntimeException](configService.cdiApiVersion)
       caught1.getMessage shouldBe "Could not find config key 'microservice.services.customs-declarations-information.api-version'"

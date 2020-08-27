@@ -79,7 +79,7 @@ class ExportsMigrationToolSpec extends WordSpec with MockitoSugar with MustMatch
       "not call ChangeEntryRepository" in {
 
         exportsMigrationTool().execute()
-        verifyZeroInteractions(changeEntryRepository)
+        verifyNoInteractions(changeEntryRepository)
       }
     }
 

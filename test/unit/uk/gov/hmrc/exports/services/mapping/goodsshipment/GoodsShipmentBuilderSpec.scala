@@ -14,25 +14,22 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment
+package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.Mockito
-import org.mockito.Mockito.{verify, verifyZeroInteractions}
+import org.mockito.Mockito.{verify, verifyNoInteractions}
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
-import uk.gov.hmrc.exports.models.DeclarationType
-import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
+import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.services.mapping.goodsshipment._
-import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentBuilder
+import uk.gov.hmrc.exports.services.mapping.goodsshipment.AEOMutualRecognitionPartiesBuilderSpec._
+import uk.gov.hmrc.exports.services.mapping.goodsshipment.ConsigneeBuilderSpec.correctAddress
+import uk.gov.hmrc.exports.services.mapping.goodsshipment.PreviousDocumentsBuilderSpec.correctPreviousDocument
+import uk.gov.hmrc.exports.services.mapping.goodsshipment.UCRBuilderSpec.correctConsignmentReferences
+import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.{ConsignmentBuilder, GoodsLocationBuilderSpec}
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.GovernmentAgencyGoodsItemBuilder
-import unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.AEOMutualRecognitionPartiesBuilderSpec._
-import unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.ConsigneeBuilderSpec.correctAddress
-import unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.PreviousDocumentsBuilderSpec.correctPreviousDocument
-import unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.UCRBuilderSpec.correctConsignmentReferences
-import unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.GoodsLocationBuilderSpec
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder with MockitoSugar with BeforeAndAfterEach {
@@ -78,8 +75,9 @@ class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclar
   "GoodsShipmentBuilder" should {
 
     "build then add" when {
+
       "Standard declaration" in {
-        val model: ExportsDeclaration = createDeclaration(DeclarationType.STANDARD)
+        val model: ExportsDeclaration = createDeclaration(STANDARD)
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -89,28 +87,27 @@ class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclar
         verify(mockGoodsShipmentNatureOfTransactionBuilder)
           .buildThenAdd(refEq(NatureOfTransaction("1")), any[Declaration.GoodsShipment])
       }
+
       "Simplified declaration" in {
-        val model: ExportsDeclaration = createDeclaration(DeclarationType.STANDARD)
+        val model: ExportsDeclaration = createDeclaration(SIMPLIFIED)
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
 
         verifyInterations(model)
 
-        verifyZeroInteractions(mockGoodsShipmentNatureOfTransactionBuilder)
+        verifyNoInteractions(mockGoodsShipmentNatureOfTransactionBuilder)
       }
     }
   }
 
   private def verifyInterations(model: ExportsDeclaration) = {
-    verify(mockGoodsShipmentNatureOfTransactionBuilder)
-      .buildThenAdd(refEq(NatureOfTransaction("1")), any[Declaration.GoodsShipment])
+    if (model.`type` == STANDARD || model.`type` == SUPPLEMENTARY)
+      verify(mockGoodsShipmentNatureOfTransactionBuilder)
+        .buildThenAdd(refEq(NatureOfTransaction("1")), any[Declaration.GoodsShipment])
 
     verify(mockConsigneeBuilder)
-      .buildThenAdd(
-        refEq(ConsigneeDetails(EntityDetails(Some("9GB1234567ABCDEF"), Some(ConsigneeBuilderSpec.correctAddress)))),
-        any[Declaration.GoodsShipment]
-      )
+      .buildThenAdd(refEq(ConsigneeDetails(EntityDetails(Some("9GB1234567ABCDEF"), Some(correctAddress)))), any[Declaration.GoodsShipment])
 
     verify(mockConsignmentBuilder)
       .buildThenAdd(refEq(model), any[Declaration.GoodsShipment])

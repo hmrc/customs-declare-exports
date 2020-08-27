@@ -18,7 +18,6 @@ package uk.gov.hmrc.exports.services
 
 import org.scalatest.{MustMatchers, WordSpec}
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
-import uk.gov.hmrc.exports.util.FileReader
 
 class WCOPointerMappingServiceIntegrationTest extends WordSpec with MustMatchers {
 

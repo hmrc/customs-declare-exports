@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.services.mapping.declaration
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.DeclarationType
-import uk.gov.hmrc.exports.models.declaration.{ExportsDeclaration, OfficeOfExit}
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.ExitOffice

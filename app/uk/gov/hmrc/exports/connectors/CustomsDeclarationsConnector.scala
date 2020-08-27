@@ -26,8 +26,7 @@ import play.mvc.Http.Status.ACCEPTED
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
 import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
-import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.{HttpClient, _}
 
 import scala.concurrent.{ExecutionContext, Future}
 

@@ -28,7 +28,8 @@ import play.api.Logger
 import uk.gov.hmrc.exports.models.generators.{IdGenerator, StringIdGenerator}
 import uk.gov.hmrc.exports.services.CountriesService
 
-import scala.collection.JavaConversions._
+//import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 @ChangeLog
 class CacheChangeLog {
@@ -50,13 +51,17 @@ class CacheChangeLog {
 
     logger.info("Applying 'CEDS-2231 Change country name to country code for location page' db migration... ")
 
-    val documents: Iterable[Document] = getDeclarationsCollection(db).find(
-      and(
-        exists("locations.goodsLocation.country"),
-        `type`("locations.goodsLocation.country", BsonType.STRING),
-        fne("locations.goodsLocation.country", ""),
-        regex("locations.goodsLocation.country", "^.{3,}$")
-      )
+    val documents: Iterator[Document] = asScalaIterator(
+      getDeclarationsCollection(db)
+        .find(
+          and(
+            exists("locations.goodsLocation.country"),
+            `type`("locations.goodsLocation.country", BsonType.STRING),
+            fne("locations.goodsLocation.country", ""),
+            regex("locations.goodsLocation.country", "^.{3,}$")
+          )
+        )
+        .iterator()
     )
 
     documents.foreach { document =>
@@ -106,19 +111,24 @@ class CacheChangeLog {
 
     logger.info("Applying 'CEDS-2247 Change routing countries structure' db migration... ")
 
-    val documents: Iterable[Document] = getDeclarationsCollection(db).find(
-      and(
-        not(elemMatch("locations.routingCountries", exists("code", true))),
-        exists("locations.routingCountries"),
-        not(size("locations.routingCountries", 0))
-      )
+    val documents: Iterator[Document] = asScalaIterator(
+      getDeclarationsCollection(db)
+        .find(
+          and(
+            not(elemMatch("locations.routingCountries", exists("code", true))),
+            exists("locations.routingCountries"),
+            not(size("locations.routingCountries", 0))
+          )
+        )
+        .iterator()
     )
 
     documents.foreach { document =>
       val documentId = document.get(INDEX_ID).asInstanceOf[String]
       val eori = document.get(INDEX_EORI).asInstanceOf[String]
 
-      val routingCountries = document.get("locations", classOf[Document]).get("routingCountries", classOf[util.List[String]]).toSeq
+      val routingCountries =
+        asScalaIterator(document.get("locations", classOf[Document]).get("routingCountries", classOf[util.List[String]]).iterator()).toSeq
 
       val codesList = seqAsJavaList(routingCountries.map(code => mapAsJavaMap(Map("code" -> code))))
 
@@ -151,50 +161,48 @@ class CacheChangeLog {
     val queryBatchSize = 2
     val updateBatchSize = 10
 
-    getDeclarationsCollection(db)
-      .find(
-        and(
-          exists("items"),
-          not(size("items", 0)),
-          exists("items.packageInformation"),
-          not(size("items.packageInformation", 0)),
-          not(exists("items.packageInformation.id"))
+    asScalaIterator(
+      getDeclarationsCollection(db)
+        .find(
+          and(
+            exists("items"),
+            not(size("items", 0)),
+            exists("items.packageInformation"),
+            not(size("items.packageInformation", 0)),
+            not(exists("items.packageInformation.id"))
+          )
         )
-      )
-      .batchSize(queryBatchSize)
-      .toIterator
-      .map { document =>
-        val items = document.get("items", classOf[util.List[Document]])
-        val itemsUpdated: util.List[Document] = items.map(updateItem)
-        logger.debug(s"Items updated: $itemsUpdated")
+        .batchSize(queryBatchSize)
+        .iterator()
+    ).map { document =>
+      val items = collectionAsScalaIterable(document.get("items", classOf[util.List[Document]]))
+      val itemsUpdated: util.List[Document] = seqAsJavaList(items.map(updateItem).toSeq)
+      logger.debug(s"Items updated: $itemsUpdated")
 
-        val documentId = document.get(INDEX_ID).asInstanceOf[String]
-        val eori = document.get(INDEX_EORI).asInstanceOf[String]
-        val filter = and(feq(INDEX_ID, documentId), feq(INDEX_EORI, eori))
-        val update = set[util.List[Document]]("items", itemsUpdated)
-        logger.debug(s"[filter: $filter] [update: $update]")
+      val documentId = document.get(INDEX_ID).asInstanceOf[String]
+      val eori = document.get(INDEX_EORI).asInstanceOf[String]
+      val filter = and(feq(INDEX_ID, documentId), feq(INDEX_EORI, eori))
+      val update = set[util.List[Document]]("items", itemsUpdated)
+      logger.debug(s"[filter: $filter] [update: $update]")
 
-        new UpdateOneModel[Document](filter, update)
-      }
-      .grouped(updateBatchSize)
-      .zipWithIndex
-      .foreach {
-        case (requests, idx) =>
-          logger.info(s"ChangeSet 007. Updating batch no. $idx...")
+      new UpdateOneModel[Document](filter, update)
+    }.grouped(updateBatchSize).zipWithIndex.foreach {
+      case (requests, idx) =>
+        logger.info(s"ChangeSet 007. Updating batch no. $idx...")
 
-          getDeclarationsCollection(db).bulkWrite(requests)
-          logger.info(s"ChangeSet 007. Updated batch no. $idx")
-      }
+        getDeclarationsCollection(db).bulkWrite(seqAsJavaList(requests))
+        logger.info(s"ChangeSet 007. Updated batch no. $idx")
+    }
 
     logger.info("Applying 'CEDS-2387 Add ID field to /items/packageInformation' db migration... Done.")
   }
 
   private def updateItem(itemDocument: Document): Document = {
-    val packageInformationElems = itemDocument.get("packageInformation", classOf[util.List[Document]])
+    val packageInformationElems: util.List[Document] = itemDocument.get("packageInformation", classOf[util.List[Document]])
 
-    val packageInformationElemsUpdated = packageInformationElems.map(_.append("id", idGenerator.generateId()))
+    val packageInformationElemsUpdated = collectionAsScalaIterable(packageInformationElems).map(_.append("id", idGenerator.generateId())).toSeq
 
-    itemDocument.updated("packageInformation", packageInformationElemsUpdated)
+    itemDocument.put("packageInformation", seqAsJavaList(packageInformationElemsUpdated))
     new Document(itemDocument)
   }
 
@@ -205,7 +213,7 @@ class CacheChangeLog {
 
   private def getCountryCode(countryName: String): String = {
     val service = new CountriesService
-    service.allCountriesAsJava.toStream
+    service.allCountries.toStream
       .find(country => country.countryName == countryName)
       .map(_.countryCode)
       .getOrElse(countryName)

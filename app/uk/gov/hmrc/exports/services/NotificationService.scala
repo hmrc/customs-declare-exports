@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.exports.services
 
-import java.time.{LocalDateTime, ZoneId, ZoneOffset, ZonedDateTime}
 import java.time.format.DateTimeFormatter
+import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import reactivemongo.core.errors.DatabaseException
-import uk.gov.hmrc.exports.models.{NotificationApiRequestHeaders, Pointer, PointerSection, PointerSectionType}
 import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationError}
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionStatus}
+import uk.gov.hmrc.exports.models.{NotificationApiRequestHeaders, Pointer, PointerSection, PointerSectionType}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -43,7 +43,7 @@ class NotificationService @Inject()(submissionRepository: SubmissionRepository, 
     notificationRepository.findNotificationsByActionIds(conversationIds).map { notifications =>
       notifications.map { notification =>
         notification.copy(errors = notification.errors.map { error =>
-          val url = error.pointer.flatMap(WCOPointerMappingService.getUrlBasedOnErrorPointer(_))
+          val url = error.pointer.flatMap(WCOPointerMappingService.getUrlBasedOnErrorPointer)
           error.addUrl(url)
         })
       }

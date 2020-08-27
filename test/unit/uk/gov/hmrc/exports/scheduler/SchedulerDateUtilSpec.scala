@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.scheduler
+package uk.gov.hmrc.exports.scheduler
 
 import java.time._
 
 import org.mockito.BDDMockito.given
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.scheduler.SchedulerDateUtil
-import unit.uk.gov.hmrc.exports.base.UnitSpec
 
 import scala.concurrent.duration._
 

@@ -16,27 +16,22 @@
 
 package uk.gov.hmrc.exports.steps
 
-import java.security.GeneralSecurityException
-
-import component.uk.gov.hmrc.exports.syntax.{Action, Postcondition, Precondition, ScenarioContext}
+import component.uk.gov.hmrc.exports.syntax.{Postcondition, Precondition, ScenarioContext}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, eq => eqm}
-import org.mockito.Mockito.{never, verify, verifyZeroInteractions, when}
+import org.mockito.Mockito.{never, verify, verifyNoInteractions, when}
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import org.scalatest.MustMatchers
-import org.scalatest.concurrent.{AbstractPatienceConfiguration, Eventually}
-import play.api.Application
-import play.api.test.FakeRequest
+import org.scalatest.concurrent.Eventually
 import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
-import testdata.ExportsTestData.ValidHeaders
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
 object `User does not try submit declaration earlier` extends Precondition {
   def name = "User does not try submit declaration earlier"
@@ -82,7 +77,7 @@ object `Submission was created` extends Postcondition {
 }
 
 object `Submission has request action` extends Postcondition with MustMatchers {
-  import uk.gov.hmrc.exports.models.declaration.submissions.{Action => SubmissionAction, SubmissionRequest}
+  import uk.gov.hmrc.exports.models.declaration.submissions.{SubmissionRequest, Action => SubmissionAction}
   override def execute(context: ScenarioContext): ScenarioContext = {
     val declaration = context.get[ExportsDeclaration]
     val repo = context.get[SubmissionRepository]
@@ -102,7 +97,7 @@ object `No submission was created` extends Postcondition {
 
   override def execute(context: ScenarioContext): ScenarioContext = {
     val repo = context.get[SubmissionRepository]
-    verifyZeroInteractions(repo)
+    verifyNoInteractions(repo)
     context
   }
 }

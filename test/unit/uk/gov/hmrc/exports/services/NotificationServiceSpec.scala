@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services
+package uk.gov.hmrc.exports.services
 
-import java.time.{Instant, LocalDateTime, ZoneId, ZoneOffset, ZonedDateTime}
+import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
 import org.mockito.ArgumentMatchers.{any, eq => meq}
-import org.mockito.Mockito.{times, verify, verifyZeroInteractions, when}
+import org.mockito.Mockito.{times, verify, verifyNoInteractions, when}
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import org.mockito.{ArgumentCaptor, InOrder, Mockito}
@@ -31,13 +31,12 @@ import reactivemongo.core.errors.DetailedDatabaseException
 import testdata.ExportsTestData._
 import testdata.NotificationTestData._
 import testdata.SubmissionTestData._
+import uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 import uk.gov.hmrc.exports.models.PointerSectionType.{FIELD, SEQUENCE}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest, SubmissionStatus}
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.NotificationService
-import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -116,7 +115,7 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
 
         notificationService.getAllNotificationsForUser(eori).futureValue
 
-        verifyZeroInteractions(notificationRepositoryMock)
+        verifyNoInteractions(notificationRepositoryMock)
       }
     }
 
@@ -195,7 +194,7 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
 
         notificationService.save(notification).futureValue
 
-        verifyZeroInteractions(submissionRepositoryMock)
+        verifyNoInteractions(submissionRepositoryMock)
       }
     }
 
@@ -212,7 +211,7 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
 
         notificationService.save(notification).futureValue
 
-        verifyZeroInteractions(submissionRepositoryMock)
+        verifyNoInteractions(submissionRepositoryMock)
       }
     }
 
@@ -232,7 +231,7 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
 
         notificationService.save(notification).futureValue
 
-        verifyZeroInteractions(submissionRepositoryMock)
+        verifyNoInteractions(submissionRepositoryMock)
       }
     }
 

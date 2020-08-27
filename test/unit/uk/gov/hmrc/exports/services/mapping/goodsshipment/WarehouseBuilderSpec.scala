@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment
+package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.models.declaration.WarehouseIdentification
-import uk.gov.hmrc.exports.services.mapping.goodsshipment.WarehouseBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class WarehouseBuilderSpec extends WordSpec with Matchers with MockitoSugar {

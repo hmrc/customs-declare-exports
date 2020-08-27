@@ -21,7 +21,7 @@ import java.util.Date
 import org.bson.Document
 import org.scalatest.{MustMatchers, WordSpec}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters.mapAsJavaMap
 
 class LockEntrySpec extends WordSpec with MustMatchers {
 
@@ -31,7 +31,8 @@ class LockEntrySpec extends WordSpec with MustMatchers {
 
       val date = new Date()
       val lockEntry = LockEntry(key = "keyValue", status = "statusValue", owner = "ownerValue", expiresAt = date)
-      val expectedOutput = new Document(Map("key" -> "keyValue", "status" -> "statusValue", "owner" -> "ownerValue", "expiresAt" -> date))
+      val expectedOutput =
+        new Document(mapAsJavaMap(Map("key" -> "keyValue", "status" -> "statusValue", "owner" -> "ownerValue", "expiresAt" -> date)))
 
       lockEntry.buildFullDBObject mustBe expectedOutput
     }

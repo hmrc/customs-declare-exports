@@ -19,16 +19,12 @@ package integration.uk.gov.hmrc.exports.repositories
 import com.codahale.metrics.SharedMetricRegistries
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, OptionValues, WordSpec}
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
-import reactivemongo.core.errors.DatabaseException
-import uk.gov.hmrc.exports.repositories.NotificationRepository
 import testdata.ExportsTestData._
 import testdata.NotificationTestData._
+import uk.gov.hmrc.exports.repositories.NotificationRepository
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class NotificationRepositorySpec
@@ -40,8 +36,6 @@ class NotificationRepositorySpec
   }
 
   private val repo = injector.instanceOf[NotificationRepository]
-
-  implicit val ec: ExecutionContext = global
 
   override def beforeEach(): Unit = {
     super.beforeEach()

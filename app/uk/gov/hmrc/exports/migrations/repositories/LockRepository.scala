@@ -28,7 +28,7 @@ import org.bson.conversions.Bson
 import uk.gov.hmrc.exports.migrations.exceptions.LockPersistenceException
 import uk.gov.hmrc.exports.migrations.repositories.LockEntry.{ExpiresAtField, KeyField, OwnerField, StatusField}
 
-import scala.collection.convert.WrapAsScala.asScalaIterator
+import scala.collection.JavaConverters.asScalaIterator
 
 class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRepository(db, collectionName, Array(KeyField)) {
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping
+package uk.gov.hmrc.exports.services.mapping
 
 import java.util.UUID
 

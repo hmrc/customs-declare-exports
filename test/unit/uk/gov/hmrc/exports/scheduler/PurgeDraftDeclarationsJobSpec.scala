@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.scheduler
+package uk.gov.hmrc.exports.scheduler
 
 import java.time._
 
@@ -22,11 +22,10 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mockito.{reset, verify}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.config.AppConfig.JobConfig
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
-import uk.gov.hmrc.exports.scheduler.PurgeDraftDeclarationsJob
-import unit.uk.gov.hmrc.exports.base.UnitSpec
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

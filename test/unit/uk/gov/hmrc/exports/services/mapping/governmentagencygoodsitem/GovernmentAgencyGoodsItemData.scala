@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
+package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.wco.dec.{Amount, GoodsMeasure, Measure}

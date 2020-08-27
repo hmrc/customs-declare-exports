@@ -17,8 +17,6 @@
 package uk.gov.hmrc.exports.mongock.changesets
 
 import com.github.cloudyrock.mongock.{ChangeLog, ChangeSet}
-import com.mongodb.client.model.Filters._
-import com.mongodb.client.model.Updates.rename
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
 import play.api.Logger

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.models
 
-import play.api.data.format.Formats
 import play.api.libs.json.{Format, Reads, Writes}
 import play.api.mvc.{Request, WrappedRequest}
 

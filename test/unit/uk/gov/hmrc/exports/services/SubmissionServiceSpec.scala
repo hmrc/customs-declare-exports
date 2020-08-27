@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services
+package uk.gov.hmrc.exports.services
 
-import java.time.{Instant, LocalDateTime, ZoneOffset, ZonedDateTime}
+import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
@@ -33,7 +33,6 @@ import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
-import uk.gov.hmrc.exports.services.{SubmissionService, WcoMapperService}
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 

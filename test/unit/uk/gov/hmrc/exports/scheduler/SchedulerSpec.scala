@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.scheduler
+package uk.gov.hmrc.exports.scheduler
 
 import java.time._
 
@@ -28,9 +28,8 @@ import org.mockito.stubbing.Answer
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
 import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.scheduler.{ScheduledJob, ScheduledJobs, Scheduler, SchedulerDateUtil}
-import unit.uk.gov.hmrc.exports.base.UnitSpec
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -56,8 +55,6 @@ class SchedulerSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
   private implicit def string2Time: String => LocalTime = { time =>
     LocalTime.parse(time)
   }
-
-  private implicit def instant2Time: Instant => LocalTime = _.atZone(zone).toLocalTime
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()

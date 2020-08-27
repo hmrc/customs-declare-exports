@@ -37,7 +37,7 @@ import uk.gov.hmrc.exports.migrations.exceptions.LockPersistenceException
 import uk.gov.hmrc.exports.migrations.repositories.LockEntry._
 import uk.gov.hmrc.exports.migrations.repositories.TestObjectsBuilder.buildMongoCursor
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters.mapAsJavaMap
 
 class LockRepositorySpec extends WordSpec with MockitoSugar with BeforeAndAfterEach with MustMatchers {
 
@@ -139,7 +139,8 @@ class LockRepositorySpec extends WordSpec with MockitoSugar with BeforeAndAfterE
 
     "return LockEntry built from Document returned by MongoCollection" in {
 
-      val elementInDb = new Document(Map(KeyField -> lockKey, StatusField -> "statusValue", OwnerField -> "ownerValue", ExpiresAtField -> date))
+      val elementInDb =
+        new Document(mapAsJavaMap(Map(KeyField -> lockKey, StatusField -> "statusValue", OwnerField -> "ownerValue", ExpiresAtField -> date)))
       when(findIterable.iterator()).thenReturn(buildMongoCursor(Seq(elementInDb)))
 
       val result = repo.findByKey(lockKey)

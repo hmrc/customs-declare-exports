@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.models.declaration
+package uk.gov.hmrc.exports.models.declaration
 
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json.{JsError, JsString, JsSuccess, Json}
-import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 
 class AdditionalDeclarationTypeSpec extends WordSpec with MustMatchers {

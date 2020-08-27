@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.base
+package uk.gov.hmrc.exports.base
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
@@ -23,11 +23,9 @@ import org.mockito.stubbing.Answer
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
-import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.{NotificationService, SubmissionService}
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
@@ -62,7 +60,6 @@ object UnitTestMockBuilder extends MockitoSugar {
 
   def buildSubmissionServiceMock: SubmissionService = {
     val submissionServiceMock: SubmissionService = mock[SubmissionService]
-    implicit val hc: HeaderCarrier = mock[HeaderCarrier]
     when(submissionServiceMock.getAllSubmissionsForUser(any())).thenReturn(Future.successful(Seq.empty))
     when(submissionServiceMock.getSubmission(any(), any())).thenReturn(Future.successful(None))
     submissionServiceMock

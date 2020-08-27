@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
+package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.declaration.AdditionalFiscalReference
-import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.DomesticDutyTaxPartyBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class DomesticDutyTaxPartyBuilderSpec extends WordSpec with Matchers with GovernmentAgencyGoodsItemData {
@@ -27,7 +26,7 @@ class DomesticDutyTaxPartyBuilderSpec extends WordSpec with Matchers with Govern
     "map correctly if cache contains Additional Fiscal References" in {
       val builder = new DomesticDutyTaxPartyBuilder
 
-      var item: GoodsShipment.GovernmentAgencyGoodsItem = new GoodsShipment.GovernmentAgencyGoodsItem
+      val item: GoodsShipment.GovernmentAgencyGoodsItem = new GoodsShipment.GovernmentAgencyGoodsItem
 
       builder.buildThenAdd(AdditionalFiscalReference("PL", "12345"), item)
 
@@ -40,7 +39,7 @@ class DomesticDutyTaxPartyBuilderSpec extends WordSpec with Matchers with Govern
 
       val builder = new DomesticDutyTaxPartyBuilder
 
-      var item: GoodsShipment.GovernmentAgencyGoodsItem = new GoodsShipment.GovernmentAgencyGoodsItem
+      val item: GoodsShipment.GovernmentAgencyGoodsItem = new GoodsShipment.GovernmentAgencyGoodsItem
 
       builder.buildThenAdd(AdditionalFiscalReference("PL", "12345"), item)
 

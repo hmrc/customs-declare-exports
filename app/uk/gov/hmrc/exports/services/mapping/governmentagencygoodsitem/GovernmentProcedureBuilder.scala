@@ -36,7 +36,7 @@ class GovernmentProcedureBuilder @Inject()() extends ModifyingBuilder[ExportItem
       }
     }
 
-  private def createGovernmentProcedure(currentCode: Option[String] = None, previousCode: Option[String] = None): GovernmentProcedure = {
+  private def createGovernmentProcedure(currentCode: Option[String], previousCode: Option[String] = None): GovernmentProcedure = {
     val governmentProcedure = new GovernmentProcedure
 
     currentCode.foreach { value =>

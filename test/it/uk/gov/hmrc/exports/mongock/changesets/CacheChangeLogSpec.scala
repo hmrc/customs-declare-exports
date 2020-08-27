@@ -1,7 +1,6 @@
 package uk.gov.hmrc.exports.mongock.changesets
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import com.mongodb.{MongoClient, MongoClientURI}
 import org.bson.Document
@@ -145,13 +144,11 @@ class CacheChangeLogSpec extends WordSpec with MustMatchers with GuiceOneServerP
 
   private def compareJson(actual: String, expected: String): Unit = {
     val mapper = new ObjectMapper
-    mapper.registerModule(DefaultScalaModule)
 
-    val jsonMap1 = mapper.readValue(actual, classOf[Map[String, Any]])
-    val jsonMap2 = mapper.readValue(expected, classOf[Map[String, Any]])
+    val jsonActual = mapper.readTree(actual)
+    val jsonExpected = mapper.readTree(expected)
 
-    jsonMap1.size mustBe jsonMap2.size
-    jsonMap2.foreach(jsonMap1 must contain(_))
+    jsonActual mustBe jsonExpected
   }
 
 }

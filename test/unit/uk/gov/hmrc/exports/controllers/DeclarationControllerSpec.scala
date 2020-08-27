@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.controllers
+package uk.gov.hmrc.exports.controllers
 
 import java.time.Instant
 
@@ -34,17 +34,16 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{status, _}
+import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
+import uk.gov.hmrc.exports.base.AuthTestSupport
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
+import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.services.DeclarationService
-import uk.gov.hmrc.http.HeaderCarrier
-import unit.uk.gov.hmrc.exports.base.AuthTestSupport
-import testdata.ExportsDeclarationBuilder
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class DeclarationControllerSpec
     extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures with MustMatchers
@@ -70,8 +69,7 @@ class DeclarationControllerSpec
         withAuthorizedUser()
         val request = aDeclarationRequest()
         val declaration = aDeclaration(withType(DeclarationType.STANDARD), withId("id"), withEori(userEori))
-        given(declarationService.create(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
-          .willReturn(Future.successful(declaration))
+        given(declarationService.create(any[ExportsDeclaration])).willReturn(Future.successful(declaration))
 
         val result: Future[Result] = route(app, post.withJsonBody(toJson(request))).get
 
@@ -89,7 +87,7 @@ class DeclarationControllerSpec
 
         status(result) must be(BAD_REQUEST)
         contentAsJson(result) mustBe Json.obj("message" -> "Bad Request", "errors" -> Json.arr("/type: error.path.missing"))
-        verifyZeroInteractions(declarationService)
+        verifyNoInteractions(declarationService)
       }
     }
 
@@ -100,7 +98,7 @@ class DeclarationControllerSpec
         val result: Future[Result] = route(app, post.withJsonBody(toJson(aDeclarationRequest()))).get
 
         status(result) must be(UNAUTHORIZED)
-        verifyZeroInteractions(declarationService)
+        verifyNoInteractions(declarationService)
       }
     }
   }
@@ -200,7 +198,7 @@ class DeclarationControllerSpec
         val result: Future[Result] = route(app, get).get
 
         status(result) must be(UNAUTHORIZED)
-        verifyZeroInteractions(declarationService)
+        verifyNoInteractions(declarationService)
       }
     }
 
@@ -260,7 +258,7 @@ class DeclarationControllerSpec
         val result: Future[Result] = route(app, get).get
 
         status(result) must be(UNAUTHORIZED)
-        verifyZeroInteractions(declarationService)
+        verifyNoInteractions(declarationService)
       }
     }
   }
@@ -319,7 +317,7 @@ class DeclarationControllerSpec
         val result: Future[Result] = route(app, delete).get
 
         status(result) must be(UNAUTHORIZED)
-        verifyZeroInteractions(declarationService)
+        verifyNoInteractions(declarationService)
       }
     }
   }
@@ -333,8 +331,7 @@ class DeclarationControllerSpec
         val request = aDeclarationRequest()
         val declaration = aDeclaration(withStatus(DeclarationStatus.DRAFT), withType(DeclarationType.STANDARD), withId("id"), withEori(userEori))
         given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(Some(declaration)))
-        given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
-          .willReturn(Future.successful(Some(declaration)))
+        given(declarationService.update(any[ExportsDeclaration])).willReturn(Future.successful(Some(declaration)))
 
         val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
 
@@ -351,8 +348,7 @@ class DeclarationControllerSpec
         withAuthorizedUser()
         val request = aDeclarationRequest()
         given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(None))
-        given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
-          .willReturn(Future.successful(None))
+        given(declarationService.update(any[ExportsDeclaration])).willReturn(Future.successful(None))
 
         val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
 
@@ -365,8 +361,7 @@ class DeclarationControllerSpec
         val request = aDeclarationRequest()
         val declaration = aDeclaration(withStatus(DeclarationStatus.DRAFT), withType(DeclarationType.STANDARD), withId("id"), withEori(userEori))
         given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(Some(declaration)))
-        given(declarationService.update(any[ExportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
-          .willReturn(Future.successful(None))
+        given(declarationService.update(any[ExportsDeclaration])).willReturn(Future.successful(None))
 
         val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
 
@@ -395,7 +390,7 @@ class DeclarationControllerSpec
 
         status(result) must be(BAD_REQUEST)
         contentAsJson(result) mustBe Json.obj("message" -> "Bad Request", "errors" -> Json.arr("/type: error.path.missing"))
-        verifyZeroInteractions(declarationService)
+        verifyNoInteractions(declarationService)
       }
     }
 
@@ -406,7 +401,7 @@ class DeclarationControllerSpec
         val result: Future[Result] = route(app, put.withJsonBody(toJson(aDeclarationRequest()))).get
 
         status(result) must be(UNAUTHORIZED)
-        verifyZeroInteractions(declarationService)
+        verifyNoInteractions(declarationService)
       }
     }
   }
@@ -416,13 +411,13 @@ class DeclarationControllerSpec
 
   def theDeclarationCreated: ExportsDeclaration = {
     val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
-    verify(declarationService).create(captor.capture())(any[HeaderCarrier], any[ExecutionContext])
+    verify(declarationService).create(captor.capture())
     captor.getValue
   }
 
   def theDeclarationUpdated: ExportsDeclaration = {
     val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
-    verify(declarationService).update(captor.capture())(any[HeaderCarrier], any[ExecutionContext])
+    verify(declarationService).update(captor.capture())
     captor.getValue
   }
 }

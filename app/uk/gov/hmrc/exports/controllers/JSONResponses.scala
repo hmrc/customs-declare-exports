@@ -18,11 +18,10 @@ package uk.gov.hmrc.exports.controllers
 
 import play.api.http.{ContentTypeOf, ContentTypes, Writeable}
 import play.api.libs.json.Writes
-import play.api.mvc.Codec
 
 trait JSONResponses {
 
-  implicit def writable[T](implicit writes: Writes[T], code: Codec): Writeable[T] = {
+  implicit def writable[T](implicit writes: Writes[T]): Writeable[T] = {
     implicit val contentType: ContentTypeOf[T] = ContentTypeOf[T](Some(ContentTypes.JSON))
     Writeable(Writeable.writeableOf_JsValue.transform.compose(writes.writes))
   }

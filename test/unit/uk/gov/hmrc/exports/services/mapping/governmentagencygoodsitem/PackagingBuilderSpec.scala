@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import org.scalatest.{Matchers, WordSpec}
-import unit.uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
+import uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class PackagingBuilderSpec extends WordSpec with Matchers with ExportsItemBuilder {

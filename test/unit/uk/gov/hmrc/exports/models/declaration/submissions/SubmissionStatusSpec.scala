@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.models.declaration.submissions
+package uk.gov.hmrc.exports.models.declaration.submissions
 
 import org.scalatest.{MustMatchers, WordSpec}
-import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.retrieve
 
 class SubmissionStatusSpec extends WordSpec with MustMatchers {

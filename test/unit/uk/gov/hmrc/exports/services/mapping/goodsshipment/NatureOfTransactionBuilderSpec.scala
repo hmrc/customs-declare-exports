@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment
+package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.declaration.NatureOfTransaction
-import uk.gov.hmrc.exports.services.mapping.goodsshipment.GoodsShipmentNatureOfTransactionBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
@@ -29,8 +28,8 @@ class NatureOfTransactionBuilderSpec extends WordSpec with Matchers {
       "'identifier' has been supplied" in {
         val builder = new GoodsShipmentNatureOfTransactionBuilder
 
-        var natureOfTransaction: NatureOfTransaction = NatureOfTransaction("1")
-        var goodsShipment: Declaration.GoodsShipment = new GoodsShipment
+        val natureOfTransaction: NatureOfTransaction = NatureOfTransaction("1")
+        val goodsShipment: Declaration.GoodsShipment = new GoodsShipment
 
         builder.buildThenAdd(natureOfTransaction, goodsShipment)
 
@@ -39,8 +38,8 @@ class NatureOfTransactionBuilderSpec extends WordSpec with Matchers {
       "'identifier' has not been supplied" in {
         val builder = new GoodsShipmentNatureOfTransactionBuilder
 
-        var natureOfTransaction: NatureOfTransaction = NatureOfTransaction("")
-        var goodsShipment: Declaration.GoodsShipment = new GoodsShipment
+        val natureOfTransaction: NatureOfTransaction = NatureOfTransaction("")
+        val goodsShipment: Declaration.GoodsShipment = new GoodsShipment
 
         builder.buildThenAdd(natureOfTransaction, goodsShipment)
 

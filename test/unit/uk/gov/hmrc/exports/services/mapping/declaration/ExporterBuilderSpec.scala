@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping.declaration
+package uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.mockito.Mockito.when
 import org.scalatest.{Matchers, WordSpec}
@@ -23,7 +23,6 @@ import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.Address
 import uk.gov.hmrc.exports.services.CountriesService
-import uk.gov.hmrc.exports.services.mapping.declaration.ExporterBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class ExporterBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
