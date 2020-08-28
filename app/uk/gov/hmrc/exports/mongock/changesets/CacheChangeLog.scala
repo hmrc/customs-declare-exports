@@ -28,7 +28,6 @@ import play.api.Logger
 import uk.gov.hmrc.exports.models.generators.{IdGenerator, StringIdGenerator}
 import uk.gov.hmrc.exports.services.CountriesService
 
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 
 @ChangeLog
