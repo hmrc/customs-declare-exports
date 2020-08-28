@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping
+package uk.gov.hmrc.exports.services.mapping
 
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper
-import uk.gov.hmrc.wco.dec.DangerousGoods
 
 class CachingMappingHelperSpec extends WordSpec with Matchers {
 

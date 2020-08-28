@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.models
+package uk.gov.hmrc.exports.models
 
 import org.scalatest.{MustMatchers, WordSpec}
 import play.mvc.Http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, UNAUTHORIZED}
-import uk.gov.hmrc.exports.models.ErrorResponse
 
 class ErrorResponseSpec extends WordSpec with MustMatchers {
 

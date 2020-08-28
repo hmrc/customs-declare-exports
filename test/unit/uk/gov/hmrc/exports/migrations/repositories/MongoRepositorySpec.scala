@@ -27,7 +27,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.migrations.repositories.TestObjectsBuilder.buildMongoCursor
 
-import scala.collection.convert.WrapAsJava.mapAsJavaMap
+import scala.collection.JavaConverters._
 
 class MongoRepositorySpec extends WordSpec with MockitoSugar with BeforeAndAfterEach {
 

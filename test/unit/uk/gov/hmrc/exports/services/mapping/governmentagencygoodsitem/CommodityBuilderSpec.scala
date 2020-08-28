@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
+package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.CommodityBuilder
 import uk.gov.hmrc.wco.dec._
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
@@ -28,7 +27,7 @@ class CommodityBuilderSpec extends WordSpec with Matchers with GovernmentAgencyG
     "map commodity item successfully when dangerous goods present" in {
       val builder = new CommodityBuilder
 
-      var item: GoodsShipment.GovernmentAgencyGoodsItem = new GoodsShipment.GovernmentAgencyGoodsItem
+      val item: GoodsShipment.GovernmentAgencyGoodsItem = new GoodsShipment.GovernmentAgencyGoodsItem
       val commodity = Commodity(
         description = Some("commodityDescription"),
         classifications = Seq(CommodityBuilderSpec.classifications),
@@ -59,7 +58,7 @@ class CommodityBuilderSpec extends WordSpec with Matchers with GovernmentAgencyG
     "map commodity item successfully when dangerous goods not present" in {
       val builder = new CommodityBuilder
 
-      var item: GoodsShipment.GovernmentAgencyGoodsItem = new GoodsShipment.GovernmentAgencyGoodsItem
+      val item: GoodsShipment.GovernmentAgencyGoodsItem = new GoodsShipment.GovernmentAgencyGoodsItem
       val commodity = Commodity(
         description = Some("commodityDescription"),
         classifications = Seq(CommodityBuilderSpec.classifications),

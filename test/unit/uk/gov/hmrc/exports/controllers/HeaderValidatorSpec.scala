@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.controllers
+package uk.gov.hmrc.exports.controllers
 
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
+import testdata.ExportsTestData._
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.http.HeaderCarrier
-import testdata.ExportsTestData._
 
 class HeaderValidatorSpec extends WordSpec with MockitoSugar with MustMatchers {
 
@@ -102,8 +101,6 @@ class HeaderValidatorSpec extends WordSpec with MockitoSugar with MustMatchers {
     "validateSubmissionHeaders" should {
 
       "return Right of validatedHeaderResponse when validateHeaders is called on valid headers" in new SetUp {
-        implicit val hc: HeaderCarrier = mock[HeaderCarrier]
-
         val result: Either[ErrorResponse, SubmissionRequestHeaders] =
           validator.validateAndExtractSubmissionHeaders(ValidHeaders)
         result must equal(Right(SubmissionRequestHeaders(LocalReferenceNumber(declarantLrnValue), Some(declarantDucrValue))))
@@ -121,8 +118,6 @@ class HeaderValidatorSpec extends WordSpec with MockitoSugar with MustMatchers {
     "validateCancellationHeaders" should {
 
       "return Right of validatedHeaderResponse when validateHeaders is called on valid headers" in new SetUp {
-        implicit val hc: HeaderCarrier = mock[HeaderCarrier]
-
         val result: Either[ErrorResponse, CancellationRequestHeaders] =
           validator.validateAndExtractCancellationHeaders(ValidHeaders)
         result must equal(Right(CancellationRequestHeaders(Mrn(declarantMrnValue))))
@@ -139,8 +134,6 @@ class HeaderValidatorSpec extends WordSpec with MockitoSugar with MustMatchers {
     "validateAndExtractSubmissionNotificationHeaders" should {
 
       "return Right of SubmissionNotificationApiRequest when validateHeaders is called on valid headers" in new SetUp {
-        implicit val hc: HeaderCarrier = mock[HeaderCarrier]
-
         val result: Either[ErrorResponse, NotificationApiRequestHeaders] =
           validator.validateAndExtractNotificationHeaders(ValidHeaders)
         result must equal(Right(NotificationApiRequestHeaders(AuthToken(dummyToken), ConversationId(actionId))))

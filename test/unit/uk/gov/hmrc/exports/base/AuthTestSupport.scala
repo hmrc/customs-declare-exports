@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.base
+package uk.gov.hmrc.exports.base
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when

@@ -21,7 +21,7 @@ import java.util.Date
 import org.bson.Document
 import org.scalatest.{MustMatchers, WordSpec}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters.mapAsJavaMap
 
 class ChangeEntrySpec extends WordSpec with MustMatchers {
 
@@ -32,7 +32,9 @@ class ChangeEntrySpec extends WordSpec with MustMatchers {
       val date = new Date()
       val changeEntry = ChangeEntry(changeId = "changeIdValue", author = "authorValue", timestamp = date, changeLogClass = "changeLogClassValue")
       val expectedOutput =
-        new Document(Map("changeId" -> "changeIdValue", "author" -> "authorValue", "timestamp" -> date, "changeLogClass" -> "changeLogClassValue"))
+        new Document(
+          mapAsJavaMap(Map("changeId" -> "changeIdValue", "author" -> "authorValue", "timestamp" -> date, "changeLogClass" -> "changeLogClassValue"))
+        )
 
       changeEntry.buildFullDBObject mustBe expectedOutput
     }

@@ -22,7 +22,6 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -31,8 +30,6 @@ import scala.concurrent.duration._
 @Singleton
 class PurgeDraftDeclarationsJob @Inject()(appConfig: AppConfig, declarationRepository: DeclarationRepository) extends ScheduledJob {
 
-  private implicit val config: AppConfig = appConfig
-  private implicit val carrier: HeaderCarrier = HeaderCarrier()
   private val jobConfig = appConfig.purgeDraftDeclarations
   private val expireDuration = appConfig.draftTimeToLive
   private val clock = appConfig.clock

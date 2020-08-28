@@ -21,12 +21,12 @@ import java.util.UUID
 import reactivemongo.api.{MongoConnection, MongoDriver}
 import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.models.declaration._
-import unit.uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
+import uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuilder {
+object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
 
   import ExportsDeclaration.Mongo._
 
@@ -105,7 +105,7 @@ object SeedMongo extends App with ExportsDeclarationBuilder with ExportsItemBuil
         }
       }
 
-  override def main(args: Array[String]): Unit = {
+  def main(args: Array[String]): Unit = {
     val driver = MongoDriver()
     val parsedUri = MongoConnection.parseURI("mongodb://localhost:27017/customs-declare-exports").get
     val connection = driver.connection(parsedUri, true).get

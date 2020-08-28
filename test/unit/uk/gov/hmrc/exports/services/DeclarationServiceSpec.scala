@@ -14,31 +14,25 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services
+package uk.gov.hmrc.exports.services
 
 import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{MustMatchers, WordSpec}
-import uk.gov.hmrc.exports.models.declaration.submissions.Submission
-import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Eori, Page, Paginated}
-import uk.gov.hmrc.exports.repositories.DeclarationRepository
-import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService, WcoSubmissionService}
-import uk.gov.hmrc.http.HeaderCarrier
+import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.repositories.DeclarationRepository
 
-import scala.concurrent.ExecutionContext.Implicits
 import scala.concurrent.Future
 
 class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers with ExportsDeclarationBuilder {
 
   private val declarationRepository = mock[DeclarationRepository]
   private val service = new DeclarationService(declarationRepository)
-  private val hc = mock[HeaderCarrier]
-  private val ec = Implicits.global
 
   "Create" should {
     "delegate to the repository" in {
@@ -46,7 +40,7 @@ class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFuture
       val persistedDeclaration = mock[ExportsDeclaration]
       given(declarationRepository.create(any())).willReturn(Future.successful(persistedDeclaration))
 
-      service.create(declaration)(hc, ec).futureValue mustBe persistedDeclaration
+      service.create(declaration).futureValue mustBe persistedDeclaration
 
       verify(declarationRepository).create(declaration)
     }
@@ -58,7 +52,7 @@ class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFuture
       val persistedDeclaration = mock[ExportsDeclaration]
       given(declarationRepository.update(any())).willReturn(Future.successful(Some(persistedDeclaration)))
 
-      service.update(declaration)(hc, ec).futureValue mustBe Some(persistedDeclaration)
+      service.update(declaration).futureValue mustBe Some(persistedDeclaration)
     }
   }
 

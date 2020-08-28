@@ -22,8 +22,8 @@ import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, Migration
 
 class MigrationsRegistrySpec extends WordSpec with MustMatchers {
 
-  private def buildMigrationDefinition(migrationInformation: MigrationInformation): MigrationDefinition = new MigrationDefinition {
-    override val migrationInformation: MigrationInformation = migrationInformation
+  private def buildMigrationDefinition(migrationInfo: MigrationInformation): MigrationDefinition = new MigrationDefinition {
+    override val migrationInformation: MigrationInformation = migrationInfo
     override def migrationFunction(db: MongoDatabase): Unit = {}
   }
 

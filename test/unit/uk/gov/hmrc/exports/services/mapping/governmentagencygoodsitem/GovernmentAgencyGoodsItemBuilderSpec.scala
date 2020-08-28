@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
+package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito
 import org.mockito.Mockito._
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
-import testdata.ExportsDeclarationBuilder
 import play.api.libs.json._
+import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper
-import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem._
+import uk.gov.hmrc.exports.services.mapping.{CachingMappingHelper, ExportsItemBuilder}
 import uk.gov.hmrc.wco.dec.Commodity
-import unit.uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class GovernmentAgencyGoodsItemBuilderSpec

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.controllers
+package uk.gov.hmrc.exports.controllers
 
 import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentMatchers._
@@ -32,9 +32,9 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
+import uk.gov.hmrc.exports.base.AuthTestSupport
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.services.SubmissionService
-import unit.uk.gov.hmrc.exports.base.AuthTestSupport
 
 import scala.concurrent.Future
 
@@ -106,7 +106,7 @@ class CancellationControllerSpec
 
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe Json.obj("message" -> "Bad Request", "errors" -> Json.arr("/changeReason: error.path.missing"))
-        verifyZeroInteractions(submissionService)
+        verifyNoInteractions(submissionService)
       }
     }
 
@@ -117,7 +117,7 @@ class CancellationControllerSpec
         val result: Future[Result] = route(app, post.withJsonBody(toJson(cancellation))).get
 
         status(result) mustBe UNAUTHORIZED
-        verifyZeroInteractions(submissionService)
+        verifyNoInteractions(submissionService)
       }
     }
   }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
+package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import com.google.inject.Guice
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
@@ -23,7 +23,6 @@ import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment._
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class ConsignmentBuilderSpec extends WordSpec with MustMatchers with ExportsDeclarationBuilder with MockitoSugar with BeforeAndAfterEach {

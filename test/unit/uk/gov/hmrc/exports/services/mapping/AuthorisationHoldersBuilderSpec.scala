@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping
+package uk.gov.hmrc.exports.services.mapping
 
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.declaration.DeclarationHolder
-import uk.gov.hmrc.exports.services.mapping.AuthorisationHoldersBuilder
+import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.models.declaration.DeclarationHolder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class AuthorisationHoldersBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {

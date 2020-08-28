@@ -18,7 +18,6 @@ package uk.gov.hmrc.exports.controllers
 
 import com.google.inject.Singleton
 import javax.inject.Inject
-import play.api.Logger
 import play.api.mvc.{PlayBodyParsers, _}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.controllers.actions.Authenticator

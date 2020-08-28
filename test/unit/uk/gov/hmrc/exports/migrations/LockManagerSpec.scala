@@ -183,7 +183,7 @@ class LockManagerSpec extends WordSpec with MockitoSugar with MustMatchers with 
 
         lockManager.ensureLockDefault()
 
-        verifyZeroInteractions(lockRepository)
+        verifyNoInteractions(lockRepository)
       }
     }
 

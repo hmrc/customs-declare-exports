@@ -24,7 +24,6 @@ import javax.inject.Inject
 import play.api.Logger
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.exports.config.{AppConfig, ExportsMigrationConfig}
-import uk.gov.hmrc.exports.migrations.changelogs.cache.ChangePackageInformationId
 import uk.gov.hmrc.exports.mongock.MigrationExecutionContext
 
 import scala.concurrent.Future

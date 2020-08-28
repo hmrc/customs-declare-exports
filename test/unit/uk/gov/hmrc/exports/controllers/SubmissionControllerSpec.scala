@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.controllers
+package uk.gov.hmrc.exports.controllers
 
 import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentMatchers.any
@@ -30,13 +30,13 @@ import play.api.libs.json.Json.toJson
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
+import uk.gov.hmrc.exports.base.AuthTestSupport
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
-import unit.uk.gov.hmrc.exports.base.AuthTestSupport
-import testdata.ExportsDeclarationBuilder
 
 import scala.concurrent.Future
 
@@ -103,7 +103,7 @@ class SubmissionControllerSpec
         val result: Future[Result] = route(app, post).get
 
         status(result) mustBe NOT_FOUND
-        verifyZeroInteractions(submissionService)
+        verifyNoInteractions(submissionService)
       }
     }
 
@@ -115,7 +115,7 @@ class SubmissionControllerSpec
         val result: Future[Result] = route(app, post).get
 
         status(result) mustBe UNAUTHORIZED
-        verifyZeroInteractions(submissionService)
+        verifyNoInteractions(submissionService)
       }
     }
   }
@@ -145,7 +145,7 @@ class SubmissionControllerSpec
         val result: Future[Result] = route(app, get).get
 
         status(result) mustBe UNAUTHORIZED
-        verifyZeroInteractions(submissionService)
+        verifyNoInteractions(submissionService)
       }
     }
   }
@@ -187,7 +187,7 @@ class SubmissionControllerSpec
         val result: Future[Result] = route(app, get).get
 
         status(result) mustBe UNAUTHORIZED
-        verifyZeroInteractions(submissionService)
+        verifyNoInteractions(submissionService)
       }
     }
   }

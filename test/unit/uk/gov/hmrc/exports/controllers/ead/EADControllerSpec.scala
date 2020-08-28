@@ -30,10 +30,10 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
+import uk.gov.hmrc.exports.base.AuthTestSupport
 import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
 import uk.gov.hmrc.exports.models.ead.MrnStatusSpec
 import uk.gov.hmrc.http.HeaderCarrier
-import unit.uk.gov.hmrc.exports.base.AuthTestSupport
 
 import scala.concurrent.Future
 
@@ -87,7 +87,7 @@ class EADControllerSpec extends WordSpec with GuiceOneAppPerSuite with AuthTestS
         val result: Future[Result] = route(app, get).get
 
         status(result) mustBe UNAUTHORIZED
-        verifyZeroInteractions(connector)
+        verifyNoInteractions(connector)
       }
     }
   }

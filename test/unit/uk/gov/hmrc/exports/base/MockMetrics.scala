@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.base
+package uk.gov.hmrc.exports.base
 
 import com.codahale.metrics.MetricRegistry
 import com.kenshoo.play.metrics.Metrics

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.controllers
+package uk.gov.hmrc.exports.controllers
 
 import com.codahale.metrics.SharedMetricRegistries
 import org.joda.time.{DateTime, DateTimeZone}
@@ -31,14 +31,14 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import testdata.NotificationTestData._
+import testdata.SubmissionTestData.submission
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
+import uk.gov.hmrc.exports.base.AuthTestSupport
+import uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildNotificationServiceMock, buildSubmissionServiceMock}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.services.{NotificationService, SubmissionService}
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
-import unit.uk.gov.hmrc.exports.base.AuthTestSupport
-import unit.uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildNotificationServiceMock, buildSubmissionServiceMock}
-import testdata.NotificationTestData._
-import testdata.SubmissionTestData.submission
 
 import scala.concurrent.Future
 import scala.util.Random
@@ -160,7 +160,7 @@ class NotificationControllerSpec
 
         routeGetAllNotificationsForUser(headersWithoutAuthorisation).futureValue
 
-        verifyZeroInteractions(notificationServiceMock)
+        verifyNoInteractions(notificationServiceMock)
       }
     }
 

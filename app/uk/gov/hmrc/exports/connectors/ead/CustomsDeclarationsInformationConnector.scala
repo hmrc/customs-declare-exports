@@ -24,8 +24,7 @@ import play.mvc.Http.Status.OK
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.ead.parsers.MrnStatusParser
 import uk.gov.hmrc.exports.models.ead.{MrnStatus, XmlTags}
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, InternalServerException}
 
 import scala.concurrent.{ExecutionContext, Future}
 

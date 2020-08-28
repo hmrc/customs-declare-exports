@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.exports.services.mapping.declaration.consignment
+package uk.gov.hmrc.exports.services.mapping.declaration.consignment
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.services.mapping.declaration.consignment.FreightBuilder
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class FreightBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
