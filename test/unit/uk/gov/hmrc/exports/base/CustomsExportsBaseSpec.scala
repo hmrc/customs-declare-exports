@@ -98,7 +98,7 @@ trait CustomsExportsBaseSpec extends PlaySpec with GuiceOneAppPerSuite with Mock
 
   protected def postRequest(uri: String, body: JsValue, headers: Map[String, String] = Map.empty): FakeRequest[AnyContentAsJson] = {
     val session: Map[String, String] =
-      Map(SessionKeys.sessionId -> s"session-${UUID.randomUUID()}", SessionKeys.userId -> "Int-ba17b467-90f3-42b6-9570-73be7b78eb2b")
+      Map(SessionKeys.sessionId -> s"session-${UUID.randomUUID()}")
 
     FakeRequest("POST", uri)
       .withHeaders((Map(cfg.headerName -> token) ++ headers).toSeq: _*)
