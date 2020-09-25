@@ -10,7 +10,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import stubs.TestMongoDB
 import stubs.TestMongoDB.mongoConfiguration
 import com.mongodb.client.model.IndexOptions
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters.iterableAsScalaIterable
 
 class SubmissionsChangeLogSpec extends WordSpec with MustMatchers with GuiceOneServerPerSuite with BeforeAndAfterEach {
 
@@ -60,10 +60,10 @@ class SubmissionsChangeLogSpec extends WordSpec with MustMatchers with GuiceOneS
     val indexOptions = new IndexOptions().unique(true).background(false).name("dummyIdx")
     val keys = new Document("dummyIdx", Integer.valueOf(1))
     getDeclarationsCollection(mongoDatabase).createIndex(keys, indexOptions)
-    getDeclarationsCollection(mongoDatabase).listIndexes().toSeq.size mustBe 2
+    iterableAsScalaIterable(getDeclarationsCollection(mongoDatabase).listIndexes()).toSeq.size mustBe 2
 
     test(mongoDatabase)
 
-    getDeclarationsCollection(mongoDatabase).listIndexes().size mustBe 1
+    iterableAsScalaIterable(getDeclarationsCollection(mongoDatabase).listIndexes()).size mustBe 1
   }
 }
