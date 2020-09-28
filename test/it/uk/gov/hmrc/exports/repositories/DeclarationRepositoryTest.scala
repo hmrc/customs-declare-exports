@@ -21,15 +21,13 @@ import java.time.{LocalDate, ZoneOffset}
 import com.codahale.metrics.SharedMetricRegistries
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.api.ReadConcern
+import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo.format
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
-import testdata.ExportsDeclarationBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

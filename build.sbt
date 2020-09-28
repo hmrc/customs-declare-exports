@@ -1,6 +1,7 @@
 import sbt.Tests.{Group, SubProcess}
 import sbt._
 import uk.gov.hmrc.DefaultBuildSettings._
+import uk.gov.hmrc.ForkedJvmPerTestSettings
 import uk.gov.hmrc.gitstamp.GitStampPlugin._
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import uk.gov.hmrc.versioning.SbtGitVersioning
@@ -17,12 +18,6 @@ lazy val allResolvers = resolvers ++= Seq(
 
 lazy val IntegrationTest = config("it") extend Test
 lazy val ComponentTest = config("component") extend Test
-
-def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] = {
-  tests map {
-    test => Group(test.name, Seq(test), SubProcess(ForkOptions(runJVMOptions = Seq("-Dtest.name=" + test.name))))
-  }
-}
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, SbtArtifactory)
@@ -57,7 +52,7 @@ lazy val microservice = Project(appName, file("."))
       (baseDirectory in Test).value / "test/util"
     ),
     addTestReportOption(IntegrationTest, "int-test-reports"),
-    testGrouping in IntegrationTest := oneForkedJvmPerTest((definedTests in IntegrationTest).value),
+    testGrouping in IntegrationTest := ForkedJvmPerTestSettings.oneForkedJvmPerTest((definedTests in IntegrationTest).value),
     parallelExecution in IntegrationTest := false
   )
   .settings(
@@ -67,10 +62,11 @@ lazy val microservice = Project(appName, file("."))
       (baseDirectory in Test).value / "test/util"
     ),
     addTestReportOption(ComponentTest, "int-test-reports"),
-    testGrouping in ComponentTest := oneForkedJvmPerTest((definedTests in ComponentTest).value),
+    testGrouping in ComponentTest := ForkedJvmPerTestSettings.oneForkedJvmPerTest((definedTests in ComponentTest).value),
     parallelExecution in ComponentTest := false
   )
   .settings(silencerSettings)
+  .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
 
 lazy val scoverageSettings: Seq[Setting[_]] = Seq(
   coverageExcludedPackages := List(
