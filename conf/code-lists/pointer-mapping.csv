@@ -22,9 +22,9 @@
 42A.28A.62A.098,declaration.borderTransport.paymentMethod,/customs-declare-exports/declaration/transport-payment
 42A.28A.62A.$1.64,declaration.locations.destinationCountries.countriesOfRouting.$1,/customs-declare-exports/declaration/countries-summary/
 42A.40A.118,declaration.totalNumberOfItems.exchangeRate,/customs-declare-exports/declaration/total-numbers-of-items
-42A.57B.R038,declaration.declarantDetails.details.eori,/customs-declare-exports/declaration/person-presenting-goods
+42A.57B.R123,declaration.declarantDetails.details.eori,/customs-declare-exports/declaration/person-presenting-goods
 42A.56A.G005,declaration.locations.officeOfExit.officeId,/customs-declare-exports/declaration/office-of-exit
-42A.57A.R038,declaration.parties.exporterDetails.details.eori,/customs-declare-exports/declaration/exporter-details
+42A.57A.R032,declaration.parties.exporterDetails.details.eori,/customs-declare-exports/declaration/exporter-details
 42A.67A.103,declaration.natureOfTransaction.natureType,/customs-declare-exports/declaration/nature-of-transaction
 42A.67A.16C.R143,declaration.parties.additionalActors.actor.eori,/customs-declare-exports/declaration/other-parties-involved
 42A.67A.16C.R005,declaration.parties.additionalActors.actor,/customs-declare-exports/declaration/other-parties-involved
