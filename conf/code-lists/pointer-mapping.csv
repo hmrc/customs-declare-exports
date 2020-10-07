@@ -38,7 +38,7 @@
 42A.67A.28A.46A.T020,declaration.departureTransport.meansOfTransportOnDepartureType,
 42A.67A.28A.64A.L017,declaration.locations.goodsLocation.identificationOfLocation,
 42A.67A.28A.64A.L110,declaration.locations.goodsLocation.qualifierOfIdentification,
-42A.67A.28A.64A.04A.410,declaration.locations.goodsLocation.typeOfLocation,
+42A.67A.28A.64A.04A.410,declaration.locations.goodsLocation.typeOfLocation,/customs-declare-exports/declaration/location-of-goods
 42A.67A.28A.64A.04A.241,declaration.locations.goodsLocation.city,
 42A.67A.28A.64A.04A.242,declaration.locations.goodsLocation.country,
 42A.67A.28A.64A.04A.239,declaration.locations.goodsLocation.addressLine,
