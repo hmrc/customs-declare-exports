@@ -35,7 +35,7 @@ class PointerMappingSpec extends WordSpec with MustMatchers {
       }.getMessage mustBe "Pointer [x.y.z] does not match WCO pattern [a.b.c]"
     }
 
-    "map field only pointer" in {
+    "map field-only pointer" in {
       // Given
       val mapping = PointerMapping(PointerPattern("a.b.c"), PointerPattern("x.y.z"), None)
       val pointer = Pointer(
