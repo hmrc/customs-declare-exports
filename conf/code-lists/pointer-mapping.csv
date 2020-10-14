@@ -66,7 +66,7 @@
 42A.67A.68A.$1.23A.65A.126,declaration.items.$1.commodityMeasure.grossMass,/customs-declare-exports/declaration/items/ITEM_ID/commodity-measure
 42A.67A.68A.$1.23A.65A.128,declaration.items.$1.commodityMeasure.netMass,/customs-declare-exports/declaration/items/ITEM_ID/commodity-measure
 42A.67A.68A.$1.23A.65A.130,declaration.items.$1.commodityMeasure.supplementaryUnits,/customs-declare-exports/declaration/items/ITEM_ID/commodity-measure
-42A.67A.68A.$1.23A.55B.$2.R119,declaration.items.$1.additionalFiscalReferences.$2.id,/customs-declare-exports/declaration/items/ITEM_ID/additional-fiscal-references-list
+42A.67A.68A.$1.23A.65A.55B.$2.R119,declaration.items.$1.additionalFiscalReferences.$2.id,/customs-declare-exports/declaration/items/ITEM_ID/additional-fiscal-references-list
 42A.67A.68A.$1.23A.55B.$2.R005,declaration.items.$1.additionalFiscalReferences.$2.roleCode,/customs-declare-exports/declaration/items/ITEM_ID/additional-fiscal-references-list
 42A.67A.68A.$1.23A.70A.166,declaration.items.$1.procedureCodes.procedureCode.current,/customs-declare-exports/declaration/items/ITEM_ID/procedure-codes
 42A.67A.68A.$1.23A.70A.161,declaration.items.$1.procedureCodes.procedureCode.previous,/customs-declare-exports/declaration/items/ITEM_ID/procedure-codes
