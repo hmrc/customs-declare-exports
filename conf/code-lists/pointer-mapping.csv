@@ -34,8 +34,8 @@
 42A.67A.27A.04A.239,declaration.parties.consigneeDetails.details.address.addressLine,/customs-declare-exports/declaration/consignee-details
 42A.67A.27A.04A.245,declaration.parties.consigneeDetails.details.address.postCode,/customs-declare-exports/declaration/consignee-details
 42A.67A.28A.46A.T004,declaration.departureTransport.meansOfTransportOnDepartureIDNumber,/customs-declare-exports/declaration/departure-transport
-42A.67A.28A.46A.T034,declaration.departureTransport.borderModeOfTransportCode,/customs-declare-exports/declaration/transport-leaving-the-border
-42A.67A.28A.46A.T020,declaration.departureTransport.meansOfTransportOnDepartureType,/customs-declare-exports/declaration/departure-transport
+42A.67A.28A.46A.T034,declaration.departureTransport.borderModeOfTransportCode,/customs-declare-exports/declaration/departure-transport
+42A.67A.28A.46A.T020,declaration.departureTransport.meansOfTransportOnDepartureType,/customs-declare-exports/declaration/inland-transport-details
 42A.67A.28A.64A.L016,declaration.locations.goodsLocation.nameOfLocation,/customs-declare-exports/declaration/location-of-goods
 42A.67A.28A.64A.L017,declaration.locations.goodsLocation.identificationOfLocation,/customs-declare-exports/declaration/location-of-goods
 42A.67A.28A.64A.L110,declaration.locations.goodsLocation.qualifierOfIdentification,/customs-declare-exports/declaration/location-of-goods
