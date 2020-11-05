@@ -27,6 +27,7 @@ import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.api.{QueryOpts, ReadConcern, ReadPreference}
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.ImplicitBSONHandlers
+import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
@@ -42,6 +43,9 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
       ExportsDeclaration.Mongo.format,
       objectIdFormats
     ) {
+
+  override lazy val collection: JSONCollection =
+    mongo().collection[JSONCollection](collectionName, failoverStrategy = RepositorySettings.failoverStrategy)
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("eori" -> IndexType.Ascending, "id" -> IndexType.Ascending), Some("eoriAndIdIdx"), unique = true),

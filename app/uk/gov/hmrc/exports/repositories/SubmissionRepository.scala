@@ -23,6 +23,7 @@ import reactivemongo.api.Cursor.FailOnError
 import reactivemongo.api.ReadPreference
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONBoolean, BSONDocument, BSONObjectID}
+import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission}
 import uk.gov.hmrc.mongo.ReactiveRepository
@@ -33,6 +34,9 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: ExecutionContext)
     extends ReactiveRepository[Submission, BSONObjectID]("submissions", mc.mongoConnector.db, Submission.formats, objectIdFormats) {
+
+  override lazy val collection: JSONCollection =
+    mongo().collection[JSONCollection](collectionName, failoverStrategy = RepositorySettings.failoverStrategy)
 
   override def indexes: Seq[Index] = Seq(
     Index(
