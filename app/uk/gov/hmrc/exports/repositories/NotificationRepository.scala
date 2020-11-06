@@ -21,6 +21,7 @@ import play.api.libs.json.{JsString, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
+import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
@@ -30,6 +31,9 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: ExecutionContext)
     extends ReactiveRepository[Notification, BSONObjectID]("notifications", mc.mongoConnector.db, Notification.format, objectIdFormats) {
+
+  override lazy val collection: JSONCollection =
+    mongo().collection[JSONCollection](collectionName, failoverStrategy = RepositorySettings.failoverStrategy)
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("dateTimeIssued" -> IndexType.Ascending), name = Some("dateTimeIssuedIdx")),
