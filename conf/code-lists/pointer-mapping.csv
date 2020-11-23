@@ -24,7 +24,12 @@
 42A.40A.118,declaration.totalNumberOfItems.exchangeRate,/customs-declare-exports/declaration/total-numbers-of-items
 42A.57B.R123,declaration.declarantDetails.details.eori,/customs-declare-exports/declaration/[URL_PATH]
 42A.56A.G005,declaration.locations.officeOfExit.officeId,/customs-declare-exports/declaration/office-of-exit
-42A.57A.R032,declaration.parties.exporterDetails.details.eori,/customs-declare-exports/declaration/exporter-details
+42A.57A.R032,declaration.parties.exporterDetails.details.eori,/customs-declare-exports/declaration/exporter-eori-number
+42A.57A.R031,declaration.parties.exporterDetails.details.address.fullName,/customs-declare-exports/declaration/exporter-address
+42A.57A.04A.241,declaration.parties.exporterDetails.details.address.townOrCity,/customs-declare-exports/declaration/exporter-address
+42A.57A.04A.242,declaration.parties.exporterDetails.details.address.country,/customs-declare-exports/declaration/exporter-address
+42A.57A.04A.239,declaration.parties.exporterDetails.details.address.addressLine,/customs-declare-exports/declaration/exporter-address
+42A.57A.04A.245,declaration.parties.exporterDetails.details.address.postCode,/customs-declare-exports/declaration/exporter-address
 42A.67A.103,declaration.natureOfTransaction.natureType,/customs-declare-exports/declaration/nature-of-transaction
 42A.67A.16C.R143,declaration.parties.additionalActors.actor.eori,/customs-declare-exports/declaration/other-parties-list
 42A.67A.16C.R005,declaration.parties.additionalActors.actor,/customs-declare-exports/declaration/other-parties-list
