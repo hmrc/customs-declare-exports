@@ -64,13 +64,8 @@ class SubmissionService @Inject()(
 
     val payload = metrics.timeCall(Timers.submissionConvertToXmlTimer)(wcoMapperService.toXml(metaData))
 
+    logProgress(declaration, "Submitting to the Declaration API")
     for {
-      // Update the Declaration Status
-      _ <- metrics.timeCall(Timers.submissionUpdateDeclarationTimer)(
-        declarationRepository.update(declaration.copy(status = DeclarationStatus.COMPLETE))
-      )
-      _ = logProgress(declaration, "Marked as COMPLETE")
-
       // Create the Submission
       submission <- metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer)(
         submissionRepository.findOrCreate(Eori(declaration.eori), declaration.id, Submission(declaration, lrn, ducr))
