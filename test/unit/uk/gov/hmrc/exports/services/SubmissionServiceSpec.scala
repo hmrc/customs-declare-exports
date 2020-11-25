@@ -144,7 +144,6 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
         when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
         when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(declarationRepository.update(any())).thenReturn(Future.successful(Some(mock[ExportsDeclaration])))
         when(submissionRepository.findOrCreate(any(), any(), any())).thenReturn(Future.successful(mock[Submission]))
         when(customsDeclarationsConnector.submitDeclaration(any(), any())(any()))
           .thenReturn(Future.successful("conv-id"))
@@ -161,8 +160,6 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         action.id mustBe "conv-id"
         action.requestType mustBe SubmissionRequest
 
-        theDeclarationUpdated().status mustEqual DeclarationStatus.COMPLETE
-
         verify(submissionRepository, never).updateMrn(any[String], any[String])
         verify(sendEmailForDmsDocAction, never).execute(any[String])
       }
@@ -173,7 +170,6 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
         when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
         when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(declarationRepository.update(any())).thenReturn(Future.successful(Some(mock[ExportsDeclaration])))
         when(submissionRepository.findOrCreate(any(), any(), any())).thenReturn(Future.successful(mock[Submission]))
         when(customsDeclarationsConnector.submitDeclaration(any(), any())(any()))
           .thenReturn(Future.successful("conv-id"))
@@ -191,8 +187,6 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         val action = theActionAdded()
         action.id mustBe "conv-id"
         action.requestType mustBe SubmissionRequest
-
-        theDeclarationUpdated().status mustEqual DeclarationStatus.COMPLETE
 
         verify(submissionRepository).updateMrn(meq("conv-id"), meq("mrn"))
         verify(sendEmailForDmsDocAction).execute(meq("conv-id"))
@@ -223,8 +217,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
         verify(submissionRepository, never).addAction(any[Submission], any[Action])
 
-        theDeclarationUpdated(0).status mustEqual DeclarationStatus.COMPLETE
-        theDeclarationUpdated(1).status mustEqual DeclarationStatus.DRAFT
+        theDeclarationUpdated().status mustEqual DeclarationStatus.DRAFT
       }
     }
 

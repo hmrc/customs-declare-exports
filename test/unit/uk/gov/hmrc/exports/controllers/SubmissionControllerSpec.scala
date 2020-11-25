@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import org.mockito.ArgumentMatchers.{any, anyString, eq => eqTo}
 import org.mockito.Mockito._
 import play.api.libs.json.Json.toJson
 import play.api.mvc.{AnyContent, Request}
@@ -30,7 +30,8 @@ import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
+import uk.gov.hmrc.exports.repositories.DeclarationRepository
+import uk.gov.hmrc.exports.services.SubmissionService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -40,14 +41,14 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
   private val cc = stubControllerComponents()
   private val authenticator = new Authenticator(mockAuthConnector, cc)
   private val submissionService: SubmissionService = mock[SubmissionService]
-  private val declarationService: DeclarationService = mock[DeclarationService]
+  private val declarationRepository: DeclarationRepository = mock[DeclarationRepository]
 
-  private val controller = new SubmissionController(authenticator, submissionService, declarationService, cc)
+  private val controller = new SubmissionController(authenticator, submissionService, cc, declarationRepository)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(mockAuthConnector, submissionService, declarationService)
+    reset(mockAuthConnector, submissionService, declarationRepository)
     withAuthorizedUser()
   }
 
@@ -63,7 +64,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
         val result = controller.create("id")(fakePostRequest)
 
         status(result) mustBe UNAUTHORIZED
-        verifyNoInteractions(declarationService)
+        verifyNoInteractions(declarationRepository)
         verifyNoInteractions(submissionService)
       }
     }
@@ -72,7 +73,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
       "return 201 (Created)" in {
 
         val declaration = aDeclaration(withId("id"), withStatus(DeclarationStatus.DRAFT))
-        when(declarationService.findOne(any(), any())).thenReturn(Future.successful(Some(declaration)))
+        when(declarationRepository.markCompleted(anyString(), any())).thenReturn(Future.successful(Some(declaration)))
         when(submissionService.submit(any())(any())).thenReturn(Future.successful(submission))
 
         val result = controller.create("id")(fakePostRequest)
@@ -86,7 +87,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
       "return 409 (Conflict)" in {
 
         val declaration = aDeclaration(withId("id"), withStatus(DeclarationStatus.COMPLETE))
-        when(declarationService.findOne(any(), any())).thenReturn(Future.successful(Some(declaration)))
+        when(declarationRepository.markCompleted(anyString(), any())).thenReturn(Future.successful(Some(declaration)))
         when(submissionService.submit(any())(any())).thenReturn(Future.successful(submission))
 
         val result = controller.create("id")(fakePostRequest)
@@ -99,7 +100,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
     "DeclarationService returns no Declaration for given UUID" should {
       "return 404 (NotFound)" in {
 
-        when(declarationService.findOne(any(), any())).thenReturn(Future.successful(None))
+        when(declarationRepository.markCompleted(anyString(), any())).thenReturn(Future.successful(None))
 
         val result = controller.create("id")(fakePostRequest)
 
