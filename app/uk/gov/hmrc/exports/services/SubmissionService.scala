@@ -22,6 +22,7 @@ import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
 import uk.gov.hmrc.http.HeaderCarrier
@@ -81,9 +82,9 @@ class SubmissionService @Inject()(
   private def appendMRNIfAlreadyAvailable(submission: Submission, actionId: String): Future[Submission] =
     notificationRepository.findNotificationsByActionId(actionId).flatMap { notifications =>
       notifications.headOption match {
-        case Some(notification) =>
-          submissionRepository.updateMrn(actionId, notification.mrn).map(_.getOrElse(submission))
-        case None => Future.successful(submission)
+        case Some(Notification(_, _, Some(details))) =>
+          submissionRepository.updateMrn(actionId, details.mrn).map(_.getOrElse(submission))
+        case _ => Future.successful(submission)
       }
     }
 

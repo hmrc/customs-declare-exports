@@ -17,10 +17,11 @@
 package uk.gov.hmrc.exports.repositories
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsNull, JsString, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.BSONObjectID
+import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.mongo.ReactiveRepository
@@ -30,15 +31,20 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: ExecutionContext)
-    extends ReactiveRepository[Notification, BSONObjectID]("notifications", mc.mongoConnector.db, Notification.format, objectIdFormats) {
+    extends ReactiveRepository[Notification, BSONObjectID]("notifications", mc.mongoConnector.db, Notification.DbFormat.format, objectIdFormats) {
 
   override lazy val collection: JSONCollection =
     mongo().collection[JSONCollection](collectionName, failoverStrategy = RepositorySettings.failoverStrategy)
 
   override def indexes: Seq[Index] = Seq(
-    Index(Seq("dateTimeIssued" -> IndexType.Ascending), name = Some("dateTimeIssuedIdx")),
-    Index(Seq("mrn" -> IndexType.Ascending), name = Some("mrnIdx")),
-    Index(Seq("actionId" -> IndexType.Ascending), name = Some("actionIdIdx"))
+    Index(Seq("details.dateTimeIssued" -> IndexType.Ascending), name = Some("dateTimeIssuedIdx")),
+    Index(Seq("details.mrn" -> IndexType.Ascending), name = Some("mrnIdx")),
+    Index(Seq("actionId" -> IndexType.Ascending), name = Some("actionIdIdx")),
+    Index(
+      Seq("details" -> IndexType.Ascending),
+      name = Some("detailsMissingIdx"),
+      partialFilter = Some(BSONDocument("details" -> BSONDocument("$type" -> "object")))
+    )
   )
 
   // TODO: Need to change this method to return Future[WriteResult].
@@ -58,4 +64,9 @@ class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: 
       case _     => find("$or" -> actionIds.map(id => Json.obj("actionId" -> JsString(id))))
     }
 
+  def findUnparsedNotifications(): Future[Seq[Notification]] =
+    find("details" -> JsNull)
+
+  def removeUnparsedNotificationsForActionId(actionId: String): Future[WriteResult] =
+    remove("actionId" -> JsString(actionId), "details" -> JsNull)
 }

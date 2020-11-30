@@ -74,6 +74,16 @@ class NotificationRepositorySpec
       notificationsInDB.length must equal(2)
       notificationsInDB.head must equal(notification)
     }
+
+    "trying to save an unparsable notification" should {
+      "be allowed" in {
+        repo.save(notificationUnparsable).futureValue must be(true)
+
+        val notificationInDB = repo.findNotificationsByActionId(actionId_4).futureValue
+        notificationInDB.length must equal(1)
+        notificationInDB.head must equal(notificationUnparsable)
+      }
+    }
   }
 
   "Notification Repository on findNotificationsByActionId" when {
@@ -165,10 +175,103 @@ class NotificationRepositorySpec
         repo.save(notification).futureValue
         repo.save(notification_2).futureValue
         repo.save(notification_3).futureValue
+        repo.save(notificationUnparsable).futureValue
 
         repo.findNotificationsByActionIds(Seq.empty).futureValue must equal(Seq.empty)
       }
     }
   }
 
+  "Notification Repository on findUnparsedNotifications" when {
+
+    "there are no unparsed Notification" should {
+      "return empty list" in {
+        repo.save(notification).futureValue
+
+        repo.findUnparsedNotifications().futureValue must equal(Seq.empty)
+      }
+    }
+
+    "there is one unparsed Notification" should {
+      "return those Notifications" in {
+        repo.save(notification).futureValue
+        repo.save(notificationUnparsable).futureValue
+
+        val foundNotifications = repo.findUnparsedNotifications().futureValue
+
+        foundNotifications.length must equal(1)
+        foundNotifications must contain(notificationUnparsable)
+      }
+    }
+
+    "there are many unparsed Notification" should {
+      "return those Notifications" in {
+        val anotherUnparsableNotification = notificationUnparsable.copy(actionId_3)
+
+        repo.save(notification).futureValue
+        repo.save(notificationUnparsable).futureValue
+        repo.save(anotherUnparsableNotification).futureValue
+
+        val foundNotifications = repo.findUnparsedNotifications().futureValue
+
+        foundNotifications.length must equal(2)
+        foundNotifications must contain(notificationUnparsable)
+        foundNotifications must contain(anotherUnparsableNotification)
+      }
+    }
+  }
+
+  "Notification Repository on removeNotificationsForActionId" when {
+
+    "there are no Notifications for the given actionId" should {
+      "not delete any notifications" in {
+        repo.save(notification_3).futureValue
+
+        repo.removeUnparsedNotificationsForActionId(notification.actionId).futureValue
+
+        repo.findNotificationsByActionId(notification_3.actionId).futureValue mustBe Seq(notification_3)
+      }
+    }
+
+    "there is one Notification for the given actionId" should {
+      "delete just that matching notification" in {
+        repo.save(notificationUnparsable).futureValue
+        repo.save(notification_3).futureValue
+
+        repo.removeUnparsedNotificationsForActionId(notificationUnparsable.actionId).futureValue
+
+        repo.findNotificationsByActionId(notificationUnparsable.actionId).futureValue mustBe Seq.empty
+        repo.findNotificationsByActionId(notification_3.actionId).futureValue mustBe Seq(notification_3)
+      }
+    }
+
+    "there are multiple Notification for the given actionId" should {
+      "delete all matching notifications" in {
+        repo.save(notificationUnparsable).futureValue
+        repo.save(notificationUnparsable.copy(payload = "<something></else>")).futureValue
+        repo.save(notification_3).futureValue
+
+        repo.removeUnparsedNotificationsForActionId(notificationUnparsable.actionId).futureValue
+
+        repo.findNotificationsByActionId(notificationUnparsable.actionId).futureValue mustBe Seq.empty
+        repo.findNotificationsByActionId(notification_3.actionId).futureValue mustBe Seq(notification_3)
+      }
+    }
+
+    "there are multiple Notification for the given actionId, some of them have been parsed" should {
+      "delete only matching actionId notifications that are unparsed" in {
+        val parsedNotificationWithSameActionId = notification_3.copy(actionId = notificationUnparsable.actionId)
+
+        repo.save(notificationUnparsable).futureValue
+        repo.save(notificationUnparsable.copy(payload = "<something></else>")).futureValue
+        repo.save(parsedNotificationWithSameActionId).futureValue
+        repo.save(notification_3).futureValue
+
+        repo.removeUnparsedNotificationsForActionId(notificationUnparsable.actionId).futureValue
+
+        repo.findNotificationsByActionId(notificationUnparsable.actionId).futureValue mustBe Seq(parsedNotificationWithSameActionId)
+        repo.findNotificationsByActionId(notification_3.actionId).futureValue mustBe Seq(notification_3)
+      }
+    }
+  }
 }

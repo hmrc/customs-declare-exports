@@ -16,26 +16,20 @@
 
 package uk.gov.hmrc.exports.migrations
 
-import akka.actor.{ActorSystem, Cancellable}
 import com.github.cloudyrock.mongock.{Mongock, MongockBuilder}
 import com.google.inject.Singleton
 import com.mongodb.{MongoClient, MongoClientURI}
 import javax.inject.Inject
 import play.api.Logger
-import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.exports.config.{AppConfig, ExportsMigrationConfig}
-import uk.gov.hmrc.exports.mongock.MigrationExecutionContext
+import uk.gov.hmrc.exports.migrations.changelogs.notification.MakeParsedDetailsOptional
+import uk.gov.hmrc.exports.routines.{Routine, RoutinesExecutionContext}
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
 
 @Singleton
-class MigrationRunner @Inject()(
-  appConfig: AppConfig,
-  exportsMigrationConfig: ExportsMigrationConfig,
-  actorSystem: ActorSystem,
-  applicationLifecycle: ApplicationLifecycle
-)(implicit mec: MigrationExecutionContext) {
+class MigrationRoutine @Inject()(appConfig: AppConfig, exportsMigrationConfig: ExportsMigrationConfig)(implicit mec: RoutinesExecutionContext)
+    extends Routine {
 
   private val logger = Logger(this.getClass)
 
@@ -43,7 +37,7 @@ class MigrationRunner @Inject()(
   private val client = new MongoClient(uri)
   private val db = client.getDatabase(uri.getDatabase)
 
-  val migrationTask: Cancellable = actorSystem.scheduler.scheduleOnce(0.seconds) {
+  def execute(): Future[Unit] = Future {
     if (exportsMigrationConfig.isExportsMigrationEnabled) {
       logger.info("Exports Migration feature enabled. Starting migration with ExportsMigrationTool")
       migrateWithExportsMigrationTool()
@@ -52,11 +46,11 @@ class MigrationRunner @Inject()(
       migrateWithMongock()
     }
   }
-  applicationLifecycle.addStopHook(() => Future.successful(migrationTask.cancel()))
 
   private def migrateWithExportsMigrationTool(): Unit = {
     val lockManagerConfig = LockManagerConfig(lockMaxTries = 10, lockMaxWaitMillis = minutesToMillis(5), lockAcquiredForMillis = minutesToMillis(3))
     val migrationsRegistry = MigrationsRegistry()
+      .register(new MakeParsedDetailsOptional())
     val migrationTool = ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig)
 
     migrationTool.execute()
@@ -77,5 +71,4 @@ class MigrationRunner @Inject()(
     runner.execute()
     runner.close()
   }
-
 }

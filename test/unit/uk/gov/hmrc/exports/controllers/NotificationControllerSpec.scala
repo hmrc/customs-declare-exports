@@ -81,7 +81,21 @@ class NotificationControllerSpec
         val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
 
         status(result) must be(OK)
-        contentAsJson(result) must be(Json.toJson(Seq(notification)))
+        contentAsJson(result) must be(Json.toJson(Seq(notification))(Notification.FrontendFormat.notificationsWrites))
+      }
+    }
+
+    "not return notifications" when {
+      "those notifications have not had the details parsed from them" in {
+        withAuthorizedUser()
+        when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
+        when(notificationServiceMock.getNotifications(any()))
+          .thenReturn(Future.successful(Seq(notificationUnparsable)))
+
+        val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
+
+        status(result) must be(OK)
+        contentAsJson(result) must be(Json.toJson(Seq())(Notification.FrontendFormat.notificationsWrites))
       }
     }
 
@@ -130,7 +144,20 @@ class NotificationControllerSpec
 
         val result = routeGetAllNotificationsForUser()
 
-        contentAsJson(result) must equal(Json.toJson(notificationsFromService))
+        contentAsJson(result) must equal(Json.toJson(notificationsFromService)(Notification.FrontendFormat.notificationsWrites))
+      }
+
+      "return only those Notifications returned by Notification Service that have been parsed" in {
+        withAuthorizedUser()
+        val notificationsFromService = Seq(notification, notification_2, notification_3, notificationUnparsable)
+        when(notificationServiceMock.getAllNotificationsForUser(any()))
+          .thenReturn(Future.successful(notificationsFromService))
+
+        val result = routeGetAllNotificationsForUser()
+
+        contentAsJson(result) must equal(
+          Json.toJson(Seq(notification, notification_2, notification_3))(Notification.FrontendFormat.notificationsWrites)
+        )
       }
 
       "call Notification Service once" in {

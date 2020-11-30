@@ -53,14 +53,19 @@ abstract class MongoRepository private[migrations] (val mongoDatabase: MongoData
     }
 
   // Index is considered unique when:
-  // 1. Every uniqueField value is equal 1
-  // 2. "ns" field contains fullCollectionName
-  // 3. "unique" field is true
+  // 1. Name is "_id_" (these are implicitly unique https://docs.mongodb.com/manual/indexes/index.html#default-id-index)
+  // 2. Every uniqueField value is equal 1
+  // 3. "ns" field contains fullCollectionName
+  // 4. "unique" field is true
   private def isIndexUnique(index: Document): Boolean = {
     val key = index.get("key").asInstanceOf[Document]
+
+    if (index.getString("name").equals("_id_")) return true
+
     for (uniqueField <- uniqueFields) {
       if (key.getInteger(uniqueField, 0) != 1) return false
     }
+
     fullCollectionName == index.getString("ns") && index.getBoolean("unique", false)
   }
 

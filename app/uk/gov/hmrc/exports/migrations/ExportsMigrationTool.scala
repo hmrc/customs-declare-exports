@@ -80,7 +80,7 @@ class ExportsMigrationTool(
     this.enabled = enabled
 
   private def executeMigration(): Unit = {
-    logger.info("ExportsMigrationTool starting the data migration sequence..")
+    logger.info(s"ExportsMigrationTool starting the data migration sequence.. ${migrationsRegistry.migrations.size}")
 
     migrationsRegistry.migrations.sorted.foreach(executeIfNewOrRunAlways)
   }

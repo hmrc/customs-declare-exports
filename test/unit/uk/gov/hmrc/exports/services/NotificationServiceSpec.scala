@@ -17,6 +17,7 @@
 package uk.gov.hmrc.exports.services
 
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
+import java.time.format.DateTimeFormatter.ofPattern
 
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito.{times, verify, verifyNoInteractions, when}
@@ -29,13 +30,14 @@ import org.scalatestplus.mockito.MockitoSugar
 import reactivemongo.bson.{BSONDocument, BSONInteger, BSONString}
 import reactivemongo.core.errors.DetailedDatabaseException
 import testdata.ExportsTestData._
+import testdata.NotificationTestData
 import testdata.NotificationTestData._
 import testdata.SubmissionTestData._
 import uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 import uk.gov.hmrc.exports.models.PointerSectionType.{FIELD, SEQUENCE}
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
+import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationDetails}
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest, SubmissionStatus}
-import uk.gov.hmrc.exports.models.{Pointer, PointerSection}
+import uk.gov.hmrc.exports.models.{AuthToken, ConversationId, NotificationApiRequestHeaders, Pointer, PointerSection}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -134,8 +136,13 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
 
   "Get Notifications" should {
     val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", Seq(Action("id1", SubmissionRequest)))
-    val notifications =
-      Seq(Notification("id1", "mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), SubmissionStatus.ACCEPTED, Seq.empty, ""))
+    val notifications = Seq(
+      Notification(
+        "id1",
+        "",
+        Some(NotificationDetails("mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), SubmissionStatus.ACCEPTED, Seq.empty))
+      )
+    )
 
     "retrieve by conversation IDs" in new Test {
       when(notificationRepositoryMock.findNotificationsByActionIds(any[Seq[String]]))
@@ -175,10 +182,72 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
         verify(submissionRepositoryMock, times(1)).updateMrn(meq(actionId), meq(mrn))
       }
 
-      trait SaveHappyPathTest extends Test {
-        when(notificationRepositoryMock.save(any())).thenReturn(Future.successful(true))
-        when(submissionRepositoryMock.updateMrn(any(), any())).thenReturn(Future.successful(Some(submission)))
+      "call NotificationRepository but not SubmissionRepository when saving an unparsed notification" in new SaveHappyPathTest {
+        notificationService.save(notificationUnparsable).futureValue
+
+        verify(notificationRepositoryMock, times(1)).save(meq(notificationUnparsable))
+        verifyNoInteractions(submissionRepositoryMock)
       }
+    }
+
+    "NotificationService on reattemptParsingUnparsedNotifications" should {
+      "do nothing if no unparsed notifications exist" in new SaveHappyPathTest {
+        when(notificationRepositoryMock.findUnparsedNotifications())
+          .thenReturn(Future.successful(Seq(notification, notification_2)))
+
+        notificationService.reattemptParsingUnparsedNotifications().futureValue
+
+        verify(notificationRepositoryMock, times(0)).removeUnparsedNotificationsForActionId(any())
+        verify(notificationRepositoryMock, times(0)).save(any())
+      }
+
+      val dateTimeIssuedString = dateTimeIssued.format(ofPattern("yyyyMMddHHmmssX"))
+
+      "reparse single unparsed notification that still can not be parsed" in new SaveHappyPathTest {
+        when(notificationRepositoryMock.findUnparsedNotifications())
+          .thenReturn(Future.successful(Seq(notificationUnparsable)))
+
+        notificationService.reattemptParsingUnparsedNotifications().futureValue
+
+        verify(notificationRepositoryMock, times(0)).removeUnparsedNotificationsForActionId(any())
+        verify(notificationRepositoryMock, times(0)).save(any())
+      }
+
+      "reparse single unparsed notification that can now be parsed" in new SaveHappyPathTest {
+        val mrn = "GB1234567890"
+        val notificationNowParsable =
+          notificationUnparsable.copy(payload = NotificationTestData.exampleReceivedNotificationXML(mrn, dateTimeIssuedString).toString())
+
+        when(notificationRepositoryMock.findUnparsedNotifications())
+          .thenReturn(Future.successful(Seq(notificationNowParsable)))
+
+        notificationService.reattemptParsingUnparsedNotifications().futureValue
+
+        val inOrder: InOrder = Mockito.inOrder(notificationRepositoryMock)
+        inOrder.verify(notificationRepositoryMock, times(1)).save(any())
+        inOrder.verify(notificationRepositoryMock, times(1)).removeUnparsedNotificationsForActionId(meq(notificationUnparsable.actionId))
+      }
+
+      "reparse single unparsed notification record (who's payload contains many 'responses')" in new SaveHappyPathTest {
+        val mrn = "GB1234567890"
+        val notificationNowParsable = notificationUnparsable.copy(
+          payload = NotificationTestData.exampleNotificationWithMultipleResponsesXML(mrn, dateTimeIssuedString).toString()
+        )
+
+        when(notificationRepositoryMock.findUnparsedNotifications())
+          .thenReturn(Future.successful(Seq(notificationNowParsable)))
+
+        notificationService.reattemptParsingUnparsedNotifications().futureValue
+
+        val inOrder: InOrder = Mockito.inOrder(notificationRepositoryMock)
+        inOrder.verify(notificationRepositoryMock, times(2)).save(any())
+        inOrder.verify(notificationRepositoryMock, times(1)).removeUnparsedNotificationsForActionId(meq(notificationUnparsable.actionId))
+      }
+    }
+
+    trait SaveHappyPathTest extends Test {
+      when(notificationRepositoryMock.save(any())).thenReturn(Future.successful(true))
+      when(submissionRepositoryMock.updateMrn(any(), any())).thenReturn(Future.successful(Some(submission)))
     }
 
     "NotificationRepository on save returns false" should {
@@ -298,6 +367,28 @@ class NotificationServiceSpec extends WordSpec with MockitoSugar with ScalaFutur
       val pointer = notificationService.buildErrorPointers(inputXml)
 
       pointer mustBe Some(expectedPointer)
+    }
+  }
+
+  "Notification Service buildNotificationsFromRequest" should {
+    val headers = NotificationApiRequestHeaders(AuthToken(dummyToken), ConversationId(actionId))
+
+    "correctly parse a single notification from a well formed xml payload" in new Test {
+      val output = notificationService.buildNotificationsFromRequest(headers, exampleReceivedNotificationXML(mrn))
+      output.size mustBe 1
+      output.head.details.isDefined mustBe true
+    }
+
+    "correctly parse multiple notifications from a well formed xml payload" in new Test {
+      val output = notificationService.buildNotificationsFromRequest(headers, exampleNotificationWithMultipleResponsesXML(mrn))
+      output.size mustBe 2
+      output.foreach(_.details.isDefined mustBe true)
+    }
+
+    "return a single notification when the whole xml could not be successfully parsed" in new Test {
+      val output = notificationService.buildNotificationsFromRequest(headers, exampleNotificationWithUnparsableXML(mrn))
+      output.size mustBe 1
+      output.head.details.isDefined mustBe false
     }
   }
 }
