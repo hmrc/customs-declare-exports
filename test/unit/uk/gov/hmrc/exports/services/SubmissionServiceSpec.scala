@@ -28,7 +28,7 @@ import testdata.ExportsDeclarationBuilder
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
+import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationDetails}
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
@@ -123,7 +123,12 @@ class SubmissionServiceSpec
 
     "submit to the Dec API" when {
       val declaration = aDeclaration()
-      val notification = Notification("id", "mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneOffset.UTC), SubmissionStatus.ACCEPTED, Seq.empty, "xml")
+
+      val notification = Notification(
+        "id1",
+        "xml",
+        Some(NotificationDetails("mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneOffset.UTC), SubmissionStatus.ACCEPTED, Seq.empty))
+      )
       val submission = Submission(declaration, "lrn", "mrn")
 
       "valid declaration" in {

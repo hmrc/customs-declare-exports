@@ -22,13 +22,13 @@ import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import reactivemongo.core.errors.DatabaseException
-import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationError}
+import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationDetails, NotificationError}
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionStatus}
 import uk.gov.hmrc.exports.models.{NotificationApiRequestHeaders, Pointer, PointerSection, PointerSectionType}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.{Node, NodeSeq}
+import scala.xml.{Node, NodeSeq, XML}
 
 @Singleton
 class NotificationService @Inject()(submissionRepository: SubmissionRepository, notificationRepository: NotificationRepository)(
@@ -39,15 +39,23 @@ class NotificationService @Inject()(submissionRepository: SubmissionRepository, 
   private val databaseDuplicateKeyErrorCode = 11000
 
   def getNotifications(submission: Submission): Future[Seq[Notification]] = {
-    val conversationIds = submission.actions.map(_.id)
-    notificationRepository.findNotificationsByActionIds(conversationIds).map { notifications =>
-      notifications.map { notification =>
-        notification.copy(errors = notification.errors.map { error =>
-          val url = error.pointer.flatMap(WCOPointerMappingService.getUrlBasedOnErrorPointer)
-          error.addUrl(url)
-        })
-      }
+
+    def updateErrorUrls(notification: Notification) = {
+      val updatedDetails = notification.details.map(
+        details =>
+          details.copy(errors = details.errors.map { error =>
+            val url = error.pointer.flatMap(WCOPointerMappingService.getUrlBasedOnErrorPointer)
+            error.addUrl(url)
+          })
+      )
+
+      notification.copy(details = updatedDetails)
     }
+
+    val conversationIds = submission.actions.map(_.id)
+    notificationRepository
+      .findNotificationsByActionIds(conversationIds)
+      .map(_.map(updateErrorUrls(_)))
   }
 
   def getAllNotificationsForUser(eori: String): Future[Seq[Notification]] =
@@ -84,21 +92,26 @@ class NotificationService @Inject()(submissionRepository: SubmissionRepository, 
     }
 
   private def updateRelatedSubmission(notification: Notification): Future[Either[String, Unit]] =
-    try {
-      submissionRepository.updateMrn(notification.actionId, notification.mrn).map {
-        case None =>
-          logger.error(s"Could not find Submission to update for actionId: ${notification.actionId}")
-          Right((): Unit)
-        case Some(_) =>
-          Right((): Unit)
+    notification.details.map { details =>
+      try {
+        submissionRepository.updateMrn(notification.actionId, details.mrn).map {
+          case None =>
+            logger.error(s"Could not find Submission to update for actionId: ${notification.actionId}")
+            Right((): Unit)
+          case Some(_) =>
+            Right((): Unit)
+        }
+      } catch {
+        case exc: Throwable =>
+          logger.error(exc.getMessage)
+          Future.successful(Left(exc.getMessage))
       }
-    } catch {
-      case exc: Throwable =>
-        logger.error(exc.getMessage)
-        Future.successful(Left(exc.getMessage))
-    }
+    }.getOrElse(Future.successful(Right((): Unit)))
 
   def buildNotificationsFromRequest(notificationApiRequestHeaders: NotificationApiRequestHeaders, notificationXml: NodeSeq): Seq[Notification] =
+    parseNotificationsPayload(notificationApiRequestHeaders.conversationId.value, notificationXml)
+
+  private def parseNotificationsPayload(actionId: String, notificationXml: NodeSeq): Seq[Notification] =
     try {
       val responsesXml = notificationXml \ "Response"
 
@@ -117,19 +130,22 @@ class NotificationService @Inject()(submissionRepository: SubmissionRepository, 
         val errors = buildErrorsFromRequest(singleResponseXml)
 
         Notification(
-          actionId = notificationApiRequestHeaders.conversationId.value,
-          mrn = mrn,
-          dateTimeIssued = dateTimeIssued,
-          status = SubmissionStatus.retrieve(functionCode, nameCode),
-          errors = errors,
-          payload = notificationXml.toString
+          actionId = actionId,
+          payload = notificationXml.toString,
+          details = Some(
+            NotificationDetails(
+              mrn = mrn,
+              dateTimeIssued = dateTimeIssued,
+              status = SubmissionStatus.retrieve(functionCode, nameCode),
+              errors = errors
+            )
+          )
         )
       }
-
     } catch {
       case exc: Throwable =>
-        logger.error(s"There is a problem during parsing notification with exception: ${exc.getMessage}")
-        Seq.empty
+        logParseExceptionAtPagerDutyLevel(actionId, exc)
+        Seq(Notification(actionId = actionId, payload = notificationXml.toString, None))
     }
 
   def buildErrorsFromRequest(singleResponseXml: Node): Seq[NotificationError] =
@@ -178,4 +194,27 @@ class NotificationService @Inject()(submissionRepository: SubmissionRepository, 
     if (exportsPointer.isEmpty) logger.warn(s"Missing pointer mapping for [${wcoPointer}]")
     exportsPointer
   }
+
+  def reattemptParsingUnparsedNotifications(): Future[Unit] =
+    notificationRepository
+      .findUnparsedNotifications()
+      .map(_.foreach { unparsedNotification =>
+        try {
+          val notifications = parseNotificationsPayload(unparsedNotification.actionId, XML.loadString(unparsedNotification.payload))
+
+          for {
+            notification <- notifications.headOption
+            _ <- notification.details
+          } yield {
+            //successfully parsed the previously unparsable notification
+            saveAll(notifications)
+            notificationRepository.removeUnparsedNotificationsForActionId(unparsedNotification.actionId)
+          }
+        } catch {
+          case exc: Throwable => logParseExceptionAtPagerDutyLevel(unparsedNotification.actionId, exc)
+        }
+      })
+
+  private def logParseExceptionAtPagerDutyLevel(actionId: String, exc: Throwable) =
+    logger.warn(s"There was a problem during parsing notification with actionId=${actionId} exception thrown: ${exc.getMessage}")
 }

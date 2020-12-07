@@ -44,3 +44,8 @@ Inserted 1059 - 16 for GB1713564034
 Inserted 1471 - 412 for GB1026524884
 Inserted 2094 - 623 for GB1585987871
 ```
+
+### Feature flags
+To set a feature flag via system properties
+
+`sbt "run -Dmicroservice.features.exportsMigration=enabled"`

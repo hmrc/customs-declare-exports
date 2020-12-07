@@ -46,9 +46,9 @@ import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepos
 import uk.gov.hmrc.exports.services.WcoSubmissionService
 import uk.gov.hmrc.http.SessionKeys
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 trait CustomsExportsBaseSpec extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar with ScalaFutures with AuthTestSupport {

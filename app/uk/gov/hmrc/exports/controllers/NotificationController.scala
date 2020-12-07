@@ -25,6 +25,7 @@ import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 import uk.gov.hmrc.exports.services.{NotificationService, SubmissionService}
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification.FrontendFormat._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
@@ -46,7 +47,7 @@ class NotificationController @Inject()(
       case Some(submission) =>
         notificationsService
           .getNotifications(submission)
-          .map(notifications => Ok(notifications))
+          .map(notifications => Ok(notifications.filter(_.details.isDefined)))
       case _ => Future.successful(NotFound)
     }
   }
@@ -57,7 +58,7 @@ class NotificationController @Inject()(
     authorisedAction(bodyParsers.default) { implicit request =>
       notificationsService
         .getAllNotificationsForUser(request.eori.value)
-        .map(notifications => Ok(notifications))
+        .map(notifications => Ok(notifications.filter(_.details.isDefined)))
     }
 
   def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.migrations
+package uk.gov.hmrc.exports.routines
 
 import play.api.inject._
 
-class ExportsMigrationModule extends SimpleModule(bind[MigrationRunner].toSelf.eagerly())
+class RoutineRunnerModule extends SimpleModule(bind[RoutineRunner].toSelf.eagerly())

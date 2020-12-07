@@ -25,7 +25,7 @@ import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
-import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationError}
+import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationDetails, NotificationError}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import testdata.ExportsTestData._
 
@@ -148,6 +148,40 @@ object NotificationTestData {
       </Response>
     </MetaData>
 
+  def exampleNotificationWithUnparsableXML(
+    mrn: String,
+    dateTime_received: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX")),
+    dateTime_accepted: String = LocalDateTime.now().plusHours(1).atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
+  ): Elem =
+    <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+      <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
+      <WCOTypeName>RES</WCOTypeName>
+      <ResponsibleCountryCode/>
+      <ResponsibleAgencyName/>
+      <AgencyAssignedCustomizationCode/>
+      <AgencyAssignedCustomizationVersionCode/>
+      <Response>
+        <FunctionCode>02</FunctionCode>
+        <FunctionalReferenceID>1234555</FunctionalReferenceID>
+        <IssueDateTime>
+          <DateTimeString formatCode="304">{dateTime_received}</DateTimeString>
+        </IssueDateTime>
+        <Declaration>
+          <ID>{mrn}</ID>
+        </Declaration>
+      </Response>
+      <Response>
+        <FunctionCode>01</FunctionCode>
+        <FunctionalReferenceID>1234567890</FunctionalReferenceID>
+        <wrong>
+          <DateTimeString formatCode="304">{dateTime_accepted}</DateTimeString>
+        </wrong>
+        <Declaration>
+          <ID>{mrn}</ID>
+        </Declaration>
+      </Response>
+    </MetaData>
+
   def exampleNotificationInIncorrectFormatXML(
     mrn: String,
     dateTime: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
@@ -247,39 +281,29 @@ object NotificationTestData {
   val payload = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
   val payload_2 = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
   val payload_3 = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
+  val payload_4 = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
 
   def exampleNotification(conversationId: String = UUID.randomUUID().toString) = Notification(
     actionId = actionId,
-    mrn = mrn,
-    dateTimeIssued = dateTimeIssued,
-    status = SubmissionStatus.UNKNOWN,
-    errors = errors,
-    payload = payload
+    payload = payload,
+    details = Some(NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = SubmissionStatus.UNKNOWN, errors = errors))
   )
 
   val notification = Notification(
     actionId = actionId,
-    mrn = mrn,
-    dateTimeIssued = dateTimeIssued,
-    status = SubmissionStatus.UNKNOWN,
-    errors = errors,
-    payload = payload
+    payload = payload,
+    details = Some(NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = SubmissionStatus.UNKNOWN, errors = errors))
   )
   val notification_2 = Notification(
     actionId = actionId,
-    mrn = mrn,
-    dateTimeIssued = dateTimeIssued_2,
-    status = SubmissionStatus.UNKNOWN,
-    errors = errors,
-    payload = payload_2
+    payload = payload_2,
+    details = Some(NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = SubmissionStatus.UNKNOWN, errors = errors))
   )
   val notification_3 = Notification(
     actionId = actionId_2,
-    mrn = mrn,
-    dateTimeIssued = dateTimeIssued_3,
-    status = SubmissionStatus.UNKNOWN,
-    errors = Seq.empty,
-    payload = payload_3
+    payload = payload_3,
+    details = Some(NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = SubmissionStatus.UNKNOWN, errors = Seq.empty))
   )
 
+  val notificationUnparsable = Notification(actionId = actionId_4, payload = payload_4, details = None)
 }
