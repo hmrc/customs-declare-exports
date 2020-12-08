@@ -21,7 +21,7 @@ import play.api.libs.json.{JsNull, JsString, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.{BSONDocument, BSONObjectID}
+import reactivemongo.bson.{BSONDocument, BSONNull, BSONObjectID}
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.mongo.ReactiveRepository
@@ -40,11 +40,7 @@ class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: 
     Index(Seq("details.dateTimeIssued" -> IndexType.Ascending), name = Some("dateTimeIssuedIdx")),
     Index(Seq("details.mrn" -> IndexType.Ascending), name = Some("mrnIdx")),
     Index(Seq("actionId" -> IndexType.Ascending), name = Some("actionIdIdx")),
-    Index(
-      Seq("details" -> IndexType.Ascending),
-      name = Some("detailsMissingIdx"),
-      partialFilter = Some(BSONDocument("details" -> BSONDocument("$type" -> "object")))
-    )
+    Index(Seq("details" -> IndexType.Ascending), name = Some("detailsMissingIdx"), partialFilter = Some(BSONDocument("details" -> BSONNull)))
   )
 
   // TODO: Need to change this method to return Future[WriteResult].
