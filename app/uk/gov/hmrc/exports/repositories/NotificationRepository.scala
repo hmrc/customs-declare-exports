@@ -37,8 +37,8 @@ class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: 
     mongo().collection[JSONCollection](collectionName, failoverStrategy = RepositorySettings.failoverStrategy)
 
   override def indexes: Seq[Index] = Seq(
-    Index(Seq("details.dateTimeIssued" -> IndexType.Ascending), name = Some("dateTimeIssuedIdx")),
-    Index(Seq("details.mrn" -> IndexType.Ascending), name = Some("mrnIdx")),
+    Index(Seq("details.dateTimeIssued" -> IndexType.Ascending), name = Some("detailsDateTimeIssuedIdx")),
+    Index(Seq("details.mrn" -> IndexType.Ascending), name = Some("detailsMrnIdx")),
     Index(Seq("actionId" -> IndexType.Ascending), name = Some("actionIdIdx")),
     Index(Seq("details" -> IndexType.Ascending), name = Some("detailsMissingIdx"), partialFilter = Some(BSONDocument("details" -> BSONNull)))
   )

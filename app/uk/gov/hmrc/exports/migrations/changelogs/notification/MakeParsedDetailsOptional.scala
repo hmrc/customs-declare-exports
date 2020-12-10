@@ -70,6 +70,15 @@ class MakeParsedDetailsOptional extends MigrationDefinition {
         .append(ERRORS, errors)
     }
 
+    val collection = db.getCollection(collectionName)
+
+    val redundantIndexesToBeDeleted = Vector("dateTimeIssuedIdx", "mrnIdx")
+    collection.listIndexes().iterator().forEachRemaining { idx =>
+      val indexName = idx.getString("name")
+      if (redundantIndexesToBeDeleted.contains(indexName))
+        collection.dropIndex(indexName)
+    }
+
     getDocumentsToUpdate(db, query, queryBatchSize).map { document =>
       val documentId = document.get(INDEX_ID)
 
@@ -85,7 +94,7 @@ class MakeParsedDetailsOptional extends MigrationDefinition {
       case (requests, idx) =>
         logger.info(s"Updating batch no. $idx...")
 
-        db.getCollection(collectionName).bulkWrite(seqAsJavaList(requests))
+        collection.bulkWrite(seqAsJavaList(requests))
         logger.info(s"Updated batch no. $idx")
     }
 
