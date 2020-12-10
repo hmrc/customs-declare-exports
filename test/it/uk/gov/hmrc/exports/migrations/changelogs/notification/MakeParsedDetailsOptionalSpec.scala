@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.mongodb.{MongoClient, MongoClientURI}
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
+import org.mongodb.scala.model.{IndexOptions, Indexes}
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
@@ -57,6 +58,19 @@ class MakeParsedDetailsOptionalSpec extends WordSpec with MustMatchers with Guic
 
     "not change records that were not yet parsed" in {
       runTest(testDataUnparsableNotification, testDataUnparsableNotification)(changeLog.migrationFunction)
+    }
+
+    "drop the two decommissioned indexes" in {
+      val collection = getDeclarationsCollection(mongoDatabase)
+      collection.createIndex(Indexes.ascending("dateTimeIssued"), IndexOptions().name("dateTimeIssuedIdx"))
+      collection.createIndex(Indexes.ascending("mrn"), IndexOptions().name("mrnIdx"))
+
+      runTest(testDataBeforeChangeSet_1, testDataAfterChangeSet_1)(changeLog.migrationFunction)
+
+      val indexesToBeDeleted = Vector("dateTimeIssuedIdx", "mrnIdx")
+      collection.listIndexes().iterator().forEachRemaining { idx =>
+        indexesToBeDeleted.contains(idx.getString("name")) mustBe false
+      }
     }
   }
 
