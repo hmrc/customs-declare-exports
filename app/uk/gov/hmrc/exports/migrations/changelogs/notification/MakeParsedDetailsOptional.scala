@@ -51,11 +51,11 @@ class MakeParsedDetailsOptional extends MigrationDefinition {
     )
 
   override def migrationFunction(db: MongoDatabase): Unit = {
-    logger.info(s"Applying '${migrationInformation.id}' db migration...")
+    logger.info(s"Applying '${migrationInformation.id}' db migration... ")
 
     val query = or(exists(MRN), exists(DATE_TIME_ISSUED), exists(STATUS), exists(ERRORS))
     val queryBatchSize = 10
-    val updateBatchSize = 100
+    val updateBatchSize = 10
 
     def createDetailsSubDoc(document: Document) = {
       val mrn = document.get(MRN).asInstanceOf[String]
