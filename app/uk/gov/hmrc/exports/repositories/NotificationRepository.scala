@@ -40,7 +40,7 @@ class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: 
     Index(Seq("details.dateTimeIssued" -> IndexType.Ascending), name = Some("detailsDateTimeIssuedIdx")),
     Index(Seq("details.mrn" -> IndexType.Ascending), name = Some("detailsMrnIdx")),
     Index(Seq("actionId" -> IndexType.Ascending), name = Some("actionIdIdx")),
-    Index(Seq("details" -> IndexType.Ascending), name = Some("detailsMissingIdx"), partialFilter = Some(BSONDocument("details" -> BSONNull)))
+    Index(Seq("details" -> IndexType.Ascending), name = Some("detailsDocMissingIdx"), partialFilter = Some(BSONDocument("details" -> BSONNull)))
   )
 
   // TODO: Need to change this method to return Future[WriteResult].

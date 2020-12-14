@@ -51,7 +51,7 @@ class MakeParsedDetailsOptional extends MigrationDefinition {
     )
 
   override def migrationFunction(db: MongoDatabase): Unit = {
-    logger.info(s"Applying '${migrationInformation.id}' db migration... ")
+    logger.info(s"Applying '${migrationInformation.id}' db migration...  ")
 
     val query = or(exists(MRN), exists(DATE_TIME_ISSUED), exists(STATUS), exists(ERRORS))
     val queryBatchSize = 10
@@ -72,7 +72,7 @@ class MakeParsedDetailsOptional extends MigrationDefinition {
 
     val collection = db.getCollection(collectionName)
 
-    val redundantIndexesToBeDeleted = Vector("dateTimeIssuedIdx", "mrnIdx")
+    val redundantIndexesToBeDeleted = Vector("dateTimeIssuedIdx", "mrnIdx", "detailsMissingIdx")
     collection.listIndexes().iterator().forEachRemaining { idx =>
       val indexName = idx.getString("name")
       if (redundantIndexesToBeDeleted.contains(indexName))
