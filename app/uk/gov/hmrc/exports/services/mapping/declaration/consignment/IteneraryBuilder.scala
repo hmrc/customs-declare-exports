@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.declaration.consignment
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.{Country, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.Consignment.Itinerary
@@ -28,9 +28,10 @@ import scala.collection.JavaConverters._
 class IteneraryBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration.Consignment] {
 
   def buildThenAdd(model: ExportsDeclaration, consignment: Declaration.Consignment): Unit = {
-    val itineraries = model.locations.routingCountries.flatMap(_.code).zipWithIndex.map {
+    val itineraries = getRoutingCountries(model).flatMap(_.code).zipWithIndex.map {
       case (countryCode, idx) => createItenerary(idx, countryCode)
     }
+
     consignment.getItinerary.addAll(itineraries.toList.asJava)
   }
 
@@ -42,5 +43,13 @@ class IteneraryBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, 
     countryCodeType.setValue(country)
     itenerary.setRoutingCountryCode(countryCodeType)
     itenerary
+  }
+
+  private def getRoutingCountries(model: ExportsDeclaration): Seq[Country] = {
+    val gbCountry = Country(Some("GB"))
+    if (model.locations.routingCountries.isEmpty && model.locations.originationCountry == Some(gbCountry))
+      Seq(gbCountry)
+    else
+      model.locations.routingCountries
   }
 }
