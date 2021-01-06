@@ -69,6 +69,32 @@ class IteneraryBuilderSpec extends WordSpec with Matchers with ExportsDeclaratio
         consignment.getItinerary.get(0).getRoutingCountryCode.getValue shouldBe "GB"
         consignment.getItinerary.get(1).getRoutingCountryCode.getValue shouldBe "FR"
       }
+
+      "no routing countries are provided and origin is GB" in {
+        // Given
+        val model = aDeclaration(withRoutingCountries(Seq()), withOriginationCountry(Country(Some("GB"))))
+        val consignment = new Declaration.Consignment()
+
+        // When
+        new IteneraryBuilder().buildThenAdd(model, consignment)
+
+        // Then
+        consignment.getItinerary should have(size(1))
+        consignment.getItinerary.get(0).getSequenceNumeric.intValue shouldBe 0
+        consignment.getItinerary.get(0).getRoutingCountryCode.getValue shouldBe "GB"
+      }
+
+      "no routing countries are provided and origin is not GB" in {
+        // Given
+        val model = aDeclaration(withRoutingCountries(Seq()), withOriginationCountry(Country(Some("FR"))))
+        val consignment = new Declaration.Consignment()
+
+        // When
+        new IteneraryBuilder().buildThenAdd(model, consignment)
+
+        // Then
+        consignment.getItinerary should have(size(0))
+      }
     }
   }
 }
