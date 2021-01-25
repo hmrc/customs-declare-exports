@@ -183,8 +183,11 @@ trait ExportsDeclarationBuilder {
   def withoutDeclarationHolders(): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(declarationHoldersData = None))
 
-  def withDeclarationHolders(holders: DeclarationHolder*): ExportsDeclarationModifier =
-    cache => cache.copy(parties = cache.parties.copy(declarationHoldersData = Some(DeclarationHolders(holders))))
+  def withDeclarationHolders(holders: DeclarationHolder*): ExportsDeclarationModifier = {
+    val isRequired = Some(YesNoAnswer(if (holders.isEmpty) "No" else "Yes"))
+    cache =>
+      cache.copy(parties = cache.parties.copy(declarationHoldersData = Some(DeclarationHolders(holders, isRequired))))
+  }
 
   def withoutCarrierDetails(): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(carrierDetails = None))

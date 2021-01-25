@@ -81,7 +81,7 @@ object DeclarationAdditionalActor {
   implicit val format: OFormat[DeclarationAdditionalActor] = Json.format[DeclarationAdditionalActor]
 }
 
-case class DeclarationHolders(holders: Seq[DeclarationHolder])
+case class DeclarationHolders(holders: Seq[DeclarationHolder], isRequired: Option[YesNoAnswer])
 object DeclarationHolders {
   implicit val format: OFormat[DeclarationHolders] = Json.format[DeclarationHolders]
 }
