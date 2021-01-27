@@ -24,7 +24,7 @@ import play.api.inject.guice.GuiceableModule
 import stubs.WireMockRunner
 
 object IntegrationTestModule extends AbstractModule {
-  def configure(): Unit = ()
+  override def configure(): Unit = ()
 
   def asGuiceableModule: GuiceableModule = GuiceableModule.guiceable(this)
 }
