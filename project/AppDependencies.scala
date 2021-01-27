@@ -12,7 +12,6 @@ object AppDependencies {
     "uk.gov.hmrc"                    %%  "bootstrap-backend-play-27"    % "3.2.0",
     "uk.gov.hmrc"                    %%  "wco-dec"                      % "0.35.0",
     "uk.gov.hmrc"                    %%  "logback-json-logger"          % "4.8.0",
-    "com.typesafe.play"              %%  "play-json-joda"               % "2.6.13",
     "com.github.cloudyrock.mongock"  %   "mongock-core"                 % "2.0.2",
     "org.mongodb.scala"              %%  "mongo-scala-driver"           % "2.9.0",
     "com.github.tototoshi"           %%  "scala-csv"                    % "1.3.6"
