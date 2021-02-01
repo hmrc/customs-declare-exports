@@ -31,13 +31,15 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import testdata.NotificationTestData._
+import testdata.notifications.NotificationTestData._
 import testdata.SubmissionTestData.submission
+import testdata.notifications.ExampleXmlAndNotificationDetailsPair
+import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
 import uk.gov.hmrc.exports.base.AuthTestSupport
 import uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildNotificationServiceMock, buildSubmissionServiceMock}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
-import uk.gov.hmrc.exports.services.{NotificationService, SubmissionService}
+import uk.gov.hmrc.exports.services.{NotificationFactory, NotificationService, SubmissionService}
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 
 import scala.concurrent.Future
@@ -57,20 +59,25 @@ class NotificationControllerSpec
 
   private val notificationServiceMock: NotificationService = buildNotificationServiceMock
   private val submissionService: SubmissionService = buildSubmissionServiceMock
+  private val notificationFactory: NotificationFactory = mock[NotificationFactory]
+
   override lazy val app: Application = GuiceApplicationBuilder()
     .overrides(
       bind[AuthConnector].to(mockAuthConnector),
       bind[NotificationService].to(notificationServiceMock),
-      bind[SubmissionService].to(submissionService)
+      bind[SubmissionService].to(submissionService),
+      bind[NotificationFactory].to(notificationFactory)
     )
     .build()
 
   override def afterEach(): Unit = {
-    reset(mockAuthConnector, notificationServiceMock)
+    reset(mockAuthConnector, notificationServiceMock, notificationFactory)
 
     super.afterEach()
   }
+
   "GET /:id" should {
+
     "return 200" when {
       "submission found" in {
         withAuthorizedUser()
@@ -90,7 +97,7 @@ class NotificationControllerSpec
         withAuthorizedUser()
         when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
         when(notificationServiceMock.getNotifications(any()))
-          .thenReturn(Future.successful(Seq(notificationUnparsable)))
+          .thenReturn(Future.successful(Seq(notificationUnparsed)))
 
         val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
 
@@ -149,7 +156,7 @@ class NotificationControllerSpec
 
       "return only those Notifications returned by Notification Service that have been parsed" in {
         withAuthorizedUser()
-        val notificationsFromService = Seq(notification, notification_2, notification_3, notificationUnparsable)
+        val notificationsFromService = Seq(notification, notification_2, notification_3, notificationUnparsed)
         when(notificationServiceMock.getAllNotificationsForUser(any()))
           .thenReturn(Future.successful(notificationsFromService))
 
@@ -201,7 +208,7 @@ class NotificationControllerSpec
 
       "return Accepted status" in {
         withAuthorizedUser()
-        when(notificationServiceMock.saveAll(any())).thenReturn(Future.successful(Right((): Unit)))
+        when(notificationServiceMock.save(any())).thenReturn(Future.successful(Right((): Unit)))
 
         val result = routePostSaveNotification()
 
@@ -210,33 +217,31 @@ class NotificationControllerSpec
 
       "call NotificationService once" in {
         withAuthorizedUser()
-        when(notificationServiceMock.saveAll(any())).thenReturn(Future.successful(Right((): Unit)))
+        when(notificationServiceMock.save(any())).thenReturn(Future.successful(Right((): Unit)))
 
         routePostSaveNotification().futureValue
 
-        verify(notificationServiceMock, times(1)).saveAll(any())
+        verify(notificationServiceMock).save(any())
       }
 
       "call NotificationService once, even if payload contains more Response elements" in {
         withAuthorizedUser()
-        when(notificationServiceMock.saveAll(any())).thenReturn(Future.successful(Right((): Unit)))
+        when(notificationServiceMock.save(any())).thenReturn(Future.successful(Right((): Unit)))
 
-        routePostSaveNotification(xmlBody = exampleNotificationWithMultipleResponsesXML(mrn)).futureValue
+        routePostSaveNotification(xmlBody = exampleNotificationWithMultipleResponses(mrn).asXml).futureValue
 
-        verify(notificationServiceMock, times(1)).saveAll(any())
+        verify(notificationServiceMock).save(any())
       }
 
       "call NotificationService with the same amount of Notifications as it is in the payload" in {
         withAuthorizedUser()
-        when(notificationServiceMock.saveAll(any())).thenReturn(Future.successful(Right((): Unit)))
+        when(notificationServiceMock.save(any())).thenReturn(Future.successful(Right((): Unit)))
+        when(notificationFactory.buildNotifications(any(), any())).thenReturn(Seq(notification, notification_2))
 
-        when(notificationServiceMock.buildNotificationsFromRequest(any(), any()))
-          .thenReturn(Seq(notification, notification_2))
-
-        routePostSaveNotification(xmlBody = exampleNotificationWithMultipleResponsesXML(mrn)).futureValue
+        routePostSaveNotification(xmlBody = exampleNotificationWithMultipleResponses(mrn).asXml).futureValue
 
         val notificationsCaptor: ArgumentCaptor[Seq[Notification]] = ArgumentCaptor.forClass(classOf[Seq[Notification]])
-        verify(notificationServiceMock, times(1)).saveAll(notificationsCaptor.capture())
+        verify(notificationServiceMock).save(notificationsCaptor.capture())
 
         notificationsCaptor.getValue.length must equal(2)
       }
@@ -246,7 +251,7 @@ class NotificationControllerSpec
 
       "return InternalServerError" in {
         withAuthorizedUser()
-        when(notificationServiceMock.saveAll(any())).thenReturn(Future.successful(Left("Error message")))
+        when(notificationServiceMock.save(any())).thenReturn(Future.successful(Left("Error message")))
 
         val result = routePostSaveNotification()
 
@@ -254,7 +259,7 @@ class NotificationControllerSpec
       }
     }
 
-    def routePostSaveNotification(headers: Map[String, String] = validHeaders, xmlBody: Elem = exampleRejectNotificationXML(mrn)): Future[Result] =
+    def routePostSaveNotification(headers: Map[String, String] = validHeaders, xmlBody: Elem = exampleRejectNotification(mrn).asXml): Future[Result] =
       route(
         app,
         FakeRequest(POST, saveNotificationUri)

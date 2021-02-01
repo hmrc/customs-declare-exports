@@ -23,7 +23,7 @@ import org.mockito.ArgumentMatchers._
 
 import scala.concurrent.Future
 
-import testdata.NotificationTestData._
+import testdata.notifications.NotificationTestData._
 
 object `Notification came earlier than request is finished` extends Precondition {
   override def name: String = "Notification came earlier than request is finished"
