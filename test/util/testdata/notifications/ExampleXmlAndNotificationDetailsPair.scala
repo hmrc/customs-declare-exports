@@ -14,43 +14,31 @@
  * limitations under the License.
  */
 
-package testdata
+package testdata.notifications
 
+import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatter.ofPattern
-import java.time.temporal.ChronoUnit.MINUTES
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
-import java.util.UUID
 
-import play.api.http.{ContentTypes, HeaderNames}
-import play.api.mvc.Codec
-import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
-import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
-import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationDetails, NotificationError}
+import uk.gov.hmrc.exports.models.{Pointer, PointerSection}
+import uk.gov.hmrc.exports.models.PointerSectionType.{FIELD, SEQUENCE}
+import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, NotificationError}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
-import testdata.ExportsTestData._
 
-import scala.util.Random
 import scala.xml.Elem
 
-object NotificationTestData {
+final case class ExampleXmlAndNotificationDetailsPair(asXml: Elem = <empty/>, asDomainModel: Seq[NotificationDetails] = Seq.empty)
+    extends ExampleXmlAndDomainModelPair[Seq[NotificationDetails]]
 
-  val dummyAuthToken: String =
-    "Bearer BXQ3/Treo4kQCZvVcCqKPlwxRN4RA9Mb5RF8fFxOuwG5WSg+S+Rsp9Nq998Fgg0HeNLXL7NGwEAIzwM6vuA6YYhRQnTRFa" +
-      "Bhrp+1w+kVW8g1qHGLYO48QPWuxdM87VMCZqxnCuDoNxVn76vwfgtpNj0+NwfzXV2Zc12L2QGgF9H9KwIkeIPK/mMlBESjue4V]"
+object ExampleXmlAndNotificationDetailsPair {
 
-  val validXML: Elem = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
-    <wstxns1:Response xmlns:wstxns1="urn:wco:datamodel:WCO:RES-DMS:2"></wstxns1:Response>
-  </MetaData>
+  private val formatter304 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
 
-  val movementXml: Elem = <inventoryLinkingMovementRequest xmlns="http://gov.uk/customs/inventoryLinking/v1">
-    <messageCode>EAL</messageCode>
-  </inventoryLinkingMovementRequest>
-
-  def exampleReceivedNotificationXML(
+  def exampleReceivedNotification(
     mrn: String,
-    dateTime: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
-  ): Elem =
-    <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+    dateTime: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(formatter304)
+  ): ExampleXmlAndNotificationDetailsPair = ExampleXmlAndNotificationDetailsPair(
+    asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
       <WCOTypeName>RES</WCOTypeName>
       <ResponsibleCountryCode/>
@@ -67,13 +55,23 @@ object NotificationTestData {
           <ID>{mrn}</ID>
         </Declaration>
       </Response>
-    </MetaData>
+    </MetaData>,
+    asDomainModel = Seq(
+      NotificationDetails(
+        mrn = mrn,
+        dateTimeIssued = ZonedDateTime.of(LocalDateTime.parse(dateTime, formatter304), ZoneId.of("UTC")),
+        status = SubmissionStatus.RECEIVED,
+        errors = Seq.empty
+      )
+    )
+  )
 
-  def exampleRejectNotificationXML(
+  //noinspection ScalaStyle
+  def exampleRejectNotification(
     mrn: String,
-    dateTime: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
-  ): Elem =
-    <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+    dateTime: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(formatter304)
+  ): ExampleXmlAndNotificationDetailsPair = ExampleXmlAndNotificationDetailsPair(
+    asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
       <WCOTypeName>RES</WCOTypeName>
       <ResponsibleCountryCode/>
@@ -87,7 +85,7 @@ object NotificationTestData {
           <DateTimeString formatCode="304">{dateTime}</DateTimeString>
         </IssueDateTime>
         <Error>
-          <ValidationCode>CDS12050</ValidationCode>
+          <ValidationCode>CDS10020</ValidationCode>
           <Pointer>
             <DocumentSectionCode>42A</DocumentSectionCode>
           </Pointer>
@@ -99,8 +97,9 @@ object NotificationTestData {
             <DocumentSectionCode>68A</DocumentSectionCode>
           </Pointer>
           <Pointer>
-            <DocumentSectionCode>70A</DocumentSectionCode>
-            <TagID>166</TagID>
+            <SequenceNumeric>2</SequenceNumeric>
+            <DocumentSectionCode>02A</DocumentSectionCode>
+            <TagID>360</TagID>
           </Pointer>
         </Error>
         <Declaration>
@@ -112,14 +111,39 @@ object NotificationTestData {
           <VersionID>1</VersionID>
         </Declaration>
       </Response>
-    </MetaData>
+    </MetaData>,
+    asDomainModel = Seq(
+      NotificationDetails(
+        mrn = mrn,
+        dateTimeIssued = ZonedDateTime.of(LocalDateTime.parse(dateTime, formatter304), ZoneId.of("UTC")),
+        status = SubmissionStatus.REJECTED,
+        errors = Seq(
+          NotificationError(
+            validationCode = "CDS10020",
+            pointer = Some(
+              Pointer(
+                Seq(
+                  PointerSection("declaration", FIELD),
+                  PointerSection("items", FIELD),
+                  PointerSection("1", SEQUENCE),
+                  PointerSection("documentProduced", FIELD),
+                  PointerSection("2", SEQUENCE),
+                  PointerSection("documentStatus", FIELD)
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  )
 
-  def exampleNotificationWithMultipleResponsesXML(
+  def exampleNotificationWithMultipleResponses(
     mrn: String,
-    dateTime_received: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX")),
-    dateTime_accepted: String = LocalDateTime.now().plusHours(1).atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
-  ): Elem =
-    <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+    dateTime_received: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(formatter304),
+    dateTime_accepted: String = LocalDateTime.now().plusHours(1).atZone(ZoneId.of("UCT")).format(formatter304)
+  ): ExampleXmlAndNotificationDetailsPair = ExampleXmlAndNotificationDetailsPair(
+    asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
       <WCOTypeName>RES</WCOTypeName>
       <ResponsibleCountryCode/>
@@ -146,14 +170,39 @@ object NotificationTestData {
           <ID>{mrn}</ID>
         </Declaration>
       </Response>
-    </MetaData>
+    </MetaData>,
+    asDomainModel = Seq(
+      NotificationDetails(
+        mrn = mrn,
+        dateTimeIssued = ZonedDateTime.of(LocalDateTime.parse(dateTime_received, formatter304), ZoneId.of("UTC")),
+        status = SubmissionStatus.RECEIVED,
+        errors = Seq.empty
+      ),
+      NotificationDetails(
+        mrn = mrn,
+        dateTimeIssued = ZonedDateTime.of(LocalDateTime.parse(dateTime_accepted, formatter304), ZoneId.of("UTC")),
+        status = SubmissionStatus.ACCEPTED,
+        errors = Seq.empty
+      )
+    )
+  )
 
-  def exampleNotificationWithUnparsableXML(
+  def exampleEmptyNotification(mrn: String): ExampleXmlAndNotificationDetailsPair =
+    ExampleXmlAndNotificationDetailsPair(asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+      <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
+      <WCOTypeName>RES</WCOTypeName>
+      <ResponsibleCountryCode/>
+      <ResponsibleAgencyName/>
+      <AgencyAssignedCustomizationCode/>
+      <AgencyAssignedCustomizationVersionCode/>
+    </MetaData>, asDomainModel = Seq.empty)
+
+  def exampleUnparsableNotification(
     mrn: String,
-    dateTime_received: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX")),
-    dateTime_accepted: String = LocalDateTime.now().plusHours(1).atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
-  ): Elem =
-    <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+    dateTime_received: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(formatter304),
+    dateTime_accepted: String = LocalDateTime.now().plusHours(1).atZone(ZoneId.of("UCT")).format(formatter304)
+  ): ExampleXmlAndNotificationDetailsPair =
+    ExampleXmlAndNotificationDetailsPair(asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
       <WCOTypeName>RES</WCOTypeName>
       <ResponsibleCountryCode/>
@@ -180,13 +229,13 @@ object NotificationTestData {
           <ID>{mrn}</ID>
         </Declaration>
       </Response>
-    </MetaData>
+    </MetaData>, asDomainModel = Seq.empty)
 
   def exampleNotificationInIncorrectFormatXML(
     mrn: String,
     dateTime: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
-  ): Elem =
-    <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+  ): ExampleXmlAndNotificationDetailsPair =
+    ExampleXmlAndNotificationDetailsPair(asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
       <WCOTypeName>RES</WCOTypeName>
       <ResponsibleCountryCode/>
@@ -229,81 +278,6 @@ object NotificationTestData {
           <VersionID>1</VersionID>
         </Declaration>
       </Response>
-    </MetaData>
+    </MetaData>, asDomainModel = Seq.empty)
 
-  val validHeaders: Map[String, String] = Map(
-    "X-CDS-Client-ID" -> "1234",
-    CustomsHeaderNames.XConversationIdName -> "XConv1",
-    CustomsHeaderNames.Authorization -> dummyAuthToken,
-    CustomsHeaderNames.XEoriIdentifierHeaderName -> "eori1",
-    HeaderNames.ACCEPT -> s"application/vnd.hmrc.${2.0}+xml",
-    HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
-  )
-
-  val headersWithoutEori: Map[String, String] = Map(
-    "X-CDS-Client-ID" -> "1234",
-    CustomsHeaderNames.XConversationIdName -> "XConv1",
-    CustomsHeaderNames.Authorization -> dummyAuthToken,
-    HeaderNames.ACCEPT -> s"application/vnd.hmrc.${2.0}+xml",
-    HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
-  )
-
-  val headersWithoutAuthorisation: Map[String, String] = Map(
-    "X-CDS-Client-ID" -> "1234",
-    CustomsHeaderNames.XConversationIdName -> "XConv1",
-    HeaderNames.ACCEPT -> "",
-    HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8)
-  )
-
-  val headersWithoutContentType: Map[String, String] = Map(
-    "X-CDS-Client-ID" -> "1234",
-    CustomsHeaderNames.XConversationIdName -> "XConv1",
-    HeaderNames.ACCEPT -> s"application/vnd.hmrc.${2.0}+xml",
-    HeaderNames.CONTENT_TYPE -> ""
-  )
-
-  /**************************************************************************/
-  private lazy val functionCodes: Seq[String] =
-    Seq("01", "02", "03", "05", "06", "07", "08", "09", "10", "11", "16", "17", "18")
-  private lazy val functionCodesRandomised: Iterator[String] = Random.shuffle(functionCodes).toIterator
-  private def randomResponseFunctionCode: String = functionCodesRandomised.next()
-
-  val dateTimeIssued: ZonedDateTime = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"))
-  val dateTimeIssued_2: ZonedDateTime = dateTimeIssued.plus(3, MINUTES)
-  val dateTimeIssued_3: ZonedDateTime = dateTimeIssued_2.plus(3, MINUTES)
-  val functionCode: String = randomResponseFunctionCode
-  val functionCode_2: String = randomResponseFunctionCode
-  val functionCode_3: String = randomResponseFunctionCode
-  val nameCode: Option[String] = None
-  val errors = Seq(NotificationError(validationCode = "CDS12056", pointer = Some(Pointer(Seq(PointerSection("42A", PointerSectionType.FIELD))))))
-
-  private val payloadExemplaryLength = 300
-  val payload = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
-  val payload_2 = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
-  val payload_3 = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
-  val payload_4 = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
-
-  def exampleNotification(conversationId: String = UUID.randomUUID().toString) = Notification(
-    actionId = actionId,
-    payload = payload,
-    details = Some(NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = SubmissionStatus.UNKNOWN, errors = errors))
-  )
-
-  val notification = Notification(
-    actionId = actionId,
-    payload = payload,
-    details = Some(NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = SubmissionStatus.UNKNOWN, errors = errors))
-  )
-  val notification_2 = Notification(
-    actionId = actionId,
-    payload = payload_2,
-    details = Some(NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = SubmissionStatus.UNKNOWN, errors = errors))
-  )
-  val notification_3 = Notification(
-    actionId = actionId_2,
-    payload = payload_3,
-    details = Some(NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = SubmissionStatus.UNKNOWN, errors = Seq.empty))
-  )
-
-  val notificationUnparsable = Notification(actionId = actionId_4, payload = payload_4, details = None)
 }

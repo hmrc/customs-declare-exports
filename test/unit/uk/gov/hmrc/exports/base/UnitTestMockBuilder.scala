@@ -25,7 +25,8 @@ import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.{NotificationService, SubmissionService}
+import uk.gov.hmrc.exports.services.SubmissionService
+import uk.gov.hmrc.exports.services.notifications.NotificationService
 
 import scala.concurrent.Future
 
@@ -77,7 +78,6 @@ object UnitTestMockBuilder extends MockitoSugar {
     val notificationServiceMock: NotificationService = mock[NotificationService]
     when(notificationServiceMock.getAllNotificationsForUser(any())).thenReturn(Future.successful(Seq.empty))
     when(notificationServiceMock.getNotifications(any())).thenReturn(Future.successful(Seq.empty))
-    when(notificationServiceMock.saveAll(any())).thenReturn(Future.successful(Left("")))
     when(notificationServiceMock.save(any())).thenReturn(Future.successful(Left("")))
     notificationServiceMock
   }

@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.routines
 
 import javax.inject.Inject
 import play.api.Logger
-import uk.gov.hmrc.exports.services.NotificationService
+import uk.gov.hmrc.exports.services.notifications.NotificationService
 
 import scala.concurrent.Future
 

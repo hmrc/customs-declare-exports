@@ -15,15 +15,19 @@
  */
 
 package uk.gov.hmrc.exports.models.declaration.submissions
+
 import play.api.libs.json.Format
 import uk.gov.hmrc.exports.util.EnumJson
 
 object SubmissionStatus extends Enumeration {
   type SubmissionStatus = Value
+
   implicit val format: Format[SubmissionStatus.Value] = EnumJson.format(SubmissionStatus)
+
   val PENDING, REQUESTED_CANCELLATION, ACCEPTED, RECEIVED, REJECTED, UNDERGOING_PHYSICAL_CHECK, ADDITIONAL_DOCUMENTS_REQUIRED, AMENDED, RELEASED,
   CLEARED, CANCELLED, CUSTOMS_POSITION_GRANTED, CUSTOMS_POSITION_DENIED, GOODS_HAVE_EXITED_THE_COMMUNITY, DECLARATION_HANDLED_EXTERNALLY,
   AWAITING_EXIT_RESULTS, UNKNOWN = Value
+
   private val codesMap: Map[String, SubmissionStatus] = Map(
     "Pending" -> PENDING,
     "Cancellation Requested" -> REQUESTED_CANCELLATION,

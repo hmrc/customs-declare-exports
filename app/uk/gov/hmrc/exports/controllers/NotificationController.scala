@@ -24,8 +24,9 @@ import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
-import uk.gov.hmrc.exports.services.{NotificationService, SubmissionService}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification.FrontendFormat._
+import uk.gov.hmrc.exports.services.SubmissionService
+import uk.gov.hmrc.exports.services.notifications.{NotificationFactory, NotificationService}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
@@ -37,6 +38,7 @@ class NotificationController @Inject()(
   metrics: ExportsMetrics,
   notificationsService: NotificationService,
   submissionService: SubmissionService,
+  notificationFactory: NotificationFactory,
   bodyParsers: PlayBodyParsers,
   cc: ControllerComponents
 )(implicit executionContext: ExecutionContext)
@@ -66,9 +68,9 @@ class NotificationController @Inject()(
 
     headerValidator.validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
       case Right(extractedHeaders) =>
-        val allNotifications = notificationsService.buildNotificationsFromRequest(extractedHeaders, request.body)
+        val allNotifications = notificationFactory.buildNotifications(extractedHeaders.conversationId.value, request.body)
 
-        notificationsService.saveAll(allNotifications).map {
+        notificationsService.save(allNotifications).map {
           case Right(_) =>
             metrics.incrementCounter(notificationMetric)
             timer.stop()
