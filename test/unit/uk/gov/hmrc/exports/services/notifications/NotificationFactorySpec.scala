@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services
+package uk.gov.hmrc.exports.services.notifications
 
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito._
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsTestData.{actionId, mrn}
-import testdata.notifications.ExampleXmlAndNotificationDetailsPair
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
 import testdata.notifications.NotificationTestData._
 

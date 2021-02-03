@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services
+package uk.gov.hmrc.exports.services.notifications
 
 import java.time.format.DateTimeFormatter.ofPattern
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
@@ -30,7 +30,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import reactivemongo.bson.{BSONDocument, BSONInteger, BSONString}
 import reactivemongo.core.errors.DetailedDatabaseException
 import testdata.ExportsTestData._
-import testdata.SubmissionTestData._
+import testdata.SubmissionTestData.{submission, _}
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
 import testdata.notifications.NotificationTestData._

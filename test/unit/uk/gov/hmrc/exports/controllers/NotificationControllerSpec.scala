@@ -31,15 +31,15 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import testdata.notifications.NotificationTestData._
 import testdata.SubmissionTestData.submission
-import testdata.notifications.ExampleXmlAndNotificationDetailsPair
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
+import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
 import uk.gov.hmrc.exports.base.AuthTestSupport
 import uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildNotificationServiceMock, buildSubmissionServiceMock}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
-import uk.gov.hmrc.exports.services.{NotificationFactory, NotificationService, SubmissionService}
+import uk.gov.hmrc.exports.services.SubmissionService
+import uk.gov.hmrc.exports.services.notifications.{NotificationFactory, NotificationService}
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 
 import scala.concurrent.Future

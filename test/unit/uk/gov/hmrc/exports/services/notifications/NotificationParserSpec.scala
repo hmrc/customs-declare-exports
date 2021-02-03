@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services
+package uk.gov.hmrc.exports.services.notifications
 
 import org.scalatest.{MustMatchers, WordSpec}
 import testdata.ExportsTestData.mrn

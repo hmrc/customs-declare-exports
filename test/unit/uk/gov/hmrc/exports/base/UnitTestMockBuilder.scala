@@ -25,7 +25,8 @@ import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.{NotificationService, SubmissionService}
+import uk.gov.hmrc.exports.services.SubmissionService
+import uk.gov.hmrc.exports.services.notifications.NotificationService
 
 import scala.concurrent.Future
 

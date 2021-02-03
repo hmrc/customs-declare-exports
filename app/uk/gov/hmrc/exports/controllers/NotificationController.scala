@@ -24,8 +24,9 @@ import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
-import uk.gov.hmrc.exports.services.{NotificationFactory, NotificationService, SubmissionService}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification.FrontendFormat._
+import uk.gov.hmrc.exports.services.SubmissionService
+import uk.gov.hmrc.exports.services.notifications.{NotificationFactory, NotificationService}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
