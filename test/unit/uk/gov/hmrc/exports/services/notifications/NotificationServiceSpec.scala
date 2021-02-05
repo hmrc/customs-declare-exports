@@ -24,8 +24,6 @@ import scala.xml.NodeSeq
 
 import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
 import org.mockito.Mockito._
-import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
 import org.mockito.{ArgumentCaptor, InOrder, Mockito}
 import reactivemongo.bson.{BSONDocument, BSONInteger, BSONString}
 import reactivemongo.core.errors.DetailedDatabaseException
@@ -41,8 +39,6 @@ import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, S
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 
 class NotificationServiceSpec extends UnitSpec {
-
-  import NotificationServiceSpec._
 
   private val submissionRepository: SubmissionRepository = buildSubmissionRepositoryMock
   private val notificationRepository: NotificationRepository = buildNotificationRepositoryMock
@@ -221,24 +217,7 @@ class NotificationServiceSpec extends UnitSpec {
       }
     }
 
-    "NotificationRepository on save throws DatabaseException" should {
-
-      "return Either.Right" in {
-        when(notificationRepository.save(any())).thenAnswer(duplicateKeyNotificationsDatabaseExceptionExampleAnswer)
-
-        notificationService.save(Seq(notification)).futureValue must equal(Right((): Unit))
-      }
-
-      "not call SubmissionRepository" in {
-        when(notificationRepository.save(any())).thenAnswer(duplicateKeyNotificationsDatabaseExceptionExampleAnswer)
-
-        notificationService.save(Seq(notification)).futureValue
-
-        verifyNoInteractions(submissionRepository)
-      }
-    }
-
-    "NotificationRepository on save throws exception other than DatabaseException" should {
+    "NotificationRepository on save throws exception" should {
 
       "return Either.Left with exception message" in {
         val exceptionMsg = "Test Exception message"
@@ -338,20 +317,4 @@ class NotificationServiceSpec extends UnitSpec {
     }
   }
 
-}
-
-object NotificationServiceSpec {
-  val DuplicateKeyDatabaseErrorCode = 11000
-  val DuplicateKeyDatabaseErrorMessage: String =
-    "E11000 duplicate key error collection: customs-declare-exports.notifications index: " +
-      "dateTimeIssuedIdx dup key: { : \"20190514123456Z\" }"
-
-  val duplicateKeyNotificationsDatabaseExceptionExample = new DetailedDatabaseException(
-    BSONDocument("errmsg" -> BSONString(DuplicateKeyDatabaseErrorMessage), "code" -> BSONInteger(DuplicateKeyDatabaseErrorCode))
-  )
-
-  val duplicateKeyNotificationsDatabaseExceptionExampleAnswer: Answer[Future[Boolean]] = new Answer[Future[Boolean]]() {
-    override def answer(invocation: InvocationOnMock): Future[Boolean] =
-      throw duplicateKeyNotificationsDatabaseExceptionExample
-  }
 }

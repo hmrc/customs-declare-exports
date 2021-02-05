@@ -18,7 +18,6 @@ package uk.gov.hmrc.exports.services.notifications
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
@@ -34,11 +33,10 @@ class NotificationService @Inject()(
 )(implicit executionContext: ExecutionContext) {
 
   private val logger = Logger(this.getClass)
-  private val databaseDuplicateKeyErrorCode = 11000
 
   def getNotifications(submission: Submission): Future[Seq[Notification]] = {
 
-    def updateErrorUrls(notification: Notification) = {
+    def updateErrorUrls(notification: Notification): Notification = {
       val updatedDetails = notification.details.map(
         details =>
           details.copy(errors = details.errors.map { error =>
@@ -80,9 +78,6 @@ class NotificationService @Inject()(
         case true  => updateRelatedSubmission(notification)
       }
     } catch {
-      case exc: DatabaseException if exc.code.contains(databaseDuplicateKeyErrorCode) =>
-        logger.error(s"Received duplicated notification with actionId: ${notification.actionId}")
-        Future.successful(Right((): Unit))
       case exc: Throwable =>
         logger.error(exc.getMessage)
         Future.successful(Left(exc.getMessage))
