@@ -17,15 +17,14 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import org.mockito.Mockito.when
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.Address
 import uk.gov.hmrc.exports.models.{Country, DeclarationType}
 import uk.gov.hmrc.exports.services.CountriesService
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class ConsignmentConsignorBuilderSpec extends WordSpec with MockitoSugar with Matchers with ExportsDeclarationBuilder {
+class ConsignmentConsignorBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   val mockCountriesService = mock[CountriesService]
   when(mockCountriesService.allCountries)
@@ -42,9 +41,9 @@ class ConsignmentConsignorBuilderSpec extends WordSpec with MockitoSugar with Ma
 
           builder.buildThenAdd(model, consignment)
 
-          consignment.getConsignor.getID.getValue should be("9GB1234567ABCDEG")
-          consignment.getConsignor.getName should be(null)
-          consignment.getConsignor.getAddress should be(null)
+          consignment.getConsignor.getID.getValue must be("9GB1234567ABCDEG")
+          consignment.getConsignor.getName must be(null)
+          consignment.getConsignor.getAddress must be(null)
         }
 
         "only address is supplied " in {
@@ -55,12 +54,12 @@ class ConsignmentConsignorBuilderSpec extends WordSpec with MockitoSugar with Ma
 
           builder.buildThenAdd(model, consignment)
 
-          consignment.getConsignor.getID should be(null)
-          consignment.getConsignor.getName.getValue should be("Consignor Full Name")
-          consignment.getConsignor.getAddress.getLine.getValue should be("Address Line")
-          consignment.getConsignor.getAddress.getCityName.getValue should be("Town or City")
-          consignment.getConsignor.getAddress.getCountryCode.getValue should be("PL")
-          consignment.getConsignor.getAddress.getPostcodeID.getValue should be("AB12 34CD")
+          consignment.getConsignor.getID must be(null)
+          consignment.getConsignor.getName.getValue must be("Consignor Full Name")
+          consignment.getConsignor.getAddress.getLine.getValue must be("Address Line")
+          consignment.getConsignor.getAddress.getCityName.getValue must be("Town or City")
+          consignment.getConsignor.getAddress.getCountryCode.getValue must be("PL")
+          consignment.getConsignor.getAddress.getPostcodeID.getValue must be("AB12 34CD")
         }
 
         "both eori and address is supplied " in {
@@ -74,9 +73,9 @@ class ConsignmentConsignorBuilderSpec extends WordSpec with MockitoSugar with Ma
 
           builder.buildThenAdd(model, consignment)
 
-          consignment.getConsignor.getID.getValue should be("9GB1234567ABCDEG")
-          consignment.getConsignor.getName should be(null)
-          consignment.getConsignor.getAddress should be(null)
+          consignment.getConsignor.getID.getValue must be("9GB1234567ABCDEG")
+          consignment.getConsignor.getName must be(null)
+          consignment.getConsignor.getAddress must be(null)
         }
 
         "empty data is supplied " in {
@@ -87,7 +86,7 @@ class ConsignmentConsignorBuilderSpec extends WordSpec with MockitoSugar with Ma
 
           builder.buildThenAdd(model, consignment)
 
-          consignment.getConsignor should be(null)
+          consignment.getConsignor must be(null)
         }
 
         "'address.fullname' is not supplied" in {
@@ -99,12 +98,12 @@ class ConsignmentConsignorBuilderSpec extends WordSpec with MockitoSugar with Ma
 
           builder.buildThenAdd(model, consignment)
 
-          consignment.getConsignor.getID should be(null)
-          consignment.getConsignor.getName should be(null)
-          consignment.getConsignor.getAddress.getLine.getValue should be("Address Line")
-          consignment.getConsignor.getAddress.getCityName.getValue should be("Town or City")
-          consignment.getConsignor.getAddress.getCountryCode.getValue should be("PL")
-          consignment.getConsignor.getAddress.getPostcodeID.getValue should be("AB12 34CD")
+          consignment.getConsignor.getID must be(null)
+          consignment.getConsignor.getName must be(null)
+          consignment.getConsignor.getAddress.getLine.getValue must be("Address Line")
+          consignment.getConsignor.getAddress.getCityName.getValue must be("Town or City")
+          consignment.getConsignor.getAddress.getCountryCode.getValue must be("PL")
+          consignment.getConsignor.getAddress.getPostcodeID.getValue must be("AB12 34CD")
         }
       }
     }

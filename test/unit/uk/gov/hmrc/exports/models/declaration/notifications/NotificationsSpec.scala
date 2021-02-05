@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.exports.models.declaration.notifications
 
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
+import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
-import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json.Json
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 
-class NotificationsSpec extends WordSpec with MustMatchers {
+class NotificationsSpec extends UnitSpec {
 
   val formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
 

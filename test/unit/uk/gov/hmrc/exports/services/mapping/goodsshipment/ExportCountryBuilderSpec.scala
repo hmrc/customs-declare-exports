@@ -17,13 +17,12 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import org.mockito.Mockito.when
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.services.CountriesService
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class ExportCountryBuilderSpec extends WordSpec with MockitoSugar with Matchers {
+class ExportCountryBuilderSpec extends UnitSpec {
 
   val mockCountriesService = mock[CountriesService]
   when(mockCountriesService.allCountries)
@@ -39,7 +38,7 @@ class ExportCountryBuilderSpec extends WordSpec with MockitoSugar with Matchers 
         builder.buildThenAdd("GB", goodsShipment)
 
         val exportCountry = goodsShipment.getExportCountry
-        exportCountry.getID.getValue should be("GB")
+        exportCountry.getID.getValue must be("GB")
       }
 
       "countryOfDispatch has not been supplied" in {
@@ -49,7 +48,7 @@ class ExportCountryBuilderSpec extends WordSpec with MockitoSugar with Matchers 
         builder.buildThenAdd("", goodsShipment)
 
         val exportCountry = goodsShipment.getExportCountry
-        exportCountry should be(null)
+        exportCountry must be(null)
       }
 
     }

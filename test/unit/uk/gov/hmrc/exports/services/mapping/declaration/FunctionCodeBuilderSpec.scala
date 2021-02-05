@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.scalatest.{Matchers, WordSpec}
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class FunctionCodeBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class FunctionCodeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "FunctionCodeBuilder" should {
     "correctly map to the WCO-DEC Declaration Function Code instance" in {
@@ -29,7 +29,7 @@ class FunctionCodeBuilderSpec extends WordSpec with Matchers with ExportsDeclara
 
       new FunctionCodeBuilder().buildThenAdd(model, declaration)
 
-      declaration.getFunctionCode.getValue should be("9")
+      declaration.getFunctionCode.getValue must be("9")
     }
 
     "build then add" in {
@@ -37,7 +37,7 @@ class FunctionCodeBuilderSpec extends WordSpec with Matchers with ExportsDeclara
 
       new FunctionCodeBuilder().buildThenAdd("1", declaration)
 
-      declaration.getFunctionCode.getValue should be("1")
+      declaration.getFunctionCode.getValue must be("1")
     }
   }
 }

@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
-import org.scalatest.{MustMatchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 
-class WCOPointerMappingServiceIntegrationTest extends WordSpec with MustMatchers {
+class WCOPointerMappingServiceIntegrationTest extends UnitSpec {
 
   "Map to Exports Pointer" should {
     "map valid pointer" in {
@@ -38,7 +38,7 @@ class WCOPointerMappingServiceIntegrationTest extends WordSpec with MustMatchers
       )
 
       val result = WCOPointerMappingService.mapWCOPointerToExportsPointer(pointer)
-      result mustBe defined
+      result mustBe 'defined
       result.get mustBe Pointer(
         List(
           PointerSection("declaration", PointerSectionType.FIELD),

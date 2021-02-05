@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.exports.models
 
-import org.scalatestplus.play.PlaySpec
+import uk.gov.hmrc.exports.base.UnitSpec
 
-class PageTest extends PlaySpec {
+class PageTest extends UnitSpec {
 
   "Page" should {
     "bind" when {

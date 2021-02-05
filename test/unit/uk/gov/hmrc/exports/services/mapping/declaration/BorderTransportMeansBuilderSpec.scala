@@ -17,15 +17,14 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.mockito.Mockito.when
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.ModeOfTransportCode
 import uk.gov.hmrc.exports.services.CountriesService
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
+class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   val mockCountriesService = mock[CountriesService]
   when(mockCountriesService.allCountries)
@@ -41,7 +40,7 @@ class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with Mockit
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getBorderTransportMeans should be(null)
+        declaration.getBorderTransportMeans must be(null)
       }
 
       "transport details only" in {
@@ -57,9 +56,9 @@ class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with Mockit
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getBorderTransportMeans.getID.getValue should be("id")
-        declaration.getBorderTransportMeans.getIdentificationTypeCode.getValue should be("type")
-        declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue should be("GB")
+        declaration.getBorderTransportMeans.getID.getValue must be("id")
+        declaration.getBorderTransportMeans.getIdentificationTypeCode.getValue must be("type")
+        declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue must be("GB")
       }
 
       "invalid nationality" in {
@@ -74,7 +73,7 @@ class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with Mockit
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue should be("")
+        declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue must be("")
       }
 
       "border transport only" in {
@@ -83,7 +82,7 @@ class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with Mockit
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getBorderTransportMeans.getModeCode.getValue should be("1")
+        declaration.getBorderTransportMeans.getModeCode.getValue must be("1")
       }
 
       "border transport is Empty" in {
@@ -92,7 +91,7 @@ class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with Mockit
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getBorderTransportMeans.getModeCode should be(null)
+        declaration.getBorderTransportMeans.getModeCode must be(null)
       }
 
       "fully populated" in {
@@ -108,10 +107,10 @@ class BorderTransportMeansBuilderSpec extends WordSpec with Matchers with Mockit
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getBorderTransportMeans.getID.getValue should be("id")
-        declaration.getBorderTransportMeans.getIdentificationTypeCode.getValue should be("type")
-        declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue should be("GB")
-        declaration.getBorderTransportMeans.getModeCode.getValue should be("3")
+        declaration.getBorderTransportMeans.getID.getValue must be("id")
+        declaration.getBorderTransportMeans.getIdentificationTypeCode.getValue must be("type")
+        declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue must be("GB")
+        declaration.getBorderTransportMeans.getModeCode.getValue must be("3")
       }
     }
   }

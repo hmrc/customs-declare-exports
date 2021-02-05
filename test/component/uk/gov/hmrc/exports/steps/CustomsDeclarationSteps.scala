@@ -18,10 +18,10 @@ package uk.gov.hmrc.exports.steps
 
 import java.util.UUID
 
-import component.uk.gov.hmrc.exports.syntax.{Postcondition, Precondition, ScenarioContext}
 import org.scalatest.concurrent.{Eventually, IntegrationPatience}
 import stubs.{CustomsDeclarationsAPIConfig, CustomsDeclarationsAPIService}
 import uk.gov.hmrc.exports.models.Eori
+import uk.gov.hmrc.exports.syntax.{Postcondition, Precondition, ScenarioContext}
 
 object `Customs declaration is fully operational` extends Precondition with CustomsDeclarationsAPIService {
 

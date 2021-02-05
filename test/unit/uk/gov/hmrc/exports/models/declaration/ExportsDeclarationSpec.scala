@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.exports.models.declaration
 
-import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json.Json
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.Eori
 
-class ExportsDeclarationSpec extends WordSpec with MustMatchers {
+class ExportsDeclarationSpec extends UnitSpec {
 
   "Exports Declaration Spec" must {
 
@@ -38,9 +38,9 @@ class ExportsDeclarationSpec extends WordSpec with MustMatchers {
       json
         .validate(ExportsDeclarationRequest.format)
         .fold(error => fail(s"Could not parse - $error"), declaration => {
-          declaration.transport.borderModeOfTransportCode mustNot be(empty)
-          declaration.transport.meansOfTransportOnDepartureType mustNot be(empty)
-          declaration.transport.transportPayment mustNot be(empty)
+          declaration.transport.borderModeOfTransportCode mustNot be('empty)
+          declaration.transport.meansOfTransportOnDepartureType mustNot be('empty)
+          declaration.transport.transportPayment mustNot be('empty)
         })
     }
   }

@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
-import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.WarehouseIdentification
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class WarehouseBuilderSpec extends WordSpec with Matchers with MockitoSugar {
+class WarehouseBuilderSpec extends UnitSpec with MockitoSugar {
 
   "WarehouseBuilder" should {
 
@@ -32,8 +32,8 @@ class WarehouseBuilderSpec extends WordSpec with Matchers with MockitoSugar {
         val goodsShipment = new GoodsShipment
         builder.buildThenAdd(WarehouseIdentification(Some("R1234567GB")), goodsShipment)
         val warehouse = goodsShipment.getWarehouse
-        warehouse.getID.getValue should be("1234567GB")
-        warehouse.getTypeCode.getValue should be("R")
+        warehouse.getID.getValue must be("1234567GB")
+        warehouse.getTypeCode.getValue must be("R")
       }
 
       "identificationType is not supplied" in {
@@ -42,8 +42,8 @@ class WarehouseBuilderSpec extends WordSpec with Matchers with MockitoSugar {
         builder.buildThenAdd(WarehouseIdentification(Some("R1234567GB")), goodsShipment)
 
         val warehouse = goodsShipment.getWarehouse
-        warehouse.getID.getValue should be("1234567GB")
-        warehouse.getTypeCode.getValue should be("R")
+        warehouse.getID.getValue must be("1234567GB")
+        warehouse.getTypeCode.getValue must be("R")
       }
 
       "identificationNumber is not supplied" in {
@@ -52,7 +52,7 @@ class WarehouseBuilderSpec extends WordSpec with Matchers with MockitoSugar {
         builder.buildThenAdd(WarehouseIdentification(None), goodsShipment)
 
         val warehouse = goodsShipment.getWarehouse
-        warehouse should be(null)
+        warehouse must be(null)
       }
 
     }

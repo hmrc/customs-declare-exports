@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.controllers.ead
 
+import scala.concurrent.Future
+
 import org.mockito.ArgumentMatchers.any
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.bind
@@ -30,14 +30,12 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
-import uk.gov.hmrc.exports.base.AuthTestSupport
+import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
 import uk.gov.hmrc.exports.models.ead.MrnStatusSpec
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.Future
-
-class EADControllerSpec extends WordSpec with GuiceOneAppPerSuite with AuthTestSupport with BeforeAndAfterEach with ScalaFutures with MustMatchers {
+class EADControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestSupport {
 
   override lazy val app: Application = GuiceApplicationBuilder()
     .overrides(bind[AuthConnector].to(mockAuthConnector), bind[CustomsDeclarationsInformationConnector].to(connector), bind[HeaderCarrier].to(hc))

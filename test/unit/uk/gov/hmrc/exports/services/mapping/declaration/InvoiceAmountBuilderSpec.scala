@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.scalatest.{Matchers, WordSpec}
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class InvoiceAmountBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class InvoiceAmountBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "InvoiceAmountBuilder" should {
 
@@ -31,7 +31,7 @@ class InvoiceAmountBuilderSpec extends WordSpec with Matchers with ExportsDeclar
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getInvoiceAmount should be(null)
+        declaration.getInvoiceAmount must be(null)
       }
 
       "empty total amount invoiced" in {
@@ -40,7 +40,7 @@ class InvoiceAmountBuilderSpec extends WordSpec with Matchers with ExportsDeclar
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getInvoiceAmount should be(null)
+        declaration.getInvoiceAmount must be(null)
       }
 
       "populated" in {
@@ -49,8 +49,8 @@ class InvoiceAmountBuilderSpec extends WordSpec with Matchers with ExportsDeclar
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getInvoiceAmount.getValue.doubleValue should be(123.45)
-        declaration.getInvoiceAmount.getCurrencyID should be("GBP")
+        declaration.getInvoiceAmount.getValue.doubleValue must be(123.45)
+        declaration.getInvoiceAmount.getCurrencyID must be("GBP")
       }
     }
   }

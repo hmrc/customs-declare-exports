@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
-import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem
 
-class GovernmentProcedureBuilderSpec extends WordSpec with Matchers with GovernmentAgencyGoodsItemData with ExportsItemBuilder {
+class GovernmentProcedureBuilderSpec extends UnitSpec with GovernmentAgencyGoodsItemData with ExportsItemBuilder {
 
   val firstProcedureCode = "CUPR"
   val additionalProcedureCode = "ABC"
@@ -34,7 +34,7 @@ class GovernmentProcedureBuilderSpec extends WordSpec with Matchers with Governm
 
         builder.buildThenAdd(exportItem, governmentAgencyGoodsItem)
 
-        governmentAgencyGoodsItem.getGovernmentProcedure shouldBe empty
+        governmentAgencyGoodsItem.getGovernmentProcedure mustBe 'empty
       }
 
       "populated procedure codes" in {
@@ -44,12 +44,12 @@ class GovernmentProcedureBuilderSpec extends WordSpec with Matchers with Governm
         builder.buildThenAdd(exportItem, governmentAgencyGoodsItem)
 
         val mappedProcedure1 = governmentAgencyGoodsItem.getGovernmentProcedure.get(0)
-        mappedProcedure1.getCurrentCode.getValue shouldBe firstProcedureCode.substring(0, 2)
-        mappedProcedure1.getPreviousCode.getValue shouldBe firstProcedureCode.substring(2, 4)
+        mappedProcedure1.getCurrentCode.getValue mustBe firstProcedureCode.substring(0, 2)
+        mappedProcedure1.getPreviousCode.getValue mustBe firstProcedureCode.substring(2, 4)
 
         val mappedProcedure2 = governmentAgencyGoodsItem.getGovernmentProcedure.get(1)
-        mappedProcedure2.getCurrentCode.getValue shouldBe additionalProcedureCode
-        mappedProcedure2.getPreviousCode shouldBe null
+        mappedProcedure2.getCurrentCode.getValue mustBe additionalProcedureCode
+        mappedProcedure2.getPreviousCode mustBe null
       }
     }
   }

@@ -20,12 +20,11 @@ import javax.xml.bind.JAXBElement
 import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
-import org.scalatest.{MustMatchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.mapping.declaration.DeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class CancellationMetaDataBuilderTest extends WordSpec with MustMatchers with MockitoSugar {
+class CancellationMetaDataBuilderTest extends UnitSpec {
 
   private val declarationBuilder = mock[DeclarationBuilder]
   private val builder = new CancellationMetaDataBuilder(declarationBuilder)

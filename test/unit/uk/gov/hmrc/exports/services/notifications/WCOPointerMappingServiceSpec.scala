@@ -16,11 +16,10 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
-import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 
-class WCOPointerMappingServiceSpec extends WordSpec with MustMatchers with MockitoSugar with BeforeAndAfterEach {
+class WCOPointerMappingServiceSpec extends UnitSpec {
 
   "Map pointer" should {
     "find matching pointer" in {
@@ -29,7 +28,7 @@ class WCOPointerMappingServiceSpec extends WordSpec with MustMatchers with Mocki
         Pointer(List(PointerSection("42A", PointerSectionType.FIELD), PointerSection("017", PointerSectionType.FIELD)))
 
       val result = WCOPointerMappingService.mapWCOPointerToExportsPointer(pointer)
-      result mustBe defined
+      result mustBe 'defined
       result.get mustBe Pointer(
         List(PointerSection("declaration", PointerSectionType.FIELD), PointerSection("functionCode", PointerSectionType.FIELD))
       )

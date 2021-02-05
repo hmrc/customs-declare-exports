@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.scalatest.{Matchers, WordSpec}
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class CurrencyExchangeBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class CurrencyExchangeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   private def builder = new CurrencyExchangeBuilder()
 
@@ -34,7 +34,7 @@ class CurrencyExchangeBuilderSpec extends WordSpec with Matchers with ExportsDec
         // When
         builder.buildThenAdd(model, declaration)
         // Then
-        declaration.getCurrencyExchange shouldBe empty
+        declaration.getCurrencyExchange mustBe 'empty
       }
 
       "exchange rate is empty" in {
@@ -44,7 +44,7 @@ class CurrencyExchangeBuilderSpec extends WordSpec with Matchers with ExportsDec
         // When
         builder.buildThenAdd(model, declaration)
         // Then
-        declaration.getCurrencyExchange shouldBe empty
+        declaration.getCurrencyExchange mustBe 'empty
       }
 
       "exchange rate is populated" in {
@@ -54,9 +54,9 @@ class CurrencyExchangeBuilderSpec extends WordSpec with Matchers with ExportsDec
         // When
         builder.buildThenAdd(model, declaration)
         // Then
-        declaration.getCurrencyExchange should have(size(1))
-        declaration.getCurrencyExchange.get(0).getCurrencyTypeCode shouldBe null
-        declaration.getCurrencyExchange.get(0).getRateNumeric.intValue() shouldBe 123
+        declaration.getCurrencyExchange must have(size(1))
+        declaration.getCurrencyExchange.get(0).getCurrencyTypeCode mustBe null
+        declaration.getCurrencyExchange.get(0).getRateNumeric.intValue() mustBe 123
       }
     }
   }

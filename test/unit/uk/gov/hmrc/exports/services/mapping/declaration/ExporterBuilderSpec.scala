@@ -17,15 +17,14 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.mockito.Mockito.when
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.Address
 import uk.gov.hmrc.exports.services.CountriesService
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class ExporterBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
+class ExporterBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   val mockCountriesService = mock[CountriesService]
   when(mockCountriesService.allCountries)
@@ -40,7 +39,7 @@ class ExporterBuilderSpec extends WordSpec with Matchers with MockitoSugar with 
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getExporter should be(null)
+        declaration.getExporter must be(null)
       }
 
       "no eori" in {
@@ -49,7 +48,7 @@ class ExporterBuilderSpec extends WordSpec with Matchers with MockitoSugar with 
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getExporter.getID should be(null)
+        declaration.getExporter.getID must be(null)
       }
 
       "no address" in {
@@ -58,7 +57,7 @@ class ExporterBuilderSpec extends WordSpec with Matchers with MockitoSugar with 
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getExporter.getAddress should be(null)
+        declaration.getExporter.getAddress must be(null)
       }
 
       "unknown country" in {
@@ -67,7 +66,7 @@ class ExporterBuilderSpec extends WordSpec with Matchers with MockitoSugar with 
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getExporter.getAddress.getCountryCode.getValue should be("")
+        declaration.getExporter.getAddress.getCountryCode.getValue must be("")
       }
 
       "populated" in {
@@ -77,9 +76,9 @@ class ExporterBuilderSpec extends WordSpec with Matchers with MockitoSugar with 
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getExporter.getID.getValue should be("eori")
-        declaration.getExporter.getName should be(null)
-        declaration.getExporter.getAddress should be(null)
+        declaration.getExporter.getID.getValue must be("eori")
+        declaration.getExporter.getName must be(null)
+        declaration.getExporter.getAddress must be(null)
       }
 
       "declarant is exporter and exporter details not provided" in {
@@ -89,7 +88,7 @@ class ExporterBuilderSpec extends WordSpec with Matchers with MockitoSugar with 
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getExporter.getID.getValue should be("dec_eori")
+        declaration.getExporter.getID.getValue must be("dec_eori")
       }
 
       "declarant is exporter and exporter details are ignored" in {
@@ -99,7 +98,7 @@ class ExporterBuilderSpec extends WordSpec with Matchers with MockitoSugar with 
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getExporter.getID.getValue should be("dec_eori")
+        declaration.getExporter.getID.getValue must be("dec_eori")
       }
 
       "declarant is not exporter and exporter details used" in {
@@ -113,7 +112,7 @@ class ExporterBuilderSpec extends WordSpec with Matchers with MockitoSugar with 
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getExporter.getID.getValue should be("exporter_eori")
+        declaration.getExporter.getID.getValue must be("exporter_eori")
       }
     }
   }

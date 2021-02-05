@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.exports.services.mapping
 
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.DeclarationHolder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class AuthorisationHoldersBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
+class AuthorisationHoldersBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "AuthorisationHolders" should {
 
@@ -36,7 +35,7 @@ class AuthorisationHoldersBuilderSpec extends WordSpec with Matchers with Mockit
         new AuthorisationHoldersBuilder().buildThenAdd(model, declaration)
 
         // Then
-        declaration.getAuthorisationHolder shouldBe empty
+        declaration.getAuthorisationHolder mustBe 'empty
       }
 
       "multiple holders" in {
@@ -50,11 +49,11 @@ class AuthorisationHoldersBuilderSpec extends WordSpec with Matchers with Mockit
         new AuthorisationHoldersBuilder().buildThenAdd(model, declaration)
 
         // Then
-        declaration.getAuthorisationHolder should have(size(2))
-        declaration.getAuthorisationHolder.get(0).getID.getValue shouldBe "eori1"
-        declaration.getAuthorisationHolder.get(1).getID.getValue shouldBe "eori2"
-        declaration.getAuthorisationHolder.get(0).getCategoryCode.getValue shouldBe "auth code1"
-        declaration.getAuthorisationHolder.get(1).getCategoryCode.getValue shouldBe "auth code2"
+        declaration.getAuthorisationHolder must have(size(2))
+        declaration.getAuthorisationHolder.get(0).getID.getValue mustBe "eori1"
+        declaration.getAuthorisationHolder.get(1).getID.getValue mustBe "eori2"
+        declaration.getAuthorisationHolder.get(0).getCategoryCode.getValue mustBe "auth code1"
+        declaration.getAuthorisationHolder.get(1).getCategoryCode.getValue mustBe "auth code2"
       }
 
       "auth code is empty" in {
@@ -66,7 +65,7 @@ class AuthorisationHoldersBuilderSpec extends WordSpec with Matchers with Mockit
         new AuthorisationHoldersBuilder().buildThenAdd(model, declaration)
 
         // Then
-        declaration.getAuthorisationHolder shouldBe empty
+        declaration.getAuthorisationHolder mustBe 'empty
       }
 
       "eori is empty" in {
@@ -78,7 +77,7 @@ class AuthorisationHoldersBuilderSpec extends WordSpec with Matchers with Mockit
         new AuthorisationHoldersBuilder().buildThenAdd(model, declaration)
 
         // Then
-        declaration.getAuthorisationHolder shouldBe empty
+        declaration.getAuthorisationHolder mustBe 'empty
       }
     }
   }

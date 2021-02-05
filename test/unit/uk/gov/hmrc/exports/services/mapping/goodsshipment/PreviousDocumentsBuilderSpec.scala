@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
-import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.{PreviousDocument, PreviousDocuments}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class PreviousDocumentsBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
+class PreviousDocumentsBuilderSpec extends UnitSpec with MockitoSugar with ExportsDeclarationBuilder {
 
   "PreviousDocumentsBuilder " should {
 
@@ -36,16 +36,16 @@ class PreviousDocumentsBuilderSpec extends WordSpec with Matchers with MockitoSu
         builder.buildThenAdd(PreviousDocuments(Seq(PreviousDocumentsBuilderSpec.correctPreviousDocument)), goodsShipment)
 
         val previousDocs = goodsShipment.getPreviousDocument
-        previousDocs.size should be(2)
-        previousDocs.get(0).getID.getValue should be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
-        previousDocs.get(0).getCategoryCode.getValue should be("Z")
-        previousDocs.get(0).getTypeCode.getValue should be("DCR")
-        previousDocs.get(0).getLineNumeric should be(BigDecimal(1).bigDecimal)
+        previousDocs.size must be(2)
+        previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
+        previousDocs.get(0).getCategoryCode.getValue must be("Z")
+        previousDocs.get(0).getTypeCode.getValue must be("DCR")
+        previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
 
-        previousDocs.get(1).getID.getValue should be("DocumentReference")
-        previousDocs.get(1).getCategoryCode.getValue should be("X")
-        previousDocs.get(1).getTypeCode.getValue should be("ABC")
-        previousDocs.get(1).getLineNumeric should be(BigDecimal(123).bigDecimal)
+        previousDocs.get(1).getID.getValue must be("DocumentReference")
+        previousDocs.get(1).getCategoryCode.getValue must be("X")
+        previousDocs.get(1).getTypeCode.getValue must be("ABC")
+        previousDocs.get(1).getLineNumeric must be(BigDecimal(123).bigDecimal)
 
       }
 
@@ -54,7 +54,7 @@ class PreviousDocumentsBuilderSpec extends WordSpec with Matchers with MockitoSu
         val goodsShipment = new GoodsShipment
         builder.buildThenAdd(PreviousDocuments(Seq.empty), goodsShipment)
 
-        goodsShipment.getPreviousDocument.isEmpty should be(true)
+        goodsShipment.getPreviousDocument.isEmpty must be(true)
       }
 
       "'document type' not supplied" in {
@@ -63,11 +63,11 @@ class PreviousDocumentsBuilderSpec extends WordSpec with Matchers with MockitoSu
         builder.buildThenAdd(PreviousDocuments(Seq(PreviousDocumentsBuilderSpec.correctPreviousDocument.copy(documentType = ""))), goodsShipment)
 
         val previousDocs = goodsShipment.getPreviousDocument
-        previousDocs.size should be(1)
-        previousDocs.get(0).getID.getValue should be("DocumentReference")
-        previousDocs.get(0).getCategoryCode.getValue should be("X")
-        previousDocs.get(0).getTypeCode should be(null)
-        previousDocs.get(0).getLineNumeric should be(BigDecimal(123).bigDecimal)
+        previousDocs.size must be(1)
+        previousDocs.get(0).getID.getValue must be("DocumentReference")
+        previousDocs.get(0).getCategoryCode.getValue must be("X")
+        previousDocs.get(0).getTypeCode must be(null)
+        previousDocs.get(0).getLineNumeric must be(BigDecimal(123).bigDecimal)
       }
 
       "'document reference' not supplied" in {
@@ -76,11 +76,11 @@ class PreviousDocumentsBuilderSpec extends WordSpec with Matchers with MockitoSu
         builder.buildThenAdd(PreviousDocuments(Seq(PreviousDocumentsBuilderSpec.correctPreviousDocument.copy(documentReference = ""))), goodsShipment)
 
         val previousDocs = goodsShipment.getPreviousDocument
-        previousDocs.size should be(1)
-        previousDocs.get(0).getID should be(null)
-        previousDocs.get(0).getCategoryCode.getValue should be("X")
-        previousDocs.get(0).getTypeCode.getValue should be("ABC")
-        previousDocs.get(0).getLineNumeric should be(BigDecimal(123).bigDecimal)
+        previousDocs.size must be(1)
+        previousDocs.get(0).getID must be(null)
+        previousDocs.get(0).getCategoryCode.getValue must be("X")
+        previousDocs.get(0).getTypeCode.getValue must be("ABC")
+        previousDocs.get(0).getLineNumeric must be(BigDecimal(123).bigDecimal)
       }
 
       "'document catagory' not supplied" in {
@@ -89,12 +89,12 @@ class PreviousDocumentsBuilderSpec extends WordSpec with Matchers with MockitoSu
         builder.buildThenAdd(PreviousDocuments(Seq(PreviousDocumentsBuilderSpec.correctPreviousDocument.copy(documentCategory = ""))), goodsShipment)
 
         val previousDocs = goodsShipment.getPreviousDocument
-        previousDocs.size should be(1)
+        previousDocs.size must be(1)
 
-        previousDocs.get(0).getID.getValue should be("DocumentReference")
-        previousDocs.get(0).getCategoryCode should be(null)
-        previousDocs.get(0).getTypeCode.getValue should be("ABC")
-        previousDocs.get(0).getLineNumeric should be(BigDecimal(123).bigDecimal)
+        previousDocs.get(0).getID.getValue must be("DocumentReference")
+        previousDocs.get(0).getCategoryCode must be(null)
+        previousDocs.get(0).getTypeCode.getValue must be("ABC")
+        previousDocs.get(0).getLineNumeric must be(BigDecimal(123).bigDecimal)
       }
 
       "'line number' not supplied" in {
@@ -106,11 +106,11 @@ class PreviousDocumentsBuilderSpec extends WordSpec with Matchers with MockitoSu
         )
 
         val previousDocs = goodsShipment.getPreviousDocument
-        previousDocs.size should be(1)
-        previousDocs.get(0).getID.getValue should be("DocumentReference")
-        previousDocs.get(0).getCategoryCode.getValue should be("X")
-        previousDocs.get(0).getTypeCode.getValue should be("ABC")
-        previousDocs.get(0).getLineNumeric should be(null)
+        previousDocs.size must be(1)
+        previousDocs.get(0).getID.getValue must be("DocumentReference")
+        previousDocs.get(0).getCategoryCode.getValue must be("X")
+        previousDocs.get(0).getTypeCode.getValue must be("ABC")
+        previousDocs.get(0).getLineNumeric must be(null)
       }
     }
   }

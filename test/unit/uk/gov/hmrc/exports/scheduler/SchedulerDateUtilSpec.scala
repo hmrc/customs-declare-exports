@@ -18,15 +18,13 @@ package uk.gov.hmrc.exports.scheduler
 
 import java.time._
 
+import scala.concurrent.duration._
+
 import org.mockito.BDDMockito.given
-import org.scalatest.BeforeAndAfterEach
-import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
 
-import scala.concurrent.duration._
-
-class SchedulerDateUtilSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
+class SchedulerDateUtilSpec extends UnitSpec {
 
   private val zone = ZoneOffset.UTC
   private val clock: Clock = Clock.fixed(instant("2019-01-01T12:00:00").plusNanos((Math.random() * 1000).toInt), zone)
@@ -40,27 +38,27 @@ class SchedulerDateUtilSpec extends UnitSpec with MockitoSugar with BeforeAndAft
 
   "Next Run" should {
     "Calculate the next run date given a run time of now" in {
-      util.nextRun(time("12:00"), 3.seconds) shouldBe instant("2019-01-01T12:00:00")
+      util.nextRun(time("12:00"), 3.seconds) mustBe instant("2019-01-01T12:00:00")
     }
 
     "Calculate the next run date given a run time in the future" in {
-      util.nextRun(time("12:00:09"), 3.seconds) shouldBe instant("2019-01-01T12:00:00")
+      util.nextRun(time("12:00:09"), 3.seconds) mustBe instant("2019-01-01T12:00:00")
     }
 
     "Calculate the next run date given a run time in the future with Offset" in {
-      util.nextRun(time("12:00:01"), 3.seconds) shouldBe instant("2019-01-01T12:00:01")
+      util.nextRun(time("12:00:01"), 3.seconds) mustBe instant("2019-01-01T12:00:01")
 
-      util.nextRun(time("12:00:10"), 3.seconds) shouldBe instant("2019-01-01T12:00:01")
+      util.nextRun(time("12:00:10"), 3.seconds) mustBe instant("2019-01-01T12:00:01")
     }
 
     "Calculate the next run date given a run time in the past" in {
-      util.nextRun(time("11:59:51"), 3.seconds) shouldBe instant("2019-01-01T12:00:00")
+      util.nextRun(time("11:59:51"), 3.seconds) mustBe instant("2019-01-01T12:00:00")
     }
 
     "Calculate the next run date given a run time in the past with Offset" in {
-      util.nextRun(time("11:59:58"), 3.seconds) shouldBe instant("2019-01-01T12:00:01")
+      util.nextRun(time("11:59:58"), 3.seconds) mustBe instant("2019-01-01T12:00:01")
 
-      util.nextRun(time("11:59:52"), 3.seconds) shouldBe instant("2019-01-01T12:00:01")
+      util.nextRun(time("11:59:52"), 3.seconds) mustBe instant("2019-01-01T12:00:01")
     }
   }
 

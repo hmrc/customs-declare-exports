@@ -18,16 +18,15 @@ package uk.gov.hmrc.exports.services.mapping.declaration.consignment
 
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
-import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.ConsignmentConsignorBuilder
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentCarrierBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class DeclarationConsignmentBuilderSpec extends WordSpec with Matchers with MockitoSugar with BeforeAndAfterEach with ExportsDeclarationBuilder {
+class DeclarationConsignmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   private val freightBuilder = mock[FreightBuilder]
   private val iteneraryBuilder = mock[IteneraryBuilder]
@@ -58,7 +57,7 @@ class DeclarationConsignmentBuilderSpec extends WordSpec with Matchers with Mock
           builder.buildThenAdd(model, declaration)
 
           // Then
-          declaration.getConsignment should not be null
+          declaration.getConsignment must not be null
           verify(freightBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
           verify(iteneraryBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
           verify(consignmentCarrierBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
@@ -75,7 +74,7 @@ class DeclarationConsignmentBuilderSpec extends WordSpec with Matchers with Mock
         builder.buildThenAdd(model, declaration)
 
         // Then
-        declaration.getConsignment shouldBe null
+        declaration.getConsignment mustBe null
         verify(freightBuilder, never()).buildThenAdd(refEq(model), any[Declaration.Consignment])
         verify(iteneraryBuilder, never()).buildThenAdd(refEq(model), any[Declaration.Consignment])
         verify(consignmentCarrierBuilder, never()).buildThenAdd(refEq(model), any[Declaration.Consignment])

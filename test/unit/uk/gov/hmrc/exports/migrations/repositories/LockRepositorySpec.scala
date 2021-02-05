@@ -18,6 +18,8 @@ package uk.gov.hmrc.exports.migrations.repositories
 
 import java.util.Date
 
+import scala.collection.JavaConverters.mapAsJavaMap
+
 import com.mongodb._
 import com.mongodb.client.model.Filters.{and, eq => feq}
 import com.mongodb.client.model.UpdateOptions
@@ -31,15 +33,12 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
 import org.mockito.Mockito._
 import org.mongodb.scala.bson.BsonString
-import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.migrations.exceptions.LockPersistenceException
 import uk.gov.hmrc.exports.migrations.repositories.LockEntry._
 import uk.gov.hmrc.exports.migrations.repositories.TestObjectsBuilder.buildMongoCursor
 
-import scala.collection.JavaConverters.mapAsJavaMap
-
-class LockRepositorySpec extends WordSpec with MockitoSugar with BeforeAndAfterEach with MustMatchers {
+class LockRepositorySpec extends UnitSpec {
 
   private val databaseName = "testDatabase"
   private val collectionName = "testCollection"
@@ -145,7 +144,7 @@ class LockRepositorySpec extends WordSpec with MockitoSugar with BeforeAndAfterE
 
       val result = repo.findByKey(lockKey)
 
-      result mustBe defined
+      result mustBe 'defined
       val expectedLockEntry = LockEntry(lockKey, "statusValue", "ownerValue", date)
       result.get mustBe expectedLockEntry
     }

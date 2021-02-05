@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.steps
 
-import component.uk.gov.hmrc.exports.syntax.{Postcondition, ScenarioContext}
-import org.scalatest.MustMatchers
+import org.scalatest.matchers.must.Matchers
 import play.api.mvc.Result
+import uk.gov.hmrc.exports.syntax.{Postcondition, ScenarioContext}
 
-class ResultStatusPostcondition(expectedStatus: Int) extends Postcondition with MustMatchers {
+class ResultStatusPostcondition(expectedStatus: Int) extends Postcondition with Matchers {
   override def name: String = s"Result status is $expectedStatus"
 
   override def execute(context: ScenarioContext): ScenarioContext = {

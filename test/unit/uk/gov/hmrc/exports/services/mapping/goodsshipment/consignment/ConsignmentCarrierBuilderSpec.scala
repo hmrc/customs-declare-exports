@@ -17,16 +17,15 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import org.mockito.Mockito.when
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.Address
 import uk.gov.hmrc.exports.models.{Country, DeclarationType}
 import uk.gov.hmrc.exports.services.CountriesService
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
+class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   private val mockCountriesService = mock[CountriesService]
 
@@ -50,7 +49,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
             new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
             // Then
-            consignment.getCarrier shouldBe null
+            consignment.getCarrier mustBe null
           }
 
           "address is empty" in {
@@ -63,7 +62,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
             new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
             // Then
-            consignment.getCarrier.getAddress shouldBe null
+            consignment.getCarrier.getAddress mustBe null
           }
 
           "eori is empty" in {
@@ -78,7 +77,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
             new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
             // Then
-            consignment.getCarrier.getID shouldBe null
+            consignment.getCarrier.getID mustBe null
           }
 
           "fully populated" in {
@@ -93,9 +92,9 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
             new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
             // Then
-            consignment.getCarrier.getID.getValue shouldBe "eori"
-            consignment.getCarrier.getName shouldBe null
-            consignment.getCarrier.getAddress shouldBe null
+            consignment.getCarrier.getID.getValue mustBe "eori"
+            consignment.getCarrier.getName mustBe null
+            consignment.getCarrier.getAddress mustBe null
           }
 
           "empty address components" in {
@@ -108,9 +107,9 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
             new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
             // Then
-            consignment.getCarrier.getID.getValue shouldBe "eori"
-            consignment.getCarrier.getName shouldBe null
-            consignment.getCarrier.getAddress shouldBe null
+            consignment.getCarrier.getID.getValue mustBe "eori"
+            consignment.getCarrier.getName mustBe null
+            consignment.getCarrier.getAddress mustBe null
           }
 
           "invalid country" in {
@@ -125,7 +124,7 @@ class ConsignmentCarrierBuilderSpec extends WordSpec with Matchers with MockitoS
             new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
 
             // Then
-            consignment.getCarrier.getAddress.getCountryCode.getValue shouldBe ""
+            consignment.getCarrier.getAddress.getCountryCode.getValue mustBe ""
           }
         }
       }

@@ -17,15 +17,14 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.mockito.Mockito.when
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.Address
 import uk.gov.hmrc.exports.models.{Country, Eori}
 import uk.gov.hmrc.exports.services.CountriesService
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
+class DeclarantBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   val mockCountriesService = mock[CountriesService]
   when(mockCountriesService.allCountries)
@@ -33,7 +32,7 @@ class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with
 
   "DeclarantBuilder" when {
 
-    "declaration contains no PersonPresentingGoodsDetails" should {
+    "declaration contains no PersonPresentingGoodsDetails" must {
 
       "build then add" when {
         "no declarant details" in {
@@ -42,7 +41,7 @@ class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with
 
           builder.buildThenAdd(model, declaration)
 
-          declaration.getDeclarant should be(null)
+          declaration.getDeclarant must be(null)
         }
 
         "no eori" in {
@@ -54,7 +53,7 @@ class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with
 
           builder.buildThenAdd(model, declaration)
 
-          declaration.getDeclarant.getID should be(null)
+          declaration.getDeclarant.getID must be(null)
         }
 
         "no address" in {
@@ -63,7 +62,7 @@ class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with
 
           builder.buildThenAdd(model, declaration)
 
-          declaration.getDeclarant.getAddress should be(null)
+          declaration.getDeclarant.getAddress must be(null)
         }
 
         "unknown country" in {
@@ -75,8 +74,8 @@ class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with
 
           builder.buildThenAdd(model, declaration)
 
-          declaration.getDeclarant.getID should be(null)
-          declaration.getDeclarant.getAddress.getCountryCode.getValue should be("")
+          declaration.getDeclarant.getID must be(null)
+          declaration.getDeclarant.getAddress.getCountryCode.getValue must be("")
         }
 
         "populated" in {
@@ -89,9 +88,9 @@ class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with
 
           builder.buildThenAdd(model, declaration)
 
-          declaration.getDeclarant.getID.getValue should be("eori")
-          declaration.getDeclarant.getAddress should be(null)
-          declaration.getDeclarant.getName should be(null)
+          declaration.getDeclarant.getID.getValue must be("eori")
+          declaration.getDeclarant.getAddress must be(null)
+          declaration.getDeclarant.getName must be(null)
         }
       }
     }
@@ -111,8 +110,8 @@ class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with
 
           builder.buildThenAdd(model, declaration)
 
-          declaration.getDeclarant.getID.getValue should be("PersonPresentingGoodsEori")
-          declaration.getDeclarant.getAddress should be(null)
+          declaration.getDeclarant.getID.getValue must be("PersonPresentingGoodsEori")
+          declaration.getDeclarant.getAddress must be(null)
         }
 
         "DeclarantDetails is empty" in {
@@ -126,8 +125,8 @@ class DeclarantBuilderSpec extends WordSpec with Matchers with MockitoSugar with
 
           builder.buildThenAdd(model, declaration)
 
-          declaration.getDeclarant.getID.getValue should be("PersonPresentingGoodsEori")
-          declaration.getDeclarant.getAddress should be(null)
+          declaration.getDeclarant.getID.getValue must be("PersonPresentingGoodsEori")
+          declaration.getDeclarant.getAddress must be(null)
         }
       }
     }

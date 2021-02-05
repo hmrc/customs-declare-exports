@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.scalatest.{Matchers, WordSpec}
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class SupervisingOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class SupervisingOfficeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "SupervisingOfficeBuilder" should {
 
@@ -31,7 +31,7 @@ class SupervisingOfficeBuilderSpec extends WordSpec with Matchers with ExportsDe
 
         new SupervisingOfficeBuilder().buildThenAdd(model, declaration)
 
-        declaration.getSupervisingOffice should be(null)
+        declaration.getSupervisingOffice must be(null)
       }
 
       "populated" in {
@@ -40,7 +40,7 @@ class SupervisingOfficeBuilderSpec extends WordSpec with Matchers with ExportsDe
 
         new SupervisingOfficeBuilder().buildThenAdd(model, declaration)
 
-        declaration.getSupervisingOffice.getID.getValue should be("value")
+        declaration.getSupervisingOffice.getID.getValue must be("value")
       }
     }
   }

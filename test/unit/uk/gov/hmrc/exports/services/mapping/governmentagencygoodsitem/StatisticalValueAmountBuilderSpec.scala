@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
-import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class StatisticalValueAmountBuilderSpec extends WordSpec with Matchers with ExportsItemBuilder {
+class StatisticalValueAmountBuilderSpec extends UnitSpec with ExportsItemBuilder {
 
   "Statistical Value Amount Builder" should {
     "build then add" when {
@@ -30,7 +30,7 @@ class StatisticalValueAmountBuilderSpec extends WordSpec with Matchers with Expo
 
         builder.buildThenAdd(model, dcoItem)
 
-        dcoItem.getStatisticalValueAmount shouldBe null
+        dcoItem.getStatisticalValueAmount mustBe null
       }
 
       "populated item type" in {
@@ -39,8 +39,8 @@ class StatisticalValueAmountBuilderSpec extends WordSpec with Matchers with Expo
 
         builder.buildThenAdd(model, dcoItem)
 
-        dcoItem.getStatisticalValueAmount.getValue.toString shouldBe "123.45"
-        dcoItem.getStatisticalValueAmount.getCurrencyID shouldBe "GBP"
+        dcoItem.getStatisticalValueAmount.getValue.toString mustBe "123.45"
+        dcoItem.getStatisticalValueAmount.getCurrencyID mustBe "GBP"
       }
     }
   }

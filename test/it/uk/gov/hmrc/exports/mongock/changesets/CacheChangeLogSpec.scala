@@ -5,17 +5,16 @@ import com.mongodb.client.{MongoCollection, MongoDatabase}
 import com.mongodb.{MongoClient, MongoClientURI}
 import org.bson.Document
 import org.mockito.Mockito
-import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import stubs.TestMongoDB
 import stubs.TestMongoDB.mongoConfiguration
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.generators.IdGenerator
 import uk.gov.hmrc.exports.mongock.changesets.CacheChangeLogSpec._
 
-class CacheChangeLogSpec extends WordSpec with MustMatchers with GuiceOneServerPerSuite with BeforeAndAfterEach with MockitoSugar {
+class CacheChangeLogSpec extends UnitSpec with GuiceOneServerPerSuite {
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()

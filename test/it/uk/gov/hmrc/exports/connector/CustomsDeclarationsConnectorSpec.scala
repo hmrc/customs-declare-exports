@@ -18,24 +18,23 @@ package uk.gov.hmrc.exports.connector
 
 import java.util.UUID
 
-import integration.uk.gov.hmrc.exports.util.TestModule
-import org.scalatestplus.mockito.MockitoSugar
+import scala.concurrent.Future
+
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
-import stubs.{CustomsDeclarationsAPIConfig, CustomsDeclarationsAPIService}
 import stubs.ExternalServicesConfig.{Host, Port}
-import uk.gov.hmrc.exports.base.IntegrationTestSpec
-import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
+import stubs.{CustomsDeclarationsAPIConfig, CustomsDeclarationsAPIService}
 import testdata.ExportsDeclarationBuilder
 import testdata.ExportsTestData._
-
-import scala.concurrent.Future
+import uk.gov.hmrc.exports.base.IntegrationTestSpec
+import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
+import uk.gov.hmrc.exports.util.TestModule
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
 class CustomsDeclarationsConnectorSpec
-    extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar with CustomsDeclarationsAPIService with ExportsDeclarationBuilder {
+    extends IntegrationTestSpec with GuiceOneAppPerSuite with CustomsDeclarationsAPIService with ExportsDeclarationBuilder {
 
   private lazy val connector = app.injector.instanceOf[CustomsDeclarationsConnector]
   private implicit val hc: HeaderCarrier = HeaderCarrier()

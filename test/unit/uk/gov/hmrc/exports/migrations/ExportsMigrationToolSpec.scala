@@ -22,13 +22,12 @@ import com.mongodb.client.MongoDatabase
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import org.mockito.Mockito._
-import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.migrations.exceptions.{ExportsMigrationException, LockManagerException}
 import uk.gov.hmrc.exports.migrations.repositories.{ChangeEntry, ChangeEntryRepository}
 
-class ExportsMigrationToolSpec extends WordSpec with MockitoSugar with MustMatchers with BeforeAndAfterEach {
+class ExportsMigrationToolSpec extends UnitSpec {
 
   private val lockManager: LockManager = mock[LockManager]
   private val migrationsRegistry: MigrationsRegistry = mock[MigrationsRegistry]

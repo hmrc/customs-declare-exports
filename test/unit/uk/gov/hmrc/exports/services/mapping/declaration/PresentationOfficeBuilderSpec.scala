@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.scalatest.{Matchers, WordSpec}
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class PresentationOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class PresentationOfficeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "PresentationOfficeBuilder" should {
 
@@ -35,7 +35,7 @@ class PresentationOfficeBuilderSpec extends WordSpec with Matchers with ExportsD
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getPresentationOffice should be(null)
+        declaration.getPresentationOffice must be(null)
       }
 
       for (declarationType: DeclarationType <- Seq(
@@ -51,7 +51,7 @@ class PresentationOfficeBuilderSpec extends WordSpec with Matchers with ExportsD
 
             builder.buildThenAdd(model, declaration)
 
-            declaration.getPresentationOffice should be(null)
+            declaration.getPresentationOffice must be(null)
           }
 
           "empty presentation office id" in {
@@ -61,7 +61,7 @@ class PresentationOfficeBuilderSpec extends WordSpec with Matchers with ExportsD
 
             builder.buildThenAdd(model, declaration)
 
-            declaration.getPresentationOffice should be(null)
+            declaration.getPresentationOffice must be(null)
           }
 
           "populated" in {
@@ -71,7 +71,7 @@ class PresentationOfficeBuilderSpec extends WordSpec with Matchers with ExportsD
 
             builder.buildThenAdd(model, declaration)
 
-            declaration.getPresentationOffice.getID.getValue should be("id")
+            declaration.getPresentationOffice.getID.getValue must be("id")
           }
         }
       }

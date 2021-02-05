@@ -17,15 +17,14 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.mockito.Mockito.when
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.{Address, EntityDetails, RepresentativeDetails}
 import uk.gov.hmrc.exports.services.CountriesService
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class AgentBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
+class AgentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   val mockCountriesService = mock[CountriesService]
   when(mockCountriesService.allCountries)
@@ -49,10 +48,10 @@ class AgentBuilderSpec extends WordSpec with Matchers with MockitoSugar with Exp
         agentBuilder.buildThenAdd(model, emptyDeclaration)
         val agent: Declaration.Agent = emptyDeclaration.getAgent
 
-        agent.getID.getValue should be("9GB1234567ABCDEF")
-        agent.getName should be(null)
-        agent.getAddress should be(null)
-        agent.getFunctionCode.getValue should be("2")
+        agent.getID.getValue must be("9GB1234567ABCDEF")
+        agent.getName must be(null)
+        agent.getAddress must be(null)
+        agent.getFunctionCode.getValue must be("2")
       }
       "only Address is supplied" in {
         val model =
@@ -81,13 +80,13 @@ class AgentBuilderSpec extends WordSpec with Matchers with MockitoSugar with Exp
         agentBuilder.buildThenAdd(model, emptyDeclaration)
         val agent: Declaration.Agent = emptyDeclaration.getAgent
 
-        agent.getID should be(null)
-        agent.getName.getValue should be("Full Name")
-        agent.getAddress.getLine.getValue should be("Address Line")
-        agent.getAddress.getCityName.getValue should be("Town or City")
-        agent.getAddress.getCountryCode.getValue should be("PL")
-        agent.getAddress.getPostcodeID.getValue should be("AB12 34CD")
-        agent.getFunctionCode.getValue should be("2")
+        agent.getID must be(null)
+        agent.getName.getValue must be("Full Name")
+        agent.getAddress.getLine.getValue must be("Address Line")
+        agent.getAddress.getCityName.getValue must be("Town or City")
+        agent.getAddress.getCountryCode.getValue must be("PL")
+        agent.getAddress.getPostcodeID.getValue must be("AB12 34CD")
+        agent.getFunctionCode.getValue must be("2")
       }
       "both eori and Address is supplied" in {
         val model =
@@ -116,10 +115,10 @@ class AgentBuilderSpec extends WordSpec with Matchers with MockitoSugar with Exp
         agentBuilder.buildThenAdd(model, emptyDeclaration)
         val agent: Declaration.Agent = emptyDeclaration.getAgent
 
-        agent.getID.getValue should be("9GB1234567ABCDEF")
-        agent.getName should be(null)
-        agent.getAddress should be(null)
-        agent.getFunctionCode.getValue should be("2")
+        agent.getID.getValue must be("9GB1234567ABCDEF")
+        agent.getName must be(null)
+        agent.getAddress must be(null)
+        agent.getFunctionCode.getValue must be("2")
       }
       "declarant not representing another agent" in {
         val model =
@@ -138,10 +137,10 @@ class AgentBuilderSpec extends WordSpec with Matchers with MockitoSugar with Exp
         agentBuilder.buildThenAdd(model, emptyDeclaration)
         val agent: Declaration.Agent = emptyDeclaration.getAgent
 
-        agent.getID.getValue should be("DEC_EORI")
-        agent.getName should be(null)
-        agent.getAddress should be(null)
-        agent.getFunctionCode.getValue should be(RepresentativeDetails.DirectRepresentative)
+        agent.getID.getValue must be("DEC_EORI")
+        agent.getName must be(null)
+        agent.getAddress must be(null)
+        agent.getFunctionCode.getValue must be(RepresentativeDetails.DirectRepresentative)
       }
     }
   }

@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
-import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalInformation
 import uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem
 
-class AdditionalInformationBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsItemBuilder {
+class AdditionalInformationBuilderSpec extends UnitSpec with MockitoSugar with ExportsItemBuilder {
 
   private val additionalInformation = AdditionalInformation("code", "description")
   private val builder = new AdditionalInformationBuilder()
@@ -35,7 +35,7 @@ class AdditionalInformationBuilderSpec extends WordSpec with Matchers with Mocki
 
       builder.buildThenAdd(exportItem, governmentAgencyGoodsItem)
 
-      governmentAgencyGoodsItem.getAdditionalInformation shouldBe empty
+      governmentAgencyGoodsItem.getAdditionalInformation mustBe 'empty
     }
 
     "populated additional information" in {
@@ -44,15 +44,15 @@ class AdditionalInformationBuilderSpec extends WordSpec with Matchers with Mocki
 
       builder.buildThenAdd(exportItem, governmentAgencyGoodsItem)
 
-      governmentAgencyGoodsItem.getAdditionalInformation shouldNot be(empty)
+      governmentAgencyGoodsItem.getAdditionalInformation mustNot be('empty)
       governmentAgencyGoodsItem.getAdditionalInformation
         .get(0)
         .getStatementCode
-        .getValue shouldBe additionalInformation.code
+        .getValue mustBe additionalInformation.code
       governmentAgencyGoodsItem.getAdditionalInformation
         .get(0)
         .getStatementDescription
-        .getValue shouldBe additionalInformation.description
+        .getValue mustBe additionalInformation.description
     }
 
     "remove new-lines from additional information description" in {
@@ -64,7 +64,7 @@ class AdditionalInformationBuilderSpec extends WordSpec with Matchers with Mocki
       governmentAgencyGoodsItem.getAdditionalInformation
         .get(0)
         .getStatementDescription
-        .getValue shouldBe "some description"
+        .getValue mustBe "some description"
     }
   }
 
@@ -74,16 +74,16 @@ class AdditionalInformationBuilderSpec extends WordSpec with Matchers with Mocki
 
       builder.buildThenAdd("description", declaration)
 
-      declaration.getAdditionalInformation should have(size(1))
+      declaration.getAdditionalInformation must have(size(1))
       val additionalInfo = declaration.getAdditionalInformation.get(0)
-      additionalInfo.getStatementTypeCode.getValue shouldBe "AES"
-      additionalInfo.getStatementDescription.getValue shouldBe "description"
-      additionalInfo.getPointer should have(size(2))
+      additionalInfo.getStatementTypeCode.getValue mustBe "AES"
+      additionalInfo.getStatementDescription.getValue mustBe "description"
+      additionalInfo.getPointer must have(size(2))
       val pointer1 = additionalInfo.getPointer.get(0)
       val pointer2 = additionalInfo.getPointer.get(1)
-      pointer1.getSequenceNumeric.intValue shouldBe 1
-      pointer1.getDocumentSectionCode.getValue shouldBe "42A"
-      pointer2.getDocumentSectionCode.getValue shouldBe "06A"
+      pointer1.getSequenceNumeric.intValue mustBe 1
+      pointer1.getDocumentSectionCode.getValue mustBe "42A"
+      pointer2.getDocumentSectionCode.getValue mustBe "06A"
     }
 
   }

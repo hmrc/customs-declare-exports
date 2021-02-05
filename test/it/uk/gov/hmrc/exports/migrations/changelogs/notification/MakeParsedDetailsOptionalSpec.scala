@@ -1,19 +1,19 @@
 package uk.gov.hmrc.exports.migrations.changelogs.notification
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.mongodb.{MongoClient, MongoClientURI}
 import com.mongodb.client.{MongoCollection, MongoDatabase}
+import com.mongodb.{MongoClient, MongoClientURI}
 import org.bson.Document
 import org.mongodb.scala.model.{IndexOptions, Indexes}
-import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import stubs.TestMongoDB
 import stubs.TestMongoDB.mongoConfiguration
-import MakeParsedDetailsOptionalSpec._
+import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.migrations.changelogs.notification.MakeParsedDetailsOptionalSpec._
 
-class MakeParsedDetailsOptionalSpec extends WordSpec with MustMatchers with GuiceOneServerPerSuite with BeforeAndAfterEach {
+class MakeParsedDetailsOptionalSpec extends UnitSpec with GuiceOneServerPerSuite {
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()

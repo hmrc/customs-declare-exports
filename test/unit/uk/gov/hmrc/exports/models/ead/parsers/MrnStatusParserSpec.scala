@@ -18,9 +18,9 @@ package uk.gov.hmrc.exports.models.ead.parsers
 
 import java.time.ZonedDateTime
 
-import org.scalatest.{MustMatchers, OptionValues, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 
-class MrnStatusParserSpec extends WordSpec with MustMatchers with OptionValues {
+class MrnStatusParserSpec extends UnitSpec {
 
   "MrnStatusParser" should {
     "create a MrnStatus instance once all data is provided" in {

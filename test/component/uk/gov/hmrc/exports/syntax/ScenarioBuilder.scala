@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package component.uk.gov.hmrc.exports.syntax
+package uk.gov.hmrc.exports.syntax
 
 import org.scalactic.source.Position
-
-import scala.reflect.ClassTag
 
 class ThenBuilder(
   val precondition: Seq[(Conjuction, Precondition)],
   val actions: Seq[(Conjuction, Action)],
   val postconditions: Seq[(Conjuction, Postcondition)]
 ) {
-  def And(postcondition: Postcondition)(implicit position: Position) = {
+  def And(postcondition: Postcondition)(implicit position: Position): ThenBuilder = {
     val entry: (Conjuction, Postcondition) = AndConjuction() -> postcondition
     new ThenBuilder(precondition, actions, postconditions :+ entry)
   }

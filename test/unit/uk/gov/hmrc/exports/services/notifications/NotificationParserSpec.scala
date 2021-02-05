@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
-import org.scalatest.{MustMatchers, WordSpec}
 import testdata.ExportsTestData.mrn
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.NotificationDetails
 
-class NotificationParserSpec extends WordSpec with MustMatchers {
+class NotificationParserSpec extends UnitSpec {
 
   private val notificationParser = new NotificationParser()
 

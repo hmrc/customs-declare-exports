@@ -18,14 +18,16 @@ package uk.gov.hmrc.exports.base
 
 import java.util.UUID
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import scala.reflect.ClassTag
+
 import akka.stream.Materializer
 import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.mockito.MockitoSugar
-import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.i18n.MessagesApi
@@ -46,12 +48,7 @@ import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepos
 import uk.gov.hmrc.exports.services.WcoSubmissionService
 import uk.gov.hmrc.http.SessionKeys
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
-import scala.reflect.ClassTag
-
-trait CustomsExportsBaseSpec extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar with ScalaFutures with AuthTestSupport {
+trait CustomsExportsBaseSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestSupport {
 
   SharedMetricRegistries.clear()
 

@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
-import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class PackagingBuilderSpec extends WordSpec with Matchers with ExportsItemBuilder {
+class PackagingBuilderSpec extends UnitSpec with ExportsItemBuilder {
 
   private def builder = new PackagingBuilder()
 
@@ -34,7 +34,7 @@ class PackagingBuilderSpec extends WordSpec with Matchers with ExportsItemBuilde
 
         builder.buildThenAdd(model, wcoItem)
 
-        wcoItem.getPackaging shouldBe empty
+        wcoItem.getPackaging mustBe 'empty
       }
 
       "populated list" in {
@@ -43,11 +43,11 @@ class PackagingBuilderSpec extends WordSpec with Matchers with ExportsItemBuilde
 
         builder.buildThenAdd(model, wcoItem)
 
-        wcoItem.getPackaging should have(size(1))
-        wcoItem.getPackaging.get(0).getSequenceNumeric.intValue shouldBe 0
-        wcoItem.getPackaging.get(0).getTypeCode.getValue shouldBe "types"
-        wcoItem.getPackaging.get(0).getQuantityQuantity.getValue.intValue shouldBe 123
-        wcoItem.getPackaging.get(0).getMarksNumbersID.getValue shouldBe "marks"
+        wcoItem.getPackaging must have(size(1))
+        wcoItem.getPackaging.get(0).getSequenceNumeric.intValue mustBe 0
+        wcoItem.getPackaging.get(0).getTypeCode.getValue mustBe "types"
+        wcoItem.getPackaging.get(0).getQuantityQuantity.getValue.intValue mustBe 123
+        wcoItem.getPackaging.get(0).getMarksNumbersID.getValue mustBe "marks"
       }
     }
   }

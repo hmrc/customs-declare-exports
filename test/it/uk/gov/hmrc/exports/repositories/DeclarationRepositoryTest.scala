@@ -14,25 +14,22 @@
  * limitations under the License.
  */
 
-package integration.uk.gov.hmrc.exports.repositories
+package uk.gov.hmrc.exports.repositories
 
 import java.time.{LocalDate, ZoneOffset}
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import com.codahale.metrics.SharedMetricRegistries
-import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.api.ReadConcern
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo.format
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.repositories.DeclarationRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
-class DeclarationRepositoryTest
-    extends WordSpec with Matchers with ScalaFutures with BeforeAndAfterEach with ExportsDeclarationBuilder with IntegrationPatience {
+class DeclarationRepositoryTest extends UnitSpec with ExportsDeclarationBuilder {
 
   private val injector = {
     SharedMetricRegistries.clear()
@@ -58,9 +55,9 @@ class DeclarationRepositoryTest
   "Create" should {
     "persist the declaration" in {
       val declaration = aDeclaration(withId("id"), withEori("eori"))
-      repository.create(declaration).futureValue shouldBe declaration
+      repository.create(declaration).futureValue mustBe declaration
 
-      collectionSize shouldBe 1
+      collectionSize mustBe 1
     }
   }
 
@@ -69,17 +66,17 @@ class DeclarationRepositoryTest
       val declaration = aDeclaration(withType(DeclarationType.STANDARD), withId("id"), withEori("eori"))
       givenADeclarationExists(declaration)
 
-      repository.update(declaration).futureValue shouldBe Some(declaration)
+      repository.update(declaration).futureValue mustBe Some(declaration)
 
-      collectionSize shouldBe 1
+      collectionSize mustBe 1
     }
 
     "do nothing for missing declaration" in {
       val declaration = aDeclaration(withId("id"), withEori("eori"))
 
-      repository.update(declaration).futureValue shouldBe None
+      repository.update(declaration).futureValue mustBe None
 
-      collectionSize shouldBe 0
+      collectionSize mustBe 0
     }
   }
 
@@ -91,7 +88,7 @@ class DeclarationRepositoryTest
         val declaration = aDeclaration(withId("id"), withEori("eori"))
         givenADeclarationExists(declaration)
 
-        repository.find("id", eori).futureValue shouldBe Some(declaration)
+        repository.find("id", eori).futureValue mustBe Some(declaration)
       }
     }
 
@@ -101,7 +98,7 @@ class DeclarationRepositoryTest
         val declaration2 = aDeclaration(withId("id"), withEori("some-other-eori"))
         givenADeclarationExists(declaration1, declaration2)
 
-        repository.find("id", eori).futureValue shouldBe None
+        repository.find("id", eori).futureValue mustBe None
       }
     }
   }
@@ -116,7 +113,7 @@ class DeclarationRepositoryTest
         givenADeclarationExists(declaration1, declaration2, declaration3)
 
         val page = Page(index = 1, size = 10)
-        repository.find(DeclarationSearch(eori1), page, DeclarationSort()).futureValue shouldBe Paginated(Seq(declaration1, declaration2), page, 2)
+        repository.find(DeclarationSearch(eori1), page, DeclarationSort()).futureValue mustBe Paginated(Seq(declaration1, declaration2), page, 2)
       }
 
       "there is multiple pages of results" in {
@@ -126,9 +123,9 @@ class DeclarationRepositoryTest
         givenADeclarationExists(declaration1, declaration2, declaration3)
 
         val page1 = Page(index = 1, size = 2)
-        repository.find(DeclarationSearch(eori), page1, DeclarationSort()).futureValue shouldBe Paginated(Seq(declaration1, declaration2), page1, 3)
+        repository.find(DeclarationSearch(eori), page1, DeclarationSort()).futureValue mustBe Paginated(Seq(declaration1, declaration2), page1, 3)
         val page2 = Page(index = 2, size = 2)
-        repository.find(DeclarationSearch(eori), page2, DeclarationSort()).futureValue shouldBe Paginated(Seq(declaration3), page2, 3)
+        repository.find(DeclarationSearch(eori), page2, DeclarationSort()).futureValue mustBe Paginated(Seq(declaration3), page2, 3)
       }
     }
 
@@ -136,7 +133,7 @@ class DeclarationRepositoryTest
       "none exist with eori" in {
         givenADeclarationExists(aDeclaration(withId("id"), withEori("some-other-eori")))
 
-        repository.find(DeclarationSearch(eori), Page(), DeclarationSort()).futureValue shouldBe Paginated
+        repository.find(DeclarationSearch(eori), Page(), DeclarationSort()).futureValue mustBe Paginated
           .empty[ExportsDeclaration](Page())
       }
     }
@@ -153,7 +150,7 @@ class DeclarationRepositoryTest
         val page = Page(index = 1, size = 10)
         repository
           .find(DeclarationSearch(eori, Some(DeclarationStatus.DRAFT)), page, DeclarationSort())
-          .futureValue shouldBe Paginated(Seq(declaration1, declaration2), page, 2)
+          .futureValue mustBe Paginated(Seq(declaration1, declaration2), page, 2)
       }
     }
   }
@@ -168,7 +165,7 @@ class DeclarationRepositoryTest
       val page = Page(index = 1, size = 10)
       repository
         .find(DeclarationSearch(eori), page, DeclarationSort(SortBy.UPDATED, SortDirection.ASC))
-        .futureValue shouldBe Paginated(Seq(declaration1, declaration2, declaration3), page, 3)
+        .futureValue mustBe Paginated(Seq(declaration1, declaration2, declaration3), page, 3)
     }
     "return the declarations in decending order" in {
       val declaration1 = aDeclaration(withUpdateDate(2019, 1, 1))
@@ -179,7 +176,7 @@ class DeclarationRepositoryTest
       val page = Page(index = 1, size = 10)
       repository
         .find(DeclarationSearch(eori), page, DeclarationSort(SortBy.UPDATED, SortDirection.DES))
-        .futureValue shouldBe Paginated(Seq(declaration3, declaration2, declaration1), page, 3)
+        .futureValue mustBe Paginated(Seq(declaration3, declaration2, declaration1), page, 3)
     }
   }
 
@@ -190,7 +187,7 @@ class DeclarationRepositoryTest
 
       repository.delete(declaration).futureValue
 
-      collectionSize shouldBe 0
+      collectionSize mustBe 0
     }
 
     "maintain other declarations" when {
@@ -202,7 +199,7 @@ class DeclarationRepositoryTest
 
         repository.delete(declaration1).futureValue
 
-        collectionSize shouldBe 2
+        collectionSize mustBe 2
       }
     }
   }
@@ -217,8 +214,8 @@ class DeclarationRepositoryTest
 
       val count = repository.deleteExpiredDraft(expireDate(2019, 8, 1)).futureValue
 
-      count shouldBe 1
-      collectionSize shouldBe 0
+      count mustBe 1
+      collectionSize mustBe 0
     }
 
     "remove the correct number of expired draft declarations" in {
@@ -230,13 +227,13 @@ class DeclarationRepositoryTest
 
       val count = repository.deleteExpiredDraft(expireDate(2019, 2, 1)).futureValue
 
-      count shouldBe 2
-      collectionSize shouldBe 2
+      count mustBe 2
+      collectionSize mustBe 2
 
       val page = Page(index = 1, size = 10)
       repository
         .find(DeclarationSearch(eori), page, DeclarationSort(SortBy.UPDATED, SortDirection.ASC))
-        .futureValue shouldBe Paginated(Seq(completedDeclaration, draftDeclarationOngoing), page, 2)
+        .futureValue mustBe Paginated(Seq(completedDeclaration, draftDeclarationOngoing), page, 2)
     }
   }
 }

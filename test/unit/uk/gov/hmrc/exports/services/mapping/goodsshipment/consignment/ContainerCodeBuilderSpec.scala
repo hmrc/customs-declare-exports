@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
-import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.Container
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class ContainerCodeBuilderSpec extends WordSpec with Matchers {
+class ContainerCodeBuilderSpec extends UnitSpec {
 
   "ContainerCodeBuilder" should {
 
@@ -31,7 +31,7 @@ class ContainerCodeBuilderSpec extends WordSpec with Matchers {
 
         builder.buildThenAdd(Seq(Container("id", Seq.empty)), consignment)
 
-        consignment.getContainerCode.getValue should be("1")
+        consignment.getContainerCode.getValue must be("1")
       }
 
       "there are no containers" in {
@@ -40,7 +40,7 @@ class ContainerCodeBuilderSpec extends WordSpec with Matchers {
 
         builder.buildThenAdd(Seq.empty, consignment)
 
-        consignment.getContainerCode.getValue should be("0")
+        consignment.getContainerCode.getValue must be("0")
       }
     }
   }

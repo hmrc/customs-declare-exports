@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.exports
 
+import scala.concurrent.Future
+
 import com.codahale.metrics.SharedMetricRegistries
-import component.uk.gov.hmrc.exports.syntax._
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
@@ -30,14 +31,12 @@ import play.api.Application
 import play.api.http.Status.{NOT_FOUND, _}
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import stubs.{CustomsDeclarationsAPIConfig, WireMockRunner}
+import stubs.{CustomsDeclarationsAPIConfig, ExternalServicesConfig, WireMockRunner}
+import testdata.ExportsTestData._
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
-import testdata.ExportsTestData._
-import stubs.ExternalServicesConfig
 import uk.gov.hmrc.exports.steps._
-
-import scala.concurrent.Future
+import uk.gov.hmrc.exports.syntax._
 
 class ExportsSubmissionReceivedSpec
     extends TypedFeatureSpec with ScalaFutures with IntegrationPatience with WireMockRunner with MockitoSugar with GuiceOneAppPerSuite

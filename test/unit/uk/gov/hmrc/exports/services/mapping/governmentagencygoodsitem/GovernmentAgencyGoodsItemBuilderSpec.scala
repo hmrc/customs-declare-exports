@@ -19,10 +19,9 @@ package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito
 import org.mockito.Mockito._
-import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json._
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration._
@@ -31,8 +30,8 @@ import uk.gov.hmrc.wco.dec.Commodity
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class GovernmentAgencyGoodsItemBuilderSpec
-    extends WordSpec with Matchers with MockitoSugar with GovernmentAgencyGoodsItemData with ExportsItemBuilder with ExportsDeclarationBuilder
-    with BeforeAndAfterEach {
+    extends UnitSpec with GovernmentAgencyGoodsItemData with ExportsItemBuilder with ExportsDeclarationBuilder {
+
   val defaultMeasureCode = "KGM"
 
   private val statisticalValueAmountBuilder = mock[StatisticalValueAmountBuilder]
@@ -91,8 +90,8 @@ class GovernmentAgencyGoodsItemBuilderSpec
           verify(mockCachingMappingHelper).commodityFromExportItem(any[ExportItem])
           verify(dutyTaxPartyBuilder)
             .buildThenAdd(any[AdditionalFiscalReference], any[GoodsShipment.GovernmentAgencyGoodsItem])
-          goodsShipment.getGovernmentAgencyGoodsItem shouldNot be(empty)
-          goodsShipment.getGovernmentAgencyGoodsItem.get(0).getSequenceNumeric.intValue() shouldBe 99
+          goodsShipment.getGovernmentAgencyGoodsItem mustNot be('empty)
+          goodsShipment.getGovernmentAgencyGoodsItem.get(0).getSequenceNumeric.intValue() mustBe 99
         }
       }
 
@@ -128,8 +127,8 @@ class GovernmentAgencyGoodsItemBuilderSpec
           verify(mockCachingMappingHelper).commodityFromExportItem(any[ExportItem])
           verify(dutyTaxPartyBuilder)
             .buildThenAdd(any[AdditionalFiscalReference], any[GoodsShipment.GovernmentAgencyGoodsItem])
-          goodsShipment.getGovernmentAgencyGoodsItem shouldNot be(empty)
-          goodsShipment.getGovernmentAgencyGoodsItem.get(0).getSequenceNumeric.intValue() shouldBe 99
+          goodsShipment.getGovernmentAgencyGoodsItem mustNot be(empty)
+          goodsShipment.getGovernmentAgencyGoodsItem.get(0).getSequenceNumeric.intValue() mustBe 99
         }
       }
     }

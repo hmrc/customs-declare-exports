@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package component.uk.gov.hmrc.exports.syntax
+package uk.gov.hmrc.exports.syntax
 
 import org.scalactic.source.Position
 import org.scalatest.Informer

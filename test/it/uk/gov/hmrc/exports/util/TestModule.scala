@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package integration.uk.gov.hmrc.exports.util
+package uk.gov.hmrc.exports.util
 
 import com.google.inject.AbstractModule
 import play.api.inject.guice.GuiceableModule

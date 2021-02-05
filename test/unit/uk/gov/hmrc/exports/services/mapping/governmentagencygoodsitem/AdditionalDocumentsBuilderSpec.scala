@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
-import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.{Date, DocumentProduced}
 import uk.gov.hmrc.wco.dec._
 
-class AdditionalDocumentsBuilderSpec extends WordSpec with Matchers with GovernmentAgencyGoodsItemData {
+class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoodsItemData {
   "AdditionalDocumentsBuilder" should {
     "map correctly when values are present" in {
 
@@ -42,18 +42,18 @@ class AdditionalDocumentsBuilderSpec extends WordSpec with Matchers with Governm
       )
 
       val mappedDocuments = AdditionalDocumentsBuilder.build(Seq(additionalDocument))
-      mappedDocuments.get(0).getCategoryCode.getValue shouldBe documentAndAdditionalDocumentTypeCode.substring(0, 1)
-      mappedDocuments.get(0).getTypeCode.getValue shouldBe documentAndAdditionalDocumentTypeCode.substring(1)
-      mappedDocuments.get(0).getID.getValue should be("123")
-      mappedDocuments.get(0).getLPCOExemptionCode.getValue shouldBe documentStatus
-      mappedDocuments.get(0).getName.getValue shouldBe documentStatusReason
-      mappedDocuments.get(0).getSubmitter.getName.getValue shouldBe issusingAuthorityName
+      mappedDocuments.get(0).getCategoryCode.getValue mustBe documentAndAdditionalDocumentTypeCode.substring(0, 1)
+      mappedDocuments.get(0).getTypeCode.getValue mustBe documentAndAdditionalDocumentTypeCode.substring(1)
+      mappedDocuments.get(0).getID.getValue must be("123")
+      mappedDocuments.get(0).getLPCOExemptionCode.getValue mustBe documentStatus
+      mappedDocuments.get(0).getName.getValue mustBe documentStatusReason
+      mappedDocuments.get(0).getSubmitter.getName.getValue mustBe issusingAuthorityName
 
       val writeoff = mappedDocuments.get(0).getWriteOff
-      writeoff.getAmountAmount shouldBe null
+      writeoff.getAmountAmount mustBe null
       val writeOffQuantity = writeoff.getQuantityQuantity
-      writeOffQuantity.getUnitCode shouldBe measurementUnit
-      writeOffQuantity.getValue shouldBe documentQuantity.bigDecimal
+      writeOffQuantity.getUnitCode mustBe measurementUnit
+      writeOffQuantity.getValue mustBe documentQuantity.bigDecimal
     }
 
     "map DocumentProduced to GovernmentAgencyGoodsItemAdditionalDocument" in {
@@ -69,13 +69,13 @@ class AdditionalDocumentsBuilderSpec extends WordSpec with Matchers with Governm
 
       val additionalDoc = AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument(doc)
 
-      additionalDoc.categoryCode shouldBe Some("D")
-      additionalDoc.typeCode shouldBe Some("OC")
-      additionalDoc.id shouldBe Some("idpart")
-      additionalDoc.lpcoExemptionCode shouldBe Some("status")
-      additionalDoc.name shouldBe Some("reason")
-      additionalDoc.effectiveDateTime shouldBe Some(DateTimeElement(DateTimeString("102", "20170410")))
-      additionalDoc.submitter.flatMap(_.name) shouldBe Some("Issuing Authority Name")
+      additionalDoc.categoryCode mustBe Some("D")
+      additionalDoc.typeCode mustBe Some("OC")
+      additionalDoc.id mustBe Some("idpart")
+      additionalDoc.lpcoExemptionCode mustBe Some("status")
+      additionalDoc.name mustBe Some("reason")
+      additionalDoc.effectiveDateTime mustBe Some(DateTimeElement(DateTimeString("102", "20170410")))
+      additionalDoc.submitter.flatMap(_.name) mustBe Some("Issuing Authority Name")
     }
   }
 }

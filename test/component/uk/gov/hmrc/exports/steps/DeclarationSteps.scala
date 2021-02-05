@@ -18,7 +18,9 @@ package uk.gov.hmrc.exports.steps
 
 import java.util.UUID
 
-import component.uk.gov.hmrc.exports.syntax.{Action, Precondition, ScenarioContext}
+import scala.concurrent.{Await, Future}
+import scala.util.control.NonFatal
+
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
@@ -27,14 +29,12 @@ import org.scalatest.concurrent.{IntegrationPatience, PatienceConfiguration}
 import play.api.Application
 import play.api.mvc.Result
 import play.api.test.FakeRequest
+import testdata.ExportsDeclarationBuilder
+import testdata.ExportsTestData.{declarantLrnValue, ValidHeaders}
 import uk.gov.hmrc.exports.models.declaration.{Container, DeclarationStatus, ExportsDeclaration, Seal}
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
-import testdata.ExportsDeclarationBuilder
-import testdata.ExportsTestData.{declarantLrnValue, ValidHeaders}
-
-import scala.concurrent.{Await, Future}
-import scala.util.control.NonFatal
+import uk.gov.hmrc.exports.syntax.{Action, Precondition, ScenarioContext}
 
 object `User has completed declaration` extends Precondition with ExportsDeclarationBuilder {
 

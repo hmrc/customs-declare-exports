@@ -14,27 +14,24 @@
  * limitations under the License.
  */
 
-package integration.uk.gov.hmrc.exports.repositories
+package uk.gov.hmrc.exports.repositories
 
 import java.util.UUID
 
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import com.codahale.metrics.SharedMetricRegistries
-import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.{BeforeAndAfterEach, MustMatchers, OptionValues, WordSpec}
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.core.errors.DatabaseException
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest, SubmissionRequest}
-import uk.gov.hmrc.exports.repositories.SubmissionRepository
 
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext.Implicits.global
-
-class SubmissionRepositorySpec
-    extends WordSpec with BeforeAndAfterEach with ScalaFutures with MustMatchers with OptionValues with IntegrationPatience {
+class SubmissionRepositorySpec extends UnitSpec {
 
   private val injector: Injector = {
     SharedMetricRegistries.clear()
@@ -54,7 +51,7 @@ class SubmissionRepositorySpec
         repo.save(submission).futureValue must be(submission)
 
         val submissionInDB = repo.findSubmissionByMrn(mrn).futureValue
-        submissionInDB must be(defined)
+        submissionInDB must be('defined)
       }
     }
 
@@ -93,7 +90,7 @@ class SubmissionRepositorySpec
     "return empty Option" when {
       "there is no Submission with given ConversationId" in {
         val newMrn = mrn_2
-        repo.updateMrn(actionId, newMrn).futureValue mustNot be(defined)
+        repo.updateMrn(actionId, newMrn).futureValue mustNot be('defined)
       }
     }
 
@@ -123,7 +120,7 @@ class SubmissionRepositorySpec
     "there is no Submission with given MRN" should {
       "return empty Option" in {
         val newAction = Action(actionId_2, CancellationRequest)
-        repo.addAction(mrn, newAction).futureValue mustNot be(defined)
+        repo.addAction(mrn, newAction).futureValue mustNot be('defined)
       }
     }
 
@@ -215,7 +212,7 @@ class SubmissionRepositorySpec
 
     "there is no Submission with given MRN" should {
       "return empty Option" in {
-        repo.findSubmissionByMrn(mrn).futureValue mustNot be(defined)
+        repo.findSubmissionByMrn(mrn).futureValue mustNot be('defined)
       }
     }
 

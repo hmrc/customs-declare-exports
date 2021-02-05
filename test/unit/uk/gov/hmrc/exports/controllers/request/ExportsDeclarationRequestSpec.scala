@@ -18,15 +18,14 @@ package uk.gov.hmrc.exports.controllers.request
 
 import java.time.Instant
 
-import org.scalatest.{MustMatchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.Json
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 
-class ExportsDeclarationRequestSpec extends WordSpec with MustMatchers with ExportsDeclarationBuilder with MockitoSugar {
+class ExportsDeclarationRequestSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   private val `type` = DeclarationType.STANDARD
   private val createdDate = Instant.MIN
@@ -97,9 +96,9 @@ class ExportsDeclarationRequestSpec extends WordSpec with MustMatchers with Expo
       .parse(ExportsDeclarationSpec.declarationAsString)
       .validate[ExportsDeclarationRequest]
       .fold(error => fail(s"Could not parse - $error"), declaration => {
-        declaration.transport.borderModeOfTransportCode mustNot be(empty)
-        declaration.transport.meansOfTransportOnDepartureType mustNot be(empty)
-        declaration.transport.transportPayment mustNot be(empty)
+        declaration.transport.borderModeOfTransportCode mustNot be('empty)
+        declaration.transport.meansOfTransportOnDepartureType mustNot be('empty)
+        declaration.transport.transportPayment mustNot be('empty)
       })
   }
 

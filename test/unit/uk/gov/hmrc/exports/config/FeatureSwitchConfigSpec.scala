@@ -17,11 +17,11 @@
 package uk.gov.hmrc.exports.config
 
 import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest.{MustMatchers, WordSpec}
 import play.api.Configuration
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.features.{Feature, FeatureStatus}
 
-class FeatureSwitchConfigSpec extends WordSpec with MustMatchers {
+class FeatureSwitchConfigSpec extends UnitSpec {
 
   private val validConfig: Config =
     ConfigFactory.parseString("""

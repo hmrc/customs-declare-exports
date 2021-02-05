@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
-import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.wco.dec._
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class CommodityBuilderSpec extends WordSpec with Matchers with GovernmentAgencyGoodsItemData {
+class CommodityBuilderSpec extends UnitSpec with GovernmentAgencyGoodsItemData {
 
   "CommodityBuilder" should {
 
@@ -38,21 +38,21 @@ class CommodityBuilderSpec extends WordSpec with Matchers with GovernmentAgencyG
       builder.buildThenAdd(commodity, item)
 
       val mappedCommodity = item.getCommodity
-      mappedCommodity.getDescription.getValue should be("commodityDescription")
+      mappedCommodity.getDescription.getValue must be("commodityDescription")
 
-      mappedCommodity.getClassification.get(0).getID.getValue should be("classificationsId")
-      mappedCommodity.getClassification.get(0).getIdentificationTypeCode.getValue should be("identificationTypeCode")
+      mappedCommodity.getClassification.get(0).getID.getValue must be("classificationsId")
+      mappedCommodity.getClassification.get(0).getIdentificationTypeCode.getValue must be("identificationTypeCode")
 
-      mappedCommodity.getDangerousGoods.get(0).getUNDGID.getValue should be("identificationTypeCode")
+      mappedCommodity.getDangerousGoods.get(0).getUNDGID.getValue must be("identificationTypeCode")
 
-      mappedCommodity.getGoodsMeasure.getGrossMassMeasure.getUnitCode should be("KGM")
-      mappedCommodity.getGoodsMeasure.getGrossMassMeasure.getValue.intValue() should be(100)
+      mappedCommodity.getGoodsMeasure.getGrossMassMeasure.getUnitCode must be("KGM")
+      mappedCommodity.getGoodsMeasure.getGrossMassMeasure.getValue.intValue() must be(100)
 
-      mappedCommodity.getGoodsMeasure.getNetNetWeightMeasure.getUnitCode should be("KGM")
-      mappedCommodity.getGoodsMeasure.getNetNetWeightMeasure.getValue.intValue() should be(90)
+      mappedCommodity.getGoodsMeasure.getNetNetWeightMeasure.getUnitCode must be("KGM")
+      mappedCommodity.getGoodsMeasure.getNetNetWeightMeasure.getValue.intValue() must be(90)
 
-      mappedCommodity.getGoodsMeasure.getTariffQuantity.getUnitCode should be("KGM")
-      mappedCommodity.getGoodsMeasure.getTariffQuantity.getValue.intValue() should be(2)
+      mappedCommodity.getGoodsMeasure.getTariffQuantity.getUnitCode must be("KGM")
+      mappedCommodity.getGoodsMeasure.getTariffQuantity.getValue.intValue() must be(2)
     }
 
     "map commodity item successfully when dangerous goods not present" in {
@@ -69,14 +69,14 @@ class CommodityBuilderSpec extends WordSpec with Matchers with GovernmentAgencyG
       builder.buildThenAdd(commodity, item)
 
       val mappedCommodity = item.getCommodity
-      mappedCommodity.getDescription.getValue should be("commodityDescription")
+      mappedCommodity.getDescription.getValue must be("commodityDescription")
 
-      mappedCommodity.getClassification.get(0).getID.getValue should be("classificationsId")
-      mappedCommodity.getClassification.get(0).getIdentificationTypeCode.getValue should be("identificationTypeCode")
+      mappedCommodity.getClassification.get(0).getID.getValue must be("classificationsId")
+      mappedCommodity.getClassification.get(0).getIdentificationTypeCode.getValue must be("identificationTypeCode")
 
-      mappedCommodity.getDangerousGoods.get(0).getUNDGID.getValue should be("identificationTypeCode")
+      mappedCommodity.getDangerousGoods.get(0).getUNDGID.getValue must be("identificationTypeCode")
 
-      mappedCommodity.getGoodsMeasure should be(null)
+      mappedCommodity.getGoodsMeasure must be(null)
     }
   }
 }

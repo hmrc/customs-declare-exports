@@ -16,21 +16,19 @@
 
 package uk.gov.hmrc.exports.connector.ead
 
-import integration.uk.gov.hmrc.exports.util.TestModule
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.Helpers.{INTERNAL_SERVER_ERROR, OK}
+import play.api.test.Helpers._
 import stubs.CustomsDeclarationsInformationAPIConfig._
 import stubs.CustomsDeclarationsInformationAPIService
 import stubs.ExternalServicesConfig.{Host, Port}
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
+import uk.gov.hmrc.exports.util.TestModule
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
-class CustomsDeclarationsInformationConnectorSpec
-    extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar with CustomsDeclarationsInformationAPIService {
+class CustomsDeclarationsInformationConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with CustomsDeclarationsInformationAPIService {
 
   private lazy val connector = app.injector.instanceOf[CustomsDeclarationsInformationConnector]
 
@@ -54,9 +52,9 @@ class CustomsDeclarationsInformationConnectorSpec
     "return response with specific status" when {
       "request is processed successfully - 200" in {
         startService(OK, mrn)
-        val mrnStatus = connector.fetchMrnStatus(mrn).get
-        mrnStatus.mrn shouldBe mrn
-        mrnStatus.eori shouldBe "GB123456789012000"
+        val mrnStatus = connector.fetchMrnStatus(mrn).futureValue.get
+        mrnStatus.mrn mustBe mrn
+        mrnStatus.eori mustBe "GB123456789012000"
         verifyDecServiceWasCalledCorrectly(mrn, expectedApiVersion = apiVersion, bearerToken)
       }
 
