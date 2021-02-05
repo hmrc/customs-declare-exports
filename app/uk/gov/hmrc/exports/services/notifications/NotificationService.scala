@@ -73,10 +73,9 @@ class NotificationService @Inject()(
 
   private def saveSingleNotification(notification: Notification): Future[Either[String, Unit]] =
     try {
-      notificationRepository.save(notification).flatMap {
-        case false => Future.successful(Left("Failed saving notification"))
-        case true  => updateRelatedSubmission(notification)
-      }
+      notificationRepository
+        .insert(notification)
+        .flatMap(_ => updateRelatedSubmission(notification))
     } catch {
       case exc: Throwable =>
         logger.error(exc.getMessage)

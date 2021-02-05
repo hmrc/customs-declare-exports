@@ -28,6 +28,7 @@ import org.mockito.{ArgumentCaptor, InOrder, Mockito}
 import reactivemongo.bson.{BSONDocument, BSONInteger, BSONString}
 import reactivemongo.core.errors.DetailedDatabaseException
 import testdata.ExportsTestData._
+import testdata.RepositoryTestData._
 import testdata.SubmissionTestData.{submission, _}
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
@@ -38,6 +39,10 @@ import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, Notif
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest, SubmissionStatus}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.xml.NodeSeq
+
 class NotificationServiceSpec extends UnitSpec {
 
   private val submissionRepository: SubmissionRepository = buildSubmissionRepositoryMock
@@ -45,7 +50,7 @@ class NotificationServiceSpec extends UnitSpec {
   private val notificationFactory: NotificationFactory = mock[NotificationFactory]
 
   private val notificationService =
-    new NotificationService(submissionRepository, notificationRepository, notificationFactory)(ExecutionContext.global)
+    new NotificationService(submissionRepository, notificationRepository, notificationFactory)
 
   val PositionFunctionCode = "11"
   val NameCodeGranted = "39"
@@ -55,12 +60,12 @@ class NotificationServiceSpec extends UnitSpec {
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(submissionRepository, notificationRepository)
+    reset(submissionRepository, notificationRepository, notificationFactory)
 
   }
 
   override def afterEach(): Unit = {
-    reset(submissionRepository, notificationRepository)
+    reset(submissionRepository, notificationRepository, notificationFactory)
 
     super.afterEach()
   }
@@ -72,7 +77,7 @@ class NotificationServiceSpec extends UnitSpec {
   }
 
   trait SaveHappyPathTest {
-    when(notificationRepository.save(any())).thenReturn(Future.successful(true))
+    when(notificationRepository.insert(any())(any())).thenReturn(Future.successful(dummyWriteResultSuccess))
     when(submissionRepository.updateMrn(any(), any())).thenReturn(Future.successful(Some(submission)))
   }
 
@@ -164,7 +169,7 @@ class NotificationServiceSpec extends UnitSpec {
     }
   }
 
-  "NotificationService on save" when {
+  "NotificationService on insert" when {
 
     "everything works correctly" should {
 
@@ -176,14 +181,14 @@ class NotificationServiceSpec extends UnitSpec {
         notificationService.save(Seq(notification)).futureValue
 
         val inOrder: InOrder = Mockito.inOrder(notificationRepository, submissionRepository)
-        inOrder.verify(notificationRepository, times(1)).save(any())
+        inOrder.verify(notificationRepository, times(1)).insert(any())(any())
         inOrder.verify(submissionRepository, times(1)).updateMrn(any(), any())
       }
 
       "call NotificationRepository passing Notification provided" in new SaveHappyPathTest {
         notificationService.save(Seq(notification)).futureValue
 
-        verify(notificationRepository, times(1)).save(meq(notification))
+        verify(notificationRepository, times(1)).insert(meq(notification))(any())
       }
 
       "call SubmissionRepository passing conversation ID and MRN provided in the Notification" in new SaveHappyPathTest {
@@ -195,33 +200,16 @@ class NotificationServiceSpec extends UnitSpec {
       "call NotificationRepository but not SubmissionRepository when saving an unparsed notification" in new SaveHappyPathTest {
         notificationService.save(Seq(notificationUnparsed)).futureValue
 
-        verify(notificationRepository, times(1)).save(meq(notificationUnparsed))
+        verify(notificationRepository, times(1)).insert(meq(notificationUnparsed))(any())
         verifyNoInteractions(submissionRepository)
       }
     }
 
-    "NotificationRepository on save returns false" should {
-
-      "return Either.Left with proper message" in {
-        when(notificationRepository.save(any())).thenReturn(Future.successful(false))
-
-        notificationService.save(Seq(notification)).futureValue must equal(Left("Failed saving notification"))
-      }
-
-      "not call SubmissionRepository" in {
-        when(notificationRepository.save(any())).thenReturn(Future.successful(false))
-
-        notificationService.save(Seq(notification)).futureValue
-
-        verifyNoInteractions(submissionRepository)
-      }
-    }
-
-    "NotificationRepository on save throws exception" should {
+    "NotificationRepository on insert throws exception" should {
 
       "return Either.Left with exception message" in {
         val exceptionMsg = "Test Exception message"
-        when(notificationRepository.save(any())).thenThrow(new RuntimeException(exceptionMsg))
+        when(notificationRepository.insert(any())(any())).thenThrow(new RuntimeException(exceptionMsg))
 
         val saveResult = notificationService.save(Seq(notification)).futureValue
 
@@ -229,7 +217,7 @@ class NotificationServiceSpec extends UnitSpec {
       }
 
       "not call SubmissionRepository" in {
-        when(notificationRepository.save(any())).thenThrow(new RuntimeException)
+        when(notificationRepository.insert(any())(any())).thenThrow(new RuntimeException)
 
         notificationService.save(Seq(notification)).futureValue
 
@@ -240,7 +228,7 @@ class NotificationServiceSpec extends UnitSpec {
     "SubmissionRepository on updateMrn returns empty Option" should {
 
       "return Either.Right" in {
-        when(notificationRepository.save(any())).thenReturn(Future.successful(true))
+        when(notificationRepository.insert(any())(any())).thenReturn(Future.successful(dummyWriteResultSuccess))
         when(submissionRepository.updateMrn(any(), any())).thenReturn(Future.successful(None))
 
         notificationService.save(Seq(notification)).futureValue must equal(Right((): Unit))
@@ -251,7 +239,7 @@ class NotificationServiceSpec extends UnitSpec {
 
       "return Either.Left with exception message" in {
         val exceptionMsg = "Test Exception message"
-        when(notificationRepository.save(any())).thenReturn(Future.successful(true))
+        when(notificationRepository.insert(any())(any())).thenReturn(Future.successful(dummyWriteResultSuccess))
         when(submissionRepository.updateMrn(any(), any())).thenThrow(new RuntimeException(exceptionMsg))
 
         val saveResult = notificationService.save(Seq(notification)).futureValue
@@ -268,7 +256,7 @@ class NotificationServiceSpec extends UnitSpec {
 
       notificationService.reattemptParsingUnparsedNotifications().futureValue
 
-      verify(notificationRepository, never()).save(any())
+      verify(notificationRepository, never()).insert(any())(any())
       verify(notificationRepository, never()).removeUnparsedNotificationsForActionId(any())
     }
 
@@ -278,7 +266,7 @@ class NotificationServiceSpec extends UnitSpec {
 
       notificationService.reattemptParsingUnparsedNotifications().futureValue
 
-      verify(notificationRepository, never()).save(any())
+      verify(notificationRepository, never()).insert(any())(any())
       verify(notificationRepository, never()).removeUnparsedNotificationsForActionId(any())
     }
 
@@ -296,7 +284,7 @@ class NotificationServiceSpec extends UnitSpec {
 
       val inOrder: InOrder = Mockito.inOrder(notificationFactory, notificationRepository)
       inOrder.verify(notificationFactory).buildNotifications(meq(notificationUnparsed.actionId), meq(testNotification.asXml))
-      inOrder.verify(notificationRepository).save(any())
+      inOrder.verify(notificationRepository).insert(any())(any())
       inOrder.verify(notificationRepository).removeUnparsedNotificationsForActionId(meq(notificationUnparsed.actionId))
     }
 
@@ -312,7 +300,7 @@ class NotificationServiceSpec extends UnitSpec {
 
       val inOrder: InOrder = Mockito.inOrder(notificationFactory, notificationRepository)
       inOrder.verify(notificationFactory).buildNotifications(meq(notificationUnparsed.actionId), meq(testNotification.asXml))
-      inOrder.verify(notificationRepository, times(2)).save(any())
+      inOrder.verify(notificationRepository, times(2)).insert(any())(any())
       inOrder.verify(notificationRepository, times(1)).removeUnparsedNotificationsForActionId(meq(notificationUnparsed.actionId))
     }
   }

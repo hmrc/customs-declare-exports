@@ -43,14 +43,6 @@ class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: 
     Index(Seq("details" -> IndexType.Ascending), name = Some("detailsDocMissingIdx"), partialFilter = Some(BSONDocument("details" -> BSONNull)))
   )
 
-  // TODO: Need to change this method to return Future[WriteResult].
-  //  In current implementation it will never return false, because in case of an error,
-  //  insert throws an Exception which will be propagated.
-  def save(notification: Notification): Future[Boolean] = insert(notification).map { res =>
-    if (!res.ok) logger.error(s"Errors when persisting export notification: ${res.writeErrors.mkString("--")}")
-    res.ok
-  }
-
   def findNotificationsByActionId(actionId: String): Future[Seq[Notification]] =
     find("actionId" -> JsString(actionId))
 
