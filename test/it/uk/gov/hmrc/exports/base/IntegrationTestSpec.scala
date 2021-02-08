@@ -17,20 +17,44 @@
 package uk.gov.hmrc.exports.base
 
 import com.codahale.metrics.SharedMetricRegistries
-import com.google.inject.AbstractModule
 import org.scalatest.concurrent.IntegrationPatience
-import play.api.inject.guice.GuiceableModule
-import stubs.WireMockRunner
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.Injecting
+import stubs.ExternalServicesConfig.{Host, Port}
+import stubs.CustomsDeclarationsAPIConfig.{apiVersion, submitDeclarationServiceContext}
+import stubs.MockGenericDownstreamService
+import testdata.ExportsTestData
+import uk.gov.hmrc.exports.util.TestModule
+import uk.gov.hmrc.http.HeaderCarrier
 
-object IntegrationTestModule extends AbstractModule {
-  override def configure(): Unit = ()
-
-  def asGuiceableModule: GuiceableModule = GuiceableModule.guiceable(this)
-}
-
-trait IntegrationTestSpec extends UnitSpec with IntegrationPatience with WireMockRunner {
+trait IntegrationTestSpec extends UnitSpec with GuiceOneAppPerSuite with Injecting with IntegrationPatience with MockGenericDownstreamService {
 
   SharedMetricRegistries.clear()
+
+  override implicit lazy val app: Application =
+    GuiceApplicationBuilder(overrides = Seq(TestModule.asGuiceableModule))
+      .configure(
+        Map(
+          "microservice.services.auth.host" -> Host,
+          "microservice.services.auth.port" -> Port,
+          "microservice.services.customs-data-store.host" -> Host,
+          "microservice.services.customs-data-store.port" -> Port,
+          "microservice.services.customs-declarations.host" -> Host,
+          "microservice.services.customs-declarations.port" -> Port,
+          "microservice.services.customs-declarations.submit-uri" -> submitDeclarationServiceContext,
+          "microservice.services.customs-declarations.bearer-token" -> ExportsTestData.authToken,
+          "microservice.services.customs-declarations.api-version" -> apiVersion,
+          "microservice.services.customs-declarations-information.host" -> Host,
+          "microservice.services.customs-declarations-information.port" -> Port,
+          "microservice.services.customs-declarations-information.submit-uri" -> "/mrn/ID/status",
+          "microservice.services.customs-declarations-information.api-version" -> "1.0"
+        )
+      )
+      .build()
+
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   override protected def beforeAll() {
     startMockServer()

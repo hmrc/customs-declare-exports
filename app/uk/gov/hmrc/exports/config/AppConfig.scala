@@ -26,16 +26,16 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import scala.concurrent.duration.FiniteDuration
 
 @Singleton
-class AppConfig @Inject()(val runModeConfiguration: Configuration, val environment: Environment, servicesConfig: ServicesConfig) {
+class AppConfig @Inject()(val configuration: Configuration, val environment: Environment, servicesConfig: ServicesConfig) {
 
   lazy val clock: Clock = Clock.systemUTC()
 
   private def loadConfig(key: String): String =
-    runModeConfiguration
+    configuration
       .getOptional[String](key)
       .getOrElse(throw new Exception(s"Missing configuration key: $key"))
 
-  lazy val mongodbUri: String = runModeConfiguration.get[String]("mongodb.uri")
+  lazy val mongodbUri: String = configuration.get[String]("mongodb.uri")
 
   lazy val authUrl: String = servicesConfig.baseUrl("auth")
 
@@ -74,6 +74,10 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, val environme
   lazy val cdiClientID = servicesConfig.getString("microservice.services.customs-declarations-information.client-id")
 
   lazy val cdiBearerToken = servicesConfig.getString("microservice.services.customs-declarations-information.bearer-token")
+
+  lazy val customsDataStoreBaseUrl: String = servicesConfig.baseUrl("customs-data-store")
+
+  lazy val verifiedEmailPath: String = configuration.get[String]("microservice.services.customs-data-store.verified-email-path")
 }
 
 object AppConfig {

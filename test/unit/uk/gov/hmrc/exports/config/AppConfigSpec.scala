@@ -43,6 +43,9 @@ class AppConfigSpec extends UnitSpec {
       |microservice.services.customs-declarations-information.bearer-token=Bearer cdi-bearer-token
       |microservice.services.customs-declarations-information.client-id=cdi-client-id
       |microservice.services.customs-declarations-information.fetch-mrn-status=/mrn/ID/status
+      |microservice.services.customs-data-store.host=localhost
+      |microservice.services.customs-data-store.port=6790
+      |microservice.services.customs-data-store.verified-email-path=/customs-data-store/eori/EORI/verified-email
     """.stripMargin)
 
   private val emptyAppConfig: Config = ConfigFactory.parseString("")
@@ -52,67 +55,67 @@ class AppConfigSpec extends UnitSpec {
   val environment = Environment.simple()
 
   private def servicesConfig(conf: Configuration) = new ServicesConfig(conf)
-  private def appConfig(conf: Configuration) = new AppConfig(conf, environment, servicesConfig(conf))
+  private def genAppConfig(conf: Configuration) = new AppConfig(conf, environment, servicesConfig(conf))
 
   "AppConfig" should {
     "return config as object model when configuration is valid" in {
-      val configService: AppConfig = appConfig(validServicesConfiguration)
+      val appConfig: AppConfig = genAppConfig(validServicesConfiguration)
 
-      configService.authUrl mustBe "http://localhostauth:9988"
-      configService.loginUrl mustBe "http://localhost:9949/auth-login-stub/gg-sign-in"
-      configService.customsDeclarationsApiVersion mustBe "1.0"
-      configService.submitDeclarationUri mustBe "/declarations"
-      configService.cancelDeclarationUri mustBe "/declarations/cancel"
-      configService.customsDeclarationsBaseUrl mustBe "http://remotedec-api:6000"
-      configService.notificationBearerToken mustBe "Bearer DummyBearerToken"
-      configService.cdiApiVersion mustBe "1.0"
-      configService.cdiBearerToken mustBe "Bearer cdi-bearer-token"
-      configService.cdiClientID mustBe "cdi-client-id"
-      configService.fetchMrnStatus mustBe "/mrn/ID/status"
-      configService.customsDeclarationsInformationBaseUrl mustBe "http://localhostd:9834"
+      appConfig.authUrl mustBe "http://localhostauth:9988"
+      appConfig.loginUrl mustBe "http://localhost:9949/auth-login-stub/gg-sign-in"
+      appConfig.customsDeclarationsApiVersion mustBe "1.0"
+      appConfig.submitDeclarationUri mustBe "/declarations"
+      appConfig.cancelDeclarationUri mustBe "/declarations/cancel"
+      appConfig.customsDeclarationsBaseUrl mustBe "http://remotedec-api:6000"
+      appConfig.notificationBearerToken mustBe "Bearer DummyBearerToken"
+      appConfig.cdiApiVersion mustBe "1.0"
+      appConfig.cdiBearerToken mustBe "Bearer cdi-bearer-token"
+      appConfig.cdiClientID mustBe "cdi-client-id"
+      appConfig.fetchMrnStatus mustBe "/mrn/ID/status"
+      appConfig.customsDeclarationsInformationBaseUrl mustBe "http://localhostd:9834"
     }
 
     "throw an exception when mandatory configuration is invalid" in {
-      val configService: AppConfig = appConfig(invalidServicesConfiguration)
+      val appConfig: AppConfig = genAppConfig(invalidServicesConfiguration)
 
-      val caught: RuntimeException = intercept[RuntimeException](configService.authUrl)
+      val caught: RuntimeException = intercept[RuntimeException](appConfig.authUrl)
       caught.getMessage mustBe "Could not find config key 'auth.host'"
 
-      val caught1: RuntimeException = intercept[RuntimeException](configService.customsDeclarationsBaseUrl)
+      val caught1: RuntimeException = intercept[RuntimeException](appConfig.customsDeclarationsBaseUrl)
       caught1.getMessage mustBe "Could not find config key 'customs-declarations.host'"
 
-      val caught2: Exception = intercept[Exception](configService.loginUrl)
+      val caught2: Exception = intercept[Exception](appConfig.loginUrl)
       caught2.getMessage mustBe "Missing configuration key: urls.login"
 
-      val caught3: RuntimeException = intercept[RuntimeException](configService.customsDeclarationsApiVersion)
+      val caught3: RuntimeException = intercept[RuntimeException](appConfig.customsDeclarationsApiVersion)
       caught3.getMessage mustBe "Could not find config key 'microservice.services.customs-declarations.api-version'"
 
-      val caught4: RuntimeException = intercept[RuntimeException](configService.submitDeclarationUri)
+      val caught4: RuntimeException = intercept[RuntimeException](appConfig.submitDeclarationUri)
       caught4.getMessage mustBe "Could not find config key 'microservice.services.customs-declarations.submit-uri'"
 
-      val caught5: RuntimeException = intercept[RuntimeException](configService.notificationBearerToken)
+      val caught5: RuntimeException = intercept[RuntimeException](appConfig.notificationBearerToken)
       caught5.getMessage mustBe "Could not find config key 'microservice.services.customs-declarations.bearer-token'"
 
-      val caught6: RuntimeException = intercept[RuntimeException](configService.cancelDeclarationUri)
+      val caught6: RuntimeException = intercept[RuntimeException](appConfig.cancelDeclarationUri)
       caught6.getMessage mustBe "Could not find config key 'microservice.services.customs-declarations.cancel-uri'"
     }
 
     "throw an exception when mandatory customs-declaration-information configuration is invalid" in {
-      val configService: AppConfig = appConfig(invalidServicesConfiguration)
+      val appConfig: AppConfig = genAppConfig(invalidServicesConfiguration)
 
-      val caught: RuntimeException = intercept[RuntimeException](configService.customsDeclarationsInformationBaseUrl)
+      val caught: RuntimeException = intercept[RuntimeException](appConfig.customsDeclarationsInformationBaseUrl)
       caught.getMessage mustBe "Could not find config key 'customs-declarations-information.host'"
 
-      val caught1: RuntimeException = intercept[RuntimeException](configService.cdiApiVersion)
+      val caught1: RuntimeException = intercept[RuntimeException](appConfig.cdiApiVersion)
       caught1.getMessage mustBe "Could not find config key 'microservice.services.customs-declarations-information.api-version'"
 
-      val caught2: RuntimeException = intercept[RuntimeException](configService.fetchMrnStatus)
+      val caught2: RuntimeException = intercept[RuntimeException](appConfig.fetchMrnStatus)
       caught2.getMessage mustBe "Could not find config key 'microservice.services.customs-declarations-information.fetch-mrn-status'"
 
-      val caught3: RuntimeException = intercept[RuntimeException](configService.cdiBearerToken)
+      val caught3: RuntimeException = intercept[RuntimeException](appConfig.cdiBearerToken)
       caught3.getMessage mustBe "Could not find config key 'microservice.services.customs-declarations-information.bearer-token'"
 
-      val caught6: RuntimeException = intercept[RuntimeException](configService.cdiClientID)
+      val caught6: RuntimeException = intercept[RuntimeException](appConfig.cdiClientID)
       caught6.getMessage mustBe "Could not find config key 'microservice.services.customs-declarations-information.client-id'"
     }
 
@@ -121,8 +124,8 @@ class AppConfigSpec extends UnitSpec {
       val clientId = UUID.randomUUID.toString
 
       "return the configured value when explicitly set" in {
-        val configService: AppConfig =
-          appConfig(
+        val appConfig: AppConfig =
+          genAppConfig(
             Configuration(
               "appName" -> appName,
               "microservice.services.customs-declarations.client-id" -> clientId,
@@ -130,7 +133,7 @@ class AppConfigSpec extends UnitSpec {
             )
           )
 
-        configService.developerHubClientId mustBe clientId
+        appConfig.developerHubClientId mustBe clientId
       }
     }
   }

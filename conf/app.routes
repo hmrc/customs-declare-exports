@@ -12,5 +12,7 @@ POST        /cancellations                                uk.gov.hmrc.exports.co
 GET         /notifications                                uk.gov.hmrc.exports.controllers.NotificationController.getAllNotificationsForUser()
 GET         /ead/:mrn                                     uk.gov.hmrc.exports.controllers.ead.EADController.findByMrn(mrn: String)
 
+GET         /eori-email/:eori                             uk.gov.hmrc.exports.controllers.EmailByEoriController.getEmailIfVerified(eori: String)
+
 # XML Based
 POST        /customs-declare-exports/notify               uk.gov.hmrc.exports.controllers.NotificationController.saveNotification()

@@ -20,37 +20,17 @@ import java.util.UUID
 
 import scala.concurrent.Future
 
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
-import stubs.ExternalServicesConfig.{Host, Port}
 import stubs.{CustomsDeclarationsAPIConfig, CustomsDeclarationsAPIService}
 import testdata.ExportsDeclarationBuilder
 import testdata.ExportsTestData._
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.util.TestModule
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
+import uk.gov.hmrc.http.InternalServerException
 
-class CustomsDeclarationsConnectorSpec
-    extends IntegrationTestSpec with GuiceOneAppPerSuite with CustomsDeclarationsAPIService with ExportsDeclarationBuilder {
+class CustomsDeclarationsConnectorSpec extends IntegrationTestSpec with CustomsDeclarationsAPIService with ExportsDeclarationBuilder {
 
-  private lazy val connector = app.injector.instanceOf[CustomsDeclarationsConnector]
-  private implicit val hc: HeaderCarrier = HeaderCarrier()
-
-  override implicit lazy val app: Application =
-    GuiceApplicationBuilder(overrides = Seq(TestModule.asGuiceableModule))
-      .configure(
-        Map(
-          "microservice.services.customs-declarations.host" -> Host,
-          "microservice.services.customs-declarations.port" -> Port,
-          "microservice.services.customs-declarations.submit-uri" -> CustomsDeclarationsAPIConfig.submitDeclarationServiceContext,
-          "microservice.services.customs-declarations.bearer-token" -> authToken,
-          "microservice.services.customs-declarations.api-version" -> CustomsDeclarationsAPIConfig.apiVersion
-        )
-      )
-      .build()
+  private lazy val connector = inject[CustomsDeclarationsConnector]
 
   // TODO: added couple of tests for having convId or not, seems like there is logic which even if we got 202 but not convId
   // TODO: it will be wrapped into 500 (to be confirmed)
