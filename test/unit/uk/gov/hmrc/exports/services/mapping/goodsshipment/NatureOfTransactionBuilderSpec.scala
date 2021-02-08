@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
-import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.NatureOfTransaction
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class NatureOfTransactionBuilderSpec extends WordSpec with Matchers {
+class NatureOfTransactionBuilderSpec extends UnitSpec {
 
   "TransactionTypeBuilder" should {
     "correctly map to the WCO-DEC GoodsShipment.TransactionNatureCodeType instance" when {
@@ -33,7 +33,7 @@ class NatureOfTransactionBuilderSpec extends WordSpec with Matchers {
 
         builder.buildThenAdd(natureOfTransaction, goodsShipment)
 
-        goodsShipment.getTransactionNatureCode.getValue should be("1")
+        goodsShipment.getTransactionNatureCode.getValue must be("1")
       }
       "'identifier' has not been supplied" in {
         val builder = new GoodsShipmentNatureOfTransactionBuilder
@@ -43,7 +43,7 @@ class NatureOfTransactionBuilderSpec extends WordSpec with Matchers {
 
         builder.buildThenAdd(natureOfTransaction, goodsShipment)
 
-        goodsShipment.getTransactionNatureCode should be(null)
+        goodsShipment.getTransactionNatureCode must be(null)
       }
     }
   }

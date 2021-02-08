@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package component.uk.gov.hmrc.exports.syntax
-
-import org.scalactic.source.Position
-import org.scalatest.FeatureSpec
-import org.scalatest.concurrent.PatienceConfiguration
+package uk.gov.hmrc.exports.syntax
 
 import scala.reflect.ClassTag
 
-abstract class TypedFeatureSpec extends FeatureSpec {
+import org.scalactic.source.Position
+import org.scalatest.featurespec.AnyFeatureSpec
+
+abstract class TypedFeatureSpec extends AnyFeatureSpec {
 
   class ScenarioBuilder(name: String) {
     def apply[A](x: ScenarioBuilder => ThenBuilder) =

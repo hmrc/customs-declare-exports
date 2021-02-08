@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration.consignment
 
-import org.scalatest.{Matchers, WordSpec}
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class FreightBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class FreightBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "FreightBuilder" should {
 
@@ -35,7 +35,7 @@ class FreightBuilderSpec extends WordSpec with Matchers with ExportsDeclarationB
         new FreightBuilder().buildThenAdd(model, consignment)
 
         // Then
-        consignment.getFreight shouldBe null
+        consignment.getFreight mustBe null
       }
 
       "payment method is empty" in {
@@ -47,7 +47,7 @@ class FreightBuilderSpec extends WordSpec with Matchers with ExportsDeclarationB
         new FreightBuilder().buildThenAdd(model, consignment)
 
         // Then
-        consignment.getFreight shouldBe null
+        consignment.getFreight mustBe null
       }
 
       "payment method is populated" in {
@@ -59,7 +59,7 @@ class FreightBuilderSpec extends WordSpec with Matchers with ExportsDeclarationB
         new FreightBuilder().buildThenAdd(model, consignment)
 
         // Then
-        consignment.getFreight.getPaymentMethodCode.getValue shouldBe "method"
+        consignment.getFreight.getPaymentMethodCode.getValue mustBe "method"
       }
     }
   }

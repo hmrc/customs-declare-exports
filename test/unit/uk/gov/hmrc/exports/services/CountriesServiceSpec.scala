@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.services
 
-import org.scalatest.{MustMatchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.Country
 
-class CountriesServiceSpec extends WordSpec with MustMatchers {
+class CountriesServiceSpec extends UnitSpec {
 
   val countriesService = new CountriesService()
 

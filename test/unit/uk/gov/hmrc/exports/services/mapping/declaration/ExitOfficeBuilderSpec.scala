@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.scalatest.{Matchers, WordSpec}
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class ExitOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class ExitOfficeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "ExitOfficeBuilder" should {
 
@@ -40,7 +40,7 @@ class ExitOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarati
 
           builder.buildThenAdd(model, declaration)
 
-          declaration.getExitOffice should be(null)
+          declaration.getExitOffice must be(null)
         }
 
         s"$declarationType journey with 'Office of Exit' data" in {
@@ -51,7 +51,7 @@ class ExitOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarati
 
           builder.buildThenAdd(model, declaration)
 
-          declaration.getExitOffice.getID.getValue should be("office-id")
+          declaration.getExitOffice.getID.getValue must be("office-id")
         }
       }
     }
@@ -64,7 +64,7 @@ class ExitOfficeBuilderSpec extends WordSpec with Matchers with ExportsDeclarati
 
           builder.buildThenAdd(model, declaration)
 
-          declaration.getExitOffice should be(null)
+          declaration.getExitOffice must be(null)
         }
       }
     }

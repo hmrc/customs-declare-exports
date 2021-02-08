@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.scalatest.{Matchers, WordSpec}
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class TypeCodeBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class TypeCodeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "TypeCodeBuilder" should {
     val builder = new TypeCodeBuilder()
@@ -31,14 +31,14 @@ class TypeCodeBuilderSpec extends WordSpec with Matchers with ExportsDeclaration
       val model = aDeclaration(withDispatchLocation("EX"), withAdditionalDeclarationType(AdditionalDeclarationType.SUPPLEMENTARY_SIMPLIFIED))
       builder.buildThenAdd(model, declaration)
 
-      declaration.getTypeCode.getValue should be("EXY")
+      declaration.getTypeCode.getValue must be("EXY")
     }
 
     "Build then add from Code" in {
       val declaration = new Declaration
       builder.buildThenAdd("code", declaration)
 
-      declaration.getTypeCode.getValue should be("code")
+      declaration.getTypeCode.getValue must be("code")
     }
   }
 }

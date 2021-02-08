@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
-import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.{Container, Seal}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class TransportEquipmentBuilderSpec extends WordSpec with Matchers {
+class TransportEquipmentBuilderSpec extends UnitSpec {
 
   "TransportEquipmentBuilder" should {
     "correctly map TransportEquipment instance for Standard journey " when {
@@ -32,25 +32,25 @@ class TransportEquipmentBuilderSpec extends WordSpec with Matchers {
 
         builder.buildThenAdd(containers, consignment)
 
-        consignment.getTransportEquipment.size() should be(2)
+        consignment.getTransportEquipment.size() must be(2)
 
         val containerA = consignment.getTransportEquipment.get(0)
-        containerA.getSequenceNumeric.intValue() should be(1)
-        containerA.getID.getValue should be("container-a")
-        containerA.getSeal.size() should be(2)
+        containerA.getSequenceNumeric.intValue() must be(1)
+        containerA.getID.getValue must be("container-a")
+        containerA.getSeal.size() must be(2)
 
-        containerA.getSeal.get(0).getID.getValue should be("seal-1a")
-        containerA.getSeal.get(0).getSequenceNumeric.intValue() should be(1)
-        containerA.getSeal.get(1).getID.getValue should be("seal-2a")
-        containerA.getSeal.get(1).getSequenceNumeric.intValue() should be(2)
+        containerA.getSeal.get(0).getID.getValue must be("seal-1a")
+        containerA.getSeal.get(0).getSequenceNumeric.intValue() must be(1)
+        containerA.getSeal.get(1).getID.getValue must be("seal-2a")
+        containerA.getSeal.get(1).getSequenceNumeric.intValue() must be(2)
 
         val containerB = consignment.getTransportEquipment.get(1)
-        containerB.getSequenceNumeric.intValue() should be(2)
-        containerB.getID.getValue should be("container-b")
-        containerB.getSeal.size() should be(1)
+        containerB.getSequenceNumeric.intValue() must be(2)
+        containerB.getID.getValue must be("container-b")
+        containerB.getSeal.size() must be(1)
 
-        containerB.getSeal.get(0).getID.getValue should be("seal-b")
-        containerB.getSeal.get(0).getSequenceNumeric.intValue() should be(1)
+        containerB.getSeal.get(0).getID.getValue must be("seal-b")
+        containerB.getSeal.get(0).getSequenceNumeric.intValue() must be(1)
       }
     }
 
@@ -62,15 +62,15 @@ class TransportEquipmentBuilderSpec extends WordSpec with Matchers {
         val containers = Seq(Container("container-a", Seq.empty))
         builder.buildThenAdd(containers, consignment)
 
-        consignment.getTransportEquipment.size() should be(1)
+        consignment.getTransportEquipment.size() must be(1)
 
         val containerA = consignment.getTransportEquipment.get(0)
-        containerA.getSequenceNumeric.intValue() should be(1)
-        containerA.getID.getValue should be("container-a")
-        containerA.getSeal.size() should be(1)
+        containerA.getSequenceNumeric.intValue() must be(1)
+        containerA.getID.getValue must be("container-a")
+        containerA.getSeal.size() must be(1)
 
-        containerA.getSeal.get(0).getID.getValue should be(TransportEquipmentBuilder.nosealsId)
-        containerA.getSeal.get(0).getSequenceNumeric.intValue() should be(1)
+        containerA.getSeal.get(0).getID.getValue must be(TransportEquipmentBuilder.nosealsId)
+        containerA.getSeal.get(0).getSequenceNumeric.intValue() must be(1)
       }
     }
 
@@ -82,15 +82,15 @@ class TransportEquipmentBuilderSpec extends WordSpec with Matchers {
         val containers = Seq.empty
         builder.buildThenAdd(containers, consignment)
 
-        consignment.getTransportEquipment.size() should be(1)
+        consignment.getTransportEquipment.size() must be(1)
 
         val containerA = consignment.getTransportEquipment.get(0)
-        containerA.getSequenceNumeric.intValue() should be(0)
-        containerA.getID should be(null)
-        containerA.getSeal.size() should be(1)
+        containerA.getSequenceNumeric.intValue() must be(0)
+        containerA.getID must be(null)
+        containerA.getSeal.size() must be(1)
 
-        containerA.getSeal.get(0).getID.getValue should be(TransportEquipmentBuilder.nosealsId)
-        containerA.getSeal.get(0).getSequenceNumeric.intValue() should be(1)
+        containerA.getSeal.get(0).getID.getValue must be(TransportEquipmentBuilder.nosealsId)
+        containerA.getSeal.get(0).getSequenceNumeric.intValue() must be(1)
       }
     }
   }

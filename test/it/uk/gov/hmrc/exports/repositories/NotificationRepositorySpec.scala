@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package integration.uk.gov.hmrc.exports.repositories
+package uk.gov.hmrc.exports.repositories
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.codahale.metrics.SharedMetricRegistries
-import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.{BeforeAndAfterEach, MustMatchers, OptionValues, WordSpec}
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import testdata.ExportsTestData._
 import testdata.notifications.NotificationTestData._
-import uk.gov.hmrc.exports.repositories.NotificationRepository
+import uk.gov.hmrc.exports.base.UnitSpec
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
-class NotificationRepositorySpec
-    extends WordSpec with BeforeAndAfterEach with ScalaFutures with MustMatchers with OptionValues with IntegrationPatience {
+class NotificationRepositorySpec extends UnitSpec {
 
   private val injector: Injector = {
     SharedMetricRegistries.clear()

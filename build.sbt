@@ -1,11 +1,9 @@
-import sbt.Tests.{Group, SubProcess}
 import sbt._
 import uk.gov.hmrc.DefaultBuildSettings._
-import uk.gov.hmrc.ForkedJvmPerTestSettings
 import uk.gov.hmrc.gitstamp.GitStampPlugin._
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import uk.gov.hmrc.versioning.SbtGitVersioning
-import uk.gov.hmrc.{SbtArtifactory, SbtAutoBuildPlugin}
+import uk.gov.hmrc.{ForkedJvmPerTestSettings, SbtArtifactory, SbtAutoBuildPlugin}
 
 val appName = "customs-declare-exports"
 
@@ -55,6 +53,7 @@ lazy val microservice = Project(appName, file("."))
     testGrouping in IntegrationTest := ForkedJvmPerTestSettings.oneForkedJvmPerTest((definedTests in IntegrationTest).value),
     parallelExecution in IntegrationTest := false
   )
+  .settings(inConfig(ComponentTest)(Defaults.testSettings): _*)
   .settings(
     Keys.fork in ComponentTest := false,
     unmanagedSourceDirectories in ComponentTest := Seq(

@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.exports.util
 
-import org.scalatest.{MustMatchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 
-class FileReaderSpec extends WordSpec with MustMatchers {
+class FileReaderSpec extends UnitSpec {
 
   private val reader = new FileReader()
 

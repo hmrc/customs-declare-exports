@@ -19,9 +19,8 @@ package uk.gov.hmrc.exports.services.mapping.goodsshipment
 import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.Mockito
 import org.mockito.Mockito.{verify, verifyNoInteractions}
-import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.AEOMutualRecognitionPartiesBuilderSpec._
@@ -32,7 +31,7 @@ import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.{Consignme
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.GovernmentAgencyGoodsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class GoodsShipmentBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder with MockitoSugar with BeforeAndAfterEach {
+class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   private val mockGoodsShipmentNatureOfTransactionBuilder = mock[GoodsShipmentNatureOfTransactionBuilder]
   private val mockConsigneeBuilder = mock[ConsigneeBuilder]

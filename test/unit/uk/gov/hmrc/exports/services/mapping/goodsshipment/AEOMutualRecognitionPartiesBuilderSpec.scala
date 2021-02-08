@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.PartyType.{Consolidator, FreightForwarder}
 import uk.gov.hmrc.exports.models.declaration.{DeclarationAdditionalActor, DeclarationAdditionalActors}
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.AEOMutualRecognitionPartiesBuilderSpec.correctAdditionalActors
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class AEOMutualRecognitionPartiesBuilderSpec extends WordSpec with Matchers with MockitoSugar {
+class AEOMutualRecognitionPartiesBuilderSpec extends UnitSpec {
 
   "AEOMutualRecognitionPartiesBuilder " should {
 
@@ -34,9 +33,9 @@ class AEOMutualRecognitionPartiesBuilderSpec extends WordSpec with Matchers with
         builder.buildThenAdd(correctAdditionalActors.actors.head, goodsShipment)
 
         val actors = goodsShipment.getAEOMutualRecognitionParty
-        actors.size should be(1)
-        actors.get(0).getID.getValue should be("eori1")
-        actors.get(0).getRoleCode.getValue should be("CS")
+        actors.size must be(1)
+        actors.get(0).getID.getValue must be("eori1")
+        actors.get(0).getRoleCode.getValue must be("CS")
       }
 
       "'eori' has not been supplied" in {
@@ -45,9 +44,9 @@ class AEOMutualRecognitionPartiesBuilderSpec extends WordSpec with Matchers with
         builder.buildThenAdd(DeclarationAdditionalActor(None, Some("CS")), goodsShipment)
 
         val actors = goodsShipment.getAEOMutualRecognitionParty
-        actors.size should be(1)
-        actors.get(0).getID should be(null)
-        actors.get(0).getRoleCode.getValue should be("CS")
+        actors.size must be(1)
+        actors.get(0).getID must be(null)
+        actors.get(0).getRoleCode.getValue must be("CS")
       }
 
       "'partyType' has not been supplied" in {
@@ -56,9 +55,9 @@ class AEOMutualRecognitionPartiesBuilderSpec extends WordSpec with Matchers with
         builder.buildThenAdd(DeclarationAdditionalActor(Some("eori1"), None), goodsShipment)
 
         val actors = goodsShipment.getAEOMutualRecognitionParty
-        actors.size should be(1)
-        actors.get(0).getID.getValue should be("eori1")
-        actors.get(0).getRoleCode should be(null)
+        actors.size must be(1)
+        actors.get(0).getID.getValue must be("eori1")
+        actors.get(0).getRoleCode must be(null)
       }
     }
   }

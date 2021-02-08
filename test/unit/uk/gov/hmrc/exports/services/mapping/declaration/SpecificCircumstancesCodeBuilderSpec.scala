@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.scalatest.{Matchers, WordSpec}
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class SpecificCircumstancesCodeBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class SpecificCircumstancesCodeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "SpecificCircumstancesCodeBuilder" should {
 
@@ -33,7 +33,7 @@ class SpecificCircumstancesCodeBuilderSpec extends WordSpec with Matchers with E
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getSpecificCircumstancesCodeCode should be(null)
+        declaration.getSpecificCircumstancesCodeCode must be(null)
       }
 
       for (declarationType: DeclarationType <- Seq(
@@ -49,7 +49,7 @@ class SpecificCircumstancesCodeBuilderSpec extends WordSpec with Matchers with E
 
             builder.buildThenAdd(model, declaration)
 
-            declaration.getSpecificCircumstancesCodeCode should be(null)
+            declaration.getSpecificCircumstancesCodeCode must be(null)
           }
 
           "invalid circumstance type" in {
@@ -59,7 +59,7 @@ class SpecificCircumstancesCodeBuilderSpec extends WordSpec with Matchers with E
 
             builder.buildThenAdd(model, declaration)
 
-            declaration.getSpecificCircumstancesCodeCode should be(null)
+            declaration.getSpecificCircumstancesCodeCode must be(null)
           }
 
           "valid circumstance type" in {
@@ -69,7 +69,7 @@ class SpecificCircumstancesCodeBuilderSpec extends WordSpec with Matchers with E
 
             builder.buildThenAdd(model, declaration)
 
-            declaration.getSpecificCircumstancesCodeCode.getValue should be("A20")
+            declaration.getSpecificCircumstancesCodeCode.getValue must be("A20")
           }
         }
       }

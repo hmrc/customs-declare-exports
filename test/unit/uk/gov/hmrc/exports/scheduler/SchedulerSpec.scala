@@ -18,6 +18,9 @@ package uk.gov.hmrc.exports.scheduler
 
 import java.time._
 
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+
 import akka.actor.{ActorSystem, Cancellable}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
@@ -25,16 +28,10 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mockito.{reset, verify, verifyNoMoreInteractions}
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
-import org.scalatest.BeforeAndAfterEach
-import org.scalatest.concurrent.Eventually
-import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
 
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
-
-class SchedulerSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach with Eventually {
+class SchedulerSpec extends UnitSpec {
 
   private val job = mock[ScheduledJob]
   private val util = mock[SchedulerDateUtil]
@@ -83,8 +80,8 @@ class SchedulerSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
 
       // Then
       val schedule = theSchedule
-      schedule.interval shouldBe 60.seconds
-      schedule.initialDelay shouldBe 30.seconds
+      schedule.interval mustBe 60.seconds
+      schedule.initialDelay mustBe 30.seconds
 
       verify(job).execute()
     }

@@ -17,10 +17,10 @@
 package uk.gov.hmrc.exports.config
 
 import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest.{MustMatchers, WordSpec}
 import play.api.Configuration
+import uk.gov.hmrc.exports.base.UnitSpec
 
-class ExportsMigrationConfigSpec extends WordSpec with MustMatchers {
+class ExportsMigrationConfigSpec extends UnitSpec {
 
   private val configWithExportsMigrationEnabled: Config = ConfigFactory.parseString("microservice.features.exportsMigration=enabled")
   private val configWithExportsMigrationDisabled: Config = ConfigFactory.parseString("microservice.features.exportsMigration=disabled")

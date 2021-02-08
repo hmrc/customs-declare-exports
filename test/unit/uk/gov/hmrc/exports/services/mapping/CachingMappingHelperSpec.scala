@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.services.mapping
 
-import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration._
 
-class CachingMappingHelperSpec extends WordSpec with Matchers {
+class CachingMappingHelperSpec extends UnitSpec {
 
   "CachingMappingHelper" should {
     "mapGoodsMeasure correctly When tariffQuantity grossMassMeasure netWeightMeasure provided" in {
@@ -27,9 +27,9 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
       val commodityMeasure = CommodityMeasure(Some("10"), Some("100.00"), Some("100.00"))
       val goodsMeasure = new CachingMappingHelper().mapGoodsMeasure(commodityMeasure).flatMap(_.goodsMeasure).get
 
-      goodsMeasure.tariffQuantity.get.value.get shouldBe 10
-      goodsMeasure.grossMassMeasure.get.value.get shouldBe 100.00
-      goodsMeasure.netWeightMeasure.get.value.get shouldBe 100.00
+      goodsMeasure.tariffQuantity.get.value.get mustBe 10
+      goodsMeasure.grossMassMeasure.get.value.get mustBe 100.00
+      goodsMeasure.netWeightMeasure.get.value.get mustBe 100.00
     }
 
     "mapGoodsMeasure correctly When grossMassMeasure netWeightMeasure provided but no tariffQuantity" in {
@@ -37,16 +37,16 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
       val commodityMeasure = CommodityMeasure(None, Some("100.00"), Some("100.00"))
 
       val goodsMeasure = new CachingMappingHelper().mapGoodsMeasure(commodityMeasure).flatMap(_.goodsMeasure).get
-      goodsMeasure.tariffQuantity shouldBe None
-      goodsMeasure.grossMassMeasure.get.value.get shouldBe 100.00
-      goodsMeasure.netWeightMeasure.get.value.get shouldBe 100.00
+      goodsMeasure.tariffQuantity mustBe None
+      goodsMeasure.grossMassMeasure.get.value.get mustBe 100.00
+      goodsMeasure.netWeightMeasure.get.value.get mustBe 100.00
     }
 
     "mapGoodsMeasure correctly When no fields are provided" in {
 
       val commodityMeasure = CommodityMeasure(None, None, None)
 
-      new CachingMappingHelper().mapGoodsMeasure(commodityMeasure) shouldBe None
+      new CachingMappingHelper().mapGoodsMeasure(commodityMeasure) mustBe None
     }
 
     "mapCommodity" when {
@@ -64,10 +64,10 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
 
         val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
 
-        commodity.description shouldBe Some("description")
-        commodity.dangerousGoods.size shouldBe 1
-        commodity.dangerousGoods.head.undgid shouldBe Some("unDangerousGoodsCode")
-        commodity.classifications.map(c => c.id) shouldBe Seq(
+        commodity.description mustBe Some("description")
+        commodity.dangerousGoods.size mustBe 1
+        commodity.dangerousGoods.head.undgid mustBe Some("unDangerousGoodsCode")
+        commodity.classifications.map(c => c.id) mustBe Seq(
           Some("commodityCode"),
           Some("cusCode"),
           Some("nationalAdditionalCodes"),
@@ -80,16 +80,16 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
 
         val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
 
-        commodity.description shouldBe Some("description")
-        commodity.dangerousGoods shouldBe Seq.empty
+        commodity.description mustBe Some("description")
+        commodity.dangerousGoods mustBe Seq.empty
 
-        commodity.classifications.map(c => c.id) shouldBe Seq(Some("commodityCode"))
+        commodity.classifications.map(c => c.id) mustBe Seq(Some("commodityCode"))
       }
 
       "Only commodity description stripped of new lines" in {
         val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(None, Some(s"description with\na new\r\nline"))))
         val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
-        commodity.description shouldBe Some("description with a new line")
+        commodity.description mustBe Some("description with a new line")
       }
 
       "Only description provided" in {
@@ -97,10 +97,10 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
 
         val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
 
-        commodity.description shouldBe Some("description")
-        commodity.dangerousGoods shouldBe Seq.empty
+        commodity.description mustBe Some("description")
+        commodity.dangerousGoods mustBe Seq.empty
 
-        commodity.classifications shouldBe Seq.empty
+        commodity.classifications mustBe Seq.empty
       }
 
       "No commodity code or description provided" in {
@@ -108,7 +108,7 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
 
         val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem)
 
-        commodity shouldBe None
+        commodity mustBe None
       }
 
       "No commodity code or description provided, but cusCode and dangerousGoods provided" in {
@@ -121,12 +121,12 @@ class CachingMappingHelperSpec extends WordSpec with Matchers {
 
         val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
 
-        commodity.description shouldBe None
-        commodity.dangerousGoods.size shouldBe 1
-        commodity.dangerousGoods.head.undgid shouldBe Some("dangerousCode")
+        commodity.description mustBe None
+        commodity.dangerousGoods.size mustBe 1
+        commodity.dangerousGoods.head.undgid mustBe Some("dangerousCode")
 
-        commodity.classifications.size shouldBe 1
-        commodity.classifications.head.id shouldBe Some("cusCode")
+        commodity.classifications.size mustBe 1
+        commodity.classifications.head.id mustBe Some("cusCode")
       }
 
     }

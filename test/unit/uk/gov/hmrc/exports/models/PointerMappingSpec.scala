@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.exports.models
 
-import org.scalatest.{MustMatchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 
-class PointerMappingSpec extends WordSpec with MustMatchers {
+class PointerMappingSpec extends UnitSpec {
 
   "Apply To" should {
     "throw exception when pointer does not match WCO pattern" in {

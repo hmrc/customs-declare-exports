@@ -17,15 +17,14 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import com.google.inject.Guice
-import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration._
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class ConsignmentBuilderSpec extends WordSpec with MustMatchers with ExportsDeclarationBuilder with MockitoSugar with BeforeAndAfterEach {
+class ConsignmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
   private val injector = Guice.createInjector()
 
   private val builder = injector.getInstance(classOf[ConsignmentBuilder])

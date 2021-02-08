@@ -18,15 +18,15 @@ package uk.gov.hmrc.exports.services
 
 import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 
+import scala.concurrent.{ExecutionContext, Future}
+
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
 import org.mockito.Mockito._
-import org.scalatest.concurrent.{Eventually, ScalaFutures}
-import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationDetails}
 import uk.gov.hmrc.exports.models.declaration.submissions._
@@ -36,10 +36,7 @@ import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
-import scala.concurrent.{ExecutionContext, Future}
-
-class SubmissionServiceSpec
-    extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers with ExportsDeclarationBuilder with Eventually with BeforeAndAfterEach {
+class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
   private val customsDeclarationsConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]

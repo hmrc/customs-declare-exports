@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
-import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalFiscalReference
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class DomesticDutyTaxPartyBuilderSpec extends WordSpec with Matchers with GovernmentAgencyGoodsItemData {
+class DomesticDutyTaxPartyBuilderSpec extends UnitSpec with GovernmentAgencyGoodsItemData {
 
   "DomesticDutyTaxPartyBuilder" should {
     "map correctly if cache contains Additional Fiscal References" in {
@@ -30,9 +30,9 @@ class DomesticDutyTaxPartyBuilderSpec extends WordSpec with Matchers with Govern
 
       builder.buildThenAdd(AdditionalFiscalReference("PL", "12345"), item)
 
-      item.getDomesticDutyTaxParty.size() should be(1)
-      item.getDomesticDutyTaxParty.get(0).getID.getValue should be("PL12345")
-      item.getDomesticDutyTaxParty.get(0).getRoleCode.getValue should be("FR1")
+      item.getDomesticDutyTaxParty.size() must be(1)
+      item.getDomesticDutyTaxParty.get(0).getID.getValue must be("PL12345")
+      item.getDomesticDutyTaxParty.get(0).getRoleCode.getValue must be("FR1")
     }
 
     "map correctly if cache contains more than one Additional Fiscal References" in {
@@ -45,11 +45,11 @@ class DomesticDutyTaxPartyBuilderSpec extends WordSpec with Matchers with Govern
 
       builder.buildThenAdd(AdditionalFiscalReference("FR", "54321"), item)
 
-      item.getDomesticDutyTaxParty.size() should be(2)
-      item.getDomesticDutyTaxParty.get(0).getID.getValue should be("PL12345")
-      item.getDomesticDutyTaxParty.get(0).getRoleCode.getValue should be("FR1")
-      item.getDomesticDutyTaxParty.get(1).getID.getValue should be("FR54321")
-      item.getDomesticDutyTaxParty.get(1).getRoleCode.getValue should be("FR1")
+      item.getDomesticDutyTaxParty.size() must be(2)
+      item.getDomesticDutyTaxParty.get(0).getID.getValue must be("PL12345")
+      item.getDomesticDutyTaxParty.get(0).getRoleCode.getValue must be("FR1")
+      item.getDomesticDutyTaxParty.get(1).getID.getValue must be("FR54321")
+      item.getDomesticDutyTaxParty.get(1).getRoleCode.getValue must be("FR1")
     }
 
   }

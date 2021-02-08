@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.models
 
-import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json.{JsString, JsSuccess, Json}
+import uk.gov.hmrc.exports.base.UnitSpec
 
-class PointerSpec extends WordSpec with MustMatchers {
+class PointerSpec extends UnitSpec {
 
   implicit val strs2pointerSectionPatterns: List[String] => List[PointerPatternSection] =
     _.map(PointerPatternSection(_))

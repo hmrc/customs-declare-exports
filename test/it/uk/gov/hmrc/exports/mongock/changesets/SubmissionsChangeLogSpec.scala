@@ -1,18 +1,19 @@
 package uk.gov.hmrc.exports.mongock.changesets
 
+import scala.collection.JavaConverters.iterableAsScalaIterable
+
+import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import com.mongodb.{MongoClient, MongoClientURI}
 import org.bson.Document
-import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import stubs.TestMongoDB
 import stubs.TestMongoDB.mongoConfiguration
-import com.mongodb.client.model.IndexOptions
-import scala.collection.JavaConverters.iterableAsScalaIterable
+import uk.gov.hmrc.exports.base.UnitSpec
 
-class SubmissionsChangeLogSpec extends WordSpec with MustMatchers with GuiceOneServerPerSuite with BeforeAndAfterEach {
+class SubmissionsChangeLogSpec extends UnitSpec with GuiceOneServerPerSuite {
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()

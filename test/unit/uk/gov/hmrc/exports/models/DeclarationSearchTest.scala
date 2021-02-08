@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.models
 
-import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 
-class DeclarationSearchTest extends PlaySpec {
+class DeclarationSearchTest extends UnitSpec {
 
   "Search" should {
     "build Mongo Query" in {

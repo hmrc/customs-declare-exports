@@ -16,22 +16,22 @@
 
 package uk.gov.hmrc.exports.steps
 
-import component.uk.gov.hmrc.exports.syntax.{Postcondition, Precondition, ScenarioContext}
+import scala.concurrent.Future
+
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, eq => eqm}
 import org.mockito.Mockito.{never, verify, verifyNoInteractions, when}
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
-import org.scalatest.MustMatchers
 import org.scalatest.concurrent.Eventually
+import org.scalatest.matchers.must.Matchers
 import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
-
-import scala.concurrent.Future
+import uk.gov.hmrc.exports.syntax.{Postcondition, Precondition, ScenarioContext}
 
 object `User does not try submit declaration earlier` extends Precondition {
   def name = "User does not try submit declaration earlier"
@@ -76,7 +76,7 @@ object `Submission was created` extends Postcondition {
   def name = "Submission was created"
 }
 
-object `Submission has request action` extends Postcondition with MustMatchers {
+object `Submission has request action` extends Postcondition with Matchers {
   import uk.gov.hmrc.exports.models.declaration.submissions.{SubmissionRequest, Action => SubmissionAction}
   override def execute(context: ScenarioContext): ScenarioContext = {
     val declaration = context.get[ExportsDeclaration]
@@ -137,10 +137,14 @@ object `Submission was updated for mrn` extends Postcondition with Eventually {
   override def name: String = "Submission was updated for mrn"
 
   override def execute(context: ScenarioContext): ScenarioContext = {
-    val repo = context.get[SubmissionRepository]
-    val notification = context.get[Notification]
-    val converstationId = context.get[String]
-    eventually { verify(repo).updateMrn(eqm(converstationId), eqm(notification.mrn)) }
+    val notification: Notification = context.get[Notification]
+    notification.details.map { details =>
+      val repo = context.get[SubmissionRepository]
+      val conversationId = context.get[String]
+      eventually {
+        verify(repo).updateMrn(eqm(conversationId), eqm(details.mrn))
+      }
+    }
     context
   }
 }

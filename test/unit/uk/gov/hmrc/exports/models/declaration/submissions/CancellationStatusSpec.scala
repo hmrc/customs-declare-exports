@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.models.declaration.submissions
 
-import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json._
+import uk.gov.hmrc.exports.base.UnitSpec
 
-class CancellationStatusSpec extends WordSpec with MustMatchers {
+class CancellationStatusSpec extends UnitSpec {
 
   "Cancellation Status Reads" should {
 

@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.models.declaration
 
-import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json.{JsSuccess, Json}
+import uk.gov.hmrc.exports.base.UnitSpec
 
-class TransportSpec extends WordSpec with MustMatchers {
+class TransportSpec extends UnitSpec {
 
   "Transport formats" should {
 

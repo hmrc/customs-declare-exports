@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.scalatest.{Matchers, WordSpec}
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class TotalPackageQuantityBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class TotalPackageQuantityBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "GoodsItemQuantityBuilder" should {
 
@@ -31,7 +31,7 @@ class TotalPackageQuantityBuilderSpec extends WordSpec with Matchers with Export
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getTotalPackageQuantity should be(null)
+        declaration.getTotalPackageQuantity must be(null)
       }
 
       "populated" in {
@@ -40,7 +40,7 @@ class TotalPackageQuantityBuilderSpec extends WordSpec with Matchers with Export
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getTotalPackageQuantity.getValue.intValue should be(123)
+        declaration.getTotalPackageQuantity.getValue.intValue must be(123)
       }
     }
   }

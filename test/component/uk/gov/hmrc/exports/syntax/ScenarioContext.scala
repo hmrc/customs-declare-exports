@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package component.uk.gov.hmrc.exports.syntax
+package uk.gov.hmrc.exports.syntax
 
 import java.util.NoSuchElementException
 
-import org.scalactic.source.Position
-
 import scala.reflect.ClassTag
+
+import org.scalactic.source.Position
 
 class ScenarioContext(values: Map[Class[_], (Any, Position)]) {
   def updated[T](value: T)(implicit tag: ClassTag[T], position: Position): ScenarioContext =

@@ -1,5 +1,4 @@
 import play.core.PlayVersion
-import play.sbt.PlayImport._
 import sbt._
 
 object AppDependencies {
@@ -8,8 +7,7 @@ object AppDependencies {
 
   val compile = Seq(
     "uk.gov.hmrc"                    %%  "simple-reactivemongo"         % "7.31.0-play-27",
-    ws,
-    "uk.gov.hmrc"                    %%  "bootstrap-backend-play-27"    % "3.2.0",
+    "uk.gov.hmrc"                    %%  "bootstrap-backend-play-27"    % "3.3.0",
     "uk.gov.hmrc"                    %%  "wco-dec"                      % "0.35.0",
     "uk.gov.hmrc"                    %%  "logback-json-logger"          % "4.8.0",
     "com.github.cloudyrock.mongock"  %   "mongock-core"                 % "2.0.2",
@@ -18,11 +16,12 @@ object AppDependencies {
   )
 
   val test = Seq(
-    "org.scalatest"           %% "scalatest"            % "3.0.8"             % testScope,
-    "org.scalatestplus.play"  %% "scalatestplus-play"   % "4.0.3"             % testScope,
-    "com.github.tomakehurst"  %  "wiremock-jre8"        % "2.27.2"            % testScope,
-    "org.pegdown"             %  "pegdown"              % "1.6.0"             % testScope,
-    "com.typesafe.play"       %% "play-test"            % PlayVersion.current % testScope,
-    "org.mockito"             %  "mockito-core"         % "3.5.7"             % "test"
+    "org.scalatest"          %% "scalatest"                % "3.2.3"             % testScope,
+    "org.scalatest"          %% "scalatest-featurespec"    % "3.2.3"             % testScope,
+    "com.typesafe.play"      %% "play-test"                % PlayVersion.current % testScope,
+    "org.scalatestplus.play" %% "scalatestplus-play"       % "4.0.3"             % testScope,
+    "com.vladsch.flexmark"   %  "flexmark-all"             % "0.36.8"            % testScope,
+    "com.github.tomakehurst" %  "wiremock-jre8"            % "2.27.2"            % testScope,
+    "org.scalatestplus"      %% "mockito-3-4"              % "3.2.3.0"           % "test"
   )
 }

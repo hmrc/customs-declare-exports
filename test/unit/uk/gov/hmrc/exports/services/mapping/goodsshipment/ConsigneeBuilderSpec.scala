@@ -17,14 +17,13 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import org.mockito.Mockito.when
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.{Address, ConsigneeDetails, EntityDetails}
 import uk.gov.hmrc.exports.services.CountriesService
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class ConsigneeBuilderSpec extends WordSpec with MockitoSugar with Matchers {
+class ConsigneeBuilderSpec extends UnitSpec {
 
   val mockCountriesService = mock[CountriesService]
   when(mockCountriesService.allCountries)
@@ -40,9 +39,9 @@ class ConsigneeBuilderSpec extends WordSpec with MockitoSugar with Matchers {
 
         builder.buildThenAdd(details, goodsShipment)
 
-        goodsShipment.getConsignee.getID.getValue should be("9GB1234567ABCDEF")
-        goodsShipment.getConsignee.getName should be(null)
-        goodsShipment.getConsignee.getAddress should be(null)
+        goodsShipment.getConsignee.getID.getValue must be("9GB1234567ABCDEF")
+        goodsShipment.getConsignee.getName must be(null)
+        goodsShipment.getConsignee.getAddress must be(null)
       }
 
       "only address is supplied " in {
@@ -53,12 +52,12 @@ class ConsigneeBuilderSpec extends WordSpec with MockitoSugar with Matchers {
 
         builder.buildThenAdd(details, goodsShipment)
 
-        goodsShipment.getConsignee.getID should be(null)
-        goodsShipment.getConsignee.getName.getValue should be("Full Name")
-        goodsShipment.getConsignee.getAddress.getLine.getValue should be("Address Line")
-        goodsShipment.getConsignee.getAddress.getCityName.getValue should be("Town or City")
-        goodsShipment.getConsignee.getAddress.getCountryCode.getValue should be("PL")
-        goodsShipment.getConsignee.getAddress.getPostcodeID.getValue should be("AB12 34CD")
+        goodsShipment.getConsignee.getID must be(null)
+        goodsShipment.getConsignee.getName.getValue must be("Full Name")
+        goodsShipment.getConsignee.getAddress.getLine.getValue must be("Address Line")
+        goodsShipment.getConsignee.getAddress.getCityName.getValue must be("Town or City")
+        goodsShipment.getConsignee.getAddress.getCountryCode.getValue must be("PL")
+        goodsShipment.getConsignee.getAddress.getPostcodeID.getValue must be("AB12 34CD")
       }
 
       "both eori and address is supplied " in {
@@ -69,9 +68,9 @@ class ConsigneeBuilderSpec extends WordSpec with MockitoSugar with Matchers {
 
         builder.buildThenAdd(details, goodsShipment)
 
-        goodsShipment.getConsignee.getID.getValue should be("9GB1234567ABCDEF")
-        goodsShipment.getConsignee.getName should be(null)
-        goodsShipment.getConsignee.getAddress should be(null)
+        goodsShipment.getConsignee.getID.getValue must be("9GB1234567ABCDEF")
+        goodsShipment.getConsignee.getName must be(null)
+        goodsShipment.getConsignee.getAddress must be(null)
       }
 
       "empty data is supplied " in {
@@ -82,7 +81,7 @@ class ConsigneeBuilderSpec extends WordSpec with MockitoSugar with Matchers {
 
         builder.buildThenAdd(details, goodsShipment)
 
-        goodsShipment.getConsignee should be(null)
+        goodsShipment.getConsignee must be(null)
       }
 
       "'address.fullname' is not supplied" in {
@@ -93,12 +92,12 @@ class ConsigneeBuilderSpec extends WordSpec with MockitoSugar with Matchers {
 
         builder.buildThenAdd(details, goodsShipment)
 
-        goodsShipment.getConsignee.getID should be(null)
-        goodsShipment.getConsignee.getName should be(null)
-        goodsShipment.getConsignee.getAddress.getLine.getValue should be("Address Line")
-        goodsShipment.getConsignee.getAddress.getCityName.getValue should be("Town or City")
-        goodsShipment.getConsignee.getAddress.getCountryCode.getValue should be("PL")
-        goodsShipment.getConsignee.getAddress.getPostcodeID.getValue should be("AB12 34CD")
+        goodsShipment.getConsignee.getID must be(null)
+        goodsShipment.getConsignee.getName must be(null)
+        goodsShipment.getConsignee.getAddress.getLine.getValue must be("Address Line")
+        goodsShipment.getConsignee.getAddress.getCityName.getValue must be("Town or City")
+        goodsShipment.getConsignee.getAddress.getCountryCode.getValue must be("PL")
+        goodsShipment.getConsignee.getAddress.getPostcodeID.getValue must be("AB12 34CD")
       }
     }
   }

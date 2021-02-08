@@ -14,27 +14,24 @@
  * limitations under the License.
  */
 
-package integration.uk.gov.hmrc.exports.repositories
+package uk.gov.hmrc.exports.repositories
 
 import java.util.UUID
 
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import com.codahale.metrics.SharedMetricRegistries
-import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.{BeforeAndAfterEach, MustMatchers, OptionValues, WordSpec}
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.core.errors.DatabaseException
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest, SubmissionRequest}
-import uk.gov.hmrc.exports.repositories.SubmissionRepository
 
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext.Implicits.global
-
-class SubmissionRepositorySpec
-    extends WordSpec with BeforeAndAfterEach with ScalaFutures with MustMatchers with OptionValues with IntegrationPatience {
+class SubmissionRepositorySpec extends UnitSpec {
 
   private val injector: Injector = {
     SharedMetricRegistries.clear()

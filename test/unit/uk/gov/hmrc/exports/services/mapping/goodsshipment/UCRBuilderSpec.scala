@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
-import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class UCRBuilderSpec extends WordSpec with Matchers with MockitoSugar {
+class UCRBuilderSpec extends UnitSpec with MockitoSugar {
 
   "UCRBuilder" should {
 
@@ -34,8 +34,8 @@ class UCRBuilderSpec extends WordSpec with Matchers with MockitoSugar {
         builder.buildThenAdd(UCRBuilderSpec.correctConsignmentReferences, goodsShipment)
 
         val ucrObject = goodsShipment.getUCR
-        ucrObject.getID should be(null)
-        ucrObject.getTraderAssignedReferenceID.getValue should be(UCRBuilderSpec.exemplaryPersonalUcr)
+        ucrObject.getID must be(null)
+        ucrObject.getTraderAssignedReferenceID.getValue must be(UCRBuilderSpec.exemplaryPersonalUcr)
       }
 
       "personal UCR not supplied" in {
@@ -45,7 +45,7 @@ class UCRBuilderSpec extends WordSpec with Matchers with MockitoSugar {
         val goodsShipment = new GoodsShipment
         builder.buildThenAdd(UCRBuilderSpec.correctConsignmentReferencesNoPersonalUcr, goodsShipment)
 
-        goodsShipment.getUCR should be(null)
+        goodsShipment.getUCR must be(null)
       }
 
     }

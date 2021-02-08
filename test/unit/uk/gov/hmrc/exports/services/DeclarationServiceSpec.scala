@@ -16,20 +16,18 @@
 
 package uk.gov.hmrc.exports.services
 
+import scala.concurrent.Future
+
 import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{MustMatchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 
-import scala.concurrent.Future
-
-class DeclarationServiceSpec extends WordSpec with MockitoSugar with ScalaFutures with MustMatchers with ExportsDeclarationBuilder {
+class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   private val declarationRepository = mock[DeclarationRepository]
   private val service = new DeclarationService(declarationRepository)

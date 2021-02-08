@@ -17,21 +17,20 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import org.mockito.Mockito.when
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.GoodsLocation
 import uk.gov.hmrc.exports.services.CountriesService
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class GoodsLocationBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
+class GoodsLocationBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   val mockCountriesService = mock[CountriesService]
   when(mockCountriesService.allCountries)
     .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
-  "GoodsLocationBuilder" should {
+  "GoodsLocationBuilder" must {
 
     "correctly map GoodsLocation instance for supplementary journey" when {
 
@@ -47,10 +46,10 @@ class GoodsLocationBuilderSpec extends WordSpec with Matchers with MockitoSugar 
   }
 
   private def validateGoodsLocation(goodsLocation: GoodsShipment.Consignment.GoodsLocation) = {
-    goodsLocation.getAddress.getCountryCode.getValue should be(GoodsLocationBuilderSpec.country)
-    goodsLocation.getName.getValue should be(GoodsLocationBuilderSpec.identificationOfLocation)
-    goodsLocation.getTypeCode.getValue should be(GoodsLocationBuilderSpec.typeOfLocation)
-    goodsLocation.getAddress.getTypeCode.getValue should be(GoodsLocationBuilderSpec.qualifierOfIdentification)
+    goodsLocation.getAddress.getCountryCode.getValue must be(GoodsLocationBuilderSpec.country)
+    goodsLocation.getName.getValue must be(GoodsLocationBuilderSpec.identificationOfLocation)
+    goodsLocation.getTypeCode.getValue must be(GoodsLocationBuilderSpec.typeOfLocation)
+    goodsLocation.getAddress.getTypeCode.getValue must be(GoodsLocationBuilderSpec.qualifierOfIdentification)
   }
 
 }

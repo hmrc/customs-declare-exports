@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import org.scalatest.{MustMatchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsTestData._
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.models._
 
-class HeaderValidatorSpec extends WordSpec with MockitoSugar with MustMatchers {
+class HeaderValidatorSpec extends UnitSpec {
 
   trait SetUp {
     val validator = new HeaderValidator

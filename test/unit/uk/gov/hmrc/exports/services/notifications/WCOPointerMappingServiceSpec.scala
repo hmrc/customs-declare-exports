@@ -16,11 +16,10 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
-import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 
-class WCOPointerMappingServiceSpec extends WordSpec with MustMatchers with MockitoSugar with BeforeAndAfterEach {
+class WCOPointerMappingServiceSpec extends UnitSpec {
 
   "Map pointer" should {
     "find matching pointer" in {

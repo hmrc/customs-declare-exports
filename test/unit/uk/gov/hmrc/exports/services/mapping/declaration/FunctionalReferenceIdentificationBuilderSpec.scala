@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.scalatest.{Matchers, WordSpec}
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class FunctionalReferenceIdentificationBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class FunctionalReferenceIdentificationBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   private val builder = new FunctionalReferenceIdBuilder()
 
@@ -32,7 +32,7 @@ class FunctionalReferenceIdentificationBuilderSpec extends WordSpec with Matcher
 
       builder.buildThenAdd(model, declaration)
 
-      declaration.getFunctionalReferenceID.getValue should be("FG7676767889")
+      declaration.getFunctionalReferenceID.getValue must be("FG7676767889")
     }
 
     "not append to Declaration if lrn is empty" in {
@@ -41,7 +41,7 @@ class FunctionalReferenceIdentificationBuilderSpec extends WordSpec with Matcher
 
       builder.buildThenAdd(model, declaration)
 
-      declaration.getFunctionalReferenceID should be(null)
+      declaration.getFunctionalReferenceID must be(null)
     }
   }
 
@@ -51,7 +51,7 @@ class FunctionalReferenceIdentificationBuilderSpec extends WordSpec with Matcher
 
       builder.buildThenAdd("id", declaration)
 
-      declaration.getFunctionalReferenceID.getValue should be("id")
+      declaration.getFunctionalReferenceID.getValue must be("id")
     }
   }
 }

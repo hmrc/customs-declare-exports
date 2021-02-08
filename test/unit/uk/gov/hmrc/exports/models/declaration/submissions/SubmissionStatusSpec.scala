@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.models.declaration.submissions
 
-import org.scalatest.{MustMatchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.retrieve
 
-class SubmissionStatusSpec extends WordSpec with MustMatchers {
+class SubmissionStatusSpec extends UnitSpec {
 
   "Reads for status" should {
     "correctly retrieve a value for every scenario" in {

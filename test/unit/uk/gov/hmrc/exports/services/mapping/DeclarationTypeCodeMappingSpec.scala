@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.exports.services.mapping
 
-import org.scalatest.{Matchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DispatchLocation.AllowedDispatchLocations
 import uk.gov.hmrc.exports.models.declaration.{AdditionalDeclarationType, DispatchLocation}
 import wco.datamodel.wco.declaration_ds.dms._2.DeclarationTypeCodeType
 
-class DeclarationTypeCodeMappingSpec extends WordSpec with Matchers {
+class DeclarationTypeCodeMappingSpec extends UnitSpec {
 
   "DeclarationTypeCodeMapping" should {
 
@@ -30,27 +30,27 @@ class DeclarationTypeCodeMappingSpec extends WordSpec with Matchers {
       val dispatchLocation = DispatchLocation(AllowedDispatchLocations.OutsideEU)
       val additionalDeclarationTypeCode = AdditionalDeclarationType.SUPPLEMENTARY_EIDR
       val codeType = additionalDeclarationTypeAndDispatchLocationToDeclarationTypeCode(Some(dispatchLocation), Some(additionalDeclarationTypeCode))
-      codeType.getValue should be("EXZ")
+      codeType.getValue must be("EXZ")
     }
 
     "return CodeType with value COY for SpecialFiscalTerritory and Simplified" in {
       val dispatchLocation = DispatchLocation(AllowedDispatchLocations.SpecialFiscalTerritory)
       val additionalDeclarationTypeCode = AdditionalDeclarationType.SUPPLEMENTARY_SIMPLIFIED
       val codeType = additionalDeclarationTypeAndDispatchLocationToDeclarationTypeCode(Some(dispatchLocation), Some(additionalDeclarationTypeCode))
-      codeType.getValue should be("COY")
+      codeType.getValue must be("COY")
     }
 
     "return CodeType with value Y for None and Simplified" in {
       val additionalDeclarationTypeCode = AdditionalDeclarationType.SUPPLEMENTARY_SIMPLIFIED
       val codeType =
         additionalDeclarationTypeAndDispatchLocationToDeclarationTypeCode(None, Some(additionalDeclarationTypeCode))
-      codeType.getValue should be("Y")
+      codeType.getValue must be("Y")
     }
 
     "return CodeType with value EX for OutsideEU and None" in {
       val dispatchLocation = DispatchLocation(AllowedDispatchLocations.OutsideEU)
       val codeType = additionalDeclarationTypeAndDispatchLocationToDeclarationTypeCode(Some(dispatchLocation), None)
-      codeType.getValue should be("EX")
+      codeType.getValue must be("EX")
     }
   }
 

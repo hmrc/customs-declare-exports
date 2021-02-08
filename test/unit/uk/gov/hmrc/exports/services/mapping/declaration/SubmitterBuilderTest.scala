@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.scalatest.{MustMatchers, WordSpec}
+import uk.gov.hmrc.exports.base.UnitSpec
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class SubmitterBuilderTest extends WordSpec with MustMatchers {
+class SubmitterBuilderTest extends UnitSpec {
 
   private val builder = new SubmitterBuilder()
 

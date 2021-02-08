@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.exports.models
 
-import org.scalatestplus.play.PlaySpec
+import uk.gov.hmrc.exports.base.UnitSpec
 
-class DeclarationSortTest extends PlaySpec {
+class DeclarationSortTest extends UnitSpec {
 
   "DeclarationSort" should {
     "bind" when {

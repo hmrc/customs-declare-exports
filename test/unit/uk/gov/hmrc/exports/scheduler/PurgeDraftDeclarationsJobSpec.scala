@@ -18,19 +18,18 @@ package uk.gov.hmrc.exports.scheduler
 
 import java.time._
 
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito.{reset, verify}
-import org.scalatest.BeforeAndAfterEach
-import org.scalatestplus.mockito.MockitoSugar
+import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.config.AppConfig.JobConfig
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 
-import scala.concurrent.Future
-import scala.concurrent.duration._
-
-class PurgeDraftDeclarationsJobSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
+class PurgeDraftDeclarationsJobSpec extends UnitSpec {
 
   private val zone = ZoneOffset.UTC
   private val clock: Clock = Clock.fixed(Instant.now(), zone)
@@ -46,20 +45,20 @@ class PurgeDraftDeclarationsJobSpec extends UnitSpec with MockitoSugar with Befo
   "Scheduled Job" should {
 
     "Configure 'Name'" in {
-      newJob.name shouldBe "PurgeDraftDeclarations"
+      newJob.name mustBe "PurgeDraftDeclarations"
     }
 
     "Configure 'firstRunTime'" in {
       val runTime = LocalTime.of(14, 0)
       given(appConfig.purgeDraftDeclarations).willReturn(JobConfig(runTime, 1.day))
 
-      newJob.firstRunTime shouldBe runTime
+      newJob.firstRunTime mustBe runTime
     }
 
     "Configure 'interval'" in {
       given(appConfig.purgeDraftDeclarations).willReturn(JobConfig(LocalTime.MIDNIGHT, 1.day))
 
-      newJob.interval shouldBe 1.day
+      newJob.interval mustBe 1.day
     }
 
   }

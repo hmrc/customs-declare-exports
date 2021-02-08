@@ -17,14 +17,13 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import org.mockito.Mockito.when
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.services.CountriesService
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class DestinationBuilderSpec extends WordSpec with Matchers with MockitoSugar with ExportsDeclarationBuilder {
+class DestinationBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   val mockCountriesService = mock[CountriesService]
   when(mockCountriesService.allCountries)
@@ -38,7 +37,7 @@ class DestinationBuilderSpec extends WordSpec with Matchers with MockitoSugar wi
         val goodsShipment = new Declaration.GoodsShipment
         builder.buildThenAdd("PL", goodsShipment)
 
-        goodsShipment.getDestination.getCountryCode.getValue should be("PL")
+        goodsShipment.getDestination.getCountryCode.getValue must be("PL")
 
       }
 
@@ -47,7 +46,7 @@ class DestinationBuilderSpec extends WordSpec with Matchers with MockitoSugar wi
         val goodsShipment = new Declaration.GoodsShipment
         builder.buildThenAdd("", goodsShipment)
 
-        goodsShipment.getDestination should be(null)
+        goodsShipment.getDestination must be(null)
 
       }
     }

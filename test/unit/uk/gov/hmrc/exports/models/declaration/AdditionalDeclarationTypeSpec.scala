@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.models.declaration
 
-import org.scalatest.{MustMatchers, WordSpec}
 import play.api.libs.json.{JsError, JsString, JsSuccess, Json}
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 
-class AdditionalDeclarationTypeSpec extends WordSpec with MustMatchers {
+class AdditionalDeclarationTypeSpec extends UnitSpec {
 
   "Formatter" should {
     "map to json" in {

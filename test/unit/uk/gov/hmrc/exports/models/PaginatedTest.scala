@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.models
 
-import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
+import uk.gov.hmrc.exports.base.UnitSpec
 
-class PaginatedTest extends PlaySpec {
+class PaginatedTest extends UnitSpec {
 
   private val results = Paginated(currentPageElements = Seq("value"), Page(index = 1, size = 2), total = 3)
   private val json =

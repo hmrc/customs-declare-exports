@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.models
 
-import org.scalatest.{MustMatchers, WordSpec}
 import play.mvc.Http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, UNAUTHORIZED}
+import uk.gov.hmrc.exports.base.UnitSpec
 
-class ErrorResponseSpec extends WordSpec with MustMatchers {
+class ErrorResponseSpec extends UnitSpec {
 
   val errorMessage = "Custom error message"
 

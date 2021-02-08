@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration.consignment
 
-import org.scalatest.{Matchers, WordSpec}
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.Country
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class IteneraryBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class IteneraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "IteneraryBuilder" should {
 
@@ -37,7 +37,7 @@ class IteneraryBuilderSpec extends WordSpec with Matchers with ExportsDeclaratio
         new IteneraryBuilder().buildThenAdd(model, consignment)
 
         // Then
-        consignment.getItinerary shouldBe empty
+        consignment.getItinerary mustBe empty
       }
 
       "with empty destination country" in {
@@ -50,7 +50,7 @@ class IteneraryBuilderSpec extends WordSpec with Matchers with ExportsDeclaratio
         new IteneraryBuilder().buildThenAdd(model, consignment)
 
         // Then
-        consignment.getItinerary shouldBe empty
+        consignment.getItinerary mustBe empty
       }
 
       "multiple routing countries" in {
@@ -63,11 +63,11 @@ class IteneraryBuilderSpec extends WordSpec with Matchers with ExportsDeclaratio
         new IteneraryBuilder().buildThenAdd(model, consignment)
 
         // Then
-        consignment.getItinerary should have(size(2))
-        consignment.getItinerary.get(0).getSequenceNumeric.intValue shouldBe 0
-        consignment.getItinerary.get(1).getSequenceNumeric.intValue shouldBe 1
-        consignment.getItinerary.get(0).getRoutingCountryCode.getValue shouldBe "GB"
-        consignment.getItinerary.get(1).getRoutingCountryCode.getValue shouldBe "FR"
+        consignment.getItinerary must have(size(2))
+        consignment.getItinerary.get(0).getSequenceNumeric.intValue mustBe 0
+        consignment.getItinerary.get(1).getSequenceNumeric.intValue mustBe 1
+        consignment.getItinerary.get(0).getRoutingCountryCode.getValue mustBe "GB"
+        consignment.getItinerary.get(1).getRoutingCountryCode.getValue mustBe "FR"
       }
 
       "no routing countries are provided and origin is GB" in {
@@ -79,9 +79,9 @@ class IteneraryBuilderSpec extends WordSpec with Matchers with ExportsDeclaratio
         new IteneraryBuilder().buildThenAdd(model, consignment)
 
         // Then
-        consignment.getItinerary should have(size(1))
-        consignment.getItinerary.get(0).getSequenceNumeric.intValue shouldBe 0
-        consignment.getItinerary.get(0).getRoutingCountryCode.getValue shouldBe "GB"
+        consignment.getItinerary must have(size(1))
+        consignment.getItinerary.get(0).getSequenceNumeric.intValue mustBe 0
+        consignment.getItinerary.get(0).getRoutingCountryCode.getValue mustBe "GB"
       }
 
       "no routing countries are provided and origin is not GB" in {
@@ -93,7 +93,7 @@ class IteneraryBuilderSpec extends WordSpec with Matchers with ExportsDeclaratio
         new IteneraryBuilder().buildThenAdd(model, consignment)
 
         // Then
-        consignment.getItinerary should have(size(0))
+        consignment.getItinerary must have(size(0))
       }
     }
   }

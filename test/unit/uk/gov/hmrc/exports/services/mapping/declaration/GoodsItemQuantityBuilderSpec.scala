@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.scalatest.{Matchers, WordSpec}
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.base.UnitSpec
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class GoodsItemQuantityBuilderSpec extends WordSpec with Matchers with ExportsDeclarationBuilder {
+class GoodsItemQuantityBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "GoodsItemQuantityBuilder" should {
     "correctly map to the WCO-DEC Type Goods Item Quantity" in {
@@ -31,7 +31,7 @@ class GoodsItemQuantityBuilderSpec extends WordSpec with Matchers with ExportsDe
       val model = aDeclaration(withItems(6))
       builder.buildThenAdd(model, declaration)
 
-      declaration.getGoodsItemQuantity.getValue should be(new java.math.BigDecimal(6))
+      declaration.getGoodsItemQuantity.getValue must be(new java.math.BigDecimal(6))
 
     }
   }

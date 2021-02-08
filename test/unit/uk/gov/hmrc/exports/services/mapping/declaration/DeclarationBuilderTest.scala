@@ -17,14 +17,13 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.mockito.Mockito._
-import org.scalatest.{MustMatchers, WordSpec}
-import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.mapping.AuthorisationHoldersBuilder
 import uk.gov.hmrc.exports.services.mapping.declaration.consignment.DeclarationConsignmentBuilder
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.GoodsShipmentBuilder
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.AdditionalInformationBuilder
 
-class DeclarationBuilderTest extends WordSpec with MustMatchers with MockitoSugar {
+class DeclarationBuilderTest extends UnitSpec {
 
   private val functionCodeBuilder: FunctionCodeBuilder = mock[FunctionCodeBuilder]
   private val functionalReferenceIdBuilder: FunctionalReferenceIdBuilder = mock[FunctionalReferenceIdBuilder]

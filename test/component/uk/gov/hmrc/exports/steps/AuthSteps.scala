@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.exports.steps
 
-import component.uk.gov.hmrc.exports.syntax.{Postcondition, Precondition, ScenarioContext}
 import stubs.AuthService
 import testdata.ExportsTestData.declarantEori
+import uk.gov.hmrc.exports.syntax.{Postcondition, Precondition, ScenarioContext}
 
 object `Authorized user` extends Precondition with AuthService {
   def name = "Authorized user"
