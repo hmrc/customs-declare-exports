@@ -96,21 +96,21 @@ class NotificationServiceSpec extends UnitSpec {
         notificationService.getAllNotificationsForUser(eori).futureValue
 
         val inOrder: InOrder = Mockito.inOrder(submissionRepository, notificationRepository)
-        inOrder.verify(submissionRepository, times(1)).findAllSubmissionsForEori(any())
-        inOrder.verify(notificationRepository, times(1)).findNotificationsByActionIds(any())
+        inOrder.verify(submissionRepository).findAllSubmissionsForEori(any())
+        inOrder.verify(notificationRepository).findNotificationsByActionIds(any())
       }
 
       "call SubmissionRepository, passing EORI provided" in new GetAllNotificationsForUserHappyPathTest {
         notificationService.getAllNotificationsForUser(eori).futureValue
 
-        verify(submissionRepository, times(1)).findAllSubmissionsForEori(meq(eori))
+        verify(submissionRepository).findAllSubmissionsForEori(meq(eori))
       }
 
       "call NotificationRepository, passing all conversation IDs" in new GetAllNotificationsForUserHappyPathTest {
         notificationService.getAllNotificationsForUser(eori).futureValue
 
         val conversationIdCaptor: ArgumentCaptor[Seq[String]] = ArgumentCaptor.forClass(classOf[Seq[String]])
-        verify(notificationRepository, times(1)).findNotificationsByActionIds(conversationIdCaptor.capture())
+        verify(notificationRepository).findNotificationsByActionIds(conversationIdCaptor.capture())
         val actualConversationIds: Seq[String] = conversationIdCaptor.getValue
         actualConversationIds.length must equal(2)
         actualConversationIds must contain(notification.actionId)
@@ -173,53 +173,54 @@ class NotificationServiceSpec extends UnitSpec {
 
     "everything works correctly" should {
 
-      "return Either.Right" in new SaveHappyPathTest {
-        notificationService.save(Seq(notification)).futureValue must equal(Right((): Unit))
+      "return successful Future" in new SaveHappyPathTest {
+        notificationService.save(Seq(notification)).futureValue must equal((): Unit)
       }
 
       "call NotificationFactory, NotificationRepository and SubmissionRepository afterwards" in new SaveHappyPathTest {
         notificationService.save(Seq(notification)).futureValue
 
         val inOrder: InOrder = Mockito.inOrder(notificationRepository, submissionRepository)
-        inOrder.verify(notificationRepository, times(1)).insert(any())(any())
-        inOrder.verify(submissionRepository, times(1)).updateMrn(any(), any())
+        inOrder.verify(notificationRepository).insert(any())(any())
+        inOrder.verify(submissionRepository).updateMrn(any(), any())
       }
 
       "call NotificationRepository passing Notification provided" in new SaveHappyPathTest {
         notificationService.save(Seq(notification)).futureValue
 
-        verify(notificationRepository, times(1)).insert(meq(notification))(any())
+        verify(notificationRepository).insert(meq(notification))(any())
       }
 
       "call SubmissionRepository passing conversation ID and MRN provided in the Notification" in new SaveHappyPathTest {
         notificationService.save(Seq(notification)).futureValue
 
-        verify(submissionRepository, times(1)).updateMrn(meq(actionId), meq(mrn))
+        verify(submissionRepository).updateMrn(meq(actionId), meq(mrn))
       }
 
       "call NotificationRepository but not SubmissionRepository when saving an unparsed notification" in new SaveHappyPathTest {
         notificationService.save(Seq(notificationUnparsed)).futureValue
 
-        verify(notificationRepository, times(1)).insert(meq(notificationUnparsed))(any())
+        verify(notificationRepository).insert(meq(notificationUnparsed))(any())
         verifyNoInteractions(submissionRepository)
       }
     }
 
-    "NotificationRepository on insert throws exception" should {
+    "NotificationRepository on insert returns WriteResult with Error" should {
 
-      "return Either.Left with exception message" in {
+      "return failed Future" in {
         val exceptionMsg = "Test Exception message"
-        when(notificationRepository.insert(any())(any())).thenThrow(new RuntimeException(exceptionMsg))
+        when(notificationRepository.insert(any())(any()))
+          .thenReturn(Future.failed(dummyWriteResultFailure(exceptionMsg)))
 
-        val saveResult = notificationService.save(Seq(notification)).futureValue
-
-        saveResult must equal(Left(exceptionMsg))
+        notificationService.save(Seq(notification)).failed.futureValue must have message exceptionMsg
       }
 
       "not call SubmissionRepository" in {
-        when(notificationRepository.insert(any())(any())).thenThrow(new RuntimeException)
+        val exceptionMsg = "Test Exception message"
+        when(notificationRepository.insert(any())(any()))
+          .thenReturn(Future.failed(dummyWriteResultFailure(exceptionMsg)))
 
-        notificationService.save(Seq(notification)).futureValue
+        notificationService.save(Seq(notification)).failed.futureValue
 
         verifyNoInteractions(submissionRepository)
       }
@@ -227,24 +228,22 @@ class NotificationServiceSpec extends UnitSpec {
 
     "SubmissionRepository on updateMrn returns empty Option" should {
 
-      "return Either.Right" in {
+      "result in a success" in {
         when(notificationRepository.insert(any())(any())).thenReturn(Future.successful(dummyWriteResultSuccess))
         when(submissionRepository.updateMrn(any(), any())).thenReturn(Future.successful(None))
 
-        notificationService.save(Seq(notification)).futureValue must equal(Right((): Unit))
+        notificationService.save(Seq(notification)).futureValue must equal((): Unit)
       }
     }
 
     "SubmissionRepository on updateMrn throws an Exception" should {
 
-      "return Either.Left with exception message" in {
+      "return failed Future" in {
         val exceptionMsg = "Test Exception message"
         when(notificationRepository.insert(any())(any())).thenReturn(Future.successful(dummyWriteResultSuccess))
         when(submissionRepository.updateMrn(any(), any())).thenThrow(new RuntimeException(exceptionMsg))
 
-        val saveResult = notificationService.save(Seq(notification)).futureValue
-
-        saveResult must equal(Left(exceptionMsg))
+        notificationService.save(Seq(notification)).failed.futureValue must have message exceptionMsg
       }
     }
   }

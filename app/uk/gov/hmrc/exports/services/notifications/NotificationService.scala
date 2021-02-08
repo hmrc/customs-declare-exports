@@ -23,6 +23,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Success
 import scala.xml.XML
 
 @Singleton
@@ -66,38 +67,22 @@ class NotificationService @Inject()(
         notificationRepository.findNotificationsByActionIds(conversationIds)
     }
 
-  def save(notifications: Seq[Notification]): Future[Either[String, Unit]] =
-    Future
-      .sequence(notifications.map(saveSingleNotification))
-      .map(_.find(_.isLeft).getOrElse(Right((): Unit)))
+  def save(notifications: Seq[Notification]): Future[Unit] =
+    Future.sequence(notifications.map(saveSingleNotification)).map(_ => ())
 
-  private def saveSingleNotification(notification: Notification): Future[Either[String, Unit]] =
-    try {
-      notificationRepository
-        .insert(notification)
-        .flatMap(_ => updateRelatedSubmission(notification))
-    } catch {
-      case exc: Throwable =>
-        logger.error(exc.getMessage)
-        Future.successful(Left(exc.getMessage))
-    }
+  private def saveSingleNotification(notification: Notification): Future[Unit] =
+    for {
+      _ <- notificationRepository.insert(notification)
+      _ <- updateRelatedSubmission(notification)
+    } yield (())
 
-  private def updateRelatedSubmission(notification: Notification): Future[Either[String, Unit]] =
+  private def updateRelatedSubmission(notification: Notification): Future[Option[Submission]] =
     notification.details.map { details =>
-      try {
-        submissionRepository.updateMrn(notification.actionId, details.mrn).map {
-          case None =>
-            logger.error(s"Could not find Submission to update for actionId: ${notification.actionId}")
-            Right((): Unit)
-          case Some(_) =>
-            Right((): Unit)
-        }
-      } catch {
-        case exc: Throwable =>
-          logger.error(exc.getMessage)
-          Future.successful(Left(exc.getMessage))
+      submissionRepository.updateMrn(notification.actionId, details.mrn).andThen {
+        case Success(None) =>
+          logger.warn(s"Could not find Submission to update for actionId: ${notification.actionId}")
       }
-    }.getOrElse(Future.successful(Right((): Unit)))
+    }.getOrElse(Future.successful(None))
 
   def reattemptParsingUnparsedNotifications(): Future[Unit] =
     notificationRepository

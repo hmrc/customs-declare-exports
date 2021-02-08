@@ -29,6 +29,7 @@ import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.{NotificationFactory, NotificationService}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Success
 import scala.xml.NodeSeq
 
 @Singleton
@@ -70,13 +71,10 @@ class NotificationController @Inject()(
       case Right(extractedHeaders) =>
         val allNotifications = notificationFactory.buildNotifications(extractedHeaders.conversationId.value, request.body)
 
-        notificationsService.save(allNotifications).map {
-          case Right(_) =>
+        notificationsService.save(allNotifications).map(_ => Accepted).andThen {
+          case Success(_) =>
             metrics.incrementCounter(notificationMetric)
             timer.stop()
-            Accepted
-          case Left(_) =>
-            InternalServerError
         }
       case Left(_) => Future.successful(Accepted)
     }

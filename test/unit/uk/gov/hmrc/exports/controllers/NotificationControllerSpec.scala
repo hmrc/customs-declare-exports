@@ -67,17 +67,20 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     )
     .build()
 
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    withAuthorizedUser()
+  }
+
   override def afterEach(): Unit = {
     reset(mockAuthConnector, notificationServiceMock, notificationFactory)
-
     super.afterEach()
   }
 
-  "GET /:id" should {
+  "Notification Controller on findByID" should {
 
     "return 200" when {
       "submission found" in {
-        withAuthorizedUser()
         when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
         when(notificationServiceMock.getNotifications(any()))
           .thenReturn(Future.successful(Seq(notification)))
@@ -91,7 +94,6 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
     "not return notifications" when {
       "those notifications have not had the details parsed from them" in {
-        withAuthorizedUser()
         when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
         when(notificationServiceMock.getNotifications(any()))
           .thenReturn(Future.successful(Seq(notificationUnparsed)))
@@ -105,7 +107,6 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
     "return 400" when {
       "submission not found" in {
-        withAuthorizedUser()
         when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(None))
 
         val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
@@ -130,7 +131,6 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     "everything works correctly" should {
 
       "return Ok status" in {
-        withAuthorizedUser()
         val notificationsFromService = Seq(notification, notification_2, notification_3)
         when(notificationServiceMock.getAllNotificationsForUser(any()))
           .thenReturn(Future.successful(notificationsFromService))
@@ -141,7 +141,6 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       }
 
       "return all Notifications returned by Notification Service" in {
-        withAuthorizedUser()
         val notificationsFromService = Seq(notification, notification_2, notification_3)
         when(notificationServiceMock.getAllNotificationsForUser(any()))
           .thenReturn(Future.successful(notificationsFromService))
@@ -152,7 +151,6 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       }
 
       "return only those Notifications returned by Notification Service that have been parsed" in {
-        withAuthorizedUser()
         val notificationsFromService = Seq(notification, notification_2, notification_3, notificationUnparsed)
         when(notificationServiceMock.getAllNotificationsForUser(any()))
           .thenReturn(Future.successful(notificationsFromService))
@@ -165,7 +163,6 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       }
 
       "call Notification Service once" in {
-        withAuthorizedUser()
         val notificationsFromService = Seq(notification, notification_2, notification_3)
         when(notificationServiceMock.getAllNotificationsForUser(any()))
           .thenReturn(Future.successful(notificationsFromService))
@@ -204,8 +201,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     "everything works correctly" should {
 
       "return Accepted status" in {
-        withAuthorizedUser()
-        when(notificationServiceMock.save(any())).thenReturn(Future.successful(Right((): Unit)))
+        when(notificationServiceMock.save(any())).thenReturn(Future.successful((): Unit))
 
         val result = routePostSaveNotification()
 
@@ -213,8 +209,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       }
 
       "call NotificationService once" in {
-        withAuthorizedUser()
-        when(notificationServiceMock.save(any())).thenReturn(Future.successful(Right((): Unit)))
+        when(notificationServiceMock.save(any())).thenReturn(Future.successful((): Unit))
 
         routePostSaveNotification().futureValue
 
@@ -222,8 +217,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       }
 
       "call NotificationService once, even if payload contains more Response elements" in {
-        withAuthorizedUser()
-        when(notificationServiceMock.save(any())).thenReturn(Future.successful(Right((): Unit)))
+        when(notificationServiceMock.save(any())).thenReturn(Future.successful((): Unit))
 
         routePostSaveNotification(xmlBody = exampleNotificationWithMultipleResponses(mrn).asXml).futureValue
 
@@ -231,8 +225,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       }
 
       "call NotificationService with the same amount of Notifications as it is in the payload" in {
-        withAuthorizedUser()
-        when(notificationServiceMock.save(any())).thenReturn(Future.successful(Right((): Unit)))
+        when(notificationServiceMock.save(any())).thenReturn(Future.successful((): Unit))
         when(notificationFactory.buildNotifications(any(), any())).thenReturn(Seq(notification, notification_2))
 
         routePostSaveNotification(xmlBody = exampleNotificationWithMultipleResponses(mrn).asXml).futureValue
@@ -244,15 +237,14 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       }
     }
 
-    "NotificationService returns Either.Left" should {
+    "NotificationService returns failure" should {
 
-      "return InternalServerError" in {
-        withAuthorizedUser()
-        when(notificationServiceMock.save(any())).thenReturn(Future.successful(Left("Error message")))
+      "throw an Exception" in {
+        when(notificationServiceMock.save(any())).thenReturn(Future.failed(new Exception("Test Exception")))
 
-        val result = routePostSaveNotification()
-
-        status(result) must be(INTERNAL_SERVER_ERROR)
+        an[Exception] mustBe thrownBy {
+          routePostSaveNotification().futureValue
+        }
       }
     }
 
