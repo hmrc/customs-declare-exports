@@ -39,11 +39,11 @@ class NotificationRepositorySpec extends UnitSpec {
     repo.removeAll().futureValue
   }
 
-  "Notification Repository on save" when {
+  "Notification Repository on insert" when {
 
     "the operation was successful" should {
-      "return true" in {
-        repo.save(notification).futureValue must be(true)
+      "result in a success" in {
+        repo.insert(notification).futureValue.ok must be(true)
 
         val notificationInDB = repo.findNotificationsByActionId(actionId).futureValue
         notificationInDB.length must equal(1)
@@ -51,30 +51,25 @@ class NotificationRepositorySpec extends UnitSpec {
       }
     }
 
-    //TODO if there is a requirement to reduce / elimate duplicate notifications these tests and the
-    // indexes will need changing. for now these tests have been changed to represent the current /
-    // expected behavior. Which is allow duplicates.
     "trying to save the same Notification twice" should {
       "be allowed" in {
-        repo.save(notification).futureValue must be(true)
-
-        repo.save(notification).futureValue must be(true)
+        repo.insert(notification).futureValue.ok must be(true)
+        repo.insert(notification).futureValue.ok must be(true)
       }
-    }
 
-    "result in having 2 notifications persisted" in {
-      repo.save(notification).futureValue must be(true)
+      "result in having 2 notifications persisted" in {
+        repo.insert(notification).futureValue.ok must be(true)
+        repo.insert(notification).futureValue.ok must be(true)
 
-      repo.save(notification).futureValue
-
-      val notificationsInDB = repo.findNotificationsByActionId(notification.actionId).futureValue
-      notificationsInDB.length must equal(2)
-      notificationsInDB.head must equal(notification)
+        val notificationsInDB = repo.findNotificationsByActionId(notification.actionId).futureValue
+        notificationsInDB.length must equal(2)
+        notificationsInDB.head must equal(notification)
+      }
     }
 
     "trying to save an unparsable notification" should {
       "be allowed" in {
-        repo.save(notificationUnparsed).futureValue must be(true)
+        repo.insert(notificationUnparsed).futureValue.ok must be(true)
 
         val notificationInDB = repo.findNotificationsByActionId(actionId_4).futureValue
         notificationInDB.length must equal(1)
@@ -93,7 +88,7 @@ class NotificationRepositorySpec extends UnitSpec {
 
     "there is single Notification with given actionId" should {
       "return this Notification only" in {
-        repo.save(notification).futureValue
+        repo.insert(notification).futureValue
 
         val foundNotifications = repo.findNotificationsByActionId(actionId).futureValue
 
@@ -104,8 +99,8 @@ class NotificationRepositorySpec extends UnitSpec {
 
     "there are multiple Notifications with given actionId" should {
       "return all the Notifications" in {
-        repo.save(notification).futureValue
-        repo.save(notification_2).futureValue
+        repo.insert(notification).futureValue
+        repo.insert(notification_2).futureValue
 
         val foundNotifications = repo.findNotificationsByActionId(actionId).futureValue
 
@@ -126,8 +121,8 @@ class NotificationRepositorySpec extends UnitSpec {
 
     "there are Notifications for one of provided actionIds" should {
       "return those Notifications" in {
-        repo.save(notification).futureValue
-        repo.save(notification_2).futureValue
+        repo.insert(notification).futureValue
+        repo.insert(notification_2).futureValue
 
         val foundNotifications =
           repo.findNotificationsByActionIds(Seq(actionId, actionId_2)).futureValue
@@ -140,9 +135,9 @@ class NotificationRepositorySpec extends UnitSpec {
 
     "there are Notifications with different actionIds" should {
       "return only Notifications with conversationId same as provided one" in {
-        repo.save(notification).futureValue
-        repo.save(notification_2).futureValue
-        repo.save(notification_3).futureValue
+        repo.insert(notification).futureValue
+        repo.insert(notification_2).futureValue
+        repo.insert(notification_3).futureValue
 
         val foundNotifications = repo.findNotificationsByActionIds(Seq(actionId_2)).futureValue
 
@@ -153,9 +148,9 @@ class NotificationRepositorySpec extends UnitSpec {
 
     "there are Notifications for all of provided actionIds" should {
       "return all the Notifications" in {
-        repo.save(notification).futureValue
-        repo.save(notification_2).futureValue
-        repo.save(notification_3).futureValue
+        repo.insert(notification).futureValue
+        repo.insert(notification_2).futureValue
+        repo.insert(notification_3).futureValue
 
         val foundNotifications =
           repo.findNotificationsByActionIds(Seq(actionId, actionId_2)).futureValue
@@ -169,10 +164,10 @@ class NotificationRepositorySpec extends UnitSpec {
 
     "the input is an empty list" should {
       "return empty list" in {
-        repo.save(notification).futureValue
-        repo.save(notification_2).futureValue
-        repo.save(notification_3).futureValue
-        repo.save(notificationUnparsed).futureValue
+        repo.insert(notification).futureValue
+        repo.insert(notification_2).futureValue
+        repo.insert(notification_3).futureValue
+        repo.insert(notificationUnparsed).futureValue
 
         repo.findNotificationsByActionIds(Seq.empty).futureValue must equal(Seq.empty)
       }
@@ -183,7 +178,7 @@ class NotificationRepositorySpec extends UnitSpec {
 
     "there are no unparsed Notification" should {
       "return empty list" in {
-        repo.save(notification).futureValue
+        repo.insert(notification).futureValue
 
         repo.findUnparsedNotifications().futureValue must equal(Seq.empty)
       }
@@ -191,8 +186,8 @@ class NotificationRepositorySpec extends UnitSpec {
 
     "there is one unparsed Notification" should {
       "return those Notifications" in {
-        repo.save(notification).futureValue
-        repo.save(notificationUnparsed).futureValue
+        repo.insert(notification).futureValue
+        repo.insert(notificationUnparsed).futureValue
 
         val foundNotifications = repo.findUnparsedNotifications().futureValue
 
@@ -205,9 +200,9 @@ class NotificationRepositorySpec extends UnitSpec {
       "return those Notifications" in {
         val anotherUnparsableNotification = notificationUnparsed.copy(actionId_3)
 
-        repo.save(notification).futureValue
-        repo.save(notificationUnparsed).futureValue
-        repo.save(anotherUnparsableNotification).futureValue
+        repo.insert(notification).futureValue
+        repo.insert(notificationUnparsed).futureValue
+        repo.insert(anotherUnparsableNotification).futureValue
 
         val foundNotifications = repo.findUnparsedNotifications().futureValue
 
@@ -222,7 +217,7 @@ class NotificationRepositorySpec extends UnitSpec {
 
     "there are no Notifications for the given actionId" should {
       "not delete any notifications" in {
-        repo.save(notification_3).futureValue
+        repo.insert(notification_3).futureValue
 
         repo.removeUnparsedNotificationsForActionId(notification.actionId).futureValue
 
@@ -232,8 +227,8 @@ class NotificationRepositorySpec extends UnitSpec {
 
     "there is one Notification for the given actionId" should {
       "delete just that matching notification" in {
-        repo.save(notificationUnparsed).futureValue
-        repo.save(notification_3).futureValue
+        repo.insert(notificationUnparsed).futureValue
+        repo.insert(notification_3).futureValue
 
         repo.removeUnparsedNotificationsForActionId(notificationUnparsed.actionId).futureValue
 
@@ -244,9 +239,9 @@ class NotificationRepositorySpec extends UnitSpec {
 
     "there are multiple Notification for the given actionId" should {
       "delete all matching notifications" in {
-        repo.save(notificationUnparsed).futureValue
-        repo.save(notificationUnparsed.copy(payload = "<something></else>")).futureValue
-        repo.save(notification_3).futureValue
+        repo.insert(notificationUnparsed).futureValue
+        repo.insert(notificationUnparsed.copy(payload = "<something></else>")).futureValue
+        repo.insert(notification_3).futureValue
 
         repo.removeUnparsedNotificationsForActionId(notificationUnparsed.actionId).futureValue
 
@@ -259,10 +254,10 @@ class NotificationRepositorySpec extends UnitSpec {
       "delete only matching actionId notifications that are unparsed" in {
         val parsedNotificationWithSameActionId = notification_3.copy(actionId = notificationUnparsed.actionId)
 
-        repo.save(notificationUnparsed).futureValue
-        repo.save(notificationUnparsed.copy(payload = "<something></else>")).futureValue
-        repo.save(parsedNotificationWithSameActionId).futureValue
-        repo.save(notification_3).futureValue
+        repo.insert(notificationUnparsed).futureValue
+        repo.insert(notificationUnparsed.copy(payload = "<something></else>")).futureValue
+        repo.insert(parsedNotificationWithSameActionId).futureValue
+        repo.insert(notification_3).futureValue
 
         repo.removeUnparsedNotificationsForActionId(notificationUnparsed.actionId).futureValue
 

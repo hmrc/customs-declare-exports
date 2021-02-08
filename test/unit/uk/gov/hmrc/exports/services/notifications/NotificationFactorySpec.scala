@@ -207,4 +207,30 @@ class NotificationFactorySpec extends UnitSpec {
       }
     }
   }
+
+  "NotificationFactory on buildNotificationUnparsed" should {
+
+    val xml = exampleReceivedNotification(mrn).asXml
+
+    "return Notification with actionId" in {
+
+      val result = notificationFactory.buildNotificationUnparsed(actionId, xml)
+
+      result.actionId mustBe actionId
+    }
+
+    "return Notification with payload" in {
+
+      val result = notificationFactory.buildNotificationUnparsed(actionId, xml)
+
+      result.payload mustBe xml.toString
+    }
+
+    "return Notification with empty details" in {
+
+      val result = notificationFactory.buildNotificationUnparsed(actionId, xml)
+
+      result.details mustBe empty
+    }
+  }
 }

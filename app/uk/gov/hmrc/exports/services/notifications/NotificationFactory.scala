@@ -35,14 +35,17 @@ class NotificationFactory @Inject()(notificationParser: NotificationParser) {
         }
 
       case Success(_) =>
-        Seq(Notification(actionId = actionId, payload = notificationXml.toString, details = None))
+        Seq(buildNotificationUnparsed(actionId = actionId, notificationXml = notificationXml))
 
       case Failure(exc) =>
         logParseExceptionAtPagerDutyLevel(actionId, exc)
-        Seq(Notification(actionId = actionId, payload = notificationXml.toString, details = None))
+        Seq(buildNotificationUnparsed(actionId = actionId, notificationXml = notificationXml))
     }
 
   private def logParseExceptionAtPagerDutyLevel(actionId: String, exc: Throwable) =
     logger.warn(s"There was a problem during parsing notification with actionId=${actionId} exception thrown: ${exc.getMessage}")
+
+  def buildNotificationUnparsed(actionId: String, notificationXml: NodeSeq): Notification =
+    Notification(actionId = actionId, payload = notificationXml.toString, details = None)
 
 }
