@@ -35,7 +35,7 @@ class AuthorisationHoldersBuilderSpec extends UnitSpec with ExportsDeclarationBu
         new AuthorisationHoldersBuilder().buildThenAdd(model, declaration)
 
         // Then
-        declaration.getAuthorisationHolder mustBe 'empty
+        declaration.getAuthorisationHolder mustBe empty
       }
 
       "multiple holders" in {
@@ -65,7 +65,7 @@ class AuthorisationHoldersBuilderSpec extends UnitSpec with ExportsDeclarationBu
         new AuthorisationHoldersBuilder().buildThenAdd(model, declaration)
 
         // Then
-        declaration.getAuthorisationHolder mustBe 'empty
+        declaration.getAuthorisationHolder mustBe empty
       }
 
       "eori is empty" in {
@@ -77,7 +77,7 @@ class AuthorisationHoldersBuilderSpec extends UnitSpec with ExportsDeclarationBu
         new AuthorisationHoldersBuilder().buildThenAdd(model, declaration)
 
         // Then
-        declaration.getAuthorisationHolder mustBe 'empty
+        declaration.getAuthorisationHolder mustBe empty
       }
     }
   }

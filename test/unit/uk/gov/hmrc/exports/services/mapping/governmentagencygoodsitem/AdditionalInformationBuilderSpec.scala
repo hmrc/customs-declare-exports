@@ -35,7 +35,7 @@ class AdditionalInformationBuilderSpec extends UnitSpec with MockitoSugar with E
 
       builder.buildThenAdd(exportItem, governmentAgencyGoodsItem)
 
-      governmentAgencyGoodsItem.getAdditionalInformation mustBe 'empty
+      governmentAgencyGoodsItem.getAdditionalInformation mustBe empty
     }
 
     "populated additional information" in {
@@ -44,7 +44,7 @@ class AdditionalInformationBuilderSpec extends UnitSpec with MockitoSugar with E
 
       builder.buildThenAdd(exportItem, governmentAgencyGoodsItem)
 
-      governmentAgencyGoodsItem.getAdditionalInformation mustNot be('empty)
+      governmentAgencyGoodsItem.getAdditionalInformation mustNot be(empty)
       governmentAgencyGoodsItem.getAdditionalInformation
         .get(0)
         .getStatementCode

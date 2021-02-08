@@ -28,7 +28,7 @@ class WCOPointerMappingServiceSpec extends UnitSpec {
         Pointer(List(PointerSection("42A", PointerSectionType.FIELD), PointerSection("017", PointerSectionType.FIELD)))
 
       val result = WCOPointerMappingService.mapWCOPointerToExportsPointer(pointer)
-      result mustBe 'defined
+      result mustBe defined
       result.get mustBe Pointer(
         List(PointerSection("declaration", PointerSectionType.FIELD), PointerSection("functionCode", PointerSectionType.FIELD))
       )

@@ -34,7 +34,7 @@ class PackagingBuilderSpec extends UnitSpec with ExportsItemBuilder {
 
         builder.buildThenAdd(model, wcoItem)
 
-        wcoItem.getPackaging mustBe 'empty
+        wcoItem.getPackaging mustBe empty
       }
 
       "populated list" in {

@@ -51,7 +51,7 @@ class SubmissionRepositorySpec extends UnitSpec {
         repo.save(submission).futureValue must be(submission)
 
         val submissionInDB = repo.findSubmissionByMrn(mrn).futureValue
-        submissionInDB must be('defined)
+        submissionInDB must be(defined)
       }
     }
 
@@ -90,7 +90,7 @@ class SubmissionRepositorySpec extends UnitSpec {
     "return empty Option" when {
       "there is no Submission with given ConversationId" in {
         val newMrn = mrn_2
-        repo.updateMrn(actionId, newMrn).futureValue mustNot be('defined)
+        repo.updateMrn(actionId, newMrn).futureValue mustNot be(defined)
       }
     }
 
@@ -120,7 +120,7 @@ class SubmissionRepositorySpec extends UnitSpec {
     "there is no Submission with given MRN" should {
       "return empty Option" in {
         val newAction = Action(actionId_2, CancellationRequest)
-        repo.addAction(mrn, newAction).futureValue mustNot be('defined)
+        repo.addAction(mrn, newAction).futureValue mustNot be(defined)
       }
     }
 
@@ -212,7 +212,7 @@ class SubmissionRepositorySpec extends UnitSpec {
 
     "there is no Submission with given MRN" should {
       "return empty Option" in {
-        repo.findSubmissionByMrn(mrn).futureValue mustNot be('defined)
+        repo.findSubmissionByMrn(mrn).futureValue mustNot be(defined)
       }
     }
 

@@ -34,7 +34,7 @@ class CurrencyExchangeBuilderSpec extends UnitSpec with ExportsDeclarationBuilde
         // When
         builder.buildThenAdd(model, declaration)
         // Then
-        declaration.getCurrencyExchange mustBe 'empty
+        declaration.getCurrencyExchange mustBe empty
       }
 
       "exchange rate is empty" in {
@@ -44,7 +44,7 @@ class CurrencyExchangeBuilderSpec extends UnitSpec with ExportsDeclarationBuilde
         // When
         builder.buildThenAdd(model, declaration)
         // Then
-        declaration.getCurrencyExchange mustBe 'empty
+        declaration.getCurrencyExchange mustBe empty
       }
 
       "exchange rate is populated" in {

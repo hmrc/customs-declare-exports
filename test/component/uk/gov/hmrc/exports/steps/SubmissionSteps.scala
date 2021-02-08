@@ -137,10 +137,14 @@ object `Submission was updated for mrn` extends Postcondition with Eventually {
   override def name: String = "Submission was updated for mrn"
 
   override def execute(context: ScenarioContext): ScenarioContext = {
-    val repo = context.get[SubmissionRepository]
     val notification: Notification = context.get[Notification]
-    val conversationId = context.get[String]
-    eventually { verify(repo).updateMrn(eqm(conversationId), eqm(notification.mrn)) }
+    notification.details.map { details =>
+      val repo = context.get[SubmissionRepository]
+      val conversationId = context.get[String]
+      eventually {
+        verify(repo).updateMrn(eqm(conversationId), eqm(details.mrn))
+      }
+    }
     context
   }
 }

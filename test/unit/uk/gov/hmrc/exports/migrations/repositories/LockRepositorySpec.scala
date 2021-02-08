@@ -144,7 +144,7 @@ class LockRepositorySpec extends UnitSpec {
 
       val result = repo.findByKey(lockKey)
 
-      result mustBe 'defined
+      result mustBe defined
       val expectedLockEntry = LockEntry(lockKey, "statusValue", "ownerValue", date)
       result.get mustBe expectedLockEntry
     }

@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.base
 
 import com.codahale.metrics.SharedMetricRegistries
 import com.google.inject.AbstractModule
+import org.scalatest.concurrent.IntegrationPatience
 import play.api.inject.guice.GuiceableModule
 import stubs.WireMockRunner
 
@@ -27,7 +28,7 @@ object IntegrationTestModule extends AbstractModule {
   def asGuiceableModule: GuiceableModule = GuiceableModule.guiceable(this)
 }
 
-trait IntegrationTestSpec extends UnitSpec with WireMockRunner {
+trait IntegrationTestSpec extends UnitSpec with IntegrationPatience with WireMockRunner {
 
   SharedMetricRegistries.clear()
 

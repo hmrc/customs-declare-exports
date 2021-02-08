@@ -38,9 +38,9 @@ class ExportsDeclarationSpec extends UnitSpec {
       json
         .validate(ExportsDeclarationRequest.format)
         .fold(error => fail(s"Could not parse - $error"), declaration => {
-          declaration.transport.borderModeOfTransportCode mustNot be('empty)
-          declaration.transport.meansOfTransportOnDepartureType mustNot be('empty)
-          declaration.transport.transportPayment mustNot be('empty)
+          declaration.transport.borderModeOfTransportCode mustNot be(empty)
+          declaration.transport.meansOfTransportOnDepartureType mustNot be(empty)
+          declaration.transport.transportPayment mustNot be(empty)
         })
     }
   }

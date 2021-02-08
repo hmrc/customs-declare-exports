@@ -87,7 +87,7 @@ class NotificationFactorySpec extends UnitSpec {
         val result = notificationFactory.buildNotifications(actionId, xml)
 
         result.size mustBe 1
-        result.head.details mustBe 'defined
+        result.head.details mustBe defined
         result.head.details.get mustBe details
       }
     }
@@ -128,9 +128,9 @@ class NotificationFactorySpec extends UnitSpec {
         val result = notificationFactory.buildNotifications(actionId, xml)
 
         result.size mustBe 3
-        result.head.details mustBe 'defined
-        result(1).details mustBe 'defined
-        result(2).details mustBe 'defined
+        result.head.details mustBe defined
+        result(1).details mustBe defined
+        result(2).details mustBe defined
 
         val allDetails = result.flatMap(_.details)
         Seq(details, details_2, details_3).foreach { det =>
@@ -164,7 +164,7 @@ class NotificationFactorySpec extends UnitSpec {
         val result = notificationFactory.buildNotifications(actionId, xml)
 
         result.size mustBe 1
-        result.head.details mustBe 'empty
+        result.head.details mustBe empty
       }
     }
 
@@ -203,7 +203,7 @@ class NotificationFactorySpec extends UnitSpec {
         val result = notificationFactory.buildNotifications(actionId, xml)
 
         result.size mustBe 1
-        result.head.details mustBe 'empty
+        result.head.details mustBe empty
       }
     }
   }

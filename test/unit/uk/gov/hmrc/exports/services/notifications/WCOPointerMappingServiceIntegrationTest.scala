@@ -38,7 +38,7 @@ class WCOPointerMappingServiceIntegrationTest extends UnitSpec {
       )
 
       val result = WCOPointerMappingService.mapWCOPointerToExportsPointer(pointer)
-      result mustBe 'defined
+      result mustBe defined
       result.get mustBe Pointer(
         List(
           PointerSection("declaration", PointerSectionType.FIELD),

@@ -34,7 +34,7 @@ class GovernmentProcedureBuilderSpec extends UnitSpec with GovernmentAgencyGoods
 
         builder.buildThenAdd(exportItem, governmentAgencyGoodsItem)
 
-        governmentAgencyGoodsItem.getGovernmentProcedure mustBe 'empty
+        governmentAgencyGoodsItem.getGovernmentProcedure mustBe empty
       }
 
       "populated procedure codes" in {

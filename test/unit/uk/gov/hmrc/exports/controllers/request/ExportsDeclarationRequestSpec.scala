@@ -96,9 +96,9 @@ class ExportsDeclarationRequestSpec extends UnitSpec with ExportsDeclarationBuil
       .parse(ExportsDeclarationSpec.declarationAsString)
       .validate[ExportsDeclarationRequest]
       .fold(error => fail(s"Could not parse - $error"), declaration => {
-        declaration.transport.borderModeOfTransportCode mustNot be('empty)
-        declaration.transport.meansOfTransportOnDepartureType mustNot be('empty)
-        declaration.transport.transportPayment mustNot be('empty)
+        declaration.transport.borderModeOfTransportCode mustNot be(empty)
+        declaration.transport.meansOfTransportOnDepartureType mustNot be(empty)
+        declaration.transport.transportPayment mustNot be(empty)
       })
   }
 

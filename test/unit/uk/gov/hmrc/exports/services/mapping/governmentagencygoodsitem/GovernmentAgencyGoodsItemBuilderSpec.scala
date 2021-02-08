@@ -90,7 +90,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
           verify(mockCachingMappingHelper).commodityFromExportItem(any[ExportItem])
           verify(dutyTaxPartyBuilder)
             .buildThenAdd(any[AdditionalFiscalReference], any[GoodsShipment.GovernmentAgencyGoodsItem])
-          goodsShipment.getGovernmentAgencyGoodsItem mustNot be('empty)
+          goodsShipment.getGovernmentAgencyGoodsItem mustNot be(empty)
           goodsShipment.getGovernmentAgencyGoodsItem.get(0).getSequenceNumeric.intValue() mustBe 99
         }
       }

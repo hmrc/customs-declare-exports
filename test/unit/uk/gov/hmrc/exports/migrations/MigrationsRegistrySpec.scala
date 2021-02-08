@@ -37,7 +37,7 @@ class MigrationsRegistrySpec extends UnitSpec {
       val newRegistry = registry.register(migrationDefinition)
 
       newRegistry mustNot be(registry)
-      newRegistry.migrations mustNot be('empty)
+      newRegistry.migrations mustNot be(empty)
       newRegistry.migrations must contain(migrationDefinition)
     }
 

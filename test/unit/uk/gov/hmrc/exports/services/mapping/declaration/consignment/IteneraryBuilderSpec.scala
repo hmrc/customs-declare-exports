@@ -37,7 +37,7 @@ class IteneraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         new IteneraryBuilder().buildThenAdd(model, consignment)
 
         // Then
-        consignment.getItinerary mustBe 'empty
+        consignment.getItinerary mustBe empty
       }
 
       "with empty destination country" in {
@@ -50,7 +50,7 @@ class IteneraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         new IteneraryBuilder().buildThenAdd(model, consignment)
 
         // Then
-        consignment.getItinerary mustBe 'empty
+        consignment.getItinerary mustBe empty
       }
 
       "multiple routing countries" in {
