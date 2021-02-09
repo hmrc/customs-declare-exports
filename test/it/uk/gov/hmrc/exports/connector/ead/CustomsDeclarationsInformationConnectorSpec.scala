@@ -16,35 +16,16 @@
 
 package uk.gov.hmrc.exports.connector.ead
 
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import stubs.CustomsDeclarationsInformationAPIConfig._
 import stubs.CustomsDeclarationsInformationAPIService
-import stubs.ExternalServicesConfig.{Host, Port}
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
-import uk.gov.hmrc.exports.util.TestModule
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
+import uk.gov.hmrc.http.InternalServerException
 
-class CustomsDeclarationsInformationConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with CustomsDeclarationsInformationAPIService {
+class CustomsDeclarationsInformationConnectorSpec extends IntegrationTestSpec with CustomsDeclarationsInformationAPIService {
 
-  private lazy val connector = app.injector.instanceOf[CustomsDeclarationsInformationConnector]
-
-  private implicit val hc: HeaderCarrier = HeaderCarrier()
-
-  override implicit lazy val app: Application =
-    GuiceApplicationBuilder(overrides = Seq(TestModule.asGuiceableModule))
-      .configure(
-        Map(
-          "microservice.services.customs-declarations-information.host" -> Host,
-          "microservice.services.customs-declarations-information.port" -> Port,
-          "microservice.services.customs-declarations-information.submit-uri" -> "/mrn/ID/status",
-          "microservice.services.customs-declarations-information.api-version" -> "1.0"
-        )
-      )
-      .build()
+  private lazy val connector = inject[CustomsDeclarationsInformationConnector]
 
   "Customs Declarations Information Connector" should {
     val mrn = "18GB9JLC3CU1LFGVR2"

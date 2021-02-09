@@ -19,14 +19,13 @@ package uk.gov.hmrc.exports.services.notifications
 import java.time.format.DateTimeFormatter.ofPattern
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.xml.NodeSeq
 
 import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
 import org.mockito.Mockito._
 import org.mockito.{ArgumentCaptor, InOrder, Mockito}
-import reactivemongo.bson.{BSONDocument, BSONInteger, BSONString}
-import reactivemongo.core.errors.DetailedDatabaseException
 import testdata.ExportsTestData._
 import testdata.RepositoryTestData._
 import testdata.SubmissionTestData.{submission, _}
@@ -38,10 +37,6 @@ import uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationDetails}
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest, SubmissionStatus}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.xml.NodeSeq
 
 class NotificationServiceSpec extends UnitSpec {
 

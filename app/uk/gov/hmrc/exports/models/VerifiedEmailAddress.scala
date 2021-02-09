@@ -14,28 +14,14 @@
  * limitations under the License.
  */
 
-package stubs
+package uk.gov.hmrc.exports.models
 
-import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
-import ExternalServicesConfig._
+import java.time.ZonedDateTime
 
-trait WireMockRunner {
+import play.api.libs.json.Json
 
-  lazy val wireMockServer = new WireMockServer(wireMockConfig().port(Port))
+case class VerifiedEmailAddress(address: String, timestamp: ZonedDateTime)
 
-  def startMockServer() {
-    if (!wireMockServer.isRunning) wireMockServer.start()
-    WireMock.configureFor(Host, Port)
-  }
-
-  def stopMockServer() {
-    wireMockServer.stop()
-  }
-
-  def resetMockServer() {
-    wireMockServer.resetAll()
-  }
-
+object VerifiedEmailAddress {
+  implicit val format = Json.format[VerifiedEmailAddress]
 }

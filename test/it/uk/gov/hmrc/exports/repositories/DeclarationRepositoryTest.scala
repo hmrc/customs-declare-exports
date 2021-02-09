@@ -21,6 +21,7 @@ import java.time.{LocalDate, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.codahale.metrics.SharedMetricRegistries
+import org.scalatest.concurrent.IntegrationPatience
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.api.ReadConcern
 import testdata.ExportsDeclarationBuilder
@@ -29,7 +30,7 @@ import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo.format
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 
-class DeclarationRepositoryTest extends UnitSpec with ExportsDeclarationBuilder {
+class DeclarationRepositoryTest extends UnitSpec with ExportsDeclarationBuilder with IntegrationPatience {
 
   private val injector = {
     SharedMetricRegistries.clear()
