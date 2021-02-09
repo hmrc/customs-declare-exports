@@ -24,7 +24,6 @@ import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepos
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
-import scala.xml.XML
 
 @Singleton
 class NotificationService @Inject()(
@@ -85,25 +84,14 @@ class NotificationService @Inject()(
     }.getOrElse(Future.successful(None))
 
   def reattemptParsingUnparsedNotifications(): Future[Unit] =
-    notificationRepository
-      .findUnparsedNotifications()
-      .map(_.foreach { unparsedNotification =>
-        try {
-          val notifications = notificationFactory.buildNotifications(unparsedNotification.actionId, XML.loadString(unparsedNotification.payload))
+    notificationRepository.findUnparsedNotifications().map(parseAndStore)
 
-          for {
-            notification <- notifications.headOption
-            _ <- notification.details
-          } yield {
-            //successfully parsed the previously unparsable notification
-            save(notifications)
-            notificationRepository.removeUnparsedNotificationsForActionId(unparsedNotification.actionId)
-          }
-        } catch {
-          case exc: Throwable => logParseExceptionAtPagerDutyLevel(unparsedNotification.actionId, exc)
-        }
-      })
+  private def parseAndStore(notifications: Seq[Notification]): Unit = notifications.foreach { notification =>
+    val notifications = notificationFactory
+      .buildNotifications(notification.actionId, notification.payload)
+      .filter(_.details.nonEmpty)
 
-  private def logParseExceptionAtPagerDutyLevel(actionId: String, exc: Throwable) =
-    logger.warn(s"There was a problem during parsing notification with actionId=${actionId} exception thrown: ${exc.getMessage}")
+    if (notifications.nonEmpty)
+      save(notifications).andThen { case _ => notificationRepository.removeUnparsedNotificationsForActionId(notification.actionId) }
+  }
 }

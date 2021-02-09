@@ -16,14 +16,10 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import scala.concurrent.Future
-import scala.util.Random
-import scala.xml.Elem
-
 import com.codahale.metrics.SharedMetricRegistries
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
@@ -43,6 +39,10 @@ import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.{NotificationFactory, NotificationService}
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
+
+import scala.concurrent.Future
+import scala.util.Random
+import scala.xml.Elem
 
 class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestSupport {
 
@@ -226,7 +226,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
       "call NotificationService with the same amount of Notifications as it is in the payload" in {
         when(notificationServiceMock.save(any())).thenReturn(Future.successful((): Unit))
-        when(notificationFactory.buildNotifications(any(), any())).thenReturn(Seq(notification, notification_2))
+        when(notificationFactory.buildNotifications(any(), anyString())).thenReturn(Seq(notification, notification_2))
 
         routePostSaveNotification(xmlBody = exampleNotificationWithMultipleResponses(mrn).asXml).futureValue
 

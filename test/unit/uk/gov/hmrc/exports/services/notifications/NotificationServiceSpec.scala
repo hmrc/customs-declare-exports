@@ -19,10 +19,6 @@ package uk.gov.hmrc.exports.services.notifications
 import java.time.format.DateTimeFormatter.ofPattern
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.xml.NodeSeq
-
 import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
 import org.mockito.Mockito._
 import org.mockito.{ArgumentCaptor, InOrder, Mockito}
@@ -37,6 +33,9 @@ import uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationDetails}
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest, SubmissionStatus}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class NotificationServiceSpec extends UnitSpec {
 
@@ -250,13 +249,14 @@ class NotificationServiceSpec extends UnitSpec {
 
       notificationService.reattemptParsingUnparsedNotifications().futureValue
 
+      verify(notificationFactory, never()).buildNotifications(any(), anyString())
       verify(notificationRepository, never()).insert(any())(any())
       verify(notificationRepository, never()).removeUnparsedNotificationsForActionId(any())
     }
 
     "reparse single unparsed notification that still can not be parsed" in new SaveHappyPathTest {
       when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(Seq(notificationUnparsed)))
-      when(notificationFactory.buildNotifications(anyString(), any[NodeSeq])).thenReturn(Seq.empty)
+      when(notificationFactory.buildNotifications(anyString(), anyString())).thenReturn(Seq.empty)
 
       notificationService.reattemptParsingUnparsedNotifications().futureValue
 
@@ -272,12 +272,12 @@ class NotificationServiceSpec extends UnitSpec {
         notificationUnparsed.copy(payload = testNotification.asXml.toString(), details = testNotification.asDomainModel.headOption)
 
       when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(Seq(notificationNowParsable)))
-      when(notificationFactory.buildNotifications(anyString(), any[NodeSeq])).thenReturn(Seq(notificationNowParsable))
+      when(notificationFactory.buildNotifications(anyString(), anyString())).thenReturn(Seq(notificationNowParsable))
 
       notificationService.reattemptParsingUnparsedNotifications().futureValue
 
       val inOrder: InOrder = Mockito.inOrder(notificationFactory, notificationRepository)
-      inOrder.verify(notificationFactory).buildNotifications(meq(notificationUnparsed.actionId), meq(testNotification.asXml))
+      inOrder.verify(notificationFactory).buildNotifications(meq(notificationUnparsed.actionId), meq(testNotification.asXml.toString))
       inOrder.verify(notificationRepository).insert(any())(any())
       inOrder.verify(notificationRepository).removeUnparsedNotificationsForActionId(meq(notificationUnparsed.actionId))
     }
@@ -288,12 +288,12 @@ class NotificationServiceSpec extends UnitSpec {
       val parsedNotifications: Seq[Notification] = testNotification.asDomainModel.map(details => unparsedNotification.copy(details = Some(details)))
 
       when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(Seq(unparsedNotification)))
-      when(notificationFactory.buildNotifications(anyString(), any[NodeSeq])).thenReturn(parsedNotifications)
+      when(notificationFactory.buildNotifications(anyString(), anyString())).thenReturn(parsedNotifications)
 
       notificationService.reattemptParsingUnparsedNotifications().futureValue
 
       val inOrder: InOrder = Mockito.inOrder(notificationFactory, notificationRepository)
-      inOrder.verify(notificationFactory).buildNotifications(meq(notificationUnparsed.actionId), meq(testNotification.asXml))
+      inOrder.verify(notificationFactory).buildNotifications(meq(notificationUnparsed.actionId), meq(testNotification.asXml.toString))
       inOrder.verify(notificationRepository, times(2)).insert(any())(any())
       inOrder.verify(notificationRepository, times(1)).removeUnparsedNotificationsForActionId(meq(notificationUnparsed.actionId))
     }

@@ -69,7 +69,7 @@ class NotificationController @Inject()(
 
     headerValidator.validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
       case Right(extractedHeaders) =>
-        val allNotifications = notificationFactory.buildNotifications(extractedHeaders.conversationId.value, request.body)
+        val allNotifications = notificationFactory.buildNotifications(extractedHeaders.conversationId.value, request.body.toString)
 
         notificationsService.save(allNotifications).map(_ => Accepted).andThen {
           case Success(_) =>
