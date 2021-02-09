@@ -22,6 +22,7 @@ import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.codahale.metrics.SharedMetricRegistries
+import org.scalatest.concurrent.IntegrationPatience
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.core.errors.DatabaseException
@@ -31,7 +32,7 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest, SubmissionRequest}
 
-class SubmissionRepositorySpec extends UnitSpec {
+class SubmissionRepositorySpec extends UnitSpec with IntegrationPatience {
 
   private val injector: Injector = {
     SharedMetricRegistries.clear()

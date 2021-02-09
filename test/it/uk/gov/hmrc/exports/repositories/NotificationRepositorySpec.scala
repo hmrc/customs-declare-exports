@@ -19,13 +19,14 @@ package uk.gov.hmrc.exports.repositories
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.codahale.metrics.SharedMetricRegistries
+import org.scalatest.concurrent.IntegrationPatience
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import testdata.ExportsTestData._
 import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.UnitSpec
 
-class NotificationRepositorySpec extends UnitSpec {
+class NotificationRepositorySpec extends UnitSpec with IntegrationPatience {
 
   private val injector: Injector = {
     SharedMetricRegistries.clear()

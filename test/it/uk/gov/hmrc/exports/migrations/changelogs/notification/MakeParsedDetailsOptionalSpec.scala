@@ -5,6 +5,7 @@ import com.mongodb.client.{MongoCollection, MongoDatabase}
 import com.mongodb.{MongoClient, MongoClientURI}
 import org.bson.Document
 import org.mongodb.scala.model.{IndexOptions, Indexes}
+import org.scalatest.concurrent.IntegrationPatience
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -13,7 +14,7 @@ import stubs.TestMongoDB.mongoConfiguration
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.migrations.changelogs.notification.MakeParsedDetailsOptionalSpec._
 
-class MakeParsedDetailsOptionalSpec extends UnitSpec with GuiceOneServerPerSuite {
+class MakeParsedDetailsOptionalSpec extends UnitSpec with GuiceOneServerPerSuite with IntegrationPatience {
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
