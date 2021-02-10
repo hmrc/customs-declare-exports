@@ -38,4 +38,6 @@ trait MockGenericDownstreamService extends WireMockRunner {
   }
 
   def verifyGetFromDownStreamService(url: String): Unit = verify(1, getRequestedFor(urlMatching(url)))
+
+  def verifyPostFromDownStreamService(url: String): Unit = verify(1, postRequestedFor(urlMatching(url)))
 }

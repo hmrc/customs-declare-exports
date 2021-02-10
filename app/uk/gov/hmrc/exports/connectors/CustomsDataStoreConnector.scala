@@ -17,13 +17,14 @@
 package uk.gov.hmrc.exports.connectors
 
 import javax.inject.Inject
-import play.api.http.Status.NOT_FOUND
-import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.VerifiedEmailAddress
-import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, Upstream4xxResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
+
+import play.api.http.Status.NOT_FOUND
+import uk.gov.hmrc.exports.config.AppConfig
+import uk.gov.hmrc.exports.models.emails.VerifiedEmailAddress
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, Upstream4xxResponse}
+import uk.gov.hmrc.http.HttpReads.Implicits._
 
 class CustomsDataStoreConnector @Inject()(http: HttpClient)(implicit appConfig: AppConfig, ec: ExecutionContext) {
 

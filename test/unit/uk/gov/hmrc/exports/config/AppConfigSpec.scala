@@ -46,6 +46,8 @@ class AppConfigSpec extends UnitSpec {
       |microservice.services.customs-data-store.host=localhost
       |microservice.services.customs-data-store.port=6790
       |microservice.services.customs-data-store.verified-email-path=/customs-data-store/eori/EORI/verified-email
+      |microservice.services.hmrc-email.host=localhost
+      |microservice.services.hmrc-email.port=8300
     """.stripMargin)
 
   private val emptyAppConfig: Config = ConfigFactory.parseString("")

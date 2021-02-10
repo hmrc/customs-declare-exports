@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models
-
-import java.time.ZonedDateTime
+package uk.gov.hmrc.exports.models.emails
 
 import play.api.libs.json.Json
 
-case class VerifiedEmailAddress(address: String, timestamp: ZonedDateTime)
+case class SendEmailRequest(to: List[String], templateId: String, parameters: Map[String, String], eventUrl: Option[String] = None)
 
-object VerifiedEmailAddress {
-  implicit val format = Json.format[VerifiedEmailAddress]
+object SendEmailRequest {
+  implicit val format = Json.format[SendEmailRequest]
 }
