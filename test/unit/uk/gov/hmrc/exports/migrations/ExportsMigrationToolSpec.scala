@@ -72,7 +72,7 @@ class ExportsMigrationToolSpec extends UnitSpec {
       "not call LockManager ensureLockDefault" in {
 
         exportsMigrationTool().execute()
-        verify(lockManager, never()).ensureLockDefault()
+        verify(lockManager, never).ensureLockDefault()
       }
 
       "not call ChangeEntryRepository" in {
@@ -162,7 +162,7 @@ class ExportsMigrationToolSpec extends UnitSpec {
 
         exportsMigrationTool().execute()
 
-        verify(changeEntryRepository, never()).save(any[ChangeEntry])
+        verify(changeEntryRepository, never).save(any[ChangeEntry])
       }
     }
 

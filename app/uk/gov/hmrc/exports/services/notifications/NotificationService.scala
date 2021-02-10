@@ -16,23 +16,27 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
+import java.util.concurrent.TimeUnit.SECONDS
+
+import akka.actor.{ActorSystem, Cancellable}
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.services.notifications.receiptactions.{NotificationReceiptAction, ParseAndSaveAction}
 
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Success
+import scala.xml.NodeSeq
 
 @Singleton
 class NotificationService @Inject()(
   submissionRepository: SubmissionRepository,
   notificationRepository: NotificationRepository,
-  notificationFactory: NotificationFactory
+  notificationFactory: NotificationFactory,
+  actorSystem: ActorSystem,
+  parseAndSaveAction: ParseAndSaveAction
 )(implicit executionContext: ExecutionContext) {
-
-  private val logger = Logger(this.getClass)
 
   def getNotifications(submission: Submission): Future[Seq[Notification]] = {
 
@@ -49,9 +53,7 @@ class NotificationService @Inject()(
     }
 
     val conversationIds = submission.actions.map(_.id)
-    notificationRepository
-      .findNotificationsByActionIds(conversationIds)
-      .map(_.map(updateErrorUrls))
+    notificationRepository.findNotificationsByActionIds(conversationIds).map(_.map(updateErrorUrls))
   }
 
   def getAllNotificationsForUser(eori: String): Future[Seq[Notification]] =
@@ -66,32 +68,23 @@ class NotificationService @Inject()(
         notificationRepository.findNotificationsByActionIds(conversationIds)
     }
 
-  def save(notifications: Seq[Notification]): Future[Unit] =
-    Future.sequence(notifications.map(saveSingleNotification)).map(_ => ())
+  def handleNewNotification(actionId: String, notificationXml: NodeSeq): Future[Unit] = {
+    val notification = notificationFactory.buildNotificationUnparsed(actionId, notificationXml)
 
-  private def saveSingleNotification(notification: Notification): Future[Unit] =
-    for {
-      _ <- notificationRepository.insert(notification)
-      _ <- updateRelatedSubmission(notification)
-    } yield (())
+    notificationRepository.insert(notification).map { _ =>
+      performActionsOnReceipt(notification)
+    }
+  }
 
-  private def updateRelatedSubmission(notification: Notification): Future[Option[Submission]] =
-    notification.details.map { details =>
-      submissionRepository.updateMrn(notification.actionId, details.mrn).andThen {
-        case Success(None) =>
-          logger.warn(s"Could not find Submission to update for actionId: ${notification.actionId}")
-      }
-    }.getOrElse(Future.successful(None))
+  private def performActionsOnReceipt(notification: Notification): Cancellable = {
+    val notificationActions: Seq[NotificationReceiptAction] = Seq(parseAndSaveAction)
+
+    actorSystem.scheduler.scheduleOnce(FiniteDuration(0, SECONDS)) {
+      notificationActions.foreach(_.execute(notification))
+    }
+  }
 
   def reattemptParsingUnparsedNotifications(): Future[Unit] =
-    notificationRepository.findUnparsedNotifications().map(parseAndStore)
+    notificationRepository.findUnparsedNotifications().map(_.map(parseAndSaveAction.execute))
 
-  private def parseAndStore(notifications: Seq[Notification]): Unit = notifications.foreach { notification =>
-    val notifications = notificationFactory
-      .buildNotifications(notification.actionId, notification.payload)
-      .filter(_.details.nonEmpty)
-
-    if (notifications.nonEmpty)
-      save(notifications).andThen { case _ => notificationRepository.removeUnparsedNotificationsForActionId(notification.actionId) }
-  }
 }

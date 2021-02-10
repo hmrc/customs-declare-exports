@@ -17,9 +17,7 @@
 package uk.gov.hmrc.exports.base
 
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.when
-import org.mockito.{ArgumentMatcher, ArgumentMatchers}
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.{ArgumentMatcher, ArgumentMatchers, MockitoSugar}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.allEnrolments

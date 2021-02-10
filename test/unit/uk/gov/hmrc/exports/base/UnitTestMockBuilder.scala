@@ -17,10 +17,7 @@
 package uk.gov.hmrc.exports.base
 
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.when
-import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.MockitoSugar
 import reactivemongo.api.commands.WriteResult
 import testdata.RepositoryTestData.dummyWriteResultFailure
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
@@ -53,8 +50,8 @@ object UnitTestMockBuilder extends MockitoSugar {
     val submissionRepositoryMock: SubmissionRepository = mock[SubmissionRepository]
     when(submissionRepositoryMock.findAllSubmissionsForEori(any())).thenReturn(Future.successful(Seq.empty))
     when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
+    when(submissionRepositoryMock.save(any())).thenReturn(Future.successful(mock[Submission]))
     when(submissionRepositoryMock.findSubmissionByUuid(any(), any())).thenReturn(Future.successful(None))
-    when(submissionRepositoryMock.save(any())).thenAnswer(withFutureArg(0))
     when(submissionRepositoryMock.updateMrn(any(), any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.addAction(any[String](), any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.addAction(any[Submission](), any())).thenReturn(Future.successful(mock[Submission]))
@@ -80,11 +77,7 @@ object UnitTestMockBuilder extends MockitoSugar {
     val notificationServiceMock: NotificationService = mock[NotificationService]
     when(notificationServiceMock.getAllNotificationsForUser(any())).thenReturn(Future.successful(Seq.empty))
     when(notificationServiceMock.getNotifications(any())).thenReturn(Future.successful(Seq.empty))
-    when(notificationServiceMock.save(any())).thenReturn(Future.successful((): Unit))
     notificationServiceMock
   }
 
-  private def withFutureArg[T](index: Int): Answer[Future[T]] = new Answer[Future[T]] {
-    override def answer(invocation: InvocationOnMock): Future[T] = Future.successful(invocation.getArgument(index))
-  }
 }

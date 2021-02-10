@@ -16,16 +16,18 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
-import java.time.format.DateTimeFormatter.ofPattern
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
+import java.util.concurrent.TimeUnit.SECONDS
 
-import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
+import akka.actor.{ActorSystem, Cancellable, Scheduler}
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.Mockito._
 import org.mockito.{ArgumentCaptor, InOrder, Mockito}
+import org.scalatest.concurrent.IntegrationPatience
 import testdata.ExportsTestData._
 import testdata.RepositoryTestData._
 import testdata.SubmissionTestData.{submission, _}
-import testdata.notifications.ExampleXmlAndNotificationDetailsPair
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
 import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.UnitSpec
@@ -33,18 +35,24 @@ import uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationDetails}
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest, SubmissionStatus}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.services.notifications.receiptactions.ParseAndSaveAction
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
+import scala.xml.NodeSeq
 
-class NotificationServiceSpec extends UnitSpec {
+class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
 
   private val submissionRepository: SubmissionRepository = buildSubmissionRepositoryMock
   private val notificationRepository: NotificationRepository = buildNotificationRepositoryMock
   private val notificationFactory: NotificationFactory = mock[NotificationFactory]
+  private val actorSystem: ActorSystem = mock[ActorSystem]
+  private val scheduler: Scheduler = mock[Scheduler]
+  private val parseAndSaveAction: ParseAndSaveAction = mock[ParseAndSaveAction]
 
   private val notificationService =
-    new NotificationService(submissionRepository, notificationRepository, notificationFactory)
+    new NotificationService(submissionRepository, notificationRepository, notificationFactory, actorSystem, parseAndSaveAction)
 
   val PositionFunctionCode = "11"
   val NameCodeGranted = "39"
@@ -54,28 +62,29 @@ class NotificationServiceSpec extends UnitSpec {
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(submissionRepository, notificationRepository, notificationFactory)
+    reset(submissionRepository, notificationRepository, notificationFactory, actorSystem, scheduler, parseAndSaveAction)
 
+    when(notificationFactory.buildNotifications(any, any)).thenReturn(Seq(notification))
+    when(notificationFactory.buildNotificationUnparsed(any, any[NodeSeq])).thenReturn(notification.copy(details = None))
+    when(notificationRepository.insert(any)(any)).thenReturn(Future.successful(dummyWriteResultSuccess))
+    when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(Some(submission)))
+    when(actorSystem.scheduler).thenReturn(scheduler)
+    when(scheduler.scheduleOnce(any)(any[() => Unit])(any)).thenReturn(Cancellable.alreadyCancelled)
+    when(parseAndSaveAction.execute(any[Notification])).thenReturn(Future.successful((): Unit))
   }
 
   override def afterEach(): Unit = {
-    reset(submissionRepository, notificationRepository, notificationFactory)
-
+    reset(submissionRepository, notificationRepository, notificationFactory, actorSystem, scheduler, parseAndSaveAction)
     super.afterEach()
   }
 
-  trait GetAllNotificationsForUserHappyPathTest {
-    when(submissionRepository.findAllSubmissionsForEori(any())).thenReturn(Future.successful(Seq(submission, submission_2)))
-    val notificationsToBeReturned = Seq(notification, notification_2, notification_3)
-    when(notificationRepository.findNotificationsByActionIds(any())).thenReturn(Future.successful(notificationsToBeReturned))
-  }
-
-  trait SaveHappyPathTest {
-    when(notificationRepository.insert(any())(any())).thenReturn(Future.successful(dummyWriteResultSuccess))
-    when(submissionRepository.updateMrn(any(), any())).thenReturn(Future.successful(Some(submission)))
-  }
-
   "NotificationService on getAllNotificationsForUser" when {
+
+    trait GetAllNotificationsForUserHappyPathTest {
+      when(submissionRepository.findAllSubmissionsForEori(any)).thenReturn(Future.successful(Seq(submission, submission_2)))
+      val notificationsToBeReturned = Seq(notification, notification_2, notification_3)
+      when(notificationRepository.findNotificationsByActionIds(any)).thenReturn(Future.successful(notificationsToBeReturned))
+    }
 
     "everything works correctly" should {
 
@@ -90,14 +99,14 @@ class NotificationServiceSpec extends UnitSpec {
         notificationService.getAllNotificationsForUser(eori).futureValue
 
         val inOrder: InOrder = Mockito.inOrder(submissionRepository, notificationRepository)
-        inOrder.verify(submissionRepository).findAllSubmissionsForEori(any())
-        inOrder.verify(notificationRepository).findNotificationsByActionIds(any())
+        inOrder.verify(submissionRepository).findAllSubmissionsForEori(any)
+        inOrder.verify(notificationRepository).findNotificationsByActionIds(any)
       }
 
       "call SubmissionRepository, passing EORI provided" in new GetAllNotificationsForUserHappyPathTest {
         notificationService.getAllNotificationsForUser(eori).futureValue
 
-        verify(submissionRepository).findAllSubmissionsForEori(meq(eori))
+        verify(submissionRepository).findAllSubmissionsForEori(eqTo(eori))
       }
 
       "call NotificationRepository, passing all conversation IDs" in new GetAllNotificationsForUserHappyPathTest {
@@ -116,13 +125,13 @@ class NotificationServiceSpec extends UnitSpec {
     "SubmissionRepository on findAllSubmissionsForEori returns empty list" should {
 
       "return empty list" in {
-        when(submissionRepository.findAllSubmissionsForEori(any())).thenReturn(Future.successful(Seq.empty))
+        when(submissionRepository.findAllSubmissionsForEori(any)).thenReturn(Future.successful(Seq.empty))
 
         notificationService.getAllNotificationsForUser(eori).futureValue must equal(Seq.empty)
       }
 
       "not call NotificationRepository" in {
-        when(submissionRepository.findAllSubmissionsForEori(any())).thenReturn(Future.successful(Seq.empty))
+        when(submissionRepository.findAllSubmissionsForEori(any)).thenReturn(Future.successful(Seq.empty))
 
         notificationService.getAllNotificationsForUser(eori).futureValue
 
@@ -133,9 +142,9 @@ class NotificationServiceSpec extends UnitSpec {
     "NotificationRepository on findNotificationsByConversationIds returns empty list" should {
 
       "return empty list" in {
-        when(submissionRepository.findAllSubmissionsForEori(any()))
+        when(submissionRepository.findAllSubmissionsForEori(any))
           .thenReturn(Future.successful(Seq(submission, submission_2)))
-        when(notificationRepository.findNotificationsByActionIds(any()))
+        when(notificationRepository.findNotificationsByActionIds(any))
           .thenReturn(Future.successful(Seq.empty))
 
         notificationService.getAllNotificationsForUser(eori).futureValue must equal(Seq.empty)
@@ -163,139 +172,117 @@ class NotificationServiceSpec extends UnitSpec {
     }
   }
 
-  "NotificationService on insert" when {
+  "NotificationService on handleNewNotification" when {
 
     "everything works correctly" should {
 
-      "return successful Future" in new SaveHappyPathTest {
-        notificationService.save(Seq(notification)).futureValue must equal((): Unit)
+      val inputXml = exampleReceivedNotification(mrn).asXml
+      val testNotificationUnparsed = Notification(actionId = actionId, payload = inputXml.toString, details = None)
+
+      "call NotificationFactory" in {
+        when(notificationFactory.buildNotificationUnparsed(anyString(), any[NodeSeq])).thenReturn(testNotificationUnparsed)
+
+        notificationService.handleNewNotification(actionId, inputXml).futureValue
+
+        verify(notificationFactory).buildNotificationUnparsed(eqTo(actionId), eqTo(inputXml))
       }
 
-      "call NotificationFactory, NotificationRepository and SubmissionRepository afterwards" in new SaveHappyPathTest {
-        notificationService.save(Seq(notification)).futureValue
+      "call NotificationRepository" in {
+        when(notificationFactory.buildNotificationUnparsed(anyString(), any[NodeSeq])).thenReturn(testNotificationUnparsed)
 
-        val inOrder: InOrder = Mockito.inOrder(notificationRepository, submissionRepository)
-        inOrder.verify(notificationRepository).insert(any())(any())
-        inOrder.verify(submissionRepository).updateMrn(any(), any())
+        notificationService.handleNewNotification(actionId, inputXml).futureValue
+
+        verify(notificationRepository).insert(eqTo(testNotificationUnparsed))(any)
       }
 
-      "call NotificationRepository passing Notification provided" in new SaveHappyPathTest {
-        notificationService.save(Seq(notification)).futureValue
+      "call scheduler with zero delay" in {
+        when(notificationFactory.buildNotificationUnparsed(anyString(), any[NodeSeq])).thenReturn(testNotificationUnparsed)
 
-        verify(notificationRepository).insert(meq(notification))(any())
+        notificationService.handleNewNotification(actionId, inputXml).futureValue
+
+        val expectedDelay = FiniteDuration(0, SECONDS)
+        verify(scheduler).scheduleOnce(eqTo(expectedDelay))(any[() => Unit])(any)
       }
 
-      "call SubmissionRepository passing conversation ID and MRN provided in the Notification" in new SaveHappyPathTest {
-        notificationService.save(Seq(notification)).futureValue
+      "call ParseAndSaveAction" in {
+        when(notificationFactory.buildNotificationUnparsed(anyString(), any[NodeSeq])).thenReturn(testNotificationUnparsed)
 
-        verify(submissionRepository).updateMrn(meq(actionId), meq(mrn))
-      }
+        notificationService.handleNewNotification(actionId, inputXml).futureValue
 
-      "call NotificationRepository but not SubmissionRepository when saving an unparsed notification" in new SaveHappyPathTest {
-        notificationService.save(Seq(notificationUnparsed)).futureValue
-
-        verify(notificationRepository).insert(meq(notificationUnparsed))(any())
-        verifyNoInteractions(submissionRepository)
-      }
-    }
-
-    "NotificationRepository on insert returns WriteResult with Error" should {
-
-      "return failed Future" in {
-        val exceptionMsg = "Test Exception message"
-        when(notificationRepository.insert(any())(any()))
-          .thenReturn(Future.failed(dummyWriteResultFailure(exceptionMsg)))
-
-        notificationService.save(Seq(notification)).failed.futureValue must have message exceptionMsg
-      }
-
-      "not call SubmissionRepository" in {
-        val exceptionMsg = "Test Exception message"
-        when(notificationRepository.insert(any())(any()))
-          .thenReturn(Future.failed(dummyWriteResultFailure(exceptionMsg)))
-
-        notificationService.save(Seq(notification)).failed.futureValue
-
-        verifyNoInteractions(submissionRepository)
-      }
-    }
-
-    "SubmissionRepository on updateMrn returns empty Option" should {
-
-      "result in a success" in {
-        when(notificationRepository.insert(any())(any())).thenReturn(Future.successful(dummyWriteResultSuccess))
-        when(submissionRepository.updateMrn(any(), any())).thenReturn(Future.successful(None))
-
-        notificationService.save(Seq(notification)).futureValue must equal((): Unit)
-      }
-    }
-
-    "SubmissionRepository on updateMrn throws an Exception" should {
-
-      "return failed Future" in {
-        val exceptionMsg = "Test Exception message"
-        when(notificationRepository.insert(any())(any())).thenReturn(Future.successful(dummyWriteResultSuccess))
-        when(submissionRepository.updateMrn(any(), any())).thenThrow(new RuntimeException(exceptionMsg))
-
-        notificationService.save(Seq(notification)).failed.futureValue must have message exceptionMsg
+        verify(parseAndSaveAction).execute(testNotificationUnparsed)
       }
     }
   }
 
-  "NotificationService on reattemptParsingUnparsedNotifications" should {
+  "NotificationService on reattemptParsingUnparsedNotifications" when {
 
-    "do nothing if no unparsed notifications exist" in new SaveHappyPathTest {
-      when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(Seq.empty))
+    "there is no unparsed Notification" should {
 
-      notificationService.reattemptParsingUnparsedNotifications().futureValue
+      "not call ParseAndSaveAction" in {
+        when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(Seq.empty))
 
-      verify(notificationFactory, never()).buildNotifications(any(), anyString())
-      verify(notificationRepository, never()).insert(any())(any())
-      verify(notificationRepository, never()).removeUnparsedNotificationsForActionId(any())
+        notificationService.reattemptParsingUnparsedNotifications().futureValue
+
+        verifyNoInteractions(parseAndSaveAction)
+      }
     }
 
-    "reparse single unparsed notification that still can not be parsed" in new SaveHappyPathTest {
-      when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(Seq(notificationUnparsed)))
-      when(notificationFactory.buildNotifications(anyString(), anyString())).thenReturn(Seq.empty)
+    "there is unparsed Notification" should {
 
-      notificationService.reattemptParsingUnparsedNotifications().futureValue
+      "call ParseAndSaveAction" in {
+        val testNotification = Notification(actionId = actionId, payload = exampleUnparsableNotification(mrn).asXml.toString, details = None)
+        when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(Seq(testNotification)))
 
-      verify(notificationRepository, never()).insert(any())(any())
-      verify(notificationRepository, never()).removeUnparsedNotificationsForActionId(any())
+        notificationService.reattemptParsingUnparsedNotifications().futureValue
+
+        verify(parseAndSaveAction).execute(eqTo(testNotification))
+      }
     }
 
-    val dateTimeIssuedString = dateTimeIssued.format(ofPattern("yyyyMMddHHmmssX"))
+    "there are many unparsed Notifications" should {
 
-    "reparse single unparsed notification that can now be parsed" in new SaveHappyPathTest {
-      val testNotification: ExampleXmlAndNotificationDetailsPair = exampleReceivedNotification(mrn, dateTimeIssuedString)
-      val notificationNowParsable: Notification =
-        notificationUnparsed.copy(payload = testNotification.asXml.toString(), details = testNotification.asDomainModel.headOption)
+      "call ParseAndSaveAction for each Notification" in {
+        val testNotification = Notification(actionId = actionId, payload = exampleUnparsableNotification(mrn).asXml.toString, details = None)
+        val testNotifications = Seq(testNotification, testNotification, testNotification)
+        when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(testNotifications))
 
-      when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(Seq(notificationNowParsable)))
-      when(notificationFactory.buildNotifications(anyString(), anyString())).thenReturn(Seq(notificationNowParsable))
+        notificationService.reattemptParsingUnparsedNotifications().futureValue
 
-      notificationService.reattemptParsingUnparsedNotifications().futureValue
-
-      val inOrder: InOrder = Mockito.inOrder(notificationFactory, notificationRepository)
-      inOrder.verify(notificationFactory).buildNotifications(meq(notificationUnparsed.actionId), meq(testNotification.asXml.toString))
-      inOrder.verify(notificationRepository).insert(any())(any())
-      inOrder.verify(notificationRepository).removeUnparsedNotificationsForActionId(meq(notificationUnparsed.actionId))
+        verify(parseAndSaveAction, times(3)).execute(eqTo(testNotification))
+      }
     }
 
-    "reparse single unparsed notification record (who's payload contains many 'responses')" in new SaveHappyPathTest {
-      val testNotification: ExampleXmlAndNotificationDetailsPair = exampleNotificationWithMultipleResponses(mrn, dateTimeIssuedString)
-      val unparsedNotification: Notification = notificationUnparsed.copy(payload = testNotification.asXml.toString())
-      val parsedNotifications: Seq[Notification] = testNotification.asDomainModel.map(details => unparsedNotification.copy(details = Some(details)))
+    "NotificationRepository throws exception" should {
 
-      when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(Seq(unparsedNotification)))
-      when(notificationFactory.buildNotifications(anyString(), anyString())).thenReturn(parsedNotifications)
+      "throw exception" in {
+        val exceptionMsg = "Test Exception message"
+        when(notificationRepository.findUnparsedNotifications()).thenThrow(new RuntimeException(exceptionMsg))
 
-      notificationService.reattemptParsingUnparsedNotifications().futureValue
+        the[RuntimeException] thrownBy {
+          notificationService.reattemptParsingUnparsedNotifications().futureValue
+        } must have message exceptionMsg
+      }
 
-      val inOrder: InOrder = Mockito.inOrder(notificationFactory, notificationRepository)
-      inOrder.verify(notificationFactory).buildNotifications(meq(notificationUnparsed.actionId), meq(testNotification.asXml.toString))
-      inOrder.verify(notificationRepository, times(2)).insert(any())(any())
-      inOrder.verify(notificationRepository, times(1)).removeUnparsedNotificationsForActionId(meq(notificationUnparsed.actionId))
+      "not call ParseAndSaveAction" in {
+        val exceptionMsg = "Test Exception message"
+        when(notificationRepository.findUnparsedNotifications()).thenThrow(new RuntimeException(exceptionMsg))
+
+        an[RuntimeException] mustBe thrownBy { notificationService.reattemptParsingUnparsedNotifications().futureValue }
+
+        verifyNoInteractions(parseAndSaveAction)
+      }
+    }
+
+    "ParseAndSaveAction throws exception" should {
+
+      "return failed Future" in {
+        val testNotification = Notification(actionId = actionId, payload = exampleUnparsableNotification(mrn).asXml.toString, details = None)
+        when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(Seq(testNotification)))
+        val exceptionMsg = "Test Exception message"
+        when(parseAndSaveAction.execute(any[Notification])).thenThrow(new RuntimeException(exceptionMsg))
+
+        notificationService.reattemptParsingUnparsedNotifications().failed.futureValue must have message exceptionMsg
+      }
     }
   }
 

@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
-import org.scalatestplus.mockito.MockitoSugar
 import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.{PreviousDocument, PreviousDocuments}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class PreviousDocumentsBuilderSpec extends UnitSpec with MockitoSugar with ExportsDeclarationBuilder {
+class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "PreviousDocumentsBuilder " should {
 
