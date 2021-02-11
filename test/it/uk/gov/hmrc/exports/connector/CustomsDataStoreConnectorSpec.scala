@@ -18,37 +18,72 @@ package uk.gov.hmrc.exports.connector
 
 import java.time.ZonedDateTime
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 import play.api.libs.json.Json
-import play.api.test.Helpers.OK
+import play.api.test.Helpers._
 import testdata.ExportsTestData
-import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
+import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.CustomsDataStoreConnector
 import uk.gov.hmrc.exports.models.VerifiedEmailAddress
-import uk.gov.hmrc.http.HttpClient
 
 class CustomsDataStoreConnectorSpec extends IntegrationTestSpec {
 
-  implicit val appConfig: AppConfig = inject[AppConfig]
+  implicit private val appConfig: AppConfig = inject[AppConfig]
+  private val connector = inject[CustomsDataStoreConnector]
 
-  val connector = new CustomsDataStoreConnector(inject[HttpClient])(appConfig, global)
+  "CustomsDataStoreConnector.getEmailAddress" when {
 
-  "CustomsDeclarationsInformationConnector.getEmailAddress" should {
+    "email service responds with OK (200)" should {
 
-    "return a valid VerifiedEmailAddress instance when successful" in {
-      val expectedEmailAddress = VerifiedEmailAddress("some@email.com", ZonedDateTime.now)
+      "return a valid VerifiedEmailAddress instance" in {
+        val testVerifiedEmailAddress = VerifiedEmailAddress("some@email.com", ZonedDateTime.now)
+        val path = s"/customs-data-store/eori/${ExportsTestData.eori}/verified-email"
+        getFromDownstreamService(path, OK, Some(Json.toJson(testVerifiedEmailAddress).toString))
+
+        val response = connector.getEmailAddress(ExportsTestData.eori).futureValue
+
+        response mustBe Some(testVerifiedEmailAddress)
+        verifyGetFromDownStreamService(path)
+      }
+    }
+
+    "email service responds with NOT_FOUND (404)" should {
+
+      "return empty Option" in {
+        val path = s"/customs-data-store/eori/${ExportsTestData.eori}/verified-email"
+        getFromDownstreamService(path, NOT_FOUND, None)
+
+        val response = connector.getEmailAddress(ExportsTestData.eori).futureValue
+
+        response mustBe None
+        verifyGetFromDownStreamService(path)
+      }
+    }
+
+    "email service responds with any other error code" should {
+
+      "return failed Future" in {
+        val path = s"/customs-data-store/eori/${ExportsTestData.eori}/verified-email"
+        val errorMsg = "Upstream service test error"
+        getFromDownstreamService(path, BAD_GATEWAY, Some(errorMsg))
+
+        val response = connector.getEmailAddress(ExportsTestData.eori).failed.futureValue
+
+        response.getMessage must include(errorMsg)
+        verifyGetFromDownStreamService(path)
+      }
+    }
+  }
+
+  "CustomsDataStoreConnector.verifiedEmailPath" should {
+
+    "return correct path" in {
       val expectedPath = s"/customs-data-store/eori/${ExportsTestData.eori}/verified-email"
 
       val actualPath = CustomsDataStoreConnector.verifiedEmailPath(ExportsTestData.eori)
+
       actualPath mustBe expectedPath
-      getFromDownstreamService(actualPath, OK, Some(Json.toJson(expectedEmailAddress).toString))
-
-      val response = connector.getEmailAddress(ExportsTestData.eori).futureValue
-      response mustBe Some(expectedEmailAddress)
-
-      verifyGetFromDownStreamService(actualPath)
     }
   }
+
 }

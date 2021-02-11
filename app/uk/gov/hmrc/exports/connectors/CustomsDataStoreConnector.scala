@@ -17,21 +17,20 @@
 package uk.gov.hmrc.exports.connectors
 
 import javax.inject.Inject
-
-import scala.concurrent.{ExecutionContext, Future}
-
+import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.VerifiedEmailAddress
-import play.api.http.Status.NOT_FOUND
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, Upstream4xxResponse}
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, Upstream4xxResponse}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 class CustomsDataStoreConnector @Inject()(http: HttpClient)(implicit appConfig: AppConfig, ec: ExecutionContext) {
 
   import CustomsDataStoreConnector._
 
   def getEmailAddress(eori: String)(implicit hc: HeaderCarrier): Future[Option[VerifiedEmailAddress]] =
-    http.GET[VerifiedEmailAddress](verifiedEmailUrl(eori)).map(Some(_)).recover {
+    http.GET[VerifiedEmailAddress](verifiedEmailUrl(eori)).map(Option(_)).recover {
       case Upstream4xxResponse(_, NOT_FOUND, _, _) => None
     }
 }
