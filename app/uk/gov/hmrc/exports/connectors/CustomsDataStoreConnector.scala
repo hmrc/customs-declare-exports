@@ -30,7 +30,7 @@ class CustomsDataStoreConnector @Inject()(http: HttpClient)(implicit appConfig: 
   import CustomsDataStoreConnector._
 
   def getEmailAddress(eori: String)(implicit hc: HeaderCarrier): Future[Option[VerifiedEmailAddress]] =
-    http.GET[VerifiedEmailAddress](verifiedEmailUrl(eori)).map(Option(_)).recover {
+    http.GET[Option[VerifiedEmailAddress]](verifiedEmailUrl(eori)).recover {
       case Upstream4xxResponse(_, NOT_FOUND, _, _) => None
     }
 }
