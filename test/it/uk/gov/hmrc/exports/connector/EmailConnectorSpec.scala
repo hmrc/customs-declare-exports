@@ -22,7 +22,9 @@ import play.api.test.Helpers.{ACCEPTED, BAD_GATEWAY, BAD_REQUEST}
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.EmailConnector
-import uk.gov.hmrc.exports.models.emails.{SendEmailError, SendEmailRequest}
+import uk.gov.hmrc.exports.models.emails.EmailParameter.MRN
+import uk.gov.hmrc.exports.models.emails.TemplateId.DMSDOC_NOTIFICATION
+import uk.gov.hmrc.exports.models.emails.{EmailParameters, SendEmailError, SendEmailRequest}
 import uk.gov.hmrc.http.HttpClient
 
 class EmailConnectorSpec extends IntegrationTestSpec {
@@ -32,12 +34,11 @@ class EmailConnectorSpec extends IntegrationTestSpec {
   val connector = new EmailConnector(inject[HttpClient])(appConfig, global)
 
   val actualPath = EmailConnector.sendEmailPath
-  val sendEmailRequest = SendEmailRequest(List("trader@mycompany.com"), "aTemplateId", Map("mrn" -> "18GB1234567890"))
+  val sendEmailRequest = SendEmailRequest(List("trader@mycompany.com"), DMSDOC_NOTIFICATION, EmailParameters(Map(MRN -> "18GB1234567890")))
 
   "EmailConnector.sendEmail" should {
 
     "return None when the email is successfully queued by the email service" in {
-      actualPath mustBe "/hmrc/email"
       postToDownstreamService(actualPath, ACCEPTED)
 
       val response = connector.sendEmail(sendEmailRequest).futureValue
@@ -64,6 +65,13 @@ class EmailConnectorSpec extends IntegrationTestSpec {
       response mustBe Some(SendEmailError(BAD_GATEWAY, message))
 
       verifyPostFromDownStreamService(actualPath)
+    }
+  }
+
+  "EmailConnector.verifiedEmailPath" should {
+    "return the expected path" in {
+      val expectedPath = "/hmrc/email"
+      actualPath mustBe expectedPath
     }
   }
 }

@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.exports.models.emails
 
-import play.api.libs.json.Json
+import play.api.libs.json.{JsString, Writes}
 
-case class SendEmailRequest(to: List[String], templateId: TemplateId, parameters: EmailParameters, eventUrl: Option[String] = None)
+sealed abstract class TemplateId(val name: String)
 
-object SendEmailRequest {
-  implicit val writes = Json.writes[SendEmailRequest]
+object TemplateId {
+  implicit val writes: Writes[TemplateId] = Writes(templateId => JsString(templateId.name))
+
+  case object DMSDOC_NOTIFICATION extends TemplateId("dmsdoc_notification")
 }
