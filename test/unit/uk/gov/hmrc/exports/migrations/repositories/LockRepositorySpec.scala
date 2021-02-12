@@ -31,7 +31,6 @@ import org.bson.conversions.Bson
 import org.bson.{BsonDateTime, BsonDocument, Document}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
-import org.mockito.Mockito._
 import org.mongodb.scala.bson.BsonString
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.migrations.exceptions.LockPersistenceException

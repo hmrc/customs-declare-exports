@@ -22,7 +22,6 @@ import com.mongodb.MongoNamespace
 import com.mongodb.client.{FindIterable, MongoCollection, MongoDatabase}
 import org.bson.Document
 import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
-import org.mockito.Mockito._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.migrations.repositories.TestObjectsBuilder.buildMongoCursor
 

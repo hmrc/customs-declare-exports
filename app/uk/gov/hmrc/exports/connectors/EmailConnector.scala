@@ -36,7 +36,7 @@ class EmailConnector @Inject()(http: HttpClient)(implicit appConfig: AppConfig, 
         if (response.status == ACCEPTED) None else Some(SendEmailError(response))
       }
       .recover {
-        case response: UpstreamErrorResponse => Some(SendEmailError(response))
+        case errorResponse: UpstreamErrorResponse => Some(SendEmailError(errorResponse))
       }
 }
 

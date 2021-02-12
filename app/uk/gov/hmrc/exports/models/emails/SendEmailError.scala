@@ -26,5 +26,5 @@ object SendEmailError {
 
   def apply(response: HttpResponse): SendEmailError = new SendEmailError(response.status, response.body)
 
-  def apply(response: UpstreamErrorResponse): SendEmailError = new SendEmailError(response.statusCode, response.message)
+  def apply(errorResponse: UpstreamErrorResponse): SendEmailError = new SendEmailError(errorResponse.statusCode, errorResponse.message)
 }

@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.exports.connectors
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.Elem
 
 import org.mockito.ArgumentMatchers.{any, anyString}
-import org.mockito.Mockito.when
 import play.api.http.Status
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
