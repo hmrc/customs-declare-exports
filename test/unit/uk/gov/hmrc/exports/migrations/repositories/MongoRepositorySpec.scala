@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.exports.migrations.repositories
 
-import scala.collection.JavaConverters._
-
 import com.mongodb.MongoNamespace
 import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.{ListIndexesIterable, MongoCollection, MongoDatabase}
@@ -27,6 +25,8 @@ import org.mockito.Mockito._
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.migrations.repositories.TestObjectsBuilder.buildMongoCursor
+
+import scala.collection.JavaConverters._
 
 class MongoRepositorySpec extends UnitSpec {
 
@@ -120,8 +120,8 @@ class MongoRepositorySpec extends UnitSpec {
 
         repo.ensureIndex()
 
-        verify(mongoCollection, never()).dropIndex(anyString())
-        verify(mongoCollection, never()).createIndex(any[Document], any[IndexOptions])
+        verify(mongoCollection, never).dropIndex(anyString())
+        verify(mongoCollection, never).createIndex(any[Document], any[IndexOptions])
       }
     }
 
@@ -151,7 +151,7 @@ class MongoRepositorySpec extends UnitSpec {
 
         repo.ensureIndex()
 
-        verify(mongoCollection, never()).createIndex(any[Document], any[IndexOptions])
+        verify(mongoCollection, never).createIndex(any[Document], any[IndexOptions])
       }
     }
 

@@ -16,14 +16,9 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import scala.concurrent.Future
-import scala.util.Random
-import scala.xml.Elem
-
 import com.codahale.metrics.SharedMetricRegistries
 import org.joda.time.{DateTime, DateTimeZone}
-import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
@@ -41,8 +36,12 @@ import uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildNotificationServiceMoc
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.services.SubmissionService
-import uk.gov.hmrc.exports.services.notifications.{NotificationFactory, NotificationService}
+import uk.gov.hmrc.exports.services.notifications.NotificationService
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
+
+import scala.concurrent.Future
+import scala.util.Random
+import scala.xml.{Elem, NodeSeq}
 
 class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestSupport {
 
@@ -54,16 +53,14 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
   SharedMetricRegistries.clear()
 
-  private val notificationServiceMock: NotificationService = buildNotificationServiceMock
+  private val notificationService: NotificationService = buildNotificationServiceMock
   private val submissionService: SubmissionService = buildSubmissionServiceMock
-  private val notificationFactory: NotificationFactory = mock[NotificationFactory]
 
   override lazy val app: Application = GuiceApplicationBuilder()
     .overrides(
       bind[AuthConnector].to(mockAuthConnector),
-      bind[NotificationService].to(notificationServiceMock),
-      bind[SubmissionService].to(submissionService),
-      bind[NotificationFactory].to(notificationFactory)
+      bind[NotificationService].to(notificationService),
+      bind[SubmissionService].to(submissionService)
     )
     .build()
 
@@ -73,7 +70,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
   }
 
   override def afterEach(): Unit = {
-    reset(mockAuthConnector, notificationServiceMock, notificationFactory)
+    reset(mockAuthConnector, notificationService, submissionService)
     super.afterEach()
   }
 
@@ -82,7 +79,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     "return 200" when {
       "submission found" in {
         when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
-        when(notificationServiceMock.getNotifications(any()))
+        when(notificationService.getNotifications(any()))
           .thenReturn(Future.successful(Seq(notification)))
 
         val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
@@ -95,7 +92,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     "not return notifications" when {
       "those notifications have not had the details parsed from them" in {
         when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
-        when(notificationServiceMock.getNotifications(any()))
+        when(notificationService.getNotifications(any()))
           .thenReturn(Future.successful(Seq(notificationUnparsed)))
 
         val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
@@ -132,7 +129,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
       "return Ok status" in {
         val notificationsFromService = Seq(notification, notification_2, notification_3)
-        when(notificationServiceMock.getAllNotificationsForUser(any()))
+        when(notificationService.getAllNotificationsForUser(any()))
           .thenReturn(Future.successful(notificationsFromService))
 
         val result = routeGetAllNotificationsForUser()
@@ -142,7 +139,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
       "return all Notifications returned by Notification Service" in {
         val notificationsFromService = Seq(notification, notification_2, notification_3)
-        when(notificationServiceMock.getAllNotificationsForUser(any()))
+        when(notificationService.getAllNotificationsForUser(any()))
           .thenReturn(Future.successful(notificationsFromService))
 
         val result = routeGetAllNotificationsForUser()
@@ -152,7 +149,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
       "return only those Notifications returned by Notification Service that have been parsed" in {
         val notificationsFromService = Seq(notification, notification_2, notification_3, notificationUnparsed)
-        when(notificationServiceMock.getAllNotificationsForUser(any()))
+        when(notificationService.getAllNotificationsForUser(any()))
           .thenReturn(Future.successful(notificationsFromService))
 
         val result = routeGetAllNotificationsForUser()
@@ -164,12 +161,12 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
       "call Notification Service once" in {
         val notificationsFromService = Seq(notification, notification_2, notification_3)
-        when(notificationServiceMock.getAllNotificationsForUser(any()))
+        when(notificationService.getAllNotificationsForUser(any()))
           .thenReturn(Future.successful(notificationsFromService))
 
         routeGetAllNotificationsForUser().futureValue
 
-        verify(notificationServiceMock, times(1)).getAllNotificationsForUser(any())
+        verify(notificationService, times(1)).getAllNotificationsForUser(any())
       }
     }
 
@@ -188,7 +185,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
         routeGetAllNotificationsForUser(headersWithoutAuthorisation).futureValue
 
-        verifyNoInteractions(notificationServiceMock)
+        verifyNoInteractions(notificationService)
       }
     }
 
@@ -201,7 +198,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     "everything works correctly" should {
 
       "return Accepted status" in {
-        when(notificationServiceMock.save(any())).thenReturn(Future.successful((): Unit))
+        when(notificationService.handleNewNotification(anyString(), any[NodeSeq])).thenReturn(Future.successful((): Unit))
 
         val result = routePostSaveNotification()
 
@@ -209,38 +206,18 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       }
 
       "call NotificationService once" in {
-        when(notificationServiceMock.save(any())).thenReturn(Future.successful((): Unit))
+        when(notificationService.handleNewNotification(anyString(), any[NodeSeq])).thenReturn(Future.successful((): Unit))
 
         routePostSaveNotification().futureValue
 
-        verify(notificationServiceMock).save(any())
-      }
-
-      "call NotificationService once, even if payload contains more Response elements" in {
-        when(notificationServiceMock.save(any())).thenReturn(Future.successful((): Unit))
-
-        routePostSaveNotification(xmlBody = exampleNotificationWithMultipleResponses(mrn).asXml).futureValue
-
-        verify(notificationServiceMock).save(any())
-      }
-
-      "call NotificationService with the same amount of Notifications as it is in the payload" in {
-        when(notificationServiceMock.save(any())).thenReturn(Future.successful((): Unit))
-        when(notificationFactory.buildNotifications(any(), any())).thenReturn(Seq(notification, notification_2))
-
-        routePostSaveNotification(xmlBody = exampleNotificationWithMultipleResponses(mrn).asXml).futureValue
-
-        val notificationsCaptor: ArgumentCaptor[Seq[Notification]] = ArgumentCaptor.forClass(classOf[Seq[Notification]])
-        verify(notificationServiceMock).save(notificationsCaptor.capture())
-
-        notificationsCaptor.getValue.length must equal(2)
+        verify(notificationService).handleNewNotification(anyString(), any[NodeSeq])
       }
     }
 
     "NotificationService returns failure" should {
 
       "throw an Exception" in {
-        when(notificationServiceMock.save(any())).thenReturn(Future.failed(new Exception("Test Exception")))
+        when(notificationService.handleNewNotification(any(), any[NodeSeq])).thenReturn(Future.failed(new Exception("Test Exception")))
 
         an[Exception] mustBe thrownBy {
           routePostSaveNotification().futureValue

@@ -18,11 +18,8 @@ package uk.gov.hmrc.exports.services
 
 import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 
-import scala.concurrent.{ExecutionContext, Future}
-
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
-import org.mockito.Mockito._
 import testdata.ExportsDeclarationBuilder
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
@@ -35,6 +32,8 @@ import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepo
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
+
+import scala.concurrent.{ExecutionContext, Future}
 
 class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
 
@@ -108,7 +107,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
 
     def theDeclarationUpdated(index: Int = 0): ExportsDeclaration = {
       val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
-      verify(declarationRepository, atLeastOnce()).update(captor.capture())
+      verify(declarationRepository, atLeastOnce).update(captor.capture())
       captor.getAllValues.get(index)
     }
 
@@ -205,7 +204,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
         // Then
         theSubmissionCreated() mustBe Submission(declaration, "lrn", "ducr")
 
-        verify(submissionRepository, never()).addAction(any[Submission], any[Action])
+        verify(submissionRepository, never).addAction(any[Submission], any[Action])
 
         theDeclarationUpdated(0).status mustEqual DeclarationStatus.COMPLETE
         theDeclarationUpdated(1).status mustEqual DeclarationStatus.DRAFT

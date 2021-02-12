@@ -74,7 +74,7 @@ class LockManagerSpec extends UnitSpec {
     "provide LockRepository with correct LockEntry" in {
 
       when(timeUtils.currentTimePlusMillis(any())).thenReturn(newLockExpiryDate)
-      doNothing().when(lockRepository).insertUpdate(any())
+      doNothing.when(lockRepository).insertUpdate(any())
 
       val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, config)
 
@@ -93,7 +93,7 @@ class LockManagerSpec extends UnitSpec {
       "call LockRepository only once" in {
 
         when(timeUtils.currentTimePlusMillis(any())).thenReturn(newLockExpiryDate)
-        doNothing().when(lockRepository).insertUpdate(any())
+        doNothing.when(lockRepository).insertUpdate(any())
 
         val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, config)
 
@@ -156,7 +156,7 @@ class LockManagerSpec extends UnitSpec {
       "provide LockRepository with correct LockEntry" in {
 
         when(timeUtils.currentTimePlusMillis(any())).thenReturn(newLockExpiryDate)
-        doNothing().when(lockRepository).updateIfSameOwner(any())
+        doNothing.when(lockRepository).updateIfSameOwner(any())
         when(lockRefreshChecker.needsRefreshLock(any())).thenReturn(true)
 
         val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, config)
@@ -193,7 +193,7 @@ class LockManagerSpec extends UnitSpec {
 
           when(lockRefreshChecker.needsRefreshLock(any())).thenReturn(true)
           when(timeUtils.currentTimePlusMillis(any())).thenReturn(newLockExpiryDate)
-          doNothing().when(lockRepository).updateIfSameOwner(any())
+          doNothing.when(lockRepository).updateIfSameOwner(any())
 
           val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, config)
 

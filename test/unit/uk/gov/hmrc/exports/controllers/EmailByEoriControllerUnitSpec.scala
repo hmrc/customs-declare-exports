@@ -18,11 +18,7 @@ package uk.gov.hmrc.exports.controllers
 
 import java.time.ZonedDateTime
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-
-import org.mockito.ArgumentMatchers.{any, eq => meq}
-import org.mockito.Mockito._
+import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -32,6 +28,9 @@ import uk.gov.hmrc.exports.connectors.CustomsDataStoreConnector
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.models.VerifiedEmailAddress
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class EmailByEoriControllerUnitSpec extends UnitSpec with AuthTestSupport {
 
@@ -60,7 +59,7 @@ class EmailByEoriControllerUnitSpec extends UnitSpec with AuthTestSupport {
       status(response) mustBe OK
       contentAsJson(response) mustBe Json.toJson(expectedEmailAddress)
 
-      verify(connector).getEmailAddress(meq(ExportsTestData.eori))(any[HeaderCarrier])
+      verify(connector).getEmailAddress(eqTo(ExportsTestData.eori))(any[HeaderCarrier])
     }
 
     "return 404(NOT_FOUND) status if the email address for the given EORI was not provided or was not verified yet" in {
@@ -71,20 +70,20 @@ class EmailByEoriControllerUnitSpec extends UnitSpec with AuthTestSupport {
     }
 
     "return 500(INTERNAL_SERVER_ERROR) status for any 4xx returned by the downstream service, let apart 404" in {
-      when(connector.getEmailAddress(any[String])(any[HeaderCarrier])).thenAnswer(_ => upstreamErrorResponse(BAD_REQUEST))
+      when(connector.getEmailAddress(any[String])(any[HeaderCarrier])).thenAnswer(upstreamErrorResponse(BAD_REQUEST))
 
       val response = controller.getEmailIfVerified(ExportsTestData.eori)(fakeRequest)
       status(response) mustBe INTERNAL_SERVER_ERROR
     }
 
     "return 500(INTERNAL_SERVER_ERROR) status for any 5xx http error code returned by the downstream service" in {
-      when(connector.getEmailAddress(any[String])(any[HeaderCarrier])).thenAnswer(_ => upstreamErrorResponse(BAD_GATEWAY))
+      when(connector.getEmailAddress(any[String])(any[HeaderCarrier])).thenAnswer(upstreamErrorResponse(BAD_GATEWAY))
 
       val response = controller.getEmailIfVerified(ExportsTestData.eori)(fakeRequest)
       status(response) mustBe INTERNAL_SERVER_ERROR
     }
   }
 
-  def upstreamErrorResponse(status: Int): Future[UpstreamErrorResponse] =
-    Future.successful(UpstreamErrorResponse("An error", status))
+  def upstreamErrorResponse(status: Int): Future[Option[VerifiedEmailAddress]] =
+    Future.failed(UpstreamErrorResponse("An error", status))
 }

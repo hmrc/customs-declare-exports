@@ -21,31 +21,34 @@ import play.api.Logger
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 
 import scala.util.{Failure, Success, Try}
-import scala.xml.NodeSeq
+import scala.xml.{NodeSeq, XML}
 
 class NotificationFactory @Inject()(notificationParser: NotificationParser) {
 
   private val logger = Logger(this.getClass)
 
-  def buildNotifications(actionId: String, notificationXml: NodeSeq): Seq[Notification] =
-    Try(notificationParser.parse(notificationXml)) match {
+  def buildNotifications(actionId: String, notificationXml: String): Seq[Notification] =
+    Try(XML.loadString(notificationXml)).map(notificationParser.parse) match {
       case Success(notificationDetails) if notificationDetails.nonEmpty =>
         notificationDetails.map { details =>
           Notification(actionId = actionId, payload = notificationXml.toString, details = Some(details))
         }
 
       case Success(_) =>
-        Seq(buildNotificationUnparsed(actionId = actionId, notificationXml = notificationXml))
+        Seq(buildNotificationUnparsed(actionId, notificationXml))
 
       case Failure(exc) =>
         logParseExceptionAtPagerDutyLevel(actionId, exc)
-        Seq(buildNotificationUnparsed(actionId = actionId, notificationXml = notificationXml))
+        Seq(buildNotificationUnparsed(actionId, notificationXml))
     }
 
-  private def logParseExceptionAtPagerDutyLevel(actionId: String, exc: Throwable) =
+  private def logParseExceptionAtPagerDutyLevel(actionId: String, exc: Throwable): Unit =
     logger.warn(s"There was a problem during parsing notification with actionId=${actionId} exception thrown: ${exc.getMessage}")
 
   def buildNotificationUnparsed(actionId: String, notificationXml: NodeSeq): Notification =
-    Notification(actionId = actionId, payload = notificationXml.toString, details = None)
+    buildNotificationUnparsed(actionId, notificationXml.toString)
+
+  private def buildNotificationUnparsed(actionId: String, notificationXml: String): Notification =
+    Notification(actionId = actionId, payload = notificationXml, details = None)
 
 }

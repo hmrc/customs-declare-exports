@@ -17,7 +17,6 @@
 package uk.gov.hmrc.exports.services.mapping.declaration.consignment
 
 import org.mockito.ArgumentMatchers._
-import org.mockito.Mockito._
 import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType
@@ -75,10 +74,10 @@ class DeclarationConsignmentBuilderSpec extends UnitSpec with ExportsDeclaration
 
         // Then
         declaration.getConsignment mustBe null
-        verify(freightBuilder, never()).buildThenAdd(refEq(model), any[Declaration.Consignment])
-        verify(iteneraryBuilder, never()).buildThenAdd(refEq(model), any[Declaration.Consignment])
-        verify(consignmentCarrierBuilder, never()).buildThenAdd(refEq(model), any[Declaration.Consignment])
-        verify(consignorBuilder, never()).buildThenAdd(refEq(model), any[Declaration.Consignment])
+        verify(freightBuilder, never).buildThenAdd(refEq(model), any[Declaration.Consignment])
+        verify(iteneraryBuilder, never).buildThenAdd(refEq(model), any[Declaration.Consignment])
+        verify(consignmentCarrierBuilder, never).buildThenAdd(refEq(model), any[Declaration.Consignment])
+        verify(consignorBuilder, never).buildThenAdd(refEq(model), any[Declaration.Consignment])
       }
     }
   }

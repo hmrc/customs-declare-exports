@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.base
+package uk.gov.hmrc.exports.services.notifications.receiptactions
 
-import org.mockito.MockitoSugar
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.matchers.must.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, OptionValues}
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 
-trait UnitSpec extends AnyWordSpec with BeforeAndAfterAll with BeforeAndAfterEach with Matchers with MockitoSugar with OptionValues with ScalaFutures
+import scala.concurrent.Future
+
+trait NotificationReceiptAction {
+  def execute(notification: Notification): Future[Unit]
+}

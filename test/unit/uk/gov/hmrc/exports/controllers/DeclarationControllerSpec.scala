@@ -18,8 +18,6 @@ package uk.gov.hmrc.exports.controllers
 
 import java.time.Instant
 
-import scala.concurrent.Future
-
 import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{eq => eqRef, _}
@@ -42,6 +40,8 @@ import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.DeclarationService
+
+import scala.concurrent.Future
 
 class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestSupport with ExportsDeclarationBuilder {
 
@@ -289,7 +289,7 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
         status(result) must be(BAD_REQUEST)
         contentAsJson(result) mustBe Json.obj("message" -> "Cannot remove a declaration once it is COMPLETE")
         verify(declarationService).findOne("id", userEori)
-        verify(declarationService, never()).deleteOne(declaration)
+        verify(declarationService, never).deleteOne(declaration)
       }
     }
 
