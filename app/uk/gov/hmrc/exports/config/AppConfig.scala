@@ -79,7 +79,7 @@ class AppConfig @Inject()(val configuration: Configuration, val environment: Env
 
   lazy val verifiedEmailPath: String = configuration.get[String]("microservice.services.customs-data-store.verified-email-path")
 
-  lazy val hmrcEmailBaseUrl: String = servicesConfig.baseUrl("hmrc-email")
+  lazy val emailServiceBaseUrl: String = servicesConfig.baseUrl("hmrc-email")
 
   lazy val sendEmailPath: String = configuration.get[String]("microservice.services.hmrc-email.send-email-path")
 }

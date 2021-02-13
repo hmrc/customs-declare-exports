@@ -18,13 +18,15 @@ package uk.gov.hmrc.exports.connector
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.Helpers.{ACCEPTED, BAD_GATEWAY, BAD_REQUEST}
-import uk.gov.hmrc.exports.base.IntegrationTestSpec
+import play.api.test.Injecting
+import uk.gov.hmrc.exports.base.{IntegrationTestSpec, UnitSpec}
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.EmailConnector
 import uk.gov.hmrc.exports.models.emails.EmailParameter.MRN
 import uk.gov.hmrc.exports.models.emails.TemplateId.DMSDOC_NOTIFICATION
-import uk.gov.hmrc.exports.models.emails.{EmailParameters, SendEmailError, SendEmailRequest}
+import uk.gov.hmrc.exports.models.emails.{BadEmailRequest, EmailAccepted, EmailParameters, InternalEmailServiceError, SendEmailRequest}
 import uk.gov.hmrc.http.HttpClient
 
 class EmailConnectorSpec extends IntegrationTestSpec {
@@ -42,36 +44,41 @@ class EmailConnectorSpec extends IntegrationTestSpec {
       postToDownstreamService(actualPath, ACCEPTED)
 
       val response = connector.sendEmail(sendEmailRequest).futureValue
-      response mustBe None
+      response mustBe EmailAccepted
 
       verifyPostFromDownStreamService(actualPath)
     }
 
-    "return a SendEmailError instance if the email service answers with a 4xx error (the email was not queued)" in {
+    "return a BadEmailRequest instance if the email service answers with a 4xx error (the email was not queued)" in {
       val message = "A Bad Request"
       postToDownstreamService(actualPath, BAD_REQUEST, Some(message))
 
       val response = connector.sendEmail(sendEmailRequest).futureValue
-      response mustBe Some(SendEmailError(BAD_REQUEST, message))
+      response mustBe BadEmailRequest(message)
 
       verifyPostFromDownStreamService(actualPath)
     }
 
-    "return a SendEmailError instance if the email service answers with a 5xx error (the email was not queued)" in {
+    "return a InternalEmailServiceError instance if the email service answers with a 5xx error (the email was not queued)" in {
       val message = "Bad Gateway"
       postToDownstreamService(actualPath, BAD_GATEWAY, Some(message))
 
       val response = connector.sendEmail(sendEmailRequest).futureValue
-      response mustBe Some(SendEmailError(BAD_GATEWAY, message))
+      response mustBe InternalEmailServiceError(message)
 
       verifyPostFromDownStreamService(actualPath)
     }
   }
+}
 
-  "EmailConnector.verifiedEmailPath" should {
-    "return the expected path" in {
-      val expectedPath = "/hmrc/email"
-      actualPath mustBe expectedPath
+class EmailServiceConnectorSpec extends UnitSpec with GuiceOneAppPerSuite with Injecting {
+
+  implicit val appConfig: AppConfig = inject[AppConfig]
+
+  "EmailConnector.sendEmailUrl" should {
+    "return the expected url" in {
+      val expectedUrl = s"http://localhost:8300/hmrc/email"
+      EmailConnector.sendEmailUrl mustBe expectedUrl
     }
   }
 }

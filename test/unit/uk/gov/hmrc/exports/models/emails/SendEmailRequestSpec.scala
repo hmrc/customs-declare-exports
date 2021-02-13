@@ -46,7 +46,7 @@ class SendEmailRequestSpec extends UnitSpec {
       Json.toJson(actualSendEmailRequest).toString mustBe expectedSendEmailRequest
     }
 
-    "be serialized as expected, even when no parameters are required" in {
+    "be serialized as expected, even when no parameters are provided" in {
       val noParameters = EmailParameters(Map.empty)
       val actualSendEmailRequest = SendEmailRequest(List(recipient), DMSDOC_NOTIFICATION, noParameters, Some(eventUrl))
 

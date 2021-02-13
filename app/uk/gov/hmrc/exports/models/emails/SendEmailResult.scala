@@ -16,15 +16,8 @@
 
 package uk.gov.hmrc.exports.models.emails
 
-import play.api.libs.json.Json
-import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
+sealed abstract class SendEmailResult(val message: String)
 
-case class SendEmailError(status: Int, message: String)
-
-object SendEmailError {
-  implicit val format = Json.format[SendEmailError]
-
-  def apply(response: HttpResponse): SendEmailError = new SendEmailError(response.status, response.body)
-
-  def apply(errorResponse: UpstreamErrorResponse): SendEmailError = new SendEmailError(errorResponse.statusCode, errorResponse.message)
-}
+case object EmailAccepted extends SendEmailResult("Accepted")
+case class BadEmailRequest(override val message: String) extends SendEmailResult(message)
+case class InternalEmailServiceError(override val message: String) extends SendEmailResult(message)
