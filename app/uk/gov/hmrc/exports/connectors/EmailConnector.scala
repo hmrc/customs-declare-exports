@@ -22,7 +22,8 @@ import javax.inject.Inject
 import play.api.Logging
 import play.api.http.Status.ACCEPTED
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.emails._
+import uk.gov.hmrc.exports.models.emails.{SendEmailRequest, SendEmailResult}
+import uk.gov.hmrc.exports.models.emails.SendEmailResult._
 import uk.gov.hmrc.http.HttpErrorFunctions._
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
@@ -42,7 +43,7 @@ class EmailConnector @Inject()(http: HttpClient)(implicit appConfig: AppConfig, 
       }
 
   private def sendEmailError(sendEmailRequest: SendEmailRequest, status: Int, message: String): SendEmailResult = {
-    logger.error(s"Error(${status}) for $sendEmailRequest. ${message}")
+    logger.warn(s"Error(${status}) for $sendEmailRequest. ${message}")
     if (is5xx(status)) InternalEmailServiceError(message) else BadEmailRequest(message)
   }
 }

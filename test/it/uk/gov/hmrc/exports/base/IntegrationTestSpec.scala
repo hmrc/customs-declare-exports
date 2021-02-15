@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,17 @@
 
 package uk.gov.hmrc.exports.base
 
-import com.codahale.metrics.SharedMetricRegistries
-import org.scalatest.concurrent.IntegrationPatience
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Injecting
 import stubs.ExternalServicesConfig.{Host, Port}
-import stubs.CustomsDeclarationsAPIConfig.{apiVersion, submitDeclarationServiceContext}
 import stubs.MockGenericDownstreamService
 import testdata.ExportsTestData
 import uk.gov.hmrc.exports.util.TestModule
 import uk.gov.hmrc.http.HeaderCarrier
 
-trait IntegrationTestSpec extends UnitSpec with GuiceOneAppPerSuite with Injecting with IntegrationPatience with MockGenericDownstreamService {
-
-  SharedMetricRegistries.clear()
+trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSuite with Injecting with MockGenericDownstreamService {
 
   override implicit lazy val app: Application =
     GuiceApplicationBuilder(overrides = Seq(TestModule.asGuiceableModule))
@@ -43,9 +38,9 @@ trait IntegrationTestSpec extends UnitSpec with GuiceOneAppPerSuite with Injecti
           "microservice.services.customs-data-store.port" -> Port,
           "microservice.services.customs-declarations.host" -> Host,
           "microservice.services.customs-declarations.port" -> Port,
-          "microservice.services.customs-declarations.submit-uri" -> submitDeclarationServiceContext,
+          "microservice.services.customs-declarations.submit-uri" -> "/",
           "microservice.services.customs-declarations.bearer-token" -> ExportsTestData.authToken,
-          "microservice.services.customs-declarations.api-version" -> apiVersion,
+          "microservice.services.customs-declarations.api-version" -> "1.0",
           "microservice.services.customs-declarations-information.host" -> Host,
           "microservice.services.customs-declarations-information.port" -> Port,
           "microservice.services.customs-declarations-information.fetch-mrn-status" -> "/mrn/ID/status",
@@ -58,14 +53,18 @@ trait IntegrationTestSpec extends UnitSpec with GuiceOneAppPerSuite with Injecti
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  override protected def beforeAll() {
-    startMockServer()
+  override protected def beforeAll(): Unit = {
+    super.beforeAll
+    startMockServer
   }
 
-  override protected def afterEach(): Unit =
-    resetMockServer()
+  override protected def afterEach(): Unit = {
+    resetMockServer
+    super.afterEach
+  }
 
   override protected def afterAll() {
-    stopMockServer()
+    stopMockServer
+    super.afterAll
   }
 }

@@ -3,7 +3,7 @@ import sbt._
 
 object AppDependencies {
 
-  private val testScope = "test, it, component"
+  private val testScope = "test, it"
 
   val compile = Seq(
     "uk.gov.hmrc"                    %%  "simple-reactivemongo"         % "7.31.0-play-27",

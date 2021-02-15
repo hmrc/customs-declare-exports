@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package stubs
+package uk.gov.hmrc.exports.base
 
-object CustomsDeclarationsAPIConfig {
-  val apiVersion: String = "1.0"
+import com.codahale.metrics.SharedMetricRegistries
+import org.scalatest.concurrent.IntegrationPatience
 
-  val submitDeclarationServiceContext = "/"
-  val cancelDeclarationServiceContext = "/cancellation-requests"
+trait IntegrationTestBaseSpec extends UnitSpec with IntegrationPatience {
+
+  SharedMetricRegistries.clear()
 }

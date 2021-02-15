@@ -16,36 +16,54 @@
 
 package uk.gov.hmrc.exports.connector.ead
 
+import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock._
+import play.api.http.ContentTypes
+import play.api.mvc.Codec
 import play.api.test.Helpers._
-import stubs.CustomsDeclarationsInformationAPIConfig._
-import stubs.CustomsDeclarationsInformationAPIService
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
+import uk.gov.hmrc.exports.models.ead.parsers.MrnStatusParserTestData
 import uk.gov.hmrc.http.InternalServerException
 
-class CustomsDeclarationsInformationConnectorSpec extends IntegrationTestSpec with CustomsDeclarationsInformationAPIService {
+class CustomsDeclarationsInformationConnectorSpec extends IntegrationTestSpec {
 
   private lazy val connector = inject[CustomsDeclarationsInformationConnector]
 
-  "Customs Declarations Information Connector" should {
-    val mrn = "18GB9JLC3CU1LFGVR2"
+  val id = "ID"
+  val fetchMrnStatusUrl = "/mrn/" + id + "/status"
 
+  val mrn = "18GB9JLC3CU1LFGVR2"
+  val mrnStatusUrl = fetchMrnStatusUrl.replace(id, mrn)
+
+  "Customs Declarations Information Connector" should {
     "return response with specific status" when {
       "request is processed successfully - 200" in {
-        startService(OK, mrn)
+        val expectedMrnStatus = MrnStatusParserTestData.mrnStatusWithAllData(mrn).toString
+        getFromDownstreamService(mrnStatusUrl, OK, Some(expectedMrnStatus))
+
         val mrnStatus = connector.fetchMrnStatus(mrn).futureValue.get
         mrnStatus.mrn mustBe mrn
         mrnStatus.eori mustBe "GB123456789012000"
-        verifyDecServiceWasCalledCorrectly(mrn, expectedApiVersion = apiVersion, bearerToken)
+
+        verifyDecServiceWasCalledCorrectly()
       }
 
       "request is not processed - 500" in {
+        getFromDownstreamService(mrnStatusUrl, INTERNAL_SERVER_ERROR)
 
-        startService(INTERNAL_SERVER_ERROR, mrn)
         intercept[InternalServerException] {
           await(connector.fetchMrnStatus(mrn))
         }
       }
     }
   }
+
+  private def verifyDecServiceWasCalledCorrectly(expectedApiVersion: String = "1.0"): Unit =
+    WireMock.verify(
+      1,
+      getRequestedFor(urlMatching(mrnStatusUrl))
+        .withHeader(CONTENT_TYPE, equalTo(ContentTypes.XML(Codec.utf_8)))
+        .withHeader(ACCEPT, equalTo(s"application/vnd.hmrc.$expectedApiVersion+xml"))
+    )
 }

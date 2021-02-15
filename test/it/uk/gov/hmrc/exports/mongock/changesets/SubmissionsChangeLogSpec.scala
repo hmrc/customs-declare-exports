@@ -6,15 +6,14 @@ import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import com.mongodb.{MongoClient, MongoClientURI}
 import org.bson.Document
-import org.scalatest.concurrent.IntegrationPatience
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import stubs.TestMongoDB
 import stubs.TestMongoDB.mongoConfiguration
-import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.base.IntegrationTestBaseSpec
 
-class SubmissionsChangeLogSpec extends UnitSpec with GuiceOneServerPerSuite with IntegrationPatience {
+class SubmissionsChangeLogSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSuite {
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
@@ -26,7 +25,7 @@ class SubmissionsChangeLogSpec extends UnitSpec with GuiceOneServerPerSuite with
   private val DatabaseName = TestMongoDB.DatabaseName
   private val CollectionName = "submissions"
 
-  private implicit val mongoDatabase: MongoDatabase = {
+  private val mongoDatabase: MongoDatabase = {
     val uri = new MongoClientURI(MongoURI.replaceAllLiterally("sslEnabled", "ssl"))
     val client = new MongoClient(uri)
 
@@ -45,7 +44,7 @@ class SubmissionsChangeLogSpec extends UnitSpec with GuiceOneServerPerSuite with
     super.afterEach()
   }
 
-  private def getDeclarationsCollection(db: MongoDatabase): MongoCollection[Document] = mongoDatabase.getCollection(CollectionName)
+  private val declarationsCollection: MongoCollection[Document] = mongoDatabase.getCollection(CollectionName)
 
   "CacheChangeLog" should {
 
@@ -58,14 +57,14 @@ class SubmissionsChangeLogSpec extends UnitSpec with GuiceOneServerPerSuite with
     }
   }
 
-  private def runTest()(test: MongoDatabase => Unit)(implicit mongoDatabase: MongoDatabase): Unit = {
+  private def runTest()(test: MongoDatabase => Unit): Unit = {
     val indexOptions = new IndexOptions().unique(true).background(false).name("dummyIdx")
     val keys = new Document("dummyIdx", Integer.valueOf(1))
-    getDeclarationsCollection(mongoDatabase).createIndex(keys, indexOptions)
-    iterableAsScalaIterable(getDeclarationsCollection(mongoDatabase).listIndexes()).toSeq.size mustBe 2
+    declarationsCollection.createIndex(keys, indexOptions)
+    iterableAsScalaIterable(declarationsCollection.listIndexes()).toSeq.size mustBe 2
 
     test(mongoDatabase)
 
-    iterableAsScalaIterable(getDeclarationsCollection(mongoDatabase).listIndexes()).size mustBe 1
+    iterableAsScalaIterable(declarationsCollection.listIndexes()).size mustBe 1
   }
 }

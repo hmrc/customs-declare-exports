@@ -18,6 +18,8 @@ package uk.gov.hmrc.exports.controllers
 
 import java.time.Instant
 
+import scala.concurrent.Future
+
 import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{eq => eqRef, _}
@@ -40,8 +42,6 @@ import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.DeclarationService
-
-import scala.concurrent.Future
 
 class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestSupport with ExportsDeclarationBuilder {
 

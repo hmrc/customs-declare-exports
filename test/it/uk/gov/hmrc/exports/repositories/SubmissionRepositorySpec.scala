@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,24 +21,17 @@ import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import com.codahale.metrics.SharedMetricRegistries
-import org.scalatest.concurrent.IntegrationPatience
-import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.core.errors.DatabaseException
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
-import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.base.IntegrationTestBaseSpec
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest, SubmissionRequest}
 
-class SubmissionRepositorySpec extends UnitSpec with IntegrationPatience {
+class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
 
-  private val injector: Injector = {
-    SharedMetricRegistries.clear()
-    GuiceApplicationBuilder().injector()
-  }
-  private val repo: SubmissionRepository = injector.instanceOf[SubmissionRepository]
+  private val repo: SubmissionRepository = GuiceApplicationBuilder().injector.instanceOf[SubmissionRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()

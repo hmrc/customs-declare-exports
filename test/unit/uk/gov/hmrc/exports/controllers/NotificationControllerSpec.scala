@@ -16,6 +16,10 @@
 
 package uk.gov.hmrc.exports.controllers
 
+import scala.concurrent.Future
+import scala.util.Random
+import scala.xml.{Elem, NodeSeq}
+
 import com.codahale.metrics.SharedMetricRegistries
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.ArgumentMatchers.{any, anyString}
@@ -38,10 +42,6 @@ import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.NotificationService
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
-
-import scala.concurrent.Future
-import scala.util.Random
-import scala.xml.{Elem, NodeSeq}
 
 class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestSupport {
 

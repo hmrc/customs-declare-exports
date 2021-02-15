@@ -18,6 +18,9 @@ package uk.gov.hmrc.exports.models.emails
 
 sealed abstract class SendEmailResult(val message: String)
 
-case object EmailAccepted extends SendEmailResult("Accepted")
-case class BadEmailRequest(override val message: String) extends SendEmailResult(message)
-case class InternalEmailServiceError(override val message: String) extends SendEmailResult(message)
+object SendEmailResult {
+
+  case object EmailAccepted extends SendEmailResult("Accepted")
+  case class BadEmailRequest(override val message: String) extends SendEmailResult(message)
+  case class InternalEmailServiceError(override val message: String) extends SendEmailResult(message)
+}

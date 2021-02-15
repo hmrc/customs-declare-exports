@@ -25,7 +25,7 @@ import play.api.Application
 import play.api.http.Status.{NOT_FOUND, _}
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import stubs.{CustomsDeclarationsAPIConfig, ExternalServicesConfig, WireMockRunner}
+import stubs.{ExternalServicesConfig, WireMockRunner}
 import testdata.ExportsTestData._
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.steps._

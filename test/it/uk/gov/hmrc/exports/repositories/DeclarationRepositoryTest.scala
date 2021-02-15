@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,24 +20,17 @@ import java.time.{LocalDate, ZoneOffset}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import com.codahale.metrics.SharedMetricRegistries
-import org.scalatest.concurrent.IntegrationPatience
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.api.ReadConcern
 import testdata.ExportsDeclarationBuilder
-import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.base.IntegrationTestBaseSpec
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo.format
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 
-class DeclarationRepositoryTest extends UnitSpec with ExportsDeclarationBuilder with IntegrationPatience {
+class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDeclarationBuilder {
 
-  private val injector = {
-    SharedMetricRegistries.clear()
-    GuiceApplicationBuilder().injector()
-  }
-
-  private val repository = injector.instanceOf[DeclarationRepository]
+  private val repository = GuiceApplicationBuilder().injector.instanceOf[DeclarationRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()

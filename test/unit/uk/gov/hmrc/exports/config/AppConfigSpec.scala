@@ -16,127 +16,86 @@
 
 package uk.gov.hmrc.exports.config
 
-import java.util.UUID
+import java.time.LocalTime
 
-import com.typesafe.config.{Config, ConfigFactory}
-import play.api.{Configuration, Environment}
-import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import scala.concurrent.duration._
 
-class AppConfigSpec extends UnitSpec {
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
+import play.api.inject.guice.GuiceApplicationBuilder
+import uk.gov.hmrc.exports.config.AppConfig.JobConfig
 
-  private val validAppConfig: Config =
-    ConfigFactory.parseString("""
-      |urls.login="http://localhost:9949/auth-login-stub/gg-sign-in"
-      |mongodb.uri="mongodb://localhost:27017/customs-declare-exports"
-      |microservice.services.auth.host=localhostauth
-      |microservice.services.auth.port=9988
-      |microservice.services.customs-declarations.host=remotedec-api
-      |microservice.services.customs-declarations.port=6000
-      |microservice.services.customs-declarations.api-version=1.0
-      |microservice.services.customs-declarations.submit-uri=/declarations
-      |microservice.services.customs-declarations.cancel-uri=/declarations/cancel
-      |microservice.services.customs-declarations.bearer-token=Bearer DummyBearerToken
-      |microservice.services.customs-declarations-information.host=localhostd
-      |microservice.services.customs-declarations-information.port=9834
-      |microservice.services.customs-declarations-information.api-version=1.0
-      |microservice.services.customs-declarations-information.bearer-token=Bearer cdi-bearer-token
-      |microservice.services.customs-declarations-information.client-id=cdi-client-id
-      |microservice.services.customs-declarations-information.fetch-mrn-status=/mrn/ID/status
-      |microservice.services.customs-data-store.host=localhost
-      |microservice.services.customs-data-store.port=6790
-      |microservice.services.customs-data-store.verified-email-path=/customs-data-store/eori/EORI/verified-email
-      |microservice.services.hmrc-email.host=localhost
-      |microservice.services.hmrc-email.port=8300
-    """.stripMargin)
+class AppConfigSpec extends AnyFunSuite with Matchers {
 
-  private val emptyAppConfig: Config = ConfigFactory.parseString("")
-  private val validServicesConfiguration = Configuration(validAppConfig)
-  private val invalidServicesConfiguration = Configuration(emptyAppConfig)
+  val mongodbUri = "mongodb://localhost:27017/customs-declare-exports"
+  val authUrl = "http://localhost:8500"
+  val loginUrl = "http://localhost:9949/auth-login-stub/gg-sign-in"
+  val customsDeclarationsBaseUrl = "http://localhost:6790"
+  val customsDeclarationsApiVersion = "1.0"
+  val submitDeclarationUri = "/"
+  val cancelDeclarationUri = "/cancellation-requests"
+  val notificationBearerToken = "Bearer customs-declare-exports"
+  val developerHubClientId = "customs-declare-exports"
+  val draftTimeToLive = 30.days
+  val purgeDraftDeclarations = JobConfig(LocalTime.of(23, 30), 1.day)
+  val customsDeclarationsInformationBaseUrl = "http://localhost:9834"
+  val fetchMrnStatus = "/mrn/ID/status"
+  val cdiApiVersion = "1.0"
+  val cdiClientID = "customs-declare-exports"
+  val cdiBearerToken = "Bearer customs-declare-exports"
+  val customsDataStoreBaseUrl = "http://localhost:6790"
+  val verifiedEmailPath = "/customs-data-store/eori/EORI/verified-email"
+  val emailServiceBaseUrl = "http://localhost:8300"
+  val sendEmailPath = "/hmrc/email"
 
-  val environment = Environment.simple()
+  private val appConfig = GuiceApplicationBuilder().injector.instanceOf[AppConfig]
 
-  private def servicesConfig(conf: Configuration) = new ServicesConfig(conf)
-  private def genAppConfig(conf: Configuration) = new AppConfig(conf, environment, servicesConfig(conf))
+  test(s"mongodbUri must be $mongodbUri") { appConfig.mongodbUri mustBe mongodbUri }
 
-  "AppConfig" should {
-    "return config as object model when configuration is valid" in {
-      val appConfig: AppConfig = genAppConfig(validServicesConfiguration)
+  test(s"authUrl must be $authUrl") { appConfig.authUrl mustBe authUrl }
 
-      appConfig.authUrl mustBe "http://localhostauth:9988"
-      appConfig.loginUrl mustBe "http://localhost:9949/auth-login-stub/gg-sign-in"
-      appConfig.customsDeclarationsApiVersion mustBe "1.0"
-      appConfig.submitDeclarationUri mustBe "/declarations"
-      appConfig.cancelDeclarationUri mustBe "/declarations/cancel"
-      appConfig.customsDeclarationsBaseUrl mustBe "http://remotedec-api:6000"
-      appConfig.notificationBearerToken mustBe "Bearer DummyBearerToken"
-      appConfig.cdiApiVersion mustBe "1.0"
-      appConfig.cdiBearerToken mustBe "Bearer cdi-bearer-token"
-      appConfig.cdiClientID mustBe "cdi-client-id"
-      appConfig.fetchMrnStatus mustBe "/mrn/ID/status"
-      appConfig.customsDeclarationsInformationBaseUrl mustBe "http://localhostd:9834"
-    }
+  test(s"loginUrl must be $loginUrl") { appConfig.loginUrl mustBe loginUrl }
 
-    "throw an exception when mandatory configuration is invalid" in {
-      val appConfig: AppConfig = genAppConfig(invalidServicesConfiguration)
-
-      val caught: RuntimeException = intercept[RuntimeException](appConfig.authUrl)
-      caught.getMessage mustBe "Could not find config key 'auth.host'"
-
-      val caught1: RuntimeException = intercept[RuntimeException](appConfig.customsDeclarationsBaseUrl)
-      caught1.getMessage mustBe "Could not find config key 'customs-declarations.host'"
-
-      val caught2: Exception = intercept[Exception](appConfig.loginUrl)
-      caught2.getMessage mustBe "Missing configuration key: urls.login"
-
-      val caught3: RuntimeException = intercept[RuntimeException](appConfig.customsDeclarationsApiVersion)
-      caught3.getMessage mustBe "Could not find config key 'microservice.services.customs-declarations.api-version'"
-
-      val caught4: RuntimeException = intercept[RuntimeException](appConfig.submitDeclarationUri)
-      caught4.getMessage mustBe "Could not find config key 'microservice.services.customs-declarations.submit-uri'"
-
-      val caught5: RuntimeException = intercept[RuntimeException](appConfig.notificationBearerToken)
-      caught5.getMessage mustBe "Could not find config key 'microservice.services.customs-declarations.bearer-token'"
-
-      val caught6: RuntimeException = intercept[RuntimeException](appConfig.cancelDeclarationUri)
-      caught6.getMessage mustBe "Could not find config key 'microservice.services.customs-declarations.cancel-uri'"
-    }
-
-    "throw an exception when mandatory customs-declaration-information configuration is invalid" in {
-      val appConfig: AppConfig = genAppConfig(invalidServicesConfiguration)
-
-      val caught: RuntimeException = intercept[RuntimeException](appConfig.customsDeclarationsInformationBaseUrl)
-      caught.getMessage mustBe "Could not find config key 'customs-declarations-information.host'"
-
-      val caught1: RuntimeException = intercept[RuntimeException](appConfig.cdiApiVersion)
-      caught1.getMessage mustBe "Could not find config key 'microservice.services.customs-declarations-information.api-version'"
-
-      val caught2: RuntimeException = intercept[RuntimeException](appConfig.fetchMrnStatus)
-      caught2.getMessage mustBe "Could not find config key 'microservice.services.customs-declarations-information.fetch-mrn-status'"
-
-      val caught3: RuntimeException = intercept[RuntimeException](appConfig.cdiBearerToken)
-      caught3.getMessage mustBe "Could not find config key 'microservice.services.customs-declarations-information.bearer-token'"
-
-      val caught6: RuntimeException = intercept[RuntimeException](appConfig.cdiClientID)
-      caught6.getMessage mustBe "Could not find config key 'microservice.services.customs-declarations-information.client-id'"
-    }
-
-    "developerHubClientId" should {
-      val appName = "customs-declare-exports"
-      val clientId = UUID.randomUUID.toString
-
-      "return the configured value when explicitly set" in {
-        val appConfig: AppConfig =
-          genAppConfig(
-            Configuration(
-              "appName" -> appName,
-              "microservice.services.customs-declarations.client-id" -> clientId,
-              "mongodb.uri" -> "mongodb://localhost:27017/customs-declare-exports"
-            )
-          )
-
-        appConfig.developerHubClientId mustBe clientId
-      }
-    }
+  test(s"customsDeclarationsBaseUrl must be $customsDeclarationsBaseUrl") {
+    appConfig.customsDeclarationsBaseUrl mustBe customsDeclarationsBaseUrl
   }
+
+  test(s"customsDeclarationsApiVersion must be $customsDeclarationsApiVersion") {
+    appConfig.customsDeclarationsApiVersion mustBe customsDeclarationsApiVersion
+  }
+
+  test(s"submitDeclarationUri must be $submitDeclarationUri") { appConfig.submitDeclarationUri mustBe submitDeclarationUri }
+
+  test(s"cancelDeclarationUri must be $cancelDeclarationUri") { appConfig.cancelDeclarationUri mustBe cancelDeclarationUri }
+
+  test(s"notificationBearerToken must be $notificationBearerToken") { appConfig.notificationBearerToken mustBe notificationBearerToken }
+
+  test(s"developerHubClientId must be $developerHubClientId") { appConfig.developerHubClientId mustBe developerHubClientId }
+
+  test(s"draftTimeToLive must be $draftTimeToLive") { appConfig.draftTimeToLive mustBe draftTimeToLive }
+
+  test(s"purgeDraftDeclarations must be $purgeDraftDeclarations") {
+    appConfig.purgeDraftDeclarations.elapseTime mustBe purgeDraftDeclarations.elapseTime
+    appConfig.purgeDraftDeclarations.interval mustBe purgeDraftDeclarations.interval
+  }
+
+  test(s"customsDeclarationsInformationBaseUrl must be $customsDeclarationsInformationBaseUrl") {
+    appConfig.customsDeclarationsInformationBaseUrl mustBe customsDeclarationsInformationBaseUrl
+  }
+
+  test(s"fetchMrnStatus must be $fetchMrnStatus") { appConfig.fetchMrnStatus mustBe fetchMrnStatus }
+
+  test(s"cdiApiVersion must be $cdiApiVersion") { appConfig.cdiApiVersion mustBe cdiApiVersion }
+
+  test(s"cdiClientID must be $cdiClientID") { appConfig.cdiClientID mustBe cdiClientID }
+
+  test(s"cdiBearerToken must be $cdiBearerToken") { appConfig.cdiBearerToken mustBe cdiBearerToken }
+
+  test(s"customsDataStoreBaseUrl must be $customsDataStoreBaseUrl") { appConfig.customsDataStoreBaseUrl mustBe customsDataStoreBaseUrl }
+
+  test(s"verifiedEmailPath must be $verifiedEmailPath") { appConfig.verifiedEmailPath mustBe verifiedEmailPath }
+
+  test(s"emailServiceBaseUrl must be $emailServiceBaseUrl") { appConfig.emailServiceBaseUrl mustBe emailServiceBaseUrl }
+
+  test(s"sendEmailPath must be $sendEmailPath") { appConfig.sendEmailPath mustBe sendEmailPath }
 }

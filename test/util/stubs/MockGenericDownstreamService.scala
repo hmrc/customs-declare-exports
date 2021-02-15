@@ -16,26 +16,53 @@
 
 package stubs
 
-import com.github.tomakehurst.wiremock.client.MappingBuilder
+import scala.annotation.tailrec
+
+import com.github.tomakehurst.wiremock.client.{MappingBuilder, ResponseDefinitionBuilder}
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
 trait MockGenericDownstreamService extends WireMockRunner {
 
-  def getFromDownstreamService(url: String, status: Int, body: Option[String] = None, delay: Int = 0): StubMapping =
-    stubForDownstreamService(get(urlMatching(url)), status, body, delay)
+  def getFromDownstreamService(
+    url: String,
+    status: Int,
+    body: Option[String] = None,
+    headers: Map[String, String] = Map.empty,
+    delay: Int = 0
+  ): StubMapping =
+    stubForDownstreamService(get(urlMatching(url)), status, body, headers, delay)
 
-  def postToDownstreamService(url: String, status: Int, body: Option[String] = None, delay: Int = 0): StubMapping =
-    stubForDownstreamService(post(urlMatching(url)), status, body, delay)
+  def postToDownstreamService(
+    url: String,
+    status: Int,
+    body: Option[String] = None,
+    headers: Map[String, String] = Map.empty,
+    delay: Int = 0
+  ): StubMapping =
+    stubForDownstreamService(post(urlMatching(url)), status, body, headers, delay)
 
-  private def stubForDownstreamService(call: MappingBuilder, status: Int, body: Option[String], delay: Int): StubMapping = {
-    val response = aResponse()
+  private def stubForDownstreamService(
+    call: MappingBuilder,
+    status: Int,
+    body: Option[String],
+    headers: Map[String, String],
+    delay: Int
+  ): StubMapping = {
+    val response = responseWithHeaders(aResponse(), headers.toList)
       .withStatus(status)
       .withFixedDelay(delay)
 
     removeStub(call)
     stubFor(call.willReturn(body.fold(response)(response.withBody)))
   }
+
+  @tailrec
+  private def responseWithHeaders(response: ResponseDefinitionBuilder, headers: List[(String, String)]): ResponseDefinitionBuilder =
+    headers match {
+      case Nil          => response
+      case head :: tail => responseWithHeaders(response.withHeader(head._1, head._2), tail)
+    }
 
   def verifyGetFromDownStreamService(url: String): Unit = verify(1, getRequestedFor(urlMatching(url)))
 

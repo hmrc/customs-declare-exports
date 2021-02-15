@@ -40,6 +40,7 @@ class EADControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestS
   override lazy val app: Application = GuiceApplicationBuilder()
     .overrides(bind[AuthConnector].to(mockAuthConnector), bind[CustomsDeclarationsInformationConnector].to(connector), bind[HeaderCarrier].to(hc))
     .build()
+
   private implicit val hc: HeaderCarrier = HeaderCarrier()
   private val connector: CustomsDeclarationsInformationConnector = mock[CustomsDeclarationsInformationConnector]
 

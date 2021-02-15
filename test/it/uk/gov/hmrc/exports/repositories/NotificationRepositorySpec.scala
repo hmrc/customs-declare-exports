@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,22 +18,14 @@ package uk.gov.hmrc.exports.repositories
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import com.codahale.metrics.SharedMetricRegistries
-import org.scalatest.concurrent.IntegrationPatience
-import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import testdata.ExportsTestData._
 import testdata.notifications.NotificationTestData._
-import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.base.IntegrationTestBaseSpec
 
-class NotificationRepositorySpec extends UnitSpec with IntegrationPatience {
+class NotificationRepositorySpec extends IntegrationTestBaseSpec {
 
-  private val injector: Injector = {
-    SharedMetricRegistries.clear()
-    GuiceApplicationBuilder().injector()
-  }
-
-  private val repo = injector.instanceOf[NotificationRepository]
+  private val repo = GuiceApplicationBuilder().injector.instanceOf[NotificationRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()

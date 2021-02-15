@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.exports.connector
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.Helpers.{ACCEPTED, BAD_GATEWAY, BAD_REQUEST}
 import play.api.test.Injecting
@@ -25,15 +23,14 @@ import uk.gov.hmrc.exports.base.{IntegrationTestSpec, UnitSpec}
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.EmailConnector
 import uk.gov.hmrc.exports.models.emails.EmailParameter.MRN
+import uk.gov.hmrc.exports.models.emails.SendEmailResult._
 import uk.gov.hmrc.exports.models.emails.TemplateId.DMSDOC_NOTIFICATION
-import uk.gov.hmrc.exports.models.emails.{BadEmailRequest, EmailAccepted, EmailParameters, InternalEmailServiceError, SendEmailRequest}
-import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.exports.models.emails.{EmailParameters, SendEmailRequest}
 
 class EmailConnectorSpec extends IntegrationTestSpec {
 
   implicit val appConfig: AppConfig = inject[AppConfig]
-
-  val connector = new EmailConnector(inject[HttpClient])(appConfig, global)
+  val connector = inject[EmailConnector]
 
   val actualPath = EmailConnector.sendEmailPath
   val sendEmailRequest = SendEmailRequest(List("trader@mycompany.com"), DMSDOC_NOTIFICATION, EmailParameters(Map(MRN -> "18GB1234567890")))
