@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.Mockito
-import org.mockito.Mockito.{verify, verifyNoInteractions}
+import org.mockito.Mockito.verifyNoInteractions
 import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType._

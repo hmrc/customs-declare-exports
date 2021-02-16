@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.util
+package uk.gov.hmrc.exports.models.emails
 
-import com.google.inject.AbstractModule
-import play.api.inject.guice.GuiceableModule
+sealed abstract class SendEmailResult(val message: String)
 
-object TestModule extends AbstractModule {
-  override def configure(): Unit = ()
+object SendEmailResult {
 
-  def asGuiceableModule: GuiceableModule = GuiceableModule.guiceable(this)
+  case object EmailAccepted extends SendEmailResult("Accepted")
+  case class BadEmailRequest(override val message: String) extends SendEmailResult(message)
+  case class InternalEmailServiceError(override val message: String) extends SendEmailResult(message)
 }

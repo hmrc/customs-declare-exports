@@ -22,7 +22,6 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 import org.mockito.BDDMockito.given
-import org.mockito.Mockito.{reset, verify}
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig

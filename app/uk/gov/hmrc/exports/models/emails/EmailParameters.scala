@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models
+package uk.gov.hmrc.exports.models.emails
 
-import java.time.ZonedDateTime
+import play.api.libs.json.{JsObject, JsString, Writes}
 
-import play.api.libs.json.Json
+case class EmailParameters(parameters: Map[EmailParameter, String])
 
-case class VerifiedEmailAddress(address: String, timestamp: ZonedDateTime)
-
-object VerifiedEmailAddress {
-  implicit val format = Json.format[VerifiedEmailAddress]
+object EmailParameters {
+  implicit val writes: Writes[EmailParameters] = Writes { ep =>
+    JsObject(ep.parameters.map(parameter => parameter._1.id -> JsString(parameter._2)).toList)
+  }
 }

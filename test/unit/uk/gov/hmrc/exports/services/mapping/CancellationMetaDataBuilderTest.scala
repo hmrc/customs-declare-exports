@@ -19,7 +19,6 @@ package uk.gov.hmrc.exports.services.mapping
 import javax.xml.bind.JAXBElement
 import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
-import org.mockito.Mockito._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.mapping.declaration.DeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration

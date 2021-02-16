@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
-import org.mockito.Mockito.when
 import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.Country

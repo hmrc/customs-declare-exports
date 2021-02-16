@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.util
+package uk.gov.hmrc.exports.models.emails
 
-import com.google.inject.AbstractModule
-import play.api.inject.guice.GuiceableModule
+import play.api.libs.json.{JsString, Writes}
 
-object TestModule extends AbstractModule {
-  override def configure(): Unit = ()
+sealed abstract class TemplateId(val name: String)
 
-  def asGuiceableModule: GuiceableModule = GuiceableModule.guiceable(this)
+object TemplateId {
+  implicit val writes: Writes[TemplateId] = Writes(templateId => JsString(templateId.name))
+
+  case object DMSDOC_NOTIFICATION extends TemplateId("dmsdoc_notification")
 }

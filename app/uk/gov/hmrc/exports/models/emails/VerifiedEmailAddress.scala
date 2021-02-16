@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.util
+package uk.gov.hmrc.exports.models.emails
 
-import com.google.inject.AbstractModule
-import play.api.inject.guice.GuiceableModule
+import java.time.ZonedDateTime
 
-object TestModule extends AbstractModule {
-  override def configure(): Unit = ()
+import play.api.libs.json.Json
 
-  def asGuiceableModule: GuiceableModule = GuiceableModule.guiceable(this)
+case class VerifiedEmailAddress(address: String, timestamp: ZonedDateTime)
+
+object VerifiedEmailAddress {
+  implicit val format = Json.format[VerifiedEmailAddress]
 }

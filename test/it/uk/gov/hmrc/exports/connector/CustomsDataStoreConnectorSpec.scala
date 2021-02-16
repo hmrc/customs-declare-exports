@@ -24,7 +24,7 @@ import testdata.ExportsTestData
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.CustomsDataStoreConnector
-import uk.gov.hmrc.exports.models.VerifiedEmailAddress
+import uk.gov.hmrc.exports.models.emails.VerifiedEmailAddress
 
 class CustomsDataStoreConnectorSpec extends IntegrationTestSpec {
 

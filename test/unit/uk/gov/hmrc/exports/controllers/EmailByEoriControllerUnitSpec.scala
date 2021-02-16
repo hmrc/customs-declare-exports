@@ -26,7 +26,7 @@ import testdata.ExportsTestData
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.connectors.CustomsDataStoreConnector
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
-import uk.gov.hmrc.exports.models.VerifiedEmailAddress
+import uk.gov.hmrc.exports.models.emails.VerifiedEmailAddress
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global

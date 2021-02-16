@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.mockito.Mockito._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.mapping.AuthorisationHoldersBuilder
 import uk.gov.hmrc.exports.services.mapping.declaration.consignment.DeclarationConsignmentBuilder

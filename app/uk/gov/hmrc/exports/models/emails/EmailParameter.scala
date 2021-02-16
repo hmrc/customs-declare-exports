@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.util
+package uk.gov.hmrc.exports.models.emails
 
-import com.google.inject.AbstractModule
-import play.api.inject.guice.GuiceableModule
+import play.api.libs.json.{JsString, Writes}
 
-object TestModule extends AbstractModule {
-  override def configure(): Unit = ()
+sealed abstract class EmailParameter(val id: String)
 
-  def asGuiceableModule: GuiceableModule = GuiceableModule.guiceable(this)
+object EmailParameter {
+  implicit val writes: Writes[EmailParameter] = Writes(parameter => JsString(parameter.id))
+
+  case object MRN extends EmailParameter("mrn")
 }

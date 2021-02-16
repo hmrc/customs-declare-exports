@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
+import scala.xml.NodeSeq
+
 import org.mockito.ArgumentMatchers.{any, eq => meq}
-import org.mockito.Mockito._
 import testdata.ExportsTestData.{actionId, mrn}
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
 import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.UnitSpec
-
-import scala.xml.NodeSeq
 
 class NotificationFactorySpec extends UnitSpec {
 

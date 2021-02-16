@@ -16,24 +16,17 @@
 
 package uk.gov.hmrc.exports
 
-import scala.concurrent.Future
-
 import com.codahale.metrics.SharedMetricRegistries
-import org.mockito.ArgumentMatchers._
-import org.mockito.Mockito._
-import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
+import org.mockito.MockitoSugar
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.http.Status.{NOT_FOUND, _}
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import stubs.{CustomsDeclarationsAPIConfig, ExternalServicesConfig, WireMockRunner}
+import stubs.{ExternalServicesConfig, WireMockRunner}
 import testdata.ExportsTestData._
-import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.steps._
 import uk.gov.hmrc.exports.syntax._
@@ -72,13 +65,6 @@ class ExportsSubmissionReceivedSpec
 
   override protected def beforeAll() {
     startMockServer()
-  }
-
-  override protected def beforeEach() {
-    when(mockSubmissionRepository.findOrCreate(any(), any(), any())).thenAnswer(new Answer[Future[Submission]] {
-      override def answer(invocation: InvocationOnMock): Future[Submission] =
-        Future.successful(invocation.getArgument(2))
-    })
   }
 
   override protected def afterEach(): Unit = {

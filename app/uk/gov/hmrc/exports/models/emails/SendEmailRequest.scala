@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package stubs
+package uk.gov.hmrc.exports.models.emails
 
-object CustomsDeclarationsInformationAPIConfig {
-  val apiVersion: String = "1.0"
-  val bearerToken: String = "Bearer authToken"
+import play.api.libs.json.Json
 
-  val id = "ID"
-  val fetchMrnStatusUrl = "/mrn/" + id + "/status"
+case class SendEmailRequest(to: List[String], templateId: TemplateId, parameters: EmailParameters, eventUrl: Option[String] = None)
+
+object SendEmailRequest {
+  implicit val writes = Json.writes[SendEmailRequest]
 }

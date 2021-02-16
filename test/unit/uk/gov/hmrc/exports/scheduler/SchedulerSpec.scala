@@ -25,7 +25,6 @@ import akka.actor.{ActorSystem, Cancellable}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.BDDMockito.given
-import org.mockito.Mockito.{reset, verify, verifyNoMoreInteractions}
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import uk.gov.hmrc.exports.base.UnitSpec

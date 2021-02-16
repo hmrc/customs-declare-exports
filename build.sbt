@@ -15,7 +15,6 @@ lazy val allResolvers = resolvers ++= Seq(
 )
 
 lazy val IntegrationTest = config("it") extend Test
-lazy val ComponentTest = config("component") extend Test
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, SbtArtifactory)
@@ -27,9 +26,7 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(publishingSettings: _*)
   .configs(IntegrationTest)
-  .configs(ComponentTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
-  .settings(inConfig(ComponentTest)(Defaults.itSettings): _*)
   .settings(
     commonSettings,
     allResolvers,
@@ -52,17 +49,6 @@ lazy val microservice = Project(appName, file("."))
     addTestReportOption(IntegrationTest, "int-test-reports"),
     testGrouping in IntegrationTest := ForkedJvmPerTestSettings.oneForkedJvmPerTest((definedTests in IntegrationTest).value),
     parallelExecution in IntegrationTest := false
-  )
-  .settings(inConfig(ComponentTest)(Defaults.testSettings): _*)
-  .settings(
-    Keys.fork in ComponentTest := false,
-    unmanagedSourceDirectories in ComponentTest := Seq(
-      (baseDirectory in ComponentTest).value / "test/component",
-      (baseDirectory in Test).value / "test/util"
-    ),
-    addTestReportOption(ComponentTest, "int-test-reports"),
-    testGrouping in ComponentTest := ForkedJvmPerTestSettings.oneForkedJvmPerTest((definedTests in ComponentTest).value),
-    parallelExecution in ComponentTest := false
   )
   .settings(silencerSettings)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
