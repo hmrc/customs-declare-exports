@@ -23,16 +23,14 @@ import uk.gov.hmrc.exports.models.declaration.notifications.NotificationDetails
 
 class NotificationParserSpec extends UnitSpec {
 
-  private val notificationParser = new NotificationParser()
-
   "NotificationParser on parse" when {
 
     "provided with notification containing no Response element" should {
 
       "return empty sequence" in {
-        val xml = exampleEmptyNotification(mrn).asXml
+        val xml = dataForEmptyNotification(mrn).asXml
 
-        val result = notificationParser.parse(xml)
+        val result = NotificationParser.parse(xml)
 
         result mustBe Seq.empty[NotificationDetails]
       }
@@ -43,9 +41,9 @@ class NotificationParserSpec extends UnitSpec {
       "contains no error elements" should {
 
         "return single NotificationDetails with empty errors" in {
-          val testNotification = exampleReceivedNotification(mrn)
+          val testNotification = dataForReceivedNotification(mrn)
 
-          val result = notificationParser.parse(testNotification.asXml)
+          val result = NotificationParser.parse(testNotification.asXml)
 
           result mustBe testNotification.asDomainModel
         }
@@ -54,9 +52,9 @@ class NotificationParserSpec extends UnitSpec {
       "contains error elements" should {
 
         "return single NotificationDetails with errors" in {
-          val testNotification = exampleRejectNotification(mrn)
+          val testNotification = dataForRejectedNotification(mrn)
 
-          val result = notificationParser.parse(testNotification.asXml)
+          val result = NotificationParser.parse(testNotification.asXml)
 
           result mustBe testNotification.asDomainModel
         }
@@ -66,9 +64,9 @@ class NotificationParserSpec extends UnitSpec {
     "provided with notification containing multiple Response elements" should {
 
       "return multiple NotificationDetails" in {
-        val testNotification = exampleNotificationWithMultipleResponses(mrn)
+        val testNotification = dataForNotificationWithMultipleResponses(mrn)
 
-        val result = notificationParser.parse(testNotification.asXml)
+        val result = NotificationParser.parse(testNotification.asXml)
 
         result mustBe testNotification.asDomainModel
       }
@@ -77,9 +75,9 @@ class NotificationParserSpec extends UnitSpec {
     "provided with notification containing invalid element" should {
 
       "throw an Exception" in {
-        val testNotification = exampleUnparsableNotification(mrn)
+        val testNotification = dataForUnparsableNotification(mrn)
 
-        an[Exception] mustBe thrownBy(notificationParser.parse(testNotification.asXml))
+        an[Exception] mustBe thrownBy(NotificationParser.parse(testNotification.asXml))
       }
     }
   }

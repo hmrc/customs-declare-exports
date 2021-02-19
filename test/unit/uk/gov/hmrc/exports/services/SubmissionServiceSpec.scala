@@ -30,14 +30,12 @@ import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
-import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
 
-  private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
   private val customsDeclarationsConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
   private val submissionRepository: SubmissionRepository = mock[SubmissionRepository]
   private val declarationRepository: DeclarationRepository = mock[DeclarationRepository]

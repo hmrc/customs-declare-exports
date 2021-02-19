@@ -16,15 +16,19 @@
 
 package testdata
 
-import reactivemongo.api.commands.{LastError, WriteResult}
-
+import scala.concurrent.Future
 import scala.util.control.NoStackTrace
 
+import reactivemongo.api.commands.{LastError, WriteResult}
+import uk.gov.hmrc.exports.repositories.WriteResponse
 object RepositoryTestData {
 
-  val dummyWriteResultSuccess: WriteResult =
-    LastError(true, None, None, None, 0, None, false, None, None, false, None, None)
+  def dummyWriteResponseFailure[T]: WriteResponse[T] = Future.successful(Left("Cannot insert document"))
+  def dummyWriteResponseSuccess[T](document: T): WriteResponse[T] = Future.successful(Right(document))
 
-  def dummyWriteResultFailure(exceptionMessage: String = "Test Exception message"): RuntimeException =
-    new RuntimeException(exceptionMessage) with NoStackTrace
+  val dummyWriteResultSuccess: Future[WriteResult] =
+    Future.successful(LastError(true, None, None, None, 0, None, false, None, None, false, None, None))
+
+  val dummyWriteResultFailure: Future[WriteResult] =
+    Future.failed[WriteResult](new RuntimeException("Test Exception message") with NoStackTrace)
 }

@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.exports.connectors
 
+import scala.concurrent.{ExecutionContext, Future}
+
 import com.google.inject.Inject
 import com.kenshoo.play.metrics.Metrics
 import javax.inject.Singleton
@@ -26,9 +28,8 @@ import play.mvc.Http.Status.ACCEPTED
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
 import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
+import uk.gov.hmrc.http.HttpReads.is4xx
 import uk.gov.hmrc.http.{HttpClient, _}
-
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: HttpClient, metrics: Metrics)(implicit ec: ExecutionContext) {
@@ -70,13 +71,14 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
           logger.error(s"Error during submitting declaration: ${error.getMessage}")
 
           error match {
-            case exWithHeaders: Upstream4xxResponse =>
-              val conversationId = exWithHeaders.headers.get("X-Conversation-ID") match {
+            case response: UpstreamErrorResponse if is4xx(response.statusCode) =>
+              val conversationId = response.headers.get("X-Conversation-ID") match {
                 case Some(data) => data.head
                 case None       => "No conversation ID found"
               }
 
               CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, Some(conversationId))
+
             case _ => CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, None)
           }
       }

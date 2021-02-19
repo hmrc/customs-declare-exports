@@ -16,10 +16,21 @@
 
 package uk.gov.hmrc.exports.base
 
+import scala.concurrent.Future
+
 import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, OptionValues}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, GivenWhenThen, OptionValues}
+import uk.gov.hmrc.http.HeaderCarrier
 
-trait UnitSpec extends AnyWordSpec with BeforeAndAfterAll with BeforeAndAfterEach with Matchers with MockitoSugar with OptionValues with ScalaFutures
+trait UnitSpec
+    extends AnyWordSpec with BeforeAndAfterAll with BeforeAndAfterEach with GivenWhenThen with Matchers with MockitoSugar with OptionValues
+    with ScalaFutures {
+
+  val unit: Unit = ()
+  val futureUnit: Future[Unit] = Future.successful(unit)
+
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+}

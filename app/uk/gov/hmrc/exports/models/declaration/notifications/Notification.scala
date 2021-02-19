@@ -18,6 +18,8 @@ package uk.gov.hmrc.exports.models.declaration.notifications
 
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
+import scala.xml.NodeSeq
+
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Json, Reads, _}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.SubmissionStatus
@@ -41,6 +43,9 @@ object NotificationDetails {
 case class Notification(actionId: String, payload: String, details: Option[NotificationDetails])
 
 object Notification {
+
+  def unparsed(actionId: String, notificationXml: NodeSeq): Notification =
+    Notification(actionId = actionId, payload = notificationXml.toString, details = None)
 
   object DbFormat {
     implicit val writes: Writes[Notification] =

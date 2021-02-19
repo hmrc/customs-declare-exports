@@ -18,8 +18,8 @@ package uk.gov.hmrc.exports.scheduler
 
 import java.time._
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
 
 import akka.actor.{ActorSystem, Cancellable}
 import org.mockito.ArgumentCaptor
@@ -57,7 +57,7 @@ class SchedulerSpec extends UnitSpec {
     given(config.clock) willReturn clock
     given(actorSystem.scheduler) willReturn internalScheduler
     given(internalScheduler.schedule(any[FiniteDuration], any[FiniteDuration], any[Runnable])(any[ExecutionContext])) will runTheJobImmediately
-    given((job.execute())) willReturn Future.successful(())
+    given((job.execute())) willReturn futureUnit
   }
 
   override protected def afterEach(): Unit = {

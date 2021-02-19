@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.connectors
 
 import scala.concurrent.{ExecutionContext, Future}
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import play.api.http.Status.ACCEPTED
 import uk.gov.hmrc.exports.config.AppConfig
@@ -28,6 +28,7 @@ import uk.gov.hmrc.http.HttpErrorFunctions._
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
 
+@Singleton
 class EmailConnector @Inject()(http: HttpClient)(implicit appConfig: AppConfig, ec: ExecutionContext) extends Logging {
 
   import EmailConnector._

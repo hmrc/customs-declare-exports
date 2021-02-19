@@ -41,6 +41,7 @@ import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.NotificationService
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 
 class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestSupport {
@@ -198,7 +199,8 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     "everything works correctly" should {
 
       "return Accepted status" in {
-        when(notificationService.handleNewNotification(anyString(), any[NodeSeq])).thenReturn(Future.successful((): Unit))
+        when(notificationService.handleNewNotification(anyString(), any[NodeSeq])(any[HeaderCarrier]))
+          .thenReturn(Future.successful((): Unit))
 
         val result = routePostSaveNotification()
 
@@ -206,18 +208,20 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       }
 
       "call NotificationService once" in {
-        when(notificationService.handleNewNotification(anyString(), any[NodeSeq])).thenReturn(Future.successful((): Unit))
+        when(notificationService.handleNewNotification(anyString(), any[NodeSeq])(any[HeaderCarrier]))
+          .thenReturn(Future.successful((): Unit))
 
         routePostSaveNotification().futureValue
 
-        verify(notificationService).handleNewNotification(anyString(), any[NodeSeq])
+        verify(notificationService).handleNewNotification(anyString(), any[NodeSeq])(any[HeaderCarrier])
       }
     }
 
     "NotificationService returns failure" should {
 
       "throw an Exception" in {
-        when(notificationService.handleNewNotification(any(), any[NodeSeq])).thenReturn(Future.failed(new Exception("Test Exception")))
+        when(notificationService.handleNewNotification(any(), any[NodeSeq])(any[HeaderCarrier]))
+          .thenReturn(Future.failed(new Exception("Test Exception")))
 
         an[Exception] mustBe thrownBy {
           routePostSaveNotification().futureValue
@@ -225,7 +229,10 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       }
     }
 
-    def routePostSaveNotification(headers: Map[String, String] = validHeaders, xmlBody: Elem = exampleRejectNotification(mrn).asXml): Future[Result] =
+    def routePostSaveNotification(
+      headers: Map[String, String] = validHeaders,
+      xmlBody: Elem = dataForRejectedNotification(mrn).asXml
+    ): Future[Result] =
       route(
         app,
         FakeRequest(POST, saveNotificationUri)

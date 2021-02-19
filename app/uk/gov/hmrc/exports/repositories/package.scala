@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services.notifications.receiptactions
-
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
+package uk.gov.hmrc.exports
 
 import scala.concurrent.Future
 
-trait NotificationReceiptAction {
-  def execute(notification: Notification): Future[Unit]
+package object repositories {
+
+  type WriteResponse[T] = Future[Either[String, T]]
 }

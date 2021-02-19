@@ -19,16 +19,14 @@ package uk.gov.hmrc.exports.services.notifications
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
-import play.api.Logger
+import scala.xml.{Node, NodeSeq}
+
+import play.api.Logging
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, NotificationError}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 
-import scala.xml.{Node, NodeSeq}
-
-class NotificationParser {
-
-  private val logger = Logger(this.getClass)
+object NotificationParser extends Logging {
 
   def parse(notificationXml: NodeSeq): Seq[NotificationDetails] = {
     val responsesXml = notificationXml \ "Response"

@@ -51,12 +51,12 @@ object SubmissionStatus extends Enumeration {
   def retrieve(functionCode: String, nameCode: Option[String] = None): SubmissionStatus =
     getStatusOrUnknown(buildSearchKey(functionCode, nameCode))
 
-  private def getStatusOrUnknown(searchKey: String) =
+  private def getStatusOrUnknown(searchKey: String): Value =
     codesMap.get(searchKey) match {
       case Some(status) => status
       case None         => UNKNOWN
     }
 
-  private def buildSearchKey(functionCode: String, nameCode: Option[String]) =
+  private def buildSearchKey(functionCode: String, nameCode: Option[String]): String =
     if (functionCode == "11") functionCode + nameCode.getOrElse("") else functionCode
 }

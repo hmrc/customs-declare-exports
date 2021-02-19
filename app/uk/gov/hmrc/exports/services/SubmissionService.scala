@@ -16,19 +16,19 @@
 
 package uk.gov.hmrc.exports.services
 
+import scala.concurrent.{ExecutionContext, Future}
+
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.Eori
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
-
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SubmissionService @Inject()(
@@ -38,9 +38,8 @@ class SubmissionService @Inject()(
   notificationRepository: NotificationRepository,
   metaDataBuilder: CancellationMetaDataBuilder,
   wcoMapperService: WcoMapperService
-)(implicit executionContext: ExecutionContext) {
-
-  private val logger = Logger(classOf[SubmissionService])
+)(implicit executionContext: ExecutionContext)
+    extends Logging {
 
   private def logProgress(declaration: ExportsDeclaration, message: String): Unit =
     logger.info(s"Declaration [${declaration.id}]: $message")
@@ -108,7 +107,7 @@ class SubmissionService @Inject()(
     )
     val xml: String = wcoMapperService.toXml(metadata)
     customsDeclarationsConnector.submitCancellation(eori, xml).flatMap { convId =>
-      updateSubmissionInDB(eori, cancellation.mrn, convId)
+      updateSubmissionInDB(cancellation.mrn, convId)
     }
   }
 
@@ -118,7 +117,7 @@ class SubmissionService @Inject()(
   def getSubmission(eori: String, uuid: String): Future[Option[Submission]] =
     submissionRepository.findSubmissionByUuid(eori, uuid)
 
-  private def updateSubmissionInDB(eori: String, mrn: String, conversationId: String): Future[CancellationStatus] =
+  private def updateSubmissionInDB(mrn: String, conversationId: String): Future[CancellationStatus] =
     submissionRepository.findSubmissionByMrn(mrn).flatMap {
       case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationRequestExists)
       case Some(_) =>

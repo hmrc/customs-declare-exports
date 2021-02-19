@@ -26,7 +26,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
-import uk.gov.hmrc.http.{HttpClient, _}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 
 class CustomsDeclarationsConnectorSpec extends UnitSpec with MockMetrics {
 
@@ -38,8 +38,6 @@ class CustomsDeclarationsConnectorSpec extends UnitSpec with MockMetrics {
     val httpClient: HttpClient = mock[HttpClient]
 
     val testObj = new CustomsDeclarationsConnector(appConfig, httpClient: HttpClient, metrics)
-
-    implicit val hc: HeaderCarrier = mock[HeaderCarrier]
 
     val conversationId = "123456"
     val responseHeaders: Map[String, Seq[String]] = Map("X-Conversation-ID" -> Seq(conversationId))

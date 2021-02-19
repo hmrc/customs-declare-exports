@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.exports.repositories
 
+import scala.concurrent.{ExecutionContext, Future}
+
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsNull, JsString, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONDocument, BSONNull, BSONObjectID}
 import reactivemongo.play.json.collection.JSONCollection
@@ -27,11 +28,10 @@ import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 
-import scala.concurrent.{ExecutionContext, Future}
-
 @Singleton
 class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: ExecutionContext)
-    extends ReactiveRepository[Notification, BSONObjectID]("notifications", mc.mongoConnector.db, Notification.DbFormat.format, objectIdFormats) {
+    extends ReactiveRepository[Notification, BSONObjectID]("notifications", mc.mongoConnector.db, Notification.DbFormat.format, objectIdFormats)
+    with RepoHelper {
 
   override lazy val collection: JSONCollection =
     mongo().collection[JSONCollection](collectionName, failoverStrategy = RepositorySettings.failoverStrategy)
@@ -55,6 +55,9 @@ class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: 
   def findUnparsedNotifications(): Future[Seq[Notification]] =
     find("details" -> JsNull)
 
-  def removeUnparsedNotificationsForActionId(actionId: String): Future[WriteResult] =
-    remove("actionId" -> JsString(actionId), "details" -> JsNull)
+  def removeUnparsedNotificationsForActionId(actionId: String): WriteResponse[Unit] =
+    handleWriteResult(remove("actionId" -> JsString(actionId), "details" -> JsNull), ())
+
+  def add(notification: Notification)(implicit ec: ExecutionContext): WriteResponse[Notification] =
+    handleWriteResult(insert(notification), notification)
 }

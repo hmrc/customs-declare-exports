@@ -20,10 +20,11 @@ import java.time.format.DateTimeFormatter
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
 import play.api.libs.json.Json
+import testdata.notifications.ExampleXmlAndNotificationDetailsPair.dataForReceivedNotification
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 
-class NotificationsSpec extends UnitSpec {
+class NotificationSpec extends UnitSpec {
 
   val formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
 
@@ -39,10 +40,30 @@ class NotificationsSpec extends UnitSpec {
       Some(NotificationDetails(mrn, ZonedDateTime.of(dateTime, ZoneId.of("UCT")), SubmissionStatus.ACCEPTED, Seq.empty))
     )
 
+    "Notification on unparsed" should {
+
+      val xml = dataForReceivedNotification(mrn).asXml
+
+      "return a Notification with actionId" in {
+        val result = Notification.unparsed(actionId, xml)
+        result.actionId mustBe actionId
+      }
+
+      "return a Notification with payload" in {
+        val result = Notification.unparsed(actionId, xml)
+        result.payload mustBe xml.toString
+      }
+
+      "return Notification with empty details" in {
+        val result = Notification.unparsed(actionId, xml)
+        result.details mustBe None
+      }
+    }
+
     "have json writes that produce object which could be parsed by the front end service" in {
       val json = Json.toJson(notification)(Notification.FrontendFormat.writes)
 
-      json.toString() mustBe NotificationsSpec.serialisedWithNonOptionalDetailsFormat(
+      json.toString() mustBe NotificationSpec.serialisedWithNonOptionalDetailsFormat(
         actionId,
         mrn,
         dateTime.atZone(ZoneId.of("UCT")).format(formatter),
@@ -53,7 +74,7 @@ class NotificationsSpec extends UnitSpec {
     "have json writes that produce object which could be parsed by the database" in {
       val json = Json.toJson(notification)(Notification.DbFormat.writes)
 
-      json.toString() mustBe NotificationsSpec.serialisedWithOptionalDetailsFormat(
+      json.toString() mustBe NotificationSpec.serialisedWithOptionalDetailsFormat(
         actionId,
         mrn,
         dateTime.atZone(ZoneId.of("UCT")).format(formatter),
@@ -63,7 +84,7 @@ class NotificationsSpec extends UnitSpec {
   }
 }
 
-object NotificationsSpec {
+object NotificationSpec {
   def serialisedWithNonOptionalDetailsFormat(actionId: String, mrn: String, dateTime: String, payload: String) =
     s"""{"actionId":"${actionId}","mrn":"${mrn}","dateTimeIssued":"${dateTime}","status":"ACCEPTED","errors":[],"payload":"${payload}"}"""
 

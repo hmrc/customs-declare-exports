@@ -32,11 +32,11 @@ class NotificationRepositorySpec extends IntegrationTestBaseSpec {
     repo.removeAll().futureValue
   }
 
-  "Notification Repository on insert" when {
+  "Notification Repository on add" when {
 
     "the operation was successful" should {
       "result in a success" in {
-        repo.insert(notification).futureValue.ok must be(true)
+        repo.add(notification).futureValue mustBe Right(notification)
 
         val notificationInDB = repo.findNotificationsByActionId(actionId).futureValue
         notificationInDB.length must equal(1)
@@ -46,13 +46,13 @@ class NotificationRepositorySpec extends IntegrationTestBaseSpec {
 
     "trying to save the same Notification twice" should {
       "be allowed" in {
-        repo.insert(notification).futureValue.ok must be(true)
-        repo.insert(notification).futureValue.ok must be(true)
+        repo.add(notification).futureValue mustBe Right(notification)
+        repo.add(notification).futureValue mustBe Right(notification)
       }
 
       "result in having 2 notifications persisted" in {
-        repo.insert(notification).futureValue.ok must be(true)
-        repo.insert(notification).futureValue.ok must be(true)
+        repo.add(notification).futureValue mustBe Right(notification)
+        repo.add(notification).futureValue mustBe Right(notification)
 
         val notificationsInDB = repo.findNotificationsByActionId(notification.actionId).futureValue
         notificationsInDB.length must equal(2)
@@ -62,7 +62,7 @@ class NotificationRepositorySpec extends IntegrationTestBaseSpec {
 
     "trying to save an unparsable notification" should {
       "be allowed" in {
-        repo.insert(notificationUnparsed).futureValue.ok must be(true)
+        repo.add(notificationUnparsed).futureValue mustBe Right(notificationUnparsed)
 
         val notificationInDB = repo.findNotificationsByActionId(actionId_4).futureValue
         notificationInDB.length must equal(1)

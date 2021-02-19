@@ -16,18 +16,17 @@
 
 package uk.gov.hmrc.exports.base
 
+import scala.concurrent.Future
+
 import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar
-import reactivemongo.api.commands.WriteResult
-import testdata.RepositoryTestData.dummyWriteResultFailure
+import testdata.RepositoryTestData.{dummyWriteResponseFailure, dummyWriteResultFailure}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.NotificationService
-
-import scala.concurrent.Future
 
 object UnitTestMockBuilder extends MockitoSugar {
 
@@ -69,7 +68,8 @@ object UnitTestMockBuilder extends MockitoSugar {
     val notificationRepositoryMock: NotificationRepository = mock[NotificationRepository]
     when(notificationRepositoryMock.findNotificationsByActionId(any())).thenReturn(Future.successful(Seq.empty))
     when(notificationRepositoryMock.findNotificationsByActionIds(any())).thenReturn(Future.successful(Seq.empty))
-    when(notificationRepositoryMock.insert(any())(any())).thenReturn(Future.failed[WriteResult](dummyWriteResultFailure()))
+    when(notificationRepositoryMock.add(any())(any())).thenReturn(dummyWriteResponseFailure)
+    when(notificationRepositoryMock.insert(any())(any())).thenReturn(dummyWriteResultFailure)
     notificationRepositoryMock
   }
 

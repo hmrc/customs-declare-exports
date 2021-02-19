@@ -41,7 +41,6 @@ class EADControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestS
     .overrides(bind[AuthConnector].to(mockAuthConnector), bind[CustomsDeclarationsInformationConnector].to(connector), bind[HeaderCarrier].to(hc))
     .build()
 
-  private implicit val hc: HeaderCarrier = HeaderCarrier()
   private val connector: CustomsDeclarationsInformationConnector = mock[CustomsDeclarationsInformationConnector]
 
   override def beforeEach(): Unit = {
