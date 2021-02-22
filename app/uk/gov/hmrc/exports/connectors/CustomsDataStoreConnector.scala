@@ -16,15 +16,14 @@
 
 package uk.gov.hmrc.exports.connectors
 
-import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+import javax.inject.{Inject, Singleton}
 import play.api.Logging
-import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.emails.VerifiedEmailAddress
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, Upstream4xxResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, UpstreamErrorResponse}
 
 @Singleton
 class CustomsDataStoreConnector @Inject()(http: HttpClient)(implicit appConfig: AppConfig, ec: ExecutionContext) extends Logging {
@@ -33,7 +32,6 @@ class CustomsDataStoreConnector @Inject()(http: HttpClient)(implicit appConfig: 
 
   def getEmailAddress(eori: String)(implicit hc: HeaderCarrier): Future[Option[VerifiedEmailAddress]] =
     http.GET[Option[VerifiedEmailAddress]](verifiedEmailUrl(eori)).recoverWith {
-      case Upstream4xxResponse(_, NOT_FOUND, _, _) => Future.successful(None)
       case exc: UpstreamErrorResponse =>
         logger.warn(s"Error(${exc.statusCode}) while retrieving the verified email address for eori($eori). ${exc.message}")
         Future.failed(exc)

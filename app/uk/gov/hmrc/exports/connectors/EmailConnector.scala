@@ -22,8 +22,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import play.api.http.Status.ACCEPTED
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.emails.{SendEmailRequest, SendEmailResult}
 import uk.gov.hmrc.exports.models.emails.SendEmailResult._
+import uk.gov.hmrc.exports.models.emails.{SendEmailRequest, SendEmailResult}
 import uk.gov.hmrc.http.HttpErrorFunctions._
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
@@ -40,7 +40,7 @@ class EmailConnector @Inject()(http: HttpClient)(implicit appConfig: AppConfig, 
         if (response.status == ACCEPTED) EmailAccepted else sendEmailError(sendEmailRequest, response.status, response.body)
       }
       .recover {
-        case response: UpstreamErrorResponse => sendEmailError(sendEmailRequest, response.statusCode, response.message)
+        case exc: UpstreamErrorResponse => sendEmailError(sendEmailRequest, exc.statusCode, exc.message)
       }
 
   private def sendEmailError(sendEmailRequest: SendEmailRequest, status: Int, message: String): SendEmailResult = {
