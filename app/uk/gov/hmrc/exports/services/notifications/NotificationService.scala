@@ -17,7 +17,8 @@
 package uk.gov.hmrc.exports.services.notifications
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.NodeSeq
+import scala.util.{Failure, Success, Try}
+import scala.xml.{NodeSeq, XML}
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logging
@@ -28,8 +29,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 @Singleton
 class NotificationService @Inject()(
-  notificationHelper: NotificationHelper,
   notificationRepository: NotificationRepository,
+  parsedNotificationHandler: ParsedNotificationHandler,
   submissionRepository: SubmissionRepository
 )(implicit executionContext: ExecutionContext)
     extends Logging {
@@ -68,7 +69,7 @@ class NotificationService @Inject()(
     val unparsedNotification = Notification.unparsed(actionId, notificationXml)
 
     notificationRepository.add(unparsedNotification).flatMap {
-      _.fold(logNotificationError(_, unparsedNotification), notificationHelper.parseAndSave)
+      _.fold(logNotificationError(_, unparsedNotification), parseAndSave)
     }
   }
 
@@ -76,11 +77,25 @@ class NotificationService @Inject()(
     //TODO we need to verify if the empty HeaderCarrier() does not cause
     // BadRequest(s) to customs-data-store and email services.
     implicit val hc = HeaderCarrier()
-    notificationRepository.findUnparsedNotifications().map(_.map(notificationHelper.parseAndSave))
+    notificationRepository.findUnparsedNotifications().map(_.map(parseAndSave))
   }
+
+  val unit: Unit = ()
+
+  private def parseAndSave(unparsed: Notification)(implicit hc: HeaderCarrier): Future[Unit] =
+    Try(XML.loadString(unparsed.payload)).map(NotificationParser.parse) match {
+      case Success(notificationDetails) if notificationDetails.nonEmpty =>
+        parsedNotificationHandler.saveParsedNotifications(unparsed, notificationDetails)
+
+      case Success(_) => Future.successful(unit)
+
+      case Failure(exc) =>
+        logger.warn(s"There was a problem while parsing notification with actionId=${unparsed.actionId}. Error was: ${exc.getMessage}")
+        Future.successful(unit)
+    }
 
   private def logNotificationError(message: String, notification: Notification): Future[Unit] =
     Future {
-      logger.warn(s"While saving non-parsed notification with ConversationId(${notification.actionId}), error was: $message")
+      logger.warn(s"While saving un-parsed notification with ConversationId(${notification.actionId}), error was: $message")
     }
 }

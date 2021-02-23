@@ -40,16 +40,16 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
 
   private val submissionRepository: SubmissionRepository = buildSubmissionRepositoryMock
   private val notificationRepository: NotificationRepository = buildNotificationRepositoryMock
-  private val notificationHelper: NotificationHelper = mock[NotificationHelper]
+  private val parsedNotificationHandler: ParsedNotificationHandler = mock[ParsedNotificationHandler]
 
-  private val notificationService = new NotificationService(notificationHelper, notificationRepository, submissionRepository)
+  private val notificationService = new NotificationService(notificationRepository, parsedNotificationHandler, submissionRepository)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(notificationHelper, notificationRepository, submissionRepository)
+    reset(parsedNotificationHandler, notificationRepository, submissionRepository)
 
-    when(notificationHelper.parseAndSave(any)(any)).thenReturn(futureUnit)
+    when(parsedNotificationHandler.saveParsedNotifications(any, any)(any)).thenReturn(futureUnit)
     when(notificationRepository.insert(any)(any)).thenReturn(dummyWriteResultSuccess)
     when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(Some(submission)))
   }
@@ -162,63 +162,56 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
 
         verify(notificationRepository).add(eqTo(unparsedNotification))(any)
       }
-
-      "call NotificationHelper" in {
-        when(notificationRepository.add(any)(any)).thenReturn(dummyWriteResponseSuccess(unparsedNotification))
-
-        notificationService.handleNewNotification(actionId, inputAsXml).futureValue
-
-        verify(notificationHelper).parseAndSave(eqTo(unparsedNotification))(any)
-      }
     }
 
-    "the non-parsed-yet notification cannot be saved" should {
+    "the un-parsed notification cannot be saved, parsed or it does not provide notification details" should {
 
-      "not call NotificationHelper.parseAndSave" in {
+      "never interact with ParsedNotificationHandler" in {
         when(notificationRepository.add(any)(any)).thenReturn(dummyWriteResponseFailure)
 
         notificationService.handleNewNotification(actionId, inputAsXml).futureValue
 
-        verify(notificationHelper, never).parseAndSave(any)(any)
+        verifyNoInteractions(parsedNotificationHandler)
       }
     }
   }
 
   "NotificationService on reattemptParsingUnparsedNotifications" when {
 
-    "there is no unparsed Notification" should {
+    "there is no un-parsed Notification" should {
 
-      "not call ParseAndSaveAction" in {
+      "never interact with ParsedNotificationHandler" in {
         when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(Seq.empty))
 
         notificationService.reattemptParsingUnparsedNotifications().futureValue
 
-        verifyNoInteractions(notificationHelper)
+        verify(notificationRepository, never).add(any)(any)
+        verifyNoInteractions(parsedNotificationHandler)
       }
     }
 
-    "there is an unparsed Notification" should {
+    "there is a single un-parsed Notification" should {
 
-      "call ParseAndSaveAction" in {
-        val testNotification = Notification(actionId = actionId, payload = dataForUnparsableNotification(mrn).asXml.toString, details = None)
+      "call saveParsedNotifications on NnotificationHelper" in {
+        val testNotification = Notification(actionId = actionId, payload = dataForReceivedNotification(mrn).asXml.toString, details = None)
         when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(Seq(testNotification)))
 
         notificationService.reattemptParsingUnparsedNotifications().futureValue
 
-        verify(notificationHelper).parseAndSave(eqTo(testNotification))(any)
+        verify(parsedNotificationHandler).saveParsedNotifications(eqTo(testNotification), any)(any)
       }
     }
 
-    "there are many unparsed Notifications" should {
+    "there are multiple un-parsed Notifications" should {
 
-      "call ParseAndSaveAction for each Notification" in {
-        val testNotification = Notification(actionId = actionId, payload = dataForUnparsableNotification(mrn).asXml.toString, details = None)
+      "call parseAndSave for each Notification" in {
+        val testNotification = Notification(actionId = actionId, payload = dataForReceivedNotification(mrn).asXml.toString, details = None)
         val testNotifications = Seq(testNotification, testNotification, testNotification)
         when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(testNotifications))
 
         notificationService.reattemptParsingUnparsedNotifications().futureValue
 
-        verify(notificationHelper, times(3)).parseAndSave(eqTo(testNotification))(any)
+        verify(parsedNotificationHandler, times(testNotifications.size)).saveParsedNotifications(eqTo(testNotification), any)(any)
       }
     }
 
@@ -233,25 +226,14 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
         } must have message exceptionMsg
       }
 
-      "not call ParseAndSaveAction" in {
+      "not interact with ParsedNotificationHandler" in {
         val exceptionMsg = "Test Exception message"
         when(notificationRepository.findUnparsedNotifications()).thenThrow(new RuntimeException(exceptionMsg))
 
         an[RuntimeException] mustBe thrownBy { notificationService.reattemptParsingUnparsedNotifications().futureValue }
 
-        verifyNoInteractions(notificationHelper)
-      }
-    }
-
-    "ParseAndSaveAction throws exception" should {
-
-      "return failed Future" in {
-        val testNotification = Notification(actionId = actionId, payload = dataForUnparsableNotification(mrn).asXml.toString, details = None)
-        when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(Seq(testNotification)))
-        val exceptionMsg = "Test Exception message"
-        when(notificationHelper.parseAndSave(any[Notification])(any)).thenThrow(new RuntimeException(exceptionMsg))
-
-        notificationService.reattemptParsingUnparsedNotifications().failed.futureValue must have message exceptionMsg
+        verify(notificationRepository, never).add(any)(any)
+        verifyNoInteractions(parsedNotificationHandler)
       }
     }
   }

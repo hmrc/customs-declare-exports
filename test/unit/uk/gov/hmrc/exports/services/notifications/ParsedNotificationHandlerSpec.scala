@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
-import java.time.ZonedDateTime
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -30,53 +28,51 @@ import testdata.SubmissionTestData.submission
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.connectors.{CustomsDataStoreConnector, EmailConnector}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
-import uk.gov.hmrc.exports.models.emails.{SendEmailRequest, VerifiedEmailAddress}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository, WriteResponse}
 
-class NotificationHelperSpec extends UnitSpec with IntegrationPatience {
+class ParsedNotificationHandlerSpec extends UnitSpec with IntegrationPatience {
 
-  private val customsDataStoreConnector = mock[CustomsDataStoreConnector]
-  private val emailConnector = mock[EmailConnector]
+  private val notificationMailer = mock[NotificationMailer]
   private val submissionRepository = mock[SubmissionRepository]
   private val notificationRepository = mock[NotificationRepository]
 
-  private val notificationHelper = new NotificationHelper(customsDataStoreConnector, emailConnector, notificationRepository, submissionRepository)
+  private val parsedNotificationHandler = new ParsedNotificationHandler(notificationMailer, notificationRepository, submissionRepository)
 
   private val waitBeforeInMillis = 50
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(customsDataStoreConnector, emailConnector, notificationRepository, submissionRepository)
+    reset(notificationMailer, notificationRepository, submissionRepository)
   }
 
-  "NotificationHelper on parseAndSave" when {
+  "ParsedNotificationHandler on saveParsedNotifications" when {
 
     "the notification's details are not given" should {
-      "have no interaction with customs-data-store, email-service, notificationRepo and submissionRepo" in {
+      "have no interaction with notificationMailer, notificationRepo and submissionRepo" in {
         val payload = dataForEmptyNotification(mrn).asXml.toString
         val notificationWithNoDetails = Notification(actionId, payload, None)
 
-        notificationHelper.parseAndSave(notificationWithNoDetails).futureValue
+        parsedNotificationHandler.saveParsedNotifications(notificationWithNoDetails, List.empty).futureValue
 
         Thread.sleep(waitBeforeInMillis)
-        verifyNoInteractions(customsDataStoreConnector, emailConnector, notificationRepository, submissionRepository)
+        verifyNoInteractions(notificationMailer, notificationRepository, submissionRepository)
       }
     }
 
-    "the parsed (with details) notification cannot be saved" should {
-      "have no interaction with customs-data-store, email-service and submissionRepo" in {
+    "a single parsed notification cannot be saved" should {
+      "have no interaction with notificationMailer and submissionRepo" in {
         when(notificationRepository.add(any[Notification])(any)).thenReturn(dummyWriteResponseFailure)
 
-        val payload = dataForReceivedNotification(mrn).asXml.toString
+        val data = dataForReceivedNotification(mrn)
+        val payload = data.asXml.toString
         val unparsedNotification = Notification(actionId, payload, None)
 
-        notificationHelper.parseAndSave(unparsedNotification).futureValue
+        parsedNotificationHandler.saveParsedNotifications(unparsedNotification, data.asDomainModel).futureValue
 
         Thread.sleep(waitBeforeInMillis)
         verify(notificationRepository).add(any[Notification])(any)
-        verifyNoInteractions(customsDataStoreConnector, emailConnector, submissionRepository)
+        verifyNoInteractions(notificationMailer, submissionRepository)
 
         And("the unparsed notification should not be removed")
         verify(notificationRepository, never).removeUnparsedNotificationsForActionId(any[String])
@@ -84,7 +80,7 @@ class NotificationHelperSpec extends UnitSpec with IntegrationPatience {
     }
 
     "for a notification with a single dmsdoc response, the related submission cannot be updated" should {
-      "have no interaction with customs-data-store and email-service" in {
+      "have no interaction with notificationMailer" in {
         val data = dataForDmsdocNotification(mrn)
         val payload = data.asXml.toString
 
@@ -94,63 +90,38 @@ class NotificationHelperSpec extends UnitSpec with IntegrationPatience {
         when(submissionRepository.updateMrn(any[String], any[String])).thenReturn(Future.successful(None))
 
         val unparsedNotification = Notification(actionId, payload, None)
-        notificationHelper.parseAndSave(unparsedNotification).futureValue
+        parsedNotificationHandler.saveParsedNotifications(unparsedNotification, data.asDomainModel).futureValue
 
         Thread.sleep(waitBeforeInMillis)
         verify(notificationRepository).add(any[Notification])(any)
         verify(submissionRepository).updateMrn(any[String], any[String])
-        verifyNoInteractions(customsDataStoreConnector, emailConnector)
+        verifyNoInteractions(notificationMailer)
 
         And("the unparsed notification should not be removed")
         verify(notificationRepository, never).removeUnparsedNotificationsForActionId(any[String])
       }
     }
 
-    "for a dmsdoc notification, the verified email address cannot be found" should {
-      "have no interaction with the email-service" in {
-        val data = dataForDmsdocNotification(mrn)
-        val payload = data.asXml.toString
-
-        val parsedNotification = Notification(actionId, payload, Some(data.asDomainModel.head))
-        when(notificationRepository.add(any[Notification])(any)).thenReturn(dummyWriteResponseSuccess(parsedNotification))
-
-        when(submissionRepository.updateMrn(any[String], any[String])).thenReturn(Future.successful(Some(submission)))
-        when(customsDataStoreConnector.getEmailAddress(any[String])(any)).thenReturn(Future.successful(None))
-
-        val unparsedNotification = Notification(actionId, payload, None)
-        notificationHelper.parseAndSave(unparsedNotification).futureValue
-
-        Thread.sleep(waitBeforeInMillis)
-        verify(notificationRepository).add(any[Notification])(any)
-        verify(submissionRepository).updateMrn(any[String], any[String])
-        verify(customsDataStoreConnector).getEmailAddress(any[String])(any)
-        verifyNoInteractions(emailConnector)
-
-        And("the unparsed notification should be removed")
-        verify(notificationRepository).removeUnparsedNotificationsForActionId(any[String])
-      }
-    }
-
-    "for a notification with a single dmsdoc response, the verified email address is retrieved" should {
-      "interact with the email-service to require the trader to upload additional documents" in {
+    "a notification has a single dmsdoc response" should {
+      "call notificationMailer on sendEmailForDmsdocNotification" in {
         testDmsdocNotification(dataForDmsdocNotification(mrn), 1)
       }
     }
 
-    "for a notification with multiple dmsdoc responses, the verified email address is retrieved" should {
-      "interact with the email-service to require the traders to upload additional documents" in {
+    "a notification has multiple dmsdoc responses" should {
+      "call notificationMailer on sendEmailForDmsdocNotification" in {
         testDmsdocNotification(dataForDmsdocNotificationWithMultipleResponses(mrn), 2)
       }
     }
 
     "a notification has only a single non-dmsdoc responses" should {
-      "have no interaction with customs-data-store and email-service" in {
+      "have no interaction with notificationMailer" in {
         testNonDmsdocNotification(dataForReceivedNotification(mrn), 1)
       }
     }
 
     "a notification has multiple non-dmsdoc responses" should {
-      "have multiple interactions with notificationRepo and submissionRepo but no one with customs-data-store and email-service" in {
+      "have multiple interactions with notificationRepo and submissionRepo but no one with notificationMailer" in {
         testNonDmsdocNotification(dataForNotificationWithMultipleResponses(mrn), 2)
       }
     }
@@ -164,11 +135,10 @@ class NotificationHelperSpec extends UnitSpec with IntegrationPatience {
 
     when(submissionRepository.updateMrn(any[String], any[String])).thenReturn(Future.successful(Some(submission)))
 
-    val verifiedEmailAddress = Some(VerifiedEmailAddress("trader@mycomany.com", ZonedDateTime.now))
-    when(customsDataStoreConnector.getEmailAddress(any[String])(any)).thenReturn(Future.successful(verifiedEmailAddress))
+    when(notificationMailer.sendEmailForDmsdocNotification(any, any)(any)).thenReturn(Future.successful(unit))
 
     val unparsedNotification = Notification(actionId, payload, None)
-    notificationHelper.parseAndSave(unparsedNotification).futureValue
+    parsedNotificationHandler.saveParsedNotifications(unparsedNotification, data.asDomainModel).futureValue
 
     // The notification under test has 3 responses, of which only 2 are dmsdoc responses.
     val repoInvocations = if (invocations > 1) invocations + 1 else invocations
@@ -176,8 +146,7 @@ class NotificationHelperSpec extends UnitSpec with IntegrationPatience {
     Thread.sleep(waitBeforeInMillis)
     verify(notificationRepository, times(repoInvocations)).add(any[Notification])(any)
     verify(submissionRepository, times(repoInvocations)).updateMrn(any[String], any[String])
-    verify(customsDataStoreConnector, times(invocations)).getEmailAddress(any[String])(any)
-    verify(emailConnector, times(invocations)).sendEmail(any[SendEmailRequest])(any)
+    verify(notificationMailer, times(invocations)).sendEmailForDmsdocNotification(any, any)(any)
 
     And("the unparsed notification should be removed")
     verify(notificationRepository).removeUnparsedNotificationsForActionId(any[String])
@@ -192,12 +161,12 @@ class NotificationHelperSpec extends UnitSpec with IntegrationPatience {
     when(notificationRepository.removeUnparsedNotificationsForActionId(any[String])).thenReturn(Future.successful(Right(unit)))
     when(submissionRepository.updateMrn(any[String], any[String])).thenReturn(Future.successful(Some(submission)))
 
-    notificationHelper.parseAndSave(unparsedNotification).futureValue
+    parsedNotificationHandler.saveParsedNotifications(unparsedNotification, data.asDomainModel).futureValue
 
     Thread.sleep(waitBeforeInMillis)
     verify(notificationRepository, times(invocations)).add(any[Notification])(any)
     verify(submissionRepository, times(invocations)).updateMrn(any[String], any[String])
-    verifyNoInteractions(customsDataStoreConnector, emailConnector)
+    verifyNoInteractions(notificationMailer)
 
     And("the unparsed notification should be removed")
     verify(notificationRepository).removeUnparsedNotificationsForActionId(any[String])
