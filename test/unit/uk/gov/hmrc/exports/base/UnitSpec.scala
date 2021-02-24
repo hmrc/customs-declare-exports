@@ -22,4 +22,8 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, OptionValues}
 
-trait UnitSpec extends AnyWordSpec with BeforeAndAfterAll with BeforeAndAfterEach with Matchers with MockitoSugar with OptionValues with ScalaFutures
+trait UnitSpec
+    extends AnyWordSpec with BeforeAndAfterAll with BeforeAndAfterEach with Matchers with MockitoSugar with OptionValues with ScalaFutures {
+
+  val unit: Unit = (): Unit
+}

@@ -62,7 +62,7 @@ class EmailSenderSpec extends UnitSpec {
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(Some(testVerifiedEmailAddress)))
         when(emailConnector.sendEmail(any[SendEmailRequest])(any())).thenReturn(Future.successful(EmailAccepted))
 
-        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue mustBe ()
+        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue mustBe unit
       }
 
       "call SubmissionRepository with correct parameters" in {
@@ -120,7 +120,7 @@ class EmailSenderSpec extends UnitSpec {
       "return successful Future" in {
         when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(None))
 
-        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue mustBe ()
+        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue mustBe unit
       }
 
       "not call CustomsDataStoreConnector" in {
@@ -146,7 +146,7 @@ class EmailSenderSpec extends UnitSpec {
         when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(Some(testSubmission)))
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(None))
 
-        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue mustBe ()
+        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue mustBe unit
       }
 
       "not call EmailConnector" in {
@@ -166,7 +166,7 @@ class EmailSenderSpec extends UnitSpec {
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(Some(testVerifiedEmailAddress)))
         when(emailConnector.sendEmail(any[SendEmailRequest])(any())).thenReturn(Future.successful(BadEmailRequest("Test BadEmailRequest message")))
 
-        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue mustBe ()
+        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue mustBe unit
       }
     }
 
@@ -178,7 +178,7 @@ class EmailSenderSpec extends UnitSpec {
         when(emailConnector.sendEmail(any[SendEmailRequest])(any()))
           .thenReturn(Future.successful(InternalEmailServiceError("Test InternalEmailServiceError message")))
 
-        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue mustBe ()
+        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue mustBe unit
       }
     }
   }

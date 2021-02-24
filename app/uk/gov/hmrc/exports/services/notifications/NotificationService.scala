@@ -16,16 +16,13 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
-import java.util.concurrent.TimeUnit.SECONDS
-
-import akka.actor.{ActorSystem, Cancellable}
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.notifications.receiptactions.{NotificationReceiptAction, ParseAndSaveAction}
+import uk.gov.hmrc.exports.services.notifications.receiptactions._
+import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
 
@@ -34,8 +31,8 @@ class NotificationService @Inject()(
   submissionRepository: SubmissionRepository,
   notificationRepository: NotificationRepository,
   notificationFactory: NotificationFactory,
-  actorSystem: ActorSystem,
-  parseAndSaveAction: ParseAndSaveAction
+  parseAndSaveAction: ParseAndSaveAction,
+  notificationReceiptActionsExecutor: NotificationReceiptActionsExecutor
 )(implicit executionContext: ExecutionContext) {
 
   def getNotifications(submission: Submission): Future[Seq[Notification]] = {
@@ -68,19 +65,11 @@ class NotificationService @Inject()(
         notificationRepository.findNotificationsByActionIds(conversationIds)
     }
 
-  def handleNewNotification(actionId: String, notificationXml: NodeSeq): Future[Unit] = {
+  def handleNewNotification(actionId: String, notificationXml: NodeSeq)(implicit hc: HeaderCarrier): Future[Unit] = {
     val notification = notificationFactory.buildNotificationUnparsed(actionId, notificationXml)
 
     notificationRepository.insert(notification).map { _ =>
-      performActionsOnReceipt(notification)
-    }
-  }
-
-  private def performActionsOnReceipt(notification: Notification): Cancellable = {
-    val notificationActions: Seq[NotificationReceiptAction] = Seq(parseAndSaveAction)
-
-    actorSystem.scheduler.scheduleOnce(FiniteDuration(0, SECONDS)) {
-      notificationActions.foreach(_.execute(notification))
+      notificationReceiptActionsExecutor.executeActions(notification)
     }
   }
 

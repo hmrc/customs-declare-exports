@@ -17,10 +17,8 @@
 package uk.gov.hmrc.exports.services.notifications
 
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
-import java.util.concurrent.TimeUnit.SECONDS
 
-import akka.actor.{ActorSystem, Cancellable, Scheduler}
-import org.mockito.ArgumentMatchers.anyString
+import akka.actor.Cancellable
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.Mockito._
 import org.mockito.{ArgumentCaptor, InOrder, Mockito}
@@ -35,24 +33,24 @@ import uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationDetails}
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest, SubmissionStatus}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.notifications.receiptactions.ParseAndSaveAction
+import uk.gov.hmrc.exports.services.notifications.receiptactions.{NotificationReceiptActionsExecutor, ParseAndSaveAction}
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
 import scala.xml.NodeSeq
 
 class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
 
+  private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
   private val submissionRepository: SubmissionRepository = buildSubmissionRepositoryMock
   private val notificationRepository: NotificationRepository = buildNotificationRepositoryMock
   private val notificationFactory: NotificationFactory = mock[NotificationFactory]
-  private val actorSystem: ActorSystem = mock[ActorSystem]
-  private val scheduler: Scheduler = mock[Scheduler]
   private val parseAndSaveAction: ParseAndSaveAction = mock[ParseAndSaveAction]
+  private val notificationReceiptActionsExecutor: NotificationReceiptActionsExecutor = mock[NotificationReceiptActionsExecutor]
 
   private val notificationService =
-    new NotificationService(submissionRepository, notificationRepository, notificationFactory, actorSystem, parseAndSaveAction)
+    new NotificationService(submissionRepository, notificationRepository, notificationFactory, parseAndSaveAction, notificationReceiptActionsExecutor)
 
   val PositionFunctionCode = "11"
   val NameCodeGranted = "39"
@@ -62,19 +60,18 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(submissionRepository, notificationRepository, notificationFactory, actorSystem, scheduler, parseAndSaveAction)
+    reset(submissionRepository, notificationRepository, notificationFactory, parseAndSaveAction, notificationReceiptActionsExecutor)
 
     when(notificationFactory.buildNotifications(any, any)).thenReturn(Seq(notification))
     when(notificationFactory.buildNotificationUnparsed(any, any[NodeSeq])).thenReturn(notification.copy(details = None))
     when(notificationRepository.insert(any)(any)).thenReturn(Future.successful(dummyWriteResultSuccess))
     when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(Some(submission)))
-    when(actorSystem.scheduler).thenReturn(scheduler)
-    when(scheduler.scheduleOnce(any)(any[() => Unit])(any)).thenReturn(Cancellable.alreadyCancelled)
     when(parseAndSaveAction.execute(any[Notification])).thenReturn(Future.successful((): Unit))
+    when(notificationReceiptActionsExecutor.executeActions(any[Notification])(any[HeaderCarrier])).thenReturn(Cancellable.alreadyCancelled)
   }
 
   override def afterEach(): Unit = {
-    reset(submissionRepository, notificationRepository, notificationFactory, actorSystem, scheduler, parseAndSaveAction)
+    reset(submissionRepository, notificationRepository, notificationFactory, parseAndSaveAction, notificationReceiptActionsExecutor)
     super.afterEach()
   }
 
@@ -180,7 +177,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       val testNotificationUnparsed = Notification(actionId = actionId, payload = inputXml.toString, details = None)
 
       "call NotificationFactory" in {
-        when(notificationFactory.buildNotificationUnparsed(anyString(), any[NodeSeq])).thenReturn(testNotificationUnparsed)
+        when(notificationFactory.buildNotificationUnparsed(any[String], any[NodeSeq])).thenReturn(testNotificationUnparsed)
 
         notificationService.handleNewNotification(actionId, inputXml).futureValue
 
@@ -188,28 +185,19 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       }
 
       "call NotificationRepository" in {
-        when(notificationFactory.buildNotificationUnparsed(anyString(), any[NodeSeq])).thenReturn(testNotificationUnparsed)
+        when(notificationFactory.buildNotificationUnparsed(any[String], any[NodeSeq])).thenReturn(testNotificationUnparsed)
 
         notificationService.handleNewNotification(actionId, inputXml).futureValue
 
         verify(notificationRepository).insert(eqTo(testNotificationUnparsed))(any)
       }
 
-      "call scheduler with zero delay" in {
-        when(notificationFactory.buildNotificationUnparsed(anyString(), any[NodeSeq])).thenReturn(testNotificationUnparsed)
+      "call NotificationReceiptActionsExecutor" in {
+        when(notificationFactory.buildNotificationUnparsed(any[String], any[NodeSeq])).thenReturn(testNotificationUnparsed)
 
         notificationService.handleNewNotification(actionId, inputXml).futureValue
 
-        val expectedDelay = FiniteDuration(0, SECONDS)
-        verify(scheduler).scheduleOnce(eqTo(expectedDelay))(any[() => Unit])(any)
-      }
-
-      "call ParseAndSaveAction" in {
-        when(notificationFactory.buildNotificationUnparsed(anyString(), any[NodeSeq])).thenReturn(testNotificationUnparsed)
-
-        notificationService.handleNewNotification(actionId, inputXml).futureValue
-
-        verify(parseAndSaveAction).execute(testNotificationUnparsed)
+        verify(notificationReceiptActionsExecutor).executeActions(eqTo(testNotificationUnparsed))(any[HeaderCarrier])
       }
     }
   }

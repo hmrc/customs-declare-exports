@@ -32,9 +32,9 @@ class ParseAndSaveAction @Inject()(
   notificationRepository: NotificationRepository,
   notificationFactory: NotificationFactory
 )(implicit executionContext: ExecutionContext)
-    extends NotificationReceiptAction with Logging {
+    extends Logging {
 
-  override def execute(notification: Notification): Future[Unit] = {
+  def execute(notification: Notification): Future[Unit] = {
     val parsedNotifications = notificationFactory
       .buildNotifications(notification.actionId, notification.payload)
       .filter(_.details.nonEmpty)
@@ -53,7 +53,7 @@ class ParseAndSaveAction @Inject()(
         for {
           _ <- notificationRepository.insert(notification)
           _ <- updateRelatedSubmission(notification)
-        } yield (())
+        } yield ()
       })
       .map(_ => ())
 
