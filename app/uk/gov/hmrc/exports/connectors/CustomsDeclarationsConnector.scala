@@ -26,6 +26,7 @@ import play.mvc.Http.Status.ACCEPTED
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
 import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
+import uk.gov.hmrc.http.HttpReads.is4xx
 import uk.gov.hmrc.http.{HttpClient, _}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -70,8 +71,8 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
           logger.error(s"Error during submitting declaration: ${error.getMessage}")
 
           error match {
-            case exWithHeaders: Upstream4xxResponse =>
-              val conversationId = exWithHeaders.headers.get("X-Conversation-ID") match {
+            case response: UpstreamErrorResponse if is4xx(response.statusCode) =>
+              val conversationId = response.headers.get("X-Conversation-ID") match {
                 case Some(data) => data.head
                 case None       => "No conversation ID found"
               }

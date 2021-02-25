@@ -16,31 +16,17 @@
 
 package uk.gov.hmrc.exports.models.declaration.notifications
 
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
-
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Json, Reads, _}
-import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.SubmissionStatus
 
-case class NotificationDetails(mrn: String, dateTimeIssued: ZonedDateTime, status: SubmissionStatus, errors: Seq[NotificationError])
-
-object NotificationDetails {
-  implicit val readLocalDateTimeFromString: Reads[ZonedDateTime] = implicitly[Reads[LocalDateTime]]
-    .map(ZonedDateTime.of(_, ZoneId.of("UTC")))
-
-  implicit val writes: OWrites[NotificationDetails] = Json.writes[NotificationDetails]
-  implicit val reads: Reads[NotificationDetails] =
-    ((__ \ "mrn").read[String] and
-      ((__ \ "dateTimeIssued").read[ZonedDateTime] or (__ \ "dateTimeIssued").read[ZonedDateTime](readLocalDateTimeFromString)) and
-      (__ \ "status").read[SubmissionStatus] and
-      (__ \ "errors").read[Seq[NotificationError]])(NotificationDetails.apply _)
-
-  implicit val format: Format[NotificationDetails] = Format(reads, writes)
-}
+import scala.xml.NodeSeq
 
 case class Notification(actionId: String, payload: String, details: Option[NotificationDetails])
 
 object Notification {
+
+  def unparsed(actionId: String, notificationXml: NodeSeq): Notification =
+    Notification(actionId = actionId, payload = notificationXml.toString, details = None)
 
   object DbFormat {
     implicit val writes: Writes[Notification] =

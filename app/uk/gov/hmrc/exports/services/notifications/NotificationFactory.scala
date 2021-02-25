@@ -17,38 +17,28 @@
 package uk.gov.hmrc.exports.services.notifications
 
 import javax.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 
 import scala.util.{Failure, Success, Try}
-import scala.xml.{NodeSeq, XML}
+import scala.xml.XML
 
-class NotificationFactory @Inject()(notificationParser: NotificationParser) {
-
-  private val logger = Logger(this.getClass)
+class NotificationFactory @Inject()(notificationParser: NotificationParser) extends Logging {
 
   def buildNotifications(actionId: String, notificationXml: String): Seq[Notification] =
     Try(XML.loadString(notificationXml)).map(notificationParser.parse) match {
       case Success(notificationDetails) if notificationDetails.nonEmpty =>
         notificationDetails.map { details =>
-          Notification(actionId = actionId, payload = notificationXml.toString, details = Some(details))
+          Notification(actionId = actionId, payload = notificationXml, details = Some(details))
         }
 
-      case Success(_) =>
-        Seq(buildNotificationUnparsed(actionId, notificationXml))
-
+      case Success(_) => Seq(Notification(actionId = actionId, payload = notificationXml, details = None))
       case Failure(exc) =>
         logParseExceptionAtPagerDutyLevel(actionId, exc)
-        Seq(buildNotificationUnparsed(actionId, notificationXml))
+        Seq()
     }
 
   private def logParseExceptionAtPagerDutyLevel(actionId: String, exc: Throwable): Unit =
     logger.warn(s"There was a problem during parsing notification with actionId=${actionId} exception thrown: ${exc.getMessage}")
-
-  def buildNotificationUnparsed(actionId: String, notificationXml: NodeSeq): Notification =
-    buildNotificationUnparsed(actionId, notificationXml.toString)
-
-  private def buildNotificationUnparsed(actionId: String, notificationXml: String): Notification =
-    Notification(actionId = actionId, payload = notificationXml, details = None)
 
 }

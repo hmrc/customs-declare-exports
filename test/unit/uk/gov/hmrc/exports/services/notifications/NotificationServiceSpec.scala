@@ -38,7 +38,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.xml.NodeSeq
 
 class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
 
@@ -63,7 +62,6 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
     reset(submissionRepository, notificationRepository, notificationFactory, parseAndSaveAction, notificationReceiptActionsExecutor)
 
     when(notificationFactory.buildNotifications(any, any)).thenReturn(Seq(notification))
-    when(notificationFactory.buildNotificationUnparsed(any, any[NodeSeq])).thenReturn(notification.copy(details = None))
     when(notificationRepository.insert(any)(any)).thenReturn(Future.successful(dummyWriteResultSuccess))
     when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(Some(submission)))
     when(parseAndSaveAction.execute(any[Notification])).thenReturn(Future.successful((): Unit))
@@ -176,16 +174,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       val inputXml = exampleReceivedNotification(mrn).asXml
       val testNotificationUnparsed = Notification(actionId = actionId, payload = inputXml.toString, details = None)
 
-      "call NotificationFactory" in {
-        when(notificationFactory.buildNotificationUnparsed(any[String], any[NodeSeq])).thenReturn(testNotificationUnparsed)
-
-        notificationService.handleNewNotification(actionId, inputXml).futureValue
-
-        verify(notificationFactory).buildNotificationUnparsed(eqTo(actionId), eqTo(inputXml))
-      }
-
       "call NotificationRepository" in {
-        when(notificationFactory.buildNotificationUnparsed(any[String], any[NodeSeq])).thenReturn(testNotificationUnparsed)
 
         notificationService.handleNewNotification(actionId, inputXml).futureValue
 
@@ -193,7 +182,6 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       }
 
       "call NotificationReceiptActionsExecutor" in {
-        when(notificationFactory.buildNotificationUnparsed(any[String], any[NodeSeq])).thenReturn(testNotificationUnparsed)
 
         notificationService.handleNewNotification(actionId, inputXml).futureValue
 

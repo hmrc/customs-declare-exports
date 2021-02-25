@@ -66,7 +66,7 @@ class NotificationService @Inject()(
     }
 
   def handleNewNotification(actionId: String, notificationXml: NodeSeq)(implicit hc: HeaderCarrier): Future[Unit] = {
-    val notification = notificationFactory.buildNotificationUnparsed(actionId, notificationXml)
+    val notification = Notification.unparsed(actionId, notificationXml)
 
     notificationRepository.insert(notification).map { _ =>
       notificationReceiptActionsExecutor.executeActions(notification)
