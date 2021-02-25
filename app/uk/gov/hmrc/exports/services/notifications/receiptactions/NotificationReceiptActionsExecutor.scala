@@ -37,7 +37,7 @@ class NotificationReceiptActionsExecutor @Inject()(
     actorSystem.scheduler.scheduleOnce(FiniteDuration(0, SECONDS)) {
       for {
         _ <- parseAndSaveAction.execute(notification)
-        _ <- sendEmailForDmsDocAction.execute(notification)
+        _ <- sendEmailForDmsDocAction.execute(notification.actionId)
       } yield ()
     }
 

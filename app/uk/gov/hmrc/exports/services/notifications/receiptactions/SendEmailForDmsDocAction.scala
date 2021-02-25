@@ -16,21 +16,24 @@
 
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 import javax.inject.{Inject, Singleton}
-import play.api.Logging
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
+import uk.gov.hmrc.exports.repositories.NotificationRepository
 import uk.gov.hmrc.exports.services.email.EmailSender
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SendEmailForDmsDocAction @Inject()(emailSender: EmailSender) extends Logging {
+class SendEmailForDmsDocAction @Inject()(notificationRepository: NotificationRepository, emailSender: EmailSender)(implicit ec: ExecutionContext) {
 
-  def execute(notification: Notification)(implicit hc: HeaderCarrier): Future[Unit] =
-    if (notification.details.get.status == SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED)
-      emailSender.sendEmailForDmsDocNotification(notification)
-    else
-      Future.successful((): Unit)
+  def execute(actionId: String)(implicit hc: HeaderCarrier): Future[Unit] =
+    notificationRepository.findNotificationsByActionId(actionId).map { notifications =>
+      notifications.map { notification =>
+        if (notification.details.exists(_.status == SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED)) {
+          emailSender.sendEmailForDmsDocNotification(notification)
+        } else
+          Future.successful((): Unit)
+      }
+    }
 
 }

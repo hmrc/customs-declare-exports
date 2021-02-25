@@ -17,51 +17,69 @@
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import testdata.ExportsTestData.actionId
 import testdata.notifications.NotificationTestData.notification
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
+import uk.gov.hmrc.exports.repositories.NotificationRepository
 import uk.gov.hmrc.exports.services.email.EmailSender
 import uk.gov.hmrc.http.HeaderCarrier
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SendEmailForDmsDocActionSpec extends UnitSpec {
 
   private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
+  private val notificationRepository = mock[NotificationRepository]
   private val emailSender = mock[EmailSender]
 
-  private val sendEmailForDmsDocAction = new SendEmailForDmsDocAction(emailSender)
+  private val sendEmailForDmsDocAction = new SendEmailForDmsDocAction(notificationRepository, emailSender)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(emailSender)
+    reset(notificationRepository, emailSender)
   }
 
   override def afterEach(): Unit = {
-    reset(emailSender)
+    reset(notificationRepository, emailSender)
     super.afterEach()
+  }
+
+  "SendEmailForDmsDocAction on execute" should {
+
+    "call NotificationRepository passing actionId" in {
+      when(notificationRepository.findNotificationsByActionId(any[String])).thenReturn(Future.successful(Seq.empty))
+
+      sendEmailForDmsDocAction.execute(actionId).futureValue
+
+      verify(notificationRepository).findNotificationsByActionId(eqTo(actionId))
+    }
   }
 
   "SendEmailForDmsDocAction on execute" when {
 
-    "provided with Notification with status ADDITIONAL_DOCUMENTS_REQUIRED" when {
+    "NotificationRepository returns Notification with status ADDITIONAL_DOCUMENTS_REQUIRED" when {
 
       val testNotification = notification.copy(details = notification.details.map(_.copy(status = SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED)))
+      val testActionId = testNotification.actionId
 
       "EmailSender returns successful Future" should {
 
         "return successful Future" in {
+          when(notificationRepository.findNotificationsByActionId(any[String])).thenReturn(Future.successful(Seq(testNotification)))
           when(emailSender.sendEmailForDmsDocNotification(any[Notification])(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
-          sendEmailForDmsDocAction.execute(testNotification).futureValue mustBe unit
+          sendEmailForDmsDocAction.execute(testActionId).futureValue mustBe unit
         }
 
         "call EmailSender" in {
+          when(notificationRepository.findNotificationsByActionId(any[String])).thenReturn(Future.successful(Seq(testNotification)))
           when(emailSender.sendEmailForDmsDocNotification(any[Notification])(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
-          sendEmailForDmsDocAction.execute(testNotification).futureValue
+          sendEmailForDmsDocAction.execute(testActionId).futureValue
 
           verify(emailSender).sendEmailForDmsDocNotification(eqTo(testNotification))(any[HeaderCarrier])
         }
@@ -70,28 +88,30 @@ class SendEmailForDmsDocActionSpec extends UnitSpec {
       "EmailSender throws an Exception" should {
 
         "propagate this exception" in {
+          when(notificationRepository.findNotificationsByActionId(any[String])).thenReturn(Future.successful(Seq(testNotification)))
           val exceptionMsg = "Test exception message"
           when(emailSender.sendEmailForDmsDocNotification(any[Notification])(any[HeaderCarrier])).thenThrow(new RuntimeException(exceptionMsg))
 
-          the[RuntimeException] thrownBy {
-            sendEmailForDmsDocAction.execute(testNotification).failed.futureValue
-          } must have message exceptionMsg
+          sendEmailForDmsDocAction.execute(testActionId).failed.futureValue must have message exceptionMsg
         }
       }
     }
 
-    "provided with Notification with status not equal to ADDITIONAL_DOCUMENTS_REQUIRED" should {
+    "NotificationRepository returns Notification with status not equal to ADDITIONAL_DOCUMENTS_REQUIRED" should {
 
       val testNotification = notification
+      val testActionId = testNotification.actionId
 
       "return successful Future" in {
+        when(notificationRepository.findNotificationsByActionId(any[String])).thenReturn(Future.successful(Seq(testNotification)))
 
-        sendEmailForDmsDocAction.execute(testNotification).futureValue mustBe unit
+        sendEmailForDmsDocAction.execute(testActionId).futureValue mustBe unit
       }
 
       "not call EmailSender" in {
+        when(notificationRepository.findNotificationsByActionId(any[String])).thenReturn(Future.successful(Seq(testNotification)))
 
-        sendEmailForDmsDocAction.execute(testNotification).futureValue
+        sendEmailForDmsDocAction.execute(testActionId).futureValue
 
         verifyZeroInteractions(emailSender)
       }

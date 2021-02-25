@@ -60,7 +60,7 @@ class NotificationReceiptActionsExecutorSpec extends UnitSpec {
 
       "call scheduler with zero delay" in {
         when(parseAndSaveAction.execute(any[Notification])).thenReturn(Future.successful((): Unit))
-        when(sendEmailForDmsDocAction.execute(any[Notification])(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
+        when(sendEmailForDmsDocAction.execute(any[String])(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
         notificationReceiptActionsExecutor.executeActions(notification)
 
@@ -70,13 +70,13 @@ class NotificationReceiptActionsExecutorSpec extends UnitSpec {
 
       "call actions in order" in {
         when(parseAndSaveAction.execute(any[Notification])).thenReturn(Future.successful((): Unit))
-        when(sendEmailForDmsDocAction.execute(any[Notification])(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
+        when(sendEmailForDmsDocAction.execute(any[String])(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
         notificationReceiptActionsExecutor.executeActions(notification)
 
         val inOrder = Mockito.inOrder(parseAndSaveAction, sendEmailForDmsDocAction)
         inOrder.verify(parseAndSaveAction).execute(eqTo(notification))
-        inOrder.verify(sendEmailForDmsDocAction).execute(eqTo(notification))(any[HeaderCarrier])
+        inOrder.verify(sendEmailForDmsDocAction).execute(eqTo(notification.actionId))(any[HeaderCarrier])
       }
     }
 
