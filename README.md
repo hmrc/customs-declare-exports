@@ -8,6 +8,12 @@ This is a placeholder README.md for a new repository
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html")
 
+### Required services
+
+In order to set up all services required for customs-declare-exports to work, there are profiles in service-manager-config repository:
+- CDS_EXPORTS_DECLARATION_DEPS - all services EXCEPT both declarations services
+- CDS_EXPORTS_DECLARATION_ALL - all services together with both declarations services
+
 ### Scalastyle
 
 Project contains scalafmt plugin.

@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
-import scala.xml.NodeSeq
-
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import testdata.ExportsTestData.{actionId, mrn}
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
 import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.UnitSpec
+
+import scala.xml.NodeSeq
 
 class NotificationFactorySpec extends UnitSpec {
 
@@ -179,58 +179,14 @@ class NotificationFactorySpec extends UnitSpec {
         noException should be thrownBy notificationFactory.buildNotifications(actionId, xmlInput)
       }
 
-      "return single Notification with actionId" in {
+      "return empty sequence" in {
         when(notificationParser.parse(any[NodeSeq])).thenThrow(exception)
 
         val result = notificationFactory.buildNotifications(actionId, xmlInput)
 
-        result.size mustBe 1
-        result.head.actionId mustBe actionId
-      }
-
-      "return single Notification with payload" in {
-        when(notificationParser.parse(any[NodeSeq])).thenThrow(exception)
-
-        val result = notificationFactory.buildNotifications(actionId, xmlInput)
-
-        result.size mustBe 1
-        result.head.payload mustBe xmlInput
-      }
-
-      "return single Notification with empty details" in {
-        when(notificationParser.parse(any[NodeSeq])).thenThrow(exception)
-
-        val result = notificationFactory.buildNotifications(actionId, xmlInput)
-
-        result.size mustBe 1
-        result.head.details mustBe empty
+        result mustBe empty
       }
     }
   }
 
-  "NotificationFactory on buildNotificationUnparsed" should {
-
-    val xml = exampleReceivedNotification(mrn).asXml
-
-    "return Notification with actionId" in {
-
-      val result = notificationFactory.buildNotificationUnparsed(actionId, xml)
-
-      result.actionId mustBe actionId
-    }
-
-    "return Notification with payload" in {
-
-      val result = notificationFactory.buildNotificationUnparsed(actionId, xml)
-
-      result.payload mustBe xml.toString
-    }
-
-    "return Notification with empty details" in {
-
-      val result = notificationFactory.buildNotificationUnparsed(actionId, xml)
-
-      result.details mustBe empty
-    }
-  }
 }
