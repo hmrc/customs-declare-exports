@@ -20,15 +20,17 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.Eori
+import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
+import uk.gov.hmrc.exports.services.notifications.receiptactions.SendEmailForDmsDocAction
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Success
 
 @Singleton
 class SubmissionService @Inject()(
@@ -37,7 +39,8 @@ class SubmissionService @Inject()(
   declarationRepository: DeclarationRepository,
   notificationRepository: NotificationRepository,
   metaDataBuilder: CancellationMetaDataBuilder,
-  wcoMapperService: WcoMapperService
+  wcoMapperService: WcoMapperService,
+  sendEmailForDmsDocAction: SendEmailForDmsDocAction
 )(implicit executionContext: ExecutionContext) {
 
   private val logger = Logger(classOf[SubmissionService])
@@ -79,15 +82,6 @@ class SubmissionService @Inject()(
     } yield savedSubmission2
   }
 
-  private def appendMRNIfAlreadyAvailable(submission: Submission, actionId: String): Future[Submission] =
-    notificationRepository.findNotificationsByActionId(actionId).flatMap { notifications =>
-      notifications.headOption match {
-        case Some(Notification(_, _, Some(details))) =>
-          submissionRepository.updateMrn(actionId, details.mrn).map(_.getOrElse(submission))
-        case _ => Future.successful(submission)
-      }
-    }
-
   private def submit(declaration: ExportsDeclaration, payload: String)(implicit hc: HeaderCarrier): Future[String] =
     customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).recoverWith {
       case throwable: Throwable =>
@@ -96,6 +90,21 @@ class SubmissionService @Inject()(
           logProgress(declaration, "Reverted declaration to DRAFT")
           Future.failed[String](throwable)
         }
+    }
+
+  private def appendMRNIfAlreadyAvailable(submission: Submission, actionId: String)(implicit hc: HeaderCarrier): Future[Submission] =
+    notificationRepository.findNotificationsByActionId(actionId).flatMap { notifications =>
+      notifications.headOption match {
+        case Some(Notification(_, _, Some(details))) =>
+          submissionRepository
+            .updateMrn(actionId, details.mrn)
+            .map(_.getOrElse(submission))
+            .andThen {
+              case Success(_) =>
+                sendEmailForDmsDocAction.execute(actionId)
+            }
+        case _ => Future.successful(submission)
+      }
     }
 
   def cancel(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationStatus] = {

@@ -30,6 +30,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
+import uk.gov.hmrc.exports.services.notifications.receiptactions.SendEmailForDmsDocAction
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
@@ -44,21 +45,32 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
   private val notificationRepository: NotificationRepository = mock[NotificationRepository]
   private val metaDataBuilder: CancellationMetaDataBuilder = mock[CancellationMetaDataBuilder]
   private val wcoMapperService: WcoMapperService = mock[WcoMapperService]
+  private val sendEmailForDmsDocAction: SendEmailForDmsDocAction = mock[SendEmailForDmsDocAction]
+
   private val submissionService = new SubmissionService(
     customsDeclarationsConnector = customsDeclarationsConnector,
     submissionRepository = submissionRepository,
     declarationRepository = declarationRepository,
     notificationRepository = notificationRepository,
     metaDataBuilder = metaDataBuilder,
-    wcoMapperService = wcoMapperService
+    wcoMapperService = wcoMapperService,
+    sendEmailForDmsDocAction = sendEmailForDmsDocAction
   )(ExecutionContext.global)
 
   override def afterEach(): Unit = {
-    reset(customsDeclarationsConnector, submissionRepository, declarationRepository, notificationRepository, metaDataBuilder, wcoMapperService)
+    reset(
+      customsDeclarationsConnector,
+      submissionRepository,
+      declarationRepository,
+      notificationRepository,
+      metaDataBuilder,
+      wcoMapperService,
+      sendEmailForDmsDocAction
+    )
     super.afterEach()
   }
 
-  "cancel" should {
+  "SubmissionService on cancel" should {
     val submission = Submission("id", "eori", "lrn", None, "ducr")
     val submissionCancelled = Submission("id", "eori", "lrn", None, "ducr", Seq(Action("conv-id", CancellationRequest)))
     val cancellation = SubmissionCancellation("ref-id", "mrn", "description", "reason")
@@ -98,7 +110,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
     }
   }
 
-  "submit" should {
+  "SubmissionService on submit" when {
     def theActionAdded(): Action = {
       val captor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])
       verify(submissionRepository).addAction(any[Submission](), captor.capture())
@@ -127,7 +139,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
       )
       val submission = Submission(declaration, "lrn", "mrn")
 
-      "valid declaration" in {
+      "declaration is valid" in {
         // Given
         when(wcoMapperService.produceMetaData(any())).thenReturn(mock[MetaData])
         when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
@@ -179,6 +191,9 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
         action.requestType mustBe SubmissionRequest
 
         theDeclarationUpdated().status mustEqual DeclarationStatus.COMPLETE
+
+        verify(submissionRepository).updateMrn(meq("conv-id"), meq("mrn"))
+        verify(sendEmailForDmsDocAction).execute(meq("conv-id"))(any[HeaderCarrier])
       }
     }
 
