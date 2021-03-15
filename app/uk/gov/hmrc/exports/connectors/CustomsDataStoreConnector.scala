@@ -25,11 +25,11 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, Upstream4xxResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class CustomsDataStoreConnector @Inject()(http: HttpClient)(implicit appConfig: AppConfig, ec: ExecutionContext) {
+class CustomsDataStoreConnector @Inject()(http: HttpClient)(implicit appConfig: AppConfig) {
 
   import CustomsDataStoreConnector._
 
-  def getEmailAddress(eori: String): Future[Option[VerifiedEmailAddress]] = {
+  def getEmailAddress(eori: String)(implicit ec: ExecutionContext): Future[Option[VerifiedEmailAddress]] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     http.GET[Option[VerifiedEmailAddress]](verifiedEmailUrl(eori)).recover {

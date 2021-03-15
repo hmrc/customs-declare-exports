@@ -29,7 +29,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.workitem.{ToDo, WorkItem}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class SendEmailForDmsDocActionSpec extends UnitSpec {
 
@@ -83,18 +83,18 @@ class SendEmailForDmsDocActionSpec extends UnitSpec {
 
         "return successful Future" in {
           when(notificationRepository.findNotificationsByActionId(any[String])).thenReturn(Future.successful(Seq(testNotification)))
-          when(sendEmailWorkItemRepository.pushNew(any[SendEmailDetails])).thenReturn(Future.successful(testWorkItem))
+          when(sendEmailWorkItemRepository.pushNew(any[SendEmailDetails])(any[ExecutionContext])).thenReturn(Future.successful(testWorkItem))
 
           sendEmailForDmsDocAction.execute(testActionId).futureValue mustBe unit
         }
 
         "call EmailSender" in {
           when(notificationRepository.findNotificationsByActionId(any[String])).thenReturn(Future.successful(Seq(testNotification)))
-          when(sendEmailWorkItemRepository.pushNew(any[SendEmailDetails])).thenReturn(Future.successful(testWorkItem))
+          when(sendEmailWorkItemRepository.pushNew(any[SendEmailDetails])(any[ExecutionContext])).thenReturn(Future.successful(testWorkItem))
 
           sendEmailForDmsDocAction.execute(testActionId).futureValue
 
-          verify(sendEmailWorkItemRepository).pushNew(eqTo(testSendEmailDetails))
+          verify(sendEmailWorkItemRepository).pushNew(eqTo(testSendEmailDetails))(any[ExecutionContext])
         }
       }
 
@@ -103,7 +103,7 @@ class SendEmailForDmsDocActionSpec extends UnitSpec {
         "propagate this exception" in {
           when(notificationRepository.findNotificationsByActionId(any[String])).thenReturn(Future.successful(Seq(testNotification)))
           val exceptionMsg = "Test exception message"
-          when(sendEmailWorkItemRepository.pushNew(any[SendEmailDetails])).thenThrow(new RuntimeException(exceptionMsg))
+          when(sendEmailWorkItemRepository.pushNew(any[SendEmailDetails])(any[ExecutionContext])).thenThrow(new RuntimeException(exceptionMsg))
 
           sendEmailForDmsDocAction.execute(testActionId).failed.futureValue must have message exceptionMsg
         }

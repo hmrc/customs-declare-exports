@@ -115,7 +115,7 @@ class SendEmailsJobSpec extends UnitSpec {
 
         "call SendEmailWorkItemRepository to complete the WorkItem" in {
           whenThereIsWorkItemAvailable()
-          when(emailSender.sendEmailForDmsDocNotification(any[String])).thenReturn(Future.successful(EmailAccepted))
+          when(emailSender.sendEmailForDmsDocNotification(any[String])(any[ExecutionContext])).thenReturn(Future.successful(EmailAccepted))
           when(sendEmailWorkItemRepository.complete(any[BSONObjectID], any[ProcessingStatus with ResultStatus])(any))
             .thenReturn(Future.successful(true))
 
@@ -126,7 +126,7 @@ class SendEmailsJobSpec extends UnitSpec {
 
         "call SendEmailWorkItemRepository again for the next WorkItem" in {
           whenThereIsWorkItemAvailable()
-          when(emailSender.sendEmailForDmsDocNotification(any[String])).thenReturn(Future.successful(EmailAccepted))
+          when(emailSender.sendEmailForDmsDocNotification(any[String])(any[ExecutionContext])).thenReturn(Future.successful(EmailAccepted))
           when(sendEmailWorkItemRepository.complete(any[BSONObjectID], any[ProcessingStatus with ResultStatus])(any))
             .thenReturn(Future.successful(true))
 
@@ -140,7 +140,8 @@ class SendEmailsJobSpec extends UnitSpec {
 
         "call SendEmailWorkItemRepository to mark the WorkItem as Failed" in {
           whenThereIsWorkItemAvailable()
-          when(emailSender.sendEmailForDmsDocNotification(any[String])).thenReturn(Future.successful(BadEmailRequest("Test BadEmailRequest message")))
+          when(emailSender.sendEmailForDmsDocNotification(any[String])(any[ExecutionContext]))
+            .thenReturn(Future.successful(BadEmailRequest("Test BadEmailRequest message")))
           when(sendEmailWorkItemRepository.markAs(any[BSONObjectID], any[ProcessingStatus with ResultStatus], any[Option[DateTime]])(any))
             .thenReturn(Future.successful(true))
 
@@ -151,7 +152,8 @@ class SendEmailsJobSpec extends UnitSpec {
 
         "call SendEmailWorkItemRepository again for the next WorkItem" in {
           whenThereIsWorkItemAvailable()
-          when(emailSender.sendEmailForDmsDocNotification(any[String])).thenReturn(Future.successful(BadEmailRequest("Test BadEmailRequest message")))
+          when(emailSender.sendEmailForDmsDocNotification(any[String])(any[ExecutionContext]))
+            .thenReturn(Future.successful(BadEmailRequest("Test BadEmailRequest message")))
           when(sendEmailWorkItemRepository.markAs(any[BSONObjectID], any[ProcessingStatus with ResultStatus], any[Option[DateTime]])(any))
             .thenReturn(Future.successful(true))
 
@@ -165,7 +167,7 @@ class SendEmailsJobSpec extends UnitSpec {
 
         "call SendEmailWorkItemRepository to mark the WorkItem as Failed" in {
           whenThereIsWorkItemAvailable()
-          when(emailSender.sendEmailForDmsDocNotification(any[String])).thenReturn(Future.successful(MissingData))
+          when(emailSender.sendEmailForDmsDocNotification(any[String])(any[ExecutionContext])).thenReturn(Future.successful(MissingData))
           when(sendEmailWorkItemRepository.markAs(any[BSONObjectID], any[ProcessingStatus with ResultStatus], any[Option[DateTime]])(any))
             .thenReturn(Future.successful(true))
 
@@ -176,7 +178,7 @@ class SendEmailsJobSpec extends UnitSpec {
 
         "call SendEmailWorkItemRepository again for the next WorkItem" in {
           whenThereIsWorkItemAvailable()
-          when(emailSender.sendEmailForDmsDocNotification(any[String])).thenReturn(Future.successful(MissingData))
+          when(emailSender.sendEmailForDmsDocNotification(any[String])(any[ExecutionContext])).thenReturn(Future.successful(MissingData))
           when(sendEmailWorkItemRepository.markAs(any[BSONObjectID], any[ProcessingStatus with ResultStatus], any[Option[DateTime]])(any))
             .thenReturn(Future.successful(true))
 
@@ -190,7 +192,7 @@ class SendEmailsJobSpec extends UnitSpec {
 
         "call SendEmailWorkItemRepository to mark the WorkItem as Failed" in {
           whenThereIsWorkItemAvailable()
-          when(emailSender.sendEmailForDmsDocNotification(any[String]))
+          when(emailSender.sendEmailForDmsDocNotification(any[String])(any[ExecutionContext]))
             .thenReturn(Future.successful(InternalEmailServiceError("Test InternalEmailServiceError message")))
           when(sendEmailWorkItemRepository.markAs(any[BSONObjectID], any[ProcessingStatus with ResultStatus], any[Option[DateTime]])(any))
             .thenReturn(Future.successful(true))
@@ -202,7 +204,7 @@ class SendEmailsJobSpec extends UnitSpec {
 
         "NOT call SendEmailWorkItemRepository again for the next WorkItem" in {
           whenThereIsWorkItemAvailable()
-          when(emailSender.sendEmailForDmsDocNotification(any[String]))
+          when(emailSender.sendEmailForDmsDocNotification(any[String])(any[ExecutionContext]))
             .thenReturn(Future.successful(InternalEmailServiceError("Test InternalEmailServiceError message")))
           when(sendEmailWorkItemRepository.markAs(any[BSONObjectID], any[ProcessingStatus with ResultStatus], any[Option[DateTime]])(any))
             .thenReturn(Future.successful(true))

@@ -31,10 +31,9 @@ class EmailSender @Inject()(
   submissionRepository: SubmissionRepository,
   customsDataStoreConnector: CustomsDataStoreConnector,
   emailConnector: EmailConnector
-)(implicit executionContext: ExecutionContext)
-    extends Logging {
+) extends Logging {
 
-  def sendEmailForDmsDocNotification(mrn: String): Future[SendEmailResult] =
+  def sendEmailForDmsDocNotification(mrn: String)(implicit ec: ExecutionContext): Future[SendEmailResult] =
     obtainEori(mrn).flatMap {
       case Some(eori) =>
         obtainEmailAddress(eori).flatMap {
@@ -48,13 +47,15 @@ class EmailSender @Inject()(
         Future.successful(MissingData)
     }
 
-  private def obtainEori(mrn: String): Future[Option[String]] =
+  private def obtainEori(mrn: String)(implicit ec: ExecutionContext): Future[Option[String]] =
     submissionRepository.findSubmissionByMrn(mrn).map(_.map(_.eori))
 
-  private def obtainEmailAddress(eori: String): Future[Option[VerifiedEmailAddress]] =
+  private def obtainEmailAddress(eori: String)(implicit ec: ExecutionContext): Future[Option[VerifiedEmailAddress]] =
     customsDataStoreConnector.getEmailAddress(eori)
 
-  private def sendEmail(mrn: String, eori: String, verifiedEmailAddress: VerifiedEmailAddress): Future[SendEmailResult] = {
+  private def sendEmail(mrn: String, eori: String, verifiedEmailAddress: VerifiedEmailAddress)(
+    implicit ec: ExecutionContext
+  ): Future[SendEmailResult] = {
     val emailParameters = EmailParameters(Map(EmailParameter.MRN -> mrn))
     val sendEmailRequest = SendEmailRequest(List(verifiedEmailAddress.address), TemplateId.DMSDOC_NOTIFICATION, emailParameters)
 

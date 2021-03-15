@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.scheduler.jobs
 
 import java.time.LocalTime
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{Inject, Named, Singleton}
 import org.joda.time.DateTime
 import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
@@ -33,7 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SendEmailsJob @Inject()(appConfig: AppConfig, sendEmailWorkItemRepository: SendEmailWorkItemRepository, emailSender: EmailSender)(
-  implicit ec: ExecutionContext
+  implicit @Named("jobsExecutionContext") ec: ExecutionContext
 ) extends ScheduledJob with Logging {
 
   override def name: String = "SendEmails"

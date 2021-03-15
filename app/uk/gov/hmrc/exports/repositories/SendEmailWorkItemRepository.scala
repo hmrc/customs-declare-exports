@@ -33,9 +33,8 @@ import uk.gov.hmrc.workitem.{WorkItem, WorkItemFieldNames, WorkItemRepository}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SendEmailWorkItemRepository @Inject()(configuration: Configuration, reactiveMongoComponent: ReactiveMongoComponent)(
-  implicit ec: ExecutionContext
-) extends WorkItemRepository[SendEmailDetails, BSONObjectID](
+class SendEmailWorkItemRepository @Inject()(configuration: Configuration, reactiveMongoComponent: ReactiveMongoComponent)
+    extends WorkItemRepository[SendEmailDetails, BSONObjectID](
       collectionName = "sendEmailWorkItems",
       mongo = reactiveMongoComponent.mongoConnector.db,
       itemFormat = WorkItemFormat.workItemMongoFormat[SendEmailDetails],
@@ -62,7 +61,7 @@ class SendEmailWorkItemRepository @Inject()(configuration: Configuration, reacti
 
   override def inProgressRetryAfterProperty: String = "workItem.sendEmail.retryAfterMillis"
 
-  def pushNew(item: SendEmailDetails): Future[WorkItem[SendEmailDetails]] = pushNew(item, now)
+  def pushNew(item: SendEmailDetails)(implicit ec: ExecutionContext): Future[WorkItem[SendEmailDetails]] = pushNew(item, now)
 }
 
 object SendEmailWorkItemRepository {

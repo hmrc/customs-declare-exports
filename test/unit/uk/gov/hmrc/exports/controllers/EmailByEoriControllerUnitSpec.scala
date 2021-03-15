@@ -30,7 +30,7 @@ import uk.gov.hmrc.exports.models.emails.VerifiedEmailAddress
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class EmailByEoriControllerUnitSpec extends UnitSpec with AuthTestSupport {
 
@@ -52,32 +52,32 @@ class EmailByEoriControllerUnitSpec extends UnitSpec with AuthTestSupport {
     "return 200(OK) status if the email address for the given EORI is verified" in {
       val expectedEmailAddress = VerifiedEmailAddress("some@email.com", ZonedDateTime.now)
 
-      when(connector.getEmailAddress(any[String]))
+      when(connector.getEmailAddress(any[String])(any[ExecutionContext]))
         .thenReturn(Future.successful(Some(expectedEmailAddress)))
 
       val response = controller.getEmailIfVerified(ExportsTestData.eori)(fakeRequest)
       status(response) mustBe OK
       contentAsJson(response) mustBe Json.toJson(expectedEmailAddress)
 
-      verify(connector).getEmailAddress(eqTo(ExportsTestData.eori))
+      verify(connector).getEmailAddress(eqTo(ExportsTestData.eori))(any[ExecutionContext])
     }
 
     "return 404(NOT_FOUND) status if the email address for the given EORI was not provided or was not verified yet" in {
-      when(connector.getEmailAddress(any[String])).thenReturn(Future.successful(None))
+      when(connector.getEmailAddress(any[String])(any[ExecutionContext])).thenReturn(Future.successful(None))
 
       val response = controller.getEmailIfVerified(ExportsTestData.eori)(fakeRequest)
       status(response) mustBe NOT_FOUND
     }
 
     "return 500(INTERNAL_SERVER_ERROR) status for any 4xx returned by the downstream service, let apart 404" in {
-      when(connector.getEmailAddress(any[String])).thenAnswer(upstreamErrorResponse(BAD_REQUEST))
+      when(connector.getEmailAddress(any[String])(any[ExecutionContext])).thenAnswer(upstreamErrorResponse(BAD_REQUEST))
 
       val response = controller.getEmailIfVerified(ExportsTestData.eori)(fakeRequest)
       status(response) mustBe INTERNAL_SERVER_ERROR
     }
 
     "return 500(INTERNAL_SERVER_ERROR) status for any 5xx http error code returned by the downstream service" in {
-      when(connector.getEmailAddress(any[String])).thenAnswer(upstreamErrorResponse(BAD_GATEWAY))
+      when(connector.getEmailAddress(any[String])(any[ExecutionContext])).thenAnswer(upstreamErrorResponse(BAD_GATEWAY))
 
       val response = controller.getEmailIfVerified(ExportsTestData.eori)(fakeRequest)
       status(response) mustBe INTERNAL_SERVER_ERROR

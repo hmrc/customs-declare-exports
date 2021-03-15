@@ -28,11 +28,11 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorR
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class EmailConnector @Inject()(http: HttpClient)(implicit appConfig: AppConfig, ec: ExecutionContext) extends Logging {
+class EmailConnector @Inject()(http: HttpClient)(implicit appConfig: AppConfig) extends Logging {
 
   import EmailConnector._
 
-  def sendEmail(sendEmailRequest: SendEmailRequest): Future[SendEmailResult] = {
+  def sendEmail(sendEmailRequest: SendEmailRequest)(implicit ec: ExecutionContext): Future[SendEmailResult] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     http
