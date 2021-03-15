@@ -12,7 +12,8 @@ object AppDependencies {
     "uk.gov.hmrc"                    %%  "logback-json-logger"          % "4.8.0",
     "com.github.cloudyrock.mongock"  %   "mongock-core"                 % "2.0.2",
     "org.mongodb.scala"              %%  "mongo-scala-driver"           % "2.9.0",
-    "com.github.tototoshi"           %%  "scala-csv"                    % "1.3.6"
+    "com.github.tototoshi"           %%  "scala-csv"                    % "1.3.6",
+    "uk.gov.hmrc"                    %%  "work-item-repo"               % "7.11.0-play-27"
   )
 
   val test = Seq(
