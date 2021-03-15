@@ -20,6 +20,7 @@ import java.time.format.DateTimeFormatter
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
 import play.api.libs.json.Json
+import reactivemongo.bson.BSONObjectID
 import testdata.ExportsTestData.{actionId, mrn}
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair.exampleReceivedNotification
 import uk.gov.hmrc.exports.base.UnitSpec
@@ -30,15 +31,17 @@ class NotificationSpec extends UnitSpec {
   val formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
 
   "Notification" must {
+    val id = BSONObjectID.generate
     val actionId = "123"
     val dateTime = LocalDateTime.now()
     val mrn = "id1"
     val payload = "<xml></xml>"
 
     val notification = Notification(
-      actionId,
-      payload,
-      Some(NotificationDetails(mrn, ZonedDateTime.of(dateTime, ZoneId.of("UCT")), SubmissionStatus.ACCEPTED, Seq.empty))
+      id = id,
+      actionId = actionId,
+      payload = payload,
+      details = Some(NotificationDetails(mrn, ZonedDateTime.of(dateTime, ZoneId.of("UCT")), SubmissionStatus.ACCEPTED, Seq.empty))
     )
 
     "have json writes that produce object which could be parsed by the front end service" in {
@@ -56,6 +59,7 @@ class NotificationSpec extends UnitSpec {
       val json = Json.toJson(notification)(Notification.DbFormat.writes)
 
       json.toString() mustBe NotificationSpec.serialisedWithOptionalDetailsFormat(
+        id.stringify,
         actionId,
         mrn,
         dateTime.atZone(ZoneId.of("UCT")).format(formatter),
@@ -95,6 +99,6 @@ object NotificationSpec {
   def serialisedWithNonOptionalDetailsFormat(actionId: String, mrn: String, dateTime: String, payload: String) =
     s"""{"actionId":"${actionId}","mrn":"${mrn}","dateTimeIssued":"${dateTime}","status":"ACCEPTED","errors":[],"payload":"${payload}"}"""
 
-  def serialisedWithOptionalDetailsFormat(actionId: String, mrn: String, dateTime: String, payload: String) =
-    s"""{"actionId":"${actionId}","payload":"${payload}","details":{"mrn":"${mrn}","dateTimeIssued":"${dateTime}","status":"ACCEPTED","errors":[]}}"""
+  def serialisedWithOptionalDetailsFormat(_id: String, actionId: String, mrn: String, dateTime: String, payload: String) =
+    s"""{"_id":{"$$oid":"${_id}"},"actionId":"${actionId}","payload":"${payload}","details":{"mrn":"${mrn}","dateTimeIssued":"${dateTime}","status":"ACCEPTED","errors":[]}}"""
 }

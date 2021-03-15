@@ -95,7 +95,7 @@ class SubmissionService @Inject()(
   private def appendMRNIfAlreadyAvailable(submission: Submission, actionId: String)(implicit hc: HeaderCarrier): Future[Submission] =
     notificationRepository.findNotificationsByActionId(actionId).flatMap { notifications =>
       notifications.headOption match {
-        case Some(Notification(_, _, Some(details))) =>
+        case Some(Notification(_, _, _, Some(details))) =>
           submissionRepository
             .updateMrn(actionId, details.mrn)
             .map(_.getOrElse(submission))

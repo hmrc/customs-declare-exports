@@ -19,10 +19,12 @@ package uk.gov.hmrc.exports.services.notifications
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
 import akka.actor.Cancellable
+import matchers.NotificationMatchers.equalWithoutId
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.Mockito._
 import org.mockito.{ArgumentCaptor, InOrder, Mockito}
 import org.scalatest.concurrent.IntegrationPatience
+import reactivemongo.bson.BSONObjectID
 import testdata.ExportsTestData._
 import testdata.RepositoryTestData._
 import testdata.SubmissionTestData.{submission, _}
@@ -153,9 +155,10 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", Seq(Action("id1", SubmissionRequest)))
       val notifications = Seq(
         Notification(
-          "id1",
-          "",
-          Some(NotificationDetails("mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), SubmissionStatus.ACCEPTED, Seq.empty))
+          id = BSONObjectID.generate,
+          actionId = "id1",
+          payload = "",
+          details = Some(NotificationDetails("mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), SubmissionStatus.ACCEPTED, Seq.empty))
         )
       )
       when(notificationRepository.findNotificationsByActionIds(any[Seq[String]]))
@@ -178,14 +181,20 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
 
         notificationService.handleNewNotification(actionId, inputXml).futureValue
 
-        verify(notificationRepository).insert(eqTo(testNotificationUnparsed))(any)
+        val captor: ArgumentCaptor[Notification] = ArgumentCaptor.forClass(classOf[Notification])
+        verify(notificationRepository).insert(captor.capture())(any)
+
+        captor.getValue must equalWithoutId(testNotificationUnparsed)
       }
 
       "call NotificationReceiptActionsExecutor" in {
 
         notificationService.handleNewNotification(actionId, inputXml).futureValue
 
-        verify(notificationReceiptActionsExecutor).executeActions(eqTo(testNotificationUnparsed))(any[HeaderCarrier])
+        val captor: ArgumentCaptor[Notification] = ArgumentCaptor.forClass(classOf[Notification])
+        verify(notificationReceiptActionsExecutor).executeActions(captor.capture())(any[HeaderCarrier])
+
+        captor.getValue must equalWithoutId(testNotificationUnparsed)
       }
     }
   }

@@ -18,19 +18,20 @@ package uk.gov.hmrc.exports.repositories
 
 import java.time.{LocalDate, ZoneOffset}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.api.ReadConcern
+import stubs.TestMongoDB.mongoConfiguration
 import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.IntegrationTestBaseSpec
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo.format
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDeclarationBuilder {
 
-  private val repository = GuiceApplicationBuilder().injector.instanceOf[DeclarationRepository]
+  private val repository = GuiceApplicationBuilder().configure(mongoConfiguration).injector.instanceOf[DeclarationRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
