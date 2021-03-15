@@ -23,4 +23,5 @@ object SendEmailResult {
   case object EmailAccepted extends SendEmailResult("Accepted")
   case class BadEmailRequest(override val message: String) extends SendEmailResult(message)
   case class InternalEmailServiceError(override val message: String) extends SendEmailResult(message)
+  case object MissingData extends SendEmailResult("Could not obtain all data necessary to send email")
 }

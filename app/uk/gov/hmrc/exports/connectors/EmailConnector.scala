@@ -16,23 +16,25 @@
 
 package uk.gov.hmrc.exports.connectors
 
-import scala.concurrent.{ExecutionContext, Future}
-
 import javax.inject.Inject
 import play.api.Logging
 import play.api.http.Status.ACCEPTED
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.emails.{SendEmailRequest, SendEmailResult}
 import uk.gov.hmrc.exports.models.emails.SendEmailResult._
+import uk.gov.hmrc.exports.models.emails.{SendEmailRequest, SendEmailResult}
 import uk.gov.hmrc.http.HttpErrorFunctions._
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 class EmailConnector @Inject()(http: HttpClient)(implicit appConfig: AppConfig, ec: ExecutionContext) extends Logging {
 
   import EmailConnector._
 
-  def sendEmail(sendEmailRequest: SendEmailRequest)(implicit hc: HeaderCarrier): Future[SendEmailResult] =
+  def sendEmail(sendEmailRequest: SendEmailRequest): Future[SendEmailResult] = {
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+
     http
       .POST[SendEmailRequest, HttpResponse](sendEmailUrl, sendEmailRequest)
       .map { response =>
@@ -41,6 +43,7 @@ class EmailConnector @Inject()(http: HttpClient)(implicit appConfig: AppConfig, 
       .recover {
         case response: UpstreamErrorResponse => sendEmailError(sendEmailRequest, response.statusCode, response.message)
       }
+  }
 
   private def sendEmailError(sendEmailRequest: SendEmailRequest, status: Int, message: String): SendEmailResult = {
     logger.warn(s"Error(${status}) for $sendEmailRequest. ${message}")

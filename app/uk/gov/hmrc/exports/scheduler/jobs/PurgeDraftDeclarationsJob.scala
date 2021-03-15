@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.scheduler
+package uk.gov.hmrc.exports.scheduler.jobs
 
 import java.time._
 

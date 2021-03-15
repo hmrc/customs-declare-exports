@@ -16,4 +16,6 @@
 
 package uk.gov.hmrc.exports.scheduler
 
+import uk.gov.hmrc.exports.scheduler.jobs.ScheduledJob
+
 case class ScheduledJobs(jobs: Iterable[ScheduledJob])

@@ -18,9 +18,6 @@ package uk.gov.hmrc.exports.scheduler
 
 import java.time._
 
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
-
 import akka.actor.{ActorSystem, Cancellable}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
@@ -29,6 +26,10 @@ import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
+import uk.gov.hmrc.exports.scheduler.jobs.ScheduledJob
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 class SchedulerSpec extends UnitSpec {
 
@@ -57,7 +58,7 @@ class SchedulerSpec extends UnitSpec {
     given(config.clock) willReturn clock
     given(actorSystem.scheduler) willReturn internalScheduler
     given(internalScheduler.schedule(any[FiniteDuration], any[FiniteDuration], any[Runnable])(any[ExecutionContext])) will runTheJobImmediately
-    given((job.execute())) willReturn Future.successful(())
+    given(job.execute()) willReturn Future.successful(())
   }
 
   override protected def afterEach(): Unit = {
@@ -85,7 +86,7 @@ class SchedulerSpec extends UnitSpec {
       verify(job).execute()
     }
 
-    "Fail to schedule job given an run date in the past" in {
+    "Fail to schedule job given a run date in the past" in {
       // Given
       given(job.interval) willReturn 3.seconds
       given(job.firstRunTime) willReturn "12:00"

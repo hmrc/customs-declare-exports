@@ -15,6 +15,7 @@
  */
 
 package uk.gov.hmrc.exports.scheduler
+
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
@@ -23,6 +24,7 @@ import akka.actor.ActorSystem
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.exports.config.AppConfig
+import uk.gov.hmrc.exports.scheduler.jobs.ScheduledJob
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.FiniteDuration

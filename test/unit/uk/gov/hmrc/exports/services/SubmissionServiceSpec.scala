@@ -165,6 +165,9 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
         action.requestType mustBe SubmissionRequest
 
         theDeclarationUpdated().status mustEqual DeclarationStatus.COMPLETE
+
+        verify(submissionRepository, never).updateMrn(any[String], any[String])
+        verify(sendEmailForDmsDocAction, never).execute(any[String])
       }
 
       "existing notification is available" in {
@@ -195,7 +198,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
         theDeclarationUpdated().status mustEqual DeclarationStatus.COMPLETE
 
         verify(submissionRepository).updateMrn(meq("conv-id"), meq("mrn"))
-        verify(sendEmailForDmsDocAction).execute(meq("conv-id"))(any[HeaderCarrier])
+        verify(sendEmailForDmsDocAction).execute(meq("conv-id"))
       }
     }
 
