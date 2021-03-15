@@ -20,14 +20,16 @@ import java.time._
 
 import akka.actor.{ActorSystem, Cancellable}
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchersSugar.any
 import org.mockito.BDDMockito.given
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
+import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.scheduler.jobs.ScheduledJob
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -36,6 +38,7 @@ class SchedulerSpec extends UnitSpec {
   private val job = mock[ScheduledJob]
   private val util = mock[SchedulerDateUtil]
   private val actorSystem = mock[ActorSystem]
+  private val applicationLifecycle = mock[ApplicationLifecycle]
   private val config = mock[AppConfig]
   private val internalScheduler = mock[akka.actor.Scheduler]
   private val zone: ZoneId = ZoneOffset.UTC
@@ -118,7 +121,7 @@ class SchedulerSpec extends UnitSpec {
     Schedule(initialDelayCaptor.getValue, intervalCaptor.getValue)
   }
   private def whenTheSchedulerStarts(withJobs: Set[ScheduledJob] = Set(job)): Scheduler =
-    new Scheduler(actorSystem, config, util, ScheduledJobs(withJobs))
+    new Scheduler(actorSystem, applicationLifecycle, config, util, ScheduledJobs(withJobs))
 
   private case class Schedule(initialDelay: FiniteDuration, interval: FiniteDuration)
 }

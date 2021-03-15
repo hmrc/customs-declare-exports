@@ -16,9 +16,12 @@
 
 package uk.gov.hmrc.exports.scheduler
 
+import akka.actor.ActorSystem
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names
-import uk.gov.hmrc.exports.scheduler.jobs.JobsExecutionContext
+import javax.inject.{Inject, Singleton}
+import play.api.libs.concurrent.CustomExecutionContext
+import uk.gov.hmrc.exports.scheduler.JobsExecutionContextModule.JobsExecutionContext
 
 import scala.concurrent.ExecutionContext
 
@@ -27,4 +30,9 @@ class JobsExecutionContextModule extends AbstractModule {
     bind(classOf[ExecutionContext])
       .annotatedWith(Names.named("jobsExecutionContext"))
       .to(classOf[JobsExecutionContext])
+}
+
+object JobsExecutionContextModule {
+  @Singleton
+  class JobsExecutionContext @Inject()(actorSystem: ActorSystem) extends CustomExecutionContext(actorSystem, "contexts.jobs-dispatcher") {}
 }

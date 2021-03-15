@@ -20,21 +20,28 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Cancellable}
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
+import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.scheduler.jobs.ScheduledJob
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class Scheduler @Inject()(actorSystem: ActorSystem, appConfig: AppConfig, schedulerDateUtil: SchedulerDateUtil, scheduledJobs: ScheduledJobs) {
+class Scheduler @Inject()(
+  actorSystem: ActorSystem,
+  applicationLifecycle: ApplicationLifecycle,
+  appConfig: AppConfig,
+  schedulerDateUtil: SchedulerDateUtil,
+  scheduledJobs: ScheduledJobs
+)(implicit ec: ExecutionContext) {
 
   private val logger = Logger(this.getClass)
 
-  scheduledJobs.jobs.foreach { job =>
+  val runningJobs: Iterable[Cancellable] = scheduledJobs.jobs.map { job =>
     logger.info(
       s"Scheduling job [${job.name}] to run periodically at [${job.firstRunTime}] with interval [${job.interval.length} ${job.interval.unit}]"
     )
@@ -51,8 +58,10 @@ class Scheduler @Inject()(actorSystem: ActorSystem, appConfig: AppConfig, schedu
           }
       }
     )
-
   }
+
+  applicationLifecycle.addStopHook(() => Future.successful(runningJobs.foreach(_.cancel())))
+
   private def nextRunDateFor(job: ScheduledJob): Instant =
     schedulerDateUtil.nextRun(job.firstRunTime, job.interval)
 

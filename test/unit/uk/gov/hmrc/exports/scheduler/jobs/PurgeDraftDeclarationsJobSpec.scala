@@ -25,6 +25,7 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.config.AppConfig.JobConfig
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
