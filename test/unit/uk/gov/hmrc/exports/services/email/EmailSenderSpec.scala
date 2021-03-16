@@ -17,11 +17,12 @@
 package uk.gov.hmrc.exports.services.email
 
 import org.mockito.ArgumentMatchers.{any, anyString, eq => eqTo}
+import testdata.ExportsTestData.mrn
 import testdata.notifications.NotificationTestData
 import testdata.{ExportsTestData, SubmissionTestData}
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.connectors.{CustomsDataStoreConnector, EmailConnector}
-import uk.gov.hmrc.exports.models.emails.SendEmailResult.{BadEmailRequest, EmailAccepted, InternalEmailServiceError}
+import uk.gov.hmrc.exports.models.emails.SendEmailResult.{BadEmailRequest, EmailAccepted, InternalEmailServiceError, MissingData}
 import uk.gov.hmrc.exports.models.emails._
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -62,7 +63,7 @@ class EmailSenderSpec extends UnitSpec {
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(Some(testVerifiedEmailAddress)))
         when(emailConnector.sendEmail(any[SendEmailRequest])(any())).thenReturn(Future.successful(EmailAccepted))
 
-        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue mustBe unit
+        emailSender.sendEmailForDmsDocNotification(mrn).futureValue mustBe EmailAccepted
       }
 
       "call SubmissionRepository with correct parameters" in {
@@ -70,7 +71,7 @@ class EmailSenderSpec extends UnitSpec {
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(Some(testVerifiedEmailAddress)))
         when(emailConnector.sendEmail(any[SendEmailRequest])(any())).thenReturn(Future.successful(EmailAccepted))
 
-        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue
+        emailSender.sendEmailForDmsDocNotification(mrn).futureValue
 
         val expectedMrn = testNotification.details.get.mrn
         verify(submissionRepository).findSubmissionByMrn(eqTo(expectedMrn))
@@ -81,10 +82,10 @@ class EmailSenderSpec extends UnitSpec {
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(Some(testVerifiedEmailAddress)))
         when(emailConnector.sendEmail(any[SendEmailRequest])(any())).thenReturn(Future.successful(EmailAccepted))
 
-        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue
+        emailSender.sendEmailForDmsDocNotification(mrn).futureValue
 
         val expectedEori = testSubmission.eori
-        verify(customsDataStoreConnector).getEmailAddress(eqTo(expectedEori))(any[HeaderCarrier])
+        verify(customsDataStoreConnector).getEmailAddress(eqTo(expectedEori))(any())
       }
 
       "call EmailConnector with correct parameters" in {
@@ -92,41 +93,29 @@ class EmailSenderSpec extends UnitSpec {
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(Some(testVerifiedEmailAddress)))
         when(emailConnector.sendEmail(any[SendEmailRequest])(any())).thenReturn(Future.successful(EmailAccepted))
 
-        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue
+        emailSender.sendEmailForDmsDocNotification(mrn).futureValue
 
         val expectedSendEmailRequest = SendEmailRequest(
           List(testVerifiedEmailAddress.address),
           TemplateId.DMSDOC_NOTIFICATION,
           EmailParameters(Map(EmailParameter.MRN -> testNotification.details.get.mrn))
         )
-        verify(emailConnector).sendEmail(eqTo(expectedSendEmailRequest))(any[HeaderCarrier])
-      }
-    }
-
-    "provided with Notification with empty details" should {
-
-      "throw IllegalArgumentException" in {
-
-        val expectedEXceptionMessage = s"MRN not found in Notification with actionId: ${testNotification.actionId}"
-
-        the[IllegalArgumentException] thrownBy {
-          emailSender.sendEmailForDmsDocNotification(testNotification.copy(details = None)).failed.futureValue
-        } must have message expectedEXceptionMessage
+        verify(emailConnector).sendEmail(eqTo(expectedSendEmailRequest))(any())
       }
     }
 
     "SubmissionRepository returns empty Option" should {
 
-      "return successful Future" in {
+      "return successful Future with MissingData" in {
         when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(None))
 
-        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue mustBe unit
+        emailSender.sendEmailForDmsDocNotification(mrn).futureValue mustBe MissingData
       }
 
       "not call CustomsDataStoreConnector" in {
         when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(None))
 
-        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue
+        emailSender.sendEmailForDmsDocNotification(mrn).futureValue
 
         verifyZeroInteractions(customsDataStoreConnector)
       }
@@ -134,7 +123,7 @@ class EmailSenderSpec extends UnitSpec {
       "not call EmailConnector" in {
         when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(None))
 
-        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue
+        emailSender.sendEmailForDmsDocNotification(mrn).futureValue
 
         verifyZeroInteractions(emailConnector)
       }
@@ -142,18 +131,18 @@ class EmailSenderSpec extends UnitSpec {
 
     "CustomsDataStoreConnector returns empty Option" should {
 
-      "return successful Future" in {
+      "return successful Future with MissingData" in {
         when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(Some(testSubmission)))
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(None))
 
-        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue mustBe unit
+        emailSender.sendEmailForDmsDocNotification(mrn).futureValue mustBe MissingData
       }
 
       "not call EmailConnector" in {
         when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(Some(testSubmission)))
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(None))
 
-        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue
+        emailSender.sendEmailForDmsDocNotification(mrn).futureValue
 
         verifyZeroInteractions(emailConnector)
       }
@@ -161,24 +150,24 @@ class EmailSenderSpec extends UnitSpec {
 
     "EmailConnector returns BadEmailRequest" should {
 
-      "return successful Future" in {
+      "return successful Future with ServerResponse" in {
         when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(Some(testSubmission)))
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(Some(testVerifiedEmailAddress)))
         when(emailConnector.sendEmail(any[SendEmailRequest])(any())).thenReturn(Future.successful(BadEmailRequest("Test BadEmailRequest message")))
 
-        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue mustBe unit
+        emailSender.sendEmailForDmsDocNotification(mrn).futureValue mustBe BadEmailRequest("Test BadEmailRequest message")
       }
     }
 
     "EmailConnector returns InternalEmailServiceError" should {
 
-      "return successful Future" in {
+      "return successful Future with ServerResponse" in {
         when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(Some(testSubmission)))
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(Some(testVerifiedEmailAddress)))
         when(emailConnector.sendEmail(any[SendEmailRequest])(any()))
           .thenReturn(Future.successful(InternalEmailServiceError("Test InternalEmailServiceError message")))
 
-        emailSender.sendEmailForDmsDocNotification(testNotification).futureValue mustBe unit
+        emailSender.sendEmailForDmsDocNotification(mrn).futureValue mustBe InternalEmailServiceError("Test InternalEmailServiceError message")
       }
     }
   }

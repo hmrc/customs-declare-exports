@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.scheduler
+package uk.gov.hmrc.exports.scheduler.jobs
 
 import java.time._
 
@@ -23,12 +23,12 @@ import play.api.Logger
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PurgeDraftDeclarationsJob @Inject()(appConfig: AppConfig, declarationRepository: DeclarationRepository) extends ScheduledJob {
+class PurgeDraftDeclarationsJob @Inject()(appConfig: AppConfig, declarationRepository: DeclarationRepository)(implicit ec: ExecutionContext)
+    extends ScheduledJob {
 
   private val jobConfig = appConfig.purgeDraftDeclarations
   private val expireDuration = appConfig.draftTimeToLive

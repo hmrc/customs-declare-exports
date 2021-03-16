@@ -19,10 +19,12 @@ package uk.gov.hmrc.exports.services.notifications
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
 import akka.actor.Cancellable
+import matchers.NotificationMatchers.equalWithoutId
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.Mockito._
 import org.mockito.{ArgumentCaptor, InOrder, Mockito}
 import org.scalatest.concurrent.IntegrationPatience
+import reactivemongo.bson.BSONObjectID
 import testdata.ExportsTestData._
 import testdata.RepositoryTestData._
 import testdata.SubmissionTestData.{submission, _}
@@ -33,7 +35,7 @@ import uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationDetails}
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest, SubmissionStatus}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.notifications.receiptactions.{NotificationReceiptActionsExecutor, ParseAndSaveAction}
+import uk.gov.hmrc.exports.services.notifications.receiptactions.NotificationReceiptActionsExecutor
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -45,11 +47,10 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
   private val submissionRepository: SubmissionRepository = buildSubmissionRepositoryMock
   private val notificationRepository: NotificationRepository = buildNotificationRepositoryMock
   private val notificationFactory: NotificationFactory = mock[NotificationFactory]
-  private val parseAndSaveAction: ParseAndSaveAction = mock[ParseAndSaveAction]
   private val notificationReceiptActionsExecutor: NotificationReceiptActionsExecutor = mock[NotificationReceiptActionsExecutor]
 
   private val notificationService =
-    new NotificationService(submissionRepository, notificationRepository, notificationFactory, parseAndSaveAction, notificationReceiptActionsExecutor)
+    new NotificationService(submissionRepository, notificationRepository, notificationFactory, notificationReceiptActionsExecutor)
 
   val PositionFunctionCode = "11"
   val NameCodeGranted = "39"
@@ -59,17 +60,16 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(submissionRepository, notificationRepository, notificationFactory, parseAndSaveAction, notificationReceiptActionsExecutor)
+    reset(submissionRepository, notificationRepository, notificationFactory, notificationReceiptActionsExecutor)
 
     when(notificationFactory.buildNotifications(any, any)).thenReturn(Seq(notification))
     when(notificationRepository.insert(any)(any)).thenReturn(Future.successful(dummyWriteResultSuccess))
     when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(Some(submission)))
-    when(parseAndSaveAction.execute(any[Notification])).thenReturn(Future.successful((): Unit))
-    when(notificationReceiptActionsExecutor.executeActions(any[Notification])(any[HeaderCarrier])).thenReturn(Cancellable.alreadyCancelled)
+    when(notificationReceiptActionsExecutor.executeActions(any[Notification])).thenReturn(Cancellable.alreadyCancelled)
   }
 
   override def afterEach(): Unit = {
-    reset(submissionRepository, notificationRepository, notificationFactory, parseAndSaveAction, notificationReceiptActionsExecutor)
+    reset(submissionRepository, notificationRepository, notificationFactory, notificationReceiptActionsExecutor)
     super.afterEach()
   }
 
@@ -153,9 +153,10 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", Seq(Action("id1", SubmissionRequest)))
       val notifications = Seq(
         Notification(
-          "id1",
-          "",
-          Some(NotificationDetails("mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), SubmissionStatus.ACCEPTED, Seq.empty))
+          id = BSONObjectID.generate,
+          actionId = "id1",
+          payload = "",
+          details = Some(NotificationDetails("mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), SubmissionStatus.ACCEPTED, Seq.empty))
         )
       )
       when(notificationRepository.findNotificationsByActionIds(any[Seq[String]]))
@@ -178,14 +179,20 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
 
         notificationService.handleNewNotification(actionId, inputXml).futureValue
 
-        verify(notificationRepository).insert(eqTo(testNotificationUnparsed))(any)
+        val captor: ArgumentCaptor[Notification] = ArgumentCaptor.forClass(classOf[Notification])
+        verify(notificationRepository).insert(captor.capture())(any)
+
+        captor.getValue must equalWithoutId(testNotificationUnparsed)
       }
 
       "call NotificationReceiptActionsExecutor" in {
 
         notificationService.handleNewNotification(actionId, inputXml).futureValue
 
-        verify(notificationReceiptActionsExecutor).executeActions(eqTo(testNotificationUnparsed))(any[HeaderCarrier])
+        val captor: ArgumentCaptor[Notification] = ArgumentCaptor.forClass(classOf[Notification])
+        verify(notificationReceiptActionsExecutor).executeActions(captor.capture())
+
+        captor.getValue must equalWithoutId(testNotificationUnparsed)
       }
     }
   }
@@ -194,37 +201,37 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
 
     "there is no unparsed Notification" should {
 
-      "not call ParseAndSaveAction" in {
+      "not call NotificationReceiptActionsExecutor" in {
         when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(Seq.empty))
 
         notificationService.reattemptParsingUnparsedNotifications().futureValue
 
-        verifyNoInteractions(parseAndSaveAction)
+        verifyNoInteractions(notificationReceiptActionsExecutor)
       }
     }
 
     "there is unparsed Notification" should {
 
-      "call ParseAndSaveAction" in {
+      "call NotificationReceiptActionsExecutor" in {
         val testNotification = Notification(actionId = actionId, payload = exampleUnparsableNotification(mrn).asXml.toString, details = None)
         when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(Seq(testNotification)))
 
         notificationService.reattemptParsingUnparsedNotifications().futureValue
 
-        verify(parseAndSaveAction).execute(eqTo(testNotification))
+        verify(notificationReceiptActionsExecutor).executeActions(eqTo(testNotification))
       }
     }
 
     "there are many unparsed Notifications" should {
 
-      "call ParseAndSaveAction for each Notification" in {
+      "call NotificationReceiptActionsExecutor for each Notification" in {
         val testNotification = Notification(actionId = actionId, payload = exampleUnparsableNotification(mrn).asXml.toString, details = None)
         val testNotifications = Seq(testNotification, testNotification, testNotification)
         when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(testNotifications))
 
         notificationService.reattemptParsingUnparsedNotifications().futureValue
 
-        verify(parseAndSaveAction, times(3)).execute(eqTo(testNotification))
+        verify(notificationReceiptActionsExecutor, times(3)).executeActions(eqTo(testNotification))
       }
     }
 
@@ -239,23 +246,23 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
         } must have message exceptionMsg
       }
 
-      "not call ParseAndSaveAction" in {
+      "not call NotificationReceiptActionsExecutor" in {
         val exceptionMsg = "Test Exception message"
         when(notificationRepository.findUnparsedNotifications()).thenThrow(new RuntimeException(exceptionMsg))
 
         an[RuntimeException] mustBe thrownBy { notificationService.reattemptParsingUnparsedNotifications().futureValue }
 
-        verifyNoInteractions(parseAndSaveAction)
+        verifyNoInteractions(notificationReceiptActionsExecutor)
       }
     }
 
-    "ParseAndSaveAction throws exception" should {
+    "NotificationReceiptActionsExecutor throws exception" should {
 
       "return failed Future" in {
         val testNotification = Notification(actionId = actionId, payload = exampleUnparsableNotification(mrn).asXml.toString, details = None)
         when(notificationRepository.findUnparsedNotifications()).thenReturn(Future.successful(Seq(testNotification)))
         val exceptionMsg = "Test Exception message"
-        when(parseAndSaveAction.execute(any[Notification])).thenThrow(new RuntimeException(exceptionMsg))
+        when(notificationReceiptActionsExecutor.executeActions(any[Notification])).thenThrow(new RuntimeException(exceptionMsg))
 
         notificationService.reattemptParsingUnparsedNotifications().failed.futureValue must have message exceptionMsg
       }

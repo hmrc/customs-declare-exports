@@ -18,20 +18,25 @@ package uk.gov.hmrc.exports.services.notifications.receiptactions
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
-import uk.gov.hmrc.exports.repositories.NotificationRepository
-import uk.gov.hmrc.exports.services.email.EmailSender
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.exports.models.emails.SendEmailDetails
+import uk.gov.hmrc.exports.repositories.{NotificationRepository, SendEmailWorkItemRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SendEmailForDmsDocAction @Inject()(notificationRepository: NotificationRepository, emailSender: EmailSender)(implicit ec: ExecutionContext) {
+class SendEmailForDmsDocAction @Inject()(notificationRepository: NotificationRepository, sendEmailWorkItemRepository: SendEmailWorkItemRepository)(
+  implicit ec: ExecutionContext
+) {
 
-  def execute(actionId: String)(implicit hc: HeaderCarrier): Future[Unit] =
+  def execute(actionId: String): Future[Unit] =
     notificationRepository.findNotificationsByActionId(actionId).map { notifications =>
       notifications.map { notification =>
         if (notification.details.exists(_.status == SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED)) {
-          emailSender.sendEmailForDmsDocNotification(notification)
+
+          notification.details.map(_.mrn).map { mrn =>
+            val sendEmailDetails = SendEmailDetails(notificationId = notification.id, mrn = mrn)
+            sendEmailWorkItemRepository.pushNew(sendEmailDetails)
+          }
         } else
           Future.successful((): Unit)
       }

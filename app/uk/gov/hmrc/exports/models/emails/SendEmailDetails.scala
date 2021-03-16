@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.exports.models.emails
 
-sealed abstract class SendEmailResult(val message: String)
+import play.api.libs.json._
+import reactivemongo.bson.BSONObjectID
+import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
-object SendEmailResult {
+case class SendEmailDetails(notificationId: BSONObjectID, mrn: String, alertTriggered: Boolean = false)
 
-  case object EmailAccepted extends SendEmailResult("Accepted")
-  case class BadEmailRequest(override val message: String) extends SendEmailResult(message)
-  case class InternalEmailServiceError(override val message: String) extends SendEmailResult(message)
-  case object MissingData extends SendEmailResult("Could not obtain all data necessary to send email")
+object SendEmailDetails {
+  implicit val idFormat = ReactiveMongoFormats.objectIdFormats
+  implicit val sendEmailWorkItemFormats: OFormat[SendEmailDetails] = Json.format[SendEmailDetails]
 }

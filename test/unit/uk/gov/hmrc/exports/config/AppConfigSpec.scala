@@ -18,12 +18,12 @@ package uk.gov.hmrc.exports.config
 
 import java.time.LocalTime
 
-import scala.concurrent.duration._
-
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.config.AppConfig.JobConfig
+
+import scala.concurrent.duration._
 
 class AppConfigSpec extends AnyFunSuite with Matchers {
 
@@ -36,8 +36,10 @@ class AppConfigSpec extends AnyFunSuite with Matchers {
   val cancelDeclarationUri = "/cancellation-requests"
   val notificationBearerToken = "Bearer customs-declare-exports"
   val developerHubClientId = "customs-declare-exports"
-  val draftTimeToLive = 30.days
+  val draftTimeToLive: FiniteDuration = 30.days
   val purgeDraftDeclarations = JobConfig(LocalTime.of(23, 30), 1.day)
+  val sendEmailsJobInterval: FiniteDuration = 5.minutes
+  val consideredFailedBeforeWorkItem: FiniteDuration = 4.minutes
   val customsDeclarationsInformationBaseUrl = "http://localhost:9834"
   val fetchMrnStatus = "/mrn/ID/status"
   val cdiApiVersion = "1.0"
@@ -77,6 +79,14 @@ class AppConfigSpec extends AnyFunSuite with Matchers {
   test(s"purgeDraftDeclarations must be $purgeDraftDeclarations") {
     appConfig.purgeDraftDeclarations.elapseTime mustBe purgeDraftDeclarations.elapseTime
     appConfig.purgeDraftDeclarations.interval mustBe purgeDraftDeclarations.interval
+  }
+
+  test(s"sendEmailsJobInterval must be $sendEmailsJobInterval") {
+    appConfig.sendEmailsJobInterval mustBe sendEmailsJobInterval
+  }
+
+  test(s"consideredFailedBeforeWorkItem must be $consideredFailedBeforeWorkItem") {
+    appConfig.consideredFailedBeforeWorkItem mustBe consideredFailedBeforeWorkItem
   }
 
   test(s"customsDeclarationsInformationBaseUrl must be $customsDeclarationsInformationBaseUrl") {

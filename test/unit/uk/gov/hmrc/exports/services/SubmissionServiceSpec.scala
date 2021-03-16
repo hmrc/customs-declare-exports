@@ -20,6 +20,7 @@ import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
+import reactivemongo.bson.BSONObjectID
 import testdata.ExportsDeclarationBuilder
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
@@ -110,7 +111,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
     }
   }
 
-  "SubmissionService on submit" when {
+  "SubmissionService on submit" should {
     def theActionAdded(): Action = {
       val captor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])
       verify(submissionRepository).addAction(any[Submission](), captor.capture())
@@ -133,9 +134,10 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
       val declaration = aDeclaration()
 
       val notification = Notification(
-        "id1",
-        "xml",
-        Some(NotificationDetails("mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneOffset.UTC), SubmissionStatus.ACCEPTED, Seq.empty))
+        id = BSONObjectID.generate,
+        actionId = "id1",
+        payload = "xml",
+        details = Some(NotificationDetails("mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneOffset.UTC), SubmissionStatus.ACCEPTED, Seq.empty))
       )
       val submission = Submission(declaration, "lrn", "mrn")
 
@@ -163,6 +165,9 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
         action.requestType mustBe SubmissionRequest
 
         theDeclarationUpdated().status mustEqual DeclarationStatus.COMPLETE
+
+        verify(submissionRepository, never).updateMrn(any[String], any[String])
+        verify(sendEmailForDmsDocAction, never).execute(any[String])
       }
 
       "existing notification is available" in {
@@ -193,7 +198,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
         theDeclarationUpdated().status mustEqual DeclarationStatus.COMPLETE
 
         verify(submissionRepository).updateMrn(meq("conv-id"), meq("mrn"))
-        verify(sendEmailForDmsDocAction).execute(meq("conv-id"))(any[HeaderCarrier])
+        verify(sendEmailForDmsDocAction).execute(meq("conv-id"))
       }
     }
 

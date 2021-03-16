@@ -16,16 +16,18 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 import play.api.inject.guice.GuiceApplicationBuilder
+import reactivemongo.bson.BSONObjectID
+import stubs.TestMongoDB.mongoConfiguration
 import testdata.ExportsTestData._
 import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.IntegrationTestBaseSpec
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class NotificationRepositorySpec extends IntegrationTestBaseSpec {
 
-  private val repo = GuiceApplicationBuilder().injector.instanceOf[NotificationRepository]
+  private val repo = GuiceApplicationBuilder().configure(mongoConfiguration).injector.instanceOf[NotificationRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -47,12 +49,12 @@ class NotificationRepositorySpec extends IntegrationTestBaseSpec {
     "trying to save the same Notification twice" should {
       "be allowed" in {
         repo.insert(notification).futureValue.ok must be(true)
-        repo.insert(notification).futureValue.ok must be(true)
+        repo.insert(notification.copy(id = BSONObjectID.generate())).futureValue.ok must be(true)
       }
 
       "result in having 2 notifications persisted" in {
         repo.insert(notification).futureValue.ok must be(true)
-        repo.insert(notification).futureValue.ok must be(true)
+        repo.insert(notification.copy(id = BSONObjectID.generate())).futureValue.ok must be(true)
 
         val notificationsInDB = repo.findNotificationsByActionId(notification.actionId).futureValue
         notificationsInDB.length must equal(2)
@@ -191,7 +193,7 @@ class NotificationRepositorySpec extends IntegrationTestBaseSpec {
 
     "there are many unparsed Notification" should {
       "return those Notifications" in {
-        val anotherUnparsableNotification = notificationUnparsed.copy(actionId_3)
+        val anotherUnparsableNotification = notificationUnparsed.copy(id = BSONObjectID.generate(), actionId = actionId_3)
 
         repo.insert(notification).futureValue
         repo.insert(notificationUnparsed).futureValue
@@ -230,10 +232,10 @@ class NotificationRepositorySpec extends IntegrationTestBaseSpec {
       }
     }
 
-    "there are multiple Notification for the given actionId" should {
+    "there are multiple Notifications for the given actionId" should {
       "delete all matching notifications" in {
         repo.insert(notificationUnparsed).futureValue
-        repo.insert(notificationUnparsed.copy(payload = "<something></else>")).futureValue
+        repo.insert(notificationUnparsed.copy(id = BSONObjectID.generate(), payload = "<something></else>")).futureValue
         repo.insert(notification_3).futureValue
 
         repo.removeUnparsedNotificationsForActionId(notificationUnparsed.actionId).futureValue
@@ -243,12 +245,12 @@ class NotificationRepositorySpec extends IntegrationTestBaseSpec {
       }
     }
 
-    "there are multiple Notification for the given actionId, some of them have been parsed" should {
+    "there are multiple Notifications for the given actionId, some of them have been parsed" should {
       "delete only matching actionId notifications that are unparsed" in {
-        val parsedNotificationWithSameActionId = notification_3.copy(actionId = notificationUnparsed.actionId)
+        val parsedNotificationWithSameActionId = notification_3.copy(id = BSONObjectID.generate(), actionId = notificationUnparsed.actionId)
 
         repo.insert(notificationUnparsed).futureValue
-        repo.insert(notificationUnparsed.copy(payload = "<something></else>")).futureValue
+        repo.insert(notificationUnparsed.copy(id = BSONObjectID.generate(), payload = "<something></else>")).futureValue
         repo.insert(parsedNotificationWithSameActionId).futureValue
         repo.insert(notification_3).futureValue
 

@@ -15,15 +15,18 @@
  */
 
 package uk.gov.hmrc.exports.scheduler
+
 import javax.inject.{Inject, Provider}
 import play.api.inject._
 import play.api.{Configuration, Environment}
+import uk.gov.hmrc.exports.scheduler.jobs.{PurgeDraftDeclarationsJob, SendEmailsJob}
 
-class Module extends play.api.inject.Module {
+class ScheduledJobModule extends play.api.inject.Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
     Seq(bind[ScheduledJobs].toProvider[ScheduledJobProvider], bind[Scheduler].toSelf.eagerly())
 }
 
-class ScheduledJobProvider @Inject()(purgeDraftDeclarations: PurgeDraftDeclarationsJob) extends Provider[ScheduledJobs] {
-  override def get(): ScheduledJobs = ScheduledJobs(Set(purgeDraftDeclarations))
+class ScheduledJobProvider @Inject()(purgeDraftDeclarations: PurgeDraftDeclarationsJob, sendEmailsJob: SendEmailsJob)
+    extends Provider[ScheduledJobs] {
+  override def get(): ScheduledJobs = ScheduledJobs(Set(purgeDraftDeclarations, sendEmailsJob))
 }

@@ -19,61 +19,53 @@ package uk.gov.hmrc.exports.services.email
 import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import uk.gov.hmrc.exports.connectors.{CustomsDataStoreConnector, EmailConnector}
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
-import uk.gov.hmrc.exports.models.emails.SendEmailResult.{BadEmailRequest, EmailAccepted, InternalEmailServiceError}
+import uk.gov.hmrc.exports.models.emails.SendEmailResult.{BadEmailRequest, InternalEmailServiceError, MissingData}
 import uk.gov.hmrc.exports.models.emails._
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Success
 
 @Singleton
 class EmailSender @Inject()(
   submissionRepository: SubmissionRepository,
   customsDataStoreConnector: CustomsDataStoreConnector,
   emailConnector: EmailConnector
-)(implicit executionContext: ExecutionContext)
-    extends Logging {
+) extends Logging {
 
-  def sendEmailForDmsDocNotification(notification: Notification)(implicit hc: HeaderCarrier): Future[Unit] = {
-    val mrn = getMrn(notification)
-
-    obtainEori(mrn).map {
+  def sendEmailForDmsDocNotification(mrn: String)(implicit ec: ExecutionContext): Future[SendEmailResult] =
+    obtainEori(mrn).flatMap {
       case Some(eori) =>
-        obtainEmailAddress(eori).map {
+        obtainEmailAddress(eori).flatMap {
           case Some(verifiedEmailAddress) => sendEmail(mrn, eori, verifiedEmailAddress)
-          case None                       => logEmailAddressNotFound(eori)
+          case None =>
+            logger.warn(s"Email address for EORI: [$eori] was not found or it is not verified yet")
+            Future.successful(MissingData)
         }
-      case None => ()
+      case None =>
+        logger.warn(s"Could not obtain EORI number for MRN: [$mrn]")
+        Future.successful(MissingData)
     }
-  }
 
-  private def getMrn(notification: Notification): String = notification.details.map(_.mrn) match {
-    case Some(mrn) => mrn
-    case None =>
-      logger.warn(s"Notification with actionId: ${notification.actionId} does not contain MRN")
-      throw new IllegalArgumentException(s"MRN not found in Notification with actionId: ${notification.actionId}")
-  }
-
-  private def obtainEori(mrn: String): Future[Option[String]] =
+  private def obtainEori(mrn: String)(implicit ec: ExecutionContext): Future[Option[String]] =
     submissionRepository.findSubmissionByMrn(mrn).map(_.map(_.eori))
 
-  private def obtainEmailAddress(eori: String)(implicit hc: HeaderCarrier): Future[Option[VerifiedEmailAddress]] =
+  private def obtainEmailAddress(eori: String)(implicit ec: ExecutionContext): Future[Option[VerifiedEmailAddress]] =
     customsDataStoreConnector.getEmailAddress(eori)
 
-  private def sendEmail(mrn: String, eori: String, verifiedEmailAddress: VerifiedEmailAddress)(implicit hc: HeaderCarrier): Future[Unit] = {
+  private def sendEmail(mrn: String, eori: String, verifiedEmailAddress: VerifiedEmailAddress)(
+    implicit ec: ExecutionContext
+  ): Future[SendEmailResult] = {
     val emailParameters = EmailParameters(Map(EmailParameter.MRN -> mrn))
     val sendEmailRequest = SendEmailRequest(List(verifiedEmailAddress.address), TemplateId.DMSDOC_NOTIFICATION, emailParameters)
 
-    emailConnector.sendEmail(sendEmailRequest).map {
-      case EmailAccepted                      =>
-      case BadEmailRequest(message)           => logSendEmailError("Bad request", message, eori, mrn)
-      case InternalEmailServiceError(message) => logSendEmailError("Email service error", message, eori, mrn)
-    }
+    emailConnector
+      .sendEmail(sendEmailRequest)
+      .andThen {
+        case Success(BadEmailRequest(message))           => logSendEmailError("Bad request", message, eori, mrn)
+        case Success(InternalEmailServiceError(message)) => logSendEmailError("Email service error", message, eori, mrn)
+      }
   }
-
-  private def logEmailAddressNotFound(eori: String): Unit =
-    logger.warn(s"Email address for eori($eori) was not found or it is not verified yet")
 
   private def logSendEmailError(error: String, message: String, eori: String, mrn: String): Unit =
     logger.warn(s"$error for eori($eori) and mrn($mrn) while sending a DmsDoc notification email, error was $message")

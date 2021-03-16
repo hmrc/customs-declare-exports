@@ -26,6 +26,8 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.CustomsDataStoreConnector
 import uk.gov.hmrc.exports.models.emails.VerifiedEmailAddress
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class CustomsDataStoreConnectorSpec extends IntegrationTestSpec {
 
   implicit private val appConfig: AppConfig = inject[AppConfig]

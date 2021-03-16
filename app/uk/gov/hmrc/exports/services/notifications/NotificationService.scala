@@ -31,7 +31,6 @@ class NotificationService @Inject()(
   submissionRepository: SubmissionRepository,
   notificationRepository: NotificationRepository,
   notificationFactory: NotificationFactory,
-  parseAndSaveAction: ParseAndSaveAction,
   notificationReceiptActionsExecutor: NotificationReceiptActionsExecutor
 )(implicit executionContext: ExecutionContext) {
 
@@ -74,6 +73,6 @@ class NotificationService @Inject()(
   }
 
   def reattemptParsingUnparsedNotifications(): Future[Unit] =
-    notificationRepository.findUnparsedNotifications().map(_.map(parseAndSaveAction.execute))
+    notificationRepository.findUnparsedNotifications().map(_.map(notificationReceiptActionsExecutor.executeActions))
 
 }

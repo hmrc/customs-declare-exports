@@ -27,6 +27,8 @@ import uk.gov.hmrc.exports.models.emails.SendEmailResult._
 import uk.gov.hmrc.exports.models.emails.TemplateId.DMSDOC_NOTIFICATION
 import uk.gov.hmrc.exports.models.emails.{EmailParameters, SendEmailRequest}
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class EmailConnectorSpec extends IntegrationTestSpec {
 
   implicit val appConfig: AppConfig = inject[AppConfig]

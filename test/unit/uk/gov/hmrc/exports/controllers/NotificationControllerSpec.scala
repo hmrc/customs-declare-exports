@@ -99,7 +99,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
         val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
 
         status(result) must be(OK)
-        contentAsJson(result) must be(Json.toJson(Seq())(Notification.FrontendFormat.notificationsWrites))
+        contentAsJson(result) must be(Json.toJson(Seq.empty[Notification])(Notification.FrontendFormat.notificationsWrites))
       }
     }
 

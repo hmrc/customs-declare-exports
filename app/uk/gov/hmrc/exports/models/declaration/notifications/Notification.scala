@@ -18,10 +18,11 @@ package uk.gov.hmrc.exports.models.declaration.notifications
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Json, Reads, _}
+import reactivemongo.bson.BSONObjectID
 
 import scala.xml.NodeSeq
 
-case class Notification(actionId: String, payload: String, details: Option[NotificationDetails])
+case class Notification(id: BSONObjectID = BSONObjectID.generate(), actionId: String, payload: String, details: Option[NotificationDetails])
 
 object Notification {
 
@@ -29,13 +30,17 @@ object Notification {
     Notification(actionId = actionId, payload = notificationXml.toString, details = None)
 
   object DbFormat {
+    implicit val idFormat = reactivemongo.play.json.BSONFormats.BSONObjectIDFormat
+
     implicit val writes: Writes[Notification] =
-      ((JsPath \ "actionId").write[String] and
+      ((JsPath \ "_id").write[BSONObjectID] and
+        (JsPath \ "actionId").write[String] and
         (JsPath \ "payload").write[String] and
         (JsPath \ "details").writeNullable[NotificationDetails](NotificationDetails.writes))(unlift(Notification.unapply))
 
     implicit val reads: Reads[Notification] =
-      ((__ \ "actionId").read[String] and
+      ((__ \ "_id").read[BSONObjectID] and
+        (__ \ "actionId").read[String] and
         (__ \ "payload").read[String] and
         (__ \ "details").readNullable[NotificationDetails])(Notification.apply _)
 

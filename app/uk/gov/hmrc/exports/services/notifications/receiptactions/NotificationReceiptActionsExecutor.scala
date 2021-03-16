@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit.SECONDS
 import akka.actor.{ActorSystem, Cancellable}
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.exports.models.declaration.notifications.Notification
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
@@ -33,7 +32,7 @@ class NotificationReceiptActionsExecutor @Inject()(
   sendEmailForDmsDocAction: SendEmailForDmsDocAction
 )(implicit executionContext: ExecutionContext) {
 
-  def executeActions(notification: Notification)(implicit hc: HeaderCarrier): Cancellable =
+  def executeActions(notification: Notification): Cancellable =
     actorSystem.scheduler.scheduleOnce(FiniteDuration(0, SECONDS)) {
       for {
         _ <- parseAndSaveAction.execute(notification)

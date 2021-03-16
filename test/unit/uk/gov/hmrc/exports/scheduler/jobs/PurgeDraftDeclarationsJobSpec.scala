@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.scheduler
+package uk.gov.hmrc.exports.scheduler.jobs
 
 import java.time._
-
-import scala.concurrent.Future
-import scala.concurrent.duration._
 
 import org.mockito.BDDMockito.given
 import play.api.test.Helpers._
@@ -27,6 +24,10 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.config.AppConfig.JobConfig
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class PurgeDraftDeclarationsJobSpec extends UnitSpec {
 
@@ -41,7 +42,7 @@ class PurgeDraftDeclarationsJobSpec extends UnitSpec {
     given(appConfig.clock) willReturn clock
   }
 
-  "Scheduled Job" should {
+  "PurgeDraftDeclarationsJob" should {
 
     "Configure 'Name'" in {
       newJob.name mustBe "PurgeDraftDeclarations"

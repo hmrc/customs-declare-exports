@@ -18,20 +18,22 @@ package uk.gov.hmrc.exports.repositories
 
 import java.util.UUID
 
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext.Implicits.global
-
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.core.errors.DatabaseException
+import stubs.TestMongoDB
+import stubs.TestMongoDB.mongoConfiguration
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
 import uk.gov.hmrc.exports.base.IntegrationTestBaseSpec
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest, SubmissionRequest}
 
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
 
-  private val repo: SubmissionRepository = GuiceApplicationBuilder().injector.instanceOf[SubmissionRepository]
+  private val repo: SubmissionRepository = GuiceApplicationBuilder().configure(mongoConfiguration).injector.instanceOf[SubmissionRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -57,7 +59,7 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
         val exc = repo.save(secondSubmission).failed.futureValue
 
         exc mustBe an[DatabaseException]
-        exc.getMessage must include("E11000 duplicate key error collection: customs-declare-exports.submissions index: actionIdIdx dup key")
+        exc.getMessage must include(s"E11000 duplicate key error collection: ${TestMongoDB.DatabaseName}.submissions index: actionIdIdx dup key")
       }
 
       "result in having only the first Submission persisted" in {
