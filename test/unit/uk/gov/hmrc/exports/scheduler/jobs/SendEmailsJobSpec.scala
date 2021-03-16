@@ -50,6 +50,7 @@ class SendEmailsJobSpec extends UnitSpec {
 
     reset(appConfig, sendEmailWorkItemRepository, emailSender)
     when(appConfig.sendEmailsJobInterval).thenReturn(5.minutes)
+    when(appConfig.consideredFailedBeforeWorkItem).thenReturn(4.minutes)
   }
 
   "SendEmailsJob" should {

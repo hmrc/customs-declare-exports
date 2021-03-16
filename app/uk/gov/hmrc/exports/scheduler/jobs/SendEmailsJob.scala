@@ -58,10 +58,10 @@ class SendEmailsJob @Inject()(appConfig: AppConfig, sendEmailWorkItemRepository:
     logger.info("Starting SendEmailsJob execution...")
 
     val now = DateTime.now()
-    val failedBefore = interval.minus(1.minute).toMinutes
+    val failedBefore = appConfig.consideredFailedBeforeWorkItem
 
     def process(): Future[Unit] =
-      sendEmailWorkItemRepository.pullOutstanding(failedBefore = now.minusMinutes(failedBefore.toInt), availableBefore = now).flatMap {
+      sendEmailWorkItemRepository.pullOutstanding(failedBefore = now.minus(failedBefore.toMillis), availableBefore = now).flatMap {
         case None =>
           Future.successful(())
         case Some(workItem) =>

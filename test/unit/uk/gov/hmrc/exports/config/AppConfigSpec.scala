@@ -39,6 +39,7 @@ class AppConfigSpec extends AnyFunSuite with Matchers {
   val draftTimeToLive: FiniteDuration = 30.days
   val purgeDraftDeclarations = JobConfig(LocalTime.of(23, 30), 1.day)
   val sendEmailsJobInterval: FiniteDuration = 5.minutes
+  val consideredFailedBeforeWorkItem: FiniteDuration = 4.minutes
   val customsDeclarationsInformationBaseUrl = "http://localhost:9834"
   val fetchMrnStatus = "/mrn/ID/status"
   val cdiApiVersion = "1.0"
@@ -82,6 +83,10 @@ class AppConfigSpec extends AnyFunSuite with Matchers {
 
   test(s"sendEmailsJobInterval must be $sendEmailsJobInterval") {
     appConfig.sendEmailsJobInterval mustBe sendEmailsJobInterval
+  }
+
+  test(s"consideredFailedBeforeWorkItem must be $consideredFailedBeforeWorkItem") {
+    appConfig.consideredFailedBeforeWorkItem mustBe consideredFailedBeforeWorkItem
   }
 
   test(s"customsDeclarationsInformationBaseUrl must be $customsDeclarationsInformationBaseUrl") {
