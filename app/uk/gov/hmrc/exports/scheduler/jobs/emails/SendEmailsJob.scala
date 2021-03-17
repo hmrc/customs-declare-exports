@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.scheduler.jobs
+package uk.gov.hmrc.exports.scheduler.jobs.emails
 
 import java.time.LocalTime
 
 import javax.inject.{Inject, Named, Singleton}
 import org.joda.time.DateTime
 import play.api.Logging
+import reactivemongo.api.ReadPreference
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.exports.models.emails.SendEmailResult._
 import uk.gov.hmrc.exports.repositories.SendEmailWorkItemRepository
+import uk.gov.hmrc.exports.scheduler.jobs.ScheduledJob
 import uk.gov.hmrc.exports.services.email.EmailSender
 import uk.gov.hmrc.workitem.{Failed, Succeeded, WorkItem}
 
@@ -32,9 +34,13 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SendEmailsJob @Inject()(appConfig: AppConfig, sendEmailWorkItemRepository: SendEmailWorkItemRepository, emailSender: EmailSender)(
-  implicit @Named("jobsExecutionContext") ec: ExecutionContext
-) extends ScheduledJob with Logging {
+class SendEmailsJob @Inject()(
+  appConfig: AppConfig,
+  sendEmailWorkItemRepository: SendEmailWorkItemRepository,
+  emailSender: EmailSender,
+  pagerDutyAlertManager: PagerDutyAlertManager
+)(implicit @Named("jobsExecutionContext") ec: ExecutionContext)
+    extends ScheduledJob with Logging {
 
   override def name: String = "SendEmails"
 
@@ -68,7 +74,7 @@ class SendEmailsJob @Inject()(appConfig: AppConfig, sendEmailWorkItemRepository:
           emailSender.sendEmailForDmsDocNotification(workItem.item.mrn).flatMap {
             case EmailAccepted =>
               logger.info(s"Email sent for MRN: ${workItem.item.mrn}")
-              sendEmailWorkItemRepository.complete(workItem.id, Succeeded).map(_ => ()).map(_ => process())
+              sendEmailWorkItemRepository.complete(workItem.id, Succeeded).map(_ => process())
             case MissingData =>
               logger.warn(s"Could not send email because some data is missing")
               failSingle(workItem).map(_ => process())
@@ -79,7 +85,6 @@ class SendEmailsJob @Inject()(appConfig: AppConfig, sendEmailWorkItemRepository:
               logger.warn(s"Email service returned Internal Service Error response: [$msg]")
               logger.warn(s"Will try again in ${interval.toMinutes} minutes")
               failSingle(workItem)
-              Future.successful(())
           }
       }
 
@@ -89,5 +94,23 @@ class SendEmailsJob @Inject()(appConfig: AppConfig, sendEmailWorkItemRepository:
   }
 
   private def failSingle(workItem: WorkItem[SendEmailDetails]): Future[Unit] =
-    sendEmailWorkItemRepository.markAs(workItem.id, Failed).map(_ => ())
+    sendEmailWorkItemRepository.markAs(workItem.id, Failed).flatMap { _ =>
+      sendEmailWorkItemRepository.findById(workItem.id, ReadPreference.primaryPreferred).map {
+        case Some(workItemUpdated) => handlePagerDutyAlert(workItemUpdated)
+
+        case None => logger.warn(s"Cannot find WorkItem with SendEmailDetails containing MRN: [${workItem.item.mrn}]")
+      }
+    }
+
+  private def handlePagerDutyAlert(workItem: WorkItem[SendEmailDetails]): Future[Option[WorkItem[SendEmailDetails]]] =
+    if (pagerDutyAlertManager.isPagerDutyAlertRequiredFor(workItem)) {
+      triggerPagerDutyAlert(workItem)
+      sendEmailWorkItemRepository.markAlertTriggered(workItem.id)
+    } else
+      Future.successful(None)
+
+  private def triggerPagerDutyAlert(workItem: WorkItem[SendEmailDetails]): Unit =
+    logger.warn(
+      s"No email has been sent for DMSDOC Notification with MRN: [${workItem.item.mrn}] for more than ${appConfig.sendEmailPagerDutyAlertTriggerDelay}"
+    )
 }
