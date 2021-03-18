@@ -16,70 +16,131 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
-import org.joda.time.DateTime.now
+import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import reactivemongo.api.ReadPreference
 import reactivemongo.bson.BSONObjectID
-import testdata.ExportsTestData
+import testdata.WorkItemTestData._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
-import uk.gov.hmrc.exports.scheduler.jobs.emails.PagerDutyAlertManagerSpec.TestDefinition
-import uk.gov.hmrc.workitem.{Failed, ProcessingStatus, ToDo, WorkItem}
+import uk.gov.hmrc.exports.repositories.SendEmailWorkItemRepository
+import uk.gov.hmrc.workitem.{Failed, WorkItem}
 
-import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 
 class PagerDutyAlertManagerSpec extends UnitSpec {
 
   private val appConfig = mock[AppConfig]
-  private val testAlertTriggerDelay = 1.day
+  private val sendEmailWorkItemRepository = mock[SendEmailWorkItemRepository]
+  private val pagerDutyAlertValidator = mock[PagerDutyAlertValidator]
 
-  private val pagerDutyAlertManager = new PagerDutyAlertManager(appConfig)
-
-  private val testDefinitions = Seq(
-    TestDefinition(workItemStatus = ToDo, alertTriggered = false, workItemAge = Duration("1h"), expectedResult = false),
-    TestDefinition(workItemStatus = ToDo, alertTriggered = false, workItemAge = testAlertTriggerDelay.plus(Duration("1m")), expectedResult = false),
-    TestDefinition(workItemStatus = ToDo, alertTriggered = true, workItemAge = Duration("1h"), expectedResult = false),
-    TestDefinition(workItemStatus = ToDo, alertTriggered = true, workItemAge = testAlertTriggerDelay.plus(Duration("1m")), expectedResult = false),
-    TestDefinition(workItemStatus = Failed, alertTriggered = false, workItemAge = Duration("1h"), expectedResult = false),
-    TestDefinition(workItemStatus = Failed, alertTriggered = false, workItemAge = testAlertTriggerDelay, expectedResult = false),
-    TestDefinition(workItemStatus = Failed, alertTriggered = false, workItemAge = testAlertTriggerDelay.plus(Duration("1m")), expectedResult = true),
-    TestDefinition(workItemStatus = Failed, alertTriggered = true, workItemAge = Duration("1h"), expectedResult = false),
-    TestDefinition(workItemStatus = Failed, alertTriggered = true, workItemAge = testAlertTriggerDelay.plus(Duration("1m")), expectedResult = false)
-  )
+  private val pagerDutyAlertManager = new PagerDutyAlertManager(appConfig, sendEmailWorkItemRepository, pagerDutyAlertValidator)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(appConfig)
-    when(appConfig.sendEmailPagerDutyAlertTriggerDelay).thenReturn(testAlertTriggerDelay)
+    reset(appConfig, sendEmailWorkItemRepository, pagerDutyAlertValidator)
   }
 
-  "PagerDutyAlertManager on isPagerDutyAlertRequiredFor" when {
+  private val testWorkItem: WorkItem[SendEmailDetails] = buildTestWorkItem(status = Failed)
 
-    testDefinitions.foreach { testDefinition =>
-      s"WotkItem status is '${testDefinition.workItemStatus}', alertTriggered field equals ${testDefinition.alertTriggered}" +
-        s" and receivedAt field is ${testDefinition.workItemAge} in the past" should {
-        s"return ${testDefinition.expectedResult}" in {
+  "PagerDutyAlertManager on managePagerDutyAlert" when {
 
-          val receivedAtValue = now.minus(testDefinition.workItemAge.toMillis)
+    "SendEmailWorkItemRepository returns empty Option" should {
 
-          val testWorkItem = WorkItem[SendEmailDetails](
-            id = BSONObjectID.generate,
-            receivedAt = receivedAtValue,
-            updatedAt = now,
-            availableAt = now,
-            status = testDefinition.workItemStatus,
-            failureCount = 0,
-            item = SendEmailDetails(notificationId = BSONObjectID.generate, mrn = ExportsTestData.mrn, alertTriggered = testDefinition.alertTriggered)
-          )
+      "return false" in {
+        when(sendEmailWorkItemRepository.findById(any[BSONObjectID], any[ReadPreference])(any[ExecutionContext])).thenReturn(Future.successful(None))
+        val id = BSONObjectID.generate
 
-          pagerDutyAlertManager.isPagerDutyAlertRequiredFor(testWorkItem) mustBe testDefinition.expectedResult
+        pagerDutyAlertManager.managePagerDutyAlert(id).futureValue mustBe false
+      }
+
+      "NOT call PagerDutyAlertValidator" in {
+        when(sendEmailWorkItemRepository.findById(any[BSONObjectID], any[ReadPreference])(any[ExecutionContext])).thenReturn(Future.successful(None))
+        val id = BSONObjectID.generate
+
+        pagerDutyAlertManager.managePagerDutyAlert(id).futureValue
+
+        verifyZeroInteractions(pagerDutyAlertValidator)
+      }
+
+      "NOT call SendEmailWorkItemRepository.markAlertTriggered" in {
+        when(sendEmailWorkItemRepository.findById(any[BSONObjectID], any[ReadPreference])(any[ExecutionContext])).thenReturn(Future.successful(None))
+        val id = BSONObjectID.generate
+
+        pagerDutyAlertManager.managePagerDutyAlert(id).futureValue
+
+        verify(sendEmailWorkItemRepository, never).markAlertTriggered(any[BSONObjectID])(any[ExecutionContext])
+      }
+    }
+
+    "SendEmailWorkItemRepository returns WorkItem" should {
+      "call PagerDutyAlertValidator" in {
+        when(sendEmailWorkItemRepository.findById(any[BSONObjectID], any[ReadPreference])(any[ExecutionContext]))
+          .thenReturn(Future.successful(Some(testWorkItem)))
+        val id = testWorkItem.id
+
+        pagerDutyAlertManager.managePagerDutyAlert(id).futureValue
+
+        verify(pagerDutyAlertValidator).isPagerDutyAlertRequiredFor(eqTo(testWorkItem))
+      }
+    }
+
+    "SendEmailWorkItemRepository returns WorkItem" when {
+
+      "PagerDutyAlertValidator returns false" should {
+
+        "return false" in {
+          when(sendEmailWorkItemRepository.findById(any[BSONObjectID], any[ReadPreference])(any[ExecutionContext]))
+            .thenReturn(Future.successful(Some(testWorkItem)))
+          when(pagerDutyAlertValidator.isPagerDutyAlertRequiredFor(any[WorkItem[SendEmailDetails]])).thenReturn(false)
+          val id = testWorkItem.id
+
+          pagerDutyAlertManager.managePagerDutyAlert(id).futureValue mustBe false
+        }
+
+        "NOT call SendEmailWorkItemRepository.markAlertTriggered" in {
+          when(sendEmailWorkItemRepository.findById(any[BSONObjectID], any[ReadPreference])(any[ExecutionContext]))
+            .thenReturn(Future.successful(Some(testWorkItem)))
+          when(pagerDutyAlertValidator.isPagerDutyAlertRequiredFor(any[WorkItem[SendEmailDetails]])).thenReturn(false)
+          val id = testWorkItem.id
+
+          pagerDutyAlertManager.managePagerDutyAlert(id).futureValue
+
+          verify(sendEmailWorkItemRepository, never).markAlertTriggered(any[BSONObjectID])(any[ExecutionContext])
+        }
+      }
+
+      "PagerDutyAlertValidator returns true" should {
+
+        val testWorkItemAlertUpdated = testWorkItem.copy(item = testWorkItem.item.copy(alertTriggered = true))
+
+        "return true" in {
+          when(sendEmailWorkItemRepository.findById(any[BSONObjectID], any[ReadPreference])(any[ExecutionContext]))
+            .thenReturn(Future.successful(Some(testWorkItem)))
+          when(pagerDutyAlertValidator.isPagerDutyAlertRequiredFor(any[WorkItem[SendEmailDetails]])).thenReturn(true)
+          when(sendEmailWorkItemRepository.markAlertTriggered(any[BSONObjectID])(any[ExecutionContext]))
+            .thenReturn(Future.successful(Some(testWorkItemAlertUpdated)))
+          val id = testWorkItem.id
+
+          pagerDutyAlertManager.managePagerDutyAlert(id).futureValue mustBe true
+        }
+
+        "call SendEmailWorkItemRepository.markAlertTriggered" in {
+          when(sendEmailWorkItemRepository.findById(any[BSONObjectID], any[ReadPreference])(any[ExecutionContext]))
+            .thenReturn(Future.successful(Some(testWorkItem)))
+          when(pagerDutyAlertValidator.isPagerDutyAlertRequiredFor(any[WorkItem[SendEmailDetails]])).thenReturn(true)
+          when(sendEmailWorkItemRepository.markAlertTriggered(any[BSONObjectID])(any[ExecutionContext]))
+            .thenReturn(Future.successful(Some(testWorkItemAlertUpdated)))
+          val id = testWorkItem.id
+
+          pagerDutyAlertManager.managePagerDutyAlert(id).futureValue
+
+          verify(sendEmailWorkItemRepository).markAlertTriggered(eqTo(id))(any[ExecutionContext])
         }
       }
     }
   }
 
-}
-
-object PagerDutyAlertManagerSpec {
-  private case class TestDefinition(workItemStatus: ProcessingStatus, alertTriggered: Boolean, workItemAge: Duration, expectedResult: Boolean)
 }

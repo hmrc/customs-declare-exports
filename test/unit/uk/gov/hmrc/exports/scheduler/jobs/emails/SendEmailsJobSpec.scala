@@ -20,7 +20,6 @@ import java.time._
 
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
-import reactivemongo.api.ReadPreference
 import reactivemongo.bson.BSONObjectID
 import testdata.WorkItemTestData._
 import uk.gov.hmrc.exports.base.UnitSpec
@@ -53,7 +52,7 @@ class SendEmailsJobSpec extends UnitSpec {
     reset(appConfig, sendEmailWorkItemRepository, emailSender, pagerDutyAlertManager)
     when(appConfig.sendEmailsJobInterval).thenReturn(5.minutes)
     when(appConfig.consideredFailedBeforeWorkItem).thenReturn(4.minutes)
-    when(pagerDutyAlertManager.isPagerDutyAlertRequiredFor(any[WorkItem[SendEmailDetails]])).thenReturn(false)
+    when(pagerDutyAlertManager.managePagerDutyAlert(any[BSONObjectID])(any[ExecutionContext])).thenReturn(Future.successful(false))
   }
 
   "SendEmailsJob" should {
@@ -118,7 +117,6 @@ class SendEmailsJobSpec extends UnitSpec {
     "SendEmailWorkItemRepository returns WorkItem" when {
 
       val testWorkItem: WorkItem[SendEmailDetails] = buildTestWorkItem(status = InProgress)
-      val testWorkItemUpdated: WorkItem[SendEmailDetails] = testWorkItem.copy(status = Failed)
 
       def whenThereIsWorkItemAvailable(): Unit =
         when(sendEmailWorkItemRepository.pullOutstanding(any[DateTime], any[DateTime])(any))
@@ -166,8 +164,6 @@ class SendEmailsJobSpec extends UnitSpec {
             .thenReturn(Future.successful(BadEmailRequest("Test BadEmailRequest message")))
           when(sendEmailWorkItemRepository.markAs(any[BSONObjectID], any[ProcessingStatus with ResultStatus], any[Option[DateTime]])(any))
             .thenReturn(Future.successful(true))
-          when(sendEmailWorkItemRepository.findById(any[BSONObjectID], any[ReadPreference])(any[ExecutionContext]))
-            .thenReturn(Future.successful(Some(testWorkItemUpdated)))
         }
 
         "call SendEmailWorkItemRepository to mark the WorkItem as Failed" in {
@@ -178,41 +174,12 @@ class SendEmailsJobSpec extends UnitSpec {
           verify(sendEmailWorkItemRepository).markAs(eqTo(testWorkItem.id), eqTo(Failed), any)(any)
         }
 
-        "call SendEmailWorkItemRepository to fetch the most up-to-date version of WorkItem with status other than InProgress" in {
-          prepareTestScenario()
-
-          sendEmailsJob.execute().futureValue
-
-          verify(sendEmailWorkItemRepository).findById(eqTo(testWorkItem.id), any[ReadPreference])(any[ExecutionContext])
-        }
-
         "call PagerDutyAlertManager" in {
           prepareTestScenario()
 
           sendEmailsJob.execute().futureValue
 
-          verify(pagerDutyAlertManager).isPagerDutyAlertRequiredFor(eqTo(testWorkItemUpdated))
-        }
-
-        "call SendEmailWorkItemRepository to update SendEmailDetails" when {
-          "PagerDutyAlertManager returns true" in {
-            prepareTestScenario()
-            when(pagerDutyAlertManager.isPagerDutyAlertRequiredFor(any[WorkItem[SendEmailDetails]])).thenReturn(true)
-
-            sendEmailsJob.execute().futureValue
-
-            verify(sendEmailWorkItemRepository).markAlertTriggered(eqTo(testWorkItem.id))(any[ExecutionContext])
-          }
-        }
-
-        "NOT call SendEmailWorkItemRepository to update SendEmailDetails" when {
-          "PagerDutyAlertManager returns false" in {
-            prepareTestScenario()
-
-            sendEmailsJob.execute().futureValue
-
-            verify(sendEmailWorkItemRepository, never).markAlertTriggered(any[BSONObjectID])(any[ExecutionContext])
-          }
+          verify(pagerDutyAlertManager).managePagerDutyAlert(eqTo(testWorkItem.id))(any[ExecutionContext])
         }
 
         "call SendEmailWorkItemRepository again for the next WorkItem" in {
@@ -231,8 +198,6 @@ class SendEmailsJobSpec extends UnitSpec {
           when(emailSender.sendEmailForDmsDocNotification(any[String])(any[ExecutionContext])).thenReturn(Future.successful(MissingData))
           when(sendEmailWorkItemRepository.markAs(any[BSONObjectID], any[ProcessingStatus with ResultStatus], any[Option[DateTime]])(any))
             .thenReturn(Future.successful(true))
-          when(sendEmailWorkItemRepository.findById(any[BSONObjectID], any[ReadPreference])(any[ExecutionContext]))
-            .thenReturn(Future.successful(Some(testWorkItemUpdated)))
         }
 
         "call SendEmailWorkItemRepository to mark the WorkItem as Failed" in {
@@ -243,41 +208,12 @@ class SendEmailsJobSpec extends UnitSpec {
           verify(sendEmailWorkItemRepository).markAs(eqTo(testWorkItem.id), eqTo(Failed), any)(any)
         }
 
-        "call SendEmailWorkItemRepository to fetch the most up-to-date version of WorkItem with status other than InProgress" in {
-          prepareTestScenario()
-
-          sendEmailsJob.execute().futureValue
-
-          verify(sendEmailWorkItemRepository).findById(eqTo(testWorkItem.id), any[ReadPreference])(any[ExecutionContext])
-        }
-
         "call PagerDutyAlertManager" in {
           prepareTestScenario()
 
           sendEmailsJob.execute().futureValue
 
-          verify(pagerDutyAlertManager).isPagerDutyAlertRequiredFor(eqTo(testWorkItemUpdated))
-        }
-
-        "call SendEmailWorkItemRepository to update SendEmailDetails" when {
-          "PagerDutyAlertManager returns true" in {
-            prepareTestScenario()
-            when(pagerDutyAlertManager.isPagerDutyAlertRequiredFor(any[WorkItem[SendEmailDetails]])).thenReturn(true)
-
-            sendEmailsJob.execute().futureValue
-
-            verify(sendEmailWorkItemRepository).markAlertTriggered(eqTo(testWorkItem.id))(any[ExecutionContext])
-          }
-        }
-
-        "NOT call SendEmailWorkItemRepository to update SendEmailDetails" when {
-          "PagerDutyAlertManager returns false" in {
-            prepareTestScenario()
-
-            sendEmailsJob.execute().futureValue
-
-            verify(sendEmailWorkItemRepository, never).markAlertTriggered(any[BSONObjectID])(any[ExecutionContext])
-          }
+          verify(pagerDutyAlertManager).managePagerDutyAlert(eqTo(testWorkItem.id))(any[ExecutionContext])
         }
 
         "call SendEmailWorkItemRepository again for the next WorkItem" in {
@@ -297,8 +233,6 @@ class SendEmailsJobSpec extends UnitSpec {
             .thenReturn(Future.successful(InternalEmailServiceError("Test InternalEmailServiceError message")))
           when(sendEmailWorkItemRepository.markAs(any[BSONObjectID], any[ProcessingStatus with ResultStatus], any[Option[DateTime]])(any))
             .thenReturn(Future.successful(true))
-          when(sendEmailWorkItemRepository.findById(any[BSONObjectID], any[ReadPreference])(any[ExecutionContext]))
-            .thenReturn(Future.successful(Some(testWorkItemUpdated)))
         }
 
         "call SendEmailWorkItemRepository to mark the WorkItem as Failed" in {
@@ -309,41 +243,12 @@ class SendEmailsJobSpec extends UnitSpec {
           verify(sendEmailWorkItemRepository).markAs(eqTo(testWorkItem.id), eqTo(Failed), any)(any)
         }
 
-        "call SendEmailWorkItemRepository to fetch the most up-to-date version of WorkItem with status other than InProgress" in {
-          prepareTestScenario()
-
-          sendEmailsJob.execute().futureValue
-
-          verify(sendEmailWorkItemRepository).findById(eqTo(testWorkItem.id), any[ReadPreference])(any[ExecutionContext])
-        }
-
         "call PagerDutyAlertManager" in {
           prepareTestScenario()
 
           sendEmailsJob.execute().futureValue
 
-          verify(pagerDutyAlertManager).isPagerDutyAlertRequiredFor(eqTo(testWorkItemUpdated))
-        }
-
-        "call SendEmailWorkItemRepository to update SendEmailDetails" when {
-          "PagerDutyAlertManager returns true" in {
-            prepareTestScenario()
-            when(pagerDutyAlertManager.isPagerDutyAlertRequiredFor(any[WorkItem[SendEmailDetails]])).thenReturn(true)
-
-            sendEmailsJob.execute().futureValue
-
-            verify(sendEmailWorkItemRepository).markAlertTriggered(eqTo(testWorkItem.id))(any[ExecutionContext])
-          }
-        }
-
-        "NOT call SendEmailWorkItemRepository to update SendEmailDetails" when {
-          "PagerDutyAlertManager returns false" in {
-            prepareTestScenario()
-
-            sendEmailsJob.execute().futureValue
-
-            verify(sendEmailWorkItemRepository, never).markAlertTriggered(any[BSONObjectID])(any[ExecutionContext])
-          }
+          verify(pagerDutyAlertManager).managePagerDutyAlert(eqTo(testWorkItem.id))(any[ExecutionContext])
         }
 
         "NOT call SendEmailWorkItemRepository again for the next WorkItem" in {

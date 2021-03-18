@@ -21,7 +21,6 @@ import java.time.LocalTime
 import javax.inject.{Inject, Named, Singleton}
 import org.joda.time.DateTime
 import play.api.Logging
-import reactivemongo.api.ReadPreference
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.exports.models.emails.SendEmailResult._
@@ -95,22 +94,6 @@ class SendEmailsJob @Inject()(
 
   private def failSingle(workItem: WorkItem[SendEmailDetails]): Future[Unit] =
     sendEmailWorkItemRepository.markAs(workItem.id, Failed).flatMap { _ =>
-      sendEmailWorkItemRepository.findById(workItem.id, ReadPreference.primaryPreferred).map {
-        case Some(workItemUpdated) => handlePagerDutyAlert(workItemUpdated)
-
-        case None => logger.warn(s"Cannot find WorkItem with SendEmailDetails containing MRN: [${workItem.item.mrn}]")
-      }
+      pagerDutyAlertManager.managePagerDutyAlert(workItem.id).map(_ => ())
     }
-
-  private def handlePagerDutyAlert(workItem: WorkItem[SendEmailDetails]): Future[Option[WorkItem[SendEmailDetails]]] =
-    if (pagerDutyAlertManager.isPagerDutyAlertRequiredFor(workItem)) {
-      triggerPagerDutyAlert(workItem)
-      sendEmailWorkItemRepository.markAlertTriggered(workItem.id)
-    } else
-      Future.successful(None)
-
-  private def triggerPagerDutyAlert(workItem: WorkItem[SendEmailDetails]): Unit =
-    logger.warn(
-      s"No email has been sent for DMSDOC Notification with MRN: [${workItem.item.mrn}] for more than ${appConfig.sendEmailPagerDutyAlertTriggerDelay}"
-    )
 }

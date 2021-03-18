@@ -17,19 +17,38 @@
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
 import javax.inject.Inject
+import play.api.Logging
+import reactivemongo.api.ReadPreference
+import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
-import uk.gov.hmrc.workitem.{Failed, WorkItem}
+import uk.gov.hmrc.exports.repositories.SendEmailWorkItemRepository
+import uk.gov.hmrc.workitem.WorkItem
 
-class PagerDutyAlertManager @Inject()(appConfig: AppConfig) {
+import scala.concurrent.{ExecutionContext, Future}
 
-  def isPagerDutyAlertRequiredFor(workItem: WorkItem[SendEmailDetails]): Boolean = {
-    val isStatusFailed = workItem.status == Failed
-    val isAlertNotTriggered = !workItem.item.alertTriggered
+class PagerDutyAlertManager @Inject()(
+  appConfig: AppConfig,
+  sendEmailWorkItemRepository: SendEmailWorkItemRepository,
+  pagerDutyAlertValidator: PagerDutyAlertValidator
+) extends Logging {
 
-    val workItemMaturity = appConfig.sendEmailPagerDutyAlertTriggerDelay
-    val isWorkItemOld = workItem.receivedAt.plus(workItemMaturity.toMillis).isBeforeNow
+  def managePagerDutyAlert(id: BSONObjectID)(implicit ec: ExecutionContext): Future[Boolean] =
+    sendEmailWorkItemRepository.findById(id, ReadPreference.primaryPreferred).flatMap {
+      case Some(workItemUpdated) =>
+        if (pagerDutyAlertValidator.isPagerDutyAlertRequiredFor(workItemUpdated)) {
+          triggerPagerDutyAlert(workItemUpdated)
+          sendEmailWorkItemRepository.markAlertTriggered(workItemUpdated.id).map(_ => true)
+        } else
+          Future.successful(false)
 
-    isStatusFailed && isAlertNotTriggered && isWorkItemOld
-  }
+      case None =>
+        logger.warn(s"Cannot find WorkItem with SendEmailDetails for id: [$id]")
+        Future.successful(false)
+    }
+
+  private def triggerPagerDutyAlert(workItem: WorkItem[SendEmailDetails]): Unit =
+    logger.warn(
+      s"No email has been sent for DMSDOC Notification with MRN: [${workItem.item.mrn}] for more than ${appConfig.sendEmailPagerDutyAlertTriggerDelay}"
+    )
 }
