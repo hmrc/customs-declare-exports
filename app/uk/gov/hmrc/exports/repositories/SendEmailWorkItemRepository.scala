@@ -62,6 +62,20 @@ class SendEmailWorkItemRepository @Inject()(configuration: Configuration, reacti
   override def inProgressRetryAfterProperty: String = "workItem.sendEmail.retryAfterMillis"
 
   def pushNew(item: SendEmailDetails)(implicit ec: ExecutionContext): Future[WorkItem[SendEmailDetails]] = pushNew(item, now)
+
+  def markAlertTriggered(id: BSONObjectID)(implicit ec: ExecutionContext): Future[Option[WorkItem[SendEmailDetails]]] = {
+    val fields = Json.obj("sendEmailDetails.alertTriggered" -> true)
+
+    findAndUpdate(
+      query = Json.obj(workItemFields.id -> ReactiveMongoFormats.objectIdWrite.writes(id)),
+      update = Json.obj("$set" -> fields),
+      fetchNewObject = true
+    ).map { updateResult =>
+      updateResult.lastError.foreach(_.err.foreach(errorMsg => logger.warn(s"Problem during $collectionName collection update: $errorMsg")))
+
+      updateResult.result[WorkItem[SendEmailDetails]]
+    }
+  }
 }
 
 object SendEmailWorkItemRepository {

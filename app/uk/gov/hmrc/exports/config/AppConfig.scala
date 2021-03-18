@@ -69,6 +69,8 @@ class AppConfig @Inject()(val configuration: Configuration, val environment: Env
   lazy val sendEmailsJobInterval: FiniteDuration = servicesConfig.getDuration("scheduler.send-emails.interval").asInstanceOf[FiniteDuration]
   lazy val consideredFailedBeforeWorkItem: FiniteDuration =
     servicesConfig.getDuration("workItem.sendEmail.consideredFailedBefore").asInstanceOf[FiniteDuration]
+  lazy val sendEmailPagerDutyAlertTriggerDelay: FiniteDuration =
+    servicesConfig.getDuration("workItem.sendEmail.pagerDutyAlertTriggerDelay").asInstanceOf[FiniteDuration]
 
   lazy val customsDeclarationsInformationBaseUrl = servicesConfig.baseUrl("customs-declarations-information")
   lazy val fetchMrnStatus = servicesConfig.getString("microservice.services.customs-declarations-information.fetch-mrn-status")

@@ -19,7 +19,8 @@ package uk.gov.hmrc.exports.scheduler
 import javax.inject.{Inject, Provider}
 import play.api.inject._
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.exports.scheduler.jobs.{PurgeDraftDeclarationsJob, SendEmailsJob}
+import uk.gov.hmrc.exports.scheduler.jobs.PurgeDraftDeclarationsJob
+import uk.gov.hmrc.exports.scheduler.jobs.emails.SendEmailsJob
 
 class ScheduledJobModule extends play.api.inject.Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
