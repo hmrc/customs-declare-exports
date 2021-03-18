@@ -17,12 +17,11 @@
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
 import javax.inject.Inject
-import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.workitem.{Failed, WorkItem}
 
-class PagerDutyAlertValidator @Inject()(appConfig: AppConfig) extends Logging {
+class PagerDutyAlertValidator @Inject()(appConfig: AppConfig) {
 
   def isPagerDutyAlertRequiredFor(workItem: WorkItem[SendEmailDetails]): Boolean = {
     val isStatusFailed = workItem.status == Failed

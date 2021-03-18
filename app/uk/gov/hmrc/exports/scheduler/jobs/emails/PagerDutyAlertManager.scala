@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import reactivemongo.api.ReadPreference
 import reactivemongo.bson.BSONObjectID
@@ -27,6 +27,7 @@ import uk.gov.hmrc.workitem.WorkItem
 
 import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 class PagerDutyAlertManager @Inject()(
   appConfig: AppConfig,
   sendEmailWorkItemRepository: SendEmailWorkItemRepository,
