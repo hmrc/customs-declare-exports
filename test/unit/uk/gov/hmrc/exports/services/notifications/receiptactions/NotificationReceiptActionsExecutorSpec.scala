@@ -21,9 +21,9 @@ import java.util.concurrent.TimeUnit.SECONDS
 import akka.actor.{ActorSystem, Cancellable, Scheduler}
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.Mockito
-import testdata.notifications.NotificationTestData.notification
+import testdata.notifications.NotificationTestData.notificationUnparsed
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
+import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -59,24 +59,24 @@ class NotificationReceiptActionsExecutorSpec extends UnitSpec {
     "all actions work correctly" should {
 
       "call scheduler with zero delay" in {
-        when(parseAndSaveAction.execute(any[Notification])).thenReturn(Future.successful((): Unit))
+        when(parseAndSaveAction.execute(any[UnparsedNotification])).thenReturn(Future.successful((): Unit))
         when(sendEmailForDmsDocAction.execute(any[String])).thenReturn(Future.successful((): Unit))
 
-        notificationReceiptActionsExecutor.executeActions(notification)
+        notificationReceiptActionsExecutor.executeActions(notificationUnparsed)
 
         val expectedDelay = FiniteDuration(0, SECONDS)
         verify(scheduler).scheduleOnce(eqTo(expectedDelay))(any[() => Unit])(any)
       }
 
       "call actions in order" in {
-        when(parseAndSaveAction.execute(any[Notification])).thenReturn(Future.successful((): Unit))
+        when(parseAndSaveAction.execute(any[UnparsedNotification])).thenReturn(Future.successful((): Unit))
         when(sendEmailForDmsDocAction.execute(any[String])).thenReturn(Future.successful((): Unit))
 
-        notificationReceiptActionsExecutor.executeActions(notification)
+        notificationReceiptActionsExecutor.executeActions(notificationUnparsed)
 
         val inOrder = Mockito.inOrder(parseAndSaveAction, sendEmailForDmsDocAction)
-        inOrder.verify(parseAndSaveAction).execute(eqTo(notification))
-        inOrder.verify(sendEmailForDmsDocAction).execute(eqTo(notification.actionId))
+        inOrder.verify(parseAndSaveAction).execute(eqTo(notificationUnparsed))
+        inOrder.verify(sendEmailForDmsDocAction).execute(eqTo(notificationUnparsed.actionId))
       }
     }
 
@@ -84,9 +84,9 @@ class NotificationReceiptActionsExecutorSpec extends UnitSpec {
 
       "call scheduler with zero delay" in {
         val testException = new RuntimeException("Test exception message")
-        when(parseAndSaveAction.execute(any[Notification])).thenReturn(Future.failed(testException))
+        when(parseAndSaveAction.execute(any[UnparsedNotification])).thenReturn(Future.failed(testException))
 
-        notificationReceiptActionsExecutor.executeActions(notification)
+        notificationReceiptActionsExecutor.executeActions(notificationUnparsed)
 
         val expectedDelay = FiniteDuration(0, SECONDS)
         verify(scheduler).scheduleOnce(eqTo(expectedDelay))(any[() => Unit])(any)
@@ -94,9 +94,9 @@ class NotificationReceiptActionsExecutorSpec extends UnitSpec {
 
       "not call SendEmailForDmsDocAction" in {
         val testException = new RuntimeException("Test exception message")
-        when(parseAndSaveAction.execute(any[Notification])).thenReturn(Future.failed(testException))
+        when(parseAndSaveAction.execute(any[UnparsedNotification])).thenReturn(Future.failed(testException))
 
-        notificationReceiptActionsExecutor.executeActions(notification)
+        notificationReceiptActionsExecutor.executeActions(notificationUnparsed)
 
         verifyZeroInteractions(sendEmailForDmsDocAction)
       }

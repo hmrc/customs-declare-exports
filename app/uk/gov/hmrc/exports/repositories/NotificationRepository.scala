@@ -23,7 +23,7 @@ import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONDocument, BSONNull, BSONObjectID}
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
+import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 
@@ -43,18 +43,26 @@ class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: 
     Index(Seq("details" -> IndexType.Ascending), name = Some("detailsDocMissingIdx"), partialFilter = Some(BSONDocument("details" -> BSONNull)))
   )
 
-  def findNotificationsByActionId(actionId: String): Future[Seq[Notification]] =
-    find("actionId" -> JsString(actionId))
+  def findNotificationsByActionId(actionId: String): Future[Seq[ParsedNotification]] =
+    find("actionId" -> JsString(actionId)).map(toParsedNotifications)
 
-  def findNotificationsByActionIds(actionIds: Seq[String]): Future[Seq[Notification]] =
+  def findNotificationsByActionIds(actionIds: Seq[String]): Future[Seq[ParsedNotification]] =
     actionIds match {
       case Seq() => Future.successful(Seq.empty)
-      case _     => find("$or" -> actionIds.map(id => Json.obj("actionId" -> JsString(id))))
+      case _     => find("$or" -> actionIds.map(id => Json.obj("actionId" -> JsString(id)))).map(toParsedNotifications)
     }
 
-  def findUnparsedNotifications(): Future[Seq[Notification]] =
-    find("details" -> JsNull)
+  def findUnparsedNotifications(): Future[Seq[UnparsedNotification]] =
+    find("details" -> JsNull).map(toUnparsedNotifications)
 
   def removeUnparsedNotificationsForActionId(actionId: String): Future[WriteResult] =
     remove("actionId" -> JsString(actionId), "details" -> JsNull)
+
+  private def toParsedNotifications(notifications: Seq[Notification]): Seq[ParsedNotification] = notifications.collect {
+    case notification: ParsedNotification => notification
+  }
+
+  private def toUnparsedNotifications(notifications: Seq[Notification]): Seq[UnparsedNotification] = notifications.collect {
+    case notification: UnparsedNotification => notification
+  }
 }

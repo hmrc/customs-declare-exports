@@ -23,9 +23,9 @@ import testdata.ExportsTestData.{actionId, mrn}
 import testdata.RepositoryTestData.{dummyWriteResultFailure, dummyWriteResultSuccess}
 import testdata.SubmissionTestData.submission
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
-import testdata.notifications.NotificationTestData.notification
+import testdata.notifications.NotificationTestData.{notification, notificationUnparsed}
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
+import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
 
@@ -62,8 +62,12 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
       "contains single Response element" should {
 
-        val inputNotification = Notification(actionId = actionId, payload = exampleRejectNotification(mrn).asXml.toString, details = None)
-        val testNotification = inputNotification.copy(details = exampleRejectNotification(mrn).asDomainModel.headOption)
+        val inputNotification = UnparsedNotification(actionId = actionId, payload = exampleRejectNotification(mrn).asXml.toString)
+        val testNotification = ParsedNotification(
+          actionId = inputNotification.actionId,
+          payload = inputNotification.payload,
+          details = exampleRejectNotification(mrn).asDomainModel.head
+        )
 
         "return successful Future" in {
           when(notificationFactory.buildNotifications(any[String], any[String])).thenReturn(Seq(testNotification))
@@ -78,7 +82,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
           val inOrder: InOrder = Mockito.inOrder(notificationFactory, notificationRepository, submissionRepository)
           inOrder.verify(notificationFactory).buildNotifications(any[String], any[String])
-          inOrder.verify(notificationRepository).insert(any[Notification])(any)
+          inOrder.verify(notificationRepository).insert(any[ParsedNotification])(any)
           inOrder.verify(submissionRepository).updateMrn(any[String], any[String])
           inOrder.verify(notificationRepository).removeUnparsedNotificationsForActionId(any[String])
         }
@@ -118,10 +122,9 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
       "contains multiple Response elements" should {
 
-        val inputNotification =
-          Notification(actionId = actionId, payload = exampleNotificationWithMultipleResponses(mrn).asXml.toString, details = None)
+        val inputNotification = UnparsedNotification(actionId = actionId, payload = exampleNotificationWithMultipleResponses(mrn).asXml.toString)
         val testNotifications = exampleNotificationWithMultipleResponses(mrn).asDomainModel.map { details =>
-          inputNotification.copy(details = Some(details))
+          ParsedNotification(actionId = inputNotification.actionId, payload = inputNotification.payload, details = details)
         }
 
         "return successful Future" in {
@@ -137,7 +140,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
           val inOrder: InOrder = Mockito.inOrder(notificationFactory, notificationRepository, submissionRepository)
           inOrder.verify(notificationFactory).buildNotifications(any[String], any[String])
-          inOrder.verify(notificationRepository, times(2)).insert(any[Notification])(any)
+          inOrder.verify(notificationRepository, times(2)).insert(any[ParsedNotification])(any)
           inOrder.verify(submissionRepository, times(2)).updateMrn(any[String], any[String])
           inOrder.verify(notificationRepository).removeUnparsedNotificationsForActionId(any[String])
         }
@@ -177,20 +180,18 @@ class ParseAndSaveActionSpec extends UnitSpec {
         }
       }
 
-      "cannot be parsed (NotificationFactory returns Notification with no details field)" should {
+      "cannot be parsed (NotificationFactory returns empty sequence)" should {
 
-        val inputNotification =
-          Notification(actionId = actionId, payload = exampleUnparsableNotification(mrn).asXml.toString, details = None)
-        val testNotification = inputNotification
+        val inputNotification = UnparsedNotification(actionId = actionId, payload = exampleUnparsableNotification(mrn).asXml.toString)
 
         "return successful Future" in {
-          when(notificationFactory.buildNotifications(any[String], any[String])).thenReturn(Seq(testNotification))
+          when(notificationFactory.buildNotifications(any[String], any[String])).thenReturn(Seq.empty)
 
           parseAndSaveProcess.execute(inputNotification).futureValue must equal((): Unit)
         }
 
         "call NotificationFactory passing actionId and payload from Notification provided" in {
-          when(notificationFactory.buildNotifications(any[String], any[String])).thenReturn(Seq(testNotification))
+          when(notificationFactory.buildNotifications(any[String], any[String])).thenReturn(Seq.empty)
 
           parseAndSaveProcess.execute(inputNotification).futureValue
 
@@ -198,7 +199,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
         }
 
         "not call NotificationRepository" in {
-          when(notificationFactory.buildNotifications(any[String], any[String])).thenReturn(Seq(testNotification))
+          when(notificationFactory.buildNotifications(any[String], any[String])).thenReturn(Seq.empty)
 
           parseAndSaveProcess.execute(inputNotification).futureValue
 
@@ -206,7 +207,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
         }
 
         "not call SubmissionRepository" in {
-          when(notificationFactory.buildNotifications(any[String], any[String])).thenReturn(Seq(testNotification))
+          when(notificationFactory.buildNotifications(any[String], any[String])).thenReturn(Seq.empty)
 
           parseAndSaveProcess.execute(inputNotification).futureValue
 
@@ -222,7 +223,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
         when(notificationFactory.buildNotifications(any[String], any[String])).thenThrow(new RuntimeException(exceptionMsg))
 
         the[RuntimeException] thrownBy {
-          parseAndSaveProcess.execute(notification)
+          parseAndSaveProcess.execute(notificationUnparsed)
         } must have message exceptionMsg
       }
 
@@ -230,7 +231,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
         val exceptionMsg = "Test Exception message"
         when(notificationFactory.buildNotifications(any[String], any[String])).thenThrow(new RuntimeException(exceptionMsg))
 
-        an[RuntimeException] mustBe thrownBy { parseAndSaveProcess.execute(notification) }
+        an[RuntimeException] mustBe thrownBy { parseAndSaveProcess.execute(notificationUnparsed) }
 
         verifyNoInteractions(notificationRepository)
       }
@@ -239,7 +240,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
         val exceptionMsg = "Test Exception message"
         when(notificationFactory.buildNotifications(any[String], any[String])).thenThrow(new RuntimeException(exceptionMsg))
 
-        an[RuntimeException] mustBe thrownBy { parseAndSaveProcess.execute(notification) }
+        an[RuntimeException] mustBe thrownBy { parseAndSaveProcess.execute(notificationUnparsed) }
 
         verifyNoInteractions(submissionRepository)
       }
@@ -252,7 +253,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
         when(notificationRepository.insert(any)(any))
           .thenReturn(Future.failed(dummyWriteResultFailure(exceptionMsg)))
 
-        parseAndSaveProcess.execute(notification).failed.futureValue must have message exceptionMsg
+        parseAndSaveProcess.execute(notificationUnparsed).failed.futureValue must have message exceptionMsg
       }
 
       "not call SubmissionRepository" in {
@@ -260,9 +261,19 @@ class ParseAndSaveActionSpec extends UnitSpec {
         when(notificationRepository.insert(any)(any))
           .thenReturn(Future.failed(dummyWriteResultFailure(exceptionMsg)))
 
-        parseAndSaveProcess.execute(notification).failed.futureValue
+        parseAndSaveProcess.execute(notificationUnparsed).failed.futureValue
 
         verifyNoInteractions(submissionRepository)
+      }
+
+      "not call NotificationRepository.removeUnparsedNotificationsForActionId" in {
+        val exceptionMsg = "Test Exception message"
+        when(notificationRepository.insert(any)(any))
+          .thenReturn(Future.failed(dummyWriteResultFailure(exceptionMsg)))
+
+        parseAndSaveProcess.execute(notificationUnparsed).failed.futureValue
+
+        verify(notificationRepository, never).removeUnparsedNotificationsForActionId(any[String])
       }
     }
 
@@ -271,15 +282,15 @@ class ParseAndSaveActionSpec extends UnitSpec {
       "result in a success" in {
         when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(None))
 
-        parseAndSaveProcess.execute(notification).futureValue must equal((): Unit)
+        parseAndSaveProcess.execute(notificationUnparsed).futureValue must equal((): Unit)
       }
 
       "call NotificationRepository.removeUnparsedNotificationsForActionId" in {
         when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(None))
 
-        parseAndSaveProcess.execute(notification).futureValue must equal((): Unit)
+        parseAndSaveProcess.execute(notificationUnparsed).futureValue must equal((): Unit)
 
-        verify(notificationRepository).removeUnparsedNotificationsForActionId(eqTo(actionId))
+        verify(notificationRepository).removeUnparsedNotificationsForActionId(eqTo(notificationUnparsed.actionId))
       }
     }
 
@@ -289,14 +300,14 @@ class ParseAndSaveActionSpec extends UnitSpec {
         val exceptionMsg = "Test Exception message"
         when(submissionRepository.updateMrn(any, any)).thenThrow(new RuntimeException(exceptionMsg))
 
-        parseAndSaveProcess.execute(notification).failed.futureValue must have message exceptionMsg
+        parseAndSaveProcess.execute(notificationUnparsed).failed.futureValue must have message exceptionMsg
       }
 
       "not call NotificationRepository.removeUnparsedNotificationsForActionId" in {
         val exceptionMsg = "Test Exception message"
         when(submissionRepository.updateMrn(any, any)).thenThrow(new RuntimeException(exceptionMsg))
 
-        parseAndSaveProcess.execute(notification).failed.futureValue
+        parseAndSaveProcess.execute(notificationUnparsed).failed.futureValue
 
         verify(notificationRepository, never).removeUnparsedNotificationsForActionId(any[String])
       }

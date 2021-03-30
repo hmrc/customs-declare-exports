@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.Eori
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
+import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
@@ -92,10 +92,10 @@ class SubmissionService @Inject()(
         }
     }
 
-  private def appendMRNIfAlreadyAvailable(submission: Submission, actionId: String)(implicit hc: HeaderCarrier): Future[Submission] =
+  private def appendMRNIfAlreadyAvailable(submission: Submission, actionId: String): Future[Submission] =
     notificationRepository.findNotificationsByActionId(actionId).flatMap { notifications =>
       notifications.headOption match {
-        case Some(Notification(_, _, _, Some(details))) =>
+        case Some(ParsedNotification(_, _, _, details)) =>
           submissionRepository
             .updateMrn(actionId, details.mrn)
             .map(_.getOrElse(submission))

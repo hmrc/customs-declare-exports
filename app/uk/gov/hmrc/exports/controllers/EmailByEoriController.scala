@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import scala.concurrent.ExecutionContext
-
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -25,12 +23,14 @@ import uk.gov.hmrc.exports.connectors.CustomsDataStoreConnector
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import scala.concurrent.ExecutionContext
+
 @Singleton
 class EmailByEoriController @Inject()(authenticator: Authenticator, customsDataStoreConnector: CustomsDataStoreConnector, cc: ControllerComponents)(
   implicit ec: ExecutionContext
 ) extends BackendController(cc) {
 
-  def getEmailIfVerified(eori: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+  def getEmailIfVerified(eori: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { _ =>
     customsDataStoreConnector
       .getEmailAddress(eori)
       .map {

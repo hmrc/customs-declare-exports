@@ -73,7 +73,7 @@ class EmailSenderSpec extends UnitSpec {
 
         emailSender.sendEmailForDmsDocNotification(mrn).futureValue
 
-        val expectedMrn = testNotification.details.get.mrn
+        val expectedMrn = testNotification.details.mrn
         verify(submissionRepository).findSubmissionByMrn(eqTo(expectedMrn))
       }
 
@@ -98,7 +98,7 @@ class EmailSenderSpec extends UnitSpec {
         val expectedSendEmailRequest = SendEmailRequest(
           List(testVerifiedEmailAddress.address),
           TemplateId.DMSDOC_NOTIFICATION,
-          EmailParameters(Map(EmailParameter.MRN -> testNotification.details.get.mrn))
+          EmailParameters(Map(EmailParameter.MRN -> testNotification.details.mrn))
         )
         verify(emailConnector).sendEmail(eqTo(expectedSendEmailRequest))(any())
       }

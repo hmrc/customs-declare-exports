@@ -65,10 +65,10 @@ class SendEmailForDmsDocActionSpec extends UnitSpec {
 
     "NotificationRepository returns Notification with status ADDITIONAL_DOCUMENTS_REQUIRED" when {
 
-      val testNotification = notification.copy(details = notification.details.map(_.copy(status = SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED)))
+      val testNotification = notification.copy(details = notification.details.copy(status = SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED))
       val testActionId = testNotification.actionId
 
-      val testSendEmailDetails = SendEmailDetails(notificationId = testNotification.id, mrn = testNotification.details.get.mrn)
+      val testSendEmailDetails = SendEmailDetails(notificationId = testNotification.id, mrn = testNotification.details.mrn)
       val testWorkItem = WorkItem(
         id = BSONObjectID.generate,
         receivedAt = DateTime.now,

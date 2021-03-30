@@ -16,58 +16,33 @@
 
 package uk.gov.hmrc.exports.models.declaration.notifications
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json.{Json, Reads, _}
-import reactivemongo.bson.BSONObjectID
+import play.api.libs.json._
 
-import scala.xml.NodeSeq
-
-case class Notification(id: BSONObjectID = BSONObjectID.generate(), actionId: String, payload: String, details: Option[NotificationDetails])
+trait Notification
 
 object Notification {
 
-  def unparsed(actionId: String, notificationXml: NodeSeq): Notification =
-    Notification(actionId = actionId, payload = notificationXml.toString, details = None)
-
   object DbFormat {
-    implicit val idFormat = reactivemongo.play.json.BSONFormats.BSONObjectIDFormat
 
-    implicit val writes: Writes[Notification] =
-      ((JsPath \ "_id").write[BSONObjectID] and
-        (JsPath \ "actionId").write[String] and
-        (JsPath \ "payload").write[String] and
-        (JsPath \ "details").writeNullable[NotificationDetails](NotificationDetails.writes))(unlift(Notification.unapply))
-
-    implicit val reads: Reads[Notification] =
-      ((__ \ "_id").read[BSONObjectID] and
-        (__ \ "actionId").read[String] and
-        (__ \ "payload").read[String] and
-        (__ \ "details").readNullable[NotificationDetails])(Notification.apply _)
-
-    implicit val notificationsReads: Reads[Seq[Notification]] = Reads.seq(reads)
-    implicit val notificationsWrites: Writes[Seq[Notification]] = Writes.seq(writes)
-
-    implicit val format: Format[Notification] = Format(reads, writes)
-  }
-
-  object FrontendFormat {
-    implicit val writes: Writes[Notification] = new Writes[Notification] {
-
-      def writes(notification: Notification) =
-        notification.details.map { details =>
-          Json.obj(
-            "actionId" -> notification.actionId,
-            "mrn" -> details.mrn,
-            "dateTimeIssued" -> details.dateTimeIssued,
-            "status" -> details.status,
-            "errors" -> details.errors,
-            "payload" -> notification.payload
-          )
-        }.getOrElse {
-          Json.obj("actionId" -> notification.actionId, "payload" -> notification.payload)
-        }
+    val writes: Writes[Notification] = new Writes[Notification] {
+      override def writes(notification: Notification): JsValue = notification match {
+        case unparsedNotification: UnparsedNotification => UnparsedNotification.DbFormat.writes.writes(unparsedNotification)
+        case parsedNotification: ParsedNotification     => ParsedNotification.DbFormat.writes.writes(parsedNotification)
+      }
     }
 
-    implicit val notificationsWrites: Writes[Seq[Notification]] = Writes.seq(writes)
+    val reads: Reads[Notification] = new Reads[Notification] {
+      override def reads(json: JsValue): JsResult[Notification] = json match {
+        case JsObject(map) =>
+          if (map.contains("details")) {
+            ParsedNotification.DbFormat.reads.reads(json)
+          } else {
+            UnparsedNotification.DbFormat.reads.reads(json)
+          }
+        case _ => JsError("Unexpected Notification Format.")
+      }
+    }
+
+    implicit val format: Format[Notification] = Format(reads, writes)
   }
 }

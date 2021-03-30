@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification.FrontendFormat._
+import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification.FrontendFormat._
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.NotificationService
 
@@ -49,7 +49,7 @@ class NotificationController @Inject()(
       case Some(submission) =>
         notificationsService
           .getNotifications(submission)
-          .map(notifications => Ok(notifications.filter(_.details.isDefined)))
+          .map(notifications => Ok(notifications))
       case _ => Future.successful(NotFound)
     }
   }
@@ -60,7 +60,7 @@ class NotificationController @Inject()(
     authorisedAction(bodyParsers.default) { implicit request =>
       notificationsService
         .getAllNotificationsForUser(request.eori.value)
-        .map(notifications => Ok(notifications.filter(_.details.isDefined)))
+        .map(notifications => Ok(notifications))
     }
 
   def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>

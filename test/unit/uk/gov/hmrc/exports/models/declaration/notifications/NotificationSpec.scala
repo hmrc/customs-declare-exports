@@ -21,8 +21,6 @@ import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
 import play.api.libs.json.Json
 import reactivemongo.bson.BSONObjectID
-import testdata.ExportsTestData.{actionId, mrn}
-import testdata.notifications.ExampleXmlAndNotificationDetailsPair.exampleReceivedNotification
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 
@@ -37,15 +35,15 @@ class NotificationSpec extends UnitSpec {
     val mrn = "id1"
     val payload = "<xml></xml>"
 
-    val notification = Notification(
+    val notification = ParsedNotification(
       id = id,
       actionId = actionId,
       payload = payload,
-      details = Some(NotificationDetails(mrn, ZonedDateTime.of(dateTime, ZoneId.of("UCT")), SubmissionStatus.ACCEPTED, Seq.empty))
+      details = NotificationDetails(mrn, ZonedDateTime.of(dateTime, ZoneId.of("UCT")), SubmissionStatus.ACCEPTED, Seq.empty)
     )
 
     "have json writes that produce object which could be parsed by the front end service" in {
-      val json = Json.toJson(notification)(Notification.FrontendFormat.writes)
+      val json = Json.toJson(notification)(ParsedNotification.FrontendFormat.writes)
 
       json.toString() mustBe NotificationSpec.serialisedWithNonOptionalDetailsFormat(
         actionId,
@@ -56,7 +54,7 @@ class NotificationSpec extends UnitSpec {
     }
 
     "have json writes that produce object which could be parsed by the database" in {
-      val json = Json.toJson(notification)(Notification.DbFormat.writes)
+      val json = Json.toJson(notification)(ParsedNotification.DbFormat.writes)
 
       json.toString() mustBe NotificationSpec.serialisedWithOptionalDetailsFormat(
         id.stringify,
@@ -65,32 +63,6 @@ class NotificationSpec extends UnitSpec {
         dateTime.atZone(ZoneId.of("UCT")).format(formatter),
         payload
       )
-    }
-  }
-
-  "Notification on unparsed" should {
-
-    val xml = exampleReceivedNotification(mrn).asXml
-
-    "return Notification with actionId" in {
-
-      val result = Notification.unparsed(actionId, xml)
-
-      result.actionId mustBe actionId
-    }
-
-    "return Notification with payload" in {
-
-      val result = Notification.unparsed(actionId, xml)
-
-      result.payload mustBe xml.toString
-    }
-
-    "return Notification with empty details" in {
-
-      val result = Notification.unparsed(actionId, xml)
-
-      result.details mustBe empty
     }
   }
 }
