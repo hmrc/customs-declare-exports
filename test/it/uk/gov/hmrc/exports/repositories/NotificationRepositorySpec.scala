@@ -66,7 +66,7 @@ class NotificationRepositorySpec extends IntegrationTestBaseSpec {
       "be allowed" in {
         repo.insert(notificationUnparsed).futureValue.ok must be(true)
 
-        val notificationInDB = repo.findNotificationsByActionId(actionId_4).futureValue
+        val notificationInDB = repo.findUnparsedNotifications().futureValue
         notificationInDB.length must equal(1)
         notificationInDB.head must equal(notificationUnparsed)
       }
@@ -165,6 +165,39 @@ class NotificationRepositorySpec extends IntegrationTestBaseSpec {
         repo.insert(notificationUnparsed).futureValue
 
         repo.findNotificationsByActionIds(Seq.empty).futureValue must equal(Seq.empty)
+      }
+    }
+  }
+
+  "Notification Repository on findNotificationsByMrn" when {
+
+    "there is no Notification with given mrn" should {
+      "return empty list" in {
+        repo.findNotificationsByMrn(mrn).futureValue must equal(Seq.empty)
+      }
+    }
+
+    "there is single Notification with given mrn" should {
+      "return this Notification only" in {
+        repo.insert(notification).futureValue
+
+        val foundNotifications = repo.findNotificationsByMrn(mrn).futureValue
+
+        foundNotifications.length must equal(1)
+        foundNotifications.head must equal(notification)
+      }
+    }
+
+    "there are multiple Notifications with given mrn" should {
+      "return all the Notifications" in {
+        repo.insert(notification).futureValue
+        repo.insert(notification_2).futureValue
+
+        val foundNotifications = repo.findNotificationsByMrn(mrn).futureValue
+
+        foundNotifications.length must equal(2)
+        foundNotifications must contain(notification)
+        foundNotifications must contain(notification_2)
       }
     }
   }

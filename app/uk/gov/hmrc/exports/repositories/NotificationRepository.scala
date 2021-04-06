@@ -44,25 +44,28 @@ class NotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: 
   )
 
   def findNotificationsByActionId(actionId: String): Future[Seq[ParsedNotification]] =
-    find("actionId" -> JsString(actionId)).map(toParsedNotifications)
+    find("actionId" -> JsString(actionId)).map(filterParsedNotifications)
 
   def findNotificationsByActionIds(actionIds: Seq[String]): Future[Seq[ParsedNotification]] =
     actionIds match {
       case Seq() => Future.successful(Seq.empty)
-      case _     => find("$or" -> actionIds.map(id => Json.obj("actionId" -> JsString(id)))).map(toParsedNotifications)
+      case _     => find("$or" -> actionIds.map(id => Json.obj("actionId" -> JsString(id)))).map(filterParsedNotifications)
     }
 
+  def findNotificationsByMrn(mrn: String): Future[Seq[ParsedNotification]] =
+    find("details.mrn" -> JsString(mrn)).map(filterParsedNotifications)
+
   def findUnparsedNotifications(): Future[Seq[UnparsedNotification]] =
-    find("details" -> JsNull).map(toUnparsedNotifications)
+    find("details" -> JsNull).map(filterUnparsedNotifications)
 
   def removeUnparsedNotificationsForActionId(actionId: String): Future[WriteResult] =
     remove("actionId" -> JsString(actionId), "details" -> JsNull)
 
-  private def toParsedNotifications(notifications: Seq[Notification]): Seq[ParsedNotification] = notifications.collect {
+  private def filterParsedNotifications(notifications: Seq[Notification]): Seq[ParsedNotification] = notifications.collect {
     case notification: ParsedNotification => notification
   }
 
-  private def toUnparsedNotifications(notifications: Seq[Notification]): Seq[UnparsedNotification] = notifications.collect {
+  private def filterUnparsedNotifications(notifications: Seq[Notification]): Seq[UnparsedNotification] = notifications.collect {
     case notification: UnparsedNotification => notification
   }
 }
