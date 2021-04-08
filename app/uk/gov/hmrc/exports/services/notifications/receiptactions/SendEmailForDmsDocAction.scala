@@ -31,12 +31,10 @@ class SendEmailForDmsDocAction @Inject()(notificationRepository: NotificationRep
   def execute(actionId: String): Future[Unit] =
     notificationRepository.findNotificationsByActionId(actionId).map { notifications =>
       notifications.map { notification =>
-        if (notification.details.exists(_.status == SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED)) {
+        if (notification.details.status == SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED) {
+          val sendEmailDetails = SendEmailDetails(notificationId = notification.id, mrn = notification.details.mrn)
+          sendEmailWorkItemRepository.pushNew(sendEmailDetails)
 
-          notification.details.map(_.mrn).map { mrn =>
-            val sendEmailDetails = SendEmailDetails(notificationId = notification.id, mrn = mrn)
-            sendEmailWorkItemRepository.pushNew(sendEmailDetails)
-          }
         } else
           Future.successful((): Unit)
       }

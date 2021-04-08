@@ -16,22 +16,14 @@
 
 package uk.gov.hmrc.exports.steps
 
-import scala.concurrent.Future
-
-import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.{any, eq => eqm}
-import org.mockito.Mockito.{never, verify, verifyNoInteractions, when}
-import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
-import org.scalatest.concurrent.Eventually
-import org.scalatest.matchers.must.Matchers
 import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
+import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
-import uk.gov.hmrc.exports.syntax.{Postcondition, Precondition, ScenarioContext}
+
+import scala.concurrent.Future
 
 object `User does not try submit declaration earlier` extends Precondition {
   def name = "User does not try submit declaration earlier"
@@ -64,7 +56,6 @@ object `Database add action without problems` extends Precondition {
 }
 
 object `Submission was created` extends Postcondition {
-  import org.mockito.ArgumentMatchers.{eq => eqm}
   override def execute(context: ScenarioContext): ScenarioContext = {
     val declaration = context.get[ExportsDeclaration]
     val eori = context.get[Eori]
@@ -137,7 +128,7 @@ object `Submission was updated for mrn` extends Postcondition with Eventually {
   override def name: String = "Submission was updated for mrn"
 
   override def execute(context: ScenarioContext): ScenarioContext = {
-    val notification: Notification = context.get[Notification]
+    val notification: ParsedNotification = context.get[ParsedNotification]
     notification.details.map { details =>
       val repo = context.get[SubmissionRepository]
       val conversationId = context.get[String]

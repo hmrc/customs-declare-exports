@@ -18,21 +18,21 @@ package uk.gov.hmrc.exports.services.notifications
 
 import javax.inject.Inject
 import play.api.Logging
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
+import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 
 import scala.util.{Failure, Success, Try}
 import scala.xml.XML
 
 class NotificationFactory @Inject()(notificationParser: NotificationParser) extends Logging {
 
-  def buildNotifications(actionId: String, notificationXml: String): Seq[Notification] =
+  def buildNotifications(actionId: String, notificationXml: String): Seq[ParsedNotification] =
     Try(XML.loadString(notificationXml)).map(notificationParser.parse) match {
       case Success(notificationDetails) if notificationDetails.nonEmpty =>
         notificationDetails.map { details =>
-          Notification(actionId = actionId, payload = notificationXml, details = Some(details))
+          ParsedNotification(actionId = actionId, payload = notificationXml, details = details)
         }
 
-      case Success(_) => Seq(Notification(actionId = actionId, payload = notificationXml, details = None))
+      case Success(_) => Seq()
       case Failure(exc) =>
         logParseExceptionAtPagerDutyLevel(actionId, exc)
         Seq()

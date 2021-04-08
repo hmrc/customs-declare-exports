@@ -25,7 +25,7 @@ import play.api.mvc.Codec
 import testdata.ExportsTestData.{actionId, actionId_2, actionId_4, mrn}
 import testdata.TestDataHelper
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
-import uk.gov.hmrc.exports.models.declaration.notifications.{Notification, NotificationDetails, NotificationError}
+import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, NotificationError, ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 
@@ -98,27 +98,27 @@ object NotificationTestData {
   val payload_3 = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
   val payload_4 = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
 
-  def exampleNotification(conversationId: String = UUID.randomUUID().toString) = Notification(
+  def exampleNotification(conversationId: String = UUID.randomUUID().toString) = ParsedNotification(
     actionId = actionId,
     payload = payload,
-    details = Some(NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = SubmissionStatus.UNKNOWN, errors = errors))
+    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = SubmissionStatus.UNKNOWN, errors = errors)
   )
 
-  val notification = Notification(
+  val notification = ParsedNotification(
     actionId = actionId,
     payload = payload,
-    details = Some(NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = SubmissionStatus.UNKNOWN, errors = errors))
+    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = SubmissionStatus.UNKNOWN, errors = errors)
   )
-  val notification_2 = Notification(
+  val notification_2 = ParsedNotification(
     actionId = actionId,
     payload = payload_2,
-    details = Some(NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = SubmissionStatus.UNKNOWN, errors = errors))
+    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = SubmissionStatus.UNKNOWN, errors = errors)
   )
-  val notification_3 = Notification(
+  val notification_3 = ParsedNotification(
     actionId = actionId_2,
     payload = payload_3,
-    details = Some(NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = SubmissionStatus.UNKNOWN, errors = Seq.empty))
+    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = SubmissionStatus.UNKNOWN, errors = Seq.empty)
   )
 
-  val notificationUnparsed = Notification(actionId = actionId_4, payload = payload_4, details = None)
+  val notificationUnparsed = UnparsedNotification(actionId = actionId_4, payload = payload_4)
 }

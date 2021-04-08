@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.services.notifications.receiptactions
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logging
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
+import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
@@ -34,10 +34,8 @@ class ParseAndSaveAction @Inject()(
 )(implicit executionContext: ExecutionContext)
     extends Logging {
 
-  def execute(notification: Notification): Future[Unit] = {
-    val parsedNotifications = notificationFactory
-      .buildNotifications(notification.actionId, notification.payload)
-      .filter(_.details.nonEmpty)
+  def execute(notification: UnparsedNotification): Future[Unit] = {
+    val parsedNotifications = notificationFactory.buildNotifications(notification.actionId, notification.payload)
 
     if (parsedNotifications.nonEmpty) {
       save(parsedNotifications).map { _ =>
@@ -47,7 +45,7 @@ class ParseAndSaveAction @Inject()(
       Future.successful((): Unit)
   }
 
-  private def save(notifications: Seq[Notification]): Future[Unit] =
+  private def save(notifications: Seq[ParsedNotification]): Future[Unit] =
     Future
       .sequence(notifications.map { notification =>
         for {
@@ -57,12 +55,10 @@ class ParseAndSaveAction @Inject()(
       })
       .map(_ => ())
 
-  private def updateRelatedSubmission(notification: Notification): Future[Option[Submission]] =
-    notification.details.map { details =>
-      submissionRepository.updateMrn(notification.actionId, details.mrn).andThen {
-        case Success(None) =>
-          logger.warn(s"Could not find Submission to update for actionId: ${notification.actionId}")
-      }
-    }.getOrElse(Future.successful(None))
+  private def updateRelatedSubmission(notification: ParsedNotification): Future[Option[Submission]] =
+    submissionRepository.updateMrn(notification.actionId, notification.details.mrn).andThen {
+      case Success(None) =>
+        logger.warn(s"Could not find Submission to update for actionId: ${notification.actionId}")
+    }
 
 }

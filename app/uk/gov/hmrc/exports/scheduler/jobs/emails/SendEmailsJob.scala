@@ -22,20 +22,22 @@ import javax.inject.{Inject, Named, Singleton}
 import org.joda.time.DateTime
 import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.exports.models.emails.SendEmailResult._
+import uk.gov.hmrc.exports.models.emails.{SendEmailDetails, SendEmailResult}
 import uk.gov.hmrc.exports.repositories.SendEmailWorkItemRepository
 import uk.gov.hmrc.exports.scheduler.jobs.ScheduledJob
 import uk.gov.hmrc.exports.services.email.EmailSender
-import uk.gov.hmrc.workitem.{Failed, Succeeded, WorkItem}
+import uk.gov.hmrc.workitem.{Cancelled, Failed, Succeeded, WorkItem}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Success
 
 @Singleton
 class SendEmailsJob @Inject()(
   appConfig: AppConfig,
   sendEmailWorkItemRepository: SendEmailWorkItemRepository,
+  emailCancellationValidator: EmailCancellationValidator,
   emailSender: EmailSender,
   pagerDutyAlertManager: PagerDutyAlertManager
 )(implicit @Named("jobsExecutionContext") ec: ExecutionContext)
@@ -61,36 +63,50 @@ class SendEmailsJob @Inject()(
 
   override def execute(): Future[Unit] = {
     logger.info("Starting SendEmailsJob execution...")
-
-    val now = DateTime.now()
-    val failedBefore = appConfig.consideredFailedBeforeWorkItem
-
-    def process(): Future[Unit] =
-      sendEmailWorkItemRepository.pullOutstanding(failedBefore = now.minus(failedBefore.toMillis), availableBefore = now).flatMap {
-        case None =>
-          Future.successful(())
-        case Some(workItem) =>
-          emailSender.sendEmailForDmsDocNotification(workItem.item.mrn).flatMap {
-            case EmailAccepted =>
-              logger.info(s"Email sent for MRN: ${workItem.item.mrn}")
-              sendEmailWorkItemRepository.complete(workItem.id, Succeeded).map(_ => process())
-            case MissingData =>
-              logger.warn(s"Could not send email because some data is missing")
-              failSingle(workItem).map(_ => process())
-            case BadEmailRequest(msg) =>
-              logger.warn(s"Email service returned Bad Request response: [$msg]")
-              failSingle(workItem).map(_ => process())
-            case InternalEmailServiceError(msg) =>
-              logger.warn(s"Email service returned Internal Service Error response: [$msg]")
-              logger.warn(s"Will try again in ${interval.toMinutes} minutes")
-              failSingle(workItem)
-          }
-      }
+    implicit val now: DateTime = DateTime.now()
 
     process().map { _ =>
       logger.info("Finishing SendEmailsJob execution")
     }
   }
+
+  private def process()(implicit now: DateTime): Future[Unit] = {
+    val failedBefore = appConfig.consideredFailedBeforeWorkItem
+
+    sendEmailWorkItemRepository.pullOutstanding(failedBefore = now.minus(failedBefore.toMillis), availableBefore = now).flatMap {
+      case None => Future.successful(())
+      case Some(workItem) =>
+        emailCancellationValidator
+          .isEmailSendingCancelled(workItem.item)
+          .flatMap {
+            case false => sendEmail(workItem)
+            case true =>
+              logger.info(s"Email for Notification with MRN: ${workItem.item.mrn} has been cancelled.")
+              sendEmailWorkItemRepository.complete(workItem.id, Cancelled)
+          }
+          .map {
+            case InternalEmailServiceError(_) => ()
+            case _                            => process()
+          }
+    }
+  }
+
+  private def sendEmail(workItem: WorkItem[SendEmailDetails]): Future[SendEmailResult] =
+    emailSender.sendEmailForDmsDocNotification(workItem.item.mrn).andThen {
+      case Success(EmailAccepted) =>
+        logger.info(s"Email sent for MRN: ${workItem.item.mrn}")
+        sendEmailWorkItemRepository.complete(workItem.id, Succeeded)
+      case Success(MissingData) =>
+        logger.warn(s"Could not send email because some data is missing")
+        failSingle(workItem)
+      case Success(BadEmailRequest(msg)) =>
+        logger.warn(s"Email service returned Bad Request response: [$msg]")
+        failSingle(workItem)
+      case Success(InternalEmailServiceError(msg)) =>
+        logger.warn(s"Email service returned Internal Service Error response: [$msg]")
+        logger.warn(s"Will try again in ${interval.toMinutes} minutes")
+        failSingle(workItem)
+    }
 
   private def failSingle(workItem: WorkItem[SendEmailDetails]): Future[Unit] =
     sendEmailWorkItemRepository.markAs(workItem.id, Failed).flatMap { _ =>

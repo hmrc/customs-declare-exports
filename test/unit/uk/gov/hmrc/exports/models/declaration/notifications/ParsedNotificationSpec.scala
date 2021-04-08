@@ -21,33 +21,32 @@ import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
 import play.api.libs.json.Json
 import reactivemongo.bson.BSONObjectID
-import testdata.ExportsTestData.{actionId, mrn}
-import testdata.notifications.ExampleXmlAndNotificationDetailsPair.exampleReceivedNotification
+import testdata.ExportsTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 
-class NotificationSpec extends UnitSpec {
+class ParsedNotificationSpec extends UnitSpec {
 
-  val formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
+  private val formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
 
-  "Notification" must {
+  "ParsedNotification" must {
     val id = BSONObjectID.generate
     val actionId = "123"
     val dateTime = LocalDateTime.now()
     val mrn = "id1"
     val payload = "<xml></xml>"
 
-    val notification = Notification(
+    val notification = ParsedNotification(
       id = id,
       actionId = actionId,
       payload = payload,
-      details = Some(NotificationDetails(mrn, ZonedDateTime.of(dateTime, ZoneId.of("UCT")), SubmissionStatus.ACCEPTED, Seq.empty))
+      details = NotificationDetails(mrn, ZonedDateTime.of(dateTime, ZoneId.of("UCT")), SubmissionStatus.ACCEPTED, Seq.empty)
     )
 
     "have json writes that produce object which could be parsed by the front end service" in {
-      val json = Json.toJson(notification)(Notification.FrontendFormat.writes)
+      val json = Json.toJson(notification)(ParsedNotification.FrontendFormat.writes)
 
-      json.toString() mustBe NotificationSpec.serialisedWithNonOptionalDetailsFormat(
+      json.toString() mustBe ParsedNotificationSpec.serialisedWithNonOptionalDetailsFormat(
         actionId,
         mrn,
         dateTime.atZone(ZoneId.of("UCT")).format(formatter),
@@ -56,9 +55,9 @@ class NotificationSpec extends UnitSpec {
     }
 
     "have json writes that produce object which could be parsed by the database" in {
-      val json = Json.toJson(notification)(Notification.DbFormat.writes)
+      val json = Json.toJson(notification)(ParsedNotification.DbFormat.writes)
 
-      json.toString() mustBe NotificationSpec.serialisedWithOptionalDetailsFormat(
+      json.toString() mustBe ParsedNotificationSpec.serialisedWithOptionalDetailsFormat(
         id.stringify,
         actionId,
         mrn,
@@ -68,34 +67,49 @@ class NotificationSpec extends UnitSpec {
     }
   }
 
-  "Notification on unparsed" should {
+  "ParsedNotification on compare" must {
 
-    val xml = exampleReceivedNotification(mrn).asXml
+    def createNotification(dateTimeIssued: ZonedDateTime) = ParsedNotification(
+      actionId = ExportsTestData.actionId,
+      payload = "payload",
+      details = NotificationDetails(mrn = ExportsTestData.mrn, dateTimeIssued = dateTimeIssued, status = SubmissionStatus.UNKNOWN, errors = Seq.empty)
+    )
 
-    "return Notification with actionId" in {
+    val zone: ZoneId = ZoneId.of("Europe/London")
+    val firstDate = ZonedDateTime.of(LocalDateTime.of(2019, 6, 10, 10, 10), zone)
+    val secondDate = firstDate.plusDays(5)
+    val thirdDate = firstDate.plusDays(10)
 
-      val result = Notification.unparsed(actionId, xml)
+    val firstNotification = createNotification(firstDate)
+    val secondNotification = createNotification(secondDate)
+    val thirdNotification = createNotification(thirdDate)
 
-      result.actionId mustBe actionId
+    "return 0" when {
+      "the two notifications are the same" in {
+        firstNotification.compare(firstNotification) must be(0)
+      }
     }
 
-    "return Notification with payload" in {
-
-      val result = Notification.unparsed(actionId, xml)
-
-      result.payload mustBe xml.toString
+    "return 1" when {
+      "the second notification is dated after the first" in {
+        secondNotification.compare(firstNotification) must be(1)
+      }
     }
 
-    "return Notification with empty details" in {
+    "return -1" when {
+      "the second notification is dated before the first" in {
+        firstNotification.compare(secondNotification) must be(-1)
+      }
+    }
 
-      val result = Notification.unparsed(actionId, xml)
-
-      result.details mustBe empty
+    "allow to sort list of notifications" in {
+      val listOfNotifications = List(thirdNotification, firstNotification, secondNotification)
+      listOfNotifications.sorted must be(List(firstNotification, secondNotification, thirdNotification))
     }
   }
 }
 
-object NotificationSpec {
+object ParsedNotificationSpec {
   def serialisedWithNonOptionalDetailsFormat(actionId: String, mrn: String, dateTime: String, payload: String) =
     s"""{"actionId":"${actionId}","mrn":"${mrn}","dateTimeIssued":"${dateTime}","status":"ACCEPTED","errors":[],"payload":"${payload}"}"""
 

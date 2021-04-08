@@ -34,10 +34,9 @@ import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
 import uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildNotificationServiceMock, buildSubmissionServiceMock}
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
-import uk.gov.hmrc.exports.models.declaration.notifications.Notification
+import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.NotificationService
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 
 import scala.concurrent.Future
@@ -86,20 +85,19 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
         val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
 
         status(result) must be(OK)
-        contentAsJson(result) must be(Json.toJson(Seq(notification))(Notification.FrontendFormat.notificationsWrites))
+        contentAsJson(result) must be(Json.toJson(Seq(notification))(ParsedNotification.FrontendFormat.notificationsWrites))
       }
     }
 
     "not return notifications" when {
       "those notifications have not had the details parsed from them" in {
         when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
-        when(notificationService.getNotifications(any()))
-          .thenReturn(Future.successful(Seq(notificationUnparsed)))
+        when(notificationService.getNotifications(any())).thenReturn(Future.successful(Seq.empty))
 
         val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
 
         status(result) must be(OK)
-        contentAsJson(result) must be(Json.toJson(Seq.empty[Notification])(Notification.FrontendFormat.notificationsWrites))
+        contentAsJson(result) must be(Json.toJson(Seq.empty[ParsedNotification])(ParsedNotification.FrontendFormat.notificationsWrites))
       }
     }
 
@@ -145,18 +143,18 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
         val result = routeGetAllNotificationsForUser()
 
-        contentAsJson(result) must equal(Json.toJson(notificationsFromService)(Notification.FrontendFormat.notificationsWrites))
+        contentAsJson(result) must equal(Json.toJson(notificationsFromService)(ParsedNotification.FrontendFormat.notificationsWrites))
       }
 
       "return only those Notifications returned by Notification Service that have been parsed" in {
-        val notificationsFromService = Seq(notification, notification_2, notification_3, notificationUnparsed)
+        val notificationsFromService = Seq(notification, notification_2, notification_3)
         when(notificationService.getAllNotificationsForUser(any()))
           .thenReturn(Future.successful(notificationsFromService))
 
         val result = routeGetAllNotificationsForUser()
 
         contentAsJson(result) must equal(
-          Json.toJson(Seq(notification, notification_2, notification_3))(Notification.FrontendFormat.notificationsWrites)
+          Json.toJson(Seq(notification, notification_2, notification_3))(ParsedNotification.FrontendFormat.notificationsWrites)
         )
       }
 
@@ -167,7 +165,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
         routeGetAllNotificationsForUser().futureValue
 
-        verify(notificationService, times(1)).getAllNotificationsForUser(any())
+        verify(notificationService).getAllNotificationsForUser(any())
       }
     }
 
@@ -199,7 +197,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     "everything works correctly" should {
 
       "return Accepted status" in {
-        when(notificationService.handleNewNotification(anyString(), any[NodeSeq])(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
+        when(notificationService.handleNewNotification(anyString(), any[NodeSeq])).thenReturn(Future.successful((): Unit))
 
         val result = routePostSaveNotification()
 
@@ -207,18 +205,18 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       }
 
       "call NotificationService once" in {
-        when(notificationService.handleNewNotification(anyString(), any[NodeSeq])(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
+        when(notificationService.handleNewNotification(anyString(), any[NodeSeq])).thenReturn(Future.successful((): Unit))
 
         routePostSaveNotification().futureValue
 
-        verify(notificationService).handleNewNotification(anyString(), any[NodeSeq])(any[HeaderCarrier])
+        verify(notificationService).handleNewNotification(anyString(), any[NodeSeq])
       }
     }
 
     "NotificationService returns failure" should {
 
       "throw an Exception" in {
-        when(notificationService.handleNewNotification(any(), any[NodeSeq])(any[HeaderCarrier]))
+        when(notificationService.handleNewNotification(any(), any[NodeSeq]))
           .thenReturn(Future.failed(new Exception("Test Exception")))
 
         an[Exception] mustBe thrownBy {
