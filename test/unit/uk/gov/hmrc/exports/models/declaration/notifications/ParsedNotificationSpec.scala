@@ -21,7 +21,6 @@ import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
 import play.api.libs.json.Json
 import reactivemongo.bson.BSONObjectID
-import testdata.ExportsTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 
@@ -64,47 +63,6 @@ class ParsedNotificationSpec extends UnitSpec {
         dateTime.atZone(ZoneId.of("UCT")).format(formatter),
         payload
       )
-    }
-  }
-
-  "ParsedNotification on compare" must {
-
-    def createNotification(dateTimeIssued: ZonedDateTime) = ParsedNotification(
-      actionId = ExportsTestData.actionId,
-      payload = "payload",
-      details = NotificationDetails(mrn = ExportsTestData.mrn, dateTimeIssued = dateTimeIssued, status = SubmissionStatus.UNKNOWN, errors = Seq.empty)
-    )
-
-    val zone: ZoneId = ZoneId.of("Europe/London")
-    val firstDate = ZonedDateTime.of(LocalDateTime.of(2019, 6, 10, 10, 10), zone)
-    val secondDate = firstDate.plusDays(5)
-    val thirdDate = firstDate.plusDays(10)
-
-    val firstNotification = createNotification(firstDate)
-    val secondNotification = createNotification(secondDate)
-    val thirdNotification = createNotification(thirdDate)
-
-    "return 0" when {
-      "the two notifications are the same" in {
-        firstNotification.compare(firstNotification) must be(0)
-      }
-    }
-
-    "return 1" when {
-      "the second notification is dated after the first" in {
-        secondNotification.compare(firstNotification) must be(1)
-      }
-    }
-
-    "return -1" when {
-      "the second notification is dated before the first" in {
-        firstNotification.compare(secondNotification) must be(-1)
-      }
-    }
-
-    "allow to sort list of notifications" in {
-      val listOfNotifications = List(thirdNotification, firstNotification, secondNotification)
-      listOfNotifications.sorted must be(List(firstNotification, secondNotification, thirdNotification))
     }
   }
 }

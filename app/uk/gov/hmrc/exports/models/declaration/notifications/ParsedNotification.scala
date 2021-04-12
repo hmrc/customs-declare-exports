@@ -21,13 +21,7 @@ import play.api.libs.json.{Json, Reads, _}
 import reactivemongo.bson.BSONObjectID
 
 case class ParsedNotification(id: BSONObjectID = BSONObjectID.generate(), actionId: String, payload: String, details: NotificationDetails)
-    extends Notification with Ordered[ParsedNotification] {
-
-  override def compare(that: ParsedNotification): Int =
-    if (this.details.dateTimeIssued == that.details.dateTimeIssued) 0
-    else if (this.details.dateTimeIssued.isAfter(that.details.dateTimeIssued)) 1
-    else -1
-}
+    extends Notification
 
 object ParsedNotification {
 
