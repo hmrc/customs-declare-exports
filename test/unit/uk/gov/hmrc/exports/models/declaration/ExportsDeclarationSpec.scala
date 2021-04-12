@@ -23,15 +23,16 @@ import uk.gov.hmrc.exports.models.Eori
 
 class ExportsDeclarationSpec extends UnitSpec {
 
-  "Exports Declaration Spec" must {
+  "ExportsDeclaration" must {
 
     import ExportsDeclaration.REST._
 
     "have json writes that produce object which could be parsed by first version of reads" in {
-      val declaration = Json
+      val declarationRequest = Json
         .parse(ExportsDeclarationSpec.declarationAsString)
         .as(ExportsDeclarationRequest.format)
-        .toExportsDeclaration("1", Eori("GB12345678"))
+
+      val declaration = ExportsDeclaration("1", Eori("GB12345678"), declarationRequest)
 
       val json = Json.toJson(declaration)
 
@@ -47,6 +48,7 @@ class ExportsDeclarationSpec extends UnitSpec {
 }
 
 object ExportsDeclarationSpec {
+
   val declarationAsString: String =
     """{
       |  "id": "6f31582e-bfd5-4b27-90be-2dca6e236b20",

@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
+
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import reactivemongo.bson.BSONObjectID
@@ -25,15 +28,10 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SendEmailWorkItemRepository}
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.workitem.{ToDo, WorkItem}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
 
 class SendEmailForDmsDocActionSpec extends UnitSpec {
 
-  private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
   private val notificationRepository = mock[NotificationRepository]
   private val sendEmailWorkItemRepository = mock[SendEmailWorkItemRepository]
 
