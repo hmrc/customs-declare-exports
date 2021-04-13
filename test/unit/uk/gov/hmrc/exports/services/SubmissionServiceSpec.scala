@@ -134,7 +134,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
       val declaration = aDeclaration()
 
       val notification = ParsedNotification(
-        id = BSONObjectID.generate,
+        _id = BSONObjectID.generate,
         actionId = "id1",
         payload = "xml",
         details = NotificationDetails("mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneOffset.UTC), SubmissionStatus.ACCEPTED, Seq.empty)

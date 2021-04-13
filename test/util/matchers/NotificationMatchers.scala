@@ -33,8 +33,8 @@ object NotificationMatchers {
     override def apply(left: ParsedNotification): MatchResult = {
       def compare: Boolean = {
         val id = BSONObjectID.generate()
-        val leftNoId = left.copy(id = id)
-        val rightNoId = notification.copy(id = id)
+        val leftNoId = left.copy(_id = id)
+        val rightNoId = notification.copy(_id = id)
 
         leftNoId == rightNoId
       }
@@ -58,8 +58,8 @@ object NotificationMatchers {
     override def apply(left: UnparsedNotification): MatchResult = {
       def compare: Boolean = {
         val id = BSONObjectID.generate()
-        val leftNoId = left.copy(id = id)
-        val rightNoId = notification.copy(id = id)
+        val leftNoId = left.copy(_id = id)
+        val rightNoId = notification.copy(_id = id)
 
         leftNoId == rightNoId
       }

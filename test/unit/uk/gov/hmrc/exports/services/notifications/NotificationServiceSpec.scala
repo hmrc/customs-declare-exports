@@ -151,7 +151,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", Seq(Action("id1", SubmissionRequest)))
       val notifications = Seq(
         ParsedNotification(
-          id = BSONObjectID.generate,
+          _id = BSONObjectID.generate,
           actionId = "id1",
           payload = "",
           details = NotificationDetails("mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), SubmissionStatus.ACCEPTED, Seq.empty)

@@ -36,7 +36,7 @@ class ParsedNotificationSpec extends UnitSpec {
     val payload = "<xml></xml>"
 
     val notification = ParsedNotification(
-      id = id,
+      _id = id,
       actionId = actionId,
       payload = payload,
       details = NotificationDetails(mrn, ZonedDateTime.of(dateTime, ZoneId.of("UCT")), SubmissionStatus.ACCEPTED, Seq.empty)
@@ -54,7 +54,7 @@ class ParsedNotificationSpec extends UnitSpec {
     }
 
     "have json writes that produce object which could be parsed by the database" in {
-      val json = Json.toJson(notification)(ParsedNotification.DbFormat.writes)
+      val json = Json.toJson(notification)(ParsedNotification.DbFormat.format)
 
       json.toString() mustBe ParsedNotificationSpec.serialisedWithOptionalDetailsFormat(
         id.stringify,

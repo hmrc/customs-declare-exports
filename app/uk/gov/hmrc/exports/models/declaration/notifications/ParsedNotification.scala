@@ -16,39 +16,22 @@
 
 package uk.gov.hmrc.exports.models.declaration.notifications
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json.{Json, Reads, _}
+import play.api.libs.json.{Json, _}
 import reactivemongo.bson.BSONObjectID
 
-case class ParsedNotification(id: BSONObjectID = BSONObjectID.generate(), actionId: String, payload: String, details: NotificationDetails)
+case class ParsedNotification(_id: BSONObjectID = BSONObjectID.generate(), actionId: String, payload: String, details: NotificationDetails)
     extends Notification
 
 object ParsedNotification {
 
   object DbFormat {
     implicit val idFormat = reactivemongo.play.json.BSONFormats.BSONObjectIDFormat
-
-    implicit val writes: Writes[ParsedNotification] =
-      ((JsPath \ "_id").write[BSONObjectID] and
-        (JsPath \ "actionId").write[String] and
-        (JsPath \ "payload").write[String] and
-        (JsPath \ "details").write[NotificationDetails](NotificationDetails.writes))(unlift(ParsedNotification.unapply))
-
-    implicit val reads: Reads[ParsedNotification] =
-      ((__ \ "_id").read[BSONObjectID] and
-        (__ \ "actionId").read[String] and
-        (__ \ "payload").read[String] and
-        (__ \ "details").read[NotificationDetails])(ParsedNotification.apply _)
-
-    implicit val notificationsReads: Reads[Seq[ParsedNotification]] = Reads.seq(reads)
-    implicit val notificationsWrites: Writes[Seq[ParsedNotification]] = Writes.seq(writes)
-
-    implicit val format: Format[ParsedNotification] = Format(reads, writes)
+    implicit val format: Format[ParsedNotification] = Json.format[ParsedNotification]
   }
 
   object FrontendFormat {
     implicit val writes: Writes[ParsedNotification] = new Writes[ParsedNotification] {
-      def writes(notification: ParsedNotification) = Json.obj(
+      def writes(notification: ParsedNotification): JsObject = Json.obj(
         "actionId" -> notification.actionId,
         "mrn" -> notification.details.mrn,
         "dateTimeIssued" -> notification.details.dateTimeIssued,

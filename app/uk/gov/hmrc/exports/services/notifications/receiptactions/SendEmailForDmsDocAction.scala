@@ -32,7 +32,7 @@ class SendEmailForDmsDocAction @Inject()(notificationRepository: NotificationRep
     notificationRepository.findNotificationsByActionId(actionId).map { notifications =>
       notifications.map { notification =>
         if (notification.details.status == SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED) {
-          val sendEmailDetails = SendEmailDetails(notificationId = notification.id, mrn = notification.details.mrn)
+          val sendEmailDetails = SendEmailDetails(notificationId = notification._id, mrn = notification.details.mrn)
           sendEmailWorkItemRepository.pushNew(sendEmailDetails)
 
         } else

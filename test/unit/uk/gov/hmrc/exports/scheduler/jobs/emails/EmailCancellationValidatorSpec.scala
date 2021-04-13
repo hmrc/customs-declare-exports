@@ -58,7 +58,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
     val firstDate = ZonedDateTime.of(LocalDateTime.of(2020, 6, 1, 10, 10), zone)
 
     val dmsDocNotification = createNotification(firstDate, ADDITIONAL_DOCUMENTS_REQUIRED)
-    val sendEmailDetails = SendEmailDetails(notificationId = dmsDocNotification.id, mrn = dmsDocNotification.details.mrn)
+    val sendEmailDetails = SendEmailDetails(notificationId = dmsDocNotification._id, mrn = dmsDocNotification.details.mrn)
 
     "return false" when {
 
@@ -132,7 +132,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
         val otherNotification = createNotification(firstDate.plusHours(2), ADDITIONAL_DOCUMENTS_REQUIRED)
         when(notificationRepository.findNotificationsByMrn(any[String])).thenReturn(Future.successful(Seq(otherNotification)))
 
-        val sendEmailDetails = SendEmailDetails(notificationId = dmsDocNotification.id, mrn = dmsDocNotification.details.mrn)
+        val sendEmailDetails = SendEmailDetails(notificationId = dmsDocNotification._id, mrn = dmsDocNotification.details.mrn)
 
         an[IllegalStateException] mustBe thrownBy { await(emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails)) }
       }

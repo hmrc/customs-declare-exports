@@ -26,8 +26,8 @@ object Notification {
 
     val writes: Writes[Notification] = new Writes[Notification] {
       override def writes(notification: Notification): JsValue = notification match {
-        case unparsedNotification: UnparsedNotification => UnparsedNotification.DbFormat.writes.writes(unparsedNotification)
-        case parsedNotification: ParsedNotification     => ParsedNotification.DbFormat.writes.writes(parsedNotification)
+        case unparsedNotification: UnparsedNotification => UnparsedNotification.DbFormat.format.writes(unparsedNotification)
+        case parsedNotification: ParsedNotification     => ParsedNotification.DbFormat.format.writes(parsedNotification)
       }
     }
 
@@ -35,9 +35,9 @@ object Notification {
       override def reads(json: JsValue): JsResult[Notification] = json match {
         case JsObject(map) =>
           if (map.contains("details")) {
-            ParsedNotification.DbFormat.reads.reads(json)
+            ParsedNotification.DbFormat.format.reads(json)
           } else {
-            UnparsedNotification.DbFormat.reads.reads(json)
+            UnparsedNotification.DbFormat.format.reads(json)
           }
         case _ => JsError("Unexpected Notification Format.")
       }
