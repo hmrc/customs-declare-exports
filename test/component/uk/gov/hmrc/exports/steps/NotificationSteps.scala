@@ -16,20 +16,16 @@
 
 package uk.gov.hmrc.exports.steps
 
-import scala.concurrent.Future
+import uk.gov.hmrc.exports.repositories.ParsedNotificationRepository
 
-import org.mockito.ArgumentMatchers._
-import org.mockito.Mockito._
-import testdata.notifications.NotificationTestData._
-import uk.gov.hmrc.exports.repositories.NotificationRepository
-import uk.gov.hmrc.exports.syntax.{Precondition, ScenarioContext}
+import scala.concurrent.Future
 
 object `Notification came earlier than request is finished` extends Precondition {
   override def name: String = "Notification came earlier than request is finished"
 
   override def execute(context: ScenarioContext): ScenarioContext = {
     val conversationId = context.get[String] // FIXME converstationId as value type
-    val repo = context.get[NotificationRepository]
+    val repo = context.get[ParsedNotificationRepository]
     val notification = exampleNotification(conversationId)
     val notifications = Seq(notification)
     when(repo.findNotificationsByActionId(any())).thenReturn(Future.successful(notifications))

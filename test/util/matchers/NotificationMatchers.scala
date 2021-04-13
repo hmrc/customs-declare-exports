@@ -18,7 +18,7 @@ package matchers
 
 import org.scalatest.matchers.{MatchResult, Matcher}
 import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
+import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 
 object NotificationMatchers {
 
@@ -31,31 +31,6 @@ object NotificationMatchers {
       }
 
     override def apply(left: ParsedNotification): MatchResult = {
-      def compare: Boolean = {
-        val id = BSONObjectID.generate()
-        val leftNoId = left.copy(_id = id)
-        val rightNoId = notification.copy(_id = id)
-
-        leftNoId == rightNoId
-      }
-
-      MatchResult(
-        left != null && compare,
-        s"Notification is not equal to {$notification}\n${actualContentWas(left)}",
-        s"Notification is equal to: {$notification}"
-      )
-    }
-  }
-
-  def equalWithoutId(notification: UnparsedNotification): Matcher[UnparsedNotification] = new Matcher[UnparsedNotification] {
-    def actualContentWas(notif: UnparsedNotification): String =
-      if (notif == null) {
-        "Element did not exist"
-      } else {
-        s"\nActual content is:\n${notif}\n"
-      }
-
-    override def apply(left: UnparsedNotification): MatchResult = {
       def compare: Boolean = {
         val id = BSONObjectID.generate()
         val leftNoId = left.copy(_id = id)

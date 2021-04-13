@@ -43,7 +43,7 @@ class PagerDutyAlertManagerSpec extends UnitSpec {
     reset(appConfig, sendEmailWorkItemRepository, pagerDutyAlertValidator)
   }
 
-  private val testWorkItem: WorkItem[SendEmailDetails] = buildTestWorkItem(status = Failed)
+  private val testWorkItem: WorkItem[SendEmailDetails] = buildTestSendEmailWorkItem(status = Failed)
 
   "PagerDutyAlertManager on managePagerDutyAlert" when {
 

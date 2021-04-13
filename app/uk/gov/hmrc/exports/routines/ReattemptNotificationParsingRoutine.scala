@@ -16,20 +16,20 @@
 
 package uk.gov.hmrc.exports.routines
 
-import javax.inject.Inject
-import play.api.Logger
-import uk.gov.hmrc.exports.services.notifications.NotificationService
+import play.api.Logging
+import uk.gov.hmrc.exports.services.notifications.receiptactions.NotificationReceiptActionsRunner
 
+import javax.inject.Inject
 import scala.concurrent.Future
 
-class ReattemptNotificationParsingRoutine @Inject()(notificationService: NotificationService)(implicit mec: RoutinesExecutionContext)
-    extends Routine {
-  private val logger = Logger(this.getClass)
+class ReattemptNotificationParsingRoutine @Inject()(notificationReceiptActionsRunner: NotificationReceiptActionsRunner)(
+  implicit mec: RoutinesExecutionContext
+) extends Routine with Logging {
 
   def execute(): Future[Unit] = {
-    logger.info("Starting NotificationService.reattemptParsingUnparsedNotifications()...")
-    notificationService.reattemptParsingUnparsedNotifications().map { _ =>
-      logger.info("Finished NotificationService.reattemptParsingUnparsedNotifications()")
+    logger.info("Starting ReattemptNotificationParsingRoutine...")
+    notificationReceiptActionsRunner.runNow(parseFailed = true).map { _ =>
+      logger.info("Finished ReattemptNotificationParsingRoutine")
     }
   }
 }

@@ -25,7 +25,6 @@ import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
-import uk.gov.hmrc.exports.repositories.SendEmailWorkItemRepository.WorkItemFormat
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 import uk.gov.hmrc.workitem.{WorkItem, WorkItemFieldNames, WorkItemRepository}
@@ -37,7 +36,7 @@ class SendEmailWorkItemRepository @Inject()(configuration: Configuration, reacti
     extends WorkItemRepository[SendEmailDetails, BSONObjectID](
       collectionName = "sendEmailWorkItems",
       mongo = reactiveMongoComponent.mongoConnector.db,
-      itemFormat = WorkItemFormat.workItemMongoFormat[SendEmailDetails],
+      itemFormat = SendEmailWorkItemRepository.workItemFormat,
       config = configuration.underlying
     ) {
 
@@ -50,14 +49,7 @@ class SendEmailWorkItemRepository @Inject()(configuration: Configuration, reacti
 
   override def now: DateTime = DateTime.now
 
-  override def workItemFields: WorkItemFieldNames = new WorkItemFieldNames {
-    val receivedAt = "receivedAt"
-    val updatedAt = "updatedAt"
-    val availableAt = "availableAt"
-    val status = "status"
-    val id = "_id"
-    val failureCount = "failureCount"
-  }
+  override def workItemFields: WorkItemFieldNames = WorkItemFormat.defaultWorkItemFields
 
   override def inProgressRetryAfterProperty: String = "workItem.sendEmail.retryAfterMillis"
 
@@ -79,41 +71,5 @@ class SendEmailWorkItemRepository @Inject()(configuration: Configuration, reacti
 }
 
 object SendEmailWorkItemRepository {
-
-  object WorkItemFormat {
-    import play.api.libs.functional.syntax._
-    import reactivemongo.play.json.ImplicitBSONHandlers._
-
-    def workItemMongoFormat[T](implicit nFormat: Format[T]): Format[WorkItem[T]] =
-      ReactiveMongoFormats.mongoEntity(notificationFormat(ReactiveMongoFormats.objectIdFormats, ReactiveMongoFormats.dateTimeFormats, nFormat))
-
-    private def notificationFormat[T](
-      implicit bsonIdFormat: Format[BSONObjectID],
-      dateTimeFormat: Format[DateTime],
-      nFormat: Format[T]
-    ): Format[WorkItem[T]] = {
-      val reads = (
-        (__ \ "id").read[BSONObjectID] and
-          (__ \ "receivedAt").read[DateTime] and
-          (__ \ "updatedAt").read[DateTime] and
-          (__ \ "availableAt").read[DateTime] and
-          (__ \ "status").read[uk.gov.hmrc.workitem.ProcessingStatus] and
-          (__ \ "failureCount").read[Int].orElse(Reads.pure(0)) and
-          (__ \ "sendEmailDetails").read[T]
-      )(WorkItem.apply[T] _)
-
-      val writes = (
-        (__ \ "id").write[BSONObjectID] and
-          (__ \ "receivedAt").write[DateTime] and
-          (__ \ "updatedAt").write[DateTime] and
-          (__ \ "availableAt").write[DateTime] and
-          (__ \ "status").write[uk.gov.hmrc.workitem.ProcessingStatus] and
-          (__ \ "failureCount").write[Int] and
-          (__ \ "sendEmailDetails").write[T]
-      )(unlift(WorkItem.unapply[T]))
-
-      Format(reads, writes)
-    }
-  }
-
+  private val workItemFormat = WorkItemFormat.workItemMongoFormat[SendEmailDetails]("sendEmailDetails")
 }

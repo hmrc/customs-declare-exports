@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
-import java.time.LocalTime
-
-import javax.inject.{Inject, Named, Singleton}
 import org.joda.time.DateTime
 import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
@@ -29,6 +26,8 @@ import uk.gov.hmrc.exports.scheduler.jobs.ScheduledJob
 import uk.gov.hmrc.exports.services.email.EmailSender
 import uk.gov.hmrc.workitem.{Cancelled, Failed, Succeeded, WorkItem}
 
+import java.time.LocalTime
+import javax.inject.{Inject, Named, Singleton}
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
@@ -40,14 +39,14 @@ class SendEmailsJob @Inject()(
   emailCancellationValidator: EmailCancellationValidator,
   emailSender: EmailSender,
   pagerDutyAlertManager: PagerDutyAlertManager
-)(implicit @Named("jobsExecutionContext") ec: ExecutionContext)
+)(implicit @Named("backgroundTasksExecutionContext") ec: ExecutionContext)
     extends ScheduledJob with Logging {
 
   override def name: String = "SendEmails"
 
-  override def firstRunTime: LocalTime = {
+  override def firstRunTime: Option[LocalTime] = {
     val now = LocalTime.now(appConfig.clock).withSecond(0).withNano(0)
-    calcRunTime(now)
+    Some(calcRunTime(now))
   }
 
   @scala.annotation.tailrec

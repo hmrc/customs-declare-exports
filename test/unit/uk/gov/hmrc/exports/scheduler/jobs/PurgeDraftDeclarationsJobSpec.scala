@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs
 
-import java.time._
-
 import org.mockito.BDDMockito.given
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.UnitSpec
@@ -25,6 +23,7 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.config.AppConfig.JobConfig
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 
+import java.time._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -52,7 +51,8 @@ class PurgeDraftDeclarationsJobSpec extends UnitSpec {
       val runTime = LocalTime.of(14, 0)
       given(appConfig.purgeDraftDeclarations).willReturn(JobConfig(runTime, 1.day))
 
-      newJob.firstRunTime mustBe runTime
+      newJob.firstRunTime mustBe defined
+      newJob.firstRunTime.get mustBe runTime
     }
 
     "Configure 'interval'" in {

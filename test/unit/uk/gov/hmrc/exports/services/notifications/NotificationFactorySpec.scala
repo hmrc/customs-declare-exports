@@ -21,6 +21,7 @@ import testdata.ExportsTestData.{actionId, mrn}
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
 import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 
 import scala.xml.NodeSeq
 
@@ -45,12 +46,12 @@ class NotificationFactorySpec extends UnitSpec {
   "NotificationFactory on buildNotifications" should {
 
     "call NotificationParser passing xml payload" in {
-      val xml = exampleReceivedNotification(mrn).asXml
-      val xmlInput = xml.toString
+      val xmlInput = exampleReceivedNotification(mrn).asXml
+      val testNotificationUnparsed = UnparsedNotification(actionId = actionId, payload = xmlInput.toString)
 
-      notificationFactory.buildNotifications(actionId, xmlInput)
+      notificationFactory.buildNotifications(testNotificationUnparsed)
 
-      verify(notificationParser).parse(meq(xml))
+      verify(notificationParser).parse(meq(xmlInput))
     }
   }
 
@@ -58,33 +59,35 @@ class NotificationFactorySpec extends UnitSpec {
 
     "NotificationParser returns single NotificationDetails" should {
 
-      val xmlInput = exampleReceivedNotification(mrn).asXml.toString
+      val xmlInput = exampleReceivedNotification(mrn).asXml
+      val testNotificationUnparsed = UnparsedNotification(actionId = actionId, payload = xmlInput.toString)
+      val testNotificationParsed = notification.copy(unparsedNotificationId = testNotificationUnparsed.id)
 
-      "return single Notification with actionId" in {
-        val details = notification.details
+      "return single ParsedNotification with actionId" in {
+        val details = testNotificationParsed.details
         when(notificationParser.parse(any[NodeSeq])).thenReturn(Seq(details))
 
-        val result = notificationFactory.buildNotifications(actionId, xmlInput)
+        val result = notificationFactory.buildNotifications(testNotificationUnparsed)
 
         result.size mustBe 1
         result.head.actionId mustBe actionId
       }
 
-      "return single Notification with payload" in {
-        val details = notification.details
+      "return single ParsedNotification with unparsedNotificationId" in {
+        val details = testNotificationParsed.details
         when(notificationParser.parse(any[NodeSeq])).thenReturn(Seq(details))
 
-        val result = notificationFactory.buildNotifications(actionId, xmlInput)
+        val result = notificationFactory.buildNotifications(testNotificationUnparsed)
 
         result.size mustBe 1
-        result.head.payload mustBe xmlInput
+        result.head.unparsedNotificationId mustBe testNotificationUnparsed.id
       }
 
-      "return single Notification with given details" in {
-        val details = notification.details
+      "return single ParsedNotification with given details" in {
+        val details = testNotificationParsed.details
         when(notificationParser.parse(any[NodeSeq])).thenReturn(Seq(details))
 
-        val result = notificationFactory.buildNotifications(actionId, xmlInput)
+        val result = notificationFactory.buildNotifications(testNotificationUnparsed)
 
         result.size mustBe 1
         result.head.details mustBe details
@@ -93,15 +96,16 @@ class NotificationFactorySpec extends UnitSpec {
 
     "NotificationParser returns multiple NotificationDetails" should {
 
-      val xmlInput = exampleNotificationWithMultipleResponses(mrn).asXml.toString
+      val xmlInput = exampleNotificationWithMultipleResponses(mrn).asXml
+      val testNotificationUnparsed = UnparsedNotification(actionId = actionId, payload = xmlInput.toString)
       val details = notification.details
       val details_2 = notification_2.details
       val details_3 = notification_3.details
 
-      "return the same amount of Notifications with the same actionId" in {
+      "return the same amount of ParsedNotifications with the same actionId" in {
         when(notificationParser.parse(any[NodeSeq])).thenReturn(Seq(details, details_2, details_3))
 
-        val result = notificationFactory.buildNotifications(actionId, xmlInput)
+        val result = notificationFactory.buildNotifications(testNotificationUnparsed)
 
         result.size mustBe 3
         result.head.actionId mustBe actionId
@@ -109,22 +113,21 @@ class NotificationFactorySpec extends UnitSpec {
         result(2).actionId mustBe actionId
       }
 
-      "return the same amount of Notifications with the same payload" in {
+      "return the same amount of ParsedNotifications with the same unparsedNotificationId" in {
         when(notificationParser.parse(any[NodeSeq])).thenReturn(Seq(details, details_2, details_3))
 
-        val result = notificationFactory.buildNotifications(actionId, xmlInput)
+        val result = notificationFactory.buildNotifications(testNotificationUnparsed)
 
-        val expectedPayload = xmlInput
         result.size mustBe 3
-        result.head.payload mustBe expectedPayload
-        result(1).payload mustBe expectedPayload
-        result(2).payload mustBe expectedPayload
+        result.head.unparsedNotificationId mustBe testNotificationUnparsed.id
+        result(1).unparsedNotificationId mustBe testNotificationUnparsed.id
+        result(2).unparsedNotificationId mustBe testNotificationUnparsed.id
       }
 
-      "return the same amount of Notifications with given details" in {
+      "return the same amount of ParsedNotifications with given details" in {
         when(notificationParser.parse(any[NodeSeq])).thenReturn(Seq(details, details_2, details_3))
 
-        val result = notificationFactory.buildNotifications(actionId, xmlInput)
+        val result = notificationFactory.buildNotifications(testNotificationUnparsed)
 
         result.size mustBe 3
         val allDetails = result.map(_.details)
@@ -136,11 +139,12 @@ class NotificationFactorySpec extends UnitSpec {
 
     "NotificationParser returns no NotificationDetails" should {
 
-      val xmlInput = exampleUnparsableNotification(mrn).asXml.toString
+      val xmlInput = exampleUnparsableNotification(mrn).asXml
+      val testNotificationUnparsed = UnparsedNotification(actionId = actionId, payload = xmlInput.toString)
 
       "return empty sequence" in {
 
-        val result = notificationFactory.buildNotifications(actionId, xmlInput)
+        val result = notificationFactory.buildNotifications(testNotificationUnparsed)
 
         result mustBe empty
       }
@@ -148,19 +152,20 @@ class NotificationFactorySpec extends UnitSpec {
 
     "NotificationParser throws an Exception" should {
 
-      val xmlInput = exampleUnparsableNotification(mrn).asXml.toString
+      val xmlInput = exampleUnparsableNotification(mrn).asXml
+      val testNotificationUnparsed = UnparsedNotification(actionId = actionId, payload = xmlInput.toString)
       val exception = new RuntimeException("Test Exception")
 
       "not throw an exception" in {
         when(notificationParser.parse(any[NodeSeq])).thenThrow(exception)
 
-        noException should be thrownBy notificationFactory.buildNotifications(actionId, xmlInput)
+        noException should be thrownBy notificationFactory.buildNotifications(testNotificationUnparsed)
       }
 
       "return empty sequence" in {
         when(notificationParser.parse(any[NodeSeq])).thenThrow(exception)
 
-        val result = notificationFactory.buildNotifications(actionId, xmlInput)
+        val result = notificationFactory.buildNotifications(testNotificationUnparsed)
 
         result mustBe empty
       }

@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs
 
-import java.time._
-
-import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 
+import java.time._
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -38,7 +37,7 @@ class PurgeDraftDeclarationsJob @Inject()(appConfig: AppConfig, declarationRepos
 
   override val name: String = "PurgeDraftDeclarations"
   override def interval: FiniteDuration = jobConfig.interval
-  override def firstRunTime: LocalTime = jobConfig.elapseTime
+  override def firstRunTime: Option[LocalTime] = Some(jobConfig.elapseTime)
 
   override def execute(): Future[Unit] = {
 

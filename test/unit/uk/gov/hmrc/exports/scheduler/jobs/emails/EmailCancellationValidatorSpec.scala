@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
-
 import org.mockito.ArgumentMatchersSugar.any
 import play.api.test.Helpers._
 import testdata.ExportsTestData._
@@ -26,8 +24,10 @@ import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus._
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
-import uk.gov.hmrc.exports.repositories.NotificationRepository
+import uk.gov.hmrc.exports.repositories.ParsedNotificationRepository
 
+import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -36,7 +36,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
   private val statusesStoppingEmailSending = Seq(REJECTED, CLEARED, CANCELLED)
   private val statusesNotStoppingEmailSending = (SubmissionStatus.values -- statusesStoppingEmailSending).toSeq
 
-  private val notificationRepository = mock[NotificationRepository]
+  private val notificationRepository = mock[ParsedNotificationRepository]
   private val emailCancellationValidator = new EmailCancellationValidator(notificationRepository)
 
   override def beforeEach(): Unit = {
@@ -47,8 +47,8 @@ class EmailCancellationValidatorSpec extends UnitSpec {
   }
 
   def createNotification(dateTimeIssued: ZonedDateTime, status: SubmissionStatus) = ParsedNotification(
+    unparsedNotificationId = UUID.randomUUID(),
     actionId = actionId,
-    payload = "payload",
     details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = status, errors = Seq.empty)
   )
 

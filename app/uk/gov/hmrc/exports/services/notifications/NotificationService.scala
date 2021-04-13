@@ -16,21 +16,21 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
-import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, UnparsedNotificationWorkItemRepository}
 import uk.gov.hmrc.exports.services.notifications.receiptactions._
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
 
 @Singleton
 class NotificationService @Inject()(
   submissionRepository: SubmissionRepository,
-  notificationRepository: NotificationRepository,
-  notificationFactory: NotificationFactory,
-  notificationReceiptActionsExecutor: NotificationReceiptActionsExecutor
+  unparsedNotificationWorkItemRepository: UnparsedNotificationWorkItemRepository,
+  notificationRepository: ParsedNotificationRepository,
+  notificationReceiptActionsScheduler: NotificationReceiptActionsScheduler
 )(implicit executionContext: ExecutionContext) {
 
   def getNotifications(submission: Submission): Future[Seq[ParsedNotification]] = {
@@ -63,12 +63,8 @@ class NotificationService @Inject()(
   def handleNewNotification(actionId: String, notificationXml: NodeSeq): Future[Unit] = {
     val notification: UnparsedNotification = UnparsedNotification(actionId = actionId, payload = notificationXml.toString)
 
-    notificationRepository.insert(notification).map { _ =>
-      notificationReceiptActionsExecutor.executeActions(notification)
+    unparsedNotificationWorkItemRepository.pushNew(notification).map { _ =>
+      notificationReceiptActionsScheduler.scheduleActionsExecution()
     }
   }
-
-  def reattemptParsingUnparsedNotifications(): Future[Unit] =
-    notificationRepository.findUnparsedNotifications().map(_.map(notificationReceiptActionsExecutor.executeActions))
-
 }

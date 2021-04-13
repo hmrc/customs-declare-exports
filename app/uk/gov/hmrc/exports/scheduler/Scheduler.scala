@@ -16,17 +16,16 @@
 
 package uk.gov.hmrc.exports.scheduler
 
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import java.util.concurrent.TimeUnit
-
 import akka.actor.{ActorSystem, Cancellable}
-import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.scheduler.jobs.ScheduledJob
 
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.concurrent.TimeUnit
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -46,7 +45,7 @@ class Scheduler @Inject()(
       s"Scheduling job [${job.name}] to run periodically at [${job.firstRunTime}] with interval [${job.interval.length} ${job.interval.unit}]"
     )
     actorSystem.scheduler.schedule(
-      durationUntil(nextRunDateFor(job)),
+      calcInitialDelay(job),
       job.interval,
       new Runnable() {
         override def run(): Unit =
@@ -62,8 +61,13 @@ class Scheduler @Inject()(
 
   applicationLifecycle.addStopHook(() => Future.successful(runningJobs.foreach(_.cancel())))
 
+  private def calcInitialDelay(job: ScheduledJob): FiniteDuration = job.firstRunTime match {
+    case Some(_) => durationUntil(nextRunDateFor(job))
+    case None    => FiniteDuration(0, TimeUnit.SECONDS)
+  }
+
   private def nextRunDateFor(job: ScheduledJob): Instant =
-    schedulerDateUtil.nextRun(job.firstRunTime, job.interval)
+    schedulerDateUtil.nextRun(job.firstRunTime.get, job.interval)
 
   private def durationUntil(datetime: Instant): FiniteDuration = {
     val now = Instant.now(appConfig.clock)

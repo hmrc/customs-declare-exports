@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
-import java.time._
-
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import reactivemongo.bson.BSONObjectID
@@ -30,6 +28,7 @@ import uk.gov.hmrc.exports.repositories.SendEmailWorkItemRepository
 import uk.gov.hmrc.exports.services.email.EmailSender
 import uk.gov.hmrc.workitem._
 
+import java.time._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -57,7 +56,7 @@ class SendEmailsJobSpec extends UnitSpec {
     when(pagerDutyAlertManager.managePagerDutyAlert(any[BSONObjectID])(any[ExecutionContext])).thenReturn(Future.successful(false))
   }
 
-  private val testWorkItem: WorkItem[SendEmailDetails] = buildTestWorkItem(status = InProgress)
+  private val testWorkItem: WorkItem[SendEmailDetails] = buildTestSendEmailWorkItem(status = InProgress)
   private def whenThereIsWorkItemAvailable(): Unit =
     when(sendEmailWorkItemRepository.pullOutstanding(any[DateTime], any[DateTime])(any))
       .thenReturn(Future.successful(Some(testWorkItem)), Future.successful(None))
@@ -76,7 +75,8 @@ class SendEmailsJobSpec extends UnitSpec {
 
         val expectedFirstRunTime = LocalTime.parse("12:05:00")
 
-        sendEmailsJob.firstRunTime mustBe expectedFirstRunTime
+        sendEmailsJob.firstRunTime mustBe defined
+        sendEmailsJob.firstRunTime.get mustBe expectedFirstRunTime
       }
 
       "current time IS the full 'interval' time" in {
@@ -85,7 +85,8 @@ class SendEmailsJobSpec extends UnitSpec {
 
         val expectedFirstRunTime = LocalTime.parse("12:10:00")
 
-        sendEmailsJob.firstRunTime mustBe expectedFirstRunTime
+        sendEmailsJob.firstRunTime mustBe defined
+        sendEmailsJob.firstRunTime.get mustBe expectedFirstRunTime
       }
     }
 
@@ -101,7 +102,7 @@ class SendEmailsJobSpec extends UnitSpec {
       "return successful Future" in {
         when(sendEmailWorkItemRepository.pullOutstanding(any[DateTime], any[DateTime])(any[ExecutionContext])).thenReturn(Future.successful(None))
 
-        sendEmailsJob.execute().futureValue mustBe (): Unit
+        sendEmailsJob.execute().futureValue mustBe ((): Unit)
       }
 
       "not call EmailCancellationValidator" in {

@@ -23,7 +23,7 @@ import testdata.RepositoryTestData.dummyWriteResultFailure
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
-import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.NotificationService
 
@@ -65,8 +65,8 @@ object UnitTestMockBuilder extends MockitoSugar {
     submissionServiceMock
   }
 
-  def buildNotificationRepositoryMock: NotificationRepository = {
-    val notificationRepositoryMock: NotificationRepository = mock[NotificationRepository]
+  def buildNotificationRepositoryMock: ParsedNotificationRepository = {
+    val notificationRepositoryMock: ParsedNotificationRepository = mock[ParsedNotificationRepository]
     when(notificationRepositoryMock.findNotificationsByActionId(any())).thenReturn(Future.successful(Seq.empty))
     when(notificationRepositoryMock.findNotificationsByActionIds(any())).thenReturn(Future.successful(Seq.empty))
     when(notificationRepositoryMock.insert(any())(any())).thenReturn(Future.failed[WriteResult](dummyWriteResultFailure()))

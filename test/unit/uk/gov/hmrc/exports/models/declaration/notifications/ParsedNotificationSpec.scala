@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.exports.models.declaration.notifications
 
-import java.time.format.DateTimeFormatter
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
-
 import play.api.libs.json.Json
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
+
+import java.time.format.DateTimeFormatter
+import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
+import java.util.UUID
 
 class ParsedNotificationSpec extends UnitSpec {
 
@@ -30,47 +31,42 @@ class ParsedNotificationSpec extends UnitSpec {
 
   "ParsedNotification" must {
     val id = BSONObjectID.generate
+    val unparsedNotificationId = UUID.randomUUID()
     val actionId = "123"
     val dateTime = LocalDateTime.now()
     val mrn = "id1"
-    val payload = "<xml></xml>"
 
     val notification = ParsedNotification(
       _id = id,
+      unparsedNotificationId,
       actionId = actionId,
-      payload = payload,
       details = NotificationDetails(mrn, ZonedDateTime.of(dateTime, ZoneId.of("UCT")), SubmissionStatus.ACCEPTED, Seq.empty)
     )
 
     "have json writes that produce object which could be parsed by the front end service" in {
       val json = Json.toJson(notification)(ParsedNotification.FrontendFormat.writes)
 
-      json.toString() mustBe ParsedNotificationSpec.serialisedWithNonOptionalDetailsFormat(
-        actionId,
-        mrn,
-        dateTime.atZone(ZoneId.of("UCT")).format(formatter),
-        payload
-      )
+      json.toString() mustBe ParsedNotificationSpec.serialisedWithFrontendFormat(actionId, mrn, dateTime.atZone(ZoneId.of("UCT")).format(formatter))
     }
 
     "have json writes that produce object which could be parsed by the database" in {
       val json = Json.toJson(notification)(ParsedNotification.DbFormat.format)
 
-      json.toString() mustBe ParsedNotificationSpec.serialisedWithOptionalDetailsFormat(
+      json.toString() mustBe ParsedNotificationSpec.serialisedWithDbFormat(
         id.stringify,
+        unparsedNotificationId.toString,
         actionId,
         mrn,
-        dateTime.atZone(ZoneId.of("UCT")).format(formatter),
-        payload
+        dateTime.atZone(ZoneId.of("UCT")).format(formatter)
       )
     }
   }
 }
 
 object ParsedNotificationSpec {
-  def serialisedWithNonOptionalDetailsFormat(actionId: String, mrn: String, dateTime: String, payload: String) =
-    s"""{"actionId":"${actionId}","mrn":"${mrn}","dateTimeIssued":"${dateTime}","status":"ACCEPTED","errors":[],"payload":"${payload}"}"""
+  def serialisedWithFrontendFormat(actionId: String, mrn: String, dateTime: String) =
+    s"""{"actionId":"${actionId}","mrn":"${mrn}","dateTimeIssued":"${dateTime}","status":"ACCEPTED","errors":[]}"""
 
-  def serialisedWithOptionalDetailsFormat(_id: String, actionId: String, mrn: String, dateTime: String, payload: String) =
-    s"""{"_id":{"$$oid":"${_id}"},"actionId":"${actionId}","payload":"${payload}","details":{"mrn":"${mrn}","dateTimeIssued":"${dateTime}","status":"ACCEPTED","errors":[]}}"""
+  def serialisedWithDbFormat(_id: String, unparsedNotificationId: String, actionId: String, mrn: String, dateTime: String) =
+    s"""{"_id":{"$$oid":"${_id}"},"unparsedNotificationId":"${unparsedNotificationId}","actionId":"${actionId}","details":{"mrn":"${mrn}","dateTimeIssued":"${dateTime}","status":"ACCEPTED","errors":[]}}"""
 }

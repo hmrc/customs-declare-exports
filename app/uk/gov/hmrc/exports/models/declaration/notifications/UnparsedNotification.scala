@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.exports.models.declaration.notifications
 
-import play.api.libs.json._
-import reactivemongo.bson.BSONObjectID
+import java.util.UUID
 
-case class UnparsedNotification(_id: BSONObjectID = BSONObjectID.generate(), actionId: String, payload: String) extends Notification
+import play.api.libs.json._
+
+case class UnparsedNotification(id: UUID = UUID.randomUUID(), actionId: String, payload: String)
 
 object UnparsedNotification {
 

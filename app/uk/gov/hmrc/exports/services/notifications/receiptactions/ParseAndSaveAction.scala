@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
-import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -29,18 +29,16 @@ import scala.util.Success
 @Singleton
 class ParseAndSaveAction @Inject()(
   submissionRepository: SubmissionRepository,
-  notificationRepository: NotificationRepository,
+  notificationRepository: ParsedNotificationRepository,
   notificationFactory: NotificationFactory
 )(implicit executionContext: ExecutionContext)
     extends Logging {
 
   def execute(notification: UnparsedNotification): Future[Unit] = {
-    val parsedNotifications = notificationFactory.buildNotifications(notification.actionId, notification.payload)
+    val parsedNotifications = notificationFactory.buildNotifications(notification)
 
     if (parsedNotifications.nonEmpty) {
-      save(parsedNotifications).map { _ =>
-        notificationRepository.removeUnparsedNotificationsForActionId(notification.actionId)
-      }
+      save(parsedNotifications)
     } else
       Future.successful((): Unit)
   }

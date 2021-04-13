@@ -16,18 +16,18 @@
 
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 
-import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
+import akka.actor.{ActorSystem, Cancellable}
 
-import scala.concurrent.{ExecutionContext, Future}
+import java.util.concurrent.TimeUnit.SECONDS
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.FiniteDuration
 
 @Singleton
-class NotificationReceiptActionsExecutor @Inject()(parseAndSaveAction: ParseAndSaveAction, sendEmailForDmsDocAction: SendEmailForDmsDocAction) {
+class NotificationReceiptActionsScheduler @Inject()(actorSystem: ActorSystem, notificationReceiptActionsRunner: NotificationReceiptActionsRunner) {
 
-  def executeActions(notification: UnparsedNotification)(implicit ec: ExecutionContext): Future[Unit] =
-    for {
-      _ <- parseAndSaveAction.execute(notification)
-      _ <- sendEmailForDmsDocAction.execute(notification.actionId)
-    } yield ()
-
+  def scheduleActionsExecution()(implicit ec: ExecutionContext): Cancellable =
+    actorSystem.scheduler.scheduleOnce(FiniteDuration(0, SECONDS)) {
+      notificationReceiptActionsRunner.runNow()
+    }
 }

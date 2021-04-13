@@ -17,7 +17,6 @@
 package uk.gov.hmrc.exports.scheduler.jobs
 
 import java.time.LocalTime
-
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
@@ -25,7 +24,7 @@ trait ScheduledJob {
 
   def name: String
   def execute(): Future[Unit]
-  def firstRunTime: LocalTime
+  def firstRunTime: Option[LocalTime]
   def interval: FiniteDuration
 
 }

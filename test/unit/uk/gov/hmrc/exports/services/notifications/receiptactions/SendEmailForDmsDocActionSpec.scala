@@ -27,12 +27,12 @@ import testdata.notifications.NotificationTestData.notification
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
-import uk.gov.hmrc.exports.repositories.{NotificationRepository, SendEmailWorkItemRepository}
+import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SendEmailWorkItemRepository}
 import uk.gov.hmrc.workitem.{ToDo, WorkItem}
 
 class SendEmailForDmsDocActionSpec extends UnitSpec {
 
-  private val notificationRepository = mock[NotificationRepository]
+  private val notificationRepository = mock[ParsedNotificationRepository]
   private val sendEmailWorkItemRepository = mock[SendEmailWorkItemRepository]
 
   private val sendEmailForDmsDocAction = new SendEmailForDmsDocAction(notificationRepository, sendEmailWorkItemRepository)
