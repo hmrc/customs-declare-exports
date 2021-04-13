@@ -18,16 +18,18 @@ package uk.gov.hmrc.exports.services.mapping.declaration
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
-import uk.gov.hmrc.exports.models.declaration.{DispatchLocation, ExportsDeclaration}
+import uk.gov.hmrc.exports.models.declaration.DispatchLocation.AllowedDispatchLocations.{OutsideEU, SpecialFiscalTerritory}
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.declaration_ds.dms._2.DeclarationTypeCodeType
 
 class TypeCodeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
-  override def buildThenAdd(exportsCacheModel: ExportsDeclaration, declaration: Declaration): Unit =
-    exportsCacheModel.additionalDeclarationType.foreach(additionalDeclarationType => {
-      declaration.setTypeCode(createTypeCode(additionalDeclarationType, exportsCacheModel.dispatchLocation))
+  override def buildThenAdd(exportsDeclaration: ExportsDeclaration, declaration: Declaration): Unit =
+    exportsDeclaration.additionalDeclarationType.foreach(additionalDeclarationType => {
+      val dispatchLocation = codeForDispatchLocation(exportsDeclaration)
+      declaration.setTypeCode(createTypeCode(additionalDeclarationType, dispatchLocation))
     })
 
   def buildThenAdd(codeType: String, declaration: Declaration): Unit = {
@@ -36,11 +38,18 @@ class TypeCodeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, D
     declaration.setTypeCode(typeCodeType)
   }
 
-  private def createTypeCode(decType: AdditionalDeclarationType, dispatchLocation: Option[DispatchLocation]): DeclarationTypeCodeType = {
+  private def createTypeCode(decType: AdditionalDeclarationType, dispatchLocation: String): DeclarationTypeCodeType = {
     val typeCodeType = new DeclarationTypeCodeType()
-    dispatchLocation.foreach { data =>
-      typeCodeType.setValue(data.dispatchLocation + decType.toString)
-    }
+    typeCodeType.setValue(dispatchLocation + decType.toString)
     typeCodeType
   }
+
+  private val countriesFor_CO_declType = List("GG", "JE", "Jersey", "Guernsey")
+
+  def codeForDispatchLocation(exportsDeclaration: ExportsDeclaration): String =
+    (for {
+      country <- exportsDeclaration.locations.destinationCountry
+      code <- country.code
+      maybeCO <- if (countriesFor_CO_declType.contains(code)) Some(SpecialFiscalTerritory) else None
+    } yield maybeCO).getOrElse(OutsideEU)
 }

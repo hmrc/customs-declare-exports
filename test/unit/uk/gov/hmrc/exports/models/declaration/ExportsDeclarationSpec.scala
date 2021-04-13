@@ -28,11 +28,11 @@ class ExportsDeclarationSpec extends UnitSpec {
     import ExportsDeclaration.REST._
 
     "have json writes that produce object which could be parsed by first version of reads" in {
-      val declarationRequest = Json
+      val exportsDeclarationRequest = Json
         .parse(ExportsDeclarationSpec.declarationAsString)
         .as(ExportsDeclarationRequest.format)
 
-      val declaration = ExportsDeclaration("1", Eori("GB12345678"), declarationRequest)
+      val declaration = ExportsDeclaration("1", Eori("GB12345678"), exportsDeclarationRequest)
 
       val json = Json.toJson(declaration)
 

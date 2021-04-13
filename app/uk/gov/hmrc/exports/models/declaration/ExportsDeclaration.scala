@@ -24,7 +24,6 @@ import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
-import uk.gov.hmrc.exports.models.declaration.DispatchLocation.AllowedDispatchLocations.{OutsideEU, SpecialFiscalTerritory}
 
 case class ExportsDeclaration(
   id: String,
@@ -59,7 +58,7 @@ object ExportsDeclaration {
       updatedDateTime = declarationRequest.updatedDateTime,
       sourceId = declarationRequest.sourceId,
       `type` = declarationRequest.`type`,
-      dispatchLocation = Some(DispatchLocation(codeForDispatchLocation(declarationRequest))),
+      dispatchLocation = declarationRequest.dispatchLocation,
       additionalDeclarationType = declarationRequest.additionalDeclarationType,
       consignmentReferences = declarationRequest.consignmentReferences,
       transport = declarationRequest.transport,
@@ -70,15 +69,6 @@ object ExportsDeclaration {
       previousDocuments = declarationRequest.previousDocuments,
       natureOfTransaction = declarationRequest.natureOfTransaction
     )
-
-  private val countriesFor_CO_declType = List("Jersey", "Guernsey")
-
-  def codeForDispatchLocation(declRequest: ExportsDeclarationRequest): String =
-    (for {
-      consignee <- declRequest.parties.consigneeDetails
-      address <- consignee.details.address
-      maybeCO <- if (countriesFor_CO_declType.contains(address.country)) Some(SpecialFiscalTerritory) else None
-    } yield maybeCO).getOrElse(OutsideEU)
 
   object REST {
     implicit val writes: OWrites[ExportsDeclaration] = Json.writes[ExportsDeclaration]
