@@ -44,7 +44,7 @@ class TypeCodeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, D
     typeCodeType
   }
 
-  private val countriesFor_CO_declType = List("GG", "JE", "Jersey", "Guernsey")
+  private val countriesFor_CO_declType = List("GG", "JE")
 
   def codeForDispatchLocation(exportsDeclaration: ExportsDeclaration): String =
     (for {

@@ -35,36 +35,30 @@ class TypeCodeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder with G
     s"set typeCode in Declaration to 'EX${declarationType}'" when {
 
       "dispatchLocation in ExportsDeclaration is undefined" in {
-        And("the destination country is not 'GG' or 'JE' or 'Jersey' or 'Guernsey'")
+        And("the destination country code is not 'GG' or 'JE'")
         testTypeCode("EX", modifiers)
       }
 
       "dispatchLocation in ExportsDeclaration is 'EX'" in {
-        And("the destination country is not 'GG' or 'JE' or 'Jersey' or 'Guernsey'")
+        And("the destination country code is not 'GG' or 'JE'")
         testTypeCode("EX", withDispatchLocation("EX") +: modifiers)
       }
     }
 
     s"set typeCode in Declaration to 'CO${declarationType}'" when {
 
-      "dispatchLocation in ExportsDeclaration is undefined and the destination country is 'GG'" in {
+      "dispatchLocation in ExportsDeclaration is undefined" in {
+        And("the destination country code is 'GG'")
         testTypeCode("CO", withDestinationCountry(Country(Some("GG"))) +: modifiers)
       }
 
-      "dispatchLocation in ExportsDeclaration is 'EX' and the destination country is 'GG'" in {
+      "dispatchLocation in ExportsDeclaration is 'EX'" in {
+        And("the destination country code is 'GG'")
         testTypeCode("CO", withDispatchLocation("EX") +: withDestinationCountry(Country(Some("GG"))) +: modifiers)
       }
 
-      "the destination country is 'JE'" in {
+      "the destination country code is 'JE'" in {
         testTypeCode("CO", withDestinationCountry(Country(Some("JE"))) +: modifiers)
-      }
-
-      "the destination country is 'Jersey'" in {
-        testTypeCode("CO", withDestinationCountry(Country(Some("Jersey"))) +: modifiers)
-      }
-
-      "the destination country is 'Guernsey'" in {
-        testTypeCode("CO", withDestinationCountry(Country(Some("Guernsey"))) +: modifiers)
       }
     }
 
