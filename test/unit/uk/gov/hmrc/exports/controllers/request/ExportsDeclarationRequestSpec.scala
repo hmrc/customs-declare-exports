@@ -16,90 +16,22 @@
 
 package uk.gov.hmrc.exports.controllers.request
 
-import java.time.Instant
-
 import play.api.libs.json.Json
-import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 
-class ExportsDeclarationRequestSpec extends UnitSpec with ExportsDeclarationBuilder {
+class ExportsDeclarationRequestSpec extends UnitSpec {
 
-  private val `type` = DeclarationType.STANDARD
-  private val createdDate = Instant.MIN
-  private val updatedDate = Instant.MAX
-  private val sourceId = "source-id"
-  private val eori = "eori"
-  private val id = "id"
-  private val dispatchLocation = mock[DispatchLocation]
-  private val additionalDeclarationType = mock[AdditionalDeclarationType]
-  private val consignmentReferences = mock[ConsignmentReferences]
-  private val transport = mock[Transport]
-  private val parties = mock[Parties]
-  private val locations = mock[Locations]
-  private val item = mock[ExportItem]
-  private val totalNumberOfItems = mock[TotalNumberOfItems]
-  private val previousDocuments = mock[PreviousDocuments]
-  private val natureOfTransaction = mock[NatureOfTransaction]
-
-  private val request = ExportsDeclarationRequest(
-    createdDateTime = createdDate,
-    updatedDateTime = updatedDate,
-    sourceId = Some(sourceId),
-    `type` = `type`,
-    dispatchLocation = Some(dispatchLocation),
-    additionalDeclarationType = Some(additionalDeclarationType),
-    consignmentReferences = Some(consignmentReferences),
-    transport = transport,
-    parties = parties,
-    locations = locations,
-    items = Seq(item),
-    totalNumberOfItems = Some(totalNumberOfItems),
-    previousDocuments = Some(previousDocuments),
-    natureOfTransaction = Some(natureOfTransaction)
-  )
-
-  private val declaration = ExportsDeclaration(
-    id = id,
-    eori = eori,
-    status = DeclarationStatus.DRAFT,
-    createdDateTime = createdDate,
-    updatedDateTime = updatedDate,
-    sourceId = Some(sourceId),
-    `type` = `type`,
-    dispatchLocation = Some(dispatchLocation),
-    additionalDeclarationType = Some(additionalDeclarationType),
-    consignmentReferences = Some(consignmentReferences),
-    transport = transport,
-    parties = parties,
-    locations = locations,
-    items = Seq(item),
-    totalNumberOfItems = Some(totalNumberOfItems),
-    previousDocuments = Some(previousDocuments),
-    natureOfTransaction = Some(natureOfTransaction)
-  )
-
-  "Request" should {
-    "map to ExportsDeclaration" in {
-      request.toExportsDeclaration(id, Eori(eori)) mustBe declaration
-    }
-
-    "set initial state for declaration without references" in {
-      request.copy(consignmentReferences = None).toExportsDeclaration(id, Eori(eori)).status mustBe DeclarationStatus.INITIAL
+  "ExportsDeclarationRequest" should {
+    "have json format that parse declaration in version 2" in {
+      Json
+        .parse(ExportsDeclarationSpec.exportsDeclarationRequestAsString)
+        .validate[ExportsDeclarationRequest]
+        .fold(error => fail(s"Could not parse - $error"), declaration => {
+          declaration.transport.borderModeOfTransportCode mustNot be(empty)
+          declaration.transport.meansOfTransportOnDepartureType mustNot be(empty)
+          declaration.transport.transportPayment mustNot be(empty)
+        })
     }
   }
-
-  "have json format that parse declaration in version 2" in {
-    Json
-      .parse(ExportsDeclarationSpec.declarationAsString)
-      .validate[ExportsDeclarationRequest]
-      .fold(error => fail(s"Could not parse - $error"), declaration => {
-        declaration.transport.borderModeOfTransportCode mustNot be(empty)
-        declaration.transport.meansOfTransportOnDepartureType mustNot be(empty)
-        declaration.transport.transportPayment mustNot be(empty)
-      })
-  }
-
 }

@@ -18,21 +18,18 @@ package uk.gov.hmrc.exports.services.notifications.receiptactions
 
 import java.util.concurrent.TimeUnit.SECONDS
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
+
 import akka.actor.{ActorSystem, Cancellable, Scheduler}
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.Mockito
 import testdata.notifications.NotificationTestData.notificationUnparsed
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
-import uk.gov.hmrc.http.HeaderCarrier
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
 
 class NotificationReceiptActionsExecutorSpec extends UnitSpec {
-
-  private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
 
   private val actorSystem: ActorSystem = mock[ActorSystem]
   private val scheduler: Scheduler = mock[Scheduler]

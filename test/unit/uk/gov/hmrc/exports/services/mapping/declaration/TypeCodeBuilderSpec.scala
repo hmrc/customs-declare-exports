@@ -16,29 +16,67 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
+import org.scalatest.{Assertion, GivenWhenThen}
 import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType
+import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.STANDARD_PRE_LODGED
+import uk.gov.hmrc.exports.models.declaration.{Country, ExportsDeclaration}
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class TypeCodeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
+class TypeCodeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder with GivenWhenThen {
+
+  val typeCodeBuilder = new TypeCodeBuilder()
+  val declarationType = STANDARD_PRE_LODGED
+
+  val modifiers = Array(withAdditionalDeclarationType(declarationType))
 
   "TypeCodeBuilder" should {
-    val builder = new TypeCodeBuilder()
 
-    "Build then add from ExportsDeclaration" in {
-      val declaration = new Declaration
-      val model = aDeclaration(withDispatchLocation("EX"), withAdditionalDeclarationType(AdditionalDeclarationType.SUPPLEMENTARY_SIMPLIFIED))
-      builder.buildThenAdd(model, declaration)
+    s"set typeCode in Declaration to 'EX${declarationType}'" when {
 
-      declaration.getTypeCode.getValue must be("EXY")
+      "dispatchLocation in ExportsDeclaration is undefined" in {
+        And("the destination country code is not 'GG' or 'JE'")
+        testTypeCode("EX", modifiers)
+      }
+
+      "dispatchLocation in ExportsDeclaration is 'EX'" in {
+        And("the destination country code is not 'GG' or 'JE'")
+        testTypeCode("EX", withDispatchLocation("EX") +: modifiers)
+      }
+    }
+
+    s"set typeCode in Declaration to 'CO${declarationType}'" when {
+
+      "dispatchLocation in ExportsDeclaration is undefined" in {
+        And("the destination country code is 'GG'")
+        testTypeCode("CO", withDestinationCountry(Country(Some("GG"))) +: modifiers)
+      }
+
+      "dispatchLocation in ExportsDeclaration is 'EX'" in {
+        And("the destination country code is 'GG'")
+        testTypeCode("CO", withDispatchLocation("EX") +: withDestinationCountry(Country(Some("GG"))) +: modifiers)
+      }
+
+      "the destination country code is 'JE'" in {
+        testTypeCode("CO", withDestinationCountry(Country(Some("JE"))) +: modifiers)
+      }
     }
 
     "Build then add from Code" in {
       val declaration = new Declaration
-      builder.buildThenAdd("code", declaration)
+      typeCodeBuilder.buildThenAdd("code", declaration)
 
       declaration.getTypeCode.getValue must be("code")
     }
+  }
+
+  private def testTypeCode(expectedTypeCode: String, modifiers: Array[ExportsDeclaration => ExportsDeclaration]): Assertion = {
+    And(s"AdditionalDeclarationType is '$declarationType'")
+
+    val declaration = new Declaration
+    val model = aDeclaration(modifiers: _*)
+    typeCodeBuilder.buildThenAdd(model, declaration)
+
+    declaration.getTypeCode.getValue must be(s"$expectedTypeCode$declarationType")
   }
 }

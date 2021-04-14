@@ -18,6 +18,9 @@ package uk.gov.hmrc.exports.services.notifications
 
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 import akka.actor.Cancellable
 import matchers.NotificationMatchers.equalWithoutId
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
@@ -36,14 +39,9 @@ import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest, SubmissionStatus}
 import uk.gov.hmrc.exports.repositories.{NotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.notifications.receiptactions.NotificationReceiptActionsExecutor
-import uk.gov.hmrc.http.HeaderCarrier
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
 
-  private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
   private val submissionRepository: SubmissionRepository = buildSubmissionRepositoryMock
   private val notificationRepository: NotificationRepository = buildNotificationRepositoryMock
   private val notificationFactory: NotificationFactory = mock[NotificationFactory]

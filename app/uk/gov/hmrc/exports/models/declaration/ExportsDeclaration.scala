@@ -19,7 +19,9 @@ package uk.gov.hmrc.exports.models.declaration
 import java.time.Instant
 
 import play.api.libs.json._
+import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
+import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 
@@ -47,10 +49,28 @@ case class ExportsDeclaration(
 
 object ExportsDeclaration {
 
+  def apply(id: String, eori: Eori, declarationRequest: ExportsDeclarationRequest): ExportsDeclaration =
+    ExportsDeclaration(
+      id = id,
+      eori = eori.value,
+      status = declarationRequest.consignmentReferences.map(_ => DeclarationStatus.DRAFT).getOrElse(DeclarationStatus.INITIAL),
+      createdDateTime = declarationRequest.createdDateTime,
+      updatedDateTime = declarationRequest.updatedDateTime,
+      sourceId = declarationRequest.sourceId,
+      `type` = declarationRequest.`type`,
+      dispatchLocation = declarationRequest.dispatchLocation,
+      additionalDeclarationType = declarationRequest.additionalDeclarationType,
+      consignmentReferences = declarationRequest.consignmentReferences,
+      transport = declarationRequest.transport,
+      parties = declarationRequest.parties,
+      locations = declarationRequest.locations,
+      items = declarationRequest.items,
+      totalNumberOfItems = declarationRequest.totalNumberOfItems,
+      previousDocuments = declarationRequest.previousDocuments,
+      natureOfTransaction = declarationRequest.natureOfTransaction
+    )
+
   object REST {
-
-    import play.api.libs.json._
-
     implicit val writes: OWrites[ExportsDeclaration] = Json.writes[ExportsDeclaration]
   }
 
@@ -71,5 +91,4 @@ object ExportsDeclaration {
     }
     implicit val format: OFormat[ExportsDeclaration] = Json.format[ExportsDeclaration]
   }
-
 }

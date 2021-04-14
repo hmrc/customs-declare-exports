@@ -18,8 +18,8 @@ package uk.gov.hmrc.exports.controllers.request
 
 import java.time.Instant
 
+import play.api.libs.json._
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
-import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration._
 
@@ -38,31 +38,9 @@ case class ExportsDeclarationRequest(
   totalNumberOfItems: Option[TotalNumberOfItems] = None,
   previousDocuments: Option[PreviousDocuments] = None,
   natureOfTransaction: Option[NatureOfTransaction] = None
-) {
-  def toExportsDeclaration(id: String, eori: Eori): ExportsDeclaration = ExportsDeclaration(
-    id = id,
-    eori = eori.value,
-    status = consignmentReferences.map(_ => DeclarationStatus.DRAFT).getOrElse(DeclarationStatus.INITIAL),
-    createdDateTime = this.createdDateTime,
-    updatedDateTime = this.updatedDateTime,
-    sourceId = this.sourceId,
-    `type` = this.`type`,
-    dispatchLocation = this.dispatchLocation,
-    additionalDeclarationType = this.additionalDeclarationType,
-    consignmentReferences = this.consignmentReferences,
-    transport = this.transport,
-    parties = this.parties,
-    locations = this.locations,
-    items = this.items,
-    totalNumberOfItems = this.totalNumberOfItems,
-    previousDocuments = this.previousDocuments,
-    natureOfTransaction = this.natureOfTransaction
-  )
-}
+)
 
 object ExportsDeclarationRequest {
-
-  import play.api.libs.json._
-
-  implicit val format: OFormat[ExportsDeclarationRequest] = Json.format[ExportsDeclarationRequest] // writes are used only for logging
+  // writes are used only for logging
+  implicit val format: OFormat[ExportsDeclarationRequest] = Json.format[ExportsDeclarationRequest]
 }

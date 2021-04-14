@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.exports.services.email
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 import org.mockito.ArgumentMatchers.{any, anyString, eq => eqTo}
 import testdata.ExportsTestData.mrn
 import testdata.notifications.NotificationTestData
@@ -25,14 +28,9 @@ import uk.gov.hmrc.exports.connectors.{CustomsDataStoreConnector, EmailConnector
 import uk.gov.hmrc.exports.models.emails.SendEmailResult.{BadEmailRequest, EmailAccepted, InternalEmailServiceError, MissingData}
 import uk.gov.hmrc.exports.models.emails._
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
-import uk.gov.hmrc.http.HeaderCarrier
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class EmailSenderSpec extends UnitSpec {
 
-  private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
   private val submissionRepository = mock[SubmissionRepository]
   private val customsDataStoreConnector = mock[CustomsDataStoreConnector]
   private val emailConnector = mock[EmailConnector]

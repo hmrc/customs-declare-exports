@@ -18,6 +18,9 @@ package uk.gov.hmrc.exports.controllers
 
 import java.util.UUID
 
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
+
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.{Json, Writes}
@@ -25,13 +28,10 @@ import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
-import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
 import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Page}
 import uk.gov.hmrc.exports.services.DeclarationService
-
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 @Singleton
 class DeclarationController @Inject()(
@@ -46,7 +46,7 @@ class DeclarationController @Inject()(
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
       logPayload("Create Declaration Request Received", request.body)
       declarationService
-        .create(request.body.toExportsDeclaration(id = UUID.randomUUID().toString, eori = request.eori))
+        .create(ExportsDeclaration(UUID.randomUUID.toString, request.eori, request.body))
         .map(logPayload("Create Declaration Response", _))
         .map(declaration => Created(declaration))
     }
@@ -61,7 +61,7 @@ class DeclarationController @Inject()(
           Future.successful(BadRequest(response))
         case Some(_) =>
           declarationService
-            .update(request.body.toExportsDeclaration(id = id, eori = request.eori))
+            .update(ExportsDeclaration(id, request.eori, request.body))
             .map(logPayload("Update Declaration Response", _))
             .map {
               case Some(declaration) => Ok(declaration)
@@ -96,8 +96,7 @@ class DeclarationController @Inject()(
   }
 
   private def logPayload[T](prefix: String, payload: T)(implicit wts: Writes[T]): T = {
-    logger.debug(s"Create Request Received: ${Json.toJson(payload)}")
+    logger.debug(s"$prefix: ${Json.toJson(payload)}")
     payload
   }
-
 }

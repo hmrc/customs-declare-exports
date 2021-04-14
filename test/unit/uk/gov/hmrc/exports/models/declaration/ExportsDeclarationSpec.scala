@@ -16,24 +16,38 @@
 
 package uk.gov.hmrc.exports.models.declaration
 
+import java.time.Instant
+
+import org.mockito.MockitoSugar.mock
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
-import uk.gov.hmrc.exports.models.Eori
+import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
+import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 
 class ExportsDeclarationSpec extends UnitSpec {
 
-  "Exports Declaration Spec" must {
+  import ExportsDeclarationSpec._
 
-    import ExportsDeclaration.REST._
+  "ExportsDeclaration" should {
+    "be correctly derived from ExportsDeclarationRequest" in {
+      ExportsDeclaration(id, Eori(eori), exportsDeclarationRequest) mustBe exportsDeclaration
+    }
 
+    "be set to initial state when without references" in {
+      ExportsDeclaration(id, Eori(eori), exportsDeclarationRequest.copy(consignmentReferences = None)).status mustBe DeclarationStatus.INITIAL
+    }
+  }
+
+  "ExportsDeclaration" must {
     "have json writes that produce object which could be parsed by first version of reads" in {
-      val declaration = Json
-        .parse(ExportsDeclarationSpec.declarationAsString)
+      val exportsDeclarationRequest = Json
+        .parse(exportsDeclarationRequestAsString)
         .as(ExportsDeclarationRequest.format)
-        .toExportsDeclaration("1", Eori("GB12345678"))
 
-      val json = Json.toJson(declaration)
+      val declaration = ExportsDeclaration("1", Eori("GB12345678"), exportsDeclarationRequest)
+
+      val json = Json.toJson(declaration)(ExportsDeclaration.REST.writes)
 
       json
         .validate(ExportsDeclarationRequest.format)
@@ -47,7 +61,63 @@ class ExportsDeclarationSpec extends UnitSpec {
 }
 
 object ExportsDeclarationSpec {
-  val declarationAsString: String =
+
+  val eori = "eori"
+  val id = "id"
+
+  private val `type` = DeclarationType.STANDARD
+  private val createdDate = Instant.MIN
+  private val updatedDate = Instant.MAX
+  private val sourceId = "source-id"
+  private val dispatchLocation = mock[DispatchLocation]
+  private val additionalDeclarationType = mock[AdditionalDeclarationType]
+  private val consignmentReferences = mock[ConsignmentReferences]
+  private val transport = mock[Transport]
+  private val parties = mock[Parties]
+  private val locations = mock[Locations]
+  private val item = mock[ExportItem]
+  private val totalNumberOfItems = mock[TotalNumberOfItems]
+  private val previousDocuments = mock[PreviousDocuments]
+  private val natureOfTransaction = mock[NatureOfTransaction]
+
+  val exportsDeclarationRequest = ExportsDeclarationRequest(
+    createdDateTime = createdDate,
+    updatedDateTime = updatedDate,
+    sourceId = Some(sourceId),
+    `type` = `type`,
+    dispatchLocation = Some(dispatchLocation),
+    additionalDeclarationType = Some(additionalDeclarationType),
+    consignmentReferences = Some(consignmentReferences),
+    transport = transport,
+    parties = parties,
+    locations = locations,
+    items = Seq(item),
+    totalNumberOfItems = Some(totalNumberOfItems),
+    previousDocuments = Some(previousDocuments),
+    natureOfTransaction = Some(natureOfTransaction)
+  )
+
+  val exportsDeclaration = ExportsDeclaration(
+    id = id,
+    eori = eori,
+    status = DeclarationStatus.DRAFT,
+    createdDateTime = createdDate,
+    updatedDateTime = updatedDate,
+    sourceId = Some(sourceId),
+    `type` = `type`,
+    dispatchLocation = Some(dispatchLocation),
+    additionalDeclarationType = Some(additionalDeclarationType),
+    consignmentReferences = Some(consignmentReferences),
+    transport = transport,
+    parties = parties,
+    locations = locations,
+    items = Seq(item),
+    totalNumberOfItems = Some(totalNumberOfItems),
+    previousDocuments = Some(previousDocuments),
+    natureOfTransaction = Some(natureOfTransaction)
+  )
+
+  val exportsDeclarationRequestAsString: String =
     """{
       |  "id": "6f31582e-bfd5-4b27-90be-2dca6e236b20",
       |  "eori": "GB7172755078551",
