@@ -49,7 +49,9 @@ class UnparsedNotificationWorkItemRepositorySpec extends IntegrationTestBaseSpec
         val exc = repo.pushNew(testUnparsedNotification_2).failed.futureValue
 
         exc mustBe an[DatabaseException]
-        exc.getMessage must include(s"E11000 duplicate key error collection: ${TestMongoDB.DatabaseName}.unparsedNotifications index: idIdx dup key")
+        exc.getMessage must include(
+          s"E11000 duplicate key error collection: ${TestMongoDB.DatabaseName}.unparsedNotifications index: itemIdIdx dup key"
+        )
       }
     }
   }
