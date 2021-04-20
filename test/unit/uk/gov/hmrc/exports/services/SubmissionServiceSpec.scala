@@ -17,15 +17,15 @@
 package uk.gov.hmrc.exports.services
 
 import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
-
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
 import reactivemongo.bson.BSONObjectID
 import testdata.ExportsDeclarationBuilder
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
-import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
+import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
@@ -37,7 +37,7 @@ import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
+class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with MockMetrics {
 
   private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
   private val customsDeclarationsConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
@@ -47,6 +47,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
   private val metaDataBuilder: CancellationMetaDataBuilder = mock[CancellationMetaDataBuilder]
   private val wcoMapperService: WcoMapperService = mock[WcoMapperService]
   private val sendEmailForDmsDocAction: SendEmailForDmsDocAction = mock[SendEmailForDmsDocAction]
+  private val exportsMetrics: ExportsMetrics = new ExportsMetrics(metrics)
 
   private val submissionService = new SubmissionService(
     customsDeclarationsConnector = customsDeclarationsConnector,
@@ -55,7 +56,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
     notificationRepository = notificationRepository,
     metaDataBuilder = metaDataBuilder,
     wcoMapperService = wcoMapperService,
-    sendEmailForDmsDocAction = sendEmailForDmsDocAction
+    sendEmailForDmsDocAction = sendEmailForDmsDocAction,
+    metrics = exportsMetrics
   )(ExecutionContext.global)
 
   override def afterEach(): Unit = {

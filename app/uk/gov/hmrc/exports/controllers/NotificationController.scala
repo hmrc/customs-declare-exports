@@ -17,12 +17,13 @@
 package uk.gov.hmrc.exports.controllers
 
 import com.google.inject.Singleton
+
 import javax.inject.Inject
 import play.api.mvc.{PlayBodyParsers, _}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
-import uk.gov.hmrc.exports.metrics.ExportsMetrics
+import uk.gov.hmrc.exports.metrics.{Counters, ExportsMetrics, Timers}
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification.FrontendFormat._
 import uk.gov.hmrc.exports.services.SubmissionService
@@ -64,7 +65,7 @@ class NotificationController @Inject()(
     }
 
   def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
-    val timer = metrics.startTimer(notificationMetric)
+    val timer = metrics.startTimer(Timers.notificationTimer)
 
     headerValidator.validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
       case Right(extractedHeaders) =>
@@ -73,7 +74,7 @@ class NotificationController @Inject()(
           .map(_ => Accepted)
           .andThen {
             case Success(_) =>
-              metrics.incrementCounter(notificationMetric)
+              metrics.incrementCounter(Counters.notificationCounter)
               timer.stop()
           }
       case Left(_) => Future.successful(Accepted)
