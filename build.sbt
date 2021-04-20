@@ -9,10 +9,7 @@ val appName = "customs-declare-exports"
 
 PlayKeys.devSettings := Seq("play.server.http.port" -> "6792")
 
-lazy val allResolvers = resolvers ++= Seq(
-  Resolver.bintrayRepo("hmrc", "releases"),
-  Resolver.jcenterRepo
-)
+lazy val allResolvers = resolvers ++= Seq(Resolver.bintrayRepo("hmrc", "releases"), Resolver.jcenterRepo)
 
 lazy val IntegrationTest = config("it") extend Test
 
@@ -27,17 +24,13 @@ lazy val microservice = Project(appName, file("."))
   .settings(publishingSettings: _*)
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
+  .settings(commonSettings, allResolvers, scoverageSettings)
   .settings(
-    commonSettings,
-    allResolvers,
-    scoverageSettings
-  )
-  .settings(
-    unmanagedSourceDirectories in Test := Seq(
-      (baseDirectory in Test).value / "test/unit",
-      (baseDirectory in Test).value / "test/util"
-    ),
-    addTestReportOption(Test, "test-reports")
+    unmanagedSourceDirectories in Test := Seq((baseDirectory in Test).value / "test/unit", (baseDirectory in Test).value / "test/util"),
+    unmanagedResourceDirectories in Test := Seq(baseDirectory.value / "test" / "resources"),
+    javaOptions in Test ++= Seq("-Dconfig.resource=test.application.conf"),
+    addTestReportOption(Test, "test-reports"),
+    Keys.fork in Test := true
   )
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(
@@ -54,14 +47,8 @@ lazy val microservice = Project(appName, file("."))
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
 
 lazy val scoverageSettings: Seq[Setting[_]] = Seq(
-  coverageExcludedPackages := List(
-    "<empty>"
-    ,"Reverse.*"
-    ,"domain\\..*"
-    ,"models\\..*"
-    ,"metrics\\..*"
-    ,".*(BuildInfo|Routes|Options).*"
-  ).mkString(";"),
+  coverageExcludedPackages := List("<empty>", "Reverse.*", "domain\\..*", "models\\..*", "metrics\\..*", ".*(BuildInfo|Routes|Options).*")
+    .mkString(";"),
   coverageMinimum := 85,
   coverageFailOnMinimum := true,
   coverageHighlighting := true,
@@ -69,7 +56,6 @@ lazy val scoverageSettings: Seq[Setting[_]] = Seq(
 )
 
 lazy val commonSettings: Seq[Setting[_]] = publishingSettings ++ defaultSettings() ++ gitStampSettings
-
 
 lazy val silencerSettings: Seq[Setting[_]] = {
   val silencerVersion = "1.7.0"

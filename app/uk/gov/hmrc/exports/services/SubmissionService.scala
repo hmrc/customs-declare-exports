@@ -63,11 +63,15 @@ class SubmissionService @Inject()(
 
     for {
       // Update the Declaration Status
-      _ <- metrics.timeCall(Timers.submissionUpdateDeclarationTimer)(declarationRepository.update(declaration.copy(status = DeclarationStatus.COMPLETE)))
+      _ <- metrics.timeCall(Timers.submissionUpdateDeclarationTimer)(
+        declarationRepository.update(declaration.copy(status = DeclarationStatus.COMPLETE))
+      )
       _ = logProgress(declaration, "Marked as COMPLETE")
 
       // Create the Submission
-      submission <- metrics.timeCall(Timers.submissionFindOrCreateSubmissionTimer)(submissionRepository.findOrCreate(Eori(declaration.eori), declaration.id, Submission(declaration, lrn, ducr)))
+      submission <- metrics.timeCall(Timers.submissionFindOrCreateSubmissionTimer)(
+        submissionRepository.findOrCreate(Eori(declaration.eori), declaration.id, Submission(declaration, lrn, ducr))
+      )
       _ = logProgress(declaration, "Found/Created Submission")
 
       // Submit the declaration to the Dec API
