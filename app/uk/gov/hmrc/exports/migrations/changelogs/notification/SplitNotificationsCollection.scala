@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.migrations.changelogs.notification
 
-import com.mongodb.client.MongoDatabase
+import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
 import org.joda.time.DateTime
 import org.mongodb.scala.bson.conversions.Bson
@@ -25,7 +25,7 @@ import org.mongodb.scala.model.Updates.{combine, set, unset}
 import play.api.Logging
 import play.api.libs.json.{Format, Json}
 import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.exports.migrations.changelogs.notification.SplitNotificationsCollection.HashFields
+import uk.gov.hmrc.exports.migrations.changelogs.notification.SplitNotificationsCollection._
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification.DbFormat.format
@@ -62,10 +62,8 @@ class SplitNotificationsCollection extends MigrationDefinition with Logging {
     val documentsToMigrateQuery = not(exists(UnparsedNotificationId))
     val queryBatchSize = 10
 
-    val documentsToMigrate = getDocumentsToMigrate(documentsToMigrateQuery, queryBatchSize)
-
-    if (documentsToMigrate.nonEmpty) {
-      documentsToMigrate.foldLeft(buildMigratedUnparsedNotificationsRegistry) { (migratedNotificationsRegistry, document) =>
+    getDocumentsToMigrate(documentsToMigrateQuery, queryBatchSize).foldLeft(buildMigratedUnparsedNotificationsRegistry) {
+      (migratedNotificationsRegistry, document) =>
         val newUnparsedNotification = buildUnparsedNotification(document)
         val newUnparsedNotificationHash = HashFields(newUnparsedNotification).##
 
@@ -87,7 +85,6 @@ class SplitNotificationsCollection extends MigrationDefinition with Logging {
         }
 
         migratedNotificationsRegistry + newUnparsedNotificationHash
-      }
     }
 
     removeRedundantIndexes()
@@ -101,13 +98,8 @@ class SplitNotificationsCollection extends MigrationDefinition with Logging {
       .iterator
   )
 
-  private def buildMigratedUnparsedNotificationsRegistry(implicit db: MongoDatabase): Set[Int] = {
-    val queryBatchSize = 10
-
-    asScalaIterator(getUnparsedNotificationsCollection.find().batchSize(queryBatchSize).iterator)
-      .map(_.get("item", classOf[Document]))
-      .foldLeft(Set.empty[Int])((mapAcc, doc) => mapAcc + HashFields(buildUnparsedNotification(doc)).##)
-  }
+  private def buildMigratedUnparsedNotificationsRegistry(implicit db: MongoDatabase): Set[Int] =
+    new MigratedUnparsedNotificationsRegistry(getUnparsedNotificationsCollection)
 
   private def fetchUnparsedNotificationId(unparsedNotification: UnparsedNotification)(implicit db: MongoDatabase): String = {
     val query = and(feq(s"item.$ActionId", unparsedNotification.actionId), feq(s"item.$Payload", unparsedNotification.payload))
@@ -156,15 +148,36 @@ class SplitNotificationsCollection extends MigrationDefinition with Logging {
   private def newWorkItem(now: DateTime, initialState: ProcessingStatus, item: UnparsedNotification) =
     WorkItem(id = BSONObjectID.generate, receivedAt = now, updatedAt = now, availableAt = now, status = initialState, failureCount = 0, item = item)
 
-  private def buildUnparsedNotification(document: Document) =
-    UnparsedNotification(actionId = document.getString("actionId"), payload = document.getString("payload"))
 }
 
 object SplitNotificationsCollection {
+
+  private def buildUnparsedNotification(document: Document) =
+    UnparsedNotification(actionId = document.getString("actionId"), payload = document.getString("payload"))
 
   case class HashFields(actionId: String, payload: String)
   object HashFields {
     def apply(unparsedNotification: UnparsedNotification): HashFields =
       HashFields(actionId = unparsedNotification.actionId, payload = unparsedNotification.payload)
+  }
+
+  class MigratedUnparsedNotificationsRegistry(collection: => MongoCollection[Document]) extends Set[Int] {
+    private lazy val underlying = initUnderlying()
+
+    private def initUnderlying(): Set[Int] = {
+      val queryBatchSize = 10
+
+      asScalaIterator(collection.find().batchSize(queryBatchSize).iterator)
+        .map(_.get("item", classOf[Document]))
+        .foldLeft(Set.empty[Int])((mapAcc, doc) => mapAcc + HashFields(buildUnparsedNotification(doc)).##)
+    }
+
+    override def contains(elem: Int): Boolean = underlying.contains(elem)
+
+    override def +(elem: Int): Set[Int] = underlying + elem
+
+    override def -(elem: Int): Set[Int] = underlying - elem
+
+    override def iterator: Iterator[Int] = underlying.iterator
   }
 }
