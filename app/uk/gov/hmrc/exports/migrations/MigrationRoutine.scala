@@ -19,12 +19,12 @@ package uk.gov.hmrc.exports.migrations
 import com.github.cloudyrock.mongock.{Mongock, MongockBuilder}
 import com.google.inject.Singleton
 import com.mongodb.{MongoClient, MongoClientURI}
-import javax.inject.Inject
 import play.api.Logger
 import uk.gov.hmrc.exports.config.{AppConfig, ExportsMigrationConfig}
-import uk.gov.hmrc.exports.migrations.changelogs.notification.MakeParsedDetailsOptional
+import uk.gov.hmrc.exports.migrations.changelogs.notification.{MakeParsedDetailsOptional, SplitTheNotificationsCollection}
 import uk.gov.hmrc.exports.routines.{Routine, RoutinesExecutionContext}
 
+import javax.inject.Inject
 import scala.concurrent.Future
 
 @Singleton
@@ -51,9 +51,11 @@ class MigrationRoutine @Inject()(appConfig: AppConfig, exportsMigrationConfig: E
     val lockManagerConfig = LockManagerConfig(lockMaxTries = 10, lockMaxWaitMillis = minutesToMillis(5), lockAcquiredForMillis = minutesToMillis(3))
     val migrationsRegistry = MigrationsRegistry()
       .register(new MakeParsedDetailsOptional())
+      .register(new SplitTheNotificationsCollection())
     val migrationTool = ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig)
 
     migrationTool.execute()
+
     client.close()
   }
 

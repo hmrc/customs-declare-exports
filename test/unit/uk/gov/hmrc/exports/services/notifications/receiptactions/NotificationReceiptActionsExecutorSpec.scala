@@ -16,54 +16,36 @@
 
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 
-import java.util.concurrent.TimeUnit.SECONDS
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
-
-import akka.actor.{ActorSystem, Cancellable, Scheduler}
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.Mockito
 import testdata.notifications.NotificationTestData.notificationUnparsed
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 class NotificationReceiptActionsExecutorSpec extends UnitSpec {
 
-  private val actorSystem: ActorSystem = mock[ActorSystem]
-  private val scheduler: Scheduler = mock[Scheduler]
   private val parseAndSaveAction: ParseAndSaveAction = mock[ParseAndSaveAction]
   private val sendEmailForDmsDocAction: SendEmailForDmsDocAction = mock[SendEmailForDmsDocAction]
 
-  private val notificationReceiptActionsExecutor = new NotificationReceiptActionsExecutor(actorSystem, parseAndSaveAction, sendEmailForDmsDocAction)
+  private val notificationReceiptActionsExecutor = new NotificationReceiptActionsExecutor(parseAndSaveAction, sendEmailForDmsDocAction)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(actorSystem, scheduler, parseAndSaveAction, sendEmailForDmsDocAction)
-    when(actorSystem.scheduler).thenReturn(scheduler)
-    when(scheduler.scheduleOnce(any)(any[() => Unit])(any)).thenReturn(Cancellable.alreadyCancelled)
+    reset(parseAndSaveAction, sendEmailForDmsDocAction)
   }
 
   override def afterEach(): Unit = {
-    reset(actorSystem, scheduler, parseAndSaveAction, sendEmailForDmsDocAction)
+    reset(parseAndSaveAction, sendEmailForDmsDocAction)
     super.afterEach()
   }
 
   "NotificationReceiptActionsExecutor on executeActions" when {
 
     "all actions work correctly" should {
-
-      "call scheduler with zero delay" in {
-        when(parseAndSaveAction.execute(any[UnparsedNotification])).thenReturn(Future.successful((): Unit))
-        when(sendEmailForDmsDocAction.execute(any[String])).thenReturn(Future.successful((): Unit))
-
-        notificationReceiptActionsExecutor.executeActions(notificationUnparsed)
-
-        val expectedDelay = FiniteDuration(0, SECONDS)
-        verify(scheduler).scheduleOnce(eqTo(expectedDelay))(any[() => Unit])(any)
-      }
 
       "call actions in order" in {
         when(parseAndSaveAction.execute(any[UnparsedNotification])).thenReturn(Future.successful((): Unit))
@@ -78,16 +60,6 @@ class NotificationReceiptActionsExecutorSpec extends UnitSpec {
     }
 
     "ParseAndSaveAction returns failed Future" should {
-
-      "call scheduler with zero delay" in {
-        val testException = new RuntimeException("Test exception message")
-        when(parseAndSaveAction.execute(any[UnparsedNotification])).thenReturn(Future.failed(testException))
-
-        notificationReceiptActionsExecutor.executeActions(notificationUnparsed)
-
-        val expectedDelay = FiniteDuration(0, SECONDS)
-        verify(scheduler).scheduleOnce(eqTo(expectedDelay))(any[() => Unit])(any)
-      }
 
       "not call SendEmailForDmsDocAction" in {
         val testException = new RuntimeException("Test exception message")

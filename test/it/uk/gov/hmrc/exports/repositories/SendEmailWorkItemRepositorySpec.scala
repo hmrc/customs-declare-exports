@@ -43,14 +43,14 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
 
     "create a new WorkItem that is ready to be pulled immediately" in {
 
-      val testSendEmailWorkItem = buildTestSendEmailWorkItem
+      val testSendEmailDetails = buildTestSendEmailDetails
 
-      repo.pushNew(testSendEmailWorkItem).futureValue
+      repo.pushNew(testSendEmailDetails).futureValue
 
       val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
 
       result mustBe defined
-      result.get.item mustBe testSendEmailWorkItem
+      result.get.item mustBe testSendEmailDetails
     }
 
     "return Exception" when {
@@ -86,7 +86,7 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
 
       "there is only WorkItem with 'Succeeded' status" in {
 
-        val workItem = buildTestWorkItem(Succeeded)
+        val workItem = buildTestSendEmailWorkItem(Succeeded)
         repo.insert(workItem).futureValue.ok mustBe true
 
         val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
@@ -97,7 +97,7 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
       "there is WorkItem with 'Failed' status" which {
         "was updated after 'failedBefore' parameter" in {
 
-          val workItem = buildTestWorkItem(Failed, updatedAt = now.minusMinutes(1))
+          val workItem = buildTestSendEmailWorkItem(Failed, updatedAt = now.minusMinutes(1))
           repo.insert(workItem).futureValue.ok mustBe true
 
           val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
@@ -111,7 +111,7 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
 
       "there is WorkItem with 'ToDo' status" in {
 
-        val workItem = buildTestWorkItem(ToDo)
+        val workItem = buildTestSendEmailWorkItem(ToDo)
         repo.insert(workItem).futureValue.ok mustBe true
 
         val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
@@ -124,7 +124,7 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
       "there is WorkItem with 'Failed' status" which {
         "was updated before 'failedBefore' parameter" in {
 
-          val workItem = buildTestWorkItem(Failed, updatedAt = now.minusMinutes(3))
+          val workItem = buildTestSendEmailWorkItem(Failed, updatedAt = now.minusMinutes(3))
           repo.insert(workItem).futureValue.ok mustBe true
 
           val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
@@ -140,7 +140,7 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
 
       "there is WorkItem with 'ToDo' status" in {
 
-        val workItem = buildTestWorkItem(ToDo)
+        val workItem = buildTestSendEmailWorkItem(ToDo)
         repo.insert(workItem).futureValue.ok mustBe true
 
         val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
@@ -155,7 +155,7 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
       "there is WorkItem with 'Failed' status" which {
         "was updated before 'failedBefore' parameter" in {
 
-          val workItem = buildTestWorkItem(Failed, updatedAt = now.minusMinutes(3))
+          val workItem = buildTestSendEmailWorkItem(Failed, updatedAt = now.minusMinutes(3))
           repo.insert(workItem).futureValue.ok mustBe true
 
           val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
@@ -176,7 +176,7 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
 
       "update the document's alertTriggered field" in {
 
-        val workItem = buildTestWorkItem(Failed)
+        val workItem = buildTestSendEmailWorkItem(Failed)
         repo.insert(workItem).futureValue.ok mustBe true
 
         val result = repo.markAlertTriggered(workItem.id).futureValue
@@ -190,7 +190,7 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
 
       "not upsert any document" in {
 
-        val workItem = buildTestWorkItem(Failed)
+        val workItem = buildTestSendEmailWorkItem(Failed)
         repo.insert(workItem).futureValue.ok mustBe true
 
         val result = repo.markAlertTriggered(BSONObjectID.generate()).futureValue

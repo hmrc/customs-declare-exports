@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.exports.scheduler
 
-import java.time._
-
 import akka.actor.{ActorSystem, Cancellable}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchersSugar.any
@@ -29,6 +27,7 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.scheduler.jobs.ScheduledJob
 
+import java.time.{LocalTime, _}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -52,10 +51,6 @@ class SchedulerSpec extends UnitSpec {
     instant(datetime)
   }
 
-  private implicit def string2Time: String => LocalTime = { time =>
-    LocalTime.parse(time)
-  }
-
   override protected def beforeEach(): Unit = {
     super.beforeEach()
     given(config.clock) willReturn clock
@@ -74,9 +69,9 @@ class SchedulerSpec extends UnitSpec {
     "Run job with valid schedule" in {
       // Given
       given(job.interval) willReturn 60.seconds
-      given(job.firstRunTime) willReturn "12:00"
+      given(job.firstRunTime) willReturn Some(LocalTime.parse("12:00"))
       given(job.name) willReturn "name"
-      given(util.nextRun(job.firstRunTime, job.interval)) willReturn "2018-12-25T12:00:30"
+      given(util.nextRun(any[LocalTime], any[FiniteDuration])) willReturn "2018-12-25T12:00:30"
 
       // When
       whenTheSchedulerStarts()
@@ -89,12 +84,29 @@ class SchedulerSpec extends UnitSpec {
       verify(job).execute()
     }
 
+    "Run job immediately" in {
+      // Given
+      given(job.interval) willReturn 60.seconds
+      given(job.firstRunTime) willReturn None
+      given(job.name) willReturn "name"
+
+      // When
+      whenTheSchedulerStarts()
+
+      // Then
+      val schedule = theSchedule
+      schedule.interval mustBe 60.seconds
+      schedule.initialDelay mustBe 0.seconds
+
+      verify(job).execute()
+    }
+
     "Fail to schedule job given a run date in the past" in {
       // Given
       given(job.interval) willReturn 3.seconds
-      given(job.firstRunTime) willReturn "12:00"
+      given(job.firstRunTime) willReturn Some(LocalTime.parse("12:00"))
       given(job.name) willReturn "name"
-      given(util.nextRun(job.firstRunTime, job.interval)).willReturn("2018-12-25T11:59:59")
+      given(util.nextRun(any[LocalTime], any[FiniteDuration])).willReturn("2018-12-25T11:59:59")
 
       // When
       intercept[IllegalArgumentException] {

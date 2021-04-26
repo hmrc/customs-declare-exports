@@ -19,20 +19,20 @@ package uk.gov.hmrc.exports.scheduler
 import akka.actor.ActorSystem
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names
-import javax.inject.{Inject, Singleton}
 import play.api.libs.concurrent.CustomExecutionContext
 import uk.gov.hmrc.exports.scheduler.JobsExecutionContextModule.JobsExecutionContext
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 class JobsExecutionContextModule extends AbstractModule {
   override def configure(): Unit =
     bind(classOf[ExecutionContext])
-      .annotatedWith(Names.named("jobsExecutionContext"))
+      .annotatedWith(Names.named("backgroundTasksExecutionContext"))
       .to(classOf[JobsExecutionContext])
 }
 
 object JobsExecutionContextModule {
   @Singleton
-  class JobsExecutionContext @Inject()(actorSystem: ActorSystem) extends CustomExecutionContext(actorSystem, "contexts.jobs-dispatcher") {}
+  class JobsExecutionContext @Inject()(actorSystem: ActorSystem) extends CustomExecutionContext(actorSystem, "contexts.background-tasks") {}
 }

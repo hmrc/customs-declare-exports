@@ -16,27 +16,16 @@
 
 package uk.gov.hmrc.exports.models.declaration.notifications
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
-import reactivemongo.bson.BSONObjectID
+import java.util.UUID
 
-case class UnparsedNotification(id: BSONObjectID = BSONObjectID.generate(), actionId: String, payload: String) extends Notification
+import play.api.libs.json._
+
+case class UnparsedNotification(id: UUID = UUID.randomUUID(), actionId: String, payload: String)
 
 object UnparsedNotification {
 
   object DbFormat {
     implicit val idFormat = reactivemongo.play.json.BSONFormats.BSONObjectIDFormat
-
-    implicit val writes: Writes[UnparsedNotification] =
-      ((JsPath \ "_id").write[BSONObjectID] and
-        (JsPath \ "actionId").write[String] and
-        (JsPath \ "payload").write[String])(unlift(UnparsedNotification.unapply))
-
-    implicit val reads: Reads[UnparsedNotification] =
-      ((__ \ "_id").read[BSONObjectID] and
-        (__ \ "actionId").read[String] and
-        (__ \ "payload").read[String])(UnparsedNotification.apply _)
-
-    implicit val format: Format[UnparsedNotification] = Format(reads, writes)
+    implicit val format: Format[UnparsedNotification] = Json.format[UnparsedNotification]
   }
 }

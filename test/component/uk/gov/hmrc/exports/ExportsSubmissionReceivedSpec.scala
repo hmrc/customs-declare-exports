@@ -17,19 +17,11 @@
 package uk.gov.hmrc.exports
 
 import com.codahale.metrics.SharedMetricRegistries
-import org.mockito.MockitoSugar
-import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.http.Status.{NOT_FOUND, _}
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import stubs.{ExternalServicesConfig, WireMockRunner}
-import testdata.ExportsTestData._
-import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.steps._
-import uk.gov.hmrc.exports.syntax._
+import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
 
 class ExportsSubmissionReceivedSpec
     extends TypedFeatureSpec with ScalaFutures with IntegrationPatience with WireMockRunner with MockitoSugar with GuiceOneAppPerSuite
@@ -37,13 +29,13 @@ class ExportsSubmissionReceivedSpec
 
   val mockSubmissionRepository: SubmissionRepository = mock[SubmissionRepository]
   val mockDeclarationRepository: DeclarationRepository = mock[DeclarationRepository]
-  val mockNotificationsRepository: NotificationRepository = mock[NotificationRepository]
+  val mockNotificationsRepository: ParsedNotificationRepository = mock[ParsedNotificationRepository]
 
   override def fakeApplication: Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
       .overrides(bind[SubmissionRepository].toInstance(mockSubmissionRepository))
-      .overrides(bind[NotificationRepository].toInstance(mockNotificationsRepository))
+      .overrides(bind[ParsedNotificationRepository].toInstance(mockNotificationsRepository))
       .overrides(bind[DeclarationRepository].toInstance(mockDeclarationRepository))
       .configure(
         Map(

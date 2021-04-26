@@ -27,12 +27,12 @@ import testdata.notifications.NotificationTestData.notification
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
-import uk.gov.hmrc.exports.repositories.{NotificationRepository, SendEmailWorkItemRepository}
+import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SendEmailWorkItemRepository}
 import uk.gov.hmrc.workitem.{ToDo, WorkItem}
 
 class SendEmailForDmsDocActionSpec extends UnitSpec {
 
-  private val notificationRepository = mock[NotificationRepository]
+  private val notificationRepository = mock[ParsedNotificationRepository]
   private val sendEmailWorkItemRepository = mock[SendEmailWorkItemRepository]
 
   private val sendEmailForDmsDocAction = new SendEmailForDmsDocAction(notificationRepository, sendEmailWorkItemRepository)
@@ -66,7 +66,7 @@ class SendEmailForDmsDocActionSpec extends UnitSpec {
       val testNotification = notification.copy(details = notification.details.copy(status = SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED))
       val testActionId = testNotification.actionId
 
-      val testSendEmailDetails = SendEmailDetails(notificationId = testNotification.id, mrn = testNotification.details.mrn)
+      val testSendEmailDetails = SendEmailDetails(notificationId = testNotification._id, mrn = testNotification.details.mrn)
       val testWorkItem = WorkItem(
         id = BSONObjectID.generate,
         receivedAt = DateTime.now,

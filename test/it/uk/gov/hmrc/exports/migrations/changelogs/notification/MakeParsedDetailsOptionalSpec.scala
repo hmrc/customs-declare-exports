@@ -44,7 +44,7 @@ class MakeParsedDetailsOptionalSpec extends IntegrationTestBaseSpec with GuiceOn
     super.afterEach()
   }
 
-  private def getDeclarationsCollection(db: MongoDatabase): MongoCollection[Document] = mongoDatabase.getCollection(CollectionName)
+  private def getNotificationsCollection(): MongoCollection[Document] = mongoDatabase.getCollection(CollectionName)
 
   "MakeParsedDetailsOptional migration definition" should {
 
@@ -61,7 +61,7 @@ class MakeParsedDetailsOptionalSpec extends IntegrationTestBaseSpec with GuiceOn
     }
 
     "drop the two decommissioned indexes" in {
-      val collection = getDeclarationsCollection(mongoDatabase)
+      val collection = getNotificationsCollection()
       collection.createIndex(Indexes.ascending("dateTimeIssued"), IndexOptions().name("dateTimeIssuedIdx"))
       collection.createIndex(Indexes.ascending("mrn"), IndexOptions().name("mrnIdx"))
 
@@ -75,11 +75,11 @@ class MakeParsedDetailsOptionalSpec extends IntegrationTestBaseSpec with GuiceOn
   }
 
   private def runTest(inputDataJson: String, expectedDataJson: String)(test: MongoDatabase => Unit)(implicit mongoDatabase: MongoDatabase): Unit = {
-    getDeclarationsCollection(mongoDatabase).insertOne(Document.parse(inputDataJson))
+    getNotificationsCollection().insertOne(Document.parse(inputDataJson))
 
     test(mongoDatabase)
 
-    val result: Document = getDeclarationsCollection(mongoDatabase).find().first()
+    val result: Document = getNotificationsCollection().find().first()
     val expectedResult: String = expectedDataJson
 
     compareJson(result.toJson, expectedResult)
@@ -98,42 +98,42 @@ class MakeParsedDetailsOptionalSpec extends IntegrationTestBaseSpec with GuiceOn
 object MakeParsedDetailsOptionalSpec {
   val testDataBeforeChangeSet_1: String =
     """{
-                                            |    "_id" : "5fc0d62750c11c0797a2456f",
-                                            |    "actionId" : "b1c09f1b-7c94-4e90-b754-7c5c71c44e11",
-                                            |    "mrn" : "MRN87878797",
-                                            |    "dateTimeIssued" : "2020-11-27T10:37:10.918Z[UTC]",
-                                            |    "status" : "UNKNOWN",
-                                            |    "errors" : [
-                                            |        {
-                                            |            "validationCode" : "CDS12056",
-                                            |            "pointer" : "42A"
-                                            |        }
-                                            |    ],
-                                            |    "payload" : "RhzDC5lT6ZrWSCHrtoy6wUkL2VdjXLNm8N6PdbyFLpE1jnBqigGsgHuS4CrPO5J8vLtkUZZe0nkNseSa9x5Epb3yuOgZYB6uV272UwCx2utsdqb2U5XEblaYNaWUdifZl9IJVNo39yy0A3XpWdB3avkKCxSn1qNW5Ar3CE4uSi1D5C4oEFUDoQqo484Y9Kt8BtQsabBzC8IaR2vUMhOEJHk5j7HJDIeQ0JGujOWY9QBm13LfAYfBoIrM3GYBJcgR45L9NfVIwVAlkkXbtsaqdVwpRyuayuy8VYyyhyFk4Uc3"
-                                            |}""".stripMargin
+      |    "_id" : "5fc0d62750c11c0797a2456f",
+      |    "actionId" : "b1c09f1b-7c94-4e90-b754-7c5c71c44e11",
+      |    "mrn" : "MRN87878797",
+      |    "dateTimeIssued" : "2020-11-27T10:37:10.918Z[UTC]",
+      |    "status" : "UNKNOWN",
+      |    "errors" : [
+      |        {
+      |            "validationCode" : "CDS12056",
+      |            "pointer" : "42A"
+      |        }
+      |    ],
+      |    "payload" : "RhzDC5lT6ZrWSCHrtoy6wUkL2VdjXLNm8N6PdbyFLpE1jnBqigGsgHuS4CrPO5J8vLtkUZZe0nkNseSa9x5Epb3yuOgZYB6uV272UwCx2utsdqb2U5XEblaYNaWUdifZl9IJVNo39yy0A3XpWdB3avkKCxSn1qNW5Ar3CE4uSi1D5C4oEFUDoQqo484Y9Kt8BtQsabBzC8IaR2vUMhOEJHk5j7HJDIeQ0JGujOWY9QBm13LfAYfBoIrM3GYBJcgR45L9NfVIwVAlkkXbtsaqdVwpRyuayuy8VYyyhyFk4Uc3"
+      |}""".stripMargin
 
   val testDataAfterChangeSet_1: String =
     """{
-                                           |    "_id" : "5fc0d62750c11c0797a2456f",
-                                           |    "actionId" : "b1c09f1b-7c94-4e90-b754-7c5c71c44e11",
-                                           |    "payload" : "RhzDC5lT6ZrWSCHrtoy6wUkL2VdjXLNm8N6PdbyFLpE1jnBqigGsgHuS4CrPO5J8vLtkUZZe0nkNseSa9x5Epb3yuOgZYB6uV272UwCx2utsdqb2U5XEblaYNaWUdifZl9IJVNo39yy0A3XpWdB3avkKCxSn1qNW5Ar3CE4uSi1D5C4oEFUDoQqo484Y9Kt8BtQsabBzC8IaR2vUMhOEJHk5j7HJDIeQ0JGujOWY9QBm13LfAYfBoIrM3GYBJcgR45L9NfVIwVAlkkXbtsaqdVwpRyuayuy8VYyyhyFk4Uc3",
-                                           |    "details" : {
-                                           |        "mrn" : "MRN87878797",
-                                           |        "dateTimeIssued" : "2020-11-27T10:37:10.918Z[UTC]",
-                                           |        "status" : "UNKNOWN",
-                                           |        "errors" : [
-                                           |            {
-                                           |                "validationCode" : "CDS12056",
-                                           |                "pointer" : "42A"
-                                           |            }
-                                           |        ]
-                                           |    }
-                                           |}""".stripMargin
+      |    "_id" : "5fc0d62750c11c0797a2456f",
+      |    "actionId" : "b1c09f1b-7c94-4e90-b754-7c5c71c44e11",
+      |    "payload" : "RhzDC5lT6ZrWSCHrtoy6wUkL2VdjXLNm8N6PdbyFLpE1jnBqigGsgHuS4CrPO5J8vLtkUZZe0nkNseSa9x5Epb3yuOgZYB6uV272UwCx2utsdqb2U5XEblaYNaWUdifZl9IJVNo39yy0A3XpWdB3avkKCxSn1qNW5Ar3CE4uSi1D5C4oEFUDoQqo484Y9Kt8BtQsabBzC8IaR2vUMhOEJHk5j7HJDIeQ0JGujOWY9QBm13LfAYfBoIrM3GYBJcgR45L9NfVIwVAlkkXbtsaqdVwpRyuayuy8VYyyhyFk4Uc3",
+      |    "details" : {
+      |        "mrn" : "MRN87878797",
+      |        "dateTimeIssued" : "2020-11-27T10:37:10.918Z[UTC]",
+      |        "status" : "UNKNOWN",
+      |        "errors" : [
+      |            {
+      |                "validationCode" : "CDS12056",
+      |                "pointer" : "42A"
+      |            }
+      |        ]
+      |    }
+      |}""".stripMargin
 
   val testDataUnparsableNotification: String =
     """{
-                                           |    "_id" : "5fc0d62750c11c0797a2456f",
-                                           |    "actionId" : "b1c09f1b-7c94-4e90-b754-7c5c71c44e11",
-                                           |    "payload" : "RhzDC5lT6ZrWSCHrtoy6wUkL2VdjXLNm8N6PdbyFLpE1jnBqigGsgHuS4CrPO5J8vLtkUZZe0nkNseSa9x5Epb3yuOgZYB6uV272UwCx2utsdqb2U5XEblaYNaWUdifZl9IJVNo39yy0A3XpWdB3avkKCxSn1qNW5Ar3CE4uSi1D5C4oEFUDoQqo484Y9Kt8BtQsabBzC8IaR2vUMhOEJHk5j7HJDIeQ0JGujOWY9QBm13LfAYfBoIrM3GYBJcgR45L9NfVIwVAlkkXbtsaqdVwpRyuayuy8VYyyhyFk4Uc3"
-                                           |}""".stripMargin
+      |    "_id" : "5fc0d62750c11c0797a2456f",
+      |    "actionId" : "b1c09f1b-7c94-4e90-b754-7c5c71c44e11",
+      |    "payload" : "RhzDC5lT6ZrWSCHrtoy6wUkL2VdjXLNm8N6PdbyFLpE1jnBqigGsgHuS4CrPO5J8vLtkUZZe0nkNseSa9x5Epb3yuOgZYB6uV272UwCx2utsdqb2U5XEblaYNaWUdifZl9IJVNo39yy0A3XpWdB3avkKCxSn1qNW5Ar3CE4uSi1D5C4oEFUDoQqo484Y9Kt8BtQsabBzC8IaR2vUMhOEJHk5j7HJDIeQ0JGujOWY9QBm13LfAYfBoIrM3GYBJcgR45L9NfVIwVAlkkXbtsaqdVwpRyuayuy8VYyyhyFk4Uc3"
+      |}""".stripMargin
 }

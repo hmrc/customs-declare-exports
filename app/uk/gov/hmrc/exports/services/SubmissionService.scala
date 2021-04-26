@@ -23,7 +23,7 @@ import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.repositories.{DeclarationRepository, NotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
 import uk.gov.hmrc.exports.services.notifications.receiptactions.SendEmailForDmsDocAction
 import uk.gov.hmrc.http.HeaderCarrier
@@ -37,7 +37,7 @@ class SubmissionService @Inject()(
   customsDeclarationsConnector: CustomsDeclarationsConnector,
   submissionRepository: SubmissionRepository,
   declarationRepository: DeclarationRepository,
-  notificationRepository: NotificationRepository,
+  notificationRepository: ParsedNotificationRepository,
   metaDataBuilder: CancellationMetaDataBuilder,
   wcoMapperService: WcoMapperService,
   sendEmailForDmsDocAction: SendEmailForDmsDocAction

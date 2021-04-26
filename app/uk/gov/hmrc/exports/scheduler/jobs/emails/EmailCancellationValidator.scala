@@ -19,19 +19,19 @@ package uk.gov.hmrc.exports.scheduler.jobs.emails
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.{CANCELLED, CLEARED, REJECTED}
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
-import uk.gov.hmrc.exports.repositories.NotificationRepository
+import uk.gov.hmrc.exports.repositories.ParsedNotificationRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-private[emails] class EmailCancellationValidator @Inject()(notificationRepository: NotificationRepository) {
+private[emails] class EmailCancellationValidator @Inject()(notificationRepository: ParsedNotificationRepository) {
 
   private val statusesCancellingEmailSending = Set(REJECTED, CLEARED, CANCELLED)
 
   def isEmailSendingCancelled(sendEmailDetails: SendEmailDetails)(implicit ec: ExecutionContext): Future[Boolean] =
     notificationRepository.findNotificationsByMrn(sendEmailDetails.mrn).map { notifications =>
       val currentDmsDocNotification = notifications
-        .find(_.id == sendEmailDetails.notificationId)
+        .find(_._id == sendEmailDetails.notificationId)
         .getOrElse(throw new IllegalStateException(s"Cannot find DMSDOC Notification with id: [${sendEmailDetails.notificationId}]"))
 
       val notificationsAfterCurrentDmsDocNotification =

@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.exports.config
 
-import java.time.{Clock, LocalTime}
-
 import com.google.inject.{Inject, Singleton}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.exports.config.AppConfig.JobConfig
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.time.{Clock, LocalTime}
 import scala.concurrent.duration.FiniteDuration
 
 @Singleton
