@@ -29,11 +29,11 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import stubs.TestMongoDB
 import stubs.TestMongoDB.mongoConfiguration
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.migrations.changelogs.notification.SplitNotificationsCollectionSpec._
+import uk.gov.hmrc.exports.migrations.changelogs.notification.SplitTheNotificationsCollectionSpec._
 
 import scala.collection.JavaConverters._
 
-class SplitNotificationsCollectionSpec extends UnitSpec with GuiceOneAppPerSuite with Matchers {
+class SplitTheNotificationsCollectionSpec extends UnitSpec with GuiceOneAppPerSuite with Matchers {
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
@@ -53,7 +53,7 @@ class SplitNotificationsCollectionSpec extends UnitSpec with GuiceOneAppPerSuite
     client.getDatabase(DatabaseName)
   }
 
-  private val changeLog = new SplitNotificationsCollection()
+  private val changeLog = new SplitTheNotificationsCollection()
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -402,7 +402,7 @@ class SplitNotificationsCollectionSpec extends UnitSpec with GuiceOneAppPerSuite
   }
 }
 
-object SplitNotificationsCollectionSpec {
+object SplitTheNotificationsCollectionSpec {
 
   trait TestData {
     val parsedNotificationBeforeChanges: String

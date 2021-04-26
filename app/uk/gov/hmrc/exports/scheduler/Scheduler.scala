@@ -62,12 +62,11 @@ class Scheduler @Inject()(
   applicationLifecycle.addStopHook(() => Future.successful(runningJobs.foreach(_.cancel())))
 
   private def calcInitialDelay(job: ScheduledJob): FiniteDuration = job.firstRunTime match {
-    case Some(_) => durationUntil(nextRunDateFor(job))
-    case None    => FiniteDuration(0, TimeUnit.SECONDS)
+    case Some(firstRunTimeValue) =>
+      val nextRunDate = schedulerDateUtil.nextRun(firstRunTimeValue, job.interval)
+      durationUntil(nextRunDate)
+    case None => FiniteDuration(0, TimeUnit.SECONDS)
   }
-
-  private def nextRunDateFor(job: ScheduledJob): Instant =
-    schedulerDateUtil.nextRun(job.firstRunTime.get, job.interval)
 
   private def durationUntil(datetime: Instant): FiniteDuration = {
     val now = Instant.now(appConfig.clock)

@@ -25,7 +25,7 @@ import org.mongodb.scala.model.Updates.{combine, set, unset}
 import play.api.Logging
 import play.api.libs.json.{Format, Json}
 import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.exports.migrations.changelogs.notification.SplitNotificationsCollection._
+import uk.gov.hmrc.exports.migrations.changelogs.notification.SplitTheNotificationsCollection._
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification.DbFormat.format
@@ -35,8 +35,20 @@ import uk.gov.hmrc.workitem.{ProcessingStatus, Succeeded, ToDo, WorkItem}
 import javax.inject.Singleton
 import scala.collection.JavaConverters._
 
+/**
+  * Migration definition for splitting existing 'notifications' collection into 2 collections. The first one stores XML
+  * payload unchanged and ConversationId, while the second one stores data extracted from the payload.
+  *
+  * Notification handling depends on whether it has been parsed in the past or not. In both scenarios a new
+  * `UnparsedNotification` is inserted into 'unparsedNotifications' collection. If it has been parsed, then the existing
+  * document in 'notifications' collection is updated with 'unparsedNotificationId' field and has 'payload' field
+  * removed. If it has not been parsed, then the document is removed from 'notifications' collection.
+  *
+  * Migration also contains "recovery" scenarios, when a previous run failed and some data might have been left in
+  * corrupted state.
+  */
 @Singleton
-class SplitNotificationsCollection extends MigrationDefinition with Logging {
+class SplitTheNotificationsCollection extends MigrationDefinition with Logging {
 
   override val migrationInformation: MigrationInformation =
     MigrationInformation(id = "CEDS-3081 Split 'notifications' collection", order = 2, author = "Maciej Rewera", runAlways = true)
@@ -55,6 +67,11 @@ class SplitNotificationsCollection extends MigrationDefinition with Logging {
 
   implicit private val workItemFormat: Format[WorkItem[UnparsedNotification]] = WorkItemFormat.workItemMongoFormat[UnparsedNotification]()
 
+  private val NotificationIsAlreadyMigrated = true
+  private val NotificationIsNotMigrated = false
+  private val NotificationIsParsed = true
+  private val NotificationIsNotParsed = false
+
   override def migrationFunction(db: MongoDatabase): Unit = {
     logger.info(s"Applying '${migrationInformation.id}' db migration...  ")
     implicit val mongoDb: MongoDatabase = db
@@ -62,29 +79,32 @@ class SplitNotificationsCollection extends MigrationDefinition with Logging {
     val documentsToMigrateQuery = not(exists(UnparsedNotificationId))
     val queryBatchSize = 10
 
-    getDocumentsToMigrate(documentsToMigrateQuery, queryBatchSize).foldLeft(buildMigratedUnparsedNotificationsRegistry) {
-      (migratedNotificationsRegistry, document) =>
-        val newUnparsedNotification = buildUnparsedNotification(document)
-        val newUnparsedNotificationHash = HashFields(newUnparsedNotification).##
+    val documentsToMigrate = getDocumentsToMigrate(documentsToMigrateQuery, queryBatchSize)
 
-        if (migratedNotificationsRegistry.contains(newUnparsedNotificationHash)) {
-          if (!document.containsKey(Details)) {
-            removeFromNotificationsCollection(document)
-          } else {
-            updateInNotificationsCollection(document, fetchUnparsedNotificationId(newUnparsedNotification))
-          }
+    documentsToMigrate.foldLeft(initialRegistryOfMigratedUnparsedNotifications) { (registryOfMigratedUnparsedNotifications, notificationDoc) =>
+      val notificationHash = HashFields(notificationDoc).##
 
-        } else {
-          if (!document.containsKey(Details)) {
-            insertUnparsedNotification(newUnparsedNotification, ToDo)
-            removeFromNotificationsCollection(document)
-          } else {
-            insertUnparsedNotification(newUnparsedNotification, Succeeded)
-            updateInNotificationsCollection(document, newUnparsedNotification.id.toString)
-          }
-        }
+      val isNotificationParsed = notificationDoc.containsKey(Details)
+      val isNotificationAlreadyMigrated = registryOfMigratedUnparsedNotifications.contains(notificationHash)
 
-        migratedNotificationsRegistry + newUnparsedNotificationHash
+      (isNotificationParsed, isNotificationAlreadyMigrated) match {
+        case (NotificationIsNotParsed, NotificationIsNotMigrated) =>
+          insertIntoUnparsedNotificationCollection(buildUnparsedNotification(notificationDoc), ToDo)
+          removeFromNotificationsCollection(notificationDoc)
+
+        case (NotificationIsNotParsed, NotificationIsAlreadyMigrated) =>
+          removeFromNotificationsCollection(notificationDoc)
+
+        case (NotificationIsParsed, NotificationIsNotMigrated) =>
+          val cursorNotification = buildUnparsedNotification(notificationDoc)
+          insertIntoUnparsedNotificationCollection(cursorNotification, Succeeded)
+          updateInNotificationsCollection(notificationDoc, cursorNotification.id.toString)
+
+        case (NotificationIsParsed, NotificationIsAlreadyMigrated) =>
+          updateInNotificationsCollection(notificationDoc, fetchUnparsedNotificationId(notificationDoc))
+      }
+
+      registryOfMigratedUnparsedNotifications + notificationHash
     }
 
     removeRedundantIndexes()
@@ -98,17 +118,17 @@ class SplitNotificationsCollection extends MigrationDefinition with Logging {
       .iterator
   )
 
-  private def buildMigratedUnparsedNotificationsRegistry(implicit db: MongoDatabase): Set[Int] =
+  private def initialRegistryOfMigratedUnparsedNotifications(implicit db: MongoDatabase): Set[Int] =
     new MigratedUnparsedNotificationsRegistry(getUnparsedNotificationsCollection)
 
-  private def fetchUnparsedNotificationId(unparsedNotification: UnparsedNotification)(implicit db: MongoDatabase): String = {
-    val query = and(feq(s"item.$ActionId", unparsedNotification.actionId), feq(s"item.$Payload", unparsedNotification.payload))
+  private def fetchUnparsedNotificationId(document: Document)(implicit db: MongoDatabase): String = {
+    val query = and(feq(s"item.$ActionId", document.getString("actionId")), feq(s"item.$Payload", document.getString("payload")))
     val DefaultUuid = "00000000-0000-0000-0000-000000000000"
 
     getUnparsedNotificationsCollection.find(query).asScala.headOption.map(_.get("item", classOf[Document]).getString("id")).getOrElse(DefaultUuid)
   }
 
-  private def insertUnparsedNotification(newUnparsedNotification: UnparsedNotification, status: ProcessingStatus)(
+  private def insertIntoUnparsedNotificationCollection(newUnparsedNotification: UnparsedNotification, status: ProcessingStatus)(
     implicit db: MongoDatabase
   ): Unit = {
     val workItem = newWorkItem(DateTime.now(), status, newUnparsedNotification)
@@ -150,15 +170,14 @@ class SplitNotificationsCollection extends MigrationDefinition with Logging {
 
 }
 
-object SplitNotificationsCollection {
+object SplitTheNotificationsCollection {
 
   private def buildUnparsedNotification(document: Document) =
     UnparsedNotification(actionId = document.getString("actionId"), payload = document.getString("payload"))
 
   case class HashFields(actionId: String, payload: String)
   object HashFields {
-    def apply(unparsedNotification: UnparsedNotification): HashFields =
-      HashFields(actionId = unparsedNotification.actionId, payload = unparsedNotification.payload)
+    def apply(document: Document): HashFields = HashFields(actionId = document.getString("actionId"), payload = document.getString("payload"))
   }
 
   class MigratedUnparsedNotificationsRegistry(collection: => MongoCollection[Document]) extends Set[Int] {
@@ -169,7 +188,7 @@ object SplitNotificationsCollection {
 
       asScalaIterator(collection.find().batchSize(queryBatchSize).iterator)
         .map(_.get("item", classOf[Document]))
-        .foldLeft(Set.empty[Int])((mapAcc, doc) => mapAcc + HashFields(buildUnparsedNotification(doc)).##)
+        .foldLeft(Set.empty[Int])((mapAcc, doc) => mapAcc + HashFields(doc).##)
     }
 
     override def contains(elem: Int): Boolean = underlying.contains(elem)

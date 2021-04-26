@@ -21,7 +21,7 @@ import com.google.inject.Singleton
 import com.mongodb.{MongoClient, MongoClientURI}
 import play.api.Logger
 import uk.gov.hmrc.exports.config.{AppConfig, ExportsMigrationConfig}
-import uk.gov.hmrc.exports.migrations.changelogs.notification.{MakeParsedDetailsOptional, SplitNotificationsCollection}
+import uk.gov.hmrc.exports.migrations.changelogs.notification.{MakeParsedDetailsOptional, SplitTheNotificationsCollection}
 import uk.gov.hmrc.exports.routines.{Routine, RoutinesExecutionContext}
 
 import javax.inject.Inject
@@ -51,7 +51,7 @@ class MigrationRoutine @Inject()(appConfig: AppConfig, exportsMigrationConfig: E
     val lockManagerConfig = LockManagerConfig(lockMaxTries = 10, lockMaxWaitMillis = minutesToMillis(5), lockAcquiredForMillis = minutesToMillis(3))
     val migrationsRegistry = MigrationsRegistry()
       .register(new MakeParsedDetailsOptional())
-      .register(new SplitNotificationsCollection())
+      .register(new SplitTheNotificationsCollection())
     val migrationTool = ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig)
 
     migrationTool.execute()
