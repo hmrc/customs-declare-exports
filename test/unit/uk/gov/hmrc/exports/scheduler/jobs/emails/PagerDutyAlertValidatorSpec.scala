@@ -36,14 +36,19 @@ class PagerDutyAlertValidatorSpec extends UnitSpec {
 
   private val testDefinitions = Seq(
     TestDefinition(workItemStatus = ToDo, alertTriggered = false, workItemAge = Duration("1h"), expectedResult = false),
-    TestDefinition(workItemStatus = ToDo, alertTriggered = false, workItemAge = testAlertTriggerDelay.plus(Duration("1m")), expectedResult = false),
+    TestDefinition(workItemStatus = ToDo, alertTriggered = false, workItemAge = testAlertTriggerDelay.plus(Duration("1s")), expectedResult = false),
     TestDefinition(workItemStatus = ToDo, alertTriggered = true, workItemAge = Duration("1h"), expectedResult = false),
-    TestDefinition(workItemStatus = ToDo, alertTriggered = true, workItemAge = testAlertTriggerDelay.plus(Duration("1m")), expectedResult = false),
+    TestDefinition(workItemStatus = ToDo, alertTriggered = true, workItemAge = testAlertTriggerDelay.plus(Duration("1s")), expectedResult = false),
     TestDefinition(workItemStatus = Failed, alertTriggered = false, workItemAge = Duration("1h"), expectedResult = false),
-    TestDefinition(workItemStatus = Failed, alertTriggered = false, workItemAge = testAlertTriggerDelay, expectedResult = false),
-    TestDefinition(workItemStatus = Failed, alertTriggered = false, workItemAge = testAlertTriggerDelay.plus(Duration("1m")), expectedResult = true),
+    TestDefinition(
+      workItemStatus = Failed,
+      alertTriggered = false,
+      workItemAge = testAlertTriggerDelay.minus(Duration("1s")),
+      expectedResult = false
+    ),
+    TestDefinition(workItemStatus = Failed, alertTriggered = false, workItemAge = testAlertTriggerDelay.plus(Duration("1s")), expectedResult = true),
     TestDefinition(workItemStatus = Failed, alertTriggered = true, workItemAge = Duration("1h"), expectedResult = false),
-    TestDefinition(workItemStatus = Failed, alertTriggered = true, workItemAge = testAlertTriggerDelay.plus(Duration("1m")), expectedResult = false)
+    TestDefinition(workItemStatus = Failed, alertTriggered = true, workItemAge = testAlertTriggerDelay.plus(Duration("1s")), expectedResult = false)
   )
 
   override def beforeEach(): Unit = {
