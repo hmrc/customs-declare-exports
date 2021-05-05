@@ -62,6 +62,8 @@ class GoodsShipmentBuilder @Inject()(
 
     exportsCacheModel.consignmentReferences.foreach(previousDocumentsBuilder.buildThenAdd(_, goodsShipment))
 
+    exportsCacheModel.mucr.foreach(previousDocumentsBuilder.buildThenAdd(_, goodsShipment))
+
     exportsCacheModel.previousDocuments.foreach(previousDocumentsBuilder.buildThenAdd(_, goodsShipment))
 
     exportsCacheModel.parties.declarationAdditionalActorsData.foreach {

@@ -26,7 +26,7 @@ import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.AEOMutualRecognitionPartiesBuilderSpec._
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.ConsigneeBuilderSpec.correctAddress
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.PreviousDocumentsBuilderSpec.correctPreviousDocument
-import uk.gov.hmrc.exports.services.mapping.goodsshipment.UCRBuilderSpec.correctConsignmentReferences
+import uk.gov.hmrc.exports.services.mapping.goodsshipment.UCRBuilderSpec.{correctConsignmentReferences, VALID_PERSONAL_UCR}
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.{ConsignmentBuilder, GoodsLocationBuilderSpec}
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.GovernmentAgencyGoodsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -106,25 +106,31 @@ class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         .buildThenAdd(refEq(NatureOfTransaction("1")), any[Declaration.GoodsShipment])
 
     verify(mockConsigneeBuilder)
-      .buildThenAdd(refEq(ConsigneeDetails(EntityDetails(Some("9GB1234567ABCDEF"), Some(correctAddress)))), any[Declaration.GoodsShipment])
+      .buildThenAdd(refEq(ConsigneeDetails(EntityDetails(Some(VALID_EORI), Some(correctAddress)))), any[Declaration.GoodsShipment])
 
     verify(mockConsignmentBuilder)
       .buildThenAdd(refEq(model), any[Declaration.GoodsShipment])
 
     verify(mockDestinationBuilder)
-      .buildThenAdd(refEq("GB"), any[Declaration.GoodsShipment])
+      .buildThenAdd(refEq(VALID_COUNTRY), any[Declaration.GoodsShipment])
 
     verify(mockExportCountryBuilder)
-      .buildThenAdd(refEq("GB"), any[Declaration.GoodsShipment])
+      .buildThenAdd(refEq(VALID_COUNTRY), any[Declaration.GoodsShipment])
 
     verify(mockUcrBuilder)
       .buildThenAdd(refEq(correctConsignmentReferences), any[Declaration.GoodsShipment])
 
     verify(mockWarehouseBuilder)
-      .buildThenAdd(refEq(WarehouseIdentification(Some("RGBWKG001"))), any[Declaration.GoodsShipment])
+      .buildThenAdd(refEq(WarehouseIdentification(Some(WAREHOUSE_ID))), any[Declaration.GoodsShipment])
 
     verify(mockPreviousDocumentBuilder)
       .buildThenAdd(refEq(PreviousDocuments(Seq(correctPreviousDocument))), any[Declaration.GoodsShipment])
+
+    verify(mockPreviousDocumentBuilder)
+      .buildThenAdd(refEq(ConsignmentReferences(DUCR(VALID_DUCR), VALID_LRN, Some(VALID_PERSONAL_UCR))), any[Declaration.GoodsShipment])
+
+    verify(mockPreviousDocumentBuilder)
+      .buildThenAdd(refEq(MUCR(VALID_MUCR)), any[Declaration.GoodsShipment])
 
     verify(governmentAgencyItemBuilder).buildThenAdd(any[ExportsDeclaration], any[Declaration.GoodsShipment])
   }
@@ -133,16 +139,17 @@ class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
     val model = aDeclaration(
       withType(declarationType),
       withNatureOfTransaction("1"),
-      withConsigneeDetails(eori = Some("9GB1234567ABCDEF"), address = Some(correctAddress)),
-      withConsignorDetails(eori = Some("9GB1234567ABCDEG"), address = Some(ConsignmentConsignorBuilderSpec.correctAddress)),
+      withConsigneeDetails(eori = Some(VALID_EORI), address = Some(correctAddress)),
+      withConsignorDetails(eori = Some(VALID_EORI), address = Some(ConsignmentConsignorBuilderSpec.correctAddress)),
       withDeclarationAdditionalActors(correctAdditionalActors1, correctAdditionalActors2),
       withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
       withOriginationCountry(),
       withDestinationCountry(),
       withoutRoutingCountries(),
-      withWarehouseIdentification("RGBWKG001"),
+      withWarehouseIdentification(WAREHOUSE_ID),
       withInlandModeOfTransport(ModeOfTransportCode.Rail),
-      withConsignmentReferences("8GB123456789012-1234567890QWERTYUIO", "123LRN", Some("8GB123456789012")),
+      withConsignmentReferences(VALID_DUCR, VALID_LRN, Some(VALID_PERSONAL_UCR)),
+      withMUCR(VALID_MUCR),
       withPreviousDocuments(correctPreviousDocument),
       withItem()
     )

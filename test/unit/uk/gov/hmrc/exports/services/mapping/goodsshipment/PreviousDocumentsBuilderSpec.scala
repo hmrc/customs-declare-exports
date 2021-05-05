@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.{PreviousDocument, PreviousDocuments}
+import uk.gov.hmrc.exports.models.declaration.{MUCR, PreviousDocument, PreviousDocuments}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
@@ -46,6 +46,69 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
         previousDocs.get(1).getTypeCode.getValue must be("ABC")
         previousDocs.get(1).getLineNumeric must be(BigDecimal(123).bigDecimal)
 
+      }
+
+      "a MUCR has been specified but no other PreviousDocument elements have" in {
+        val builder = new PreviousDocumentsBuilder
+        val mucr = MUCR(VALID_MUCR)
+        val goodsShipment = new GoodsShipment
+        builder.buildThenAdd(mucr, goodsShipment)
+
+        val previousDocs = goodsShipment.getPreviousDocument
+        previousDocs.size must be(1)
+        previousDocs.get(0).getID.getValue must be(VALID_MUCR)
+        previousDocs.get(0).getCategoryCode.getValue must be("Z")
+        previousDocs.get(0).getTypeCode.getValue must be("MCR")
+        previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
+      }
+
+      "a MUCR has been specified along with other PreviousDocument elements" when {
+        "PreviousDocument elements do not contain a MUCR value" in {
+          val builder = new PreviousDocumentsBuilder
+          val mucr = MUCR(VALID_MUCR)
+          val goodsShipment = new GoodsShipment
+          builder.buildThenAdd(mucr, goodsShipment)
+
+          builder.buildThenAdd(PreviousDocuments(Seq(PreviousDocumentsBuilderSpec.correctPreviousDocument)), goodsShipment)
+
+          val previousDocs = goodsShipment.getPreviousDocument
+          previousDocs.size must be(2)
+          previousDocs.get(0).getID.getValue must be(VALID_MUCR)
+          previousDocs.get(0).getCategoryCode.getValue must be("Z")
+          previousDocs.get(0).getTypeCode.getValue must be("MCR")
+          previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
+
+          previousDocs.get(1).getID.getValue must be("DocumentReference")
+          previousDocs.get(1).getCategoryCode.getValue must be("X")
+          previousDocs.get(1).getTypeCode.getValue must be("ABC")
+          previousDocs.get(1).getLineNumeric must be(BigDecimal(123).bigDecimal)
+        }
+
+        "PreviousDocument elements also contains a MUCR value" in {
+          val builder = new PreviousDocumentsBuilder
+          val mucr = MUCR(VALID_MUCR)
+          val goodsShipment = new GoodsShipment
+          builder.buildThenAdd(mucr, goodsShipment)
+
+          builder.buildThenAdd(
+            PreviousDocuments(
+              Seq(PreviousDocument(documentCategory = "Z", documentType = "MCR", documentReference = VALID_MUCR, goodsItemIdentifier = Some("1")))
+            ),
+            goodsShipment
+          )
+
+          val previousDocs = goodsShipment.getPreviousDocument
+          previousDocs.size must be(2)
+          previousDocs.get(0).getID.getValue must be(VALID_MUCR)
+          previousDocs.get(0).getCategoryCode.getValue must be("Z")
+          previousDocs.get(0).getTypeCode.getValue must be("MCR")
+          previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
+
+          previousDocs.get(1).getID.getValue must be(VALID_MUCR)
+          previousDocs.get(1).getCategoryCode.getValue must be("Z")
+          previousDocs.get(1).getTypeCode.getValue must be("MCR")
+          previousDocs.get(1).getLineNumeric must be(BigDecimal(1).bigDecimal)
+        }
       }
 
       "document data empty" in {
@@ -116,7 +179,10 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
 
 }
 
-object PreviousDocumentsBuilderSpec {
+object PreviousDocumentsBuilderSpec extends ExportsDeclarationBuilder {
   val correctPreviousDocument =
     PreviousDocument(documentCategory = "X", documentType = "ABC", documentReference = "DocumentReference", goodsItemIdentifier = Some("123"))
+
+  val correctMucrPreviousDocument =
+    PreviousDocument(documentCategory = "Z", documentType = "MCR", documentReference = VALID_MUCR, goodsItemIdentifier = Some("1"))
 }
