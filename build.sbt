@@ -9,11 +9,6 @@ val appName = "customs-declare-exports"
 
 PlayKeys.devSettings := Seq("play.server.http.port" -> "6792")
 
-lazy val allResolvers = resolvers ++= Seq(
-  Resolver.bintrayRepo("hmrc", "releases"),
-  Resolver.jcenterRepo
-)
-
 lazy val IntegrationTest = config("it") extend Test
 
 lazy val microservice = Project(appName, file("."))
@@ -27,11 +22,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(publishingSettings: _*)
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
-  .settings(
-    commonSettings,
-    allResolvers,
-    scoverageSettings
-  )
+  .settings(commonSettings, scoverageSettings)
   .settings(
     unmanagedSourceDirectories in Test := Seq(
       (baseDirectory in Test).value / "test/unit",
@@ -55,12 +46,12 @@ lazy val microservice = Project(appName, file("."))
 
 lazy val scoverageSettings: Seq[Setting[_]] = Seq(
   coverageExcludedPackages := List(
-    "<empty>"
-    ,"Reverse.*"
-    ,"domain\\..*"
-    ,"models\\..*"
-    ,"metrics\\..*"
-    ,".*(BuildInfo|Routes|Options).*"
+    "<empty>",
+    "Reverse.*",
+    "domain\\..*",
+    "models\\..*",
+    "metrics\\..*",
+    ".*(BuildInfo|Routes|Options).*"
   ).mkString(";"),
   coverageMinimum := 85,
   coverageFailOnMinimum := true,
@@ -69,7 +60,6 @@ lazy val scoverageSettings: Seq[Setting[_]] = Seq(
 )
 
 lazy val commonSettings: Seq[Setting[_]] = publishingSettings ++ defaultSettings() ++ gitStampSettings
-
 
 lazy val silencerSettings: Seq[Setting[_]] = {
   val silencerVersion = "1.7.0"
