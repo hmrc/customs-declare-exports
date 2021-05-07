@@ -32,6 +32,10 @@ trait ExportsDeclarationBuilder {
   protected val VALID_PERSONAL_UCR = "5GB123456789000"
   protected val VALID_DUCR = "5GB123456789000-123ABC456DEFIIIII"
   protected val VALID_LRN = "FG7676767889"
+  protected val VALID_MUCR = "GB/123452971100-101SHIP2"
+  protected val VALID_EORI = "9GB1234567ABCDEF"
+  protected val WAREHOUSE_ID = "RGBWKG001"
+  protected val VALID_COUNTRY = "GB"
 
   def aDeclaration(modifiers: ExportsDeclarationModifier*): ExportsDeclaration =
     modifiers.foldLeft(modelWithDefaults)((current, modifier) => modifier(current))
@@ -47,6 +51,7 @@ trait ExportsDeclarationBuilder {
     dispatchLocation = None,
     additionalDeclarationType = None,
     consignmentReferences = None,
+    mucr = None,
     transport = Transport(),
     parties = Parties(),
     locations = Locations(),
@@ -301,4 +306,6 @@ trait ExportsDeclarationBuilder {
   def withUpdateDate(year: Int, month: Int, dayOfMonth: Int): ExportsDeclarationModifier =
     _.copy(updatedDateTime = LocalDateTime.of(year, month, dayOfMonth, 10, 0, 0).toInstant(ZoneOffset.UTC))
 
+  def withMUCR(mucr: String): ExportsDeclarationModifier =
+    cache => cache.copy(mucr = Some(MUCR(mucr)))
 }

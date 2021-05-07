@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
+import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class UCRBuilderSpec extends UnitSpec {
+class UCRBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "UCRBuilder" should {
 
@@ -34,7 +35,7 @@ class UCRBuilderSpec extends UnitSpec {
 
         val ucrObject = goodsShipment.getUCR
         ucrObject.getID must be(null)
-        ucrObject.getTraderAssignedReferenceID.getValue must be(UCRBuilderSpec.exemplaryPersonalUcr)
+        ucrObject.getTraderAssignedReferenceID.getValue must be(VALID_PERSONAL_UCR)
       }
 
       "personal UCR not supplied" in {
@@ -51,11 +52,9 @@ class UCRBuilderSpec extends UnitSpec {
   }
 }
 
-object UCRBuilderSpec {
-  val exemplaryDucr = "8GB123456789012-1234567890QWERTYUIO"
-  val exemplaryPersonalUcr = "8GB123456789012"
+object UCRBuilderSpec extends ExportsDeclarationBuilder {
   val correctConsignmentReferences =
-    ConsignmentReferences(ducr = DUCR(ducr = exemplaryDucr), lrn = "123LRN", personalUcr = Some(exemplaryPersonalUcr))
+    ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = VALID_LRN, personalUcr = Some(VALID_PERSONAL_UCR))
   val correctConsignmentReferencesNoPersonalUcr =
-    ConsignmentReferences(ducr = DUCR(ducr = exemplaryDucr), lrn = "123LRN")
+    ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = VALID_LRN)
 }

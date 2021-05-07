@@ -72,6 +72,7 @@ object ExportsDeclarationSpec {
   private val dispatchLocation = mock[DispatchLocation]
   private val additionalDeclarationType = mock[AdditionalDeclarationType]
   private val consignmentReferences = mock[ConsignmentReferences]
+  private val mucr = MUCR("mucr")
   private val transport = mock[Transport]
   private val parties = mock[Parties]
   private val locations = mock[Locations]
@@ -88,6 +89,7 @@ object ExportsDeclarationSpec {
     dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),
     consignmentReferences = Some(consignmentReferences),
+    mucr = Some(mucr),
     transport = transport,
     parties = parties,
     locations = locations,
@@ -108,6 +110,7 @@ object ExportsDeclarationSpec {
     dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),
     consignmentReferences = Some(consignmentReferences),
+    mucr = Some(mucr),
     transport = transport,
     parties = parties,
     locations = locations,

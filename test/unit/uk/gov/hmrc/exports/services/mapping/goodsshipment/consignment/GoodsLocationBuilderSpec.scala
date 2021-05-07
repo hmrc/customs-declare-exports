@@ -45,7 +45,7 @@ class GoodsLocationBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
   }
 
   private def validateGoodsLocation(goodsLocation: GoodsShipment.Consignment.GoodsLocation) = {
-    goodsLocation.getAddress.getCountryCode.getValue must be(GoodsLocationBuilderSpec.country)
+    goodsLocation.getAddress.getCountryCode.getValue must be(VALID_COUNTRY)
     goodsLocation.getName.getValue must be(GoodsLocationBuilderSpec.identificationOfLocation)
     goodsLocation.getTypeCode.getValue must be(GoodsLocationBuilderSpec.typeOfLocation)
     goodsLocation.getAddress.getTypeCode.getValue must be(GoodsLocationBuilderSpec.qualifierOfIdentification)
@@ -53,13 +53,12 @@ class GoodsLocationBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
 }
 
-object GoodsLocationBuilderSpec {
+object GoodsLocationBuilderSpec extends ExportsDeclarationBuilder {
   val identificationOfLocation = "EMAEMAEMA"
-  val country = "GB"
   val typeOfLocation = "A"
   val qualifierOfIdentification = "Y"
   val correctGoodsLocation = GoodsLocation(
-    country = country,
+    country = VALID_COUNTRY,
     typeOfLocation = typeOfLocation,
     qualifierOfIdentification = qualifierOfIdentification,
     identificationOfLocation = Some(identificationOfLocation)
