@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.base
 
 import com.codahale.metrics.MetricRegistry
 import com.kenshoo.play.metrics.Metrics
+import uk.gov.hmrc.exports.metrics.ExportsMetrics
 
 trait MockMetrics {
 
@@ -31,4 +32,6 @@ trait MockMetrics {
       */
     override def toJson: String = ???
   }
+
+  val exportsMetrics = new ExportsMetrics(metrics)
 }

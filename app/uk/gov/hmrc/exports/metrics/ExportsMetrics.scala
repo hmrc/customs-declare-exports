@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.metrics
 
 import com.codahale.metrics.Timer.Context
 import com.kenshoo.play.metrics.Metrics
+import uk.gov.hmrc.exports.metrics.ExportsMetrics.{Counter, Monitor, Timer}
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 
 import java.util.concurrent.atomic.AtomicBoolean
@@ -81,7 +82,7 @@ class ExportsMetrics @Inject()(metrics: Metrics) {
       result.foreach { _ =>
         if (timerRunning.compareAndSet(true, false)) {
           timerContext.stop()
-          incrementCounter(monitor.completionCounterCounter)
+          incrementCounter(monitor.completionCounter)
         }
       }
 
@@ -105,47 +106,45 @@ class ExportsMetrics @Inject()(metrics: Metrics) {
 
 }
 
-case class Meter(name: String) { val path = s"$name.rate" }
-case class Timer(name: String) { val path = s"$name.timer" }
-case class Counter(name: String) { val path = s"$name.counter" }
+object ExportsMetrics {
 
-trait Monitor {
-  val name: String
+  case class Meter(name: String) { val path = s"$name.rate" }
+  case class Timer(name: String) { val path = s"$name.timer" }
+  case class Counter(name: String) { val path = s"$name.counter" }
 
-  val path: String = s"$name.monitor"
-  val timer: Timer = Timer(path)
-  val callCounter: Counter = Counter(path)
-  val completionCounterCounter: Counter = Counter(s"$path.success")
-  val failureCounter: Counter = Counter(s"$path.failed")
-}
+  trait Monitor {
+    val name: String
 
-object MetricIdentifiers {
-  val notificationMetric = "submission.notification"
-  val submissionMetric = "submission.submit"
-  val submissionProduceMetaDataMetric = "submission.submit.produceMetaData"
-  val submissionXmlMetric = "submission.submit.produceXml"
-  val submissionUpdateDeclarationMetric = "submission.submit.updateDeclarationStatus"
-  val submissionFindOrCreateSubmissionMetric = "submission.submit.findOrCreateSubmission"
-  val submissionSendToDecApiMetric = "submission.submit.sendToDecApi"
-  val submissionAddSubmissionActionMetric = "submission.submit.addSubmissionAction"
-  val submissionAppendMrnToSubmissionMetric = "submission.submit.appendMrnToSubmission"
-}
+    val path: String = s"$name.monitor"
+    val timer: Timer = Timer(path)
+    val callCounter: Counter = Counter(path)
+    val completionCounter: Counter = Counter(s"$path.success")
+    val failureCounter: Counter = Counter(s"$path.failed")
+  }
 
-object Timers {
-  val notificationTimer: Timer = Timer(notificationMetric)
-  val submissionProduceMetaDataTimer: Timer = Timer(submissionProduceMetaDataMetric)
-  val submissionXmlTimer: Timer = Timer(submissionXmlMetric)
-  val submissionUpdateDeclarationTimer: Timer = Timer(submissionUpdateDeclarationMetric)
-  val submissionFindOrCreateSubmissionTimer: Timer = Timer(submissionFindOrCreateSubmissionMetric)
-  val submissionSendToDecApiTimer: Timer = Timer(submissionSendToDecApiMetric)
-  val submissionAddSubmissionActionTimer: Timer = Timer(submissionAddSubmissionActionMetric)
-  val submissionAppendMrnToSubmissionTimer: Timer = Timer(submissionAppendMrnToSubmissionMetric)
-}
+  object Timers {
+    val notificationTimer: Timer = Timer(notificationMetric)
 
-object Counters {
-  val notificationCounter: Counter = Counter(notificationMetric)
-}
+    val upstreamCustomsDeclarationsTimer: Timer = Timer(upstreamCustomsDeclarationsMetric)
 
-object Monitors {
-  val submissionMonitor: Monitor = new Monitor { override val name: String = submissionMetric }
+    val declarationFindAllTimer: Timer = Timer(declarationFindAllMetric)
+    val declarationFindSingleTimer: Timer = Timer(declarationFindSingleMetric)
+    val declarationUpdateTimer: Timer = Timer(declarationUpdateMetric)
+
+    val submissionProduceMetaDataTimer: Timer = Timer(submissionProduceMetaDataMetric)
+    val submissionConvertToXmlTimer: Timer = Timer(submissionConvertToXmlMetric)
+    val submissionUpdateDeclarationTimer: Timer = Timer(submissionUpdateDeclarationMetric)
+    val submissionFindOrCreateSubmissionTimer: Timer = Timer(submissionFindOrCreateSubmissionMetric)
+    val submissionSendToDecApiTimer: Timer = Timer(submissionSendToDecApiMetric)
+    val submissionAddSubmissionActionTimer: Timer = Timer(submissionAddSubmissionActionMetric)
+    val submissionAppendMrnToSubmissionTimer: Timer = Timer(submissionAppendMrnToSubmissionMetric)
+  }
+
+  object Counters {
+    val notificationCounter: Counter = Counter(notificationMetric)
+  }
+
+  object Monitors {
+    val submissionMonitor: Monitor = new Monitor { override val name: String = submissionMetric }
+  }
 }

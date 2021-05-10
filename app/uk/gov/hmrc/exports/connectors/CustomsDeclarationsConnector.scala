@@ -17,22 +17,23 @@
 package uk.gov.hmrc.exports.connectors
 
 import com.google.inject.Inject
-import com.kenshoo.play.metrics.Metrics
-import javax.inject.Singleton
 import play.api.Logger
 import play.api.http.{ContentTypes, HeaderNames, Status}
 import play.api.mvc.Codec
 import play.mvc.Http.Status.ACCEPTED
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
+import uk.gov.hmrc.exports.metrics.ExportsMetrics
+import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timers
 import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
 import uk.gov.hmrc.http.HttpReads.is4xx
 import uk.gov.hmrc.http.{HttpClient, _}
 
+import javax.inject.Singleton
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: HttpClient, metrics: Metrics)(implicit ec: ExecutionContext) {
+class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: HttpClient, metrics: ExportsMetrics)(implicit ec: ExecutionContext) {
 
   private val logger = Logger(this.getClass)
 
@@ -59,32 +60,28 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
   private def postMetaData(eori: String, uri: String, xml: String)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] =
     post(eori, uri, xml)
 
-  private val postTimer = metrics.defaultRegistry.timer("upstream.customs-declarations.timer")
-
   private[connectors] def post(eori: String, uri: String, body: String)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] = {
     logger.debug(s"CUSTOMS_DECLARATIONS request payload is -> $body")
-    val postStopwatch = postTimer.time()
-    httpClient
-      .POSTString[CustomsDeclarationsResponse](s"${appConfig.customsDeclarationsBaseUrl}$uri", body, headers = headers(eori))(responseReader, hc, ec)
-      .recover {
-        case error: Throwable =>
-          logger.error(s"Error during submitting declaration: ${error.getMessage}")
 
-          error match {
-            case response: UpstreamErrorResponse if is4xx(response.statusCode) =>
-              val conversationId = response.headers.get("X-Conversation-ID") match {
-                case Some(data) => data.head
-                case None       => "No conversation ID found"
-              }
+    metrics.timeAsyncCall(Timers.upstreamCustomsDeclarationsTimer) {
+      httpClient
+        .POSTString[CustomsDeclarationsResponse](s"${appConfig.customsDeclarationsBaseUrl}$uri", body, headers = headers(eori))
+        .recover {
+          case error: Throwable =>
+            logger.error(s"Error during submitting declaration: ${error.getMessage}")
 
-              CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, Some(conversationId))
-            case _ => CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, None)
-          }
-      }
-      .andThen {
-        case _ => postStopwatch.stop()
-      }
+            error match {
+              case response: UpstreamErrorResponse if is4xx(response.statusCode) =>
+                val conversationId = response.headers.get("X-Conversation-ID") match {
+                  case Some(data) => data.head
+                  case None       => "No conversation ID found"
+                }
 
+                CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, Some(conversationId))
+              case _ => CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, None)
+            }
+        }
+    }
   }
 
   private def headers(eori: String): Seq[(String, String)] = Seq(

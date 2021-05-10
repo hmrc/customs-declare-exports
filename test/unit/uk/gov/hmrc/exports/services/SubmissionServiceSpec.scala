@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.services
 
-import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
 import testdata.ExportsDeclarationBuilder
@@ -24,7 +23,6 @@ import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
 import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
@@ -48,7 +46,6 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
   private val metaDataBuilder: CancellationMetaDataBuilder = mock[CancellationMetaDataBuilder]
   private val wcoMapperService: WcoMapperService = mock[WcoMapperService]
   private val sendEmailForDmsDocAction: SendEmailForDmsDocAction = mock[SendEmailForDmsDocAction]
-  private val exportsMetrics: ExportsMetrics = new ExportsMetrics(metrics)
 
   private val submissionService = new SubmissionService(
     customsDeclarationsConnector = customsDeclarationsConnector,
