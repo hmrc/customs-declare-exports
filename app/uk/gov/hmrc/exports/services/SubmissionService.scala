@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.exports.services
 
-import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
+import uk.gov.hmrc.exports.metrics.ExportsMetrics
+import uk.gov.hmrc.exports.metrics.ExportsMetrics.{Monitors, Timers}
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions._
@@ -29,6 +30,7 @@ import uk.gov.hmrc.exports.services.notifications.receiptactions.SendEmailForDms
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
 
@@ -40,7 +42,8 @@ class SubmissionService @Inject()(
   notificationRepository: ParsedNotificationRepository,
   metaDataBuilder: CancellationMetaDataBuilder,
   wcoMapperService: WcoMapperService,
-  sendEmailForDmsDocAction: SendEmailForDmsDocAction
+  sendEmailForDmsDocAction: SendEmailForDmsDocAction,
+  metrics: ExportsMetrics
 )(implicit executionContext: ExecutionContext) {
 
   private val logger = Logger(classOf[SubmissionService])
@@ -48,36 +51,44 @@ class SubmissionService @Inject()(
   private def logProgress(declaration: ExportsDeclaration, message: String): Unit =
     logger.info(s"Declaration [${declaration.id}]: $message")
 
-  def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] = {
+  def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] = metrics.timeAsyncCall(Monitors.submissionMonitor) {
     logProgress(declaration, "Beginning Submission")
-    val metaData = wcoMapperService.produceMetaData(declaration)
+
+    val metaData = metrics.timeCall(Timers.submissionProduceMetaDataTimer)(wcoMapperService.produceMetaData(declaration))
     val lrn = wcoMapperService
       .declarationLrn(metaData)
       .getOrElse(throw new IllegalArgumentException("A LRN is required"))
     val ducr = wcoMapperService
       .declarationDucr(metaData)
       .getOrElse(throw new IllegalArgumentException("A DUCR is required"))
-    val payload = wcoMapperService.toXml(metaData)
+
+    val payload = metrics.timeCall(Timers.submissionConvertToXmlTimer)(wcoMapperService.toXml(metaData))
 
     for {
       // Update the Declaration Status
-      _ <- declarationRepository.update(declaration.copy(status = DeclarationStatus.COMPLETE))
+      _ <- metrics.timeCall(Timers.submissionUpdateDeclarationTimer)(
+        declarationRepository.update(declaration.copy(status = DeclarationStatus.COMPLETE))
+      )
       _ = logProgress(declaration, "Marked as COMPLETE")
 
       // Create the Submission
-      submission <- submissionRepository.findOrCreate(Eori(declaration.eori), declaration.id, Submission(declaration, lrn, ducr))
+      submission <- metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer)(
+        submissionRepository.findOrCreate(Eori(declaration.eori), declaration.id, Submission(declaration, lrn, ducr))
+      )
       _ = logProgress(declaration, "Found/Created Submission")
 
       // Submit the declaration to the Dec API
       // Revert the declaration status back to DRAFT if it fails
       _ = logProgress(declaration, "Submitting to the Declaration API")
-      conversationId: String <- submit(declaration, payload)
+      conversationId: String <- metrics.timeAsyncCall(Timers.submissionSendToDecApiTimer)(submit(declaration, payload))
       _ = logProgress(declaration, "Submitted to the Declaration API Successfully")
 
       // Append the "Submission" action & a MRN if already available
       action = Action(id = conversationId, requestType = SubmissionRequest)
-      savedSubmission1 <- submissionRepository.addAction(submission, action)
-      savedSubmission2 <- appendMRNIfAlreadyAvailable(savedSubmission1, conversationId)
+      savedSubmission1 <- metrics.timeAsyncCall(Timers.submissionAddSubmissionActionTimer)(submissionRepository.addAction(submission, action))
+      savedSubmission2 <- metrics.timeAsyncCall(Timers.submissionAppendMrnToSubmissionTimer)(
+        appendMRNIfAlreadyAvailable(savedSubmission1, conversationId)
+      )
       _ = logProgress(declaration, "Submission Complete")
     } yield savedSubmission2
   }

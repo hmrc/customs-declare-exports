@@ -18,23 +18,133 @@ package uk.gov.hmrc.exports.metrics
 
 import com.codahale.metrics.Timer.Context
 import com.kenshoo.play.metrics.Metrics
-import javax.inject.Inject
-import javax.inject.Singleton
+import uk.gov.hmrc.exports.metrics.ExportsMetrics.{Counter, Monitor, Timer}
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
+
+import java.util.concurrent.atomic.AtomicBoolean
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 @Singleton
 class ExportsMetrics @Inject()(metrics: Metrics) {
 
-  val timers = Map(notificationMetric -> metrics.defaultRegistry.timer(s"$notificationMetric.timer"))
+  private val registry = metrics.defaultRegistry
 
-  val counters = Map(notificationMetric -> metrics.defaultRegistry.counter(s"$notificationMetric.counter"))
+  def startTimer(timer: Timer): Context = registry.timer(timer.path).time()
 
-  def startTimer(feature: String): Context = timers(feature).time()
+  def incrementCounter(counter: Counter): Unit = registry.counter(counter.path).inc()
 
-  def incrementCounter(feature: String): Unit = counters(feature).inc()
+  def timeCall[A](timer: Timer)(block: => A): A = {
+    val timerContext: Context = startTimer(timer)
+    val result = block
+    timerContext.stop()
+    result
+  }
+
+  def timeAsyncCall[A](timer: Timer)(block: => Future[A])(implicit ec: ExecutionContext): Future[A] = {
+    val timerContext: Context = startTimer(timer)
+    val timerRunning: AtomicBoolean = new AtomicBoolean(true)
+
+    try {
+      val result = block
+
+      result.foreach { _ =>
+        if (timerRunning.compareAndSet(true, false)) {
+          timerContext.stop()
+        }
+      }
+
+      result.failed.foreach { _ =>
+        if (timerRunning.compareAndSet(true, false)) {
+          timerContext.stop()
+        }
+      }
+
+      result
+    } catch {
+      case NonFatal(e) =>
+        if (timerRunning.compareAndSet(true, false)) {
+          timerContext.stop()
+        }
+        throw e
+    }
+  }
+
+  def timeAsyncCall[A](monitor: Monitor)(block: => Future[A])(implicit ec: ExecutionContext): Future[A] = {
+    incrementCounter(monitor.callCounter)
+    val timerContext: Context = startTimer(monitor.timer)
+    val timerRunning: AtomicBoolean = new AtomicBoolean(true)
+
+    try {
+      val result = block
+
+      result.foreach { _ =>
+        if (timerRunning.compareAndSet(true, false)) {
+          timerContext.stop()
+          incrementCounter(monitor.completionCounter)
+        }
+      }
+
+      result.failed.foreach { _ =>
+        if (timerRunning.compareAndSet(true, false)) {
+          timerContext.stop()
+          incrementCounter(monitor.failureCounter)
+        }
+      }
+
+      result
+    } catch {
+      case NonFatal(e) =>
+        if (timerRunning.compareAndSet(true, false)) {
+          timerContext.stop()
+          incrementCounter(monitor.failureCounter)
+        }
+        throw e
+    }
+  }
 
 }
 
-object MetricIdentifiers {
-  val notificationMetric = "submission.notification"
+object ExportsMetrics {
+
+  case class Meter(name: String) { val path = s"$name.rate" }
+  case class Timer(name: String) { val path = s"$name.timer" }
+  case class Counter(name: String) { val path = s"$name.counter" }
+
+  trait Monitor {
+    val name: String
+
+    val path: String = s"$name.monitor"
+    val timer: Timer = Timer(path)
+    val callCounter: Counter = Counter(path)
+    val completionCounter: Counter = Counter(s"$path.success")
+    val failureCounter: Counter = Counter(s"$path.failed")
+  }
+
+  object Timers {
+    val notificationTimer: Timer = Timer(NotificationMetric.notificationReceiptHandling)
+
+    val upstreamCustomsDeclarationsTimer: Timer = Timer(UpstreamMetric.customsDeclarations)
+
+    val declarationFindAllTimer: Timer = Timer(DeclarationMetric.findAll)
+    val declarationFindSingleTimer: Timer = Timer(DeclarationMetric.findSingle)
+    val declarationUpdateTimer: Timer = Timer(DeclarationMetric.update)
+
+    val submissionProduceMetaDataTimer: Timer = Timer(SubmissionMetric.produceMetaData)
+    val submissionConvertToXmlTimer: Timer = Timer(SubmissionMetric.convertToXml)
+    val submissionUpdateDeclarationTimer: Timer = Timer(SubmissionMetric.updateDeclaration)
+    val submissionFindOrCreateSubmissionTimer: Timer = Timer(SubmissionMetric.findOrCreateSubmission)
+    val submissionSendToDecApiTimer: Timer = Timer(SubmissionMetric.sendToDecApi)
+    val submissionAddSubmissionActionTimer: Timer = Timer(SubmissionMetric.addSubmissionAction)
+    val submissionAppendMrnToSubmissionTimer: Timer = Timer(SubmissionMetric.appendMrnToSubmission)
+  }
+
+  object Counters {
+    val notificationCounter: Counter = Counter(NotificationMetric.notificationReceiptHandling)
+  }
+
+  object Monitors {
+    val submissionMonitor: Monitor = new Monitor { override val name: String = SubmissionMetric.wholeSubmission }
+  }
 }

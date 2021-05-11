@@ -21,7 +21,7 @@ import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
 import testdata.ExportsDeclarationBuilder
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
-import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions._
@@ -36,7 +36,7 @@ import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
-class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
+class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with MockMetrics {
 
   private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
   private val customsDeclarationsConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
@@ -54,7 +54,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
     notificationRepository = notificationRepository,
     metaDataBuilder = metaDataBuilder,
     wcoMapperService = wcoMapperService,
-    sendEmailForDmsDocAction = sendEmailForDmsDocAction
+    sendEmailForDmsDocAction = sendEmailForDmsDocAction,
+    metrics = exportsMetrics
   )(ExecutionContext.global)
 
   override def afterEach(): Unit = {

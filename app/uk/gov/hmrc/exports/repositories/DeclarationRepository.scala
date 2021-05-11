@@ -16,10 +16,6 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import java.time._
-
-import com.kenshoo.play.metrics.Metrics
-import javax.inject.Inject
 import play.api.libs.json.{JsObject, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.Cursor.FailOnError
@@ -29,14 +25,18 @@ import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.ImplicitBSONHandlers
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.exports.config.AppConfig
+import uk.gov.hmrc.exports.metrics.ExportsMetrics
+import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timers
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 
+import java.time._
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: AppConfig, metrics: Metrics)(implicit ec: ExecutionContext)
+class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: AppConfig, metrics: ExportsMetrics)(implicit ec: ExecutionContext)
     extends ReactiveRepository[ExportsDeclaration, BSONObjectID](
       "declarations",
       mc.mongoConnector.db,
@@ -60,42 +60,33 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
     Index(Seq("updatedDateTime" -> IndexType.Descending, "status" -> IndexType.Ascending), Some("statusAndUpdateIdx"))
   )
 
-  private val findDeclarationTimer = metrics.defaultRegistry.timer("mongo.declaration.find")
-
-  def find(id: String, eori: Eori): Future[Option[ExportsDeclaration]] = {
-    val findStopwatch = findDeclarationTimer.time()
-    super.find("id" -> id, "eori" -> eori.value).map(_.headOption).andThen {
-      case _ => findStopwatch.stop()
-    }
+  def find(id: String, eori: Eori): Future[Option[ExportsDeclaration]] = metrics.timeAsyncCall(Timers.declarationFindSingleTimer) {
+    super.find("id" -> id, "eori" -> eori.value).map(_.headOption)
   }
-
-  private val getDeclarationsTimer = metrics.defaultRegistry.timer("mongo.declarations.find")
 
   def find(search: DeclarationSearch, pagination: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] = {
     val query = Json.toJson(search).as[JsObject]
-    val findStopwatch = getDeclarationsTimer.time()
-    for {
-      results <- collection
-        .find(query, projection = None)(ImplicitBSONHandlers.JsObjectDocumentWriter, ImplicitBSONHandlers.JsObjectDocumentWriter)
-        .sort(Json.obj(sort.by.toString -> sort.direction.id))
-        .options(QueryOpts(skipN = (pagination.index - 1) * pagination.size, batchSizeN = pagination.size))
-        .cursor[ExportsDeclaration](ReadPreference.primaryPreferred)
-        .collect(maxDocs = pagination.size, FailOnError[List[ExportsDeclaration]]())
-        .map(_.toSeq)
-      total <- collection.count(Some(query), limit = Some(0), skip = 0, hint = None, readConcern = ReadConcern.Local)
-    } yield {
-      findStopwatch.stop()
-      Paginated(currentPageElements = results, page = pagination, total = total)
+
+    metrics.timeAsyncCall(Timers.declarationFindAllTimer) {
+      for {
+        results <- collection
+          .find(query, projection = None)(ImplicitBSONHandlers.JsObjectDocumentWriter, ImplicitBSONHandlers.JsObjectDocumentWriter)
+          .sort(Json.obj(sort.by.toString -> sort.direction.id))
+          .options(QueryOpts(skipN = (pagination.index - 1) * pagination.size, batchSizeN = pagination.size))
+          .cursor[ExportsDeclaration](ReadPreference.primaryPreferred)
+          .collect(maxDocs = pagination.size, FailOnError[List[ExportsDeclaration]]())
+          .map(_.toSeq)
+        total <- collection.count(Some(query), limit = Some(0), skip = 0, hint = None, readConcern = ReadConcern.Local)
+      } yield {
+        Paginated(currentPageElements = results, page = pagination, total = total)
+      }
     }
   }
 
   def create(declaration: ExportsDeclaration): Future[ExportsDeclaration] =
     super.insert(declaration).map(_ => declaration)
 
-  private val updateDeclarationTimer = metrics.defaultRegistry.timer("mongo.declaration.update")
-
-  def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] = {
-    val updateStopwatch = updateDeclarationTimer.time()
+  def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] = metrics.timeAsyncCall(Timers.declarationUpdateTimer) {
     super
       .findAndUpdate(
         Json.obj("id" -> declaration.id, "eori" -> declaration.eori),
@@ -104,9 +95,6 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
         upsert = false
       )
       .map(_.value.map(_.as[ExportsDeclaration]))
-      .andThen {
-        case _ => updateStopwatch.stop()
-      }
   }
 
   def delete(declaration: ExportsDeclaration): Future[Unit] =

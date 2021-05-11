@@ -24,11 +24,11 @@ lazy val microservice = Project(appName, file("."))
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(commonSettings, scoverageSettings)
   .settings(
-    unmanagedSourceDirectories in Test := Seq(
-      (baseDirectory in Test).value / "test/unit",
-      (baseDirectory in Test).value / "test/util"
-    ),
-    addTestReportOption(Test, "test-reports")
+    unmanagedSourceDirectories in Test := Seq((baseDirectory in Test).value / "test/unit", (baseDirectory in Test).value / "test/util"),
+    unmanagedResourceDirectories in Test := Seq(baseDirectory.value / "test" / "resources"),
+    javaOptions in Test ++= Seq("-Dconfig.resource=test.application.conf"),
+    addTestReportOption(Test, "test-reports"),
+    Keys.fork in Test := true
   )
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(

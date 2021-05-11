@@ -16,10 +16,6 @@
 
 package uk.gov.hmrc.exports.connectors
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.Elem
-
 import org.mockito.ArgumentMatchers.{any, anyString}
 import play.api.http.Status
 import play.api.test.Helpers._
@@ -27,6 +23,10 @@ import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
 import uk.gov.hmrc.http.{HttpClient, _}
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
+import scala.xml.Elem
 
 class CustomsDeclarationsConnectorSpec extends UnitSpec with MockMetrics {
 
@@ -37,7 +37,7 @@ class CustomsDeclarationsConnectorSpec extends UnitSpec with MockMetrics {
     val appConfig: AppConfig = mock[AppConfig]
     val httpClient: HttpClient = mock[HttpClient]
 
-    val testObj = new CustomsDeclarationsConnector(appConfig, httpClient: HttpClient, metrics)
+    val testObj = new CustomsDeclarationsConnector(appConfig, httpClient: HttpClient, exportsMetrics)
 
     implicit val hc: HeaderCarrier = mock[HeaderCarrier]
 
