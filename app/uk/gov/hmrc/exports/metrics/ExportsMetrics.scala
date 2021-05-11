@@ -123,28 +123,28 @@ object ExportsMetrics {
   }
 
   object Timers {
-    val notificationTimer: Timer = Timer(notificationMetric)
+    val notificationTimer: Timer = Timer(NotificationMetric.notificationReceiptHandling)
 
-    val upstreamCustomsDeclarationsTimer: Timer = Timer(upstreamCustomsDeclarationsMetric)
+    val upstreamCustomsDeclarationsTimer: Timer = Timer(UpstreamMetric.customsDeclarations)
 
-    val declarationFindAllTimer: Timer = Timer(declarationFindAllMetric)
-    val declarationFindSingleTimer: Timer = Timer(declarationFindSingleMetric)
-    val declarationUpdateTimer: Timer = Timer(declarationUpdateMetric)
+    val declarationFindAllTimer: Timer = Timer(DeclarationMetric.findAll)
+    val declarationFindSingleTimer: Timer = Timer(DeclarationMetric.findSingle)
+    val declarationUpdateTimer: Timer = Timer(DeclarationMetric.update)
 
-    val submissionProduceMetaDataTimer: Timer = Timer(submissionProduceMetaDataMetric)
-    val submissionConvertToXmlTimer: Timer = Timer(submissionConvertToXmlMetric)
-    val submissionUpdateDeclarationTimer: Timer = Timer(submissionUpdateDeclarationMetric)
-    val submissionFindOrCreateSubmissionTimer: Timer = Timer(submissionFindOrCreateSubmissionMetric)
-    val submissionSendToDecApiTimer: Timer = Timer(submissionSendToDecApiMetric)
-    val submissionAddSubmissionActionTimer: Timer = Timer(submissionAddSubmissionActionMetric)
-    val submissionAppendMrnToSubmissionTimer: Timer = Timer(submissionAppendMrnToSubmissionMetric)
+    val submissionProduceMetaDataTimer: Timer = Timer(SubmissionMetric.produceMetaData)
+    val submissionConvertToXmlTimer: Timer = Timer(SubmissionMetric.convertToXml)
+    val submissionUpdateDeclarationTimer: Timer = Timer(SubmissionMetric.updateDeclaration)
+    val submissionFindOrCreateSubmissionTimer: Timer = Timer(SubmissionMetric.findOrCreateSubmission)
+    val submissionSendToDecApiTimer: Timer = Timer(SubmissionMetric.sendToDecApi)
+    val submissionAddSubmissionActionTimer: Timer = Timer(SubmissionMetric.addSubmissionAction)
+    val submissionAppendMrnToSubmissionTimer: Timer = Timer(SubmissionMetric.appendMrnToSubmission)
   }
 
   object Counters {
-    val notificationCounter: Counter = Counter(notificationMetric)
+    val notificationCounter: Counter = Counter(NotificationMetric.notificationReceiptHandling)
   }
 
   object Monitors {
-    val submissionMonitor: Monitor = new Monitor { override val name: String = submissionMetric }
+    val submissionMonitor: Monitor = new Monitor { override val name: String = SubmissionMetric.wholeSubmission }
   }
 }

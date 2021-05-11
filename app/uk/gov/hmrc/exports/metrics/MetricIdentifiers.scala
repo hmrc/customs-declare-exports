@@ -17,20 +17,30 @@
 package uk.gov.hmrc.exports.metrics
 
 private[metrics] object MetricIdentifiers {
-  val notificationMetric = "notification"
 
-  val upstreamCustomsDeclarationsMetric = "upstream.customs-declarations"
+  object NotificationMetric {
+    val notificationReceiptHandling = "notification"
+  }
 
-  val declarationFindAllMetric = "declaration.findAll"
-  val declarationFindSingleMetric = "declaration.findSingle"
-  val declarationUpdateMetric = "declaration.update"
+  object UpstreamMetric {
+    val customsDeclarations = "upstream.customs-declarations"
+  }
 
-  val submissionMetric = "submission.declaration"
-  val submissionProduceMetaDataMetric = "submission.declaration.produceMetaData"
-  val submissionConvertToXmlMetric = "submission.declaration.convertToXml"
-  val submissionUpdateDeclarationMetric = "submission.declaration.updateDeclarationStatus"
-  val submissionFindOrCreateSubmissionMetric = "submission.declaration.findOrCreateSubmission"
-  val submissionSendToDecApiMetric = "submission.declaration.sendToDecApi"
-  val submissionAddSubmissionActionMetric = "submission.declaration.addSubmissionAction"
-  val submissionAppendMrnToSubmissionMetric = "submission.declaration.appendMrnToSubmission"
+  object DeclarationMetric {
+    val findAll = "declaration.findAll"
+    val findSingle = "declaration.findSingle"
+    val update = "declaration.update"
+  }
+
+  object SubmissionMetric {
+    val wholeSubmission = "submission.declaration"
+    val produceMetaData = "submission.declaration.produceMetaData"
+    val convertToXml = "submission.declaration.convertToXml"
+    val updateDeclaration = "submission.declaration.updateDeclarationStatus"
+    val findOrCreateSubmission = "submission.declaration.findOrCreateSubmission"
+    val sendToDecApi = "submission.declaration.sendToDecApi"
+    val addSubmissionAction = "submission.declaration.addSubmissionAction"
+    val appendMrnToSubmission = "submission.declaration.appendMrnToSubmission"
+  }
+
 }
