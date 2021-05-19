@@ -35,7 +35,7 @@ class TransportSpec extends UnitSpec {
     )
 
     val transport = Transport(
-      transportPayment = Some(TransportPayment(paymentMethod = Some("payment-method"))),
+      transportPayment = Some(TransportPayment(paymentMethod = "payment-method")),
       containers = Some(Seq(Container(id = "container-id", seals = Seq(Seal(id = "seal-id"))))),
       borderModeOfTransportCode = Some(TransportLeavingTheBorder(Some(ModeOfTransportCode.Road))),
       meansOfTransportOnDepartureType = Some("means-of-transport-on-departure"),

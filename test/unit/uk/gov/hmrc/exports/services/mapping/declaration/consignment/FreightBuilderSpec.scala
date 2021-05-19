@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.services.mapping.declaration.consignment
 import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.TransportPayment._
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class FreightBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
@@ -38,9 +39,21 @@ class FreightBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         consignment.getFreight mustBe null
       }
 
-      "payment method is empty" in {
+      "payment method is populated with a value that should be sent to DMS" in {
         // Given
-        val model = aDeclaration(withTransportPayment(None))
+        val model = aDeclaration(withTransportPayment(cash))
+        val consignment = new Declaration.Consignment()
+
+        // When
+        new FreightBuilder().buildThenAdd(model, consignment)
+
+        // Then
+        consignment.getFreight.getPaymentMethodCode.getValue mustBe cash
+      }
+
+      "payment method is populated with a value that should not be sent to DMS" in {
+        // Given
+        val model = aDeclaration(withTransportPayment(notAvailable))
         val consignment = new Declaration.Consignment()
 
         // When
@@ -48,18 +61,6 @@ class FreightBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
         // Then
         consignment.getFreight mustBe null
-      }
-
-      "payment method is populated" in {
-        // Given
-        val model = aDeclaration(withTransportPayment(Some("method")))
-        val consignment = new Declaration.Consignment()
-
-        // When
-        new FreightBuilder().buildThenAdd(model, consignment)
-
-        // Then
-        consignment.getFreight.getPaymentMethodCode.getValue mustBe "method"
       }
     }
   }
