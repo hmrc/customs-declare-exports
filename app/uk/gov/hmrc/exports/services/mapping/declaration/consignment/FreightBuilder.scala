@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.services.mapping.declaration.consignment
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.TransportPayment._
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.Consignment.Freight
@@ -27,15 +28,16 @@ class FreightBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, De
 
   override def buildThenAdd(model: ExportsDeclaration, consignment: Declaration.Consignment): Unit =
     model.transport.transportPayment
-      .flatMap(_.paymentMethod)
+      .map(_.paymentMethod)
+      .filter(canBeSent)
       .map(createFreight)
       .foreach(consignment.setFreight)
 
   def createFreight(paymentMethod: String): Freight = {
-    val freight = new Declaration.Consignment.Freight()
-
     val paymentMethodCodeType = new FreightPaymentMethodCodeType()
     paymentMethodCodeType.setValue(paymentMethod)
+
+    val freight = new Declaration.Consignment.Freight()
     freight.setPaymentMethodCode(paymentMethodCodeType)
 
     freight

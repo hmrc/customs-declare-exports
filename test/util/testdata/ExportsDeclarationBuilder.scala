@@ -300,7 +300,7 @@ trait ExportsDeclarationBuilder {
         )
     )
 
-  def withTransportPayment(payment: Option[String]): ExportsDeclarationModifier =
+  def withTransportPayment(payment: String): ExportsDeclarationModifier =
     declaration => declaration.copy(transport = declaration.transport.copy(transportPayment = Some(TransportPayment(payment))))
 
   def withUpdateDate(year: Int, month: Int, dayOfMonth: Int): ExportsDeclarationModifier =

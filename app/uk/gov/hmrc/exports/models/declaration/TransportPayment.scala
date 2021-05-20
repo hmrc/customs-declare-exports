@@ -17,10 +17,22 @@
 package uk.gov.hmrc.exports.models.declaration
 import play.api.libs.json.{Json, OFormat}
 
-case class TransportPayment(paymentMethod: Option[String] = None)
+case class TransportPayment(paymentMethod: String)
 
 object TransportPayment {
 
   implicit val format: OFormat[TransportPayment] = Json.format[TransportPayment]
 
+  val cash = "A"
+  val creditCard = "B"
+  val cheque = "C"
+  val other = "D"
+  val eFunds = "H"
+  val accHolder = "Y"
+  val notPrePaid = "Z"
+  val notAvailable = "_"
+
+  val paymentMethodsAllowedToBeSent = Set(cash, creditCard, cheque, other, eFunds, accHolder, notPrePaid) //does not include 'notAvailable'
+
+  def canBeSent(paymentMethod: String): Boolean = paymentMethodsAllowedToBeSent.contains(paymentMethod)
 }
