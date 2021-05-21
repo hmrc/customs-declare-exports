@@ -22,6 +22,7 @@ import java.util.UUID
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 
@@ -51,6 +52,7 @@ trait ExportsDeclarationBuilder {
     dispatchLocation = None,
     additionalDeclarationType = None,
     consignmentReferences = None,
+    linkDucrToMucr = None,
     mucr = None,
     transport = Transport(),
     parties = Parties(),
@@ -307,5 +309,5 @@ trait ExportsDeclarationBuilder {
     _.copy(updatedDateTime = LocalDateTime.of(year, month, dayOfMonth, 10, 0, 0).toInstant(ZoneOffset.UTC))
 
   def withMUCR(mucr: String): ExportsDeclarationModifier =
-    cache => cache.copy(mucr = Some(MUCR(mucr)))
+    cache => cache.copy(linkDucrToMucr = Some(YesNoAnswer(YesNoAnswers.yes)), mucr = Some(MUCR(mucr)))
 }

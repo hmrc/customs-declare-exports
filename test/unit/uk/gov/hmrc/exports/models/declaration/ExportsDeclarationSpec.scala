@@ -23,6 +23,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers.yes
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 
 class ExportsDeclarationSpec extends UnitSpec {
@@ -72,7 +73,7 @@ object ExportsDeclarationSpec {
   private val dispatchLocation = mock[DispatchLocation]
   private val additionalDeclarationType = mock[AdditionalDeclarationType]
   private val consignmentReferences = mock[ConsignmentReferences]
-  private val mucr = MUCR("mucr")
+  private val mucr = MUCR("CZYX123A")
   private val transport = mock[Transport]
   private val parties = mock[Parties]
   private val locations = mock[Locations]
@@ -89,6 +90,7 @@ object ExportsDeclarationSpec {
     dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),
     consignmentReferences = Some(consignmentReferences),
+    linkDucrToMucr = Some(YesNoAnswer(yes)),
     mucr = Some(mucr),
     transport = transport,
     parties = parties,
@@ -110,6 +112,7 @@ object ExportsDeclarationSpec {
     dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),
     consignmentReferences = Some(consignmentReferences),
+    linkDucrToMucr = Some(YesNoAnswer(yes)),
     mucr = Some(mucr),
     transport = transport,
     parties = parties,
@@ -137,6 +140,12 @@ object ExportsDeclarationSpec {
       |      "ducr": "8GB123451068100-101SHIP1"
       |    },
       |    "lrn": "QSLRN7285100"
+      |  },
+      |  "linkDucrToMucr": {
+      |    "answer": "Yes"
+      |  },
+      |  "mucr": {
+      |    "mucr": "CZYX123A"
       |  },
       |  "transport": {
       |    "transportPayment": {

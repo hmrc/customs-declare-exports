@@ -31,6 +31,7 @@ case class ExportsDeclarationRequest(
   dispatchLocation: Option[DispatchLocation] = None,
   additionalDeclarationType: Option[AdditionalDeclarationType] = None,
   consignmentReferences: Option[ConsignmentReferences] = None,
+  linkDucrToMucr: Option[YesNoAnswer] = None,
   mucr: Option[MUCR] = None,
   transport: Transport = Transport(),
   parties: Parties = Parties(),

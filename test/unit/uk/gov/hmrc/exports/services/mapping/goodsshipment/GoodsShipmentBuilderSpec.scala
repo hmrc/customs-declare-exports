@@ -26,7 +26,7 @@ import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.AEOMutualRecognitionPartiesBuilderSpec._
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.ConsigneeBuilderSpec.correctAddress
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.PreviousDocumentsBuilderSpec.correctPreviousDocument
-import uk.gov.hmrc.exports.services.mapping.goodsshipment.UCRBuilderSpec.{correctConsignmentReferences, VALID_PERSONAL_UCR}
+import uk.gov.hmrc.exports.services.mapping.goodsshipment.UCRBuilderSpec.correctConsignmentReferences
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.{ConsignmentBuilder, GoodsLocationBuilderSpec}
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.GovernmentAgencyGoodsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
