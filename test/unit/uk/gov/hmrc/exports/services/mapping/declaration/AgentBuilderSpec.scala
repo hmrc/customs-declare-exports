@@ -29,14 +29,17 @@ class AgentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
   when(mockCountriesService.allCountries)
     .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
-  "AgentBuilder" should {
+  val representativeEori = "9GB1234567ABCDEF"
+  val declarantEori = "DEC_EORI"
+  val address = Address(fullName = "Full Name", addressLine = "Address Line", townOrCity = "Town or City", postCode = "AB12 34CD", country = "Poland")
 
+  "AgentBuilder" should {
     "correctly map from ExportsCacheModel to the WCO-DEC Agent instance" when {
       "only EORI is supplied" in {
         val model =
           aDeclaration(
             withRepresentativeDetails(
-              details = Some(EntityDetails(eori = Some("9GB1234567ABCDEF"), address = None)),
+              details = Some(EntityDetails(eori = Some(representativeEori), address = None)),
               statusCode = Some(RepresentativeDetails.DirectRepresentative)
             )
           )
@@ -47,29 +50,17 @@ class AgentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         agentBuilder.buildThenAdd(model, emptyDeclaration)
         val agent: Declaration.Agent = emptyDeclaration.getAgent
 
-        agent.getID.getValue must be("9GB1234567ABCDEF")
+        agent.getID.getValue must be(representativeEori)
         agent.getName must be(null)
         agent.getAddress must be(null)
         agent.getFunctionCode.getValue must be("2")
       }
+
       "only Address is supplied" in {
         val model =
           aDeclaration(
             withRepresentativeDetails(
-              details = Some(
-                EntityDetails(
-                  eori = None,
-                  address = Some(
-                    Address(
-                      fullName = "Full Name",
-                      addressLine = "Address Line",
-                      townOrCity = "Town or City",
-                      postCode = "AB12 34CD",
-                      country = "Poland"
-                    )
-                  )
-                )
-              ),
+              details = Some(EntityDetails(eori = None, address = Some(address))),
               statusCode = Some(RepresentativeDetails.DirectRepresentative)
             )
           )
@@ -80,31 +71,19 @@ class AgentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         val agent: Declaration.Agent = emptyDeclaration.getAgent
 
         agent.getID must be(null)
-        agent.getName.getValue must be("Full Name")
-        agent.getAddress.getLine.getValue must be("Address Line")
-        agent.getAddress.getCityName.getValue must be("Town or City")
+        agent.getName.getValue must be(address.fullName)
+        agent.getAddress.getLine.getValue must be(address.addressLine)
+        agent.getAddress.getCityName.getValue must be(address.townOrCity)
         agent.getAddress.getCountryCode.getValue must be("PL")
-        agent.getAddress.getPostcodeID.getValue must be("AB12 34CD")
+        agent.getAddress.getPostcodeID.getValue must be(address.postCode)
         agent.getFunctionCode.getValue must be("2")
       }
+
       "both eori and Address is supplied" in {
         val model =
           aDeclaration(
             withRepresentativeDetails(
-              details = Some(
-                EntityDetails(
-                  eori = Some("9GB1234567ABCDEF"),
-                  address = Some(
-                    Address(
-                      fullName = "Full Name",
-                      addressLine = "Address Line",
-                      townOrCity = "Town or City",
-                      postCode = "AB12 34CD",
-                      country = "Poland"
-                    )
-                  )
-                )
-              ),
+              details = Some(EntityDetails(eori = Some(representativeEori), address = Some(address))),
               statusCode = Some(RepresentativeDetails.DirectRepresentative)
             )
           )
@@ -114,34 +93,39 @@ class AgentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         agentBuilder.buildThenAdd(model, emptyDeclaration)
         val agent: Declaration.Agent = emptyDeclaration.getAgent
 
-        agent.getID.getValue must be("9GB1234567ABCDEF")
+        agent.getID.getValue must be(representativeEori)
         agent.getName must be(null)
         agent.getAddress must be(null)
         agent.getFunctionCode.getValue must be("2")
       }
-      "declarant not representing another agent" in {
-        val model =
-          aDeclaration(
-            withRepresentativeDetails(
-              details = None,
-              statusCode = Some(RepresentativeDetails.DirectRepresentative),
-              representingAnotherAgent = Some("No")
-            ),
-            withDeclarantDetails(eori = Some("DEC_EORI"))
-          )
 
-        val agentBuilder = new AgentBuilder(mockCountriesService)
-        val emptyDeclaration = new Declaration
+      "no RepresentativeDetails are supplied and" when {
 
-        agentBuilder.buildThenAdd(model, emptyDeclaration)
-        val agent: Declaration.Agent = emptyDeclaration.getAgent
+        Seq("Yes", "No").foreach { repOtherAgent =>
+          s"representingAnotherAgent is set to ${repOtherAgent}" in {
+            val model =
+              aDeclaration(
+                withRepresentativeDetails(
+                  details = None,
+                  statusCode = Some(RepresentativeDetails.DirectRepresentative),
+                  representingAnotherAgent = Some(repOtherAgent)
+                ),
+                withDeclarantDetails(eori = Some(declarantEori))
+              )
 
-        agent.getID.getValue must be("DEC_EORI")
-        agent.getName must be(null)
-        agent.getAddress must be(null)
-        agent.getFunctionCode.getValue must be(RepresentativeDetails.DirectRepresentative)
+            val agentBuilder = new AgentBuilder(mockCountriesService)
+            val emptyDeclaration = new Declaration
+
+            agentBuilder.buildThenAdd(model, emptyDeclaration)
+            val agent: Declaration.Agent = emptyDeclaration.getAgent
+
+            agent.getID.getValue must be(declarantEori)
+            agent.getName must be(null)
+            agent.getAddress must be(null)
+            agent.getFunctionCode.getValue must be(RepresentativeDetails.DirectRepresentative)
+          }
+        }
       }
     }
   }
-
 }

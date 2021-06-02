@@ -28,9 +28,11 @@ class AgentBuilder @Inject()(countriesService: CountriesService) extends Modifyi
 
   override def buildThenAdd(exportsCacheModel: ExportsDeclaration, declaration: Declaration): Unit =
     exportsCacheModel.parties.representativeDetails.foreach { representativeDetails =>
-      if (representativeDetails.isRepresentingOtherAgent) {
+      representativeDetails.details.map { _ =>
         declaration.setAgent(createAgent(representativeDetails.details, representativeDetails.statusCode))
-      } else declaration.setAgent(createAgent(exportsCacheModel.parties.declarantDetails.map(_.details), representativeDetails.statusCode))
+      }.getOrElse {
+        declaration.setAgent(createAgent(exportsCacheModel.parties.declarantDetails.map(_.details), representativeDetails.statusCode))
+      }
     }
 
   private def createAgent(details: Option[EntityDetails], statusCode: Option[String]): Declaration.Agent = {
