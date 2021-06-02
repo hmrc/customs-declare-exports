@@ -36,7 +36,7 @@ class FreightBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         new FreightBuilder().buildThenAdd(model, consignment)
 
         // Then
-        consignment.getFreight mustBe null
+        Option(consignment.getFreight) mustBe None
       }
 
       "payment method is populated with a value that should be sent to DMS" in {
@@ -60,7 +60,7 @@ class FreightBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         new FreightBuilder().buildThenAdd(model, consignment)
 
         // Then
-        consignment.getFreight mustBe null
+        Option(consignment.getFreight) mustBe None
       }
     }
   }

@@ -20,6 +20,7 @@ import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
+import uk.gov.hmrc.exports.models.declaration.TransportPayment.cash
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class SpecificCircumstancesCodeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
@@ -28,12 +29,13 @@ class SpecificCircumstancesCodeBuilderSpec extends UnitSpec with ExportsDeclarat
 
     "build then add" when {
       "type is supplementary" in {
-        val model = aDeclaration(withType(DeclarationType.SUPPLEMENTARY), withOfficeOfExit(circumstancesCode = Some("Yes")))
+        val model =
+          aDeclaration(withType(DeclarationType.SUPPLEMENTARY), withOfficeOfExit(circumstancesCode = Some("Yes")), withTransportPayment(cash))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getSpecificCircumstancesCodeCode must be(null)
+        Option(declaration.getSpecificCircumstancesCodeCode) mustBe None
       }
 
       for (declarationType: DeclarationType <- Seq(
@@ -49,33 +51,39 @@ class SpecificCircumstancesCodeBuilderSpec extends UnitSpec with ExportsDeclarat
 
             builder.buildThenAdd(model, declaration)
 
-            declaration.getSpecificCircumstancesCodeCode must be(null)
+            Option(declaration.getSpecificCircumstancesCodeCode) mustBe None
           }
 
           "invalid circumstance type" in {
-            val model =
-              aDeclaration(withType(declarationType), withOfficeOfExit(circumstancesCode = Some("")))
+            val model = aDeclaration(withType(declarationType), withOfficeOfExit(circumstancesCode = Some("")))
             val declaration = new Declaration()
 
             builder.buildThenAdd(model, declaration)
 
-            declaration.getSpecificCircumstancesCodeCode must be(null)
+            Option(declaration.getSpecificCircumstancesCodeCode) mustBe None
           }
 
-          "valid circumstance type" in {
-            val model =
-              aDeclaration(withType(declarationType), withOfficeOfExit(circumstancesCode = Some("Yes")))
+          "valid circumstance type (Office of Exit)" in {
+            val model = aDeclaration(withType(declarationType), withOfficeOfExit(circumstancesCode = Some("Yes")))
             val declaration = new Declaration()
 
             builder.buildThenAdd(model, declaration)
 
-            declaration.getSpecificCircumstancesCodeCode.getValue must be("A20")
+            declaration.getSpecificCircumstancesCodeCode.getValue mustBe "A20"
+          }
+
+          "valid circumstance type (Express consignment)" in {
+            val model = aDeclaration(withType(declarationType), withTransportPayment(cash))
+            val declaration = new Declaration()
+
+            builder.buildThenAdd(model, declaration)
+
+            declaration.getSpecificCircumstancesCodeCode.getValue mustBe "A20"
           }
         }
       }
     }
   }
 
-  private def builder =
-    new SpecificCircumstancesCodeBuilder()
+  private def builder = new SpecificCircumstancesCodeBuilder()
 }

@@ -303,7 +303,11 @@ trait ExportsDeclarationBuilder {
     )
 
   def withTransportPayment(payment: String): ExportsDeclarationModifier =
-    declaration => declaration.copy(transport = declaration.transport.copy(transportPayment = Some(TransportPayment(payment))))
+    declaration =>
+      declaration.copy(
+        transport =
+          declaration.transport.copy(expressConsignment = Some(YesNoAnswer(YesNoAnswers.yes)), transportPayment = Some(TransportPayment(payment)))
+    )
 
   def withUpdateDate(year: Int, month: Int, dayOfMonth: Int): ExportsDeclarationModifier =
     _.copy(updatedDateTime = LocalDateTime.of(year, month, dayOfMonth, 10, 0, 0).toInstant(ZoneOffset.UTC))

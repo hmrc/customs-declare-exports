@@ -25,6 +25,7 @@ object TransportLeavingTheBorder {
 }
 
 case class Transport(
+  expressConsignment: Option[YesNoAnswer] = None,
   transportPayment: Option[TransportPayment] = None,
   containers: Option[Seq[Container]] = None,
   borderModeOfTransportCode: Option[TransportLeavingTheBorder] = None,

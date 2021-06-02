@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.controllers.request
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 import uk.gov.hmrc.exports.models.declaration._
 
 class ExportsDeclarationRequestSpec extends UnitSpec {
@@ -30,6 +31,7 @@ class ExportsDeclarationRequestSpec extends UnitSpec {
         .fold(error => fail(s"Could not parse - $error"), declaration => {
           declaration.transport.borderModeOfTransportCode mustNot be(empty)
           declaration.transport.meansOfTransportOnDepartureType mustNot be(empty)
+          declaration.transport.expressConsignment mustBe Some(YesNoAnswer(YesNoAnswers.yes))
           declaration.transport.transportPayment mustNot be(empty)
         })
     }

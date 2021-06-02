@@ -18,12 +18,14 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{JsSuccess, Json}
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 
 class TransportSpec extends UnitSpec {
 
   "Transport formats" should {
 
     val json = Json.obj(
+      "expressConsignment" -> Json.obj("answer" -> "Yes"),
       "transportPayment" -> Json.obj("paymentMethod" -> "payment-method"),
       "containers" -> Json.arr(Json.obj("id" -> "container-id", "seals" -> Json.arr(Json.obj("id" -> "seal-id")))),
       "borderModeOfTransportCode" -> Json.obj("code" -> "3"),
@@ -35,6 +37,7 @@ class TransportSpec extends UnitSpec {
     )
 
     val transport = Transport(
+      expressConsignment = Some(YesNoAnswer(YesNoAnswers.yes)),
       transportPayment = Some(TransportPayment(paymentMethod = "payment-method")),
       containers = Some(Seq(Container(id = "container-id", seals = Seq(Seal(id = "seal-id"))))),
       borderModeOfTransportCode = Some(TransportLeavingTheBorder(Some(ModeOfTransportCode.Road))),

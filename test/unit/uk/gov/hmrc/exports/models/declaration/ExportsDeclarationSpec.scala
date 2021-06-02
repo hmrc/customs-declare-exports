@@ -148,6 +148,9 @@ object ExportsDeclarationSpec {
       |    "mucr": "CZYX123A"
       |  },
       |  "transport": {
+      |    "expressConsignment": {
+      |      "answer": "Yes"
+      |    },
       |    "transportPayment": {
       |      "paymentMethod": "H"
       |    },
