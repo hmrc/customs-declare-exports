@@ -1,9 +1,8 @@
 import sbt._
+import uk.gov.hmrc.{ForkedJvmPerTestSettings, SbtAutoBuildPlugin}
 import uk.gov.hmrc.DefaultBuildSettings._
 import uk.gov.hmrc.gitstamp.GitStampPlugin._
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
-import uk.gov.hmrc.versioning.SbtGitVersioning
-import uk.gov.hmrc.{ForkedJvmPerTestSettings, SbtArtifactory, SbtAutoBuildPlugin}
 
 val appName = "customs-declare-exports"
 
@@ -12,7 +11,7 @@ PlayKeys.devSettings := Seq("play.server.http.port" -> "6792")
 lazy val IntegrationTest = config("it") extend Test
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, SbtArtifactory)
+  .enablePlugins(PlayScala, SbtAutoBuildPlugin, SbtDistributablesPlugin)
   .settings(
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
