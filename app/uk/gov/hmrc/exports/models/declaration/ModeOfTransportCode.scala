@@ -29,6 +29,7 @@ object ModeOfTransportCode {
   case object Road extends ModeOfTransportCode("3")
   case object Air extends ModeOfTransportCode("4")
   case object PostalConsignment extends ModeOfTransportCode("5")
+  case object RoRo extends ModeOfTransportCode("6")
   case object FixedTransportInstallations extends ModeOfTransportCode("7")
   case object InlandWaterway extends ModeOfTransportCode("8")
   case object Unknown extends ModeOfTransportCode("9")
@@ -37,7 +38,7 @@ object ModeOfTransportCode {
   def apply(code: String): ModeOfTransportCode = reverseLookup.getOrElse(code, Empty)
 
   private val allowedModeOfTransportCodes: Set[ModeOfTransportCode] =
-    Set(Maritime, Rail, Road, Air, PostalConsignment, FixedTransportInstallations, InlandWaterway, Unknown, Empty)
+    Set(Maritime, Rail, Road, Air, PostalConsignment, RoRo, FixedTransportInstallations, InlandWaterway, Unknown, Empty)
 
   private val reverseLookup: Map[String, ModeOfTransportCode] = allowedModeOfTransportCodes.map(entry => entry.value -> entry).toMap
 
