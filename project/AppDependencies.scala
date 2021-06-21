@@ -16,6 +16,7 @@ object AppDependencies {
     "uk.gov.hmrc"                    %%  "work-item-repo"               % "8.0.0-play-28",
     "com.fasterxml.jackson.module"   %%  "jackson-module-scala"         % "2.12.3"
   )
+  // TODO: update wco-dec Scala to 2.12 and publish locally MetaData class with ` namespace = "" `
 
   val test = Seq(
     "org.scalatest"          %% "scalatest"                % "3.2.9"             % testScope,

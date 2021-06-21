@@ -16,13 +16,16 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
+import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.mapping.AuthorisationHoldersBuilder
 import uk.gov.hmrc.exports.services.mapping.declaration.consignment.DeclarationConsignmentBuilder
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.GoodsShipmentBuilder
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.AdditionalInformationBuilder
+import wco.datamodel.wco.dec_dms._2.Declaration
 
-class DeclarationBuilderTest extends UnitSpec {
+class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
 
   private val functionCodeBuilder: FunctionCodeBuilder = mock[FunctionCodeBuilder]
   private val functionalReferenceIdBuilder: FunctionalReferenceIdBuilder = mock[FunctionalReferenceIdBuilder]
@@ -72,6 +75,18 @@ class DeclarationBuilderTest extends UnitSpec {
     amendmentBuilder,
     additionalInformationBuilder
   )
+
+  "DeclarationBuilder on buildDeclaration" should {
+
+    "call all builders" in {
+      val inputDeclaration = aDeclaration()
+      builder.buildDeclaration(inputDeclaration)
+
+      verify(functionCodeBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+
+
+    }
+  }
 
   "Build Cancellation" should {
     "build and append to Declaration" in {
