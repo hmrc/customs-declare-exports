@@ -302,7 +302,10 @@ object ExportsDeclarationSpec {
       |            "documentTypeCode": "C501",
       |            "documentIdentifier": "GBAEOC717572504502811"
       |          }
-      |        ]
+      |        ],
+      |        "isRequired" : {
+|                  "answer" : "Yes"
+|              }
       |      }
       |    }
       |  ],

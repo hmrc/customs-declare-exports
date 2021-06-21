@@ -150,7 +150,7 @@ object DocumentProduced {
   implicit val format: OFormat[DocumentProduced] = Json.format[DocumentProduced]
 }
 
-case class DocumentsProduced(documents: Seq[DocumentProduced])
+case class DocumentsProduced(documents: Seq[DocumentProduced], isRequired: Option[YesNoAnswer])
 object DocumentsProduced {
   implicit val format: OFormat[DocumentsProduced] = Json.format[DocumentsProduced]
 }
