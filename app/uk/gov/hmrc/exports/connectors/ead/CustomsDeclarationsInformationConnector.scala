@@ -36,7 +36,7 @@ class CustomsDeclarationsInformationConnector @Inject()(mrnStatusParser: MrnStat
 
   def fetchMrnStatus(mrn: String)(implicit hc: HeaderCarrier): Future[Option[MrnStatus]] =
     httpClient
-      .doGet(url = s"${appConfig.customsDeclarationsInformationBaseUrl}${appConfig.fetchMrnStatus.replace(XmlTags.id, mrn)}", headers = headers())
+      .doGet(url = s"${appConfig.customsDeclarationsInformationBaseUrl}${appConfig.fetchMrnStatus.replace(XmlTags.id, mrn)}", headers = headers)
       .map { response =>
         response.status match {
           case OK =>
@@ -48,10 +48,19 @@ class CustomsDeclarationsInformationConnector @Inject()(mrnStatusParser: MrnStat
         }
       }
 
-  private def headers(): Seq[(String, String)] = Seq(
-    "X-Client-ID" -> appConfig.cdiClientID,
-    HeaderNames.ACCEPT -> s"application/vnd.hmrc.${appConfig.cdiApiVersion}+xml",
-    HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
-    HeaderNames.CACHE_CONTROL -> "no-cache"
-  )
+  private def headers(implicit hc: HeaderCarrier): Seq[(String, String)] = {
+    val headers = Seq(
+      "X-Client-ID" -> appConfig.cdiClientID,
+      HeaderNames.ACCEPT -> s"application/vnd.hmrc.${appConfig.cdiApiVersion}+xml",
+      HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
+      HeaderNames.CACHE_CONTROL -> "no-cache"
+    )
+
+    hc.authorization.fold {
+      logger.error("Authorization header not provided while trying to retrieve the declaration's status")
+      headers
+    } { bearer =>
+      headers :+ (HeaderNames.AUTHORIZATION -> bearer.value)
+    }
+  }
 }
