@@ -24,7 +24,7 @@ class CachingMappingHelperSpec extends UnitSpec {
   "CachingMappingHelper" should {
     "mapGoodsMeasure correctly When tariffQuantity grossMassMeasure netWeightMeasure provided" in {
 
-      val commodityMeasure = CommodityMeasure(Some("10"), Some("100.00"), Some("100.00"))
+      val commodityMeasure = CommodityMeasure(Some("10"), Some(false), Some("100.00"), Some("100.00"))
       val goodsMeasure = new CachingMappingHelper().mapGoodsMeasure(commodityMeasure).flatMap(_.goodsMeasure).get
 
       goodsMeasure.tariffQuantity.get.value.get mustBe 10
@@ -34,7 +34,7 @@ class CachingMappingHelperSpec extends UnitSpec {
 
     "mapGoodsMeasure correctly When grossMassMeasure netWeightMeasure provided but no tariffQuantity" in {
 
-      val commodityMeasure = CommodityMeasure(None, Some("100.00"), Some("100.00"))
+      val commodityMeasure = CommodityMeasure(None, Some(true), Some("100.00"), Some("100.00"))
 
       val goodsMeasure = new CachingMappingHelper().mapGoodsMeasure(commodityMeasure).flatMap(_.goodsMeasure).get
       goodsMeasure.tariffQuantity mustBe None
@@ -44,7 +44,7 @@ class CachingMappingHelperSpec extends UnitSpec {
 
     "mapGoodsMeasure correctly When no fields are provided" in {
 
-      val commodityMeasure = CommodityMeasure(None, None, None)
+      val commodityMeasure = CommodityMeasure(None, None, None, None)
 
       new CachingMappingHelper().mapGoodsMeasure(commodityMeasure) mustBe None
     }

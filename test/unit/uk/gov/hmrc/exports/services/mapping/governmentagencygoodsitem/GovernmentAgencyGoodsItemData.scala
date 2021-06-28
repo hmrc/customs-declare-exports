@@ -51,7 +51,7 @@ trait GovernmentAgencyGoodsItemData {
   val netMassString = "15.00"
   val grossMassString = "25.00"
   val tariffQuantity = "31"
-  val commodityMeasure = CommodityMeasure(Some(tariffQuantity), netMass = Some(netMassString), grossMass = Some(grossMassString))
+  val commodityMeasure = CommodityMeasure(Some(tariffQuantity), Some(false), netMass = Some(netMassString), grossMass = Some(grossMassString))
 
   //procedureCodes Data
 
