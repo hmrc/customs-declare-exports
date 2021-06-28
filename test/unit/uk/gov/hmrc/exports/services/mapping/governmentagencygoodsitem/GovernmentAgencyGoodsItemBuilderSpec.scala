@@ -62,7 +62,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
         s"on the $declarationType journey" in {
           val exportItem = anItem(
             withSequenceId(99),
-            withCommodityMeasure(CommodityMeasure(Some("2"), Some("90"), Some("100"))),
+            withCommodityMeasure(CommodityMeasure(Some("2"), Some(false), Some("90"), Some("100"))),
             withAdditionalFiscalReferenceData(AdditionalFiscalReferences(Seq(AdditionalFiscalReference("GB", "reference")))),
             withStatisticalValue(statisticalValue = "123"),
             withCommodityDetails(
@@ -99,7 +99,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
         s"on the $declarationType journey" in {
           val exportItem = anItem(
             withSequenceId(99),
-            withCommodityMeasure(CommodityMeasure(Some("2"), Some("90"), Some("100"))),
+            withCommodityMeasure(CommodityMeasure(Some("2"), Some(false), Some("90"), Some("100"))),
             withAdditionalFiscalReferenceData(AdditionalFiscalReferences(Seq(AdditionalFiscalReference("GB", "reference")))),
             withStatisticalValue(statisticalValue = "123"),
             withCommodityDetails(
