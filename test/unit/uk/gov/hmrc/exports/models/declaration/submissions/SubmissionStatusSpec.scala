@@ -44,6 +44,7 @@ class SubmissionStatusSpec extends UnitSpec {
       retrieve("WrongStatus") must be(SubmissionStatus.UNKNOWN)
       retrieve("11", Some("39")) must be(SubmissionStatus.CUSTOMS_POSITION_GRANTED)
       retrieve("11", Some("41")) must be(SubmissionStatus.CUSTOMS_POSITION_DENIED)
+      retrieve("51") must be(SubmissionStatus.QUERY_NOTIFICATION_MESSAGE)
 
     }
 
