@@ -86,7 +86,7 @@ trait ExportsItemBuilder {
 
   def withDocumentsProduced(isRequired: Option[YesNoAnswer], first: DocumentProduced, docs: DocumentProduced*): ItemModifier = cache => {
     val existing = cache.documentsProducedData.map(_.documents).getOrElse(Seq.empty)
-    cache.copy(documentsProducedData = Some(DocumentsProduced(existing ++ Seq(first) ++ docs, isRequired)))
+    cache.copy(documentsProducedData = Some(DocumentsProduced(isRequired, existing ++ Seq(first) ++ docs)))
   }
 
   def withDocumentsProducedData(docs: DocumentsProduced): ItemModifier =
