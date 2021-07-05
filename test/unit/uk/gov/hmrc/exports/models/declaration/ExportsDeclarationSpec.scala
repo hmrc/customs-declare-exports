@@ -296,16 +296,16 @@ object ExportsDeclarationSpec {
       |          }
       |        ]
       |      },
-      |      "documentsProducedData": {
+      |      "additionalDocuments": {
+      |        "isRequired" : {
+      |            "answer" : "Yes"
+      |        },
       |        "documents": [
       |          {
       |            "documentTypeCode": "C501",
       |            "documentIdentifier": "GBAEOC717572504502811"
       |          }
-      |        ],
-      |        "isRequired" : {
-|                  "answer" : "Yes"
-|              }
+      |        ]
       |      }
       |    }
       |  ],

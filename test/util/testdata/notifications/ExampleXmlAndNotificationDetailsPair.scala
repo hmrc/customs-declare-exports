@@ -126,7 +126,7 @@ object ExampleXmlAndNotificationDetailsPair {
                   PointerSection("declaration", FIELD),
                   PointerSection("items", FIELD),
                   PointerSection("1", SEQUENCE),
-                  PointerSection("documentProduced", FIELD),
+                  PointerSection("additionalDocument", FIELD),
                   PointerSection("2", SEQUENCE),
                   PointerSection("documentStatus", FIELD)
                 )

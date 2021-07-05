@@ -311,7 +311,10 @@ object CacheChangeLogSpec {
       |                    }
       |                ]
       |            },
-      |            "documentsProducedData": {
+      |            "additionalDocuments": {
+      |                "isRequired" : {
+      |                    "answer" : "Yes"
+      |                },
       |                "documents": [
       |                    {
       |                        "documentTypeCode": "C501",
@@ -492,7 +495,10 @@ object CacheChangeLogSpec {
       |          }
       |        ]
       |      },
-      |      "documentsProducedData": {
+      |      "additionalDocuments": {
+      |        "isRequired" : {
+      |            "answer" : "Yes"
+      |        },
       |        "documents": [
       |          {
       |            "documentTypeCode": "C501",
@@ -675,7 +681,10 @@ object CacheChangeLogSpec {
       |          }
       |        ]
       |      },
-      |      "documentsProducedData": {
+      |      "additionalDocuments": {
+      |        "isRequired" : {
+      |            "answer" : "Yes"
+      |        },
       |        "documents": [
       |          {
       |            "documentTypeCode": "C501",
@@ -859,7 +868,10 @@ object CacheChangeLogSpec {
       |          }
       |        ]
       |      },
-      |      "documentsProducedData": {
+      |      "additionalDocuments": {
+      |        "isRequired" : {
+      |            "answer" : "Yes"
+      |        },
       |        "documents": [
       |          {
       |            "documentTypeCode": "C501",
@@ -1043,7 +1055,10 @@ object CacheChangeLogSpec {
       |          }
       |        ]
       |      },
-      |      "documentsProducedData": {
+      |      "additionalDocuments": {
+      |        "isRequired" : {
+      |            "answer" : "Yes"
+      |        },
       |        "documents": [
       |          {
       |            "documentTypeCode": "C501",
@@ -1227,7 +1242,10 @@ object CacheChangeLogSpec {
       |          }
       |        ]
       |      },
-      |      "documentsProducedData": {
+      |      "additionalDocuments": {
+      |        "isRequired" : {
+      |            "answer" : "Yes"
+      |        },
       |        "documents": [
       |          {
       |            "documentTypeCode": "C501",
@@ -1412,7 +1430,10 @@ object CacheChangeLogSpec {
                                            |          }
                                            |        ]
                                            |      },
-                                           |      "documentsProducedData": {
+                                           |      "additionalDocuments": {
+                                           |        "isRequired" : {
+                                           |            "answer" : "Yes"
+                                           |        },
                                            |        "documents": [
                                            |          {
                                            |            "documentTypeCode": "C501",

@@ -142,7 +142,7 @@ object DocumentWriteOff {
   implicit val format: OFormat[DocumentWriteOff] = Json.format[DocumentWriteOff]
 }
 
-case class DocumentProduced(
+case class AdditionalDocument(
   documentTypeCode: Option[String],
   documentIdentifier: Option[String],
   documentStatus: Option[String],
@@ -151,13 +151,13 @@ case class DocumentProduced(
   dateOfValidity: Option[Date],
   documentWriteOff: Option[DocumentWriteOff]
 )
-object DocumentProduced {
-  implicit val format: OFormat[DocumentProduced] = Json.format[DocumentProduced]
+object AdditionalDocument {
+  implicit val format: OFormat[AdditionalDocument] = Json.format[AdditionalDocument]
 }
 
-case class DocumentsProduced(isRequired: Option[YesNoAnswer], documents: Seq[DocumentProduced])
-object DocumentsProduced {
-  implicit val format: OFormat[DocumentsProduced] = Json.format[DocumentsProduced]
+case class AdditionalDocuments(isRequired: Option[YesNoAnswer], documents: Seq[AdditionalDocument])
+object AdditionalDocuments {
+  implicit val format: OFormat[AdditionalDocuments] = Json.format[AdditionalDocuments]
 }
 
 case class ExportItem(
@@ -175,7 +175,7 @@ case class ExportItem(
   packageInformation: Option[List[PackageInformation]] = None,
   commodityMeasure: Option[CommodityMeasure] = None,
   additionalInformation: Option[AdditionalInformations] = None,
-  documentsProducedData: Option[DocumentsProduced] = None
+  additionalDocuments: Option[AdditionalDocuments] = None
 )
 object ExportItem {
   implicit val format: OFormat[ExportItem] = Json.format[ExportItem]

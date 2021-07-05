@@ -25,7 +25,7 @@ class WCOPointerMappingServiceIntegrationTest extends UnitSpec {
     "map valid pointer" in {
       val pointer = Pointer(
         // 42A.67A.68A.$1.02A.$2.D005
-        // declaration.items.$1.documentProduced.$2.documentIdentifier
+        // declaration.items.$1.additionalDocument.$2.documentIdentifier
         List(
           PointerSection("42A", PointerSectionType.FIELD),
           PointerSection("67A", PointerSectionType.FIELD),
@@ -44,7 +44,7 @@ class WCOPointerMappingServiceIntegrationTest extends UnitSpec {
           PointerSection("declaration", PointerSectionType.FIELD),
           PointerSection("items", PointerSectionType.FIELD),
           PointerSection("1", PointerSectionType.SEQUENCE),
-          PointerSection("documentProduced", PointerSectionType.FIELD),
+          PointerSection("additionalDocument", PointerSectionType.FIELD),
           PointerSection("2", PointerSectionType.SEQUENCE),
           PointerSection("documentIdentifier", PointerSectionType.FIELD)
         )
