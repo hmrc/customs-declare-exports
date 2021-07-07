@@ -16,12 +16,14 @@
 
 package uk.gov.hmrc.exports.services
 
-import javax.inject.Inject
-import javax.xml.bind.JAXBElement
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.mapping.SubmissionMetaDataBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
+
+import java.io.StringWriter
+import javax.inject.Inject
+import javax.xml.bind.{JAXBContext, JAXBElement, Marshaller}
 
 class WcoMapperService @Inject()(submissionMetadataBuilder: SubmissionMetaDataBuilder) {
 
@@ -49,12 +51,11 @@ class WcoMapperService @Inject()(submissionMetadataBuilder: SubmissionMetaDataBu
         .getValue
     ).orElse(None)
 
-  def toXml(metaData: MetaData) = {
-    import java.io.StringWriter
+  private lazy val jaxbContext = JAXBContext.newInstance(classOf[MetaData])
 
-    import javax.xml.bind.{JAXBContext, Marshaller}
+  def toXml(metaData: MetaData): String = {
+    val jaxbMarshaller = jaxbContext.createMarshaller
 
-    val jaxbMarshaller = JAXBContext.newInstance(classOf[MetaData]).createMarshaller
     jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true)
 
     val sw = new StringWriter
