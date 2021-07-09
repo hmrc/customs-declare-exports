@@ -84,13 +84,13 @@ trait ExportsItemBuilder {
         )
     )
 
-  def withDocumentsProduced(isRequired: Option[YesNoAnswer], first: DocumentProduced, docs: DocumentProduced*): ItemModifier = cache => {
-    val existing = cache.documentsProducedData.map(_.documents).getOrElse(Seq.empty)
-    cache.copy(documentsProducedData = Some(DocumentsProduced(existing ++ Seq(first) ++ docs, isRequired)))
+  def withAdditionalDocuments(isRequired: Option[YesNoAnswer], first: AdditionalDocument, docs: AdditionalDocument*): ItemModifier = cache => {
+    val existing = cache.additionalDocuments.map(_.documents).getOrElse(Seq.empty)
+    cache.copy(additionalDocuments = Some(AdditionalDocuments(isRequired, existing ++ Seq(first) ++ docs)))
   }
 
-  def withDocumentsProducedData(docs: DocumentsProduced): ItemModifier =
-    cache => cache.copy(documentsProducedData = Some(docs))
+  def withAdditionalDocuments(docs: AdditionalDocuments): ItemModifier =
+    cache => cache.copy(additionalDocuments = Some(docs))
 
   private def uuid: String = UUID.randomUUID().toString
 

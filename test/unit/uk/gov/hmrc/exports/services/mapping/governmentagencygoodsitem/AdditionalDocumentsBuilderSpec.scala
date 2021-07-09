@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.{Date, DocumentProduced}
+import uk.gov.hmrc.exports.models.declaration.{AdditionalDocument, Date}
 import uk.gov.hmrc.wco.dec._
 
 class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoodsItemData {
@@ -50,14 +50,14 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
       mappedDocuments.get(0).getSubmitter.getName.getValue mustBe issusingAuthorityName
 
       val writeoff = mappedDocuments.get(0).getWriteOff
-      writeoff.getAmountAmount mustBe null
+      Option(writeoff.getAmountAmount) mustBe None
       val writeOffQuantity = writeoff.getQuantityQuantity
       writeOffQuantity.getUnitCode mustBe measurementUnit
       writeOffQuantity.getValue mustBe documentQuantity.bigDecimal
     }
 
-    "map DocumentProduced to GovernmentAgencyGoodsItemAdditionalDocument" in {
-      val doc = DocumentProduced(
+    "map AdditionalDocument to GovernmentAgencyGoodsItemAdditionalDocument" in {
+      val additionalDocument = AdditionalDocument(
         documentTypeCode = Some("DOC"),
         documentIdentifier = Some("idpart"),
         documentStatus = Some("status"),
@@ -67,15 +67,15 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
         documentWriteOff = None
       )
 
-      val additionalDoc = AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument(doc)
+      val wcoAdditionalDocument = AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument(additionalDocument)
 
-      additionalDoc.categoryCode mustBe Some("D")
-      additionalDoc.typeCode mustBe Some("OC")
-      additionalDoc.id mustBe Some("idpart")
-      additionalDoc.lpcoExemptionCode mustBe Some("status")
-      additionalDoc.name mustBe Some("reason")
-      additionalDoc.effectiveDateTime mustBe Some(DateTimeElement(DateTimeString("102", "20170410")))
-      additionalDoc.submitter.flatMap(_.name) mustBe Some("Issuing Authority Name")
+      wcoAdditionalDocument.categoryCode mustBe Some("D")
+      wcoAdditionalDocument.typeCode mustBe Some("OC")
+      wcoAdditionalDocument.id mustBe Some("idpart")
+      wcoAdditionalDocument.lpcoExemptionCode mustBe Some("status")
+      wcoAdditionalDocument.name mustBe Some("reason")
+      wcoAdditionalDocument.effectiveDateTime mustBe Some(DateTimeElement(DateTimeString("102", "20170410")))
+      wcoAdditionalDocument.submitter.flatMap(_.name) mustBe Some("Issuing Authority Name")
     }
   }
 }
