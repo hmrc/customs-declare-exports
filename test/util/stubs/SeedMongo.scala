@@ -16,13 +16,13 @@
 
 package stubs
 
-import java.util.UUID
 import reactivemongo.api.{MongoConnection, MongoDriver}
 import testdata.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers.yes
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers.yes
 
+import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
@@ -74,9 +74,9 @@ object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
   val random = new scala.util.Random()
 
   val target = 20000
+  val batchSize = 1000
 
-  def generateEori =
-    "GB" + random.nextInt(Int.MaxValue).toString
+  def generateEori = "GB" + random.nextInt(Int.MaxValue).toString
 
   import reactivemongo.play.json.collection.JSONCollection
 
@@ -92,16 +92,13 @@ object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
       .database("customs-declare-exports")
       .map(db => db.collection[JSONCollection]("declarations"))
       .map { collection =>
-        var now = 0
-        while (now < target) {
-          val count = random.nextInt(1000)
-          val eori = generateEori
-          val declarations = Range(0, count).map { _ =>
-            declaration.copy(id = UUID.randomUUID.toString, eori = eori, status = randomStatus)
+        val batchesAmount = Math.ceil(target / batchSize).toInt
+        (1 to batchesAmount).foreach { batchNumber =>
+          val declarations = (1 to batchSize).map { _ =>
+            declaration.copy(id = UUID.randomUUID.toString, eori = generateEori, status = randomStatus)
           }
           Await.ready(collection.insert.many(declarations), Duration.Inf)
-          now += count
-          println(s"Inserted $now - $count for $eori")
+          println(s"Inserted ${batchSize * batchNumber} out of ${target} declarations")
         }
       }
 
