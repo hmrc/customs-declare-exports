@@ -48,6 +48,10 @@ test:scalafmt::test # check test sources
 sbt:scalafmt::test  # check .sbt sources
 ```
 
+### Pre-merge check
+There is a script called `precheck.sh` that runs all tests, examine their coverage and check if all the files are properly formatted.
+It is a good practise to run it just before pushing to GitHub.
+
 ### Seed mongo
 
 To provide high number of declarations (20 000) in system run
