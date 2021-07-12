@@ -121,6 +121,7 @@ case class Parties(
   representativeDetails: Option[RepresentativeDetails] = None,
   declarationAdditionalActorsData: Option[DeclarationAdditionalActors] = None,
   declarationHoldersData: Option[DeclarationHolders] = None,
+  authorisationProcedureCodeChoice: Option[AuthorisationProcedureCodeChoice] = None,
   carrierDetails: Option[CarrierDetails] = None,
   isEntryIntoDeclarantsRecords: Option[YesNoAnswer] = None,
   personPresentingGoodsDetails: Option[PersonPresentingGoodsDetails] = None

@@ -52,11 +52,15 @@ class ExportsDeclarationSpec extends UnitSpec {
 
       json
         .validate(ExportsDeclarationRequest.format)
-        .fold(error => fail(s"Could not parse - $error"), declaration => {
-          declaration.transport.borderModeOfTransportCode mustNot be(empty)
-          declaration.transport.meansOfTransportOnDepartureType mustNot be(empty)
-          declaration.transport.transportPayment mustNot be(empty)
-        })
+        .fold(
+          error => fail(s"Could not parse - $error"),
+          declaration => {
+            declaration.transport.borderModeOfTransportCode mustNot be(empty)
+            declaration.transport.meansOfTransportOnDepartureType mustNot be(empty)
+            declaration.transport.transportPayment mustNot be(empty)
+            declaration.parties.authorisationProcedureCodeChoice mustNot be(empty)
+          }
+        )
     }
   }
 }
@@ -205,6 +209,9 @@ object ExportsDeclarationSpec {
       |          "eori": "GB717572504502811"
       |        }
       |      ]
+      |    },
+      |    "authorisationProcedureCodeChoice" : {
+      |      "code" : "Code1040"
       |    },
       |    "carrierDetails": {
       |      "details": {
