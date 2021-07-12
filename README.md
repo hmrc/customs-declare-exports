@@ -28,6 +28,18 @@ This repository contains unit and integration tests for the service. In order to
 
 ## Developer notes
 
+
+### Feature flags
+This service uses feature flags to enable/disable some of its features. These can be changed/overridden in config under `microservice.features.<featureName>` key.
+
+The list of feature flags and what they are responsible for:
+
+`exportsMigration=[enabled/disabled]` - If enabled, the service uses Exports Migration Tool for data migrations. Otherwise, it uses Mongock.
+
+#### To set a feature flag via system properties:
+
+`sbt "run -Dmicroservice.features.exportsMigration=enabled"`
+
 ### Scalastyle
 
 Project contains scalafmt plugin.
@@ -68,11 +80,6 @@ Inserted 1059 - 16 for GB1713564034
 Inserted 1471 - 412 for GB1026524884
 Inserted 2094 - 623 for GB1585987871
 ```
-
-### Feature flags
-To set a feature flag via system properties
-
-`sbt "run -Dmicroservice.features.exportsMigration=enabled"`
 
 ## License
 
