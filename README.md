@@ -1,18 +1,44 @@
 # customs-declare-exports
 
-[![Build Status](https://travis-ci.org/hmrc/customs-declare-exports.svg)](https://travis-ci.org/hmrc/customs-declare-exports) [ ![Download](https://api.bintray.com/packages/hmrc/releases/customs-declare-exports/images/download.svg) ](https://bintray.com/hmrc/releases/customs-declare-exports/_latestVersion)
+## Summary
+This microservice is part of Customs Exports Declaration Service (CEDS). It is designed to work in tandem with [customs-declare-exports-frontend](https://github.com/hmrc/customs-declare-exports-frontend) service.
 
-This is a placeholder README.md for a new repository
+It provides functionality to manage declaration-related data before and after it has been submitted.
 
-### License
+## Prerequisites
+This service is written in [Scala](http://www.scala-lang.org/) and [Play](http://playframework.com/), so needs at a [JRE](https://www.java.com/en/download/) to run and a JDK for development.
 
-This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html")
+This service does **not** use MongoDB.
 
-### Required services
-
-In order to set up all services required for customs-declare-exports to work, there are profiles in service-manager-config repository:
+This service depends on other services. The easiest way to set up required microservices is to use Service Manager and profiles from [service-manager-config](https://github.com/hmrc/service-manager-config/) repository:
 - CDS_EXPORTS_DECLARATION_DEPS - all services EXCEPT both declarations services
 - CDS_EXPORTS_DECLARATION_ALL - all services together with both declarations services
+
+### Running the application
+In order to run the application you need to have SBT installed. Then, it is enough to start the service with:
+
+`sbt run`
+
+### Testing the application
+This repository contains unit and integration tests for the service. In order to run them, simply execute:
+
+`sbt test` - for unit tests
+
+`sbt it:test` - for integration tests
+
+## Developer notes
+
+
+### Feature flags
+This service uses feature flags to enable/disable some of its features. These can be changed/overridden in config under `microservice.features.<featureName>` key.
+
+The list of feature flags and what they are responsible for:
+
+`exportsMigration=[enabled/disabled]` - If enabled, the service uses Exports Migration Tool for data migrations. Otherwise, it uses Mongock.
+
+#### To set a feature flag via system properties:
+
+`sbt "run -Dmicroservice.features.exportsMigration=enabled"`
 
 ### Scalastyle
 
@@ -34,6 +60,10 @@ test:scalafmt::test # check test sources
 sbt:scalafmt::test  # check .sbt sources
 ```
 
+### Pre-merge check
+There is a script called `precheck.sh` that runs all tests, examine their coverage and check if all the files are properly formatted.
+It is a good practise to run it just before pushing to GitHub.
+
 ### Seed mongo
 
 To provide high number of declarations (20 000) in system run
@@ -51,7 +81,6 @@ Inserted 1471 - 412 for GB1026524884
 Inserted 2094 - 623 for GB1585987871
 ```
 
-### Feature flags
-To set a feature flag via system properties
+## License
 
-`sbt "run -Dmicroservice.features.exportsMigration=enabled"`
+This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html")
