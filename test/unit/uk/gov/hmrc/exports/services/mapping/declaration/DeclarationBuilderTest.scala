@@ -84,7 +84,6 @@ class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
 
       verify(functionCodeBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
 
-
     }
   }
 

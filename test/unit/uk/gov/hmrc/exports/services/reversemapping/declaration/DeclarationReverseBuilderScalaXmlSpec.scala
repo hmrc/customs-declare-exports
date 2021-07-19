@@ -19,32 +19,28 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationReverseBuilderWcoDecSpec._
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationReverseBuilderScalaXmlSpec._
 
 import java.time.Instant
 
-class DeclarationReverseBuilderWcoDecSpec extends UnitSpec with ExportsDeclarationBuilder {
+class DeclarationReverseBuilderScalaXmlSpec extends UnitSpec with ExportsDeclarationBuilder {
 
-  val expected = DeclarationReverseBuilderWcoDecSpec.outputJson(
+  val expected = DeclarationReverseBuilderScalaXmlSpec.outputJson(
     id = "a2bd1152-8df2-4dc5-b251-180c81d5ffc5",
     createdDateTime = Instant.parse("2021-05-18T15:12:30.921Z"),
     updatedDateTime = Instant.parse("2021-05-18T15:12:30.921Z")
   )
 
   "TEST" in {
-    val declarationReverseBuilderWcoDec = new DeclarationReverseBuilderWcoDec
-    val outputDecWco: ExportsDeclaration = declarationReverseBuilderWcoDec.fromXml(inputXml)
-
     val declarationReverseBuilderScalaXml = new DeclarationReverseBuilderScalaXml
     val outputDecScalaXml: ExportsDeclaration = declarationReverseBuilderScalaXml.fromXml(inputXml)
 
-    println(outputDecWco)
     println(outputDecScalaXml)
   }
 }
 
 //noinspection ScalaStyle
-object DeclarationReverseBuilderWcoDecSpec {
+object DeclarationReverseBuilderScalaXmlSpec {
 
   val inputXml =
     """
