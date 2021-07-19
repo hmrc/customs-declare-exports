@@ -33,8 +33,7 @@ class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
   private val goodsItemQuantityBuilder: GoodsItemQuantityBuilder = mock[GoodsItemQuantityBuilder]
   private val agentBuilder: AgentBuilder = mock[AgentBuilder]
   private val presentationOfficeBuilder: PresentationOfficeBuilder = mock[PresentationOfficeBuilder]
-  private val specificCircumstancesCodeBuilder: SpecificCircumstancesCodeBuilder =
-    mock[SpecificCircumstancesCodeBuilder]
+  private val specificCircumstancesCodeBuilder: SpecificCircumstancesCodeBuilder = mock[SpecificCircumstancesCodeBuilder]
   private val exitOfficeBuilder: ExitOfficeBuilder = mock[ExitOfficeBuilder]
   private val borderTransportMeansBuilder: BorderTransportMeansBuilder = mock[BorderTransportMeansBuilder]
   private val exporterBuilder: ExporterBuilder = mock[ExporterBuilder]
@@ -83,7 +82,23 @@ class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
       builder.buildDeclaration(inputDeclaration)
 
       verify(functionCodeBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
-
+      verify(functionalReferenceIdBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+      verify(typeCodeBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+      verify(goodsItemQuantityBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+      verify(agentBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+      verify(presentationOfficeBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+      verify(specificCircumstancesCodeBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+      verify(exitOfficeBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+      verify(borderTransportMeansBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+      verify(exporterBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+      verify(declarantBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+      verify(invoiceAmountBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+      verify(supervisingOfficeBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+      verify(totalPackageQuantityBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+      verify(declarationConsignmentBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+      verify(authorisationHoldersBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+      verify(currencyExchangeBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
+      verify(goodsShipmentBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
     }
   }
 

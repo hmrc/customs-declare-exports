@@ -16,31 +16,41 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
-import testdata.ExportsDeclarationBuilder
+import org.mockito.ArgumentMatchersSugar.any
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationReverseBuilderScalaXmlSpec._
+import uk.gov.hmrc.exports.services.reversemapping.declaration.items.ItemsParser
 
-import java.time.Instant
+import scala.xml.NodeSeq
 
-class DeclarationReverseBuilderScalaXmlSpec extends UnitSpec with ExportsDeclarationBuilder {
+class ExportsDeclarationXmlParserSpec extends UnitSpec {
 
-  val expected = DeclarationReverseBuilderScalaXmlSpec.outputJson(
-    id = "a2bd1152-8df2-4dc5-b251-180c81d5ffc5",
-    createdDateTime = Instant.parse("2021-05-18T15:12:30.921Z"),
-    updatedDateTime = Instant.parse("2021-05-18T15:12:30.921Z")
-  )
+  private val additionalDeclarationTypeParser = mock[AdditionalDeclarationTypeParser]
+  private val consignmentReferencesParser = mock[ConsignmentReferencesParser]
+  private val mucrParser = mock[MucrParser]
+  private val itemsParser = mock[ItemsParser]
 
-  "TEST" in {
-    val declarationReverseBuilderScalaXml = new DeclarationReverseBuilderScalaXml
-    val outputDecScalaXml: ExportsDeclaration = declarationReverseBuilderScalaXml.fromXml(inputXml)
+  private val exportsDeclarationXmlParser =
+    new ExportsDeclarationXmlParser(additionalDeclarationTypeParser, consignmentReferencesParser, mucrParser, itemsParser)
 
-    println(outputDecScalaXml)
+  "ExportsDeclarationXmlParser on fromXml" should {
+
+    "call all sub-parsers" in {
+
+      val xml = ExportsDeclarationXmlParserSpec.inputXml
+
+      exportsDeclarationXmlParser.fromXml(xml)
+
+      verify(additionalDeclarationTypeParser).parse(any[NodeSeq])
+      verify(consignmentReferencesParser).parse(any[NodeSeq])
+      verify(mucrParser).parse(any[NodeSeq])
+      verify(itemsParser).parse(any[NodeSeq])
+    }
   }
+
 }
 
 //noinspection ScalaStyle
-object DeclarationReverseBuilderScalaXmlSpec {
+object ExportsDeclarationXmlParserSpec {
 
   val inputXml =
     """
@@ -228,235 +238,5 @@ object DeclarationReverseBuilderScalaXmlSpec {
       |        </ns3:GoodsShipment>
       |    </ns3:Declaration>
       |</MetaData>
-      |""".stripMargin
-
-  def outputJson(id: String, createdDateTime: Instant, updatedDateTime: Instant) =
-    s"""
-      |{
-      |    "id" : "$id",
-      |    "eori" : "GB123456123456",
-      |    "status" : "COMPLETE",
-      |    "createdDateTime" : {"$$date":${createdDateTime.toEpochMilli}},
-      |    "updatedDateTime" : {"$$date":${updatedDateTime.toEpochMilli}},
-      |    "type" : "STANDARD",
-      |    "additionalDeclarationType" : "D",
-      |    "consignmentReferences" : {
-      |        "ducr" : {
-      |            "ducr" : "8GB123456555524-101SHIP1"
-      |        },
-      |        "lrn" : "QSLRN5374100"
-      |    },
-      |    "transport" : {
-      |        "transportPayment" : {
-      |            "paymentMethod" : "H"
-      |        },
-      |        "containers" : [
-      |            {
-      |                "id" : "123456",
-      |                "seals" : []
-      |            }
-      |        ],
-      |        "borderModeOfTransportCode" : {
-      |            "code" : "1"
-      |        },
-      |        "meansOfTransportOnDepartureType" : "11",
-      |        "meansOfTransportOnDepartureIDNumber" : "SHIP1",
-      |        "meansOfTransportCrossingTheBorderNationality" : "United Kingdom, Great Britain, Northern Ireland",
-      |        "meansOfTransportCrossingTheBorderType" : "11",
-      |        "meansOfTransportCrossingTheBorderIDNumber" : "Superfast Hawk Millenium"
-      |    },
-      |    "parties" : {
-      |        "consigneeDetails" : {
-      |            "details" : {
-      |                "address" : {
-      |                    "fullName" : "Bags Export",
-      |                    "addressLine" : "1 Bags Avenue",
-      |                    "townOrCity" : "New York",
-      |                    "postCode" : "10001",
-      |                    "country" : "United States of America (the), Including Puerto Rico"
-      |                }
-      |            }
-      |        },
-      |        "declarantDetails" : {
-      |            "details" : {
-      |                "eori" : "GB123456123456"
-      |            }
-      |        },
-      |        "declarantIsExporter" : {
-      |            "answer" : "Yes"
-      |        },
-      |        "declarationAdditionalActorsData" : {
-      |            "actors" : []
-      |        },
-      |        "declarationHoldersData" : {
-      |            "holders" : [
-      |                {
-      |                    "authorisationTypeCode" : "AEOC",
-      |                    "eori" : "GB717572504502801"
-      |                }
-      |            ],
-      |            "isRequired" : {
-      |                "answer" : "Yes"
-      |            }
-      |        },
-      |        "carrierDetails" : {
-      |            "details" : {
-      |                "address" : {
-      |                    "fullName" : "XYZ Carrier",
-      |                    "addressLine" : "School Road",
-      |                    "townOrCity" : "London",
-      |                    "postCode" : "WS1 2AB",
-      |                    "country" : "United Kingdom, Great Britain, Northern Ireland"
-      |                }
-      |            }
-      |        }
-      |    },
-      |    "locations" : {
-      |        "originationCountry" : {
-      |            "code" : "GB"
-      |        },
-      |        "destinationCountry" : {
-      |            "code" : "US"
-      |        },
-      |        "hasRoutingCountries" : false,
-      |        "routingCountries" : [],
-      |        "goodsLocation" : {
-      |            "country" : "GB",
-      |            "typeOfLocation" : "A",
-      |            "qualifierOfIdentification" : "U",
-      |            "identificationOfLocation" : "FXTFXTFXT"
-      |        },
-      |        "officeOfExit" : {
-      |            "officeId" : "GB000434"
-      |        },
-      |        "supervisingCustomsOffice" : {},
-      |        "inlandModeOfTransportCode" : {
-      |            "inlandModeOfTransportCode" : "1"
-      |        }
-      |    },
-      |    "items" : [
-      |        {
-      |            "id" : "b19001cg",
-      |            "sequenceId" : 1,
-      |            "procedureCodes" : {
-      |                "procedureCode" : "1040",
-      |                "additionalProcedureCodes" : [
-      |                    "000"
-      |                ]
-      |            },
-      |            "statisticalValue" : {
-      |                "statisticalValue" : "1000"
-      |            },
-      |            "commodityDetails" : {
-      |                "combinedNomenclatureCode" : "46021910",
-      |                "descriptionOfGoods" : "Straw for bottles"
-      |            },
-      |            "dangerousGoodsCode" : {},
-      |            "cusCode" : {},
-      |            "taricCodes" : [],
-      |            "nactCodes" : [],
-      |            "packageInformation" : [
-      |                {
-      |                    "id" : "y48oxxz4",
-      |                    "typesOfPackages" : "XD",
-      |                    "numberOfPackages" : 10,
-      |                    "shippingMarks" : "Shipping description"
-      |                }
-      |            ],
-      |            "commodityMeasure" : {
-      |                "supplementaryUnits" : "10",
-      |                "netMass" : "500",
-      |                "grossMass" : "700"
-      |            },
-      |            "additionalInformation" : {
-      |                "isRequired" : {
-      |                    "answer" : "Yes"
-      |                },
-      |                "items" : [
-      |                    {
-      |                        "code" : "00400",
-      |                        "description" : "EXPORTER"
-      |                    }
-      |                ]
-      |            },
-      |            "documentsProducedData" : {
-      |                "documents" : [
-      |                    {
-      |                        "documentTypeCode" : "C501",
-      |                        "documentIdentifier" : "GBAEOC717572504502801"
-      |                    }
-      |                ]
-      |            }
-      |        },
-      |        {
-      |            "id" : "457d4fbf",
-      |            "sequenceId" : 2,
-      |            "procedureCodes" : {
-      |                "procedureCode" : "1040",
-      |                "additionalProcedureCodes" : [
-      |                    "000"
-      |                ]
-      |            },
-      |            "statisticalValue" : {
-      |                "statisticalValue" : "1000"
-      |            },
-      |            "commodityDetails" : {
-      |                "combinedNomenclatureCode" : "46021910",
-      |                "descriptionOfGoods" : "Straw for bottles"
-      |            },
-      |            "dangerousGoodsCode" : {},
-      |            "cusCode" : {},
-      |            "taricCodes" : [],
-      |            "nactCodes" : [],
-      |            "packageInformation" : [
-      |                {
-      |                    "id" : "mdms87iu",
-      |                    "typesOfPackages" : "XD",
-      |                    "numberOfPackages" : 10,
-      |                    "shippingMarks" : "Shipping description"
-      |                }
-      |            ],
-      |            "commodityMeasure" : {
-      |                "supplementaryUnits" : "10",
-      |                "netMass" : "500",
-      |                "grossMass" : "700"
-      |            },
-      |            "additionalInformation" : {
-      |                "isRequired" : {
-      |                    "answer" : "Yes"
-      |                },
-      |                "items" : [
-      |                    {
-      |                        "code" : "00400",
-      |                        "description" : "EXPORTER"
-      |                    },
-      |                    {
-      |                        "code" : "00400",
-      |                        "description" : "Information blahblahblah"
-      |                    }
-      |                ]
-      |            },
-      |            "documentsProducedData" : {
-      |                "documents" : [
-      |                    {
-      |                        "documentTypeCode" : "C501",
-      |                        "documentIdentifier" : "GBAEOC717572504502801"
-      |                    }
-      |                ]
-      |            }
-      |        }
-      |    ],
-      |    "totalNumberOfItems" : {
-      |        "totalAmountInvoiced" : "56764",
-      |        "exchangeRate" : "1.49",
-      |        "totalPackage" : "1"
-      |    },
-      |    "previousDocuments" : {
-      |        "documents" : []
-      |    },
-      |    "natureOfTransaction" : {
-      |        "natureType" : "1"
-      |    }
-      |}
       |""".stripMargin
 }

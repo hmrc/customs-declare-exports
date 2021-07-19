@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models.ead.parsers
+package uk.gov.hmrc.exports.models
 
 object StringOption {
 

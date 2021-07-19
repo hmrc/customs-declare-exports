@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.models.ead.parsers
 
-import java.time.ZonedDateTime
-
+import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.models.ead.XmlTags._
 import uk.gov.hmrc.exports.models.ead.{MrnStatus, PreviousDocument, XmlTags}
 
+import java.time.ZonedDateTime
 import scala.xml.NodeSeq
 
 class MrnStatusParser {
