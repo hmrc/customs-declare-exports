@@ -29,6 +29,7 @@ object AdditionalDeclarationType extends Enumeration {
       ),
       Writes(v => JsString(v.toString))
     )
+
   val SUPPLEMENTARY_SIMPLIFIED = Value("Y")
   val SUPPLEMENTARY_EIDR = Value("Z")
   val STANDARD_PRE_LODGED = Value("D")
