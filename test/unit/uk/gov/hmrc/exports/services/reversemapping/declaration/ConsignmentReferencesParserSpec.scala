@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import testdata.ReverseMappingTestData
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR}
 
 import scala.xml.{Elem, NodeSeq}
 
@@ -59,19 +60,30 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
       "TraderAssignedReferenceID element is present" in {
 
         val input = inputXml(
-          previousDocument = Some(PreviousDocument(id = "typeCodeId")),
+          previousDocument = Some(PreviousDocument(id = "ducr")),
           functionalReferenceId = Some("functionalReferenceId"),
           traderAssignedReferenceID = Some("traderAssignedReferenceID")
         )
 
-        parser.parse(input) mustBe defined
+        val result = parser.parse(input)
+
+        val expectedResult =
+          Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = "functionalReferenceId", personalUcr = Some("traderAssignedReferenceID")))
+
+        result mustBe defined
+        result mustBe expectedResult
       }
 
       "TraderAssignedReferenceID element is NOT present" in {
 
-        val input = inputXml(previousDocument = Some(PreviousDocument(id = "typeCodeId")), functionalReferenceId = Some("functionalReferenceId"))
+        val input = inputXml(previousDocument = Some(PreviousDocument(id = "ducr")), functionalReferenceId = Some("functionalReferenceId"))
 
-        parser.parse(input) mustBe defined
+        val result = parser.parse(input)
+
+        val expectedResult = Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = "functionalReferenceId"))
+
+        result mustBe defined
+        result mustBe expectedResult
       }
     }
   }
@@ -82,7 +94,7 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
     previousDocument: Option[PreviousDocument] = None,
     functionalReferenceId: Option[String] = None,
     traderAssignedReferenceID: Option[String] = None
-  ): Elem = ReverseMappingTestData.inputXml {
+  ): Elem = ReverseMappingTestData.inputXmlMetaData {
     <ns3:Declaration>
       {
         functionalReferenceId.map { refId =>

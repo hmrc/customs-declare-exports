@@ -21,7 +21,7 @@ import scala.xml.{Elem, Node, NodeSeq}
 
 object ReverseMappingTestData {
 
-  def inputXml(declarationXmlContent: NodeSeq): Elem =
+  def inputXmlMetaData(declarationXmlContent: NodeSeq): Elem =
     <MetaData xmlns:ns3="urn:wco:datamodel:WCO:DEC-DMS:2"
               xmlns:ns2="urn:wco:datamodel:WCO:Declaration_DS:DMS:2"
               xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">

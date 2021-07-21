@@ -21,7 +21,7 @@ import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
 import scala.xml.NodeSeq
 
-class MucrParser extends XmlParser[Option[MUCR]] {
+class MucrParser extends DeclarationXmlParser[Option[MUCR]] {
 
   override def parse(inputXml: NodeSeq): Option[MUCR] =
     (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)

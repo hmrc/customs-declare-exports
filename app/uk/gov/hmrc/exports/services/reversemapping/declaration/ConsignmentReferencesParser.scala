@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
 import scala.xml.NodeSeq
 
-class ConsignmentReferencesParser extends XmlParser[Option[ConsignmentReferences]] {
+class ConsignmentReferencesParser extends DeclarationXmlParser[Option[ConsignmentReferences]] {
 
   override def parse(inputXml: NodeSeq): Option[ConsignmentReferences] =
     for {

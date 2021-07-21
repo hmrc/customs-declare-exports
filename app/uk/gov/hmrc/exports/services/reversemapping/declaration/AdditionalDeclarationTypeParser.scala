@@ -23,7 +23,7 @@ import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags.{Declarat
 
 import scala.xml.NodeSeq
 
-class AdditionalDeclarationTypeParser extends XmlParser[Option[AdditionalDeclarationType]] {
+class AdditionalDeclarationTypeParser extends DeclarationXmlParser[Option[AdditionalDeclarationType]] {
 
   override def parse(inputXml: NodeSeq): Option[AdditionalDeclarationType] =
     StringOption((inputXml \ Declaration \ TypeCode).text)

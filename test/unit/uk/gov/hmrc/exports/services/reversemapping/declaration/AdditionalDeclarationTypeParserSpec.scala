@@ -54,18 +54,21 @@ class AdditionalDeclarationTypeParserSpec extends UnitSpec {
 
     "return correct AdditionalDeclarationType" when {
 
-      AdditionalDeclarationType.values.map(_.toString).foreach { additionalDeclarationTypeCode =>
-        s"third character of TypeCode element is $additionalDeclarationTypeCode" in {
+      AdditionalDeclarationType.values.foreach { additionalDeclarationTypeCode =>
+        s"third character of TypeCode element is ${additionalDeclarationTypeCode.toString}" in {
 
-          val input = inputXml(Some("EX" + additionalDeclarationTypeCode))
+          val input = inputXml(Some("EX" + additionalDeclarationTypeCode.toString))
 
-          parser.parse(input) mustBe defined
+          val result = parser.parse(input)
+
+          result mustBe defined
+          result mustBe Some(additionalDeclarationTypeCode)
         }
       }
     }
   }
 
-  private def inputXml(typeCode: Option[String]): Elem = ReverseMappingTestData.inputXml {
+  private def inputXml(typeCode: Option[String]): Elem = ReverseMappingTestData.inputXmlMetaData {
     <ns3:Declaration>
       {typeCode.map { code => <ns3:TypeCode>{code}</ns3:TypeCode> }.getOrElse(NodeSeq.Empty) }
     </ns3:Declaration>

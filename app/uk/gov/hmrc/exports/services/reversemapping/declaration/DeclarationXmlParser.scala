@@ -18,6 +18,6 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import scala.xml.NodeSeq
 
-trait XmlParser[A] {
+trait DeclarationXmlParser[A] {
   def parse(inputXml: NodeSeq): A
 }
