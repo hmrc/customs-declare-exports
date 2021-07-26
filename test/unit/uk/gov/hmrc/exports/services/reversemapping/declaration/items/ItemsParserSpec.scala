@@ -20,6 +20,7 @@ import org.mockito.ArgumentMatchersSugar.any
 import testdata.ReverseMappingTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ExportItem
+import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlParsingException
 
 import scala.xml.NodeSeq
 
@@ -40,21 +41,39 @@ class ItemsParserSpec extends UnitSpec {
 
       val governmentAgencyGoodsItemsAmount = 3
       val input = inputXml(governmentAgencyGoodsItemsAmount)
+      val itemsToReturn = Seq(ExportItem(id = "testId_1"), ExportItem(id = "testId_2"), ExportItem(id = "testId_3"))
 
       "call SingleItemParser" in {
-        val itemsToReturn = Seq(ExportItem(id = "testId_1"), ExportItem(id = "testId_2"), ExportItem(id = "testId_3"))
-        when(singleItemParser.parse(any[NodeSeq])).thenReturn(itemsToReturn(0), itemsToReturn(1), itemsToReturn(2))
+
+        when(singleItemParser.parse(any[NodeSeq])).thenReturn(Right(itemsToReturn.head), Right(itemsToReturn(1)), Right(itemsToReturn(2)))
 
         itemsParser.parse(input)
 
         verify(singleItemParser, times(governmentAgencyGoodsItemsAmount)).parse(any[NodeSeq])
       }
 
-      "return ExportsItems returned by SingleItemParser" in {
-        val itemsToReturn = Seq(ExportItem(id = "testId_1"), ExportItem(id = "testId_2"), ExportItem(id = "testId_3"))
-        when(singleItemParser.parse(any[NodeSeq])).thenReturn(itemsToReturn(0), itemsToReturn(1), itemsToReturn(2))
+      "return Right with ExportsItems returned by SingleItemParser" in {
 
-        itemsParser.parse(input) mustBe itemsToReturn
+        when(singleItemParser.parse(any[NodeSeq])).thenReturn(Right(itemsToReturn.head), Right(itemsToReturn(1)), Right(itemsToReturn(2)))
+
+        itemsParser.parse(input) mustBe Right(itemsToReturn)
+      }
+
+      "return Left with XmlParsingException" when {
+
+        "SingleItemParser returns Left for at least one item" in {
+
+          val returnedValues =
+            Seq(Right(ExportItem(id = "testId_1")), Left(XmlParsingException("Test Exception")), Right(ExportItem(id = "testId_2")))
+
+          when(singleItemParser.parse(any[NodeSeq])).thenReturn(returnedValues.head, returnedValues(1), returnedValues(2))
+
+          val result = itemsParser.parse(input)
+
+          result.isLeft mustBe true
+          result.left.get mustBe an[XmlParsingException]
+          result.left.get.message mustBe "Test Exception"
+        }
       }
     }
 
@@ -69,9 +88,9 @@ class ItemsParserSpec extends UnitSpec {
         verifyZeroInteractions(singleItemParser)
       }
 
-      "return empty list" in {
+      "return Right with empty list" in {
 
-        itemsParser.parse(input) mustBe Seq.empty
+        itemsParser.parse(input) mustBe Right(Seq.empty)
       }
     }
   }

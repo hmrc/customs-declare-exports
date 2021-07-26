@@ -18,31 +18,21 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.items
 
 import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.models.declaration.ProcedureCodes
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
+import uk.gov.hmrc.exports.services.reversemapping.declaration.{DeclarationXmlParser, XmlParsingException}
 
 import scala.xml.NodeSeq
 
 class ProcedureCodesParser extends DeclarationXmlParser[Option[ProcedureCodes]] {
 
-  override def parse(itemXml: NodeSeq): Option[ProcedureCodes] = {
-    validateInput(itemXml)
-
+  override def parse(itemXml: NodeSeq): XmlParserResult[Option[ProcedureCodes]] = validateInput(itemXml).map { _ =>
     val procedureCode: Option[String] = (itemXml \ GovernmentProcedure).find { governmentProcedureNode =>
       (governmentProcedureNode \ PreviousCode).nonEmpty
-    }.flatMap { governmentProcedureNode =>
-      for {
-        currentCode <- StringOption((governmentProcedureNode \ CurrentCode).text)
-        previousCode <- StringOption((governmentProcedureNode \ PreviousCode).text)
-      } yield currentCode + previousCode
-    }
+    }.flatMap(parseProcedureCode)
 
     val additionalProcedureCodes: Seq[String] = (itemXml \ GovernmentProcedure).flatMap { governmentProcedureNode =>
-      governmentProcedureNode
-        .filterNot(node => StringOption((node \ PreviousCode).text).nonEmpty)
-        .flatMap { governmentProcedure =>
-          StringOption((governmentProcedure \ CurrentCode).text)
-        }
+      governmentProcedureNode.filterNot(node => StringOption((node \ PreviousCode).text).nonEmpty).flatMap(parseAdditionalProcedureCodes)
     }
 
     if (procedureCode.isDefined || additionalProcedureCodes.nonEmpty)
@@ -50,18 +40,34 @@ class ProcedureCodesParser extends DeclarationXmlParser[Option[ProcedureCodes]] 
     else None
   }
 
-  private def validateInput(itemXml: NodeSeq): Unit = {
-    val isThereGovernmentProcedureWithPreviousCodeOnly = (itemXml \ GovernmentProcedure).exists { governmentProcedureNode =>
-      (governmentProcedureNode \ PreviousCode).nonEmpty && (governmentProcedureNode \ CurrentCode).isEmpty
+  private def parseProcedureCode(governmentProcedureNode: NodeSeq): Option[String] =
+    for {
+      currentCode <- StringOption((governmentProcedureNode \ CurrentCode).text)
+      previousCode <- StringOption((governmentProcedureNode \ PreviousCode).text)
+    } yield currentCode + previousCode
+
+  private def parseAdditionalProcedureCodes(governmentProcedureNode: NodeSeq): Option[String] =
+    StringOption((governmentProcedureNode \ CurrentCode).text)
+
+  private def validateInput(itemXml: NodeSeq): XmlParserResult[NodeSeq] = {
+    val isThereGovernmentProcedureWithPreviousCodeOnly = (xml: NodeSeq) =>
+      (xml \ GovernmentProcedure).exists { governmentProcedureNode =>
+        (governmentProcedureNode \ PreviousCode).nonEmpty && (governmentProcedureNode \ CurrentCode).isEmpty
     }
 
-    val areThereMultipleGovernmentProceduresWithPreviousCodes = (itemXml \ GovernmentProcedure).count { governmentProcedureNode =>
-      (governmentProcedureNode \ PreviousCode).nonEmpty
-    } > 1
+    val areThereMultipleGovernmentProceduresWithPreviousCodes = (xml: NodeSeq) =>
+      (xml \ GovernmentProcedure).count { governmentProcedureNode =>
+        (governmentProcedureNode \ PreviousCode).nonEmpty
+      } > 1
 
-    if (isThereGovernmentProcedureWithPreviousCodeOnly)
-      throw new IllegalStateException("GovernmentProcedure element does not contain CurrentCode element")
-    if (areThereMultipleGovernmentProceduresWithPreviousCodes)
-      throw new IllegalStateException("There are multiple GovernmentProcedure elements with PreviousCode elements")
+    val errorMessages = Map(
+      isThereGovernmentProcedureWithPreviousCodeOnly -> "GovernmentProcedure element does not contain CurrentCode element",
+      areThereMultipleGovernmentProceduresWithPreviousCodes -> "There are multiple GovernmentProcedure elements with PreviousCode elements"
+    )
+
+    val errors = errorMessages.filter { case (validationFunction, _) => validationFunction(itemXml) }.values
+
+    if (errors.nonEmpty) Left(XmlParsingException(errors.mkString("[", ", ", "}")))
+    else Right(itemXml)
   }
 }

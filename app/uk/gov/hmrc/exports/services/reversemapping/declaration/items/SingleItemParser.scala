@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.items
 
 import uk.gov.hmrc.exports.models.declaration.ExportItem
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
 import java.util.UUID
@@ -26,11 +27,11 @@ import scala.xml.NodeSeq
 
 class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) extends DeclarationXmlParser[ExportItem] {
 
-  override def parse(itemXml: NodeSeq): ExportItem = {
+  override def parse(itemXml: NodeSeq): XmlParserResult[ExportItem] = {
     val sequenceNumeric = (itemXml \ SequenceNumeric).text.toInt
 
-    val procedureCodes = procedureCodesParser.parse(itemXml)
-
-    ExportItem(id = UUID.randomUUID().toString, sequenceId = sequenceNumeric, procedureCodes = procedureCodes)
+    for {
+      procedureCodes <- procedureCodesParser.parse(itemXml)
+    } yield ExportItem(id = UUID.randomUUID().toString, sequenceId = sequenceNumeric, procedureCodes = procedureCodes)
   }
 }

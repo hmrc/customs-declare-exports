@@ -28,42 +28,42 @@ class AdditionalDeclarationTypeParserSpec extends UnitSpec {
 
   "AdditionalDeclarationTypeParser on parse" should {
 
-    "return empty Option" when {
+    "return Right with empty Option" when {
 
       "TypeCode element is not present" in {
 
         val input = inputXml(None)
 
-        parser.parse(input) mustBe None
+        parser.parse(input) mustBe Right(None)
       }
 
       "TypeCode element contains only 2 characters" in {
 
         val input = inputXml(Some("EX"))
 
-        parser.parse(input) mustBe None
-      }
-
-      "third character of TypeCode element is NOT listed in AdditionalDeclarationType" in {
-
-        val input = inputXml(Some("EX7"))
-
-        parser.parse(input) mustBe None
+        parser.parse(input) mustBe Right(None)
       }
     }
 
-    "return correct AdditionalDeclarationType" when {
+    "return Right with correct AdditionalDeclarationType" when {
 
       AdditionalDeclarationType.values.foreach { additionalDeclarationTypeCode =>
         s"third character of TypeCode element is ${additionalDeclarationTypeCode.toString}" in {
 
           val input = inputXml(Some("EX" + additionalDeclarationTypeCode.toString))
 
-          val result = parser.parse(input)
-
-          result mustBe defined
-          result mustBe Some(additionalDeclarationTypeCode)
+          parser.parse(input) mustBe Right(Some(additionalDeclarationTypeCode))
         }
+      }
+    }
+
+    "return Left with XmlParsingException" when {
+
+      "third character of TypeCode element is NOT listed in AdditionalDeclarationType" in {
+
+        val input = inputXml(Some("EX7"))
+
+        parser.parse(input).isLeft mustBe true
       }
     }
   }

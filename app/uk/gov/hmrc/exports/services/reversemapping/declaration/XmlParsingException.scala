@@ -16,18 +16,4 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
-import uk.gov.hmrc.exports.models.declaration.MUCR
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
-import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
-
-import scala.xml.NodeSeq
-
-class MucrParser extends DeclarationXmlParser[Option[MUCR]] {
-
-  override def parse(inputXml: NodeSeq): XmlParserResult[Option[MUCR]] = Right(
-    (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
-      .find(previousDocument => (previousDocument \ TypeCode).text == "MCR")
-      .map(previousDocument => (previousDocument \ ID).text)
-      .map(MUCR(_))
-  )
-}
+case class XmlParsingException(message: String) extends RuntimeException(message)

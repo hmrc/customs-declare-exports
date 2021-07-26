@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.items.ItemsParser
 
 import java.time.Instant
@@ -32,33 +33,40 @@ class ExportsDeclarationXmlParser @Inject()(
   itemsParser: ItemsParser
 ) {
 
-  def fromXml(xml: String): ExportsDeclaration = {
+  def fromXml(xml: String): XmlParserResult[ExportsDeclaration] = {
     val declarationXml = scala.xml.XML.loadString(xml)
 
     buildExportsDeclaration(declarationXml)
   }
 
-  private def buildExportsDeclaration(declarationXml: NodeSeq): ExportsDeclaration =
-    ExportsDeclaration(
-      id = UUID.randomUUID().toString,
-      eori = "GB1234567890",
-      status = DeclarationStatus.COMPLETE,
-      createdDateTime = Instant.now(),
-      updatedDateTime = Instant.now(),
-      sourceId = None,
-      `type` = DeclarationType.STANDARD,
-      dispatchLocation = None,
-      additionalDeclarationType = additionalDeclarationTypeParser.parse(declarationXml),
-      consignmentReferences = consignmentReferencesParser.parse(declarationXml),
-      linkDucrToMucr = None,
-      mucr = mucrParser.parse(declarationXml),
-      transport = Transport(),
-      parties = Parties(),
-      locations = Locations(),
-      items = itemsParser.parse(declarationXml),
-      totalNumberOfItems = None,
-      previousDocuments = None,
-      natureOfTransaction = None
-    )
+  private def buildExportsDeclaration(declarationXml: NodeSeq): XmlParserResult[ExportsDeclaration] =
+    for {
+      additionalDeclarationType <- additionalDeclarationTypeParser.parse(declarationXml)
+      consignmentReferences <- consignmentReferencesParser.parse(declarationXml)
+      mucr <- mucrParser.parse(declarationXml)
+      items <- itemsParser.parse(declarationXml)
+
+    } yield
+      ExportsDeclaration(
+        id = UUID.randomUUID().toString,
+        eori = "GB1234567890",
+        status = DeclarationStatus.COMPLETE,
+        createdDateTime = Instant.now(),
+        updatedDateTime = Instant.now(),
+        sourceId = None,
+        `type` = DeclarationType.STANDARD,
+        dispatchLocation = None,
+        additionalDeclarationType = additionalDeclarationType,
+        consignmentReferences = consignmentReferences,
+        linkDucrToMucr = None,
+        mucr = mucr,
+        transport = Transport(),
+        parties = Parties(),
+        locations = Locations(),
+        items = items,
+        totalNumberOfItems = None,
+        previousDocuments = None,
+        natureOfTransaction = None
+      )
 
 }

@@ -27,17 +27,17 @@ class ProcedureCodesParserSpec extends UnitSpec {
 
   "ProcedureCodesParser on parse" should {
 
-    "return empty Option" when {
+    "return Right with empty Option" when {
 
       "no GovernmentProcedure element is present" in {
 
         val input = inputXml()
 
-        procedureCodesParser.parse(input) mustBe None
+        procedureCodesParser.parse(input) mustBe Right(None)
       }
     }
 
-    "return ProcedureCodes with procedureCode field only" when {
+    "return Right with ProcedureCodes containing procedureCode field only" when {
 
       "GovernmentProcedure element with PreviousCode and CurrentCode is present" in {
 
@@ -45,24 +45,24 @@ class ProcedureCodesParserSpec extends UnitSpec {
         val currentCode = "CurrentCode"
         val input = inputXml(Seq(GovernmentProcedure(previousCode = Some(previousCode), currentCode = Some(currentCode))))
 
-        procedureCodesParser.parse(input) mustBe Some(
-          ProcedureCodes(procedureCode = Some(currentCode + previousCode), additionalProcedureCodes = Seq.empty)
+        procedureCodesParser.parse(input) mustBe Right(
+          Some(ProcedureCodes(procedureCode = Some(currentCode + previousCode), additionalProcedureCodes = Seq.empty))
         )
       }
     }
 
-    "return ProcedureCodes with additionalProcedureCodes field only" when {
+    "return Right with ProcedureCodes containing additionalProcedureCodes field only" when {
 
       "GovernmentProcedure element with CurrentCode only is present" in {
 
         val currentCode = "CurrentCode"
         val input = inputXml(Seq(GovernmentProcedure(currentCode = Some(currentCode))))
 
-        procedureCodesParser.parse(input) mustBe Some(ProcedureCodes(procedureCode = None, additionalProcedureCodes = Seq(currentCode)))
+        procedureCodesParser.parse(input) mustBe Right(Some(ProcedureCodes(procedureCode = None, additionalProcedureCodes = Seq(currentCode))))
       }
     }
 
-    "return ProcedureCodes with procedureCode and additionalProcedureCodes" when {
+    "return Right with correct ProcedureCodes" when {
 
       "there are multiple GovernmentProcedure elements but only one contains PreviousCode" in {
 
@@ -78,21 +78,19 @@ class ProcedureCodesParserSpec extends UnitSpec {
           )
         )
 
-        procedureCodesParser.parse(input) mustBe Some(
-          ProcedureCodes(procedureCode = Some(currentCode_1 + previousCode_1), additionalProcedureCodes = Seq(currentCode_2, currentCode_3))
+        procedureCodesParser.parse(input) mustBe Right(
+          Some(ProcedureCodes(procedureCode = Some(currentCode_1 + previousCode_1), additionalProcedureCodes = Seq(currentCode_2, currentCode_3)))
         )
       }
     }
 
-    "throw an Exception" when {
+    "return Left with XmlParsingException" when {
 
       "GovernmentProcedure element with PreviousCode but no CurrentCode is present" in {
 
         val input = inputXml(Seq(GovernmentProcedure(previousCode = Some("PreviousCode"))))
 
-        an[IllegalStateException] mustBe thrownBy {
-          procedureCodesParser.parse(input)
-        }
+        procedureCodesParser.parse(input).isLeft mustBe true
       }
 
       "there are multiple GovernmentProcedure elements with PreviousCode" in {
@@ -105,9 +103,7 @@ class ProcedureCodesParserSpec extends UnitSpec {
             )
           )
 
-        an[IllegalStateException] mustBe thrownBy {
-          procedureCodesParser.parse(input)
-        }
+        procedureCodesParser.parse(input).isLeft mustBe true
       }
     }
   }

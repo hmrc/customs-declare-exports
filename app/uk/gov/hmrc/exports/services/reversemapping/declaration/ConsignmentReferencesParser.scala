@@ -16,24 +16,39 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
+import play.api.Logging
 import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR}
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
 import scala.xml.NodeSeq
 
-class ConsignmentReferencesParser extends DeclarationXmlParser[Option[ConsignmentReferences]] {
+class ConsignmentReferencesParser extends DeclarationXmlParser[Option[ConsignmentReferences]] with Logging {
 
-  override def parse(inputXml: NodeSeq): Option[ConsignmentReferences] =
-    for {
-      ducr <- (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
-        .find(previousDocument => (previousDocument \ TypeCode).text == "DCR")
-        .map(previousDocument => (previousDocument \ ID).text)
-        .map(DUCR(_))
+  override def parse(inputXml: NodeSeq): XmlParserResult[Option[ConsignmentReferences]] = {
+    val ducrOpt = (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
+      .find(previousDocument => (previousDocument \ TypeCode).text == "DCR")
+      .map(previousDocument => (previousDocument \ ID).text)
+      .map(DUCR(_))
 
-      lrn <- StringOption((inputXml \ Declaration \ FunctionalReferenceID).text)
+    val lrnOpt = StringOption((inputXml \ Declaration \ FunctionalReferenceID).text)
 
-      personalUcr = StringOption((inputXml \ Declaration \ GoodsShipment \ UCR \ TraderAssignedReferenceID).text)
+    val personalUcrOpt = StringOption((inputXml \ Declaration \ GoodsShipment \ UCR \ TraderAssignedReferenceID).text)
 
-    } yield ConsignmentReferences(ducr, lrn, personalUcr)
+    val areBothMandatoryFieldsPresent = ducrOpt.nonEmpty && lrnOpt.nonEmpty
+    val areAllFieldsEmpty = ducrOpt.isEmpty && lrnOpt.isEmpty && personalUcrOpt.isEmpty
+
+    if (areBothMandatoryFieldsPresent) {
+      Right(for {
+        ducr <- ducrOpt
+        lrn <- lrnOpt
+      } yield ConsignmentReferences(ducr, lrn, personalUcrOpt))
+    } else if (areAllFieldsEmpty) {
+      Right(None)
+    } else {
+      Left(XmlParsingException("Cannot build ConsignmentReferences from XML"))
+    }
+  }
+
 }

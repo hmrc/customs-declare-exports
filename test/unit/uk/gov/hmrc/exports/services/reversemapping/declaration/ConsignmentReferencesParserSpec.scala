@@ -28,36 +28,29 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
 
   "ConsignmentReferencesParser on parse" should {
 
-    "return empty Option" when {
+    "return Right with empty Option" when {
+      "provided with XML containing none of relevant fields" in {
 
-      "PreviousDocument element with ID element is NOT present" in {
+        val input = inputXml()
 
-        val input = inputXml(functionalReferenceId = Some("functionalReferenceId"))
-
-        parser.parse(input) mustBe None
-      }
-
-      "FunctionalReferenceID element is NOT present" in {
-
-        val input = inputXml(previousDocument = Some(PreviousDocument(id = "typeCodeId")))
-
-        parser.parse(input) mustBe None
-      }
-
-      "PreviousDocument contains 'MCR' TypeCode" in {
-
-        val input = inputXml(
-          previousDocument = Some(PreviousDocument(id = "typeCodeId", typeCode = "MCR")),
-          functionalReferenceId = Some("functionalReferenceId")
-        )
-
-        parser.parse(input) mustBe None
+        parser.parse(input) mustBe Right(None)
       }
     }
 
-    "return correct ConsignmentReferences" when {
+    "return Right with correct ConsignmentReferences" when {
 
-      "TraderAssignedReferenceID element is present" in {
+      "provided with XML containing: PreviousDocument with TypeCode 'DCR' and ID, FunctionalReferenceID" in {
+
+        val input = inputXml(previousDocument = Some(PreviousDocument(id = "ducr")), functionalReferenceId = Some("functionalReferenceId"))
+
+        val result = parser.parse(input)
+
+        val expectedResult = Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = "functionalReferenceId"))
+
+        result mustBe Right(expectedResult)
+      }
+
+      "provided with XML containing: PreviousDocument with TypeCode 'DCR' and ID, FunctionalReferenceID, TraderAssignedReferenceID" in {
 
         val input = inputXml(
           previousDocument = Some(PreviousDocument(id = "ducr")),
@@ -70,20 +63,46 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
         val expectedResult =
           Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = "functionalReferenceId", personalUcr = Some("traderAssignedReferenceID")))
 
-        result mustBe defined
-        result mustBe expectedResult
+        result mustBe Right(expectedResult)
+      }
+    }
+
+    "return Left with XmlParsingException" when {
+
+      "provided with XML containing: PreviousDocument with TypeCode 'DCR' and ID" in {
+
+        val input = inputXml(previousDocument = Some(PreviousDocument(id = "typeCodeId")))
+
+        parser.parse(input).isLeft mustBe true
       }
 
-      "TraderAssignedReferenceID element is NOT present" in {
+      "provided with XML containing: PreviousDocument with TypeCode 'DCR' and ID, TraderAssignedReferenceID" in {
 
-        val input = inputXml(previousDocument = Some(PreviousDocument(id = "ducr")), functionalReferenceId = Some("functionalReferenceId"))
+        val input =
+          inputXml(previousDocument = Some(PreviousDocument(id = "typeCodeId")), traderAssignedReferenceID = Some("traderAssignedReferenceID"))
 
-        val result = parser.parse(input)
+        parser.parse(input).isLeft mustBe true
+      }
 
-        val expectedResult = Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = "functionalReferenceId"))
+      "provided with XML containing: FunctionalReferenceID" in {
 
-        result mustBe defined
-        result mustBe expectedResult
+        val input = inputXml(functionalReferenceId = Some("functionalReferenceId"))
+
+        parser.parse(input).isLeft mustBe true
+      }
+
+      "provided with XML containing: FunctionalReferenceID, TraderAssignedReferenceID" in {
+
+        val input = inputXml(functionalReferenceId = Some("functionalReferenceId"), traderAssignedReferenceID = Some("traderAssignedReferenceID"))
+
+        parser.parse(input).isLeft mustBe true
+      }
+
+      "provided with XML containing: TraderAssignedReferenceID" in {
+
+        val input = inputXml(traderAssignedReferenceID = Some("traderAssignedReferenceID"))
+
+        parser.parse(input).isLeft mustBe true
       }
     }
   }

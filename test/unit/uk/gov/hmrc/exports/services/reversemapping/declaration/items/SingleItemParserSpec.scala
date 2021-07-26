@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.items
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ProcedureCodes
+import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlParsingException
 
 import scala.xml.NodeSeq
 
@@ -33,31 +34,48 @@ class SingleItemParserSpec extends UnitSpec {
     reset(procedureCodesParser)
   }
 
+  private val inputXml =
+    <ns3:GovernmentAgencyGoodsItem>
+      <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+    </ns3:GovernmentAgencyGoodsItem>
+
   "SingleItemParser on parse" should {
 
     "call all sub-parsers, passing item-level XML to them" in {
-      when(procedureCodesParser.parse(any[NodeSeq])).thenReturn(None)
+      when(procedureCodesParser.parse(any[NodeSeq])).thenReturn(Right(None))
 
       singleItemParser.parse(inputXml)
 
       verify(procedureCodesParser).parse(eqTo(inputXml))
     }
 
-    "return ExportItem with values returned by sub-parsers" in {
-      val testProcedureCodes = ProcedureCodes(Some("code"), Seq("additional", "procedure", "codes"))
-      when(procedureCodesParser.parse(any[NodeSeq])).thenReturn(Some(testProcedureCodes))
+    "return Right with ExportItem containing values returned by sub-parsers" when {
 
-      val result = singleItemParser.parse(inputXml)
+      "all sub-parsers return Right" in {
+        val testProcedureCodes = ProcedureCodes(Some("code"), Seq("additional", "procedure", "codes"))
+        when(procedureCodesParser.parse(any[NodeSeq])).thenReturn(Right(Some(testProcedureCodes)))
 
-      result.id mustNot be(empty)
-      result.sequenceId mustBe 1
-      result.procedureCodes mustBe Some(testProcedureCodes)
+        val result = singleItemParser.parse(inputXml)
+
+        result.isRight mustBe true
+        result.right.get.id mustNot be(empty)
+        result.right.get.sequenceId mustBe 1
+        result.right.get.procedureCodes mustBe Some(testProcedureCodes)
+      }
+    }
+
+    "return Left with XmlParsingException" when {
+
+      "ProcedureCodesParser returns Left" in {
+        when(procedureCodesParser.parse(any[NodeSeq])).thenReturn(Left(XmlParsingException("Test Exception")))
+
+        val result = singleItemParser.parse(inputXml)
+
+        result.isLeft mustBe true
+        result.left.get mustBe an[XmlParsingException]
+        result.left.get.message mustBe "Test Exception"
+      }
     }
   }
-
-  private val inputXml =
-    <ns3:GovernmentAgencyGoodsItem>
-      <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
-    </ns3:GovernmentAgencyGoodsItem>
 
 }
