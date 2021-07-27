@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services.reversemapping.declaration
+package uk.gov.hmrc.exports.services.reversemapping.declaration.items
 
-import uk.gov.hmrc.exports.models.declaration.MUCR
+import uk.gov.hmrc.exports.models.declaration.ExportItem
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
+import java.util.UUID
+import javax.inject.Inject
 import scala.xml.NodeSeq
 
-class MucrParser extends DeclarationXmlParser[Option[MUCR]] {
+class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) extends DeclarationXmlParser[ExportItem] {
 
-  override def parse(inputXml: NodeSeq): XmlParserResult[Option[MUCR]] = Right(
-    (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
-      .find(previousDocument => (previousDocument \ TypeCode).text == "MCR")
-      .map(previousDocument => (previousDocument \ ID).text)
-      .map(MUCR(_))
-  )
+  override def parse(itemXml: NodeSeq): XmlParserResult[ExportItem] = {
+    val sequenceNumeric = (itemXml \ SequenceNumeric).text.toInt
+
+    for {
+      procedureCodes <- procedureCodesParser.parse(itemXml)
+    } yield ExportItem(id = UUID.randomUUID().toString, sequenceId = sequenceNumeric, procedureCodes = procedureCodes)
+  }
 }

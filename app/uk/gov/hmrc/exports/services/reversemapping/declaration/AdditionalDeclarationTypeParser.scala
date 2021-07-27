@@ -19,14 +19,22 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags.{Declaration, TypeCode}
 
+import scala.util.Try
 import scala.xml.NodeSeq
 
-class AdditionalDeclarationTypeParser extends XmlParser[Option[AdditionalDeclarationType]] {
+class AdditionalDeclarationTypeParser extends DeclarationXmlParser[Option[AdditionalDeclarationType]] {
 
-  override def parse(inputXml: NodeSeq): Option[AdditionalDeclarationType] =
-    StringOption((inputXml \ Declaration \ TypeCode).text)
-      .flatMap(value => AdditionalDeclarationType.values.find(_.toString == value.drop(2)))
+  override def parse(inputXml: NodeSeq): XmlParserResult[Option[AdditionalDeclarationType]] =
+    StringOption((inputXml \ Declaration \ TypeCode).text.drop(2))
+      .map(code => toXmlParserResult(AdditionalDeclarationType.fromString(code)))
+      .getOrElse(Right(None))
 
+  private def toXmlParserResult[A](tryBlock: Try[A]): XmlParserResult[Option[A]] =
+    tryBlock.toEither
+      .map(Some(_))
+      .left
+      .map(exc => XmlParsingException(exc.getMessage))
 }

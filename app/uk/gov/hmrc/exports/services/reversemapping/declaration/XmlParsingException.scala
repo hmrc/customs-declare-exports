@@ -16,8 +16,4 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
-import scala.xml.NodeSeq
-
-trait XmlParser[A] {
-  def parse(inputXml: NodeSeq): A
-}
+case class XmlParsingException(message: String) extends RuntimeException(message)

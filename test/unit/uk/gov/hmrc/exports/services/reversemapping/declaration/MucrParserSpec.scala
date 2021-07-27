@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import testdata.ReverseMappingTestData
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.models.declaration.MUCR
 
 import scala.xml.{Elem, NodeSeq}
 
@@ -33,14 +34,14 @@ class MucrParserSpec extends UnitSpec {
 
         val input = inputXml()
 
-        parser.parse(input) mustBe None
+        parser.parse(input) mustBe Right(None)
       }
 
       "PreviousDocument contains 'DCR' TypeCode" in {
 
         val input = inputXml(Some(PreviousDocument(id = "id", typeCode = "DCR")))
 
-        parser.parse(input) mustBe None
+        parser.parse(input) mustBe Right(None)
       }
     }
 
@@ -48,16 +49,18 @@ class MucrParserSpec extends UnitSpec {
 
       "PreviousDocument contains ID and 'MCR' TypeCode" in {
 
-        val input = inputXml(Some(PreviousDocument(id = "id")))
+        val input = inputXml(Some(PreviousDocument(id = "mucr")))
 
-        parser.parse(input) mustBe defined
+        val result = parser.parse(input)
+
+        result mustBe Right(Some(MUCR("mucr")))
       }
     }
   }
 
   private case class PreviousDocument(id: String, typeCode: String = "MCR")
 
-  private def inputXml(previousDocument: Option[PreviousDocument] = None): Elem = ReverseMappingTestData.inputXml {
+  private def inputXml(previousDocument: Option[PreviousDocument] = None): Elem = ReverseMappingTestData.inputXmlMetaData {
     <ns3:Declaration>
       { previousDocument.map { tc =>
         <ns3:GoodsShipment>

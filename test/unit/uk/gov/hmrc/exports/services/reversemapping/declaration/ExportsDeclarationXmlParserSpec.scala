@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import org.mockito.ArgumentMatchersSugar.any
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.reversemapping.declaration.items.ItemsParser
 
 import scala.xml.NodeSeq
@@ -32,6 +33,17 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec {
   private val exportsDeclarationXmlParser =
     new ExportsDeclarationXmlParser(additionalDeclarationTypeParser, consignmentReferencesParser, mucrParser, itemsParser)
 
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+
+    reset(additionalDeclarationTypeParser, consignmentReferencesParser, mucrParser, itemsParser)
+
+    when(additionalDeclarationTypeParser.parse(any[NodeSeq])).thenReturn(Right(None))
+    when(consignmentReferencesParser.parse(any[NodeSeq])).thenReturn(Right(None))
+    when(mucrParser.parse(any[NodeSeq])).thenReturn(Right(None))
+    when(itemsParser.parse(any[NodeSeq])).thenReturn(Right(Seq.empty))
+  }
+
   "ExportsDeclarationXmlParser on fromXml" should {
 
     "call all sub-parsers" in {
@@ -44,6 +56,34 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec {
       verify(consignmentReferencesParser).parse(any[NodeSeq])
       verify(mucrParser).parse(any[NodeSeq])
       verify(itemsParser).parse(any[NodeSeq])
+    }
+
+    "return Right with ExportsDeclaration" when {
+
+      "all sub-parsers return Right" in {
+
+        val xml = ExportsDeclarationXmlParserSpec.inputXml
+
+        val result = exportsDeclarationXmlParser.fromXml(xml)
+
+        result.isRight mustBe true
+        result.right.get mustBe an[ExportsDeclaration]
+      }
+    }
+
+    "return Left with XmlParsingException" when {
+
+      "any parser returns Left" in {
+
+        when(additionalDeclarationTypeParser.parse(any[NodeSeq])).thenReturn(Left(XmlParsingException("Test Exception")))
+        val xml = ExportsDeclarationXmlParserSpec.inputXml
+
+        val result = exportsDeclarationXmlParser.fromXml(xml)
+
+        result.isLeft mustBe true
+        result.left.get mustBe an[XmlParsingException]
+        result.left.get.message mustBe "Test Exception"
+      }
     }
   }
 

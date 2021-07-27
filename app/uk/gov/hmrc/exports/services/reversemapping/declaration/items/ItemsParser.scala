@@ -16,45 +16,17 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.items
 
-import uk.gov.hmrc.exports.models.StringOption
-import uk.gov.hmrc.exports.models.declaration.{ExportItem, ProcedureCodes}
+import uk.gov.hmrc.exports.models.declaration.ExportItem
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
-import uk.gov.hmrc.exports.services.reversemapping.declaration.{XmlParser, XmlTags}
 
-import java.util.UUID
+import javax.inject.Inject
 import scala.xml.NodeSeq
 
-class ItemsParser extends XmlParser[Seq[ExportItem]] {
+class ItemsParser @Inject()(singleItemParser: SingleItemParser) extends DeclarationXmlParser[Seq[ExportItem]] {
 
-  override def parse(inputXml: NodeSeq): Seq[ExportItem] =
-    (inputXml \ XmlTags.Declaration \ GoodsShipment \ GovernmentAgencyGoodsItem).map(parseSingleItem)
+  override def parse(inputXml: NodeSeq): XmlParserResult[Seq[ExportItem]] =
+    (inputXml \ Declaration \ GoodsShipment \ GovernmentAgencyGoodsItem).map(singleItemParser.parse).toEitherOfList
 
-  private def parseSingleItem(itemXml: NodeSeq): ExportItem = {
-    val sequenceNumeric = (itemXml \ SequenceNumeric).text.toInt
-
-    val procedureCodes = {
-      val procedureCode: Option[String] = (itemXml \ GovernmentProcedure).flatMap { governmentProcedureNode =>
-        governmentProcedureNode
-          .find(node => StringOption((node \ PreviousCode).text).nonEmpty)
-          .flatMap { governmentProcedure =>
-            for {
-              currentCode <- StringOption((governmentProcedure \ CurrentCode).text)
-              previousCode <- StringOption((governmentProcedure \ PreviousCode).text)
-            } yield currentCode + previousCode
-          }
-      }.headOption
-
-      val additionalProcedureCodes: Seq[String] = (itemXml \ GovernmentProcedure).flatMap { governmentProcedureNode =>
-        governmentProcedureNode
-          .filterNot(node => StringOption((node \ PreviousCode).text).nonEmpty)
-          .flatMap { governmentProcedure =>
-            StringOption((governmentProcedure \ CurrentCode).text)
-          }
-      }
-
-      procedureCode.map(_ => ProcedureCodes(procedureCode, additionalProcedureCodes))
-    }
-
-    ExportItem(id = UUID.randomUUID().toString, sequenceId = sequenceNumeric, procedureCodes = procedureCodes)
-  }
 }
