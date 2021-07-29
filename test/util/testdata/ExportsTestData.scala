@@ -57,6 +57,7 @@ object ExportsTestData {
   val VALID_DUCR_HEADER: (String, String) = XDucrHeaderName -> declarantDucrValue
   val VALID_MRN_HEADER: (String, String) = XMrnHeaderName -> declarantMrnValue
   val now: DateTime = DateTime.now.withZone(DateTimeZone.UTC)
+  val eidrDateStamp = "20001231"
 
   val verifiedEmailAddress = VerifiedEmailAddress("some@email.com", ZonedDateTime.now)
 

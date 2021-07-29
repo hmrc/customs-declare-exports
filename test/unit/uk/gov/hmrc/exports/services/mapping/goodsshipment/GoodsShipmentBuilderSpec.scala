@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.services.mapping.goodsshipment
 import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.Mockito
 import org.mockito.Mockito.verifyNoInteractions
-import testdata.ExportsDeclarationBuilder
+import testdata.{ExportsDeclarationBuilder, ExportsTestData}
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration._
@@ -127,7 +127,11 @@ class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       .buildThenAdd(refEq(PreviousDocuments(Seq(correctPreviousDocument))), any[Declaration.GoodsShipment])
 
     verify(mockPreviousDocumentBuilder)
-      .buildThenAdd(refEq(ConsignmentReferences(DUCR(VALID_DUCR), VALID_LRN, Some(VALID_PERSONAL_UCR))), any[Declaration.GoodsShipment])
+      .buildThenAdd(
+        refEq(ConsignmentReferences(DUCR(VALID_DUCR), VALID_LRN, Some(VALID_PERSONAL_UCR), None, Some(ExportsTestData.mrn))),
+        any[DeclarationType],
+        any[Declaration.GoodsShipment]
+      )
 
     verify(mockPreviousDocumentBuilder)
       .buildThenAdd(refEq(MUCR(VALID_MUCR)), any[Declaration.GoodsShipment])
@@ -148,7 +152,7 @@ class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       withoutRoutingCountries(),
       withWarehouseIdentification(WAREHOUSE_ID),
       withInlandModeOfTransport(ModeOfTransportCode.Rail),
-      withConsignmentReferences(VALID_DUCR, VALID_LRN, Some(VALID_PERSONAL_UCR)),
+      withConsignmentReferences(VALID_DUCR, VALID_LRN, Some(VALID_PERSONAL_UCR), None, Some(ExportsTestData.mrn)),
       withMUCR(VALID_MUCR),
       withPreviousDocuments(correctPreviousDocument),
       withItem()

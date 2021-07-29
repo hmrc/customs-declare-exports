@@ -92,9 +92,11 @@ trait ExportsDeclarationBuilder {
   def withConsignmentReferences(
     ducr: String = VALID_DUCR,
     lrn: String = VALID_LRN,
-    personalUcr: Option[String] = Some(VALID_DUCR)
+    personalUcr: Option[String] = Some(VALID_DUCR),
+    eidrDateStamp: Option[String] = None,
+    mrn: Option[String] = None
   ): ExportsDeclarationModifier =
-    _.copy(consignmentReferences = Some(ConsignmentReferences(DUCR(ducr), lrn, personalUcr)))
+    _.copy(consignmentReferences = Some(ConsignmentReferences(DUCR(ducr), lrn, personalUcr, eidrDateStamp, mrn)))
 
   def withoutDepartureTransport(): ExportsDeclarationModifier =
     declaration =>
