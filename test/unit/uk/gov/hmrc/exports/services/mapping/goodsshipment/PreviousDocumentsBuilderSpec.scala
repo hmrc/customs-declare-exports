@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.services.mapping.goodsshipment
 import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.{MUCR, PreviousDocument, PreviousDocuments}
+import uk.gov.hmrc.exports.models.DeclarationType._
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
@@ -26,11 +27,75 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
   "PreviousDocumentsBuilder " should {
 
     "correctly map new model to a WCO-DEC GoodsShipment.PreviousDocuments instance" when {
-      "when document data is present and a DUCR has been added previously" in {
 
+      Seq(STANDARD, SIMPLIFIED, OCCASIONAL, CLEARANCE).foreach { decType =>
+        s"a DUCR is specified for a ${decType} declaration" in {
+          val builder = new PreviousDocumentsBuilder
+          val goodsShipment = new GoodsShipment
+          builder.buildThenAdd(UCRBuilderSpec.correctConsignmentReferencesWithPersonalUcr, decType, goodsShipment)
+
+          val previousDocs = goodsShipment.getPreviousDocument
+          previousDocs.size must be(1)
+          previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
+          previousDocs.get(0).getCategoryCode.getValue must be("Z")
+          previousDocs.get(0).getTypeCode.getValue must be("DCR")
+          previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
+        }
+      }
+
+      s"a DUCR is specified for a SUPPLEMENTARY declaration" in {
         val builder = new PreviousDocumentsBuilder
         val goodsShipment = new GoodsShipment
-        builder.buildThenAdd(UCRBuilderSpec.correctConsignmentReferences, goodsShipment)
+        builder.buildThenAdd(UCRBuilderSpec.correctConsignmentReferencesWithPersonalUcr, SUPPLEMENTARY, goodsShipment)
+
+        val previousDocs = goodsShipment.getPreviousDocument
+        previousDocs.size must be(1)
+        previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
+        previousDocs.get(0).getCategoryCode.getValue must be("Y")
+        previousDocs.get(0).getTypeCode.getValue must be("DCR")
+        previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
+      }
+
+      s"an EIDR date stamp is specified for a declaration" in {
+        val builder = new PreviousDocumentsBuilder
+        val goodsShipment = new GoodsShipment
+        builder.buildThenAdd(UCRBuilderSpec.correctConsignmentReferencesWithEidr, STANDARD, goodsShipment)
+
+        val previousDocs = goodsShipment.getPreviousDocument
+        previousDocs.size must be(2)
+        previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
+        previousDocs.get(0).getCategoryCode.getValue must be("Z")
+        previousDocs.get(0).getTypeCode.getValue must be("DCR")
+        previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
+
+        previousDocs.get(1).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferencesWithEidr.eidrDateStamp.get)
+        previousDocs.get(1).getCategoryCode.getValue must be("Y")
+        previousDocs.get(1).getTypeCode.getValue must be("CLE")
+        previousDocs.get(1).getLineNumeric must be(BigDecimal(1).bigDecimal)
+      }
+
+      s"an MRN is specified for a declaration" in {
+        val builder = new PreviousDocumentsBuilder
+        val goodsShipment = new GoodsShipment
+        builder.buildThenAdd(UCRBuilderSpec.correctConsignmentReferencesWithMrn, STANDARD, goodsShipment)
+
+        val previousDocs = goodsShipment.getPreviousDocument
+        previousDocs.size must be(2)
+        previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
+        previousDocs.get(0).getCategoryCode.getValue must be("Z")
+        previousDocs.get(0).getTypeCode.getValue must be("DCR")
+        previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
+
+        previousDocs.get(1).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferencesWithMrn.mrn.get)
+        previousDocs.get(1).getCategoryCode.getValue must be("Y")
+        previousDocs.get(1).getTypeCode.getValue must be("SDE")
+        previousDocs.get(1).getLineNumeric must be(BigDecimal(1).bigDecimal)
+      }
+
+      "document data is present and a DUCR has been added previously" in {
+        val builder = new PreviousDocumentsBuilder
+        val goodsShipment = new GoodsShipment
+        builder.buildThenAdd(UCRBuilderSpec.correctConsignmentReferencesWithPersonalUcr, STANDARD, goodsShipment)
 
         builder.buildThenAdd(PreviousDocuments(Seq(PreviousDocumentsBuilderSpec.correctPreviousDocument)), goodsShipment)
 

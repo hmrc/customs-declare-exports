@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR, MUCR, PreviousDocument, PreviousDocuments}
+import uk.gov.hmrc.exports.models.DeclarationType.{DeclarationType, SUPPLEMENTARY}
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.declaration_ds.dms._2.{PreviousDocumentCategoryCodeType, PreviousDocumentIdentificationIDType, PreviousDocumentTypeCodeType}
@@ -26,6 +27,10 @@ class PreviousDocumentsBuilder @Inject()() extends ModifyingBuilder[PreviousDocu
 
   private val ducrTypeCodeValue = "DCR"
   private val mucrTypeCodeValue = "MCR"
+  private val eidrTypeCodeValue = "CLE"
+  private val mrnTypeCodeValue = "SDE"
+  private val categoryCodeY = "Y"
+  private val categoryCodeZ = "Z"
 
   override def buildThenAdd(model: PreviousDocuments, goodsShipment: GoodsShipment): Unit =
     if (isDefined(model)) {
@@ -69,27 +74,40 @@ class PreviousDocumentsBuilder @Inject()() extends ModifyingBuilder[PreviousDocu
     previousDocument
   }
 
-  def buildThenAdd(model: ConsignmentReferences, goodsShipment: GoodsShipment): Unit =
+  def buildThenAdd(model: ConsignmentReferences, `type`: DeclarationType, goodsShipment: GoodsShipment): Unit = {
     if (isDefined(model)) {
-      goodsShipment.getPreviousDocument.add(createDucrDocument(model.ducr))
+      goodsShipment.getPreviousDocument.add(createDucrDocument(model.ducr, `type`))
     }
+
+    model.eidrDateStamp.map(eidr => goodsShipment.getPreviousDocument.add(createEidrDateStampDocument(eidr)))
+    model.mrn.map(mrn => goodsShipment.getPreviousDocument.add(createMrnDateStampDocument(mrn)))
+  }
 
   private def isDefined(previousDocumentsData: ConsignmentReferences): Boolean = previousDocumentsData.ducr.nonEmpty
 
-  private def createDucrDocument(ducr: DUCR): GoodsShipment.PreviousDocument = createPrevDoc(ducr.ducr, ducrTypeCodeValue)
+  private def createEidrDateStampDocument(eidrDateStamp: String): GoodsShipment.PreviousDocument =
+    createPrevDoc(eidrDateStamp, categoryCodeY, eidrTypeCodeValue)
+
+  private def createMrnDateStampDocument(mrn: String): GoodsShipment.PreviousDocument =
+    createPrevDoc(mrn, categoryCodeY, mrnTypeCodeValue)
+
+  private def createDucrDocument(ducr: DUCR, `type`: DeclarationType): GoodsShipment.PreviousDocument = {
+    val catCode = if (`type` == SUPPLEMENTARY) categoryCodeY else categoryCodeZ
+    createPrevDoc(ducr.ducr, catCode, ducrTypeCodeValue)
+  }
 
   def buildThenAdd(mucr: MUCR, goodsShipment: GoodsShipment): Unit =
     if (mucr.nonEmpty) {
       goodsShipment.getPreviousDocument.add(createMucrDocument(mucr))
     }
 
-  private def createMucrDocument(mucr: MUCR): GoodsShipment.PreviousDocument = createPrevDoc(mucr.mucr, mucrTypeCodeValue)
+  private def createMucrDocument(mucr: MUCR): GoodsShipment.PreviousDocument = createPrevDoc(mucr.mucr, categoryCodeZ, mucrTypeCodeValue)
 
-  private def createPrevDoc(value: String, typeCodeValue: String): GoodsShipment.PreviousDocument = {
+  private def createPrevDoc(value: String, categoryCodeValue: String, typeCodeValue: String): GoodsShipment.PreviousDocument = {
     val previousDocument = new GoodsShipment.PreviousDocument()
 
     val categoryCode = new PreviousDocumentCategoryCodeType()
-    categoryCode.setValue("Z")
+    categoryCode.setValue(categoryCodeValue)
     previousDocument.setCategoryCode(categoryCode)
 
     val id = new PreviousDocumentIdentificationIDType()

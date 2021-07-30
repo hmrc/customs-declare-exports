@@ -17,6 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import testdata.ExportsDeclarationBuilder
+import testdata.ExportsTestData._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
@@ -43,18 +44,23 @@ class UCRBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         val builder = new UCRBuilder
 
         val goodsShipment = new GoodsShipment
-        builder.buildThenAdd(UCRBuilderSpec.correctConsignmentReferencesNoPersonalUcr, goodsShipment)
+        builder.buildThenAdd(UCRBuilderSpec.correctConsignmentReferencesWithoutPersonalUcr, goodsShipment)
 
         goodsShipment.getUCR must be(null)
       }
-
     }
   }
 }
 
 object UCRBuilderSpec extends ExportsDeclarationBuilder {
   val correctConsignmentReferences =
+    ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = VALID_LRN, personalUcr = Some(VALID_PERSONAL_UCR), mrn = Some(mrn))
+  val correctConsignmentReferencesWithPersonalUcr =
     ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = VALID_LRN, personalUcr = Some(VALID_PERSONAL_UCR))
-  val correctConsignmentReferencesNoPersonalUcr =
+  val correctConsignmentReferencesWithoutPersonalUcr =
     ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = VALID_LRN)
+  val correctConsignmentReferencesWithEidr =
+    ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = VALID_LRN, eidrDateStamp = Some(eidrDateStamp))
+  val correctConsignmentReferencesWithMrn =
+    ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = VALID_LRN, mrn = Some(mrn))
 }
