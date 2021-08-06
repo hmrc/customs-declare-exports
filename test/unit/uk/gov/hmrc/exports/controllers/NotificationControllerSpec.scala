@@ -74,11 +74,11 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     super.afterEach()
   }
 
-  "Notification Controller on findByID" should {
+  "Notification Controller on findById" should {
 
     "return 200" when {
       "submission found" in {
-        when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
+        when(submissionService.findSubmissionById(any(), any())).thenReturn(Future.successful(Some(submission)))
         when(notificationService.getNotifications(any()))
           .thenReturn(Future.successful(Seq(notification)))
 
@@ -91,7 +91,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
     "not return notifications" when {
       "those notifications have not had the details parsed from them" in {
-        when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
+        when(submissionService.findSubmissionById(any(), any())).thenReturn(Future.successful(Some(submission)))
         when(notificationService.getNotifications(any())).thenReturn(Future.successful(Seq.empty))
 
         val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
@@ -103,7 +103,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
     "return 400" when {
       "submission not found" in {
-        when(submissionService.getSubmission(any(), any())).thenReturn(Future.successful(None))
+        when(submissionService.findSubmissionById(any(), any())).thenReturn(Future.successful(None))
 
         val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
 

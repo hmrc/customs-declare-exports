@@ -48,15 +48,21 @@ class SubmissionController @Inject()(
   def findAll(): Action[AnyContent] =
     authenticator.authorisedAction(parse.default) { implicit request =>
       submissionService
-        .getAllSubmissionsForUser(request.eori.value)
+        .findAllSubmissionsForUser(request.eori.value)
         .map(submissions => Ok(submissions))
     }
 
-  def findByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    submissionService.getSubmission(request.eori.value, id).map {
+  def findByDucr(ducr: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    submissionService.findSubmissionByDucr(request.eori.value, ducr).map {
       case Some(submission) => Ok(submission)
       case None             => NotFound
     }
   }
 
+  def findById(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    submissionService.findSubmissionById(request.eori.value, id).map {
+      case Some(submission) => Ok(submission)
+      case None             => NotFound
+    }
+  }
 }

@@ -79,14 +79,14 @@ class DeclarationController @Inject()(
       declarationService.find(search, pagination, sort).map(results => Ok(results))
     }
 
-  def findByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+  def findById(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     declarationService.findOne(id, request.eori).map {
       case Some(declaration) => Ok(declaration)
       case None              => NotFound
     }
   }
 
-  def deleteByID(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+  def deleteById(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     declarationService.findOne(id, request.eori).flatMap {
       case Some(declaration) if declaration.status == DeclarationStatus.COMPLETE =>
         Future.successful(BadRequest(ErrorResponse("Cannot remove a declaration once it is COMPLETE")))

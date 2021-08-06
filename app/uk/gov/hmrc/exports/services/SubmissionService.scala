@@ -128,17 +128,20 @@ class SubmissionService @Inject()(
     )
     val xml: String = wcoMapperService.toXml(metadata)
     customsDeclarationsConnector.submitCancellation(eori, xml).flatMap { convId =>
-      updateSubmissionInDB(eori, cancellation.mrn, convId)
+      updateSubmissionInDB(cancellation.mrn, convId)
     }
   }
 
-  def getAllSubmissionsForUser(eori: String): Future[Seq[Submission]] =
+  def findAllSubmissionsForUser(eori: String): Future[Seq[Submission]] =
     submissionRepository.findAllSubmissionsForEori(eori)
 
-  def getSubmission(eori: String, uuid: String): Future[Option[Submission]] =
-    submissionRepository.findSubmissionByUuid(eori, uuid)
+  def findSubmissionByDucr(eori: String, ducr: String): Future[Option[Submission]] =
+    submissionRepository.findSubmissionByDucr(eori, ducr)
 
-  private def updateSubmissionInDB(eori: String, mrn: String, conversationId: String): Future[CancellationStatus] =
+  def findSubmissionById(eori: String, id: String): Future[Option[Submission]] =
+    submissionRepository.findSubmissionById(eori, id)
+
+  private def updateSubmissionInDB(mrn: String, conversationId: String): Future[CancellationStatus] =
     submissionRepository.findSubmissionByMrn(mrn).flatMap {
       case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationRequestExists)
       case Some(_) =>

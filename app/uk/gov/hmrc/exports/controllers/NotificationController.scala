@@ -43,8 +43,8 @@ class NotificationController @Inject()(
 )(implicit executionContext: ExecutionContext)
     extends Authenticator(authConnector, cc) with JSONResponses {
 
-  def findByID(id: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
-    submissionService.getSubmission(request.eori.value, id) flatMap {
+  def findById(id: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
+    submissionService.findSubmissionById(request.eori.value, id) flatMap {
       case Some(submission) =>
         notificationsService
           .getNotifications(submission)

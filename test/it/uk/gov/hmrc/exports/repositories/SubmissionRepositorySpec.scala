@@ -146,7 +146,7 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
       "add action at end of sequence" in {
         val savedSubmission = repo.save(submission).futureValue
         repo.addAction(savedSubmission, action).futureValue
-        val result = repo.findSubmissionByUuid(savedSubmission.eori, savedSubmission.uuid).futureValue.value
+        val result = repo.findSubmissionById(savedSubmission.eori, savedSubmission.uuid).futureValue.value
         result.actions.map(_.id) must contain(action.id)
       }
     }
@@ -223,19 +223,19 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
     }
   }
 
-  "findSubmissionByUuid" when {
+  "Submission Repository on findSubmissionById" when {
 
     "no matching submission exists" should {
       "return None" in {
-        repo.findSubmissionByUuid(eori, uuid).futureValue mustBe None
+        repo.findSubmissionById(eori, uuid).futureValue mustBe None
       }
     }
 
     "part matching submission exists" should {
       "return None" in {
         repo.save(submission).futureValue
-        repo.findSubmissionByUuid("other", uuid).futureValue mustBe None
-        repo.findSubmissionByUuid(eori, "other").futureValue mustBe None
+        repo.findSubmissionById("other", uuid).futureValue mustBe None
+        repo.findSubmissionById(eori, "other").futureValue mustBe None
       }
     }
 
@@ -243,9 +243,27 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
       "return this Some" in {
         repo.save(submission).futureValue
 
-        repo.findSubmissionByUuid(eori, uuid).futureValue mustBe Some(submission)
+        repo.findSubmissionById(eori, uuid).futureValue mustBe Some(submission)
       }
     }
   }
 
+  "Submission Repository on findSubmissionByDucr" when {
+
+    "there is no Submission with given DUCR for the given EORI" should {
+      "return empty Option" in {
+        repo.findSubmissionByDucr(eori, ducr).futureValue mustNot be(defined)
+      }
+    }
+
+    "there is a Submission with given DUCR for the given EORI" should {
+      "return this Submission" in {
+        repo.save(submission).futureValue
+
+        val retrievedSubmission = repo.findSubmissionByDucr(eori, ducr).futureValue
+
+        retrievedSubmission.value must equal(submission)
+      }
+    }
+  }
 }
