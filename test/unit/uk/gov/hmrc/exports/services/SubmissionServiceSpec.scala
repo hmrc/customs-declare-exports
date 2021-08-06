@@ -253,25 +253,36 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     }
   }
 
-  "Get all Submissions for eori" should {
+  "Find all Submissions for EORI" should {
     "delegate to repository" in {
       val response = mock[Seq[Submission]]
       when(submissionRepository.findAllSubmissionsForEori(any())).thenReturn(Future.successful(response))
 
-      submissionService.getAllSubmissionsForUser(eori).futureValue mustBe response
+      submissionService.findAllSubmissionsForUser(eori).futureValue mustBe response
 
       verify(submissionRepository).findAllSubmissionsForEori(meq(eori))
     }
   }
 
-  "Get Submission" should {
+  "Find Submission by Id" should {
     "delegate to repository" in {
       val response = mock[Option[Submission]]
-      when(submissionRepository.findSubmissionByUuid(any(), any())).thenReturn(Future.successful(response))
+      when(submissionRepository.findSubmissionById(any(), any())).thenReturn(Future.successful(response))
 
-      submissionService.getSubmission(eori, uuid).futureValue mustBe response
+      submissionService.findSubmissionById(eori, uuid).futureValue mustBe response
 
-      verify(submissionRepository).findSubmissionByUuid(meq(eori), meq(uuid))
+      verify(submissionRepository).findSubmissionById(meq(eori), meq(uuid))
+    }
+  }
+
+  "Find Submission by DUCR for EORI" should {
+    "delegate to repository" in {
+      val response = mock[Option[Submission]]
+      when(submissionRepository.findSubmissionByDucr(any(), any())).thenReturn(Future.successful(response))
+
+      submissionService.findSubmissionByDucr(eori, ducr).futureValue mustBe response
+
+      verify(submissionRepository).findSubmissionByDucr(meq(eori), meq(ducr))
     }
   }
 }

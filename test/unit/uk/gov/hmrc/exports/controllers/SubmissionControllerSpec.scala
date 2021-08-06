@@ -124,13 +124,13 @@ class SubmissionControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Au
     "return 200" when {
       "request is valid" in {
         withAuthorizedUser()
-        given(submissionService.getAllSubmissionsForUser(any())).willReturn(Future.successful(submissions))
+        given(submissionService.findAllSubmissionsForUser(any())).willReturn(Future.successful(submissions))
 
         val result: Future[Result] = route(app, get).get
 
         status(result) mustBe OK
         contentAsJson(result) mustBe toJson(submissions)
-        verify(submissionService).getAllSubmissionsForUser(userEori.value)
+        verify(submissionService).findAllSubmissionsForUser(userEori.value)
       }
     }
 
@@ -153,26 +153,26 @@ class SubmissionControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Au
     "return 200" when {
       "request is valid" in {
         withAuthorizedUser()
-        given(submissionService.getSubmission(any(), any())).willReturn(Future.successful(Some(submission)))
+        given(submissionService.findSubmissionById(any(), any())).willReturn(Future.successful(Some(submission)))
 
         val result: Future[Result] = route(app, get).get
 
         status(result) mustBe OK
         contentAsJson(result) mustBe toJson(submission)
-        verify(submissionService).getSubmission(userEori.value, "id")
+        verify(submissionService).findSubmissionById(userEori.value, "id")
       }
     }
 
     "return 404" when {
       "unknown ID" in {
         withAuthorizedUser()
-        given(submissionService.getSubmission(any(), any())).willReturn(Future.successful(None))
+        given(submissionService.findSubmissionById(any(), any())).willReturn(Future.successful(None))
 
         val result: Future[Result] = route(app, get).get
 
         status(result) mustBe NOT_FOUND
         contentAsString(result) mustBe empty
-        verify(submissionService).getSubmission(userEori.value, "id")
+        verify(submissionService).findSubmissionById(userEori.value, "id")
       }
     }
 
@@ -188,4 +188,45 @@ class SubmissionControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Au
     }
   }
 
+  "Find By DUCR" should {
+    val get = FakeRequest("GET", "/declarations/ducr/submission/ducr")
+    val submission = Submission("id", userEori.value, "lrn", None, "ducr")
+
+    "return 200" when {
+      "request is valid" in {
+        withAuthorizedUser()
+        given(submissionService.findSubmissionByDucr(any(), any())).willReturn(Future.successful(Some(submission)))
+
+        val result: Future[Result] = route(app, get).get
+
+        status(result) mustBe OK
+        contentAsJson(result) mustBe toJson(submission)
+        verify(submissionService).findSubmissionByDucr(userEori.value, "ducr")
+      }
+    }
+
+    "return 404" when {
+      "unknown EORI or DUCR" in {
+        withAuthorizedUser()
+        given(submissionService.findSubmissionByDucr(any(), any())).willReturn(Future.successful(None))
+
+        val result: Future[Result] = route(app, get).get
+
+        status(result) mustBe NOT_FOUND
+        contentAsString(result) mustBe empty
+        verify(submissionService).findSubmissionByDucr(userEori.value, "ducr")
+      }
+    }
+
+    "return 401" when {
+      "unauthorized" in {
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        val result: Future[Result] = route(app, get).get
+
+        status(result) mustBe UNAUTHORIZED
+        verifyNoInteractions(submissionService)
+      }
+    }
+  }
 }

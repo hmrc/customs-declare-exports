@@ -61,15 +61,18 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
   }
 
   def findOrCreate(eori: Eori, id: String, onMissing: Submission): Future[Submission] =
-    findSubmissionByUuid(eori.value, id).flatMap {
+    findSubmissionById(eori.value, id).flatMap {
       case Some(submission) => Future.successful(submission)
       case None             => save(onMissing)
     }
 
+  def findSubmissionByDucr(eori: String, ducr: String): Future[Option[Submission]] =
+    find("eori" -> eori, "ducr" -> ducr).map(_.headOption)
+
   def findSubmissionByMrn(mrn: String): Future[Option[Submission]] = find("mrn" -> mrn).map(_.headOption)
 
-  def findSubmissionByUuid(eori: String, uuid: String): Future[Option[Submission]] =
-    find("eori" -> eori, "uuid" -> uuid).map(_.headOption)
+  def findSubmissionById(eori: String, id: String): Future[Option[Submission]] =
+    find("eori" -> eori, "uuid" -> id).map(_.headOption)
 
   def save(submission: Submission): Future[Submission] = insert(submission).map { res =>
     if (!res.ok) logger.error(s"Errors when persisting declaration submission: ${res.writeErrors.mkString("--")}")

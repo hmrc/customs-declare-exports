@@ -48,20 +48,21 @@ object UnitTestMockBuilder extends MockitoSugar {
 
   def buildSubmissionRepositoryMock: SubmissionRepository = {
     val submissionRepositoryMock: SubmissionRepository = mock[SubmissionRepository]
-    when(submissionRepositoryMock.findAllSubmissionsForEori(any())).thenReturn(Future.successful(Seq.empty))
-    when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
-    when(submissionRepositoryMock.save(any())).thenReturn(Future.successful(mock[Submission]))
-    when(submissionRepositoryMock.findSubmissionByUuid(any(), any())).thenReturn(Future.successful(None))
-    when(submissionRepositoryMock.updateMrn(any(), any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.addAction(any[String](), any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.addAction(any[Submission](), any())).thenReturn(Future.successful(mock[Submission]))
+    when(submissionRepositoryMock.findAllSubmissionsForEori(any())).thenReturn(Future.successful(Seq.empty))
+    when(submissionRepositoryMock.findSubmissionById(any(), any())).thenReturn(Future.successful(None))
+    when(submissionRepositoryMock.findSubmissionByDucr(any(), any())).thenReturn(Future.successful(None))
+    when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
+    when(submissionRepositoryMock.save(any())).thenReturn(Future.successful(mock[Submission]))
+    when(submissionRepositoryMock.updateMrn(any(), any())).thenReturn(Future.successful(None))
     submissionRepositoryMock
   }
 
   def buildSubmissionServiceMock: SubmissionService = {
     val submissionServiceMock: SubmissionService = mock[SubmissionService]
-    when(submissionServiceMock.getAllSubmissionsForUser(any())).thenReturn(Future.successful(Seq.empty))
-    when(submissionServiceMock.getSubmission(any(), any())).thenReturn(Future.successful(None))
+    when(submissionServiceMock.findAllSubmissionsForUser(any())).thenReturn(Future.successful(Seq.empty))
+    when(submissionServiceMock.findSubmissionById(any(), any())).thenReturn(Future.successful(None))
     submissionServiceMock
   }
 
