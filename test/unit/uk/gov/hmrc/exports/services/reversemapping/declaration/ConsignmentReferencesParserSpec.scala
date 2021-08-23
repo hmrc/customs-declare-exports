@@ -19,12 +19,15 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 import testdata.ReverseMappingTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR}
-
 import scala.xml.{Elem, NodeSeq}
+
+import uk.gov.hmrc.exports.services.reversemapping.DeclarationId
 
 class ConsignmentReferencesParserSpec extends UnitSpec {
 
   private val parser = new ConsignmentReferencesParser
+
+  private val declarationId = DeclarationId(eori = "GB1234567890", mrn = "MRN87878797")
 
   "ConsignmentReferencesParser on parse" should {
 
@@ -33,7 +36,7 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
 
         val input = inputXml()
 
-        parser.parse(input) mustBe Right(None)
+        parser.parse(declarationId, input) mustBe Right(None)
       }
     }
 
@@ -43,7 +46,7 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
 
         val input = inputXml(previousDocument = Some(PreviousDocument(id = "ducr")), functionalReferenceId = Some("functionalReferenceId"))
 
-        val result = parser.parse(input)
+        val result = parser.parse(declarationId, input)
 
         val expectedResult = Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = "functionalReferenceId"))
 
@@ -58,7 +61,7 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
           traderAssignedReferenceID = Some("traderAssignedReferenceID")
         )
 
-        val result = parser.parse(input)
+        val result = parser.parse(declarationId, input)
 
         val expectedResult =
           Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = "functionalReferenceId", personalUcr = Some("traderAssignedReferenceID")))
@@ -73,7 +76,7 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
 
         val input = inputXml(previousDocument = Some(PreviousDocument(id = "typeCodeId")))
 
-        parser.parse(input).isLeft mustBe true
+        parser.parse(declarationId, input).isLeft mustBe true
       }
 
       "provided with XML containing: PreviousDocument with TypeCode 'DCR' and ID, TraderAssignedReferenceID" in {
@@ -81,28 +84,28 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
         val input =
           inputXml(previousDocument = Some(PreviousDocument(id = "typeCodeId")), traderAssignedReferenceID = Some("traderAssignedReferenceID"))
 
-        parser.parse(input).isLeft mustBe true
+        parser.parse(declarationId, input).isLeft mustBe true
       }
 
       "provided with XML containing: FunctionalReferenceID" in {
 
         val input = inputXml(functionalReferenceId = Some("functionalReferenceId"))
 
-        parser.parse(input).isLeft mustBe true
+        parser.parse(declarationId, input).isLeft mustBe true
       }
 
       "provided with XML containing: FunctionalReferenceID, TraderAssignedReferenceID" in {
 
         val input = inputXml(functionalReferenceId = Some("functionalReferenceId"), traderAssignedReferenceID = Some("traderAssignedReferenceID"))
 
-        parser.parse(input).isLeft mustBe true
+        parser.parse(declarationId, input).isLeft mustBe true
       }
 
       "provided with XML containing: TraderAssignedReferenceID" in {
 
         val input = inputXml(traderAssignedReferenceID = Some("traderAssignedReferenceID"))
 
-        parser.parse(input).isLeft mustBe true
+        parser.parse(declarationId, input).isLeft mustBe true
       }
     }
   }

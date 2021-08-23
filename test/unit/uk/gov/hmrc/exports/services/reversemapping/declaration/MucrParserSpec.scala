@@ -24,7 +24,7 @@ import scala.xml.{Elem, NodeSeq}
 
 class MucrParserSpec extends UnitSpec {
 
-  private val parser = new MucrParser
+  private val parser = new PreviousDocsWithMCRParser
 
   "MucrParser on parse" should {
 

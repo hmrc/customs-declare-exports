@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.exports.models.declaration
 
+import org.scalatest.EitherValues
 import play.api.libs.json.{JsError, JsString, JsSuccess, Json}
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType._
 
-class AdditionalDeclarationTypeSpec extends UnitSpec {
+class AdditionalDeclarationTypeSpec extends UnitSpec with EitherValues {
 
   "Formatter" should {
     "map to json" in {
@@ -73,8 +74,8 @@ class AdditionalDeclarationTypeSpec extends UnitSpec {
 
           val result = AdditionalDeclarationType.fromString(validCode._1)
 
-          result.isSuccess mustBe true
-          result.get mustBe validCode._2
+          result.isRight mustBe true
+          result.value mustBe Some(validCode._2)
         }
       }
     }
@@ -85,8 +86,8 @@ class AdditionalDeclarationTypeSpec extends UnitSpec {
 
         val result = AdditionalDeclarationType.fromString("7")
 
-        result.isFailure mustBe true
-        result.failed.get.getMessage mustBe "7 is not a valid value for AdditionalDeclarationType"
+        result.isLeft mustBe true
+        result.left.value mustBe "7 is not a valid value for AdditionalDeclarationType"
       }
     }
   }

@@ -20,29 +20,33 @@ import org.mockito.ArgumentMatchersSugar.any
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.reversemapping.declaration.items.ItemsParser
-
 import scala.xml.NodeSeq
+
+import uk.gov.hmrc.exports.services.reversemapping.DeclarationId
 
 class ExportsDeclarationXmlParserSpec extends UnitSpec {
 
   private val additionalDeclarationTypeParser = mock[AdditionalDeclarationTypeParser]
   private val consignmentReferencesParser = mock[ConsignmentReferencesParser]
-  private val mucrParser = mock[MucrParser]
+  private val previousDocsWithMCRParser = mock[PreviousDocsWithMCRParser]
   private val itemsParser = mock[ItemsParser]
 
-  private val exportsDeclarationXmlParser =
-    new ExportsDeclarationXmlParser(additionalDeclarationTypeParser, consignmentReferencesParser, mucrParser, itemsParser)
+  private val exportsDeclarationXmlParser = new ExportsDeclarationXmlParser(
+    additionalDeclarationTypeParser, consignmentReferencesParser, previousDocsWithMCRParser, itemsParser
+  )
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(additionalDeclarationTypeParser, consignmentReferencesParser, mucrParser, itemsParser)
+    reset(additionalDeclarationTypeParser, consignmentReferencesParser, previousDocsWithMCRParser, itemsParser)
 
     when(additionalDeclarationTypeParser.parse(any[NodeSeq])).thenReturn(Right(None))
-    when(consignmentReferencesParser.parse(any[NodeSeq])).thenReturn(Right(None))
-    when(mucrParser.parse(any[NodeSeq])).thenReturn(Right(None))
+    when(consignmentReferencesParser.parse(any[DeclarationId], any[NodeSeq])).thenReturn(Right(None))
+    when(previousDocsWithMCRParser.parse(any[NodeSeq])).thenReturn(Right(None))
     when(itemsParser.parse(any[NodeSeq])).thenReturn(Right(Seq.empty))
   }
+
+  private val declarationId = DeclarationId(eori = "GB1234567890", mrn = "MRN87878797")
 
   "ExportsDeclarationXmlParser on fromXml" should {
 
@@ -50,11 +54,11 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec {
 
       val xml = ExportsDeclarationXmlParserSpec.inputXml
 
-      exportsDeclarationXmlParser.fromXml(xml)
+      exportsDeclarationXmlParser.fromXml(declarationId, xml)
 
       verify(additionalDeclarationTypeParser).parse(any[NodeSeq])
-      verify(consignmentReferencesParser).parse(any[NodeSeq])
-      verify(mucrParser).parse(any[NodeSeq])
+      verify(consignmentReferencesParser).parse(any[DeclarationId], any[NodeSeq])
+      verify(previousDocsWithMCRParser).parse(any[NodeSeq])
       verify(itemsParser).parse(any[NodeSeq])
     }
 
@@ -64,7 +68,7 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec {
 
         val xml = ExportsDeclarationXmlParserSpec.inputXml
 
-        val result = exportsDeclarationXmlParser.fromXml(xml)
+        val result = exportsDeclarationXmlParser.fromXml(declarationId, xml)
 
         result.isRight mustBe true
         result.right.get mustBe an[ExportsDeclaration]
@@ -78,7 +82,7 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec {
         when(additionalDeclarationTypeParser.parse(any[NodeSeq])).thenReturn(Left(XmlParsingException("Test Exception")))
         val xml = ExportsDeclarationXmlParserSpec.inputXml
 
-        val result = exportsDeclarationXmlParser.fromXml(xml)
+        val result = exportsDeclarationXmlParser.fromXml(declarationId, xml)
 
         result.isLeft mustBe true
         result.left.get mustBe an[XmlParsingException]

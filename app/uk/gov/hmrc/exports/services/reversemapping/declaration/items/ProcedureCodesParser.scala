@@ -16,17 +16,19 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.items
 
+import scala.xml.NodeSeq
+
+import javax.inject.Singleton
 import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.models.declaration.ProcedureCodes
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
+import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlParsingException
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
-import uk.gov.hmrc.exports.services.reversemapping.declaration.{DeclarationXmlParser, XmlParsingException}
 
-import scala.xml.NodeSeq
+@Singleton
+class ProcedureCodesParser {
 
-class ProcedureCodesParser extends DeclarationXmlParser[Option[ProcedureCodes]] {
-
-  override def parse(itemXml: NodeSeq): XmlParserResult[Option[ProcedureCodes]] = validateInput(itemXml).map { _ =>
+  def parse(itemXml: NodeSeq): XmlParserResult[Option[ProcedureCodes]] = validateInput(itemXml).map { _ =>
     val procedureCode: Option[String] = (itemXml \ GovernmentProcedure).find { governmentProcedureNode =>
       (governmentProcedureNode \ PreviousCode).nonEmpty
     }.flatMap(parseProcedureCode)

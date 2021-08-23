@@ -16,17 +16,20 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
+import scala.xml.NodeSeq
+
+import javax.inject.Singleton
 import play.api.Logging
 import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR}
+import uk.gov.hmrc.exports.services.reversemapping.DeclarationId
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
-import scala.xml.NodeSeq
+@Singleton
+class ConsignmentReferencesParser extends Logging {
 
-class ConsignmentReferencesParser extends DeclarationXmlParser[Option[ConsignmentReferences]] with Logging {
-
-  override def parse(inputXml: NodeSeq): XmlParserResult[Option[ConsignmentReferences]] = {
+  def parse(declarationId: DeclarationId, inputXml: NodeSeq): XmlParserResult[Option[ConsignmentReferences]] = {
     val ducrOpt = (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
       .find(previousDocument => (previousDocument \ TypeCode).text == "DCR")
       .map(previousDocument => (previousDocument \ ID).text)
@@ -43,12 +46,11 @@ class ConsignmentReferencesParser extends DeclarationXmlParser[Option[Consignmen
       Right(for {
         ducr <- ducrOpt
         lrn <- lrnOpt
-      } yield ConsignmentReferences(ducr, lrn, personalUcrOpt))
+      } yield ConsignmentReferences(ducr, lrn, personalUcrOpt, None, Some(declarationId.mrn)))
     } else if (areAllFieldsEmpty) {
       Right(None)
     } else {
       Left(XmlParsingException("Cannot build ConsignmentReferences from XML"))
     }
   }
-
 }

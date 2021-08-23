@@ -16,18 +16,17 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
-import uk.gov.hmrc.exports.models.declaration.MUCR
+import scala.xml.NodeSeq
+
+import javax.inject.Singleton
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
-import scala.xml.NodeSeq
+@Singleton
+class PreviousDocsWithMCRParser {
 
-class MucrParser extends DeclarationXmlParser[Option[MUCR]] {
-
-  override def parse(inputXml: NodeSeq): XmlParserResult[Option[MUCR]] = Right(
+  def parse(inputXml: NodeSeq): XmlParserResult[Option[NodeSeq]] = Right(
     (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
       .find(previousDocument => (previousDocument \ TypeCode).text == "MCR")
-      .map(previousDocument => (previousDocument \ ID).text)
-      .map(MUCR(_))
   )
 }

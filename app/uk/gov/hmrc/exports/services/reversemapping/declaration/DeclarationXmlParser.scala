@@ -16,16 +16,10 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
-
 import scala.annotation.tailrec
-import scala.xml.NodeSeq
-
-trait DeclarationXmlParser[A] {
-  def parse(inputXml: NodeSeq): XmlParserResult[A]
-}
 
 object DeclarationXmlParser {
+
   type XmlParserResult[A] = Either[XmlParsingException, A]
 
   implicit class EitherList[T](list: Seq[XmlParserResult[T]]) {

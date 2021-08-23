@@ -16,25 +16,25 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
+import scala.xml.NodeSeq
+
+import javax.inject.Singleton
 import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType
-import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
+import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.{AdtMaybe, AdtResult}
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags.{Declaration, TypeCode}
 
-import scala.util.Try
-import scala.xml.NodeSeq
+@Singleton
+class AdditionalDeclarationTypeParser {
 
-class AdditionalDeclarationTypeParser extends DeclarationXmlParser[Option[AdditionalDeclarationType]] {
-
-  override def parse(inputXml: NodeSeq): XmlParserResult[Option[AdditionalDeclarationType]] =
+  def parse(inputXml: NodeSeq): XmlParserResult[AdtMaybe] =
     StringOption((inputXml \ Declaration \ TypeCode).text.drop(2))
       .map(code => toXmlParserResult(AdditionalDeclarationType.fromString(code)))
       .getOrElse(Right(None))
 
-  private def toXmlParserResult[A](tryBlock: Try[A]): XmlParserResult[Option[A]] =
-    tryBlock.toEither
-      .map(Some(_))
+  private def toXmlParserResult(adtResult: AdtResult): XmlParserResult[AdtMaybe] =
+    adtResult
       .left
-      .map(exc => XmlParsingException(exc.getMessage))
+      .map(exc => XmlParsingException(exc))
 }
