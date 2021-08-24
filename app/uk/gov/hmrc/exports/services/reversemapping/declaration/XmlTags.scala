@@ -31,5 +31,7 @@ object XmlTags {
   val GovernmentProcedure = "GovernmentProcedure"
   val PreviousCode = "PreviousCode"
   val CurrentCode = "CurrentCode"
-
+  val Consignment = "Consignment"
+  val TransportEquipment = "TransportEquipment"
+  val Seal = "Seal"
 }

@@ -18,9 +18,7 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import java.time.Instant
 import java.util.UUID
-
 import scala.xml.NodeSeq
-
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType._
@@ -28,13 +26,15 @@ import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.items.ItemsParser
+import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.TransportParser
 
 class ExportsDeclarationXmlParser @Inject()(
   additionalDeclarationTypeParser: AdditionalDeclarationTypeParser,
   consignmentReferencesParser: ConsignmentReferencesParser,
   linkDucrToMucrParser: LinkDucrToMucrParser,
   mucrParser: MucrParser,
-  itemsParser: ItemsParser
+  itemsParser: ItemsParser,
+  transportParser: TransportParser
 ) {
 
   def fromXml(mappingContext: MappingContext, xml: String): XmlParserResult[ExportsDeclaration] = {
@@ -50,6 +50,7 @@ class ExportsDeclarationXmlParser @Inject()(
       linkDucrToMucr <- linkDucrToMucrParser.parse(declarationXml)
       mucr <- mucrParser.parse(declarationXml)
       items <- itemsParser.parse(declarationXml)
+      transport <- transportParser.parse(declarationXml)
     } yield
       ExportsDeclaration(
         id = UUID.randomUUID().toString,
@@ -64,7 +65,7 @@ class ExportsDeclarationXmlParser @Inject()(
         consignmentReferences = consignmentReferences,
         linkDucrToMucr = linkDucrToMucr,
         mucr = mucr,
-        transport = Transport(),
+        transport = transport,
         parties = Parties(),
         locations = Locations(),
         items = items,
