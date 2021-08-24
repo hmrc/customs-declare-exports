@@ -25,7 +25,7 @@ import javax.inject.Inject
 import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType._
 import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.services.reversemapping.DeclarationId
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.items.ItemsParser
 
@@ -37,12 +37,12 @@ class ExportsDeclarationXmlParser @Inject()(
   itemsParser: ItemsParser
 ) {
 
-  def fromXml(declarationId: DeclarationId, xml: String): XmlParserResult[ExportsDeclaration] = {
+  def fromXml(mappingContext: MappingContext, xml: String): XmlParserResult[ExportsDeclaration] = {
     val declarationXml = scala.xml.XML.loadString(xml)
-    buildExportsDeclaration(declarationId, declarationXml)
+    buildExportsDeclaration(mappingContext, declarationXml)
   }
 
-  private def buildExportsDeclaration(declarationId: DeclarationId, declarationXml: NodeSeq): XmlParserResult[ExportsDeclaration] =
+  private def buildExportsDeclaration(mappingContext: MappingContext, declarationXml: NodeSeq): XmlParserResult[ExportsDeclaration] =
     for {
       additionalDeclarationType <- additionalDeclarationTypeParser.parse(declarationXml)
       declarationType <- deriveDeclarationType(additionalDeclarationType)
@@ -53,7 +53,7 @@ class ExportsDeclarationXmlParser @Inject()(
     } yield
       ExportsDeclaration(
         id = UUID.randomUUID().toString,
-        eori = declarationId.eori,
+        eori = mappingContext.eori,
         status = DeclarationStatus.COMPLETE,
         createdDateTime = Instant.now(),
         updatedDateTime = Instant.now(),
@@ -61,7 +61,7 @@ class ExportsDeclarationXmlParser @Inject()(
         `type` = declarationType,
         dispatchLocation = None,
         additionalDeclarationType = additionalDeclarationType,
-        consignmentReferences = consignmentReferences.map(_.copy(mrn = Some(declarationId.mrn))),
+        consignmentReferences = consignmentReferences,
         linkDucrToMucr = linkDucrToMucr,
         mucr = mucr,
         transport = Transport(),

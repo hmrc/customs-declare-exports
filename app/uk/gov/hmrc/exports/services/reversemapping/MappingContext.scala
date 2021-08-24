@@ -16,4 +16,4 @@
 
 package uk.gov.hmrc.exports.services.reversemapping
 
-case class DeclarationId(eori: String, mrn: String)
+case class MappingContext(eori: String)

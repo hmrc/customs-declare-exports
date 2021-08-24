@@ -23,7 +23,7 @@ import org.scalatest.EitherValues
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.STANDARD_PRE_LODGED
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.services.reversemapping.DeclarationId
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.items.ItemsParser
 
 class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
@@ -49,7 +49,7 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
     when(itemsParser.parse(any[NodeSeq])).thenReturn(Right(Seq.empty))
   }
 
-  private val declarationId = DeclarationId(eori = "GB1234567890", mrn = "MRN87878797")
+  private val mappingContext = MappingContext(eori = "GB1234567890")
 
   "ExportsDeclarationXmlParser on fromXml" should {
 
@@ -57,7 +57,7 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
 
       val xml = ExportsDeclarationXmlParserSpec.inputXml
 
-      exportsDeclarationXmlParser.fromXml(declarationId, xml)
+      exportsDeclarationXmlParser.fromXml(mappingContext, xml)
 
       verify(additionalDeclarationTypeParser).parse(any[NodeSeq])
       verify(consignmentReferencesParser).parse(any[NodeSeq])
@@ -71,7 +71,7 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
       "all sub-parsers return Right" in {
         val xml = ExportsDeclarationXmlParserSpec.inputXml
 
-        val result = exportsDeclarationXmlParser.fromXml(declarationId, xml)
+        val result = exportsDeclarationXmlParser.fromXml(mappingContext, xml)
 
         result.isRight mustBe true
         result.value mustBe an[ExportsDeclaration]
@@ -85,7 +85,7 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
 
         val xml = ExportsDeclarationXmlParserSpec.inputXml
 
-        val result = exportsDeclarationXmlParser.fromXml(declarationId, xml)
+        val result = exportsDeclarationXmlParser.fromXml(mappingContext, xml)
 
         result.isLeft mustBe true
         result.left.value mustBe "Test Exception"
