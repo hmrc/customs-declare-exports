@@ -84,7 +84,7 @@ class ProcedureCodesParserSpec extends UnitSpec {
       }
     }
 
-    "return Left with XmlParsingException" when {
+    "return Left with XmlParserError" when {
 
       "GovernmentProcedure element with PreviousCode but no CurrentCode is present" in {
 

@@ -20,11 +20,11 @@ import org.mockito.ArgumentMatchersSugar.any
 import testdata.ReverseMappingTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ExportItem
-import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlParsingException
-
 import scala.xml.NodeSeq
 
-class ItemsParserSpec extends UnitSpec {
+import org.scalatest.EitherValues
+
+class ItemsParserSpec extends UnitSpec with EitherValues {
 
   private val singleItemParser = mock[SingleItemParser]
   private val itemsParser = new ItemsParser(singleItemParser)
@@ -59,20 +59,19 @@ class ItemsParserSpec extends UnitSpec {
         itemsParser.parse(input) mustBe Right(itemsToReturn)
       }
 
-      "return Left with XmlParsingException" when {
+      "return Left with XmlParserError" when {
 
         "SingleItemParser returns Left for at least one item" in {
 
           val returnedValues =
-            Seq(Right(ExportItem(id = "testId_1")), Left(XmlParsingException("Test Exception")), Right(ExportItem(id = "testId_2")))
+            Seq(Right(ExportItem(id = "testId_1")), Left("Test Exception"), Right(ExportItem(id = "testId_2")))
 
           when(singleItemParser.parse(any[NodeSeq])).thenReturn(returnedValues.head, returnedValues(1), returnedValues(2))
 
           val result = itemsParser.parse(input)
 
           result.isLeft mustBe true
-          result.left.get mustBe an[XmlParsingException]
-          result.left.get.message mustBe "Test Exception"
+          result.left.value mustBe "Test Exception"
         }
       }
     }

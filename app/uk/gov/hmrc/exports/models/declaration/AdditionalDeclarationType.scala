@@ -18,10 +18,10 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json._
 
-import scala.util.Try
-
 object AdditionalDeclarationType extends Enumeration {
+
   type AdditionalDeclarationType = Value
+
   implicit val format: Format[AdditionalDeclarationType.Value] =
     Format(
       Reads(
@@ -32,11 +32,15 @@ object AdditionalDeclarationType extends Enumeration {
       Writes(v => JsString(v.toString))
     )
 
-  def fromString(str: String): Try[AdditionalDeclarationType] = Try {
+  type AdtError = String
+  type AdtMaybe = Option[AdditionalDeclarationType]
+  type AdtResult = Either[AdtError, AdtMaybe]
+
+  def fromString(str: String): AdtResult =
     AdditionalDeclarationType.values
       .find(_.toString == str)
-      .getOrElse(throw new IllegalArgumentException(s"$str is not a valid value for AdditionalDeclarationType"))
-  }
+      .map(adt => Right(Some(adt)))
+      .getOrElse(Left(s"$str is not a valid value for AdditionalDeclarationType"))
 
   val SUPPLEMENTARY_SIMPLIFIED = Value("Y")
   val SUPPLEMENTARY_EIDR = Value("Z")
