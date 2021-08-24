@@ -16,33 +16,40 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
-import org.mockito.ArgumentMatchersSugar.any
-import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.services.reversemapping.declaration.items.ItemsParser
-
 import scala.xml.NodeSeq
 
-class ExportsDeclarationXmlParserSpec extends UnitSpec {
+import org.mockito.ArgumentMatchersSugar.any
+import org.scalatest.EitherValues
+import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.STANDARD_PRE_LODGED
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
+import uk.gov.hmrc.exports.services.reversemapping.declaration.items.ItemsParser
+
+class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
 
   private val additionalDeclarationTypeParser = mock[AdditionalDeclarationTypeParser]
   private val consignmentReferencesParser = mock[ConsignmentReferencesParser]
+  private val linkDucrToMucrParser = mock[LinkDucrToMucrParser]
   private val mucrParser = mock[MucrParser]
   private val itemsParser = mock[ItemsParser]
 
   private val exportsDeclarationXmlParser =
-    new ExportsDeclarationXmlParser(additionalDeclarationTypeParser, consignmentReferencesParser, mucrParser, itemsParser)
+    new ExportsDeclarationXmlParser(additionalDeclarationTypeParser, consignmentReferencesParser, linkDucrToMucrParser, mucrParser, itemsParser)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(additionalDeclarationTypeParser, consignmentReferencesParser, mucrParser, itemsParser)
+    reset(additionalDeclarationTypeParser, consignmentReferencesParser, linkDucrToMucrParser, mucrParser, itemsParser)
 
-    when(additionalDeclarationTypeParser.parse(any[NodeSeq])).thenReturn(Right(None))
+    when(additionalDeclarationTypeParser.parse(any[NodeSeq])).thenReturn(Right(Some(STANDARD_PRE_LODGED)))
     when(consignmentReferencesParser.parse(any[NodeSeq])).thenReturn(Right(None))
+    when(linkDucrToMucrParser.parse(any[NodeSeq])).thenReturn(Right(None))
     when(mucrParser.parse(any[NodeSeq])).thenReturn(Right(None))
     when(itemsParser.parse(any[NodeSeq])).thenReturn(Right(Seq.empty))
   }
+
+  private val mappingContext = MappingContext(eori = "GB1234567890")
 
   "ExportsDeclarationXmlParser on fromXml" should {
 
@@ -50,10 +57,11 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec {
 
       val xml = ExportsDeclarationXmlParserSpec.inputXml
 
-      exportsDeclarationXmlParser.fromXml(xml)
+      exportsDeclarationXmlParser.fromXml(mappingContext, xml)
 
       verify(additionalDeclarationTypeParser).parse(any[NodeSeq])
       verify(consignmentReferencesParser).parse(any[NodeSeq])
+      verify(linkDucrToMucrParser).parse(any[NodeSeq])
       verify(mucrParser).parse(any[NodeSeq])
       verify(itemsParser).parse(any[NodeSeq])
     }
@@ -61,28 +69,26 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec {
     "return Right with ExportsDeclaration" when {
 
       "all sub-parsers return Right" in {
-
         val xml = ExportsDeclarationXmlParserSpec.inputXml
 
-        val result = exportsDeclarationXmlParser.fromXml(xml)
+        val result = exportsDeclarationXmlParser.fromXml(mappingContext, xml)
 
         result.isRight mustBe true
-        result.right.get mustBe an[ExportsDeclaration]
+        result.value mustBe an[ExportsDeclaration]
       }
     }
 
-    "return Left with XmlParsingException" when {
+    "return Left with XmlParserError" when {
 
       "any parser returns Left" in {
+        when(additionalDeclarationTypeParser.parse(any[NodeSeq])).thenReturn(Left("Test Exception"))
 
-        when(additionalDeclarationTypeParser.parse(any[NodeSeq])).thenReturn(Left(XmlParsingException("Test Exception")))
         val xml = ExportsDeclarationXmlParserSpec.inputXml
 
-        val result = exportsDeclarationXmlParser.fromXml(xml)
+        val result = exportsDeclarationXmlParser.fromXml(mappingContext, xml)
 
         result.isLeft mustBe true
-        result.left.get mustBe an[XmlParsingException]
-        result.left.get.message mustBe "Test Exception"
+        result.left.value mustBe "Test Exception"
       }
     }
   }

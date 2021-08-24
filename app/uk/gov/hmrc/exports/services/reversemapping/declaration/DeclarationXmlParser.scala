@@ -26,7 +26,9 @@ trait DeclarationXmlParser[A] {
 }
 
 object DeclarationXmlParser {
-  type XmlParserResult[A] = Either[XmlParsingException, A]
+
+  type XmlParserError = String
+  type XmlParserResult[A] = Either[XmlParserError, A]
 
   implicit class EitherList[T](list: Seq[XmlParserResult[T]]) {
 

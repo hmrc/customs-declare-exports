@@ -16,15 +16,14 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
-import play.api.Logging
+import scala.xml.NodeSeq
+
 import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR}
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
-import scala.xml.NodeSeq
-
-class ConsignmentReferencesParser extends DeclarationXmlParser[Option[ConsignmentReferences]] with Logging {
+class ConsignmentReferencesParser extends DeclarationXmlParser[Option[ConsignmentReferences]] {
 
   override def parse(inputXml: NodeSeq): XmlParserResult[Option[ConsignmentReferences]] = {
     val ducrOpt = (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
@@ -47,7 +46,7 @@ class ConsignmentReferencesParser extends DeclarationXmlParser[Option[Consignmen
     } else if (areAllFieldsEmpty) {
       Right(None)
     } else {
-      Left(XmlParsingException("Cannot build ConsignmentReferences from XML"))
+      Left("Cannot build ConsignmentReferences from XML")
     }
   }
 

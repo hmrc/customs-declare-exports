@@ -57,7 +57,7 @@ class AdditionalDeclarationTypeParserSpec extends UnitSpec {
       }
     }
 
-    "return Left with XmlParsingException" when {
+    "return Left with XmlParserError" when {
 
       "third character of TypeCode element is NOT listed in AdditionalDeclarationType" in {
 

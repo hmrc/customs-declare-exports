@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services.reversemapping.declaration
+package uk.gov.hmrc.exports.services.reversemapping
 
-case class XmlParsingException(message: String) extends RuntimeException(message)
+case class MappingContext(eori: String)

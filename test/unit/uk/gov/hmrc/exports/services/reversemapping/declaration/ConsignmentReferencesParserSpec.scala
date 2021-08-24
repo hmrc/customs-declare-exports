@@ -67,7 +67,7 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
       }
     }
 
-    "return Left with XmlParsingException" when {
+    "return Left with XmlParserError" when {
 
       "provided with XML containing: PreviousDocument with TypeCode 'DCR' and ID" in {
 

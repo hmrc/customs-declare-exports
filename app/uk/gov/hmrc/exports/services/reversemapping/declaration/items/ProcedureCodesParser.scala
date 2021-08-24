@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.items
 
+import scala.xml.NodeSeq
+
 import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.models.declaration.ProcedureCodes
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
-import uk.gov.hmrc.exports.services.reversemapping.declaration.{DeclarationXmlParser, XmlParsingException}
-
-import scala.xml.NodeSeq
 
 class ProcedureCodesParser extends DeclarationXmlParser[Option[ProcedureCodes]] {
 
@@ -67,7 +67,7 @@ class ProcedureCodesParser extends DeclarationXmlParser[Option[ProcedureCodes]] 
 
     val errors = errorMessages.filter { case (validationFunction, _) => validationFunction(itemXml) }.values
 
-    if (errors.nonEmpty) Left(XmlParsingException(errors.mkString("[", ", ", "}")))
+    if (errors.nonEmpty) Left(errors.mkString("[", ", ", "}"))
     else Right(itemXml)
   }
 }

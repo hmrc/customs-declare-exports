@@ -15,11 +15,13 @@
  */
 
 package uk.gov.hmrc.exports.models
+
 import play.api.libs.json._
 import uk.gov.hmrc.exports.util.EnumJson
 
 object DeclarationType extends Enumeration {
   type DeclarationType = Value
   implicit val format: Format[DeclarationType.Value] = EnumJson.format(DeclarationType)
+
   val STANDARD, SUPPLEMENTARY, SIMPLIFIED, OCCASIONAL, CLEARANCE = Value
 }
