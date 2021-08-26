@@ -17,17 +17,17 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
 import scala.xml.NodeSeq
-
 import javax.inject.Singleton
 import uk.gov.hmrc.exports.models.declaration.{ModeOfTransportCode, TransportLeavingTheBorder}
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags.{BorderTransportMeans, Declaration, ModeCode}
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 @Singleton
 class TransportLeavingTheBorderParser extends DeclarationXmlParser[Option[TransportLeavingTheBorder]] {
 
-  override def parse(inputXml: NodeSeq): XmlParserResult[Option[TransportLeavingTheBorder]] = {
+  override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Option[TransportLeavingTheBorder]] = {
     val modeOfTransportCode = (inputXml \ Declaration \ BorderTransportMeans \ ModeCode).text
     Right(if (modeOfTransportCode.nonEmpty) Some(transportLeavingTheBorder(modeOfTransportCode)) else None)
   }

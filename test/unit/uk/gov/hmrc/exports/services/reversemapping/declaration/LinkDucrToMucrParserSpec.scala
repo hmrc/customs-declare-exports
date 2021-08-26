@@ -16,15 +16,19 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
-import scala.xml.{Elem, NodeSeq}
+import testdata.ExportsTestData.eori
 
 import org.scalatest.EitherValues
+import scala.xml.{Elem, NodeSeq}
+import testdata.ReverseMappingTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 class LinkDucrToMucrParserSpec extends UnitSpec with EitherValues {
 
+  private implicit val context = MappingContext(eori)
   private val parser = new LinkDucrToMucrParser
 
   "LinkDucrToMucrParser on parse" should {

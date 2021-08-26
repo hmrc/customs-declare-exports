@@ -20,14 +20,17 @@ import org.mockito.ArgumentMatchersSugar.any
 import testdata.ReverseMappingTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ExportItem
-import scala.xml.NodeSeq
 
+import scala.xml.NodeSeq
 import org.scalatest.EitherValues
+import testdata.ExportsTestData.eori
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 class ItemsParserSpec extends UnitSpec with EitherValues {
 
   private val singleItemParser = mock[SingleItemParser]
   private val itemsParser = new ItemsParser(singleItemParser)
+  private implicit val context = MappingContext(eori)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -45,16 +48,18 @@ class ItemsParserSpec extends UnitSpec with EitherValues {
 
       "call SingleItemParser" in {
 
-        when(singleItemParser.parse(any[NodeSeq])).thenReturn(Right(itemsToReturn.head), Right(itemsToReturn(1)), Right(itemsToReturn(2)))
+        when(singleItemParser.parse(any[NodeSeq])(any[MappingContext]))
+          .thenReturn(Right(itemsToReturn.head), Right(itemsToReturn(1)), Right(itemsToReturn(2)))
 
         itemsParser.parse(input)
 
-        verify(singleItemParser, times(governmentAgencyGoodsItemsAmount)).parse(any[NodeSeq])
+        verify(singleItemParser, times(governmentAgencyGoodsItemsAmount)).parse(any[NodeSeq])(any[MappingContext])
       }
 
       "return Right with ExportsItems returned by SingleItemParser" in {
 
-        when(singleItemParser.parse(any[NodeSeq])).thenReturn(Right(itemsToReturn.head), Right(itemsToReturn(1)), Right(itemsToReturn(2)))
+        when(singleItemParser.parse(any[NodeSeq])(any[MappingContext]))
+          .thenReturn(Right(itemsToReturn.head), Right(itemsToReturn(1)), Right(itemsToReturn(2)))
 
         itemsParser.parse(input) mustBe Right(itemsToReturn)
       }
@@ -66,7 +71,7 @@ class ItemsParserSpec extends UnitSpec with EitherValues {
           val returnedValues =
             Seq(Right(ExportItem(id = "testId_1")), Left("Test Exception"), Right(ExportItem(id = "testId_2")))
 
-          when(singleItemParser.parse(any[NodeSeq])).thenReturn(returnedValues.head, returnedValues(1), returnedValues(2))
+          when(singleItemParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(returnedValues.head, returnedValues(1), returnedValues(2))
 
           val result = itemsParser.parse(input)
 

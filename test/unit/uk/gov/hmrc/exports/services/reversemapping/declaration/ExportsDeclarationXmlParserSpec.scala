@@ -17,15 +17,15 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import scala.xml.NodeSeq
-
 import org.mockito.ArgumentMatchersSugar.any
 import org.scalatest.EitherValues
+import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
-
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.STANDARD_PRE_LODGED
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
-import uk.gov.hmrc.exports.models.declaration.{ExportsDeclaration, Transport}
+import uk.gov.hmrc.exports.models.declaration.{ExportsDeclaration, Parties, Transport}
 import uk.gov.hmrc.exports.services.reversemapping.declaration.items.ItemsParser
+import uk.gov.hmrc.exports.services.reversemapping.declaration.parties.PartiesParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.TransportParser
 
 class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
@@ -36,6 +36,7 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
   private val mucrParser = mock[MucrParser]
   private val itemsParser = mock[ItemsParser]
   private val transportParser = mock[TransportParser]
+  private val partiesParser = mock[PartiesParser]
 
   private val exportsDeclarationXmlParser =
     new ExportsDeclarationXmlParser(
@@ -44,20 +45,22 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
       linkDucrToMucrParser,
       mucrParser,
       itemsParser,
-      transportParser
+      transportParser,
+      partiesParser
     )
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(additionalDeclarationTypeParser, consignmentReferencesParser, linkDucrToMucrParser, mucrParser, itemsParser, transportParser)
+    reset(additionalDeclarationTypeParser, consignmentReferencesParser, linkDucrToMucrParser, mucrParser, itemsParser, transportParser, partiesParser)
 
-    when(additionalDeclarationTypeParser.parse(any[NodeSeq])).thenReturn(Right(Some(STANDARD_PRE_LODGED)))
-    when(consignmentReferencesParser.parse(any[NodeSeq])).thenReturn(Right(None))
-    when(linkDucrToMucrParser.parse(any[NodeSeq])).thenReturn(Right(None))
-    when(mucrParser.parse(any[NodeSeq])).thenReturn(Right(None))
-    when(itemsParser.parse(any[NodeSeq])).thenReturn(Right(Seq.empty))
-    when(transportParser.parse(any[NodeSeq])).thenReturn(Right(Transport()))
+    when(additionalDeclarationTypeParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(STANDARD_PRE_LODGED)))
+    when(consignmentReferencesParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
+    when(linkDucrToMucrParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
+    when(mucrParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
+    when(itemsParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Seq.empty))
+    when(transportParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Transport()))
+    when(partiesParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Parties()))
   }
 
   private val mappingContext = MappingContext(eori = "GB1234567890")
@@ -70,12 +73,13 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
 
       exportsDeclarationXmlParser.fromXml(mappingContext, xml)
 
-      verify(additionalDeclarationTypeParser).parse(any[NodeSeq])
-      verify(consignmentReferencesParser).parse(any[NodeSeq])
-      verify(linkDucrToMucrParser).parse(any[NodeSeq])
-      verify(mucrParser).parse(any[NodeSeq])
-      verify(itemsParser).parse(any[NodeSeq])
-      verify(transportParser).parse(any[NodeSeq])
+      verify(additionalDeclarationTypeParser).parse(any[NodeSeq])(any[MappingContext])
+      verify(consignmentReferencesParser).parse(any[NodeSeq])(any[MappingContext])
+      verify(linkDucrToMucrParser).parse(any[NodeSeq])(any[MappingContext])
+      verify(mucrParser).parse(any[NodeSeq])(any[MappingContext])
+      verify(itemsParser).parse(any[NodeSeq])(any[MappingContext])
+      verify(transportParser).parse(any[NodeSeq])(any[MappingContext])
+      verify(partiesParser).parse(any[NodeSeq])(any[MappingContext])
     }
 
     "return Right with ExportsDeclaration" when {
@@ -93,7 +97,7 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
     "return Left with XmlParserError" when {
 
       "any parser returns Left" in {
-        when(additionalDeclarationTypeParser.parse(any[NodeSeq])).thenReturn(Left("Test Exception"))
+        when(additionalDeclarationTypeParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Left("Test Exception"))
 
         val xml = ExportsDeclarationXmlParserSpec.inputXml
 

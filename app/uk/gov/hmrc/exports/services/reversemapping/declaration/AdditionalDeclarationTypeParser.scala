@@ -17,16 +17,16 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import scala.xml.NodeSeq
-
 import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdtMaybe
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags.{Declaration, TypeCode}
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 class AdditionalDeclarationTypeParser extends DeclarationXmlParser[AdtMaybe] {
 
-  override def parse(inputXml: NodeSeq): XmlParserResult[AdtMaybe] =
+  override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[AdtMaybe] =
     StringOption((inputXml \ Declaration \ TypeCode).text.drop(2))
       .map(AdditionalDeclarationType.fromString)
       .getOrElse(Right(None))

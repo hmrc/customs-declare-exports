@@ -20,13 +20,14 @@ import uk.gov.hmrc.exports.models.declaration.ExportItem
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 import javax.inject.Inject
 import scala.xml.NodeSeq
 
 class ItemsParser @Inject()(singleItemParser: SingleItemParser) extends DeclarationXmlParser[Seq[ExportItem]] {
 
-  override def parse(inputXml: NodeSeq): XmlParserResult[Seq[ExportItem]] =
+  override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Seq[ExportItem]] =
     (inputXml \ Declaration \ GoodsShipment \ GovernmentAgencyGoodsItem).map(singleItemParser.parse).toEitherOfList
 
 }

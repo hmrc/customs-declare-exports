@@ -19,12 +19,17 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 import scala.xml.Elem
 
 import org.scalatest.EitherValues
+import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.ContainersParser.NO_SEALS
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
+
+import scala.xml.Elem
 
 class ContainersParserSpec extends UnitSpec with EitherValues {
 
   val parser = new ContainersParser()
+  private implicit val context = MappingContext(eori)
 
   "ContainersParserSpec on parse" should {
     "return Right with empty Seq" when {

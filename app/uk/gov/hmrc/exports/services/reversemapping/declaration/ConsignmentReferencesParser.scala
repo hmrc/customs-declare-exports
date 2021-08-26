@@ -17,15 +17,15 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import scala.xml.NodeSeq
-
 import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR}
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 class ConsignmentReferencesParser extends DeclarationXmlParser[Option[ConsignmentReferences]] {
 
-  override def parse(inputXml: NodeSeq): XmlParserResult[Option[ConsignmentReferences]] = {
+  override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Option[ConsignmentReferences]] = {
     val ducrOpt = (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
       .find(previousDocument => (previousDocument \ TypeCode).text == "DCR")
       .map(previousDocument => (previousDocument \ ID).text)

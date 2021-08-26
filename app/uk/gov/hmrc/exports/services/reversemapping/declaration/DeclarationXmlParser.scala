@@ -17,12 +17,13 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 import scala.annotation.tailrec
 import scala.xml.NodeSeq
 
 trait DeclarationXmlParser[A] {
-  def parse(inputXml: NodeSeq): XmlParserResult[A]
+  def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[A]
 }
 
 object DeclarationXmlParser {

@@ -16,14 +16,17 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.items
 
+import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ProcedureCodes
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 import scala.xml.{Elem, NodeSeq}
 
 class ProcedureCodesParserSpec extends UnitSpec {
 
   private val procedureCodesParser = new ProcedureCodesParser()
+  private implicit val context = MappingContext(eori)
 
   "ProcedureCodesParser on parse" should {
 
