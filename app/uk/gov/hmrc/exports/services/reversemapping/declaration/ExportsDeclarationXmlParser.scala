@@ -16,12 +16,6 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
-import java.time.Instant
-import java.util.UUID
-
-import scala.xml.NodeSeq
-
-import javax.inject.Inject
 import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType._
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
@@ -29,8 +23,14 @@ import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.items.ItemsParser
+import uk.gov.hmrc.exports.services.reversemapping.declaration.locations.LocationsParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.parties.PartiesParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.TransportParser
+
+import java.time.Instant
+import java.util.UUID
+import javax.inject.Inject
+import scala.xml.NodeSeq
 
 class ExportsDeclarationXmlParser @Inject()(
   additionalDeclarationTypeParser: AdditionalDeclarationTypeParser,
@@ -38,7 +38,8 @@ class ExportsDeclarationXmlParser @Inject()(
   mucrParser: MucrParser,
   itemsParser: ItemsParser,
   transportParser: TransportParser,
-  partiesParser: PartiesParser
+  partiesParser: PartiesParser,
+  locationsParser: LocationsParser
 ) {
 
   def fromXml(mappingContext: MappingContext, xml: String): XmlParserResult[ExportsDeclaration] = {
@@ -55,6 +56,7 @@ class ExportsDeclarationXmlParser @Inject()(
       items <- itemsParser.parse(declarationXml)
       transport <- transportParser.parse(declarationXml)
       parties <- partiesParser.parse(declarationXml)
+      locations <- locationsParser.parse(declarationXml)
     } yield
       ExportsDeclaration(
         id = UUID.randomUUID().toString,
@@ -71,7 +73,7 @@ class ExportsDeclarationXmlParser @Inject()(
         mucr = mucr,
         transport = transport,
         parties = parties,
-        locations = Locations(),
+        locations = locations,
         items = items,
         totalNumberOfItems = None,
         previousDocuments = None,
