@@ -21,12 +21,16 @@ import scala.xml.NodeSeq
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.Transport
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.{XmlNodeHandler, XmlParserResult}
-import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 
 class TransportParser @Inject()(
   containersParser: ContainersParser,
   expressConsignmentParser: ExpressConsignmentParser,
+  meansOfTransportCrossingTheBorderIDNumberParser: MeansOfTransportCrossingTheBorderIDNumberParser,
+  meansOfTransportCrossingTheBorderNationalityParser: MeansOfTransportCrossingTheBorderNationalityParser,
+  meansOfTransportCrossingTheBorderTypeParser: MeansOfTransportCrossingTheBorderTypeParser,
+  meansOfTransportOnDepartureIDNumberParser: MeansOfTransportOnDepartureIDNumberParser,
+  meansOfTransportOnDepartureTypeParser: MeansOfTransportOnDepartureTypeParser,
   transportLeavingTheBorderParser: TransportLeavingTheBorderParser,
   transportPaymentParser: TransportPaymentParser
 ) extends DeclarationXmlParser[Transport] {
@@ -34,31 +38,30 @@ class TransportParser @Inject()(
   override def parse(inputXml: NodeSeq): XmlParserResult[Transport] =
     for {
       containers <- containersParser.parse(inputXml)
+      expressConsignment <- expressConsignmentParser.parse(inputXml)
+      transportPayment <- transportPaymentParser.parse(inputXml)
+      borderModeOfTransportCode <- transportLeavingTheBorderParser.parse(inputXml)
+      meansOfTransportOnDepartureType <- meansOfTransportOnDepartureTypeParser.parse(inputXml)
+      meansOfTransportOnDepartureIDNumber <- meansOfTransportOnDepartureIDNumberParser.parse(inputXml)
+      meansOfTransportCrossingTheBorderNationality <- meansOfTransportCrossingTheBorderNationalityParser.parse(inputXml)
+      meansOfTransportCrossingTheBorderType <- meansOfTransportCrossingTheBorderTypeParser.parse(inputXml)
+      meansOfTransportCrossingTheBorderIDNumber <- meansOfTransportCrossingTheBorderIDNumberParser.parse(inputXml)
     } yield {
       val maybeContainers = containers.isEmpty match {
         case true  => None
         case false => Some(containers)
       }
 
-      val departureTransportMeans = parseDepartureTransportMeans(inputXml)
-      val borderTransportMeans = parseBorderTransportMeans(inputXml)
-
       Transport(
-        expressConsignment = expressConsignmentParser.parse(inputXml),
-        transportPayment = transportPaymentParser.parse(inputXml),
+        expressConsignment = expressConsignment,
+        transportPayment = transportPayment,
         containers = maybeContainers,
-        borderModeOfTransportCode = transportLeavingTheBorderParser.parse(inputXml),
-        meansOfTransportOnDepartureType = (departureTransportMeans \ IdentificationTypeCode).toOptionalString,
-        meansOfTransportOnDepartureIDNumber = (departureTransportMeans \ ID).toOptionalString,
-        meansOfTransportCrossingTheBorderNationality = (borderTransportMeans \ RegistrationNationalityCode).toOptionalString,
-        meansOfTransportCrossingTheBorderType = (borderTransportMeans \ IdentificationTypeCode).toOptionalString,
-        meansOfTransportCrossingTheBorderIDNumber = (borderTransportMeans \ ID).toOptionalString
+        borderModeOfTransportCode = borderModeOfTransportCode,
+        meansOfTransportOnDepartureType = meansOfTransportOnDepartureType,
+        meansOfTransportOnDepartureIDNumber = meansOfTransportOnDepartureIDNumber,
+        meansOfTransportCrossingTheBorderNationality = meansOfTransportCrossingTheBorderNationality,
+        meansOfTransportCrossingTheBorderType = meansOfTransportCrossingTheBorderType,
+        meansOfTransportCrossingTheBorderIDNumber = meansOfTransportCrossingTheBorderIDNumber
       )
     }
-
-  private def parseDepartureTransportMeans(inputXml: NodeSeq): NodeSeq =
-    inputXml \ Declaration \ GoodsShipment \ Consignment \ DepartureTransportMeans
-
-  private def parseBorderTransportMeans(inputXml: NodeSeq): NodeSeq =
-    inputXml \ Declaration \ BorderTransportMeans
 }

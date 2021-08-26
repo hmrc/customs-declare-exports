@@ -37,7 +37,7 @@ object XmlTags {
   val RegistrationNationalityCode = "RegistrationNationalityCode"
   val Seal = "Seal"
   val SequenceNumeric = "SequenceNumeric"
-  val SpecificCircumstancesCode = "DeclarationSpecificCircumstancesCodeCodeType"
+  val DeclarationSpecificCircumstancesCodeCodeType = "DeclarationSpecificCircumstancesCodeCodeType"
   val TraderAssignedReferenceID = "TraderAssignedReferenceID"
   val TransportEquipment = "TransportEquipment"
   val TypeCode = "TypeCode"

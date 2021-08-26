@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
-import scala.xml.{Elem, NodeSeq}
+import scala.xml.NodeSeq
 
 import org.mockito.ArgumentMatchersSugar.any
 import org.scalatest.EitherValues
@@ -28,54 +28,77 @@ class TransportParserSpec extends UnitSpec with EitherValues {
 
   private val containersParser = mock[ContainersParser]
   private val expressConsignmentParser = mock[ExpressConsignmentParser]
+  private val meansOfTransportCrossingTheBorderIDNumberParser = mock[MeansOfTransportCrossingTheBorderIDNumberParser]
+  private val meansOfTransportCrossingTheBorderNationalityParser = mock[MeansOfTransportCrossingTheBorderNationalityParser]
+  private val meansOfTransportCrossingTheBorderTypeParser = mock[MeansOfTransportCrossingTheBorderTypeParser]
+  private val meansOfTransportOnDepartureIDNumberParser = mock[MeansOfTransportOnDepartureIDNumberParser]
+  private val meansOfTransportOnDepartureTypeParser = mock[MeansOfTransportOnDepartureTypeParser]
   private val transportLeavingTheBorderParser = mock[TransportLeavingTheBorderParser]
   private val transportPaymentParser = mock[TransportPaymentParser]
 
   private val transportParser =
-    new TransportParser(containersParser, expressConsignmentParser, transportLeavingTheBorderParser, transportPaymentParser)
+    new TransportParser(
+      containersParser,
+      expressConsignmentParser,
+      meansOfTransportCrossingTheBorderIDNumberParser,
+      meansOfTransportCrossingTheBorderNationalityParser,
+      meansOfTransportCrossingTheBorderTypeParser,
+      meansOfTransportOnDepartureIDNumberParser,
+      meansOfTransportOnDepartureTypeParser,
+      transportLeavingTheBorderParser,
+      transportPaymentParser
+    )
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(containersParser, expressConsignmentParser, transportLeavingTheBorderParser, transportPaymentParser)
+    reset(
+      containersParser,
+      expressConsignmentParser,
+      meansOfTransportCrossingTheBorderIDNumberParser,
+      meansOfTransportCrossingTheBorderNationalityParser,
+      meansOfTransportCrossingTheBorderTypeParser,
+      meansOfTransportOnDepartureIDNumberParser,
+      meansOfTransportOnDepartureTypeParser,
+      transportLeavingTheBorderParser,
+      transportPaymentParser
+    )
 
     when(containersParser.parse(any[NodeSeq])).thenReturn(Right(Seq()))
-    when(expressConsignmentParser.parse(any[NodeSeq])).thenReturn(None)
-    when(transportLeavingTheBorderParser.parse(any[NodeSeq])).thenReturn(None)
-    when(transportPaymentParser.parse(any[NodeSeq])).thenReturn(None)
+    when(expressConsignmentParser.parse(any[NodeSeq])).thenReturn(Right(None))
+    when(meansOfTransportCrossingTheBorderIDNumberParser.parse(any[NodeSeq])).thenReturn(Right(None))
+    when(meansOfTransportCrossingTheBorderNationalityParser.parse(any[NodeSeq])).thenReturn(Right(None))
+    when(meansOfTransportCrossingTheBorderTypeParser.parse(any[NodeSeq])).thenReturn(Right(None))
+    when(meansOfTransportOnDepartureIDNumberParser.parse(any[NodeSeq])).thenReturn(Right(None))
+    when(meansOfTransportOnDepartureTypeParser.parse(any[NodeSeq])).thenReturn(Right(None))
+    when(transportLeavingTheBorderParser.parse(any[NodeSeq])).thenReturn(Right(None))
+    when(transportPaymentParser.parse(any[NodeSeq])).thenReturn(Right(None))
   }
 
   "TransportParser parse" should {
     val xml = <meta></meta>
 
     "call all sub-parsers" in {
-      val transport = transportParser.parse(xml).value
+      transportParser.parse(xml).value
 
       verify(containersParser).parse(any[NodeSeq])
       verify(expressConsignmentParser).parse(any[NodeSeq])
+      verify(meansOfTransportCrossingTheBorderIDNumberParser).parse(any[NodeSeq])
+      verify(meansOfTransportCrossingTheBorderNationalityParser).parse(any[NodeSeq])
+      verify(meansOfTransportCrossingTheBorderTypeParser).parse(any[NodeSeq])
+      verify(meansOfTransportOnDepartureIDNumberParser).parse(any[NodeSeq])
+      verify(meansOfTransportOnDepartureTypeParser).parse(any[NodeSeq])
       verify(transportLeavingTheBorderParser).parse(any[NodeSeq])
       verify(transportPaymentParser).parse(any[NodeSeq])
-
-      transport.meansOfTransportOnDepartureType mustBe None
-      transport.meansOfTransportOnDepartureIDNumber mustBe None
-      transport.meansOfTransportCrossingTheBorderNationality mustBe None
-      transport.meansOfTransportCrossingTheBorderType mustBe None
-      transport.meansOfTransportCrossingTheBorderIDNumber mustBe None
     }
 
     "return a Transport instance" when {
       "all sub-parsers return Right or a value" in {
-        val result = transportParser.parse(inputXml)
+        val result = transportParser.parse(xml)
 
         result.isRight mustBe true
         val transport = result.value
         transport mustBe an[Transport]
-
-        transport.meansOfTransportOnDepartureType mustBe Some("11")
-        transport.meansOfTransportOnDepartureIDNumber mustBe Some("SHIP1")
-        transport.meansOfTransportCrossingTheBorderNationality mustBe Some("GB")
-        transport.meansOfTransportCrossingTheBorderType mustBe Some("12")
-        transport.meansOfTransportCrossingTheBorderIDNumber mustBe Some("Superfast Hawk Millenium")
       }
     }
 
@@ -91,23 +114,4 @@ class TransportParserSpec extends UnitSpec with EitherValues {
       }
     }
   }
-
-  private val inputXml: Elem =
-    <meta>
-      <ns3:Declaration>
-        <ns3:BorderTransportMeans>
-          <ns3:RegistrationNationalityCode>GB</ns3:RegistrationNationalityCode>
-          <ns3:IdentificationTypeCode>12</ns3:IdentificationTypeCode>
-          <ns3:ID>Superfast Hawk Millenium</ns3:ID>
-        </ns3:BorderTransportMeans>
-        <ns3:GoodsShipment>
-          <ns3:Consignment>
-            <ns3:DepartureTransportMeans>
-              <ns3:IdentificationTypeCode>11</ns3:IdentificationTypeCode>
-              <ns3:ID>SHIP1</ns3:ID>
-            </ns3:DepartureTransportMeans>
-          </ns3:Consignment>
-        </ns3:GoodsShipment>
-      </ns3:Declaration>
-    </meta>
 }

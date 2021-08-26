@@ -20,39 +20,36 @@ import scala.xml.{Elem, NodeSeq}
 
 import org.scalatest.EitherValues
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.TransportPayment
 
-class TransportPaymentParserSpec extends UnitSpec with EitherValues {
+class MeansOfTransportCrossingTheBorderIDNumberParserSpec extends UnitSpec with EitherValues {
 
-  private val parser = new TransportPaymentParser
+  private val parser = new MeansOfTransportCrossingTheBorderIDNumberParser
 
-  "TransportPaymentParser on parse" should {
+  "MeansOfTransportCrossingTheBorderIDNumberParser on parse" should {
 
     "return None" when {
-      "the '/ Consignment / Freight / PaymentMethodCode' element is NOT present" in {
+      "the '/ BorderTransportMeans / ID' element is NOT present" in {
         val input = inputXml()
         parser.parse(input).value mustBe None
       }
     }
 
-    "return the expected PaymentMethod" when {
-      "the '/ Consignment / Freight / PaymentMethodCode' element is present" in {
-        val input = inputXml(Some(TransportPayment.cash))
-        val transportPayment = parser.parse(input).value.get
-        transportPayment.paymentMethod mustBe TransportPayment.cash
+    "return the expected value" when {
+      "the '/ BorderTransportMeans / ID' element is present" in {
+        val expectedId = "Superfast Hawk Millenium"
+        val input = inputXml(Some(expectedId))
+        parser.parse(input).value.get mustBe expectedId
       }
     }
   }
 
-  private def inputXml(inputValue: Option[String] = None): Elem =
+  private def inputXml(idNumber: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        { inputValue.map { value =>
-          <ns3:Consignment>
-            <ns3:Freight>
-              <ns3:PaymentMethodCode>{value}</ns3:PaymentMethodCode>
-            </ns3:Freight>
-          </ns3:Consignment>
+        { idNumber.map { id =>
+          <ns3:BorderTransportMeans>
+            <ns3:ID>{id}</ns3:ID>
+          </ns3:BorderTransportMeans>
         }.getOrElse(NodeSeq.Empty) }
       </ns3:Declaration>
     </meta>

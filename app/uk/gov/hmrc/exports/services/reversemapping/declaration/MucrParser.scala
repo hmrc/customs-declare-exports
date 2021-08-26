@@ -20,14 +20,17 @@ import scala.xml.NodeSeq
 
 import javax.inject.Singleton
 import uk.gov.hmrc.exports.models.declaration.MUCR
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
 @Singleton
-class MucrParser {
+class MucrParser extends DeclarationXmlParser[Option[MUCR]] {
 
-  def parse(inputXml: NodeSeq): Option[MUCR] =
-    (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
-      .find(previousDocument => (previousDocument \ TypeCode).text == "MCR")
-      .map(previousDocument => (previousDocument \ ID).text)
-      .map(MUCR(_))
+  override def parse(inputXml: NodeSeq): XmlParserResult[Option[MUCR]] =
+    Right(
+      (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
+        .find(previousDocument => (previousDocument \ TypeCode).text == "MCR")
+        .map(previousDocument => (previousDocument \ ID).text)
+        .map(MUCR(_))
+    )
 }

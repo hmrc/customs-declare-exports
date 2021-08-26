@@ -19,7 +19,6 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 import scala.xml.{Elem, NodeSeq}
 
 import org.scalatest.EitherValues
-import testdata.ReverseMappingTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType
 
@@ -53,7 +52,6 @@ class AdditionalDeclarationTypeParserSpec extends UnitSpec with EitherValues {
     }
 
     "return a XmlParserError" when {
-
       "the 3rd character of the '/ TypeCode' element is NOT listed in AdditionalDeclarationType" in {
         val input = inputXml(Some("EX7"))
         parser.parse(input).isLeft mustBe true
@@ -61,10 +59,10 @@ class AdditionalDeclarationTypeParserSpec extends UnitSpec with EitherValues {
     }
   }
 
-  private def inputXml(typeCode: Option[String]): Elem = ReverseMappingTestData.inputXmlMetaData {
-    <ns3:Declaration>
-      {typeCode.map { code => <ns3:TypeCode>{code}</ns3:TypeCode> }.getOrElse(NodeSeq.Empty) }
-    </ns3:Declaration>
-  }
-
+  private def inputXml(typeCode: Option[String]): Elem =
+    <meta>
+      <ns3:Declaration>
+        {typeCode.map { code => <ns3:TypeCode>{code}</ns3:TypeCode> }.getOrElse(NodeSeq.Empty) }
+      </ns3:Declaration>
+    </meta>
 }

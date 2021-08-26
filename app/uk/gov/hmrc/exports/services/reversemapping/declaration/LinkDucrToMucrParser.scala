@@ -21,13 +21,16 @@ import scala.xml.NodeSeq
 import javax.inject.Singleton
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
 @Singleton
-class LinkDucrToMucrParser {
+class LinkDucrToMucrParser extends DeclarationXmlParser[Option[YesNoAnswer]] {
 
-  def parse(inputXml: NodeSeq): Option[YesNoAnswer] =
-    (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
-      .find(previousDocument => (previousDocument \ TypeCode).text == "MCR")
-      .map(_ => YesNoAnswer(YesNoAnswers.yes))
+  override def parse(inputXml: NodeSeq): XmlParserResult[Option[YesNoAnswer]] =
+    Right(
+      (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
+        .find(previousDocument => (previousDocument \ TypeCode).text == "MCR")
+        .map(_ => YesNoAnswer(YesNoAnswers.yes))
+    )
 }

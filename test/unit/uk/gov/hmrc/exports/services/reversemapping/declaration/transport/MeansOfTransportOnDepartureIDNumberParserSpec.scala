@@ -20,26 +20,25 @@ import scala.xml.{Elem, NodeSeq}
 
 import org.scalatest.EitherValues
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.TransportPayment
 
-class TransportPaymentParserSpec extends UnitSpec with EitherValues {
+class MeansOfTransportOnDepartureIDNumberParserSpec extends UnitSpec with EitherValues {
 
-  private val parser = new TransportPaymentParser
+  private val parser = new MeansOfTransportOnDepartureIDNumberParser
 
-  "TransportPaymentParser on parse" should {
+  "MeansOfTransportOnDepartureIDNumberParser on parse" should {
 
     "return None" when {
-      "the '/ Consignment / Freight / PaymentMethodCode' element is NOT present" in {
+      "the '/ GoodsShipment / Consignment / DepartureTransportMeans / ID' element is NOT present" in {
         val input = inputXml()
         parser.parse(input).value mustBe None
       }
     }
 
-    "return the expected PaymentMethod" when {
-      "the '/ Consignment / Freight / PaymentMethodCode' element is present" in {
-        val input = inputXml(Some(TransportPayment.cash))
-        val transportPayment = parser.parse(input).value.get
-        transportPayment.paymentMethod mustBe TransportPayment.cash
+    "return the expected value" when {
+      "the '/ GoodsShipment / Consignment / DepartureTransportMeans / ID' element is present" in {
+        val expectedValue = "SHIP1"
+        val input = inputXml(Some(expectedValue))
+        parser.parse(input).value.get mustBe expectedValue
       }
     }
   }
@@ -48,11 +47,13 @@ class TransportPaymentParserSpec extends UnitSpec with EitherValues {
     <meta>
       <ns3:Declaration>
         { inputValue.map { value =>
-          <ns3:Consignment>
-            <ns3:Freight>
-              <ns3:PaymentMethodCode>{value}</ns3:PaymentMethodCode>
-            </ns3:Freight>
-          </ns3:Consignment>
+          <ns3:GoodsShipment>
+            <ns3:Consignment>
+              <ns3:DepartureTransportMeans>
+                <ns3:ID>{value}</ns3:ID>
+              </ns3:DepartureTransportMeans>
+            </ns3:Consignment>
+          </ns3:GoodsShipment>
         }.getOrElse(NodeSeq.Empty) }
       </ns3:Declaration>
     </meta>

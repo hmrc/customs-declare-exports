@@ -18,12 +18,12 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
 import scala.xml.{Elem, NodeSeq}
 
-import testdata.ReverseMappingTestData
+import org.scalatest.EitherValues
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 
-class ExpressConsignmentParserSpec extends UnitSpec {
+class ExpressConsignmentParserSpec extends UnitSpec with EitherValues {
 
   private val parser = new ExpressConsignmentParser
 
@@ -33,28 +33,29 @@ class ExpressConsignmentParserSpec extends UnitSpec {
 
       "the '/ DeclarationSpecificCircumstancesCodeCodeType' element is NOT present" in {
         val input = inputXml()
-        parser.parse(input) mustBe None
+        parser.parse(input).value mustBe None
       }
 
       "the '/ DeclarationSpecificCircumstancesCodeCodeType' element has not 'A20' as value" in {
         val input = inputXml(Some("value"))
-        parser.parse(input) mustBe None
+        parser.parse(input).value mustBe None
       }
     }
 
     "return the expected YesNoAnswer" when {
       "the '/ DeclarationSpecificCircumstancesCodeCodeType' element has 'A20' as value" in {
         val input = inputXml(Some("A20"))
-        parser.parse(input).get mustBe YesNoAnswer(YesNoAnswers.yes)
+        parser.parse(input).value.get mustBe YesNoAnswer(YesNoAnswers.yes)
       }
     }
   }
 
-  private def inputXml(specificCircumstances: Option[String] = None): Elem = ReverseMappingTestData.inputXmlMetaData {
-    <ns3:Declaration>
-      { specificCircumstances.map { sC =>
-        <ns3:DeclarationSpecificCircumstancesCodeCodeType>{sC}</ns3:DeclarationSpecificCircumstancesCodeCodeType>
-      }.getOrElse(NodeSeq.Empty) }
-    </ns3:Declaration>
-  }
+  private def inputXml(inputValue: Option[String] = None): Elem =
+    <meta>
+      <ns3:Declaration>
+        { inputValue.map { value =>
+          <ns3:DeclarationSpecificCircumstancesCodeCodeType>{value}</ns3:DeclarationSpecificCircumstancesCodeCodeType>
+        }.getOrElse(NodeSeq.Empty) }
+      </ns3:Declaration>
+    </meta>
 }

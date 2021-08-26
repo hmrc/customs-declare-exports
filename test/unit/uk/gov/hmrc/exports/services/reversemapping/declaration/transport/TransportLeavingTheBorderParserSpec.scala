@@ -18,11 +18,11 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
 import scala.xml.{Elem, NodeSeq}
 
-import testdata.ReverseMappingTestData
+import org.scalatest.EitherValues
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ModeOfTransportCode
 
-class TransportLeavingTheBorderParserSpec extends UnitSpec {
+class TransportLeavingTheBorderParserSpec extends UnitSpec with EitherValues {
 
   private val parser = new TransportLeavingTheBorderParser
 
@@ -31,14 +31,14 @@ class TransportLeavingTheBorderParserSpec extends UnitSpec {
     "return None" when {
       "the 'BorderTransportMeans / ModeCode' element is NOT present" in {
         val input = inputXml()
-        parser.parse(input) mustBe None
+        parser.parse(input).value mustBe None
       }
     }
 
     "return ModeOfTransportCode.Empty" when {
       "the 'BorderTransportMeans / ModeCode' element is present but not known" in {
         val input = inputXml(Some("value"))
-        val transportLeavingTheBorder = parser.parse(input).get
+        val transportLeavingTheBorder = parser.parse(input).value.get
         transportLeavingTheBorder.code.get mustBe ModeOfTransportCode.Empty
       }
     }
@@ -46,19 +46,20 @@ class TransportLeavingTheBorderParserSpec extends UnitSpec {
     "return the expected ModeOfTransportCode" when {
       "the 'BorderTransportMeans / ModeCode' element is present and known" in {
         val input = inputXml(Some("1"))
-        val transportLeavingTheBorder = parser.parse(input).get
+        val transportLeavingTheBorder = parser.parse(input).value.get
         transportLeavingTheBorder.code.get mustBe ModeOfTransportCode.Maritime
       }
     }
   }
 
-  private def inputXml(modeOfTransportCode: Option[String] = None): Elem = ReverseMappingTestData.inputXmlMetaData {
-    <ns3:Declaration>
-      {modeOfTransportCode.map { mTC =>
-      <ns3:BorderTransportMeans>
-        <ns3:ModeCode>{mTC}</ns3:ModeCode>
-      </ns3:BorderTransportMeans>
-    }.getOrElse(NodeSeq.Empty)}
-    </ns3:Declaration>
-  }
+  private def inputXml(inputValue: Option[String] = None): Elem =
+    <meta>
+      <ns3:Declaration>
+        { inputValue.map { value =>
+          <ns3:BorderTransportMeans>
+            <ns3:ModeCode>{value}</ns3:ModeCode>
+          </ns3:BorderTransportMeans>
+        }.getOrElse(NodeSeq.Empty) }
+      </ns3:Declaration>
+    </meta>
 }

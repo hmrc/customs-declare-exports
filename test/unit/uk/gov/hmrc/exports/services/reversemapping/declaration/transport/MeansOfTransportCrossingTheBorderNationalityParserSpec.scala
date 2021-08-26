@@ -20,26 +20,25 @@ import scala.xml.{Elem, NodeSeq}
 
 import org.scalatest.EitherValues
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.TransportPayment
 
-class TransportPaymentParserSpec extends UnitSpec with EitherValues {
+class MeansOfTransportCrossingTheBorderNationalityParserSpec extends UnitSpec with EitherValues {
 
-  private val parser = new TransportPaymentParser
+  private val parser = new MeansOfTransportCrossingTheBorderNationalityParser
 
-  "TransportPaymentParser on parse" should {
+  "MeansOfTransportCrossingTheBorderNationalityParser on parse" should {
 
     "return None" when {
-      "the '/ Consignment / Freight / PaymentMethodCode' element is NOT present" in {
+      "the '/ BorderTransportMeans / RegistrationNationalityCode' element is NOT present" in {
         val input = inputXml()
         parser.parse(input).value mustBe None
       }
     }
 
-    "return the expected PaymentMethod" when {
-      "the '/ Consignment / Freight / PaymentMethodCode' element is present" in {
-        val input = inputXml(Some(TransportPayment.cash))
-        val transportPayment = parser.parse(input).value.get
-        transportPayment.paymentMethod mustBe TransportPayment.cash
+    "return the expected value" when {
+      "the '/ BorderTransportMeans / RegistrationNationalityCode' element is present" in {
+        val expectedValue = "GB"
+        val input = inputXml(Some(expectedValue))
+        parser.parse(input).value.get mustBe expectedValue
       }
     }
   }
@@ -48,11 +47,9 @@ class TransportPaymentParserSpec extends UnitSpec with EitherValues {
     <meta>
       <ns3:Declaration>
         { inputValue.map { value =>
-          <ns3:Consignment>
-            <ns3:Freight>
-              <ns3:PaymentMethodCode>{value}</ns3:PaymentMethodCode>
-            </ns3:Freight>
-          </ns3:Consignment>
+          <ns3:BorderTransportMeans>
+            <ns3:RegistrationNationalityCode>{value}</ns3:RegistrationNationalityCode>
+          </ns3:BorderTransportMeans>
         }.getOrElse(NodeSeq.Empty) }
       </ns3:Declaration>
     </meta>

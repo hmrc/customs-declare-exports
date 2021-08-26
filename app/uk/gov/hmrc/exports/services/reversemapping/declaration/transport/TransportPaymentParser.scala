@@ -20,13 +20,15 @@ import scala.xml.NodeSeq
 
 import javax.inject.Singleton
 import uk.gov.hmrc.exports.models.declaration.TransportPayment
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags.{Consignment, Declaration, Freight, PaymentMethodCode}
 
 @Singleton
-class TransportPaymentParser {
+class TransportPaymentParser extends DeclarationXmlParser[Option[TransportPayment]] {
 
-  def parse(inputXml: NodeSeq): Option[TransportPayment] = {
+  override def parse(inputXml: NodeSeq): XmlParserResult[Option[TransportPayment]] = {
     val paymentMethod = (inputXml \ Declaration \ Consignment \ Freight \ PaymentMethodCode).text
-    if (paymentMethod.nonEmpty) Some(TransportPayment(paymentMethod)) else None
+    Right(if (paymentMethod.nonEmpty) Some(TransportPayment(paymentMethod)) else None)
   }
 }

@@ -18,7 +18,9 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import java.time.Instant
 import java.util.UUID
+
 import scala.xml.NodeSeq
+
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType._
@@ -47,6 +49,8 @@ class ExportsDeclarationXmlParser @Inject()(
       additionalDeclarationType <- additionalDeclarationTypeParser.parse(declarationXml)
       declarationType <- deriveDeclarationType(additionalDeclarationType)
       consignmentReferences <- consignmentReferencesParser.parse(declarationXml)
+      linkDucrToMucr <- linkDucrToMucrParser.parse(declarationXml)
+      mucr <- mucrParser.parse(declarationXml)
       items <- itemsParser.parse(declarationXml)
       transport <- transportParser.parse(declarationXml)
     } yield
@@ -61,8 +65,8 @@ class ExportsDeclarationXmlParser @Inject()(
         dispatchLocation = None,
         additionalDeclarationType = additionalDeclarationType,
         consignmentReferences = consignmentReferences,
-        linkDucrToMucr = linkDucrToMucrParser.parse(declarationXml),
-        mucr = mucrParser.parse(declarationXml),
+        linkDucrToMucr = linkDucrToMucr,
+        mucr = mucr,
         transport = transport,
         parties = Parties(),
         locations = Locations(),

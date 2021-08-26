@@ -43,12 +43,4 @@ object DeclarationXmlParser {
       insideOut(list, Nil)
     }
   }
-
-  implicit class XmlNodeHandler(node: NodeSeq) {
-
-    def toOptionalString: Option[String] = {
-      val result = node.text
-      if (result.nonEmpty) Some(result) else None
-    }
-  }
 }

@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
-import testdata.ReverseMappingTestData
+import scala.xml.{Elem, NodeSeq}
+
+import org.scalatest.EitherValues
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.MUCR
 
-import scala.xml.{Elem, NodeSeq}
-
-class MucrParserSpec extends UnitSpec {
+class MucrParserSpec extends UnitSpec with EitherValues {
 
   private val parser = new MucrParser
 
@@ -31,46 +31,37 @@ class MucrParserSpec extends UnitSpec {
     "return empty Option" when {
 
       "PreviousDocument element is NOT present" in {
-
         val input = inputXml()
-
-        parser.parse(input) mustBe None
+        parser.parse(input).value mustBe None
       }
 
       "PreviousDocument contains 'DCR' TypeCode" in {
-
         val input = inputXml(Some(PreviousDocument(id = "id", typeCode = "DCR")))
-
-        parser.parse(input) mustBe None
+        parser.parse(input).value mustBe None
       }
     }
 
     "return correct MUCR" when {
-
       "PreviousDocument contains ID and 'MCR' TypeCode" in {
-
         val input = inputXml(Some(PreviousDocument(id = "mucr")))
-
-        val result = parser.parse(input)
-
-        result mustBe Some(MUCR("mucr"))
+        parser.parse(input).value mustBe Some(MUCR("mucr"))
       }
     }
   }
 
   private case class PreviousDocument(id: String, typeCode: String = "MCR")
 
-  private def inputXml(previousDocument: Option[PreviousDocument] = None): Elem = ReverseMappingTestData.inputXmlMetaData {
-    <ns3:Declaration>
-      { previousDocument.map { tc =>
-        <ns3:GoodsShipment>
-          <ns3:PreviousDocument>
-            <ns3:TypeCode>{tc.typeCode}</ns3:TypeCode>
-            <ns3:ID>{tc.id}</ns3:ID>
-          </ns3:PreviousDocument>
-        </ns3:GoodsShipment>
-      }.getOrElse(NodeSeq.Empty) }
-    </ns3:Declaration>
-  }
-
+  private def inputXml(previousDocument: Option[PreviousDocument] = None): Elem =
+    <meta>
+      <ns3:Declaration>
+        { previousDocument.map { tc =>
+          <ns3:GoodsShipment>
+            <ns3:PreviousDocument>
+              <ns3:TypeCode>{tc.typeCode}</ns3:TypeCode>
+              <ns3:ID>{tc.id}</ns3:ID>
+            </ns3:PreviousDocument>
+          </ns3:GoodsShipment>
+        }.getOrElse(NodeSeq.Empty) }
+      </ns3:Declaration>
+    </meta>
 }
