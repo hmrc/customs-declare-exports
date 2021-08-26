@@ -16,62 +16,53 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
-import testdata.ReverseMappingTestData
+import scala.xml.{Elem, NodeSeq}
+
+import org.scalatest.EitherValues
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType
 
-import scala.xml.{Elem, NodeSeq}
-
-class AdditionalDeclarationTypeParserSpec extends UnitSpec {
+class AdditionalDeclarationTypeParserSpec extends UnitSpec with EitherValues {
 
   private val parser = new AdditionalDeclarationTypeParser
 
   "AdditionalDeclarationTypeParser on parse" should {
 
-    "return Right with empty Option" when {
+    "return None" when {
 
-      "TypeCode element is not present" in {
-
+      "the '/ TypeCode' element is not present" in {
         val input = inputXml(None)
-
-        parser.parse(input) mustBe Right(None)
+        parser.parse(input).value mustBe None
       }
 
-      "TypeCode element contains only 2 characters" in {
-
+      "the '/ TypeCode' element contains only 2 characters" in {
         val input = inputXml(Some("EX"))
-
-        parser.parse(input) mustBe Right(None)
+        parser.parse(input).value mustBe None
       }
     }
 
-    "return Right with correct AdditionalDeclarationType" when {
+    "return the expected AdditionalDeclarationType" when {
 
       AdditionalDeclarationType.values.foreach { additionalDeclarationTypeCode =>
-        s"third character of TypeCode element is ${additionalDeclarationTypeCode.toString}" in {
-
+        s"the 3rd character of the '/ TypeCode' element is ${additionalDeclarationTypeCode.toString}" in {
           val input = inputXml(Some("EX" + additionalDeclarationTypeCode.toString))
-
-          parser.parse(input) mustBe Right(Some(additionalDeclarationTypeCode))
+          parser.parse(input).value.get mustBe additionalDeclarationTypeCode
         }
       }
     }
 
-    "return Left with XmlParserError" when {
-
-      "third character of TypeCode element is NOT listed in AdditionalDeclarationType" in {
-
+    "return a XmlParserError" when {
+      "the 3rd character of the '/ TypeCode' element is NOT listed in AdditionalDeclarationType" in {
         val input = inputXml(Some("EX7"))
-
         parser.parse(input).isLeft mustBe true
       }
     }
   }
 
-  private def inputXml(typeCode: Option[String]): Elem = ReverseMappingTestData.inputXmlMetaData {
-    <ns3:Declaration>
-      {typeCode.map { code => <ns3:TypeCode>{code}</ns3:TypeCode> }.getOrElse(NodeSeq.Empty) }
-    </ns3:Declaration>
-  }
-
+  private def inputXml(typeCode: Option[String]): Elem =
+    <meta>
+      <ns3:Declaration>
+        {typeCode.map { code => <ns3:TypeCode>{code}</ns3:TypeCode> }.getOrElse(NodeSeq.Empty) }
+      </ns3:Declaration>
+    </meta>
 }

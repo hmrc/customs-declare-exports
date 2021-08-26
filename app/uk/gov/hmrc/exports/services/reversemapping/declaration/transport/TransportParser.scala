@@ -16,24 +16,52 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
+import scala.xml.NodeSeq
+
+import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.Transport
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 
-import javax.inject.Inject
-import scala.xml.NodeSeq
-
-class TransportParser @Inject()(containersParser: ContainersParser) extends DeclarationXmlParser[Transport] {
+class TransportParser @Inject()(
+  containersParser: ContainersParser,
+  expressConsignmentParser: ExpressConsignmentParser,
+  meansOfTransportCrossingTheBorderIDNumberParser: MeansOfTransportCrossingTheBorderIDNumberParser,
+  meansOfTransportCrossingTheBorderNationalityParser: MeansOfTransportCrossingTheBorderNationalityParser,
+  meansOfTransportCrossingTheBorderTypeParser: MeansOfTransportCrossingTheBorderTypeParser,
+  meansOfTransportOnDepartureIDNumberParser: MeansOfTransportOnDepartureIDNumberParser,
+  meansOfTransportOnDepartureTypeParser: MeansOfTransportOnDepartureTypeParser,
+  transportLeavingTheBorderParser: TransportLeavingTheBorderParser,
+  transportPaymentParser: TransportPaymentParser
+) extends DeclarationXmlParser[Transport] {
 
   override def parse(inputXml: NodeSeq): XmlParserResult[Transport] =
     for {
       containers <- containersParser.parse(inputXml)
+      expressConsignment <- expressConsignmentParser.parse(inputXml)
+      transportPayment <- transportPaymentParser.parse(inputXml)
+      borderModeOfTransportCode <- transportLeavingTheBorderParser.parse(inputXml)
+      meansOfTransportOnDepartureType <- meansOfTransportOnDepartureTypeParser.parse(inputXml)
+      meansOfTransportOnDepartureIDNumber <- meansOfTransportOnDepartureIDNumberParser.parse(inputXml)
+      meansOfTransportCrossingTheBorderNationality <- meansOfTransportCrossingTheBorderNationalityParser.parse(inputXml)
+      meansOfTransportCrossingTheBorderType <- meansOfTransportCrossingTheBorderTypeParser.parse(inputXml)
+      meansOfTransportCrossingTheBorderIDNumber <- meansOfTransportCrossingTheBorderIDNumberParser.parse(inputXml)
     } yield {
       val maybeContainers = containers.isEmpty match {
         case true  => None
         case false => Some(containers)
       }
 
-      Transport(containers = maybeContainers)
+      Transport(
+        expressConsignment = expressConsignment,
+        transportPayment = transportPayment,
+        containers = maybeContainers,
+        borderModeOfTransportCode = borderModeOfTransportCode,
+        meansOfTransportOnDepartureType = meansOfTransportOnDepartureType,
+        meansOfTransportOnDepartureIDNumber = meansOfTransportOnDepartureIDNumber,
+        meansOfTransportCrossingTheBorderNationality = meansOfTransportCrossingTheBorderNationality,
+        meansOfTransportCrossingTheBorderType = meansOfTransportCrossingTheBorderType,
+        meansOfTransportCrossingTheBorderIDNumber = meansOfTransportCrossingTheBorderIDNumber
+      )
     }
 }

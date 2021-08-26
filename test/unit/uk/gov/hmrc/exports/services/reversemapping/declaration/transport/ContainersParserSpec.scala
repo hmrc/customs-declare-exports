@@ -16,13 +16,11 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
+import scala.xml.Elem
+
 import org.scalatest.EitherValues
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.Container
 import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.ContainersParser.NO_SEALS
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
-
-import scala.xml.Elem
 
 class ContainersParserSpec extends UnitSpec with EitherValues {
 

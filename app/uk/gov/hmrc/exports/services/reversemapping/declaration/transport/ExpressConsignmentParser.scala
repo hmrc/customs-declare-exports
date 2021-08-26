@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services.reversemapping.declaration
+package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
 import scala.xml.NodeSeq
 
 import javax.inject.Singleton
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
-import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
+import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags.{Declaration, DeclarationSpecificCircumstancesCodeCodeType}
 
 @Singleton
-class LinkDucrToMucrParser extends DeclarationXmlParser[Option[YesNoAnswer]] {
+class ExpressConsignmentParser extends DeclarationXmlParser[Option[YesNoAnswer]] {
 
-  override def parse(inputXml: NodeSeq): XmlParserResult[Option[YesNoAnswer]] =
-    Right(
-      (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
-        .find(previousDocument => (previousDocument \ TypeCode).text == "MCR")
-        .map(_ => YesNoAnswer(YesNoAnswers.yes))
-    )
+  override def parse(inputXml: NodeSeq): XmlParserResult[Option[YesNoAnswer]] = {
+    val specificCircumstances = (inputXml \ Declaration \ DeclarationSpecificCircumstancesCodeCodeType).text
+    Right(if (specificCircumstances == "A20") Some(YesNoAnswer(YesNoAnswers.yes)) else None)
+  }
 }

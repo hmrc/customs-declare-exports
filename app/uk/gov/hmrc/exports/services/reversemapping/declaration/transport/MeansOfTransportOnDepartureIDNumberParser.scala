@@ -14,23 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services.reversemapping.declaration
+package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
 import scala.xml.NodeSeq
 
 import javax.inject.Singleton
-import uk.gov.hmrc.exports.models.declaration.MUCR
+import uk.gov.hmrc.exports.models.StringOption
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
 @Singleton
-class MucrParser extends DeclarationXmlParser[Option[MUCR]] {
+class MeansOfTransportOnDepartureIDNumberParser extends DeclarationXmlParser[Option[String]] {
 
-  override def parse(inputXml: NodeSeq): XmlParserResult[Option[MUCR]] =
-    Right(
-      (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
-        .find(previousDocument => (previousDocument \ TypeCode).text == "MCR")
-        .map(previousDocument => (previousDocument \ ID).text)
-        .map(MUCR(_))
-    )
+  override def parse(inputXml: NodeSeq): XmlParserResult[Option[String]] =
+    Right(StringOption((inputXml \ Declaration \ GoodsShipment \ Consignment \ DepartureTransportMeans \ ID).text))
 }

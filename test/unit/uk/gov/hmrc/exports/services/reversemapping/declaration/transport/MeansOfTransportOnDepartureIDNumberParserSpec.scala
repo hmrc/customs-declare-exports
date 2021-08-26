@@ -14,38 +14,31 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services.reversemapping.declaration
+package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
 import scala.xml.{Elem, NodeSeq}
 
 import org.scalatest.EitherValues
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 
-class LinkDucrToMucrParserSpec extends UnitSpec with EitherValues {
+class MeansOfTransportOnDepartureIDNumberParserSpec extends UnitSpec with EitherValues {
 
-  private val parser = new LinkDucrToMucrParser
+  private val parser = new MeansOfTransportOnDepartureIDNumberParser
 
-  "LinkDucrToMucrParser on parse" should {
+  "MeansOfTransportOnDepartureIDNumberParser on parse" should {
 
     "return None" when {
-
-      "the 'GoodsShipment / PreviousDocument' element is NOT present" in {
+      "the '/ GoodsShipment / Consignment / DepartureTransportMeans / ID' element is NOT present" in {
         val input = inputXml()
-        parser.parse(input).value mustBe None
-      }
-
-      "the 'GoodsShipment / PreviousDocument' element has 'DCR' as TypeCode" in {
-        val input = inputXml(Some("DCR"))
         parser.parse(input).value mustBe None
       }
     }
 
-    "return the expected YesNoAnswer" when {
-      "the 'GoodsShipment / PreviousDocument' element has 'MCR' as TypeCode" in {
-        val input = inputXml(Some("MCR"))
-        parser.parse(input).value.get mustBe YesNoAnswer(YesNoAnswers.yes)
+    "return the expected value" when {
+      "the '/ GoodsShipment / Consignment / DepartureTransportMeans / ID' element is present" in {
+        val expectedValue = "SHIP1"
+        val input = inputXml(Some(expectedValue))
+        parser.parse(input).value.get mustBe expectedValue
       }
     }
   }
@@ -55,9 +48,11 @@ class LinkDucrToMucrParserSpec extends UnitSpec with EitherValues {
       <ns3:Declaration>
         { inputValue.map { value =>
           <ns3:GoodsShipment>
-            <ns3:PreviousDocument>
-              <ns3:TypeCode>{value}</ns3:TypeCode>
-            </ns3:PreviousDocument>
+            <ns3:Consignment>
+              <ns3:DepartureTransportMeans>
+                <ns3:ID>{value}</ns3:ID>
+              </ns3:DepartureTransportMeans>
+            </ns3:Consignment>
           </ns3:GoodsShipment>
         }.getOrElse(NodeSeq.Empty) }
       </ns3:Declaration>

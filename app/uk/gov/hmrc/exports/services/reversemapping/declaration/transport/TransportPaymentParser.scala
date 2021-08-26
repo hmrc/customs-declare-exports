@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services.reversemapping.declaration
+package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
 import scala.xml.NodeSeq
 
 import javax.inject.Singleton
-import uk.gov.hmrc.exports.models.declaration.MUCR
+import uk.gov.hmrc.exports.models.declaration.TransportPayment
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
-import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
+import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags.{Consignment, Declaration, Freight, PaymentMethodCode}
 
 @Singleton
-class MucrParser extends DeclarationXmlParser[Option[MUCR]] {
+class TransportPaymentParser extends DeclarationXmlParser[Option[TransportPayment]] {
 
-  override def parse(inputXml: NodeSeq): XmlParserResult[Option[MUCR]] =
-    Right(
-      (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
-        .find(previousDocument => (previousDocument \ TypeCode).text == "MCR")
-        .map(previousDocument => (previousDocument \ ID).text)
-        .map(MUCR(_))
-    )
+  override def parse(inputXml: NodeSeq): XmlParserResult[Option[TransportPayment]] = {
+    val paymentMethod = (inputXml \ Declaration \ Consignment \ Freight \ PaymentMethodCode).text
+    Right(if (paymentMethod.nonEmpty) Some(TransportPayment(paymentMethod)) else None)
+  }
 }

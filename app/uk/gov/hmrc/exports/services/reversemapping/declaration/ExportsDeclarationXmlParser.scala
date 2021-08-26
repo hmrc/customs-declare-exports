@@ -18,7 +18,9 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import java.time.Instant
 import java.util.UUID
+
 import scala.xml.NodeSeq
+
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType._
