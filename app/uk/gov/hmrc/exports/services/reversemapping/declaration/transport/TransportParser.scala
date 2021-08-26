@@ -16,14 +16,20 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
-import uk.gov.hmrc.exports.models.declaration.Transport
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
-
-import javax.inject.Inject
 import scala.xml.NodeSeq
 
-class TransportParser @Inject()(containersParser: ContainersParser) extends DeclarationXmlParser[Transport] {
+import javax.inject.Inject
+import uk.gov.hmrc.exports.models.declaration.Transport
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.{XmlNodeHandler, XmlParserResult}
+import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
+
+class TransportParser @Inject()(
+  containersParser: ContainersParser,
+  expressConsignmentParser: ExpressConsignmentParser,
+  transportLeavingTheBorderParser: TransportLeavingTheBorderParser,
+  transportPaymentParser: TransportPaymentParser
+) extends DeclarationXmlParser[Transport] {
 
   override def parse(inputXml: NodeSeq): XmlParserResult[Transport] =
     for {
@@ -34,6 +40,25 @@ class TransportParser @Inject()(containersParser: ContainersParser) extends Decl
         case false => Some(containers)
       }
 
-      Transport(containers = maybeContainers)
+      val departureTransportMeans = parseDepartureTransportMeans(inputXml)
+      val borderTransportMeans = parseBorderTransportMeans(inputXml)
+
+      Transport(
+        expressConsignment = expressConsignmentParser.parse(inputXml),
+        transportPayment = transportPaymentParser.parse(inputXml),
+        containers = maybeContainers,
+        borderModeOfTransportCode = transportLeavingTheBorderParser.parse(inputXml),
+        meansOfTransportOnDepartureType = (departureTransportMeans \ IdentificationTypeCode).toOptionalString,
+        meansOfTransportOnDepartureIDNumber = (departureTransportMeans \ ID).toOptionalString,
+        meansOfTransportCrossingTheBorderNationality = (borderTransportMeans \ RegistrationNationalityCode).toOptionalString,
+        meansOfTransportCrossingTheBorderType = (borderTransportMeans \ IdentificationTypeCode).toOptionalString,
+        meansOfTransportCrossingTheBorderIDNumber = (borderTransportMeans \ ID).toOptionalString
+      )
     }
+
+  private def parseDepartureTransportMeans(inputXml: NodeSeq): NodeSeq =
+    inputXml \ Declaration \ GoodsShipment \ Consignment \ DepartureTransportMeans
+
+  private def parseBorderTransportMeans(inputXml: NodeSeq): NodeSeq =
+    inputXml \ Declaration \ BorderTransportMeans
 }

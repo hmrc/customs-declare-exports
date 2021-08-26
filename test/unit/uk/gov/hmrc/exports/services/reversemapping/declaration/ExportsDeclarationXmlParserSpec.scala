@@ -54,8 +54,8 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
 
     when(additionalDeclarationTypeParser.parse(any[NodeSeq])).thenReturn(Right(Some(STANDARD_PRE_LODGED)))
     when(consignmentReferencesParser.parse(any[NodeSeq])).thenReturn(Right(None))
-    when(linkDucrToMucrParser.parse(any[NodeSeq])).thenReturn(Right(None))
-    when(mucrParser.parse(any[NodeSeq])).thenReturn(Right(None))
+    when(linkDucrToMucrParser.parse(any[NodeSeq])).thenReturn(None)
+    when(mucrParser.parse(any[NodeSeq])).thenReturn(None)
     when(itemsParser.parse(any[NodeSeq])).thenReturn(Right(Seq.empty))
     when(transportParser.parse(any[NodeSeq])).thenReturn(Right(Transport()))
   }

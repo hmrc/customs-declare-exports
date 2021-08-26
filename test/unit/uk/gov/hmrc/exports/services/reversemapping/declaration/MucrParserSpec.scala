@@ -34,14 +34,14 @@ class MucrParserSpec extends UnitSpec {
 
         val input = inputXml()
 
-        parser.parse(input) mustBe Right(None)
+        parser.parse(input) mustBe None
       }
 
       "PreviousDocument contains 'DCR' TypeCode" in {
 
         val input = inputXml(Some(PreviousDocument(id = "id", typeCode = "DCR")))
 
-        parser.parse(input) mustBe Right(None)
+        parser.parse(input) mustBe None
       }
     }
 
@@ -53,7 +53,7 @@ class MucrParserSpec extends UnitSpec {
 
         val result = parser.parse(input)
 
-        result mustBe Right(Some(MUCR("mucr")))
+        result mustBe Some(MUCR("mucr"))
       }
     }
   }

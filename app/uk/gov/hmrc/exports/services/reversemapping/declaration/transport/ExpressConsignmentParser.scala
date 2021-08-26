@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services.reversemapping.declaration
+package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
 import scala.xml.NodeSeq
 
 import javax.inject.Singleton
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
-import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
+import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags.{Declaration, SpecificCircumstancesCode}
 
 @Singleton
-class LinkDucrToMucrParser {
+class ExpressConsignmentParser {
 
-  def parse(inputXml: NodeSeq): Option[YesNoAnswer] =
-    (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
-      .find(previousDocument => (previousDocument \ TypeCode).text == "MCR")
-      .map(_ => YesNoAnswer(YesNoAnswers.yes))
+  def parse(inputXml: NodeSeq): Option[YesNoAnswer] = {
+    val specificCircumstances = (inputXml \ Declaration \ SpecificCircumstancesCode).text
+    if (specificCircumstances == "A20") Some(YesNoAnswer(YesNoAnswers.yes)) else None
+  }
 }

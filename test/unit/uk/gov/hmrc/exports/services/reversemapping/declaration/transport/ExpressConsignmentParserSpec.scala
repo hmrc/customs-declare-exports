@@ -14,51 +14,46 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services.reversemapping.declaration
+package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
 import scala.xml.{Elem, NodeSeq}
 
-import org.scalatest.EitherValues
 import testdata.ReverseMappingTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 
-class LinkDucrToMucrParserSpec extends UnitSpec with EitherValues {
+class ExpressConsignmentParserSpec extends UnitSpec {
 
-  private val parser = new LinkDucrToMucrParser
+  private val parser = new ExpressConsignmentParser
 
-  "LinkDucrToMucrParser on parse" should {
+  "ExpressConsignmentParser on parse" should {
 
     "return None" when {
 
-      "the 'GoodsShipment / PreviousDocument' element is NOT present" in {
+      "the '/ DeclarationSpecificCircumstancesCodeCodeType' element is NOT present" in {
         val input = inputXml()
         parser.parse(input) mustBe None
       }
 
-      "the 'GoodsShipment / PreviousDocument' element has 'DCR' as TypeCode" in {
-        val input = inputXml(Some("DCR"))
+      "the '/ DeclarationSpecificCircumstancesCodeCodeType' element has not 'A20' as value" in {
+        val input = inputXml(Some("value"))
         parser.parse(input) mustBe None
       }
     }
 
     "return the expected YesNoAnswer" when {
-      "the 'GoodsShipment / PreviousDocument' element has 'MCR' as TypeCode" in {
-        val input = inputXml(Some("MCR"))
+      "the '/ DeclarationSpecificCircumstancesCodeCodeType' element has 'A20' as value" in {
+        val input = inputXml(Some("A20"))
         parser.parse(input).get mustBe YesNoAnswer(YesNoAnswers.yes)
       }
     }
   }
 
-  private def inputXml(typeCode: Option[String] = None): Elem = ReverseMappingTestData.inputXmlMetaData {
+  private def inputXml(specificCircumstances: Option[String] = None): Elem = ReverseMappingTestData.inputXmlMetaData {
     <ns3:Declaration>
-      { typeCode.map { tc =>
-        <ns3:GoodsShipment>
-          <ns3:PreviousDocument>
-            <ns3:TypeCode>{tc}</ns3:TypeCode>
-          </ns3:PreviousDocument>
-        </ns3:GoodsShipment>
+      { specificCircumstances.map { sC =>
+        <ns3:DeclarationSpecificCircumstancesCodeCodeType>{sC}</ns3:DeclarationSpecificCircumstancesCodeCodeType>
       }.getOrElse(NodeSeq.Empty) }
     </ns3:Declaration>
   }

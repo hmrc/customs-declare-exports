@@ -47,8 +47,6 @@ class ExportsDeclarationXmlParser @Inject()(
       additionalDeclarationType <- additionalDeclarationTypeParser.parse(declarationXml)
       declarationType <- deriveDeclarationType(additionalDeclarationType)
       consignmentReferences <- consignmentReferencesParser.parse(declarationXml)
-      linkDucrToMucr <- linkDucrToMucrParser.parse(declarationXml)
-      mucr <- mucrParser.parse(declarationXml)
       items <- itemsParser.parse(declarationXml)
       transport <- transportParser.parse(declarationXml)
     } yield
@@ -63,8 +61,8 @@ class ExportsDeclarationXmlParser @Inject()(
         dispatchLocation = None,
         additionalDeclarationType = additionalDeclarationType,
         consignmentReferences = consignmentReferences,
-        linkDucrToMucr = linkDucrToMucr,
-        mucr = mucr,
+        linkDucrToMucr = linkDucrToMucrParser.parse(declarationXml),
+        mucr = mucrParser.parse(declarationXml),
         transport = transport,
         parties = Parties(),
         locations = Locations(),
