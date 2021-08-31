@@ -17,16 +17,16 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
 import scala.xml.NodeSeq
-
 import javax.inject.Singleton
 import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 @Singleton
 class MeansOfTransportCrossingTheBorderTypeParser extends DeclarationXmlParser[Option[String]] {
 
-  override def parse(inputXml: NodeSeq): XmlParserResult[Option[String]] =
+  override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Option[String]] =
     Right(StringOption((inputXml \ Declaration \ BorderTransportMeans \ IdentificationTypeCode).text))
 }

@@ -16,14 +16,17 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
+import testdata.ExportsTestData.eori
 import testdata.ReverseMappingTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR}
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 import scala.xml.{Elem, NodeSeq}
 
 class ConsignmentReferencesParserSpec extends UnitSpec {
 
+  private implicit val context = MappingContext(eori)
   private val parser = new ConsignmentReferencesParser
 
   "ConsignmentReferencesParser on parse" should {

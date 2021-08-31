@@ -22,11 +22,12 @@ import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlPar
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.ContainersParser.NO_SEALS
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 import scala.xml.NodeSeq
 
 class ContainersParser extends DeclarationXmlParser[Seq[Container]] {
-  override def parse(inputXml: NodeSeq): XmlParserResult[Seq[Container]] =
+  override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Seq[Container]] =
     (inputXml \ Declaration \ GoodsShipment \ Consignment \ TransportEquipment).map(parseTransportEquipmentNode).toEitherOfList
 
   private def parseTransportEquipmentNode(inputXml: NodeSeq): Either[XmlParserError, Container] = {

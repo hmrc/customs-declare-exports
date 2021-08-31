@@ -19,11 +19,16 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 import scala.xml.{Elem, NodeSeq}
 
 import org.scalatest.EitherValues
+import testdata.ExportsTestData.eori
+import testdata.ReverseMappingTestData
+
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 class AdditionalDeclarationTypeParserSpec extends UnitSpec with EitherValues {
 
+  private implicit val context = MappingContext(eori)
   private val parser = new AdditionalDeclarationTypeParser
 
   "AdditionalDeclarationTypeParser on parse" should {

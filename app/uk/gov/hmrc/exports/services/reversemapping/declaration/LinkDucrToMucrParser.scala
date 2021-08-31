@@ -19,15 +19,17 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 import scala.xml.NodeSeq
 
 import javax.inject.Singleton
+
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 @Singleton
 class LinkDucrToMucrParser extends DeclarationXmlParser[Option[YesNoAnswer]] {
 
-  override def parse(inputXml: NodeSeq): XmlParserResult[Option[YesNoAnswer]] =
+  override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Option[YesNoAnswer]] =
     Right(
       (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
         .find(previousDocument => (previousDocument \ TypeCode).text == "MCR")

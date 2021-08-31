@@ -17,17 +17,17 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
 import scala.xml.NodeSeq
-
 import javax.inject.Singleton
 import uk.gov.hmrc.exports.models.declaration.TransportPayment
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags.{Consignment, Declaration, Freight, PaymentMethodCode}
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 @Singleton
 class TransportPaymentParser extends DeclarationXmlParser[Option[TransportPayment]] {
 
-  override def parse(inputXml: NodeSeq): XmlParserResult[Option[TransportPayment]] = {
+  override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Option[TransportPayment]] = {
     val paymentMethod = (inputXml \ Declaration \ Consignment \ Freight \ PaymentMethodCode).text
     Right(if (paymentMethod.nonEmpty) Some(TransportPayment(paymentMethod)) else None)
   }

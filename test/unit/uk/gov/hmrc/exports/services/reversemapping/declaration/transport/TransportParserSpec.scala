@@ -20,13 +20,17 @@ import scala.xml.NodeSeq
 
 import org.mockito.ArgumentMatchersSugar.any
 import org.scalatest.EitherValues
+import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.Transport
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserError
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 class TransportParserSpec extends UnitSpec with EitherValues {
 
+  private implicit val context = MappingContext(eori)
   private val containersParser = mock[ContainersParser]
+
   private val expressConsignmentParser = mock[ExpressConsignmentParser]
   private val meansOfTransportCrossingTheBorderIDNumberParser = mock[MeansOfTransportCrossingTheBorderIDNumberParser]
   private val meansOfTransportCrossingTheBorderNationalityParser = mock[MeansOfTransportCrossingTheBorderNationalityParser]
@@ -64,15 +68,15 @@ class TransportParserSpec extends UnitSpec with EitherValues {
       transportPaymentParser
     )
 
-    when(containersParser.parse(any[NodeSeq])).thenReturn(Right(Seq()))
-    when(expressConsignmentParser.parse(any[NodeSeq])).thenReturn(Right(None))
-    when(meansOfTransportCrossingTheBorderIDNumberParser.parse(any[NodeSeq])).thenReturn(Right(None))
-    when(meansOfTransportCrossingTheBorderNationalityParser.parse(any[NodeSeq])).thenReturn(Right(None))
-    when(meansOfTransportCrossingTheBorderTypeParser.parse(any[NodeSeq])).thenReturn(Right(None))
-    when(meansOfTransportOnDepartureIDNumberParser.parse(any[NodeSeq])).thenReturn(Right(None))
-    when(meansOfTransportOnDepartureTypeParser.parse(any[NodeSeq])).thenReturn(Right(None))
-    when(transportLeavingTheBorderParser.parse(any[NodeSeq])).thenReturn(Right(None))
-    when(transportPaymentParser.parse(any[NodeSeq])).thenReturn(Right(None))
+    when(containersParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Seq()))
+    when(expressConsignmentParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
+    when(meansOfTransportCrossingTheBorderIDNumberParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
+    when(meansOfTransportCrossingTheBorderNationalityParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
+    when(meansOfTransportCrossingTheBorderTypeParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
+    when(meansOfTransportOnDepartureIDNumberParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
+    when(meansOfTransportOnDepartureTypeParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
+    when(transportLeavingTheBorderParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
+    when(transportPaymentParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
   }
 
   "TransportParser parse" should {
@@ -81,15 +85,15 @@ class TransportParserSpec extends UnitSpec with EitherValues {
     "call all sub-parsers" in {
       transportParser.parse(xml).value
 
-      verify(containersParser).parse(any[NodeSeq])
-      verify(expressConsignmentParser).parse(any[NodeSeq])
-      verify(meansOfTransportCrossingTheBorderIDNumberParser).parse(any[NodeSeq])
-      verify(meansOfTransportCrossingTheBorderNationalityParser).parse(any[NodeSeq])
-      verify(meansOfTransportCrossingTheBorderTypeParser).parse(any[NodeSeq])
-      verify(meansOfTransportOnDepartureIDNumberParser).parse(any[NodeSeq])
-      verify(meansOfTransportOnDepartureTypeParser).parse(any[NodeSeq])
-      verify(transportLeavingTheBorderParser).parse(any[NodeSeq])
-      verify(transportPaymentParser).parse(any[NodeSeq])
+      verify(containersParser).parse(any[NodeSeq])(any[MappingContext])
+      verify(expressConsignmentParser).parse(any[NodeSeq])(any[MappingContext])
+      verify(meansOfTransportCrossingTheBorderIDNumberParser).parse(any[NodeSeq])(any[MappingContext])
+      verify(meansOfTransportCrossingTheBorderNationalityParser).parse(any[NodeSeq])(any[MappingContext])
+      verify(meansOfTransportCrossingTheBorderTypeParser).parse(any[NodeSeq])(any[MappingContext])
+      verify(meansOfTransportOnDepartureIDNumberParser).parse(any[NodeSeq])(any[MappingContext])
+      verify(meansOfTransportOnDepartureTypeParser).parse(any[NodeSeq])(any[MappingContext])
+      verify(transportLeavingTheBorderParser).parse(any[NodeSeq])(any[MappingContext])
+      verify(transportPaymentParser).parse(any[NodeSeq])(any[MappingContext])
     }
 
     "return a Transport instance" when {
@@ -104,7 +108,7 @@ class TransportParserSpec extends UnitSpec with EitherValues {
 
     "return a XmlParserError" when {
       "any sub-parser returns Left" in {
-        when(containersParser.parse(any[NodeSeq])).thenReturn(Left("XML Error"))
+        when(containersParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Left("XML Error"))
 
         val result = transportParser.parse(xml)
 

@@ -17,16 +17,18 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration.items
 
 import scala.xml.NodeSeq
-
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.scalatest.EitherValues
+import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ProcedureCodes
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 class SingleItemParserSpec extends UnitSpec with EitherValues {
 
   private val procedureCodesParser = mock[ProcedureCodesParser]
   private val singleItemParser = new SingleItemParser(procedureCodesParser)
+  private implicit val context = MappingContext(eori)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -42,18 +44,18 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
   "SingleItemParser on parse" should {
 
     "call all sub-parsers, passing item-level XML to them" in {
-      when(procedureCodesParser.parse(any[NodeSeq])).thenReturn(Right(None))
+      when(procedureCodesParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
 
       singleItemParser.parse(inputXml)
 
-      verify(procedureCodesParser).parse(eqTo(inputXml))
+      verify(procedureCodesParser).parse(eqTo(inputXml))(any[MappingContext])
     }
 
     "return Right with ExportItem containing values returned by sub-parsers" when {
 
       "all sub-parsers return Right" in {
         val testProcedureCodes = ProcedureCodes(Some("code"), Seq("additional", "procedure", "codes"))
-        when(procedureCodesParser.parse(any[NodeSeq])).thenReturn(Right(Some(testProcedureCodes)))
+        when(procedureCodesParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(testProcedureCodes)))
 
         val result = singleItemParser.parse(inputXml)
 
@@ -67,7 +69,7 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
     "return Left with XmlParserError" when {
 
       "ProcedureCodesParser returns Left" in {
-        when(procedureCodesParser.parse(any[NodeSeq])).thenReturn(Left("Test Exception"))
+        when(procedureCodesParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Left("Test Exception"))
 
         val result = singleItemParser.parse(inputXml)
 

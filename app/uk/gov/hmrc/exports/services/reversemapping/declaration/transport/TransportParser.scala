@@ -22,6 +22,7 @@ import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.Transport
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 class TransportParser @Inject()(
   containersParser: ContainersParser,
@@ -35,7 +36,7 @@ class TransportParser @Inject()(
   transportPaymentParser: TransportPaymentParser
 ) extends DeclarationXmlParser[Transport] {
 
-  override def parse(inputXml: NodeSeq): XmlParserResult[Transport] =
+  override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Transport] =
     for {
       containers <- containersParser.parse(inputXml)
       expressConsignment <- expressConsignmentParser.parse(inputXml)

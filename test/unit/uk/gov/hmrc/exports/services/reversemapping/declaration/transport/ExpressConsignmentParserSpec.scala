@@ -17,14 +17,16 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
 import scala.xml.{Elem, NodeSeq}
-
 import org.scalatest.EitherValues
+import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 class ExpressConsignmentParserSpec extends UnitSpec with EitherValues {
 
+  private implicit val context = MappingContext(eori)
   private val parser = new ExpressConsignmentParser
 
   "ExpressConsignmentParser on parse" should {

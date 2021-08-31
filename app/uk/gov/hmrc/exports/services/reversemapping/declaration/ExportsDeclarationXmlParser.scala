@@ -28,6 +28,7 @@ import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.items.ItemsParser
+import uk.gov.hmrc.exports.services.reversemapping.declaration.parties.PartiesParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.TransportParser
 
 class ExportsDeclarationXmlParser @Inject()(
@@ -36,15 +37,16 @@ class ExportsDeclarationXmlParser @Inject()(
   linkDucrToMucrParser: LinkDucrToMucrParser,
   mucrParser: MucrParser,
   itemsParser: ItemsParser,
-  transportParser: TransportParser
+  transportParser: TransportParser,
+  partiesParser: PartiesParser
 ) {
 
   def fromXml(mappingContext: MappingContext, xml: String): XmlParserResult[ExportsDeclaration] = {
     val declarationXml = scala.xml.XML.loadString(xml)
-    buildExportsDeclaration(mappingContext, declarationXml)
+    buildExportsDeclaration(declarationXml)(mappingContext)
   }
 
-  private def buildExportsDeclaration(mappingContext: MappingContext, declarationXml: NodeSeq): XmlParserResult[ExportsDeclaration] =
+  private def buildExportsDeclaration(declarationXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[ExportsDeclaration] =
     for {
       additionalDeclarationType <- additionalDeclarationTypeParser.parse(declarationXml)
       declarationType <- deriveDeclarationType(additionalDeclarationType)
@@ -53,10 +55,11 @@ class ExportsDeclarationXmlParser @Inject()(
       mucr <- mucrParser.parse(declarationXml)
       items <- itemsParser.parse(declarationXml)
       transport <- transportParser.parse(declarationXml)
+      parties <- partiesParser.parse(declarationXml)
     } yield
       ExportsDeclaration(
         id = UUID.randomUUID().toString,
-        eori = mappingContext.eori,
+        eori = context.eori,
         status = DeclarationStatus.COMPLETE,
         createdDateTime = Instant.now(),
         updatedDateTime = Instant.now(),
@@ -68,7 +71,7 @@ class ExportsDeclarationXmlParser @Inject()(
         linkDucrToMucr = linkDucrToMucr,
         mucr = mucr,
         transport = transport,
-        parties = Parties(),
+        parties = parties,
         locations = Locations(),
         items = items,
         totalNumberOfItems = None,
