@@ -26,7 +26,11 @@ import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import javax.inject.Inject
 import scala.xml.NodeSeq
 
-class PartiesParser @Inject()(entityDetailsParser: EntityDetailsParser) extends DeclarationXmlParser[Parties] {
+class PartiesParser @Inject()(
+  entityDetailsParser: EntityDetailsParser,
+  agentFunctionCodeParser: AgentFunctionCodeParser,
+  declarationHolderParser: DeclarationHolderParser
+) extends DeclarationXmlParser[Parties] {
 
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Parties] =
     for {
@@ -34,14 +38,24 @@ class PartiesParser @Inject()(entityDetailsParser: EntityDetailsParser) extends 
       maybeConsigneeEntityDetails <- entityDetailsParser.parse((inputXml \ Declaration \ Consignee))
       maybeConsignorEntityDetails <- entityDetailsParser.parse((inputXml \ Declaration \ Consignor))
       maybeCarrierEntityDetails <- entityDetailsParser.parse((inputXml \ Declaration \ Carrier))
+      maybeRepresentativeEntityDetails <- entityDetailsParser.parse((inputXml \ Declaration \ Agent))
+      maybeRepresentativeFunctionCode <- agentFunctionCodeParser.parse(inputXml)
+      holders <- declarationHolderParser.parse(inputXml)
     } yield {
+      val maybeHolders = holders.isEmpty match {
+        case true  => None
+        case false => Some(holders)
+      }
+
       Parties(
         exporterDetails = maybeExporterEntityDetails.map(ExporterDetails(_)),
         consigneeDetails = maybeConsigneeEntityDetails.map(details => filterOutEori(ConsigneeDetails(details))),
         consignorDetails = maybeConsignorEntityDetails.map(ConsignorDetails(_)),
         carrierDetails = maybeCarrierEntityDetails.map(CarrierDetails(_)),
         declarantDetails = Some(DeclarantDetails(EntityDetails(Some(context.eori), None))),
-        declarantIsExporter = defineDeclarantIsExporter(maybeExporterEntityDetails)
+        declarantIsExporter = defineDeclarantIsExporter(maybeExporterEntityDetails),
+        representativeDetails = defineRepresentativeDetails(maybeRepresentativeEntityDetails, maybeRepresentativeFunctionCode),
+        declarationHoldersData = maybeHolders.map(DeclarationHolders(_, Some(YesNoAnswer(YesNoAnswers.yes))))
       )
     }
 
@@ -57,4 +71,12 @@ class PartiesParser @Inject()(entityDetailsParser: EntityDetailsParser) extends 
   //the ConsigneeDetails section should never have an eori, so remove if present
   private def filterOutEori(details: ConsigneeDetails): ConsigneeDetails =
     details.copy(details = details.details.copy(eori = None))
+
+  private def defineRepresentativeDetails(maybeEntityDetails: Option[EntityDetails], maybeFunctionCode: Option[String])(
+    implicit context: MappingContext
+  ): Option[RepresentativeDetails] = {
+    val representativeEntityDetails = maybeEntityDetails.getOrElse(EntityDetails(Some(context.eori), None))
+
+    Some(RepresentativeDetails(Some(representativeEntityDetails), maybeFunctionCode, None))
+  }
 }
