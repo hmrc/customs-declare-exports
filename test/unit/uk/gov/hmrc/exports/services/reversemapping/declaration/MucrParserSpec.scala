@@ -20,7 +20,6 @@ import scala.xml.{Elem, NodeSeq}
 
 import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
-import testdata.ReverseMappingTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.MUCR
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext

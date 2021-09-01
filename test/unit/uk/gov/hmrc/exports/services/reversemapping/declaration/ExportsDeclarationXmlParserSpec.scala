@@ -17,13 +17,15 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import scala.xml.NodeSeq
+
 import org.mockito.ArgumentMatchersSugar.any
 import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.STANDARD_PRE_LODGED
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
-import uk.gov.hmrc.exports.models.declaration.{ExportsDeclaration, Parties, Transport}
+import uk.gov.hmrc.exports.models.declaration.{ExportsDeclaration, MUCR, Parties, Transport, YesNoAnswer}
 import uk.gov.hmrc.exports.services.reversemapping.declaration.items.ItemsParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.parties.PartiesParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.TransportParser
@@ -32,7 +34,6 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
 
   private val additionalDeclarationTypeParser = mock[AdditionalDeclarationTypeParser]
   private val consignmentReferencesParser = mock[ConsignmentReferencesParser]
-  private val linkDucrToMucrParser = mock[LinkDucrToMucrParser]
   private val mucrParser = mock[MucrParser]
   private val itemsParser = mock[ItemsParser]
   private val transportParser = mock[TransportParser]
@@ -42,7 +43,6 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
     new ExportsDeclarationXmlParser(
       additionalDeclarationTypeParser,
       consignmentReferencesParser,
-      linkDucrToMucrParser,
       mucrParser,
       itemsParser,
       transportParser,
@@ -52,11 +52,10 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(additionalDeclarationTypeParser, consignmentReferencesParser, linkDucrToMucrParser, mucrParser, itemsParser, transportParser, partiesParser)
+    reset(additionalDeclarationTypeParser, consignmentReferencesParser, mucrParser, itemsParser, transportParser, partiesParser)
 
     when(additionalDeclarationTypeParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(STANDARD_PRE_LODGED)))
     when(consignmentReferencesParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
-    when(linkDucrToMucrParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
     when(mucrParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
     when(itemsParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Seq.empty))
     when(transportParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Transport()))
@@ -75,7 +74,6 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
 
       verify(additionalDeclarationTypeParser).parse(any[NodeSeq])(any[MappingContext])
       verify(consignmentReferencesParser).parse(any[NodeSeq])(any[MappingContext])
-      verify(linkDucrToMucrParser).parse(any[NodeSeq])(any[MappingContext])
       verify(mucrParser).parse(any[NodeSeq])(any[MappingContext])
       verify(itemsParser).parse(any[NodeSeq])(any[MappingContext])
       verify(transportParser).parse(any[NodeSeq])(any[MappingContext])
@@ -91,6 +89,34 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
 
         result.isRight mustBe true
         result.value mustBe an[ExportsDeclaration]
+      }
+    }
+
+    "set ExportsDeclaration.linkDucrToMucr to None" when {
+      "ExportsDeclaration.mucr is None" in {
+        when(mucrParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
+
+        val xml = ExportsDeclarationXmlParserSpec.inputXml
+
+        val result = exportsDeclarationXmlParser.fromXml(mappingContext, xml)
+
+        result.isRight mustBe true
+        result.value mustBe an[ExportsDeclaration]
+        result.value.linkDucrToMucr mustBe None
+      }
+    }
+
+    "set ExportsDeclaration.linkDucrToMucr to 'yes'" when {
+      "ExportsDeclaration.mucr is NOT None" in {
+        when(mucrParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(MUCR("mucr"))))
+
+        val xml = ExportsDeclarationXmlParserSpec.inputXml
+
+        val result = exportsDeclarationXmlParser.fromXml(mappingContext, xml)
+
+        result.isRight mustBe true
+        result.value mustBe an[ExportsDeclaration]
+        result.value.linkDucrToMucr.get mustBe YesNoAnswer(YesNoAnswers.yes)
       }
     }
 

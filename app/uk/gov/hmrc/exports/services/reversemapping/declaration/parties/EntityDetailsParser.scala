@@ -17,9 +17,8 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration.parties
 
 import uk.gov.hmrc.exports.models.declaration.{EntityDetails, Address => AddressModel}
-import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
@@ -31,15 +30,15 @@ class EntityDetailsParser extends DeclarationXmlParser[Option[EntityDetails]] {
     Right(parseEori(inputXml) orElse parseAddress(inputXml))
 
   private def parseEori(inputXml: NodeSeq): Option[EntityDetails] =
-    StringOption((inputXml \ ID).text)
+    (inputXml \ ID).toStringOption
       .map(eori => EntityDetails(eori = Some(eori), None))
 
   private def parseAddress(inputXml: NodeSeq): Option[EntityDetails] = {
-    val name = StringOption((inputXml \ Address \ Name).text)
-    val addressLine = StringOption((inputXml \ Address \ Line).text)
-    val cityName = StringOption((inputXml \ Address \ CityName).text)
-    val postcodeID = StringOption((inputXml \ Address \ PostcodeID).text)
-    val countryCode = StringOption((inputXml \ Address \ CountryCode).text)
+    val name = (inputXml \ Address \ Name).toStringOption
+    val addressLine = (inputXml \ Address \ Line).toStringOption
+    val cityName = (inputXml \ Address \ CityName).toStringOption
+    val postcodeID = (inputXml \ Address \ PostcodeID).toStringOption
+    val countryCode = (inputXml \ Address \ CountryCode).toStringOption
 
     if (Seq(name, addressLine, cityName, postcodeID, countryCode).flatten.isEmpty)
       None

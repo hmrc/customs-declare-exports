@@ -24,6 +24,7 @@ import scala.xml.NodeSeq
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType._
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
@@ -34,7 +35,6 @@ import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.Transpo
 class ExportsDeclarationXmlParser @Inject()(
   additionalDeclarationTypeParser: AdditionalDeclarationTypeParser,
   consignmentReferencesParser: ConsignmentReferencesParser,
-  linkDucrToMucrParser: LinkDucrToMucrParser,
   mucrParser: MucrParser,
   itemsParser: ItemsParser,
   transportParser: TransportParser,
@@ -51,7 +51,6 @@ class ExportsDeclarationXmlParser @Inject()(
       additionalDeclarationType <- additionalDeclarationTypeParser.parse(declarationXml)
       declarationType <- deriveDeclarationType(additionalDeclarationType)
       consignmentReferences <- consignmentReferencesParser.parse(declarationXml)
-      linkDucrToMucr <- linkDucrToMucrParser.parse(declarationXml)
       mucr <- mucrParser.parse(declarationXml)
       items <- itemsParser.parse(declarationXml)
       transport <- transportParser.parse(declarationXml)
@@ -68,7 +67,7 @@ class ExportsDeclarationXmlParser @Inject()(
         dispatchLocation = None,
         additionalDeclarationType = additionalDeclarationType,
         consignmentReferences = consignmentReferences,
-        linkDucrToMucr = linkDucrToMucr,
+        linkDucrToMucr = mucr.map(_ => YesNoAnswer(YesNoAnswers.yes)),
         mucr = mucr,
         transport = transport,
         parties = parties,

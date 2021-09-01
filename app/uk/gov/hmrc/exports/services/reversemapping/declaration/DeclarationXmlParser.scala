@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
+import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
@@ -43,5 +44,9 @@ object DeclarationXmlParser {
 
       insideOut(list, Nil)
     }
+  }
+
+  implicit class OptionalString(nodeSeq: NodeSeq) {
+    def toStringOption: Option[String] = StringOption(nodeSeq.text)
   }
 }

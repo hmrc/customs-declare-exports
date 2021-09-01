@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.parties
 
-import uk.gov.hmrc.exports.models.StringOption
+import scala.xml.NodeSeq
+
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
-
-import scala.xml.NodeSeq
 
 class AgentFunctionCodeParser extends DeclarationXmlParser[Option[String]] {
 
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Option[String]] =
-    Right(StringOption((inputXml \ Declaration \ Agent \ FunctionCode).text))
+    Right((inputXml \ Declaration \ Agent \ FunctionCode).toStringOption)
 }

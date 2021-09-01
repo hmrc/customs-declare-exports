@@ -17,9 +17,8 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import scala.xml.NodeSeq
-import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR}
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
@@ -31,9 +30,9 @@ class ConsignmentReferencesParser extends DeclarationXmlParser[Option[Consignmen
       .map(previousDocument => (previousDocument \ ID).text)
       .map(DUCR(_))
 
-    val lrnOpt = StringOption((inputXml \ Declaration \ FunctionalReferenceID).text)
+    val lrnOpt = (inputXml \ Declaration \ FunctionalReferenceID).toStringOption
 
-    val personalUcrOpt = StringOption((inputXml \ Declaration \ GoodsShipment \ UCR \ TraderAssignedReferenceID).text)
+    val personalUcrOpt = (inputXml \ Declaration \ GoodsShipment \ UCR \ TraderAssignedReferenceID).toStringOption
 
     val areBothMandatoryFieldsPresent = ducrOpt.nonEmpty && lrnOpt.nonEmpty
     val areAllFieldsEmpty = ducrOpt.isEmpty && lrnOpt.isEmpty && personalUcrOpt.isEmpty

@@ -16,22 +16,21 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
+import scala.xml.NodeSeq
+
 import uk.gov.hmrc.exports.models.declaration.{Container, Seal => SealModel}
-import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.ContainersParser.NO_SEALS
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
-import scala.xml.NodeSeq
-
 class ContainersParser extends DeclarationXmlParser[Seq[Container]] {
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Seq[Container]] =
     (inputXml \ Declaration \ GoodsShipment \ Consignment \ TransportEquipment).map(parseTransportEquipmentNode).toEitherOfList
 
   private def parseTransportEquipmentNode(inputXml: NodeSeq): Either[XmlParserError, Container] = {
-    val id = StringOption((inputXml \ ID).text)
+    val id = (inputXml \ ID).toStringOption
     val eitherSeals = (inputXml \ Seal).map(parseSealNode).toEitherOfList
 
     (id, eitherSeals) match {
@@ -46,7 +45,7 @@ class ContainersParser extends DeclarationXmlParser[Seq[Container]] {
   }
 
   private def parseSealNode(inputXml: NodeSeq): Either[XmlParserError, SealModel] =
-    StringOption((inputXml \ ID).text) match {
+    (inputXml \ ID).toStringOption match {
       case Some(value) => Right(SealModel(value))
       case None        => Left(s"Seal element is missing the required ID element")
     }

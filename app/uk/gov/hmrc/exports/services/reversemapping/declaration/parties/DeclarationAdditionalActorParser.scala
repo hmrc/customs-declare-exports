@@ -16,19 +16,18 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.parties
 
-import uk.gov.hmrc.exports.models.StringOption
-import uk.gov.hmrc.exports.models.declaration.DeclarationAdditionalActor
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
-import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
-import uk.gov.hmrc.exports.services.reversemapping.MappingContext
-
 import scala.xml.NodeSeq
+
+import uk.gov.hmrc.exports.models.declaration.DeclarationAdditionalActor
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
+import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
 class DeclarationAdditionalActorParser extends DeclarationXmlParser[Seq[DeclarationAdditionalActor]] {
 
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Seq[DeclarationAdditionalActor]] = {
-    val elements = (inputXml \ Declaration \ GoodsShipment \ AEOMutualRecognitionParty).toSeq
+    val elements = inputXml \ Declaration \ GoodsShipment \ AEOMutualRecognitionParty
 
     Right(
       elements
@@ -38,8 +37,8 @@ class DeclarationAdditionalActorParser extends DeclarationXmlParser[Seq[Declarat
   }
 
   private def parseEori(inputXml: NodeSeq): Option[String] =
-    StringOption((inputXml \ ID).text)
+    (inputXml \ ID).toStringOption
 
   private def parseRoleCode(inputXml: NodeSeq): Option[String] =
-    StringOption((inputXml \ RoleCode).text)
+    (inputXml \ RoleCode).toStringOption
 }

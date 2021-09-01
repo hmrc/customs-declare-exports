@@ -21,7 +21,7 @@ import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
-import scala.xml.{Elem, NodeSeq}
+import scala.xml.NodeSeq
 
 class DeclarationHolderParserSpec extends UnitSpec with EitherValues {
 

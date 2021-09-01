@@ -17,19 +17,45 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration.items
 
 import java.util.UUID
+
 import scala.xml.NodeSeq
+
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.ExportItem
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
-import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
+import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
+import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
 class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) extends DeclarationXmlParser[ExportItem] {
 
   override def parse(itemXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[ExportItem] =
-    procedureCodesParser.parse(itemXml).map {
-      val sequenceId = (itemXml \ SequenceNumeric).text.toInt
-      ExportItem(UUID.randomUUID().toString, sequenceId, _)
+    procedureCodesParser.parse(itemXml).map { procedureCodes =>
+      val domesticDutyTaxParties = itemXml \ DomesticDutyTaxParty
+
+      ExportItem(
+        id = UUID.randomUUID().toString,
+        sequenceId = (itemXml \ SequenceNumeric).text.toInt,
+        procedureCodes = procedureCodes,
+        fiscalInformation = parseFiscalInformation(domesticDutyTaxParties),
+        additionalFiscalReferencesData = parseAdditionalFiscalReferencesData(domesticDutyTaxParties),
+        statisticalValue = parseStatisticalValue(itemXml)
+      )
     }
+
+  private def parseAdditionalFiscalReferencesData(domesticDutyTaxParties: NodeSeq): Option[AdditionalFiscalReferences] = {
+    val references = (domesticDutyTaxParties \ ID).flatMap { reference =>
+      val text = reference.text
+      if (text.length > 1) Some(AdditionalFiscalReference(country = text.take(2), reference = text.drop(2))) else None
+    }
+
+    if (references.nonEmpty) Some(AdditionalFiscalReferences(references)) else None
+  }
+
+  private def parseFiscalInformation(domesticDutyTaxParties: NodeSeq): Option[FiscalInformation] =
+    if (domesticDutyTaxParties.nonEmpty) Some(FiscalInformation(YesNoAnswers.yes)) else None
+
+  private def parseStatisticalValue(inputXml: NodeSeq): Option[StatisticalValue] =
+    (inputXml \ StatisticalValueAmount).toStringOption.map(StatisticalValue(_))
 }
