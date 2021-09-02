@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.parties
 
+import scala.xml.NodeSeq
+
 import uk.gov.hmrc.exports.models.declaration.DeclarationHolder
-import uk.gov.hmrc.exports.models.StringOption
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
-import uk.gov.hmrc.exports.services.reversemapping.MappingContext
-
-import scala.xml.NodeSeq
 
 class DeclarationHolderParser extends DeclarationXmlParser[Seq[DeclarationHolder]] {
 
@@ -35,8 +34,8 @@ class DeclarationHolderParser extends DeclarationXmlParser[Seq[DeclarationHolder
     )
 
   private def parseDeclarationHolderNode(inputXml: NodeSeq): DeclarationHolder = {
-    val id = StringOption((inputXml \ ID).text)
-    val catCode = StringOption((inputXml \ CategoryCode).text)
+    val id = (inputXml \ ID).toStringOption
+    val catCode = (inputXml \ CategoryCode).toStringOption
 
     DeclarationHolder(catCode, id)
   }

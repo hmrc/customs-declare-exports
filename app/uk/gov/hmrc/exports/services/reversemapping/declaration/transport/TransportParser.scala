@@ -19,50 +19,55 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 import scala.xml.NodeSeq
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.Transport
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
+import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
+import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
-class TransportParser @Inject()(
-  containersParser: ContainersParser,
-  expressConsignmentParser: ExpressConsignmentParser,
-  meansOfTransportCrossingTheBorderIDNumberParser: MeansOfTransportCrossingTheBorderIDNumberParser,
-  meansOfTransportCrossingTheBorderNationalityParser: MeansOfTransportCrossingTheBorderNationalityParser,
-  meansOfTransportCrossingTheBorderTypeParser: MeansOfTransportCrossingTheBorderTypeParser,
-  meansOfTransportOnDepartureIDNumberParser: MeansOfTransportOnDepartureIDNumberParser,
-  meansOfTransportOnDepartureTypeParser: MeansOfTransportOnDepartureTypeParser,
-  transportLeavingTheBorderParser: TransportLeavingTheBorderParser,
-  transportPaymentParser: TransportPaymentParser
-) extends DeclarationXmlParser[Transport] {
+class TransportParser @Inject()(containersParser: ContainersParser) extends DeclarationXmlParser[Transport] {
 
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Transport] =
-    for {
-      containers <- containersParser.parse(inputXml)
-      expressConsignment <- expressConsignmentParser.parse(inputXml)
-      transportPayment <- transportPaymentParser.parse(inputXml)
-      borderModeOfTransportCode <- transportLeavingTheBorderParser.parse(inputXml)
-      meansOfTransportOnDepartureType <- meansOfTransportOnDepartureTypeParser.parse(inputXml)
-      meansOfTransportOnDepartureIDNumber <- meansOfTransportOnDepartureIDNumberParser.parse(inputXml)
-      meansOfTransportCrossingTheBorderNationality <- meansOfTransportCrossingTheBorderNationalityParser.parse(inputXml)
-      meansOfTransportCrossingTheBorderType <- meansOfTransportCrossingTheBorderTypeParser.parse(inputXml)
-      meansOfTransportCrossingTheBorderIDNumber <- meansOfTransportCrossingTheBorderIDNumberParser.parse(inputXml)
-    } yield {
-      val maybeContainers = containers.isEmpty match {
-        case true  => None
-        case false => Some(containers)
-      }
+    containersParser.parse(inputXml).map { containers =>
+      val departureTransportMeans = parseDepartureTransportMeans(inputXml)
+      val borderTransportMeans = parseBorderTransportMeans(inputXml)
 
       Transport(
-        expressConsignment = expressConsignment,
-        transportPayment = transportPayment,
-        containers = maybeContainers,
-        borderModeOfTransportCode = borderModeOfTransportCode,
-        meansOfTransportOnDepartureType = meansOfTransportOnDepartureType,
-        meansOfTransportOnDepartureIDNumber = meansOfTransportOnDepartureIDNumber,
-        meansOfTransportCrossingTheBorderNationality = meansOfTransportCrossingTheBorderNationality,
-        meansOfTransportCrossingTheBorderType = meansOfTransportCrossingTheBorderType,
-        meansOfTransportCrossingTheBorderIDNumber = meansOfTransportCrossingTheBorderIDNumber
+        expressConsignment = parseExpressConsignment(inputXml),
+        transportPayment = parseTransportPayment(inputXml),
+        containers = maybeContainers(containers),
+        borderModeOfTransportCode = parseBorderModeOfTransportCode(inputXml),
+        meansOfTransportOnDepartureType = (departureTransportMeans \ IdentificationTypeCode).toStringOption,
+        meansOfTransportOnDepartureIDNumber = (departureTransportMeans \ ID).toStringOption,
+        meansOfTransportCrossingTheBorderNationality = (borderTransportMeans \ RegistrationNationalityCode).toStringOption,
+        meansOfTransportCrossingTheBorderType = (borderTransportMeans \ IdentificationTypeCode).toStringOption,
+        meansOfTransportCrossingTheBorderIDNumber = (borderTransportMeans \ ID).toStringOption
       )
     }
+
+  private def maybeContainers(containers: Seq[Container]): Option[Seq[Container]] =
+    if (containers.nonEmpty) Some(containers) else None
+
+  private def parseBorderModeOfTransportCode(inputXml: NodeSeq): Option[TransportLeavingTheBorder] = {
+    val modeOfTransportCode = (inputXml \ Declaration \ BorderTransportMeans \ ModeCode).text
+    def transportLeavingTheBorder = TransportLeavingTheBorder(Some(ModeOfTransportCode(modeOfTransportCode)))
+    if (modeOfTransportCode.nonEmpty) Some(transportLeavingTheBorder) else None
+  }
+
+  private def parseBorderTransportMeans(inputXml: NodeSeq): NodeSeq =
+    inputXml \ Declaration \ BorderTransportMeans
+
+  private def parseExpressConsignment(inputXml: NodeSeq): Option[YesNoAnswer] = {
+    val specificCircumstances = (inputXml \ Declaration \ DeclarationSpecificCircumstancesCodeCodeType).text
+    if (specificCircumstances == "A20") Some(YesNoAnswer(YesNoAnswers.yes)) else None
+  }
+
+  private def parseDepartureTransportMeans(inputXml: NodeSeq): NodeSeq =
+    inputXml \ Declaration \ GoodsShipment \ Consignment \ DepartureTransportMeans
+
+  private def parseTransportPayment(inputXml: NodeSeq): Option[TransportPayment] = {
+    val paymentMethod = (inputXml \ Declaration \ Consignment \ Freight \ PaymentMethodCode).text
+    if (paymentMethod.nonEmpty) Some(TransportPayment(paymentMethod)) else None
+  }
 }
