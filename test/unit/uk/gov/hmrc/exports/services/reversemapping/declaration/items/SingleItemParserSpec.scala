@@ -35,6 +35,7 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
   override def beforeEach(): Unit = {
     super.beforeEach()
 
+    reset(procedureCodesParser)
     when(procedureCodesParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
   }
 
@@ -132,11 +133,14 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
 
       "'/ GovernmentAgencyGoodsItem / DomesticDutyTaxParty' elements are not fully defined" in {
         val result1 = singleItemParser.parse(additionalFiscalReferencesData(List("G")))
-        result1.value.additionalFiscalReferencesData mustBe None
+        val references1 = result1.value.additionalFiscalReferencesData.get.references
+        references1.size mustBe 1
+        references1.head.country mustBe "G?"
 
-        val result2 = singleItemParser.parse(additionalFiscalReferencesData(List("GB12345678", "G")))
+        val result2 = singleItemParser.parse(additionalFiscalReferencesData(List("GB12345678", "B")))
         val references2 = result2.value.additionalFiscalReferencesData.get.references
-        references2.size mustBe 1
+        references2.size mustBe 2
+        references2.last.country mustBe "B?"
       }
     }
 

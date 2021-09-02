@@ -46,8 +46,10 @@ class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) ext
 
   private def parseAdditionalFiscalReferencesData(domesticDutyTaxParties: NodeSeq): Option[AdditionalFiscalReferences] = {
     val references = (domesticDutyTaxParties \ ID).flatMap { reference =>
-      val text = reference.text
-      if (text.length > 1) Some(AdditionalFiscalReference(country = text.take(2), reference = text.drop(2))) else None
+      reference.toStringOption.map { text =>
+        val country = if (text.length > 1) text.take(2) else s"$text?"
+        AdditionalFiscalReference(country = country, reference = text.drop(2))
+      }
     }
 
     if (references.nonEmpty) Some(AdditionalFiscalReferences(references)) else None
