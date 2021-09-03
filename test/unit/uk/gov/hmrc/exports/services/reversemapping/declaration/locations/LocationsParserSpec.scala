@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.locations
 
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchersSugar._
 import org.scalatest.EitherValues
 import testdata.ExportsTestData
@@ -27,9 +28,7 @@ import scala.xml.NodeSeq
 
 class LocationsParserSpec extends UnitSpec with EitherValues {
 
-  private val originationCountryParser = mock[OriginationCountryParser]
-  private val destinationCountryParser = mock[DestinationCountryParser]
-  private val routingCountriesParser = mock[RoutingCountriesParser]
+  private val countryParser = mock[CountryParser]
   private val goodsLocationParser = mock[GoodsLocationParser]
   private val officeOfExitParser = mock[OfficeOfExitParser]
   private val supervisingCustomsOfficeParser = mock[SupervisingCustomsOfficeParser]
@@ -37,9 +36,7 @@ class LocationsParserSpec extends UnitSpec with EitherValues {
   private val inlandModeOfTransportCodeParser = mock[InlandModeOfTransportCodeParser]
 
   private val parser = new LocationsParser(
-    originationCountryParser,
-    destinationCountryParser,
-    routingCountriesParser,
+    countryParser,
     goodsLocationParser,
     officeOfExitParser,
     supervisingCustomsOfficeParser,
@@ -51,9 +48,7 @@ class LocationsParserSpec extends UnitSpec with EitherValues {
     super.beforeEach()
 
     reset(
-      originationCountryParser,
-      destinationCountryParser,
-      routingCountriesParser,
+      countryParser,
       goodsLocationParser,
       officeOfExitParser,
       supervisingCustomsOfficeParser,
@@ -61,9 +56,7 @@ class LocationsParserSpec extends UnitSpec with EitherValues {
       inlandModeOfTransportCodeParser
     )
 
-    when(originationCountryParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
-    when(destinationCountryParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
-    when(routingCountriesParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Seq.empty))
+    when(countryParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
     when(goodsLocationParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
     when(officeOfExitParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
     when(supervisingCustomsOfficeParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
@@ -75,20 +68,60 @@ class LocationsParserSpec extends UnitSpec with EitherValues {
 
   "LocationsParser on parse" should {
 
-    val xml = <meta></meta>
+    val originationCountryElement: NodeSeq = <ns3:ID>GB</ns3:ID>
+    val destinationCountryElement: NodeSeq = <ns3:CountryCode>FR</ns3:CountryCode>
+    val routingCountryElement_1: NodeSeq = <ns3:RoutingCountryCode>DE</ns3:RoutingCountryCode>
+    val routingCountryElement_2: NodeSeq = <ns3:RoutingCountryCode>DK</ns3:RoutingCountryCode>
 
-    "call all sub-parsers" in {
+    val xml = <meta>
+      <ns3:Declaration>
+        <ns3:GoodsShipment>
+          <ns3:ExportCountry>
+            {originationCountryElement}
+          </ns3:ExportCountry>
+          <ns3:Destination>
+            {destinationCountryElement}
+          </ns3:Destination>
+        </ns3:GoodsShipment>
+        <ns3:Consignment>
+          <ns3:Itinerary>
+            <ns3:SequenceNumeric>0</ns3:SequenceNumeric>
+            {routingCountryElement_1}
+          </ns3:Itinerary>
+          <ns3:Itinerary>
+            <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+            {routingCountryElement_2}
+          </ns3:Itinerary>
+        </ns3:Consignment>
+      </ns3:Declaration>
+    </meta>
+
+    "call all sub-parsers" that {
+
+      "require the whole XML as parameter" in {
+
+        parser.parse(xml)
+
+        verify(goodsLocationParser).parse(eqTo(xml))(eqTo(mappingContext))
+        verify(officeOfExitParser).parse(eqTo(xml))(eqTo(mappingContext))
+        verify(supervisingCustomsOfficeParser).parse(eqTo(xml))(eqTo(mappingContext))
+        verify(warehouseIdentificationParser).parse(eqTo(xml))(eqTo(mappingContext))
+        verify(inlandModeOfTransportCodeParser).parse(eqTo(xml))(eqTo(mappingContext))
+      }
+    }
+
+    "call CountryParser" in {
 
       parser.parse(xml)
 
-      verify(originationCountryParser).parse(eqTo(xml))(eqTo(mappingContext))
-      verify(destinationCountryParser).parse(eqTo(xml))(eqTo(mappingContext))
-      verify(routingCountriesParser).parse(eqTo(xml))(eqTo(mappingContext))
-      verify(goodsLocationParser).parse(eqTo(xml))(eqTo(mappingContext))
-      verify(officeOfExitParser).parse(eqTo(xml))(eqTo(mappingContext))
-      verify(supervisingCustomsOfficeParser).parse(eqTo(xml))(eqTo(mappingContext))
-      verify(warehouseIdentificationParser).parse(eqTo(xml))(eqTo(mappingContext))
-      verify(inlandModeOfTransportCodeParser).parse(eqTo(xml))(eqTo(mappingContext))
+      val captor: ArgumentCaptor[NodeSeq] = ArgumentCaptor.forClass(classOf[NodeSeq])
+      verify(countryParser, times(4)).parse(captor.capture())(eqTo(mappingContext))
+      val actualRoutingCountryElements = captor.getAllValues
+      actualRoutingCountryElements.get(0).toString mustBe originationCountryElement.toString
+      actualRoutingCountryElements.get(1).toString mustBe destinationCountryElement.toString
+      actualRoutingCountryElements.get(2).toString mustBe routingCountryElement_1.toString
+      actualRoutingCountryElements.get(3).toString mustBe routingCountryElement_2.toString
+
     }
 
     "return a Locations instance" when {
@@ -114,10 +147,10 @@ class LocationsParserSpec extends UnitSpec with EitherValues {
 
     "return Right with Locations" that {
 
-      "has originationCountry set to value returned by OriginationCountryParser" in {
+      "has originationCountry set to value returned by CountryParser" in {
 
         val originationCountry = Country(Some("GB"))
-        when(originationCountryParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(originationCountry)))
+        when(countryParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(originationCountry)))
 
         val result = parser.parse(xml)
 
@@ -126,10 +159,10 @@ class LocationsParserSpec extends UnitSpec with EitherValues {
         result.value.originationCountry.get mustBe originationCountry
       }
 
-      "has destinationCountry set to value returned by DestinationCountryParser" in {
+      "has destinationCountry set to value returned by CountryParser" in {
 
         val destinationCountry = Country(Some("GB"))
-        when(destinationCountryParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(destinationCountry)))
+        when(countryParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(destinationCountry)))
 
         val result = parser.parse(xml)
 
@@ -139,9 +172,9 @@ class LocationsParserSpec extends UnitSpec with EitherValues {
       }
 
       "has hasRoutingCountries set to false" when {
-        "routingCountries returned by RoutingCountriesParser are empty" in {
+        "routingCountries returned by CountryParser are empty" in {
 
-          when(routingCountriesParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Seq.empty))
+          when(countryParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
 
           val result = parser.parse(xml)
 
@@ -152,10 +185,10 @@ class LocationsParserSpec extends UnitSpec with EitherValues {
       }
 
       "has hasRoutingCountries set to true" when {
-        "routingCountries returned by RoutingCountriesParser are NOT empty" in {
+        "routingCountries returned by CountryParser are NOT empty" in {
 
-          val routingCountries = Seq(Country(Some("GB")), Country(Some("FR")), Country(Some("DE")))
-          when(routingCountriesParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(routingCountries))
+          when(countryParser.parse(any[NodeSeq])(any[MappingContext]))
+            .thenReturn(Right(None), Right(None), Right(Some(Country(Some("GB")))), Right(Some(Country(Some("FR")))))
 
           val result = parser.parse(xml)
 
@@ -167,8 +200,9 @@ class LocationsParserSpec extends UnitSpec with EitherValues {
 
       "has routingCountries set to value returned by RoutingCountriesParser" in {
 
-        val routingCountries = Seq(Country(Some("GB")), Country(Some("FR")), Country(Some("DE")))
-        when(routingCountriesParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(routingCountries))
+        val routingCountries = Seq(Country(Some("GB")), Country(Some("FR")))
+        when(countryParser.parse(any[NodeSeq])(any[MappingContext]))
+          .thenReturn(Right(None), Right(None), Right(Some(Country(Some("GB")))), Right(Some(Country(Some("FR")))))
 
         val result = parser.parse(xml)
 

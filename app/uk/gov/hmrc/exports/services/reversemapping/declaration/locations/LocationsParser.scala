@@ -16,19 +16,18 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.locations
 
-import uk.gov.hmrc.exports.models.declaration.Locations
+import uk.gov.hmrc.exports.models.declaration.{Country, Locations}
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
+import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
 import javax.inject.{Inject, Singleton}
 import scala.xml.NodeSeq
 
 @Singleton
 class LocationsParser @Inject()(
-  originationCountryParser: OriginationCountryParser,
-  destinationCountryParser: DestinationCountryParser,
-  routingCountriesParser: RoutingCountriesParser,
+  countryParser: CountryParser,
   goodsLocationParser: GoodsLocationParser,
   officeOfExitParser: OfficeOfExitParser,
   supervisingCustomsOfficeParser: SupervisingCustomsOfficeParser,
@@ -38,9 +37,9 @@ class LocationsParser @Inject()(
 
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Locations] =
     for {
-      originationCountry <- originationCountryParser.parse(inputXml)
-      destinationCountry <- destinationCountryParser.parse(inputXml)
-      routingCountries <- routingCountriesParser.parse(inputXml)
+      originationCountry <- countryParser.parse(inputXml \ Declaration \ GoodsShipment \ ExportCountry \ ID)
+      destinationCountry <- countryParser.parse(inputXml \ Declaration \ GoodsShipment \ Destination \ CountryCode)
+      routingCountries <- parseRoutingCountries(inputXml)
       goodsLocation <- goodsLocationParser.parse(inputXml)
       officeOfExit <- officeOfExitParser.parse(inputXml)
       supervisingCustomsOffice <- supervisingCustomsOfficeParser.parse(inputXml)
@@ -61,5 +60,8 @@ class LocationsParser @Inject()(
         inlandModeOfTransportCode = inlandModeOfTransportCode
       )
     }
+
+  private def parseRoutingCountries(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Seq[Country]] =
+    (inputXml \ Declaration \ Consignment \ Itinerary \ RoutingCountryCode).map(countryParser.parse).toEitherOfList.map(_.flatten)
 
 }

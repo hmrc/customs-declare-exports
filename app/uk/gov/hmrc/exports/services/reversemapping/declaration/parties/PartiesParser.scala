@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.parties
 
-import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
+import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
-import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 import javax.inject.Inject
 import scala.xml.NodeSeq
@@ -34,11 +34,11 @@ class PartiesParser @Inject()(
 
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Parties] =
     for {
-      maybeExporterEntityDetails <- entityDetailsParser.parse((inputXml \ Declaration \ Exporter))
-      maybeConsigneeEntityDetails <- entityDetailsParser.parse((inputXml \ Declaration \ Consignee))
-      maybeConsignorEntityDetails <- entityDetailsParser.parse((inputXml \ Declaration \ Consignor))
-      maybeCarrierEntityDetails <- entityDetailsParser.parse((inputXml \ Declaration \ Carrier))
-      maybeRepresentativeEntityDetails <- entityDetailsParser.parse((inputXml \ Declaration \ Agent))
+      maybeExporterEntityDetails <- entityDetailsParser.parse(inputXml \ Declaration \ Exporter)
+      maybeConsigneeEntityDetails <- entityDetailsParser.parse(inputXml \ Declaration \ Consignee)
+      maybeConsignorEntityDetails <- entityDetailsParser.parse(inputXml \ Declaration \ Consignor)
+      maybeCarrierEntityDetails <- entityDetailsParser.parse(inputXml \ Declaration \ Carrier)
+      maybeRepresentativeEntityDetails <- entityDetailsParser.parse(inputXml \ Declaration \ Agent)
       maybeRepresentativeFunctionCode <- agentFunctionCodeParser.parse(inputXml)
       holders <- declarationHolderParser.parse(inputXml)
     } yield {

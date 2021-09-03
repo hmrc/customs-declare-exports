@@ -50,6 +50,14 @@ class GoodsLocationParserSpec extends UnitSpec with EitherValues {
         result.isRight mustBe true
         result.value mustBe None
       }
+
+      "GoodsLocation element is present but its elements are empty" in {
+
+        val result = parser.parse(inputXml(Some(GoodsLocation("", "", "", None))))
+
+        result.isRight mustBe true
+        result.value mustBe None
+      }
     }
 
     "return Right with GoodsLocation" when {

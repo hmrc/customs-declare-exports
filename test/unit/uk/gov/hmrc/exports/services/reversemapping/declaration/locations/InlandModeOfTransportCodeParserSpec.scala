@@ -21,7 +21,7 @@ import testdata.ExportsTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.{InlandModeOfTransportCode, ModeOfTransportCode}
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
-import uk.gov.hmrc.exports.services.reversemapping.declaration.locations.InlandModeOfTransportCodeParserSpec.{emptyModeCodeElement, inputXml}
+import uk.gov.hmrc.exports.services.reversemapping.declaration.locations.InlandModeOfTransportCodeParserSpec.inputXml
 
 import scala.xml.{Elem, NodeSeq}
 
@@ -44,7 +44,7 @@ class InlandModeOfTransportCodeParserSpec extends UnitSpec with EitherValues {
 
       "the 'GoodsShipment / Consignment / DepartureTransportMeans / ModeCode' element is present but it is empty" in {
 
-        val result = parser.parse(emptyModeCodeElement)
+        val result = parser.parse(inputXml(Some("")))
 
         result.isRight mustBe true
         result.value mustBe None
@@ -87,19 +87,6 @@ object InlandModeOfTransportCodeParserSpec {
           </ns3:Consignment>
         </ns3:GoodsShipment>
       }.getOrElse(NodeSeq.Empty) }
-      </ns3:Declaration>
-    </meta>
-
-  private val emptyModeCodeElement: Elem =
-    <meta>
-      <ns3:Declaration>
-        <ns3:GoodsShipment>
-          <ns3:Consignment>
-            <ns3:DepartureTransportMeans>
-              <ns3:ModeCode></ns3:ModeCode>
-            </ns3:DepartureTransportMeans>
-          </ns3:Consignment>
-        </ns3:GoodsShipment>
       </ns3:Declaration>
     </meta>
 }

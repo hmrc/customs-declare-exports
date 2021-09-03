@@ -43,7 +43,7 @@ class WarehouseIdentificationParserSpec extends UnitSpec with EitherValues {
         result.value mustBe None
       }
 
-      "the 'GoodsShipment / Warehouse' element is present but empty" in {
+      "the 'GoodsShipment / Warehouse' element is present but it is empty" in {
 
         val result = parser.parse(inputXml())
 

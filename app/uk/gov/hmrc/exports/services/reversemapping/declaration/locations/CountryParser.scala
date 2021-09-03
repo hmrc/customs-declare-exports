@@ -16,21 +16,18 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.locations
 
-import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.models.declaration.Country
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
-import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 
 import javax.inject.Singleton
 import scala.xml.NodeSeq
 
 @Singleton
-class DestinationCountryParser extends DeclarationXmlParser[Option[Country]] {
+class CountryParser extends DeclarationXmlParser[Option[Country]] {
 
-  override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Option[Country]] = Right(
-    StringOption((inputXml \ Declaration \ GoodsShipment \ Destination \ CountryCode).text)
-      .map(exportCountryId => Country(Some(exportCountryId)))
-  )
+  override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Option[Country]] =
+    Right(inputXml.toStringOption.map(countryCode => Country(Some(countryCode))))
+
 }
