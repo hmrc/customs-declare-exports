@@ -16,15 +16,15 @@
 
 package testdata
 
-import java.time.{LocalDateTime, ZoneOffset}
-import java.util.UUID
-
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
+
+import java.time.{LocalDateTime, ZoneOffset}
+import java.util.UUID
 
 //noinspection ScalaStyle
 trait ExportsDeclarationBuilder {
@@ -244,16 +244,8 @@ trait ExportsDeclarationBuilder {
   def withoutOfficeOfExit(): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(officeOfExit = None))
 
-  def withOfficeOfExit(
-    officeId: Option[String] = None,
-    presentationOfficeId: Option[String] = None,
-    circumstancesCode: Option[String] = None,
-    isUkOfficeOfExit: Option[String] = Some("No")
-  ): ExportsDeclarationModifier =
-    cache =>
-      cache.copy(
-        locations = cache.locations.copy(officeOfExit = Some(OfficeOfExit(officeId, presentationOfficeId, circumstancesCode, isUkOfficeOfExit)))
-    )
+  def withOfficeOfExit(officeId: Option[String] = None): ExportsDeclarationModifier =
+    cache => cache.copy(locations = cache.locations.copy(officeOfExit = Some(OfficeOfExit(officeId))))
 
   def withoutItems(): ExportsDeclarationModifier = _.copy(items = Seq.empty)
 

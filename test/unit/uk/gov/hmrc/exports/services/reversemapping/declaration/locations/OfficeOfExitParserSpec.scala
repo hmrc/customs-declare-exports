@@ -60,7 +60,7 @@ class OfficeOfExitParserSpec extends UnitSpec with EitherValues {
         val result = parser.parse(inputXml(Some(exitOfficeId)))
 
         result.isRight mustBe true
-        result.value mustBe Some(OfficeOfExit(Some(exitOfficeId), None, None, None))
+        result.value mustBe Some(OfficeOfExit(Some(exitOfficeId)))
       }
     }
   }

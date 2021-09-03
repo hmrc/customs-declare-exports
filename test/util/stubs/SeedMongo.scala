@@ -54,7 +54,7 @@ object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
     withWarehouseIdentification("RGBLBA001"),
     withSupervisingCustomsOffice("Belfast"),
     withInlandModeOfTransport(ModeOfTransportCode.Maritime),
-    withOfficeOfExit(Some("GB000054"), Some("GBLBA003"), Some("No")),
+    withOfficeOfExit(Some("GB000054")),
     withItems(
       anItem(
         withProcedureCodes(Some("1040"), Seq("000")),

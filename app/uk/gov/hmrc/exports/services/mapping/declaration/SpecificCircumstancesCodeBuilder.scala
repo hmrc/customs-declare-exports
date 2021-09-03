@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import uk.gov.hmrc.exports.models.DeclarationType
+import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
@@ -28,18 +28,12 @@ import javax.inject.Inject
 class SpecificCircumstancesCodeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(exportsDeclaration: ExportsDeclaration, declaration: Declaration): Unit =
     exportsDeclaration.`type` match {
-      case DeclarationType.STANDARD | DeclarationType.SIMPLIFIED | DeclarationType.OCCASIONAL | DeclarationType.CLEARANCE =>
-        if (isExpressConsignment(exportsDeclaration) || hasCircumstances(exportsDeclaration))
+      case STANDARD | SIMPLIFIED | OCCASIONAL | CLEARANCE =>
+        if (isExpressConsignment(exportsDeclaration))
           setCircumstancesCode(declaration)
 
       case _ => (): Unit
     }
-
-  private def hasCircumstances(exportsDeclaration: ExportsDeclaration): Boolean =
-    (for {
-      officeOfExit <- exportsDeclaration.locations.officeOfExit
-      circumstancesCode <- officeOfExit.circumstancesCode
-    } yield circumstancesCode.contains("Yes")).getOrElse(false)
 
   private def isExpressConsignment(exportsDeclaration: ExportsDeclaration): Boolean =
     exportsDeclaration.transport.expressConsignment.exists(_.answer == YesNoAnswers.yes)

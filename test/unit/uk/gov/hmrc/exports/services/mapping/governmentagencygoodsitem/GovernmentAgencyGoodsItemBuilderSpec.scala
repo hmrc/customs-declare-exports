@@ -18,7 +18,6 @@ package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito
-import org.mockito.Mockito._
 import play.api.libs.json._
 import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
@@ -69,8 +68,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
               CommodityDetails(combinedNomenclatureCode = Some("classificationsId"), descriptionOfGoods = Some("commodityDescription"))
             )
           )
-          val exportsDeclaration =
-            aDeclaration(withType(declarationType), withItem(exportItem), withOfficeOfExit(presentationOfficeId = Some("id")))
+          val exportsDeclaration = aDeclaration(withType(declarationType), withItem(exportItem))
 
           when(mockCachingMappingHelper.mapGoodsMeasure(any[CommodityMeasure]))
             .thenReturn(Some(Commodity(description = Some("Some Commodity"))))
@@ -106,8 +104,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
               CommodityDetails(combinedNomenclatureCode = Some("classificationsId"), descriptionOfGoods = Some("commodityDescription"))
             )
           )
-          val exportsDeclaration =
-            aDeclaration(withType(declarationType), withItem(exportItem), withOfficeOfExit(presentationOfficeId = Some("id")))
+          val exportsDeclaration = aDeclaration(withType(declarationType), withItem(exportItem))
 
           when(mockCachingMappingHelper.mapGoodsMeasure(any[CommodityMeasure]))
             .thenReturn(Some(Commodity(description = Some("Some Commodity"))))

@@ -226,7 +226,7 @@ class LocationsParserSpec extends UnitSpec with EitherValues {
 
       "has officeOfExit set to value returned by OfficeOfExitParser" in {
 
-        val officeOfExit = OfficeOfExit(Some("GB000434"), None, None, None)
+        val officeOfExit = OfficeOfExit(Some("GB000434"))
         when(officeOfExitParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(officeOfExit)))
 
         val result = parser.parse(xml)

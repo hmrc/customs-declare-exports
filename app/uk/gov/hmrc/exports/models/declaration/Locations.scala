@@ -30,12 +30,7 @@ object GoodsLocation {
   implicit val format: OFormat[GoodsLocation] = Json.format[GoodsLocation]
 }
 
-case class OfficeOfExit(
-  officeId: Option[String],
-  presentationOfficeId: Option[String] = None,
-  circumstancesCode: Option[String] = None,
-  isUkOfficeOfExit: Option[String] = None
-)
+case class OfficeOfExit(officeId: Option[String])
 
 object OfficeOfExit {
   implicit val format: OFormat[OfficeOfExit] = Json.format[OfficeOfExit]
