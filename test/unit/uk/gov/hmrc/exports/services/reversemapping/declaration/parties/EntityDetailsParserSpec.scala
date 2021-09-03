@@ -20,6 +20,7 @@ import org.scalatest.EitherValues
 import testdata.ExportsTestData._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
+import uk.gov.hmrc.exports.services.reversemapping.declaration.parties.EntityDetailsParserSpec._
 
 import scala.xml.NodeSeq
 
@@ -27,12 +28,6 @@ class EntityDetailsParserSpec extends UnitSpec with EitherValues {
 
   private val parser = new EntityDetailsParser()
   private implicit val context = MappingContext(eori)
-
-  private val addressName = "The Mapels"
-  private val addressLine = "24 Never Lane"
-  private val addressCityName = "Gotham"
-  private val addressCountryCode = "GB"
-  private val addressPostcodeID = "10001"
 
   "EntityDetailsParser on parse" should {
     "return Right with None" when {
@@ -133,19 +128,28 @@ class EntityDetailsParserSpec extends UnitSpec with EitherValues {
       }
     }
   }
+}
+
+object EntityDetailsParserSpec {
+
+  private val addressName = "The Mapels"
+  private val addressLine = "24 Never Lane"
+  private val addressCityName = "Gotham"
+  private val addressCountryCode = "GB"
+  private val addressPostcodeID = "10001"
 
   private val suppliedIdElementsXml: NodeSeq =
-    <meta>
+    <EntityDetails>
       <ns3:ID>{eori}</ns3:ID>
-    </meta>
+    </EntityDetails>
 
   private val suppliedEmptyIdElementsXml: NodeSeq =
-    <meta>
+    <EntityDetails>
       <ns3:ID></ns3:ID>
-    </meta>
+    </EntityDetails>
 
   private val suppliedCompleteAddressElementsXml: NodeSeq =
-    <meta>
+    <EntityDetails>
       <ns3:Address>
         <ns3:Name>{addressName}</ns3:Name>
         <ns3:Line>{addressLine}</ns3:Line>
@@ -153,32 +157,32 @@ class EntityDetailsParserSpec extends UnitSpec with EitherValues {
         <ns3:CountryCode>{addressCountryCode}</ns3:CountryCode>
         <ns3:PostcodeID>{addressPostcodeID}</ns3:PostcodeID>
       </ns3:Address>
-    </meta>
+    </EntityDetails>
 
   private val suppliedPartialAddressElementsXml: NodeSeq =
-    <meta>
+    <EntityDetails>
       <ns3:Address>
         <ns3:Line>{addressLine}</ns3:Line>
         <ns3:CountryCode>{addressCountryCode}</ns3:CountryCode>
         <ns3:PostcodeID>{addressPostcodeID}</ns3:PostcodeID>
       </ns3:Address>
-    </meta>
+    </EntityDetails>
 
   private val suppliedEmptyAddressElementsXml: NodeSeq =
-    <meta>
+    <EntityDetails>
       <ns3:Address>
       </ns3:Address>
-    </meta>
+    </EntityDetails>
 
   private val suppliedEmptyAddressAndIdElementsXml: NodeSeq =
-    <meta>
+    <EntityDetails>
       <ns3:ID></ns3:ID>
       <ns3:Address>
       </ns3:Address>
-    </meta>
+    </EntityDetails>
 
   private val suppliedIDAndAddressElementsXml: NodeSeq =
-    <meta>
+    <EntityDetails>
       <ns3:ID>{eori}</ns3:ID>
       <ns3:Address>
         <ns3:Name>{addressName}</ns3:Name>
@@ -187,5 +191,5 @@ class EntityDetailsParserSpec extends UnitSpec with EitherValues {
         <ns3:CountryCode>{addressCountryCode}</ns3:CountryCode>
         <ns3:PostcodeID>{addressPostcodeID}</ns3:PostcodeID>
       </ns3:Address>
-    </meta>
+    </EntityDetails>
 }

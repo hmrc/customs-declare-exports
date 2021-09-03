@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
-import scala.xml.Elem
-
 import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.ContainersParser.NO_SEALS
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
+
+import scala.xml.Elem
 
 import scala.xml.Elem
 
@@ -133,7 +133,7 @@ class ContainersParserSpec extends UnitSpec with EitherValues {
       }
     }
 
-    "return Left with XmlParsingException" when {
+    "return Left with error message" when {
       "one of the TransportEquipment elements present does not contain an ID element" in {
         val result = parser.parse(missingContainerIdElementXml)
 

@@ -35,10 +35,10 @@ class ContainersParser extends DeclarationXmlParser[Seq[Container]] {
 
     (id, eitherSeals) match {
       case (Some(value), Right(seals)) =>
-        val filteredSeals = seals.filter(!_.id.equals(NO_SEALS))
+        val filteredSeals = seals.filterNot(_.id.equals(NO_SEALS))
         Right(Container(value, filteredSeals))
       case (None, _) =>
-        Left(s"TransportEquipment element is missing the required ID element")
+        Left("TransportEquipment element is missing the required ID element")
       case (_, Left(sealsError)) =>
         Left(sealsError)
     }
@@ -47,7 +47,7 @@ class ContainersParser extends DeclarationXmlParser[Seq[Container]] {
   private def parseSealNode(inputXml: NodeSeq): Either[XmlParserError, SealModel] =
     (inputXml \ ID).toStringOption match {
       case Some(value) => Right(SealModel(value))
-      case None        => Left(s"Seal element is missing the required ID element")
+      case None        => Left("Seal element is missing the required ID element")
     }
 }
 

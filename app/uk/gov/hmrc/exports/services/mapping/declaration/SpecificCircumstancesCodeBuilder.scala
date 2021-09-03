@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import javax.inject.Inject
-
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.declaration_ds.dms._2._
+
+import javax.inject.Inject
 
 class SpecificCircumstancesCodeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(exportsDeclaration: ExportsDeclaration, declaration: Declaration): Unit =
@@ -42,7 +42,7 @@ class SpecificCircumstancesCodeBuilder @Inject()() extends ModifyingBuilder[Expo
     } yield circumstancesCode.contains("Yes")).getOrElse(false)
 
   private def isExpressConsignment(exportsDeclaration: ExportsDeclaration): Boolean =
-    exportsDeclaration.transport.expressConsignment.map(_.answer == YesNoAnswers.yes).getOrElse(false)
+    exportsDeclaration.transport.expressConsignment.exists(_.answer == YesNoAnswers.yes)
 
   private def setCircumstancesCode(declaration: Declaration): Unit = {
     val circumstancesCode = new DeclarationSpecificCircumstancesCodeCodeType()

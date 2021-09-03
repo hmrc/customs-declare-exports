@@ -32,9 +32,9 @@ object GoodsLocation {
 
 case class OfficeOfExit(
   officeId: Option[String],
-  presentationOfficeId: Option[String],
-  circumstancesCode: Option[String],
-  isUkOfficeOfExit: Option[String]
+  presentationOfficeId: Option[String] = None,
+  circumstancesCode: Option[String] = None,
+  isUkOfficeOfExit: Option[String] = None
 )
 
 object OfficeOfExit {

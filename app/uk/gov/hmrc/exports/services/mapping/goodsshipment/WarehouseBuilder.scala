@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
-import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.WarehouseIdentification
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Warehouse
 import wco.datamodel.wco.declaration_ds.dms._2.{WarehouseIdentificationIDType, WarehouseTypeCodeType}
+
+import javax.inject.Inject
 
 class WarehouseBuilder @Inject()() extends ModifyingBuilder[WarehouseIdentification, GoodsShipment] {
   override def buildThenAdd(warehouseIdentification: WarehouseIdentification, goodsShipment: GoodsShipment): Unit =
@@ -40,7 +41,7 @@ class WarehouseBuilder @Inject()() extends ModifyingBuilder[WarehouseIdentificat
     warehouse.setID(id)
 
     val typeCode = new WarehouseTypeCodeType()
-    typeCode.setValue(identificationType.getOrElse("").toString)
+    typeCode.setValue(identificationType.getOrElse(""))
     warehouse.setTypeCode(typeCode)
 
     warehouse
