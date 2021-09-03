@@ -37,7 +37,7 @@ class GoodsLocationParser extends DeclarationXmlParser[Option[GoodsLocation]] {
     val qualifierOfIdentification = (goodsLocationElement \ Address \ TypeCode).toStringOption
     val identificationOfLocation = (goodsLocationElement \ Name).toStringOption
 
-    if (Seq(country, typeOfLocation, qualifierOfIdentification).flatten.isEmpty)
+    if (Seq(country, typeOfLocation, qualifierOfIdentification, identificationOfLocation).flatten.isEmpty)
       None
     else {
       Some(

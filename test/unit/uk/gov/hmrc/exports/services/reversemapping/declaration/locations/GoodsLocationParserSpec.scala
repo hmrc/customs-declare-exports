@@ -45,7 +45,7 @@ class GoodsLocationParserSpec extends UnitSpec with EitherValues {
 
       "GoodsLocation element is present but it has no elements" in {
 
-        val result = parser.parse(missingAllMandatoryElements)
+        val result = parser.parse(missingAllElements)
 
         result.isRight mustBe true
         result.value mustBe None
@@ -134,6 +134,19 @@ class GoodsLocationParserSpec extends UnitSpec with EitherValues {
         result.value.get.identificationOfLocation mustBe defined
         result.value.get.identificationOfLocation.get mustBe "FXTFXTFXT"
       }
+
+      "GoodsLocation element is present with ONLY 'Name' element" in {
+
+        val result = parser.parse(missingAllMandatoryElements)
+
+        result.isRight mustBe true
+        result.value mustBe defined
+        result.value.get.country mustBe ""
+        result.value.get.typeOfLocation mustBe ""
+        result.value.get.qualifierOfIdentification mustBe ""
+        result.value.get.identificationOfLocation mustBe defined
+        result.value.get.identificationOfLocation.get mustBe "FXTFXTFXT"
+      }
     }
   }
 
@@ -147,24 +160,24 @@ object GoodsLocationParserSpec {
         <ns3:GoodsShipment>
           <ns3:Consignment>
             { maybeGoodsLocation.map { goodsLocation =>
-            <ns3:GoodsLocation>
-              { goodsLocation.identificationOfLocation.map { idOfLocation =>
-              <ns3:Name>{idOfLocation}</ns3:Name>
-            }.getOrElse(NodeSeq.Empty) }
+              <ns3:GoodsLocation>
+                { goodsLocation.identificationOfLocation.map { idOfLocation =>
+                  <ns3:Name>{idOfLocation}</ns3:Name>
+                }.getOrElse(NodeSeq.Empty) }
 
-              <ns3:TypeCode>{goodsLocation.typeOfLocation}</ns3:TypeCode>
-              <ns3:Address>
-                <ns3:TypeCode>{goodsLocation.qualifierOfIdentification}</ns3:TypeCode>
-                <ns3:CountryCode>{goodsLocation.country}</ns3:CountryCode>
-              </ns3:Address>
-            </ns3:GoodsLocation>
-          }.getOrElse(NodeSeq.Empty) }
+                <ns3:TypeCode>{goodsLocation.typeOfLocation}</ns3:TypeCode>
+                <ns3:Address>
+                  <ns3:TypeCode>{goodsLocation.qualifierOfIdentification}</ns3:TypeCode>
+                  <ns3:CountryCode>{goodsLocation.country}</ns3:CountryCode>
+                </ns3:Address>
+              </ns3:GoodsLocation>
+            }.getOrElse(NodeSeq.Empty) }
           </ns3:Consignment>
         </ns3:GoodsShipment>
       </ns3:Declaration>
     </meta>
 
-  private val missingAllMandatoryElements: Elem =
+  private val missingAllElements: Elem =
     <meta>
       <ns3:Declaration>
         <ns3:GoodsShipment>
@@ -221,6 +234,19 @@ object GoodsLocationParserSpec {
                 <ns3:TypeCode>U</ns3:TypeCode>
                 <ns3:CountryCode>GB</ns3:CountryCode>
               </ns3:Address>
+            </ns3:GoodsLocation>
+          </ns3:Consignment>
+        </ns3:GoodsShipment>
+      </ns3:Declaration>
+    </meta>
+
+  private val missingAllMandatoryElements: Elem =
+    <meta>
+      <ns3:Declaration>
+        <ns3:GoodsShipment>
+          <ns3:Consignment>
+            <ns3:GoodsLocation>
+              <ns3:Name>FXTFXTFXT</ns3:Name>
             </ns3:GoodsLocation>
           </ns3:Consignment>
         </ns3:GoodsShipment>
