@@ -29,8 +29,7 @@ class SpecificCircumstancesCodeBuilderSpec extends UnitSpec with ExportsDeclarat
 
     "build then add" when {
       "type is supplementary" in {
-        val model =
-          aDeclaration(withType(DeclarationType.SUPPLEMENTARY), withOfficeOfExit(circumstancesCode = Some("Yes")), withTransportPayment(cash))
+        val model = aDeclaration(withType(DeclarationType.SUPPLEMENTARY), withTransportPayment(cash))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -52,24 +51,6 @@ class SpecificCircumstancesCodeBuilderSpec extends UnitSpec with ExportsDeclarat
             builder.buildThenAdd(model, declaration)
 
             Option(declaration.getSpecificCircumstancesCodeCode) mustBe None
-          }
-
-          "invalid circumstance type" in {
-            val model = aDeclaration(withType(declarationType), withOfficeOfExit(circumstancesCode = Some("")))
-            val declaration = new Declaration()
-
-            builder.buildThenAdd(model, declaration)
-
-            Option(declaration.getSpecificCircumstancesCodeCode) mustBe None
-          }
-
-          "valid circumstance type (Office of Exit)" in {
-            val model = aDeclaration(withType(declarationType), withOfficeOfExit(circumstancesCode = Some("Yes")))
-            val declaration = new Declaration()
-
-            builder.buildThenAdd(model, declaration)
-
-            declaration.getSpecificCircumstancesCodeCode.getValue mustBe "A20"
           }
 
           "valid circumstance type (Express consignment)" in {

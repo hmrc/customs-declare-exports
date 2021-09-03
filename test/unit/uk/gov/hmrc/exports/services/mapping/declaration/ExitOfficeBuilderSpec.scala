@@ -45,7 +45,7 @@ class ExitOfficeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
         s"$declarationType journey with 'Office of Exit' data" in {
           val model =
-            aDeclaration(withType(declarationType), withOfficeOfExit(officeId = Some("office-id"), isUkOfficeOfExit = Some("Yes")))
+            aDeclaration(withType(declarationType), withOfficeOfExit(officeId = Some("office-id")))
 
           val declaration = new Declaration()
 

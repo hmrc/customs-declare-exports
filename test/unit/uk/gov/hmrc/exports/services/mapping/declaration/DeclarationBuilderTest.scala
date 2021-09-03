@@ -32,7 +32,6 @@ class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
   private val typeCodeBuilder: TypeCodeBuilder = mock[TypeCodeBuilder]
   private val goodsItemQuantityBuilder: GoodsItemQuantityBuilder = mock[GoodsItemQuantityBuilder]
   private val agentBuilder: AgentBuilder = mock[AgentBuilder]
-  private val presentationOfficeBuilder: PresentationOfficeBuilder = mock[PresentationOfficeBuilder]
   private val specificCircumstancesCodeBuilder: SpecificCircumstancesCodeBuilder = mock[SpecificCircumstancesCodeBuilder]
   private val exitOfficeBuilder: ExitOfficeBuilder = mock[ExitOfficeBuilder]
   private val borderTransportMeansBuilder: BorderTransportMeansBuilder = mock[BorderTransportMeansBuilder]
@@ -56,7 +55,6 @@ class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
     typeCodeBuilder,
     goodsItemQuantityBuilder,
     agentBuilder,
-    presentationOfficeBuilder,
     specificCircumstancesCodeBuilder,
     exitOfficeBuilder,
     borderTransportMeansBuilder,
@@ -86,7 +84,6 @@ class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
       verify(typeCodeBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
       verify(goodsItemQuantityBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
       verify(agentBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
-      verify(presentationOfficeBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
       verify(specificCircumstancesCodeBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
       verify(exitOfficeBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
       verify(borderTransportMeansBuilder).buildThenAdd(eqTo(inputDeclaration), any[Declaration])
