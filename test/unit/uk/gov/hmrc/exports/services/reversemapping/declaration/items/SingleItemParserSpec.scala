@@ -21,7 +21,7 @@ import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
-import uk.gov.hmrc.exports.models.declaration.{ExportItem, ProcedureCodes, TaricCode}
+import uk.gov.hmrc.exports.models.declaration.{ExportItem, NactCode, ProcedureCodes, TaricCode}
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 import scala.xml.{Elem, NodeSeq}
@@ -298,6 +298,46 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
         result.value.taricCodes mustBe defined
         result.value.taricCodes.get.length mustBe 2
         result.value.taricCodes.get mustBe Seq(TaricCode("3333"), TaricCode("7777"))
+      }
+    }
+
+    "set ExportItem.nactCodes to empty List" when {
+
+      "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element" in {
+
+        val result = singleItemParser.parse(commodityDetails())
+
+        result.value.nactCodes mustBe defined
+        result.value.nactCodes.get mustBe List.empty
+      }
+
+      "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'GN' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("3333", "TRA"))))
+
+        result.value.nactCodes mustBe defined
+        result.value.nactCodes.get mustBe List.empty
+      }
+    }
+
+    "set ExportItem.nactCodes to the expected value" when {
+
+      "there is single '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'GN' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("3333", "TRA"), ("1234", "GN"))))
+
+        result.value.nactCodes mustBe defined
+        result.value.nactCodes.get.length mustBe 1
+        result.value.nactCodes.get mustBe Seq(NactCode("1234"))
+      }
+
+      "there are multiple '/ GovernmentAgencyGoodsItem / Commodity / Classification' elements with 'GN' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("3333", "TRA"), ("1234", "GN"), ("1235", "GN"))))
+
+        result.value.nactCodes mustBe defined
+        result.value.nactCodes.get.length mustBe 2
+        result.value.nactCodes.get mustBe Seq(NactCode("1234"), NactCode("1235"))
       }
     }
   }
