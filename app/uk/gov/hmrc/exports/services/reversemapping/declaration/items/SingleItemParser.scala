@@ -42,7 +42,8 @@ class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) ext
         statisticalValue = parseStatisticalValue(itemXml),
         commodityDetails = parseCommodityDetails(itemXml),
         dangerousGoodsCode = parseDangerousGoodsCode(itemXml),
-        cusCode = parseCusCode(itemXml)
+        cusCode = parseCusCode(itemXml),
+        taricCodes = parseTaricCodes(itemXml)
       )
     }
 
@@ -87,6 +88,18 @@ class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) ext
       .find(classification => (classification \ IdentificationTypeCode).text == cusCodeTypeCode)
       .flatMap(classification => (classification \ ID).toStringOption)
       .map(cusCode => CUSCode(Some(cusCode)))
+  }
+
+  private def parseTaricCodes(itemXml: NodeSeq): Option[List[TaricCode]] = {
+    val taricCodeTypeCode = "TRA"
+
+    Some(
+      (itemXml \ Commodity \ Classification)
+        .filter(classification => (classification \ IdentificationTypeCode).text == taricCodeTypeCode)
+        .flatMap(classification => (classification \ ID).toStringOption)
+        .map(TaricCode(_))
+        .toList
+    )
   }
 
 }

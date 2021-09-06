@@ -21,7 +21,7 @@ import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
-import uk.gov.hmrc.exports.models.declaration.{ExportItem, ProcedureCodes}
+import uk.gov.hmrc.exports.models.declaration.{ExportItem, ProcedureCodes, TaricCode}
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 import scala.xml.{Elem, NodeSeq}
@@ -258,6 +258,46 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
         result.value.cusCode mustBe defined
         result.value.cusCode.get.cusCode mustBe defined
         result.value.cusCode.get.cusCode.get mustBe "11111111"
+      }
+    }
+
+    "set ExportItem.taricCodes to empty List" when {
+
+      "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element" in {
+
+        val result = singleItemParser.parse(commodityDetails())
+
+        result.value.taricCodes mustBe defined
+        result.value.taricCodes.get mustBe List.empty
+      }
+
+      "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'TRA' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("12345678", "TSP"))))
+
+        result.value.taricCodes mustBe defined
+        result.value.taricCodes.get mustBe List.empty
+      }
+    }
+
+    "set ExportItem.taricCodes to the expected value" when {
+
+      "there is single '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'TRA' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("12345678", "TSP"), ("3333", "TRA"))))
+
+        result.value.taricCodes mustBe defined
+        result.value.taricCodes.get.length mustBe 1
+        result.value.taricCodes.get mustBe Seq(TaricCode("3333"))
+      }
+
+      "there are multiple '/ GovernmentAgencyGoodsItem / Commodity / Classification' elements with 'TRA' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("12345678", "TSP"), ("3333", "TRA"), ("7777", "TRA"))))
+
+        result.value.taricCodes mustBe defined
+        result.value.taricCodes.get.length mustBe 2
+        result.value.taricCodes.get mustBe Seq(TaricCode("3333"), TaricCode("7777"))
       }
     }
   }
