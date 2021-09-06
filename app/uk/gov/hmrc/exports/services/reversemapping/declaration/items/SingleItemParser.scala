@@ -41,7 +41,8 @@ class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) ext
         additionalFiscalReferencesData = parseAdditionalFiscalReferencesData(domesticDutyTaxParties),
         statisticalValue = parseStatisticalValue(itemXml),
         commodityDetails = parseCommodityDetails(itemXml),
-        dangerousGoodsCode = parseDangerousGoodsCode(itemXml)
+        dangerousGoodsCode = parseDangerousGoodsCode(itemXml),
+        cusCode = parseCusCode(itemXml)
       )
     }
 
@@ -78,4 +79,14 @@ class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) ext
 
   private def parseDangerousGoodsCode(itemXml: NodeSeq): Option[UNDangerousGoodsCode] =
     (itemXml \ Commodity \ DangerousGoods \ UNDGID).toStringOption.map(code => UNDangerousGoodsCode(Some(code)))
+
+  private def parseCusCode(itemXml: NodeSeq): Option[CUSCode] = {
+    val cusCodeTypeCode = "CV"
+
+    (itemXml \ Commodity \ Classification)
+      .find(classification => (classification \ IdentificationTypeCode).text == cusCodeTypeCode)
+      .flatMap(classification => (classification \ ID).toStringOption)
+      .map(cusCode => CUSCode(Some(cusCode)))
+  }
+
 }

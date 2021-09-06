@@ -232,6 +232,34 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
         result.value.dangerousGoodsCode.get.dangerousGoodsCode.get mustBe "9876"
       }
     }
+
+    "set ExportItem.cusCode to None" when {
+
+      "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element" in {
+
+        val result = singleItemParser.parse(commodityDetails())
+
+        result.value.cusCode mustBe None
+      }
+
+      "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'CV' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("12345678", "TSP"))))
+
+        result.value.cusCode mustBe None
+      }
+    }
+
+    "set ExportItem.cusCode to the expected value" when {
+      "there is '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'CV' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("12345678", "TSP"), ("11111111", "CV"))))
+
+        result.value.cusCode mustBe defined
+        result.value.cusCode.get.cusCode mustBe defined
+        result.value.cusCode.get.cusCode.get mustBe "11111111"
+      }
+    }
   }
 
   private def additionalFiscalReferencesData(values: Seq[String]): Elem =
