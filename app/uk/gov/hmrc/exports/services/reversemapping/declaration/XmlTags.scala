@@ -33,6 +33,7 @@ object XmlTags {
   val Consignor = "Consignor"
   val CountryCode = "CountryCode"
   val CurrentCode = "CurrentCode"
+  val DangerousGoods = "DangerousGoods"
   val Declaration = "Declaration"
   val DeclarationSpecificCircumstancesCodeCodeType = "DeclarationSpecificCircumstancesCodeCodeType"
   val Description = "Description"
@@ -70,5 +71,6 @@ object XmlTags {
   val TransportEquipment = "TransportEquipment"
   val TypeCode = "TypeCode"
   val UCR = "UCR"
+  val UNDGID = "UNDGID"
   val Warehouse = "Warehouse"
 }

@@ -212,6 +212,26 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
         result.value.commodityDetails.get.combinedNomenclatureCode.get mustBe "12345678"
       }
     }
+
+    "set ExportItem.dangerousGoodsCode to None" when {
+      "'/ GovernmentAgencyGoodsItem / Commodity / DangerousGoods / UNDGID' element is NOT present" in {
+
+        val result = singleItemParser.parse(commodityDetails())
+
+        result.value.dangerousGoodsCode mustBe None
+      }
+    }
+
+    "set ExportItem.dangerousGoodsCode to the expected value" when {
+      "'/ GovernmentAgencyGoodsItem / Commodity / DangerousGoods / UNDGID' element is present" in {
+
+        val result = singleItemParser.parse(commodityDetails(dangerousGoods = Some("9876")))
+
+        result.value.dangerousGoodsCode mustBe defined
+        result.value.dangerousGoodsCode.get.dangerousGoodsCode mustBe defined
+        result.value.dangerousGoodsCode.get.dangerousGoodsCode.get mustBe "9876"
+      }
+    }
   }
 
   private def additionalFiscalReferencesData(values: Seq[String]): Elem =
@@ -230,7 +250,11 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
       <ns3:StatisticalValueAmount>{value}</ns3:StatisticalValueAmount>
     </ns3:GovernmentAgencyGoodsItem>
 
-  private def commodityDetails(description: Option[String] = None, classifications: Seq[(String, String)] = Seq.empty): Elem =
+  private def commodityDetails(
+    description: Option[String] = None,
+    classifications: Seq[(String, String)] = Seq.empty,
+    dangerousGoods: Option[String] = None
+  ): Elem =
     <ns3:GovernmentAgencyGoodsItem>
       <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
       <ns3:Commodity>
@@ -243,6 +267,11 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
             <ns3:IdentificationTypeCode>{classification._2}</ns3:IdentificationTypeCode>
           </ns3:Classification>
         }}
+        { dangerousGoods.map { code =>
+          <ns3:DangerousGoods>
+            <ns3:UNDGID>{code}</ns3:UNDGID>
+          </ns3:DangerousGoods>
+        }.getOrElse(NodeSeq.Empty) }
       </ns3:Commodity>
     </ns3:GovernmentAgencyGoodsItem>
 

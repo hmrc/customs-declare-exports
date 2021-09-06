@@ -40,7 +40,8 @@ class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) ext
         fiscalInformation = parseFiscalInformation(domesticDutyTaxParties),
         additionalFiscalReferencesData = parseAdditionalFiscalReferencesData(domesticDutyTaxParties),
         statisticalValue = parseStatisticalValue(itemXml),
-        commodityDetails = parseCommodityDetails(itemXml)
+        commodityDetails = parseCommodityDetails(itemXml),
+        dangerousGoodsCode = parseDangerousGoodsCode(itemXml)
       )
     }
 
@@ -74,4 +75,7 @@ class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) ext
     else
       Some(CommodityDetails(combinedNomenclatureCode = maybeCombinedNomenclatureCode, descriptionOfGoods = maybeDescription))
   }
+
+  private def parseDangerousGoodsCode(itemXml: NodeSeq): Option[UNDangerousGoodsCode] =
+    (itemXml \ Commodity \ DangerousGoods \ UNDGID).toStringOption.map(code => UNDangerousGoodsCode(Some(code)))
 }
