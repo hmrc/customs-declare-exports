@@ -16,17 +16,16 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.items
 
-import java.util.UUID
-
-import scala.xml.NodeSeq
-
-import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
+
+import java.util.UUID
+import javax.inject.Inject
+import scala.xml.NodeSeq
 
 class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) extends DeclarationXmlParser[ExportItem] {
 
@@ -40,7 +39,8 @@ class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) ext
         procedureCodes = procedureCodes,
         fiscalInformation = parseFiscalInformation(domesticDutyTaxParties),
         additionalFiscalReferencesData = parseAdditionalFiscalReferencesData(domesticDutyTaxParties),
-        statisticalValue = parseStatisticalValue(itemXml)
+        statisticalValue = parseStatisticalValue(itemXml),
+        commodityDetails = parseCommodityDetails(itemXml)
       )
     }
 
@@ -58,6 +58,20 @@ class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) ext
   private def parseFiscalInformation(domesticDutyTaxParties: NodeSeq): Option[FiscalInformation] =
     if (domesticDutyTaxParties.nonEmpty) Some(FiscalInformation(YesNoAnswers.yes)) else None
 
-  private def parseStatisticalValue(inputXml: NodeSeq): Option[StatisticalValue] =
-    (inputXml \ StatisticalValueAmount).toStringOption.map(StatisticalValue(_))
+  private def parseStatisticalValue(itemXml: NodeSeq): Option[StatisticalValue] =
+    (itemXml \ StatisticalValueAmount).toStringOption.map(StatisticalValue(_))
+
+  private def parseCommodityDetails(itemXml: NodeSeq): Option[CommodityDetails] = {
+    val combinedNomenclatureCodeTypeCode = "TSP"
+
+    val maybeDescription = (itemXml \ Commodity \ Description).toStringOption
+    val maybeCombinedNomenclatureCode = (itemXml \ Commodity \ Classification)
+      .find(classification => (classification \ IdentificationTypeCode).text == combinedNomenclatureCodeTypeCode)
+      .flatMap(classification => (classification \ ID).toStringOption)
+
+    if (maybeDescription.isEmpty && maybeCombinedNomenclatureCode.isEmpty)
+      None
+    else
+      Some(CommodityDetails(combinedNomenclatureCode = maybeCombinedNomenclatureCode, descriptionOfGoods = maybeDescription))
+  }
 }
