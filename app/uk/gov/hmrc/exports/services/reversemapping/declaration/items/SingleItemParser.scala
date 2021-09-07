@@ -69,9 +69,7 @@ class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) ext
     val combinedNomenclatureCodeTypeCode = "TSP"
 
     val maybeDescription = (itemXml \ Commodity \ Description).toStringOption
-    val maybeCombinedNomenclatureCode = (itemXml \ Commodity \ Classification)
-      .find(classification => (classification \ IdentificationTypeCode).text == combinedNomenclatureCodeTypeCode)
-      .flatMap(classification => (classification \ ID).toStringOption)
+    val maybeCombinedNomenclatureCode = filterClassificationIdsFor(itemXml, combinedNomenclatureCodeTypeCode).headOption
 
     if (maybeDescription.isEmpty && maybeCombinedNomenclatureCode.isEmpty)
       None
@@ -85,9 +83,7 @@ class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) ext
   private def parseCusCode(itemXml: NodeSeq): Option[CUSCode] = {
     val cusCodeTypeCode = "CV"
 
-    (itemXml \ Commodity \ Classification)
-      .find(classification => (classification \ IdentificationTypeCode).text == cusCodeTypeCode)
-      .flatMap(classification => (classification \ ID).toStringOption)
+    filterClassificationIdsFor(itemXml, cusCodeTypeCode).headOption
       .map(cusCode => CUSCode(Some(cusCode)))
   }
 
@@ -95,11 +91,8 @@ class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) ext
     val taricCodeTypeCode = "TRA"
 
     Some(
-      (itemXml \ Commodity \ Classification)
-        .filter(classification => (classification \ IdentificationTypeCode).text == taricCodeTypeCode)
-        .flatMap(classification => (classification \ ID).toStringOption)
+      filterClassificationIdsFor(itemXml, taricCodeTypeCode).toList
         .map(TaricCode(_))
-        .toList
     )
   }
 
@@ -107,12 +100,13 @@ class SingleItemParser @Inject()(procedureCodesParser: ProcedureCodesParser) ext
     val nactCodeTypeCode = "GN"
 
     Some(
-      (itemXml \ Commodity \ Classification)
-        .filter(classification => (classification \ IdentificationTypeCode).text == nactCodeTypeCode)
-        .flatMap(classification => (classification \ ID).toStringOption)
+      filterClassificationIdsFor(itemXml, nactCodeTypeCode).toList
         .map(NactCode(_))
-        .toList
     )
   }
 
+  private def filterClassificationIdsFor(itemXml: NodeSeq, identificationTypeCode: String): Seq[String] =
+    (itemXml \ Commodity \ Classification)
+      .filter(classification => (classification \ IdentificationTypeCode).text == identificationTypeCode)
+      .flatMap(classification => (classification \ ID).toStringOption)
 }
