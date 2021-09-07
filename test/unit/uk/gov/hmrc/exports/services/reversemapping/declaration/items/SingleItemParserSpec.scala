@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.items
 
-import scala.xml.{Elem, NodeSeq}
-
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
-import uk.gov.hmrc.exports.models.declaration.{ExportItem, ProcedureCodes}
+import uk.gov.hmrc.exports.models.declaration.{ExportItem, NactCode, ProcedureCodes, TaricCode}
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
+
+import scala.xml.{Elem, NodeSeq}
 
 class SingleItemParserSpec extends UnitSpec with EitherValues {
 
@@ -157,6 +157,189 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
         references.last.reference mustBe ""
       }
     }
+
+    "set ExportItem.commodityDetails to None" when {
+
+      "'/ GovernmentAgencyGoodsItem / Commodity / Description' element is NOT present" when {
+
+        "'/ GovernmentAgencyGoodsItem / Commodity / Classification' elements are NOT present" in {
+
+          val result = singleItemParser.parse(commodityDetails())
+
+          result.value.commodityDetails mustBe None
+        }
+
+        "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'TSP' IdentificationTypeCode value" in {
+
+          val result = singleItemParser.parse(commodityDetails(classifications = Seq(("1234", "GN"))))
+
+          result.value.commodityDetails mustBe None
+        }
+      }
+    }
+
+    "set ExportItem.commodityDetails to the expected values" when {
+
+      "'/ GovernmentAgencyGoodsItem / Commodity / Description' element is present" in {
+
+        val result = singleItemParser.parse(commodityDetails(description = Some("description")))
+
+        result.value.commodityDetails mustBe defined
+        result.value.commodityDetails.get.combinedNomenclatureCode mustBe None
+        result.value.commodityDetails.get.descriptionOfGoods mustBe defined
+        result.value.commodityDetails.get.descriptionOfGoods.get mustBe "description"
+      }
+
+      "there is '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'TSP' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("1234", "GN"), ("12345678", "TSP"))))
+
+        result.value.commodityDetails mustBe defined
+        result.value.commodityDetails.get.descriptionOfGoods mustBe None
+        result.value.commodityDetails.get.combinedNomenclatureCode mustBe defined
+        result.value.commodityDetails.get.combinedNomenclatureCode.get mustBe "12345678"
+      }
+
+      "both of required values are provided" in {
+
+        val inputXml = commodityDetails(description = Some("description"), classifications = Seq(("1234", "GN"), ("12345678", "TSP")))
+        val result = singleItemParser.parse(inputXml)
+
+        result.value.commodityDetails mustBe defined
+        result.value.commodityDetails.get.descriptionOfGoods mustBe defined
+        result.value.commodityDetails.get.descriptionOfGoods.get mustBe "description"
+        result.value.commodityDetails.get.combinedNomenclatureCode mustBe defined
+        result.value.commodityDetails.get.combinedNomenclatureCode.get mustBe "12345678"
+      }
+    }
+
+    "set ExportItem.dangerousGoodsCode to None" when {
+      "'/ GovernmentAgencyGoodsItem / Commodity / DangerousGoods / UNDGID' element is NOT present" in {
+
+        val result = singleItemParser.parse(commodityDetails())
+
+        result.value.dangerousGoodsCode mustBe None
+      }
+    }
+
+    "set ExportItem.dangerousGoodsCode to the expected value" when {
+      "'/ GovernmentAgencyGoodsItem / Commodity / DangerousGoods / UNDGID' element is present" in {
+
+        val result = singleItemParser.parse(commodityDetails(dangerousGoods = Some("9876")))
+
+        result.value.dangerousGoodsCode mustBe defined
+        result.value.dangerousGoodsCode.get.dangerousGoodsCode mustBe defined
+        result.value.dangerousGoodsCode.get.dangerousGoodsCode.get mustBe "9876"
+      }
+    }
+
+    "set ExportItem.cusCode to None" when {
+
+      "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element" in {
+
+        val result = singleItemParser.parse(commodityDetails())
+
+        result.value.cusCode mustBe None
+      }
+
+      "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'CV' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("12345678", "TSP"))))
+
+        result.value.cusCode mustBe None
+      }
+    }
+
+    "set ExportItem.cusCode to the expected value" when {
+      "there is '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'CV' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("12345678", "TSP"), ("11111111", "CV"))))
+
+        result.value.cusCode mustBe defined
+        result.value.cusCode.get.cusCode mustBe defined
+        result.value.cusCode.get.cusCode.get mustBe "11111111"
+      }
+    }
+
+    "set ExportItem.taricCodes to empty List" when {
+
+      "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element" in {
+
+        val result = singleItemParser.parse(commodityDetails())
+
+        result.value.taricCodes mustBe defined
+        result.value.taricCodes.get mustBe List.empty
+      }
+
+      "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'TRA' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("12345678", "TSP"))))
+
+        result.value.taricCodes mustBe defined
+        result.value.taricCodes.get mustBe List.empty
+      }
+    }
+
+    "set ExportItem.taricCodes to the expected value" when {
+
+      "there is single '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'TRA' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("12345678", "TSP"), ("3333", "TRA"))))
+
+        result.value.taricCodes mustBe defined
+        result.value.taricCodes.get.length mustBe 1
+        result.value.taricCodes.get mustBe Seq(TaricCode("3333"))
+      }
+
+      "there are multiple '/ GovernmentAgencyGoodsItem / Commodity / Classification' elements with 'TRA' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("12345678", "TSP"), ("3333", "TRA"), ("7777", "TRA"))))
+
+        result.value.taricCodes mustBe defined
+        result.value.taricCodes.get.length mustBe 2
+        result.value.taricCodes.get mustBe Seq(TaricCode("3333"), TaricCode("7777"))
+      }
+    }
+
+    "set ExportItem.nactCodes to empty List" when {
+
+      "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element" in {
+
+        val result = singleItemParser.parse(commodityDetails())
+
+        result.value.nactCodes mustBe defined
+        result.value.nactCodes.get mustBe List.empty
+      }
+
+      "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'GN' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("3333", "TRA"))))
+
+        result.value.nactCodes mustBe defined
+        result.value.nactCodes.get mustBe List.empty
+      }
+    }
+
+    "set ExportItem.nactCodes to the expected value" when {
+
+      "there is single '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'GN' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("3333", "TRA"), ("1234", "GN"))))
+
+        result.value.nactCodes mustBe defined
+        result.value.nactCodes.get.length mustBe 1
+        result.value.nactCodes.get mustBe Seq(NactCode("1234"))
+      }
+
+      "there are multiple '/ GovernmentAgencyGoodsItem / Commodity / Classification' elements with 'GN' IdentificationTypeCode value" in {
+
+        val result = singleItemParser.parse(commodityDetails(classifications = Seq(("3333", "TRA"), ("1234", "GN"), ("1235", "GN"))))
+
+        result.value.nactCodes mustBe defined
+        result.value.nactCodes.get.length mustBe 2
+        result.value.nactCodes.get mustBe Seq(NactCode("1234"), NactCode("1235"))
+      }
+    }
   }
 
   private def additionalFiscalReferencesData(values: Seq[String]): Elem =
@@ -174,4 +357,30 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
       <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
       <ns3:StatisticalValueAmount>{value}</ns3:StatisticalValueAmount>
     </ns3:GovernmentAgencyGoodsItem>
+
+  private def commodityDetails(
+    description: Option[String] = None,
+    classifications: Seq[(String, String)] = Seq.empty,
+    dangerousGoods: Option[String] = None
+  ): Elem =
+    <ns3:GovernmentAgencyGoodsItem>
+      <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+      <ns3:Commodity>
+        { description.map { desc =>
+          <ns3:Description>{desc}</ns3:Description>
+        }.getOrElse(NodeSeq.Empty) }
+        { classifications.map { classification =>
+          <ns3:Classification>
+            <ns3:ID>{classification._1}</ns3:ID>
+            <ns3:IdentificationTypeCode>{classification._2}</ns3:IdentificationTypeCode>
+          </ns3:Classification>
+        }}
+        { dangerousGoods.map { code =>
+          <ns3:DangerousGoods>
+            <ns3:UNDGID>{code}</ns3:UNDGID>
+          </ns3:DangerousGoods>
+        }.getOrElse(NodeSeq.Empty) }
+      </ns3:Commodity>
+    </ns3:GovernmentAgencyGoodsItem>
+
 }
