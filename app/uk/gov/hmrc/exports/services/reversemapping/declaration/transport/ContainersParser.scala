@@ -29,7 +29,7 @@ class ContainersParser extends DeclarationXmlParser[Seq[Container]] {
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Seq[Container]] =
     (inputXml \ Declaration \ GoodsShipment \ Consignment \ TransportEquipment).map(parseTransportEquipmentNode).toEitherOfList
 
-  private def parseTransportEquipmentNode(inputXml: NodeSeq): Either[XmlParserError, Container] = {
+  private def parseTransportEquipmentNode(inputXml: NodeSeq): XmlParserResult[Container] = {
     val id = (inputXml \ ID).toStringOption
     val eitherSeals = (inputXml \ Seal).map(parseSealNode).toEitherOfList
 
