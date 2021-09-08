@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.services.mapping
 
 import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.DeclarationHolder
+import uk.gov.hmrc.exports.models.declaration.{DeclarationHolder, EoriSource}
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class AuthorisationHoldersBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
@@ -41,7 +41,10 @@ class AuthorisationHoldersBuilderSpec extends UnitSpec with ExportsDeclarationBu
       "multiple holders" in {
         // Given
         val model = aDeclaration(
-          withDeclarationHolders(DeclarationHolder(Some("auth code1"), Some("eori1")), DeclarationHolder(Some("auth code2"), Some("eori2")))
+          withDeclarationHolders(
+            DeclarationHolder(Some("auth code1"), Some("eori1"), Some(EoriSource.OtherEori)),
+            DeclarationHolder(Some("auth code2"), Some("eori2"), Some(EoriSource.OtherEori))
+          )
         )
         val declaration = new Declaration()
 
@@ -58,7 +61,7 @@ class AuthorisationHoldersBuilderSpec extends UnitSpec with ExportsDeclarationBu
 
       "auth code is empty" in {
         // Given
-        val model = aDeclaration(withDeclarationHolders(DeclarationHolder(None, Some("eori"))))
+        val model = aDeclaration(withDeclarationHolders(DeclarationHolder(None, Some("eori"), Some(EoriSource.OtherEori))))
         val declaration = new Declaration()
 
         // When
@@ -70,7 +73,7 @@ class AuthorisationHoldersBuilderSpec extends UnitSpec with ExportsDeclarationBu
 
       "eori is empty" in {
         // Given
-        val model = aDeclaration(withDeclarationHolders(DeclarationHolder(Some("auth code"), None)))
+        val model = aDeclaration(withDeclarationHolders(DeclarationHolder(Some("auth code"), None, Some(EoriSource.OtherEori))))
         val declaration = new Declaration()
 
         // When

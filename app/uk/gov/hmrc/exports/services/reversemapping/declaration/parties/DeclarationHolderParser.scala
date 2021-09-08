@@ -17,8 +17,7 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration.parties
 
 import scala.xml.NodeSeq
-
-import uk.gov.hmrc.exports.models.declaration.DeclarationHolder
+import uk.gov.hmrc.exports.models.declaration.{DeclarationHolder, EoriSource}
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
@@ -37,6 +36,6 @@ class DeclarationHolderParser extends DeclarationXmlParser[Seq[DeclarationHolder
     val id = (inputXml \ ID).toStringOption
     val catCode = (inputXml \ CategoryCode).toStringOption
 
-    DeclarationHolder(catCode, id)
+    DeclarationHolder(catCode, id, id.map(_ => EoriSource.OtherEori))
   }
 }

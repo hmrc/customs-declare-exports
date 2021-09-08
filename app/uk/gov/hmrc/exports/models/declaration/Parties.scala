@@ -86,7 +86,7 @@ object DeclarationHolders {
   implicit val format: OFormat[DeclarationHolders] = Json.format[DeclarationHolders]
 }
 
-case class DeclarationHolder(authorisationTypeCode: Option[String], eori: Option[String])
+case class DeclarationHolder(authorisationTypeCode: Option[String], eori: Option[String], eoriSource: Option[EoriSource])
 object DeclarationHolder {
   implicit val format: OFormat[DeclarationHolder] = Json.format[DeclarationHolder]
 }
