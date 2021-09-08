@@ -20,7 +20,7 @@ import org.mockito.ArgumentMatchersSugar.any
 import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.{DeclarationHolder, EntityDetails, Parties, YesNoAnswer}
+import uk.gov.hmrc.exports.models.declaration.{DeclarationHolder, EntityDetails, EoriSource, Parties, YesNoAnswer}
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserError
@@ -60,7 +60,8 @@ class PartiesParserSpec extends UnitSpec with EitherValues {
       "all sub-parsers return Right" in {
 
         when(entityDetailsParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(EntityDetails(Some(eori), None))))
-        when(declarationHolderParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Seq(DeclarationHolder(Some(""), Some(eori)))))
+        when(declarationHolderParser.parse(any[NodeSeq])(any[MappingContext]))
+          .thenReturn(Right(Seq(DeclarationHolder(Some(""), Some(eori), Some(EoriSource.OtherEori)))))
         val result = partiesParser.parse(xml)
 
         result.isRight mustBe true
@@ -165,7 +166,8 @@ class PartiesParserSpec extends UnitSpec with EitherValues {
       }
 
       "set the DeclarationHolders isRequired value to true when there is one or more AuthorisationHolder elements present" in {
-        when(declarationHolderParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Seq(DeclarationHolder(Some(""), Some(eori)))))
+        when(declarationHolderParser.parse(any[NodeSeq])(any[MappingContext]))
+          .thenReturn(Right(Seq(DeclarationHolder(Some(""), Some(eori), Some(EoriSource.OtherEori)))))
 
         val result = partiesParser.parse(xml)
 

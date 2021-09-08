@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.parties
 import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.models.declaration.EoriSource
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 import scala.xml.NodeSeq
@@ -66,6 +67,9 @@ class DeclarationHolderParserSpec extends UnitSpec with EitherValues {
 
         result.value.head.eori.isDefined mustBe true
         result.value.head.eori.get mustBe eori
+
+        result.value.head.eoriSource.isDefined mustBe true
+        result.value.head.eoriSource.get mustBe EoriSource.OtherEori
       }
 
       "one partially populated (only TypeCode) AuthorisationHolder element is present" in {
@@ -78,6 +82,7 @@ class DeclarationHolderParserSpec extends UnitSpec with EitherValues {
         result.value.head.authorisationTypeCode.get mustBe catCode1
 
         result.value.head.eori.isDefined mustBe false
+        result.value.head.eoriSource.isDefined mustBe false
       }
 
       "one partially populated (only Eori) AuthorisationHolder element is present" in {
@@ -90,6 +95,9 @@ class DeclarationHolderParserSpec extends UnitSpec with EitherValues {
 
         result.value.head.eori.isDefined mustBe true
         result.value.head.eori.get mustBe eori
+
+        result.value.head.eoriSource.isDefined mustBe true
+        result.value.head.eoriSource.get mustBe EoriSource.OtherEori
       }
 
       "multiple AuthorisationHolder elements are present" in {
