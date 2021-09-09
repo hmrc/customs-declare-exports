@@ -17,7 +17,6 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{JsString, JsonValidationError, Reads, Writes}
-import uk.gov.hmrc.exports.models.Eori
 
 sealed trait EoriSource
 

@@ -21,21 +21,24 @@ import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
-import uk.gov.hmrc.exports.models.declaration.{ExportItem, NactCode, ProcedureCodes, TaricCode}
+import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
-
 import scala.xml.{Elem, NodeSeq}
 
 class SingleItemParserSpec extends UnitSpec with EitherValues {
 
+  private val packageInformationParser = mock[PackageInformationParser]
   private val procedureCodesParser = mock[ProcedureCodesParser]
-  private val singleItemParser = new SingleItemParser(procedureCodesParser)
+
+  private val singleItemParser = new SingleItemParser(packageInformationParser, procedureCodesParser)
+
   private implicit val context = MappingContext(eori)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(procedureCodesParser)
+    reset(packageInformationParser, procedureCodesParser)
+    when(packageInformationParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(List.empty))
     when(procedureCodesParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
   }
 
@@ -52,25 +55,43 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
       result.isRight mustBe true
       result.value mustBe an[ExportItem]
 
+      verify(packageInformationParser).parse(eqTo(inputXml))(any[MappingContext])
       verify(procedureCodesParser).parse(eqTo(inputXml))(any[MappingContext])
     }
 
     "return Right with ExportItem containing values returned by sub-parsers" when {
       "all sub-parsers return Right" in {
+        val expectedPackageInformation = PackageInformation("1", Some("nOP"), Some(3), Some("sM"))
+        when(packageInformationParser.parse(any[NodeSeq])(any[MappingContext]))
+          .thenReturn(Right(List(Some(expectedPackageInformation))))
+
         val expectedProcedureCodes = Some(ProcedureCodes(Some("code"), Seq("additional", "procedure", "codes")))
         when(procedureCodesParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(expectedProcedureCodes))
 
         val result = singleItemParser.parse(inputXml)
 
         result.isRight mustBe true
-        val exportItem = result.right.get
+
+        val exportItem = result.value
         exportItem.id mustNot be(empty)
         exportItem.sequenceId mustBe 1
+
+        exportItem.packageInformation.value.head mustBe expectedPackageInformation
         exportItem.procedureCodes mustBe expectedProcedureCodes
       }
     }
 
     "return Left with XmlParserError" when {
+
+      "PackageInformationParser returns Left" in {
+        when(packageInformationParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Left("Test Exception"))
+
+        val result = singleItemParser.parse(inputXml)
+
+        result.isLeft mustBe true
+        result.left.value mustBe "Test Exception"
+      }
+
       "ProcedureCodesParser returns Left" in {
         when(procedureCodesParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Left("Test Exception"))
 
@@ -340,6 +361,85 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
         result.value.nactCodes.get mustBe Seq(NactCode("1234"), NactCode("1235"))
       }
     }
+
+    "set ExportItem.commodityMeasure to None" when {
+
+      "the '/ GovernmentAgencyGoodsItem / Commodity / GoodsMeasure' element is NOT present" in {
+        val result = singleItemParser.parse(goodsMeasure())
+        result.value.commodityMeasure mustBe None
+      }
+
+      "the '/ GovernmentAgencyGoodsItem / Commodity / GoodsMeasure' element is empty" in {
+        val result = singleItemParser.parse(goodsMeasure(Some(GoodsMeasure())))
+        result.value.commodityMeasure mustBe None
+      }
+    }
+
+    "set ExportItem.commodityMeasure to the expected value" when {
+
+      def xmlForGoodsMeasure(commodityMeasure: CommodityMeasure): Elem =
+        goodsMeasure(Some(GoodsMeasure(commodityMeasure.supplementaryUnits, commodityMeasure.netMass, commodityMeasure.grossMass)))
+
+      "all elements of the '/ GovernmentAgencyGoodsItem / Commodity / GoodsMeasure' element are present" in {
+        val expectedCommodityMeasure = CommodityMeasure(Some("TariffQuantity"), Some(false), Some("NetNetWeightMeasure"), Some("GrossMassMeasure"))
+
+        val result = singleItemParser.parse(xmlForGoodsMeasure(expectedCommodityMeasure))
+        result.value.commodityMeasure.value mustBe expectedCommodityMeasure
+      }
+
+      "the '/ GovernmentAgencyGoodsItem / Commodity / GoodsMeasure / TariffQuantity' element is NOT present" in {
+        val expectedCommodityMeasure = CommodityMeasure(None, None, Some("NetNetWeightMeasure"), Some("GrossMassMeasure"))
+
+        val result = singleItemParser.parse(xmlForGoodsMeasure(expectedCommodityMeasure))
+        result.value.commodityMeasure.value mustBe expectedCommodityMeasure
+      }
+    }
+
+    "set ExportItem.additionalInformation to the expected value" when {
+
+      val noExpectedAdditionalInformation = AdditionalInformations(Some(YesNoAnswer(YesNoAnswers.no)), List.empty)
+
+      "the '/ GovernmentAgencyGoodsItem / AdditionalInformation' element is NOT present" in {
+        val result = singleItemParser.parse(inputXml)
+        result.value.additionalInformation.get mustBe noExpectedAdditionalInformation
+      }
+
+      "the '/ GovernmentAgencyGoodsItem / AdditionalInformation' element is empty" in {
+        val result = singleItemParser.parse(additionalInformation(List(AdditionalInformationForXml(None, None))))
+        result.value.additionalInformation.get mustBe noExpectedAdditionalInformation
+      }
+
+      "all elements of '/ GovernmentAgencyGoodsItem / AdditionalInformation' element are present but empty" in {
+        val result = singleItemParser.parse(additionalInformation(List(AdditionalInformationForXml(Some(""), Some("")))))
+        result.value.additionalInformation.get mustBe noExpectedAdditionalInformation
+      }
+
+      "a single '/ GovernmentAgencyGoodsItem / AdditionalInformation' element is fully present" in {
+        val expectedAdditionalInformation = AdditionalInformation("code", "descr")
+        val additionalInformationForXml =
+          AdditionalInformationForXml(Some(expectedAdditionalInformation.code), Some(expectedAdditionalInformation.description))
+        val result = singleItemParser.parse(additionalInformation(List(additionalInformationForXml)))
+
+        val additionalInfo = result.value.additionalInformation.get
+        additionalInfo.isRequired.get mustBe YesNoAnswer(YesNoAnswers.yes)
+        additionalInfo.items.head mustBe expectedAdditionalInformation
+      }
+
+      "multiple '/ GovernmentAgencyGoodsItem / AdditionalInformation' elements are fully present" in {
+        val expectedAdditionalInformation = AdditionalInformation("code", "descr")
+        val additionalInformationForXml =
+          AdditionalInformationForXml(Some(expectedAdditionalInformation.code), Some(expectedAdditionalInformation.description))
+        val result = singleItemParser.parse(additionalInformation(List(additionalInformationForXml, additionalInformationForXml)))
+
+        val additionalInfos = result.value.additionalInformation.get
+
+        additionalInfos.isRequired.get mustBe YesNoAnswer(YesNoAnswers.yes)
+
+        additionalInfos.items.size mustBe 2
+        additionalInfos.items.head mustBe expectedAdditionalInformation
+        additionalInfos.items.last mustBe expectedAdditionalInformation
+      }
+    }
   }
 
   private def additionalFiscalReferencesData(values: Seq[String]): Elem =
@@ -383,4 +483,53 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
       </ns3:Commodity>
     </ns3:GovernmentAgencyGoodsItem>
 
+  private case class GoodsMeasure(
+    tariffQuantity: Option[String] = None,
+    netWeightMeasure: Option[String] = None,
+    grossMassMeasure: Option[String] = None
+  )
+
+  private def goodsMeasure(goodsMeasure: Option[GoodsMeasure] = None): Elem =
+    <ns3:GovernmentAgencyGoodsItem>
+      <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+      <ns3:Commodity>
+        { goodsMeasure.map { gm =>
+          <ns3:GoodsMeasure>
+
+            { gm.tariffQuantity.map { tariffQuantity =>
+              <ns3:TariffQuantity>{tariffQuantity}</ns3:TariffQuantity>
+            }.getOrElse(NodeSeq.Empty) }
+
+            { gm.netWeightMeasure.map { netWeightMeasure =>
+              <ns3:NetNetWeightMeasure>{netWeightMeasure}</ns3:NetNetWeightMeasure>
+            }.getOrElse(NodeSeq.Empty) }
+
+            { gm.grossMassMeasure.map { grossMassMeasure =>
+              <ns3:GrossMassMeasure>{grossMassMeasure}</ns3:GrossMassMeasure>
+            }.getOrElse(NodeSeq.Empty) }
+
+          </ns3:GoodsMeasure>
+        }.getOrElse(NodeSeq.Empty) }
+      </ns3:Commodity>
+    </ns3:GovernmentAgencyGoodsItem>
+
+  private case class AdditionalInformationForXml(code: Option[String] = None, description: Option[String] = None)
+
+  private def additionalInformation(additionalInformationForXml: List[AdditionalInformationForXml]): Elem =
+    <ns3:GovernmentAgencyGoodsItem>
+      <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+      { additionalInformationForXml.map { ai =>
+        <ns3:AdditionalInformation>
+
+          { ai.code.map { code =>
+            <ns3:StatementCode>{code}</ns3:StatementCode>
+          }.getOrElse(NodeSeq.Empty) }
+
+          { ai.description.map { description =>
+            <ns3:StatementDescription>{description}</ns3:StatementDescription>
+          }.getOrElse(NodeSeq.Empty) }
+
+        </ns3:AdditionalInformation>
+      } }
+    </ns3:GovernmentAgencyGoodsItem>
 }
