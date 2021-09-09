@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.notifications
 
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
-import uk.gov.hmrc.exports.models.declaration.submissions.Submission
+import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionQueryParameters}
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, UnparsedNotificationWorkItemRepository}
 import uk.gov.hmrc.exports.services.notifications.receiptactions._
 
@@ -49,7 +49,7 @@ class NotificationService @Inject()(
   }
 
   def getAllNotificationsForUser(eori: String): Future[Seq[ParsedNotification]] =
-    submissionRepository.findAllSubmissionsForEori(eori).flatMap {
+    submissionRepository.findBy(eori, SubmissionQueryParameters()).flatMap {
       case Seq() => Future.successful(Seq.empty)
       case submissions =>
         val conversationIds = for {

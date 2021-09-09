@@ -32,7 +32,7 @@ import testdata.SubmissionTestData.submission
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
 import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
-import uk.gov.hmrc.exports.base.UnitTestMockBuilder.{buildNotificationServiceMock, buildSubmissionServiceMock}
+import uk.gov.hmrc.exports.base.UnitTestMockBuilder.buildNotificationServiceMock
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.services.SubmissionService
@@ -54,7 +54,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
   SharedMetricRegistries.clear()
 
   private val notificationService: NotificationService = buildNotificationServiceMock
-  private val submissionService: SubmissionService = buildSubmissionServiceMock
+  private val submissionService: SubmissionService = mock[SubmissionService]
 
   override lazy val app: Application = GuiceApplicationBuilder()
     .overrides(
@@ -78,7 +78,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
     "return 200" when {
       "submission found" in {
-        when(submissionService.findSubmissionById(any(), any())).thenReturn(Future.successful(Some(submission)))
+        when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
         when(notificationService.getNotifications(any()))
           .thenReturn(Future.successful(Seq(notification)))
 
@@ -91,7 +91,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
     "not return notifications" when {
       "those notifications have not had the details parsed from them" in {
-        when(submissionService.findSubmissionById(any(), any())).thenReturn(Future.successful(Some(submission)))
+        when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
         when(notificationService.getNotifications(any())).thenReturn(Future.successful(Seq.empty))
 
         val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
@@ -103,7 +103,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
     "return 400" when {
       "submission not found" in {
-        when(submissionService.findSubmissionById(any(), any())).thenReturn(Future.successful(None))
+        when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq.empty))
 
         val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
 

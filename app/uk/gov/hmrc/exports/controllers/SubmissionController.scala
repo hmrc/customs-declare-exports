@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import scala.concurrent.{ExecutionContext, Future}
-
-import javax.inject.{Inject, Singleton}
 import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionQueryParameters
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
+
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SubmissionController @Inject()(
@@ -45,24 +46,25 @@ class SubmissionController @Inject()(
     }
   }
 
-  def findAll(): Action[AnyContent] =
-    authenticator.authorisedAction(parse.default) { implicit request =>
-      submissionService
-        .findAllSubmissionsForUser(request.eori.value)
-        .map(submissions => Ok(submissions))
-    }
-
   def findByDucr(ducr: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    submissionService.findSubmissionByDucr(request.eori.value, ducr).map {
-      case Some(submission) => Ok(submission)
-      case None             => NotFound
-    }
+    submissionService
+      .findAllSubmissionsBy(request.eori.value, SubmissionQueryParameters(ducr = Some(ducr)))
+      .map {
+        case Nil             => NotFound
+        case submission +: _ => Ok(submission)
+      }
+  }
+
+  def findAllBy(queryParameters: SubmissionQueryParameters): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    submissionService.findAllSubmissionsBy(request.eori.value, queryParameters).map(Ok(_))
   }
 
   def findById(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    submissionService.findSubmissionById(request.eori.value, id).map {
-      case Some(submission) => Ok(submission)
-      case None             => NotFound
-    }
+    submissionService
+      .findAllSubmissionsBy(request.eori.value, SubmissionQueryParameters(uuid = Some(id)))
+      .map {
+        case Nil             => NotFound
+        case submission +: _ => Ok(submission)
+      }
   }
 }
