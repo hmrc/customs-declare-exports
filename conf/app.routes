@@ -14,6 +14,8 @@ POST        /cancellations                                uk.gov.hmrc.exports.co
 GET         /notifications                                uk.gov.hmrc.exports.controllers.NotificationController.getAllNotificationsForUser()
 
 GET         /submissions                                  uk.gov.hmrc.exports.controllers.SubmissionController.findAllBy(queryParameters: uk.gov.hmrc.exports.models.declaration.submissions.SubmissionQueryParameters)
+POST        /submission/:id                               uk.gov.hmrc.exports.controllers.SubmissionController.create(id: String)
+GET         /submission/notifications/:id                 uk.gov.hmrc.exports.controllers.NotificationController.findById(id: String)
 
 GET         /ead/:mrn                                     uk.gov.hmrc.exports.controllers.ead.EADController.findByMrn(mrn: String)
 
