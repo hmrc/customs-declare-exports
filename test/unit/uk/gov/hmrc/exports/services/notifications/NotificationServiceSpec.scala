@@ -31,7 +31,7 @@ import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification, UnparsedNotification}
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest, SubmissionStatus}
+import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, UnparsedNotificationWorkItemRepository}
 import uk.gov.hmrc.exports.services.notifications.receiptactions.NotificationReceiptActionsScheduler
 import uk.gov.hmrc.workitem.{ToDo, WorkItem}
@@ -74,7 +74,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
   "NotificationService on getAllNotificationsForUser" when {
 
     trait GetAllNotificationsForUserHappyPathTest {
-      when(submissionRepository.findAllSubmissionsForEori(any)).thenReturn(Future.successful(Seq(submission, submission_2)))
+      when(submissionRepository.findBy(any, any)).thenReturn(Future.successful(Seq(submission, submission_2)))
       val notificationsToBeReturned = Seq(notification, notification_2, notification_3)
       when(notificationRepository.findNotificationsByActionIds(any)).thenReturn(Future.successful(notificationsToBeReturned))
     }
@@ -92,14 +92,14 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
         notificationService.getAllNotificationsForUser(eori).futureValue
 
         val inOrder: InOrder = Mockito.inOrder(submissionRepository, notificationRepository)
-        inOrder.verify(submissionRepository).findAllSubmissionsForEori(any)
+        inOrder.verify(submissionRepository).findBy(any, any)
         inOrder.verify(notificationRepository).findNotificationsByActionIds(any)
       }
 
       "call SubmissionRepository, passing EORI provided" in new GetAllNotificationsForUserHappyPathTest {
         notificationService.getAllNotificationsForUser(eori).futureValue
 
-        verify(submissionRepository).findAllSubmissionsForEori(eqTo(eori))
+        verify(submissionRepository).findBy(eqTo(eori), eqTo(SubmissionQueryParameters()))
       }
 
       "call NotificationRepository, passing all conversation IDs" in new GetAllNotificationsForUserHappyPathTest {
@@ -118,13 +118,13 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
     "SubmissionRepository on findAllSubmissionsForEori returns empty list" should {
 
       "return empty list" in {
-        when(submissionRepository.findAllSubmissionsForEori(any)).thenReturn(Future.successful(Seq.empty))
+        when(submissionRepository.findBy(any, any)).thenReturn(Future.successful(Seq.empty))
 
         notificationService.getAllNotificationsForUser(eori).futureValue must equal(Seq.empty)
       }
 
       "not call NotificationRepository" in {
-        when(submissionRepository.findAllSubmissionsForEori(any)).thenReturn(Future.successful(Seq.empty))
+        when(submissionRepository.findBy(any, any)).thenReturn(Future.successful(Seq.empty))
 
         notificationService.getAllNotificationsForUser(eori).futureValue
 
@@ -135,7 +135,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
     "NotificationRepository on findNotificationsByConversationIds returns empty list" should {
 
       "return empty list" in {
-        when(submissionRepository.findAllSubmissionsForEori(any))
+        when(submissionRepository.findBy(any, any))
           .thenReturn(Future.successful(Seq(submission, submission_2)))
         when(notificationRepository.findNotificationsByActionIds(any))
           .thenReturn(Future.successful(Seq.empty))

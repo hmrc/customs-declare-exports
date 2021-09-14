@@ -16,10 +16,8 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import scala.concurrent.Future
-
 import com.codahale.metrics.SharedMetricRegistries
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -37,6 +35,8 @@ import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
+
+import scala.concurrent.Future
 
 class SubmissionControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestSupport with ExportsDeclarationBuilder {
 
@@ -124,13 +124,13 @@ class SubmissionControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Au
     "return 200" when {
       "request is valid" in {
         withAuthorizedUser()
-        given(submissionService.findAllSubmissionsForUser(any())).willReturn(Future.successful(submissions))
+        given(submissionService.findAllSubmissionsBy(any(), any())).willReturn(Future.successful(submissions))
 
         val result: Future[Result] = route(app, get).get
 
         status(result) mustBe OK
         contentAsJson(result) mustBe toJson(submissions)
-        verify(submissionService).findAllSubmissionsForUser(userEori.value)
+        verify(submissionService).findAllSubmissionsBy(eqTo(userEori.value), eqTo(SubmissionQueryParameters()))
       }
     }
 
@@ -153,26 +153,26 @@ class SubmissionControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Au
     "return 200" when {
       "request is valid" in {
         withAuthorizedUser()
-        given(submissionService.findSubmissionById(any(), any())).willReturn(Future.successful(Some(submission)))
+        given(submissionService.findAllSubmissionsBy(any(), any())).willReturn(Future.successful(Seq(submission)))
 
         val result: Future[Result] = route(app, get).get
 
         status(result) mustBe OK
         contentAsJson(result) mustBe toJson(submission)
-        verify(submissionService).findSubmissionById(userEori.value, "id")
+        verify(submissionService).findAllSubmissionsBy(userEori.value, SubmissionQueryParameters(uuid = Some("id")))
       }
     }
 
     "return 404" when {
       "unknown ID" in {
         withAuthorizedUser()
-        given(submissionService.findSubmissionById(any(), any())).willReturn(Future.successful(None))
+        given(submissionService.findAllSubmissionsBy(any(), any())).willReturn(Future.successful(Seq.empty))
 
         val result: Future[Result] = route(app, get).get
 
         status(result) mustBe NOT_FOUND
         contentAsString(result) mustBe empty
-        verify(submissionService).findSubmissionById(userEori.value, "id")
+        verify(submissionService).findAllSubmissionsBy(userEori.value, SubmissionQueryParameters(uuid = Some("id")))
       }
     }
 
@@ -195,26 +195,26 @@ class SubmissionControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Au
     "return 200" when {
       "request is valid" in {
         withAuthorizedUser()
-        given(submissionService.findSubmissionByDucr(any(), any())).willReturn(Future.successful(Some(submission)))
+        given(submissionService.findAllSubmissionsBy(any(), any())).willReturn(Future.successful(Seq(submission)))
 
         val result: Future[Result] = route(app, get).get
 
         status(result) mustBe OK
         contentAsJson(result) mustBe toJson(submission)
-        verify(submissionService).findSubmissionByDucr(userEori.value, "ducr")
+        verify(submissionService).findAllSubmissionsBy(userEori.value, SubmissionQueryParameters(ducr = Some("ducr")))
       }
     }
 
     "return 404" when {
       "unknown EORI or DUCR" in {
         withAuthorizedUser()
-        given(submissionService.findSubmissionByDucr(any(), any())).willReturn(Future.successful(None))
+        given(submissionService.findAllSubmissionsBy(any(), any())).willReturn(Future.successful(Seq.empty))
 
         val result: Future[Result] = route(app, get).get
 
         status(result) mustBe NOT_FOUND
         contentAsString(result) mustBe empty
-        verify(submissionService).findSubmissionByDucr(userEori.value, "ducr")
+        verify(submissionService).findAllSubmissionsBy(userEori.value, SubmissionQueryParameters(ducr = Some("ducr")))
       }
     }
 

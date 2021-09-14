@@ -24,6 +24,7 @@ import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.{Counters, Timers}
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification.FrontendFormat._
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionQueryParameters
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.NotificationService
 
@@ -44,12 +45,9 @@ class NotificationController @Inject()(
     extends Authenticator(authConnector, cc) with JSONResponses {
 
   def findById(id: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
-    submissionService.findSubmissionById(request.eori.value, id) flatMap {
-      case Some(submission) =>
-        notificationsService
-          .getNotifications(submission)
-          .map(notifications => Ok(notifications))
-      case _ => Future.successful(NotFound)
+    submissionService.findAllSubmissionsBy(request.eori.value, SubmissionQueryParameters(uuid = Some(id))) flatMap {
+      case Nil             => Future.successful(NotFound)
+      case submission +: _ => notificationsService.getNotifications(submission).map(Ok(_))
     }
   }
 

@@ -24,7 +24,6 @@ import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.NotificationService
 
 import scala.concurrent.Future
@@ -50,20 +49,11 @@ object UnitTestMockBuilder extends MockitoSugar {
     val submissionRepositoryMock: SubmissionRepository = mock[SubmissionRepository]
     when(submissionRepositoryMock.addAction(any[String](), any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.addAction(any[Submission](), any())).thenReturn(Future.successful(mock[Submission]))
-    when(submissionRepositoryMock.findAllSubmissionsForEori(any())).thenReturn(Future.successful(Seq.empty))
-    when(submissionRepositoryMock.findSubmissionById(any(), any())).thenReturn(Future.successful(None))
-    when(submissionRepositoryMock.findSubmissionByDucr(any(), any())).thenReturn(Future.successful(None))
+    when(submissionRepositoryMock.findBy(any(), any())).thenReturn(Future.successful(Seq.empty))
     when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.save(any())).thenReturn(Future.successful(mock[Submission]))
     when(submissionRepositoryMock.updateMrn(any(), any())).thenReturn(Future.successful(None))
     submissionRepositoryMock
-  }
-
-  def buildSubmissionServiceMock: SubmissionService = {
-    val submissionServiceMock: SubmissionService = mock[SubmissionService]
-    when(submissionServiceMock.findAllSubmissionsForUser(any())).thenReturn(Future.successful(Seq.empty))
-    when(submissionServiceMock.findSubmissionById(any(), any())).thenReturn(Future.successful(None))
-    submissionServiceMock
   }
 
   def buildNotificationRepositoryMock: ParsedNotificationRepository = {

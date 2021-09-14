@@ -19,8 +19,6 @@ package uk.gov.hmrc.exports.services
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
 import testdata.ExportsDeclarationBuilder
-import testdata.ExportsTestData._
-import testdata.SubmissionTestData._
 import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
@@ -253,36 +251,4 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     }
   }
 
-  "Find all Submissions for EORI" should {
-    "delegate to repository" in {
-      val response = mock[Seq[Submission]]
-      when(submissionRepository.findAllSubmissionsForEori(any())).thenReturn(Future.successful(response))
-
-      submissionService.findAllSubmissionsForUser(eori).futureValue mustBe response
-
-      verify(submissionRepository).findAllSubmissionsForEori(meq(eori))
-    }
-  }
-
-  "Find Submission by Id" should {
-    "delegate to repository" in {
-      val response = mock[Option[Submission]]
-      when(submissionRepository.findSubmissionById(any(), any())).thenReturn(Future.successful(response))
-
-      submissionService.findSubmissionById(eori, uuid).futureValue mustBe response
-
-      verify(submissionRepository).findSubmissionById(meq(eori), meq(uuid))
-    }
-  }
-
-  "Find Submission by DUCR for EORI" should {
-    "delegate to repository" in {
-      val response = mock[Option[Submission]]
-      when(submissionRepository.findSubmissionByDucr(any(), any())).thenReturn(Future.successful(response))
-
-      submissionService.findSubmissionByDucr(eori, ducr).futureValue mustBe response
-
-      verify(submissionRepository).findSubmissionByDucr(meq(eori), meq(ducr))
-    }
-  }
 }

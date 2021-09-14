@@ -16,19 +16,20 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, JsString, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.Cursor.FailOnError
 import reactivemongo.api.ReadPreference
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONBoolean, BSONDocument, BSONObjectID}
+import reactivemongo.play.json.ImplicitBSONHandlers
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.exports.models.Eori
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionQueryParameters}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -50,29 +51,22 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
     Index(Seq("updatedDateTime" -> IndexType.Ascending), name = Some("updateTimeIdx"))
   )
 
-  def findAllSubmissionsForEori(eori: String): Future[Seq[Submission]] = {
-    import reactivemongo.play.json.ImplicitBSONHandlers.JsObjectDocumentWriter
+  def findOrCreate(eori: Eori, id: String, onMissing: Submission): Future[Submission] =
+    findBy(eori.value, SubmissionQueryParameters(uuid = Some(id))).flatMap {
+      case Nil         => save(onMissing)
+      case submissions => Future.successful(submissions.head)
+    }
 
+  def findSubmissionByMrn(mrn: String): Future[Option[Submission]] = find("mrn" -> mrn).map(_.headOption)
+
+  def findBy(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] = {
+    val query = Json.toJson(queryParameters).as[JsObject] + (otherField = ("eori", JsString(eori)))
     collection
-      .find(Json.obj("eori" -> eori), None)
+      .find(query, projection = None)(ImplicitBSONHandlers.JsObjectDocumentWriter, ImplicitBSONHandlers.JsObjectDocumentWriter)
       .sort(Json.obj("actions.requestTimestamp" -> -1))
       .cursor[Submission](ReadPreference.primaryPreferred)
       .collect(maxDocs = -1, FailOnError[Seq[Submission]]())
   }
-
-  def findOrCreate(eori: Eori, id: String, onMissing: Submission): Future[Submission] =
-    findSubmissionById(eori.value, id).flatMap {
-      case Some(submission) => Future.successful(submission)
-      case None             => save(onMissing)
-    }
-
-  def findSubmissionByDucr(eori: String, ducr: String): Future[Option[Submission]] =
-    find("eori" -> eori, "ducr" -> ducr).map(_.headOption)
-
-  def findSubmissionByMrn(mrn: String): Future[Option[Submission]] = find("mrn" -> mrn).map(_.headOption)
-
-  def findSubmissionById(eori: String, id: String): Future[Option[Submission]] =
-    find("eori" -> eori, "uuid" -> id).map(_.headOption)
 
   def save(submission: Submission): Future[Submission] = insert(submission).map { res =>
     if (!res.ok) logger.error(s"Errors when persisting declaration submission: ${res.writeErrors.mkString("--")}")

@@ -132,14 +132,8 @@ class SubmissionService @Inject()(
     }
   }
 
-  def findAllSubmissionsForUser(eori: String): Future[Seq[Submission]] =
-    submissionRepository.findAllSubmissionsForEori(eori)
-
-  def findSubmissionByDucr(eori: String, ducr: String): Future[Option[Submission]] =
-    submissionRepository.findSubmissionByDucr(eori, ducr)
-
-  def findSubmissionById(eori: String, id: String): Future[Option[Submission]] =
-    submissionRepository.findSubmissionById(eori, id)
+  def findAllSubmissionsBy(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] =
+    submissionRepository.findBy(eori, queryParameters)
 
   private def updateSubmissionInDB(mrn: String, conversationId: String): Future[CancellationStatus] =
     submissionRepository.findSubmissionByMrn(mrn).flatMap {

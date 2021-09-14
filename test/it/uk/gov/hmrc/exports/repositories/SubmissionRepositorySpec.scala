@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import java.util.UUID
-
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.core.errors.DatabaseException
 import stubs.TestMongoDB
@@ -26,8 +24,9 @@ import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
 import uk.gov.hmrc.exports.base.IntegrationTestBaseSpec
 import uk.gov.hmrc.exports.models.Eori
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions._
 
+import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -68,7 +67,7 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
 
         repo.save(secondSubmission).failed.futureValue
 
-        val submissionsInDB = repo.findAllSubmissionsForEori(eori).futureValue
+        val submissionsInDB = repo.findBy(eori, SubmissionQueryParameters()).futureValue
         submissionsInDB.length must be(1)
         submissionsInDB.head must equal(submission)
       }
@@ -77,7 +76,7 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
     "allow save two submissions with empty actions" in {
       repo.save(emptySubmission_1).futureValue must be(emptySubmission_1)
       repo.save(emptySubmission_2).futureValue must be(emptySubmission_2)
-      repo.findAllSubmissionsForEori(eori).futureValue must have length 2
+      repo.findBy(eori, SubmissionQueryParameters()).futureValue must have length 2
     }
   }
 
@@ -146,8 +145,11 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
       "add action at end of sequence" in {
         val savedSubmission = repo.save(submission).futureValue
         repo.addAction(savedSubmission, action).futureValue
-        val result = repo.findSubmissionById(savedSubmission.eori, savedSubmission.uuid).futureValue.value
-        result.actions.map(_.id) must contain(action.id)
+
+        val result = repo.findBy(savedSubmission.eori, SubmissionQueryParameters(uuid = Some(savedSubmission.uuid))).futureValue
+
+        result mustNot be(empty)
+        result.head.actions.map(_.id) must contain(action.id)
       }
     }
   }
@@ -164,42 +166,6 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
       "insert provided submission" in {
         val result = repo.findOrCreate(Eori(submission_2.eori), submission_2.uuid, submission).futureValue
         result.actions mustEqual submission.actions
-      }
-    }
-  }
-
-  "Submission Repository on findAllSubmissionsByEori" when {
-
-    "there is no Submission associated with this EORI" should {
-      "return empty List" in {
-        repo.findAllSubmissionsForEori(eori).futureValue must equal(Seq.empty)
-      }
-    }
-
-    "there is single Submission associated with this EORI" should {
-      "return this Submission only" in {
-        repo.save(submission).futureValue
-
-        val retrievedSubmissions = repo.findAllSubmissionsForEori(eori).futureValue
-
-        retrievedSubmissions.size must equal(1)
-        retrievedSubmissions.headOption.value must equal(submission)
-      }
-    }
-
-    "there are multiple Submissions associated with this EORI" should {
-      "return all the Submissions" in {
-        repo.save(submission).futureValue
-        repo.save(submission_2).futureValue
-        repo.save(submission_3).futureValue
-
-        val retrievedSubmissions = repo.findAllSubmissionsForEori(eori).futureValue
-
-        retrievedSubmissions.size must equal(3)
-        retrievedSubmissions must contain(submission)
-        retrievedSubmissions must contain(submission_2)
-        retrievedSubmissions must contain(submission_3)
-        retrievedSubmissions must contain inOrder (submission, submission_3, submission_2)
       }
     }
   }
@@ -223,46 +189,94 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
     }
   }
 
-  "Submission Repository on findSubmissionById" when {
+  "SubmissionRepository on findBy" when {
 
-    "no matching submission exists" should {
-      "return None" in {
-        repo.findSubmissionById(eori, uuid).futureValue mustBe None
-      }
-    }
+    "querying with empty SubmissionQueryParameters" should {
+      "return all Submissions for given EORI" in {
 
-    "part matching submission exists" should {
-      "return None" in {
         repo.save(submission).futureValue
-        repo.findSubmissionById("other", uuid).futureValue mustBe None
-        repo.findSubmissionById(eori, "other").futureValue mustBe None
+        repo.save(submission_2).futureValue
+
+        val queryParams = SubmissionQueryParameters()
+
+        val result = repo.findBy(submission.eori, queryParams).futureValue
+
+        result mustBe Seq(submission, submission_2)
       }
     }
 
-    "matching submission exists" should {
-      "return this Some" in {
-        repo.save(submission).futureValue
+    "querying by UUID only" when {
 
-        repo.findSubmissionById(eori, uuid).futureValue mustBe Some(submission)
+      "there is no Submission with given UUID for the given EORI" should {
+        "return empty Sequence" in {
+
+          val queryParams = SubmissionQueryParameters(uuid = Some(uuid))
+
+          repo.findBy(eori, queryParams).futureValue mustBe Seq.empty[Submission]
+        }
+      }
+
+      "there is a Submission with given UUID for the given EORI" should {
+        "return this Submission" in {
+
+          repo.save(submission).futureValue
+          val queryParams = SubmissionQueryParameters(uuid = Some(submission.uuid))
+
+          val retrievedSubmissions = repo.findBy(submission.eori, queryParams).futureValue
+
+          retrievedSubmissions.length mustBe 1
+          retrievedSubmissions.head mustBe submission
+        }
       }
     }
-  }
 
-  "Submission Repository on findSubmissionByDucr" when {
+    "querying by DUCR only" when {
 
-    "there is no Submission with given DUCR for the given EORI" should {
-      "return empty Option" in {
-        repo.findSubmissionByDucr(eori, ducr).futureValue mustNot be(defined)
+      "there is no Submission with given DUCR for the given EORI" should {
+        "return empty Sequence" in {
+
+          val queryParams = SubmissionQueryParameters(ducr = Some(ducr))
+
+          repo.findBy(eori, queryParams).futureValue mustBe Seq.empty[Submission]
+        }
+      }
+
+      "there is a Submission with given DUCR for the given EORI" should {
+        "return this Submission" in {
+
+          repo.save(submission).futureValue
+          val queryParams = SubmissionQueryParameters(ducr = Some(submission.ducr))
+
+          val retrievedSubmissions = repo.findBy(submission.eori, queryParams).futureValue
+
+          retrievedSubmissions.length mustBe 1
+          retrievedSubmissions.head mustBe submission
+        }
       }
     }
 
-    "there is a Submission with given DUCR for the given EORI" should {
-      "return this Submission" in {
-        repo.save(submission).futureValue
+    "querying by LRN only" when {
 
-        val retrievedSubmission = repo.findSubmissionByDucr(eori, ducr).futureValue
+      "there is no Submission with given MRN for the given EORI" should {
+        "return empty Sequence" in {
 
-        retrievedSubmission.value must equal(submission)
+          val queryParams = SubmissionQueryParameters(lrn = Some(lrn))
+
+          repo.findBy(eori, queryParams).futureValue mustBe Seq.empty[Submission]
+        }
+      }
+
+      "there is a Submission with given MRN for the given EORI" should {
+        "return this Submission" in {
+
+          repo.save(submission).futureValue
+          val queryParams = SubmissionQueryParameters(lrn = Some(submission.lrn))
+
+          val retrievedSubmissions = repo.findBy(submission.eori, queryParams).futureValue
+
+          retrievedSubmissions.length mustBe 1
+          retrievedSubmissions.head mustBe submission
+        }
       }
     }
   }
