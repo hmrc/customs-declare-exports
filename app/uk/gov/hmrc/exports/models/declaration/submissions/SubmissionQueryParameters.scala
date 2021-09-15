@@ -28,23 +28,24 @@ case class SubmissionQueryParameters(uuid: Option[String] = None, ducr: Option[S
 object SubmissionQueryParameters {
   implicit val format: OFormat[SubmissionQueryParameters] = Json.format[SubmissionQueryParameters]
 
-  implicit def queryStringBindable(implicit stringBinder: QueryStringBindable[String]) = new QueryStringBindable[SubmissionQueryParameters] {
+  implicit def queryStringBindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[SubmissionQueryParameters] =
+    new QueryStringBindable[SubmissionQueryParameters] {
 
-    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, SubmissionQueryParameters]] = {
-      val uuid = params.get("id").flatMap(_.headOption)
-      val ducr = params.get("ducr").flatMap(_.headOption)
-      val lrn = params.get("lrn").flatMap(_.headOption)
+      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, SubmissionQueryParameters]] = {
+        val uuid = params.get("id").flatMap(_.headOption)
+        val ducr = params.get("ducr").flatMap(_.headOption)
+        val lrn = params.get("lrn").flatMap(_.headOption)
 
-      val queryParams = SubmissionQueryParameters(uuid = uuid, ducr = ducr, lrn = lrn)
-      Some(Right(queryParams))
+        val queryParams = SubmissionQueryParameters(uuid = uuid, ducr = ducr, lrn = lrn)
+        Some(Right(queryParams))
+      }
+
+      override def unbind(key: String, value: SubmissionQueryParameters): String = {
+        val id = value.uuid.map(uuid => s"id=$uuid")
+        val ducr = value.ducr.map(ducr => s"ducr=$ducr")
+        val lrn = value.lrn.map(lrn => s"lrn=$lrn")
+
+        Seq(id, ducr, lrn).flatten.mkString("&")
+      }
     }
-
-    override def unbind(key: String, value: SubmissionQueryParameters): String = {
-      val id = value.uuid.map(uuid => s"id=$uuid")
-      val ducr = value.ducr.map(ducr => s"ducr=$ducr")
-      val lrn = value.lrn.map(lrn => s"lrn=$lrn")
-
-      Seq(id, ducr, lrn).flatten.mkString("&")
-    }
-  }
 }

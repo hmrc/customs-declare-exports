@@ -19,11 +19,11 @@ package stubs
 import reactivemongo.api.{MongoConnection, MongoDriver}
 import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers.yes
-import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, _}
 import uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
-
 import java.util.UUID
-import scala.concurrent.Await
+
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 
 object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
@@ -67,7 +67,7 @@ object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
       )
     ),
     withTotalNumberOfItems(Some("56764"), Some("1.49"), "1"),
-    withPreviousDocuments(PreviousDocument("Y", "IF3", "101SHIP2", None)),
+    withPreviousDocuments(PreviousDocument("IF3", "101SHIP2", None)),
     withNatureOfTransaction("1")
   )
 
@@ -76,18 +76,18 @@ object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
   val target = 20000
   val batchSize = 1000
 
-  def generateEori = "GB" + random.nextInt(Int.MaxValue).toString
+  def generateEori: String = "GB" + random.nextInt(Int.MaxValue).toString
 
   import reactivemongo.play.json.collection.JSONCollection
 
-  def randomStatus =
+  def randomStatus: DeclarationStatus.Value =
     if (random.nextDouble() > 0.1) {
       DeclarationStatus.COMPLETE
     } else {
       DeclarationStatus.DRAFT
     }
 
-  def job(connection: MongoConnection) =
+  def job(connection: MongoConnection): Future[Unit] =
     connection
       .database("customs-declare-exports")
       .map(db => db.collection[JSONCollection]("declarations"))
