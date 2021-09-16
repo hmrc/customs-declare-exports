@@ -17,9 +17,8 @@
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import java.time.format.DateTimeFormatter
-
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{AdditionalDocument, ExportItem}
+import uk.gov.hmrc.exports.models.declaration.{AdditionalDocument, DocumentWriteOff, ExportItem}
 import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper._
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import uk.gov.hmrc.wco.dec._
@@ -140,11 +139,34 @@ object AdditionalDocumentsBuilder {
     submitter
   }
 
-  def createGoodsItemAdditionalDocument(additionalDocument: AdditionalDocument) =
+  val documentTypeCodesRequiringOptionalFields = Seq("9101", "9005", "I004", "L001", "9100", "9102", "9104", "9105", "9106", "X001", "X002", "Y100")
+  val documentStatusesRequiringOptionalFields = Seq("UA", "UE", "UP", "US", "XX", "XW")
+
+  private def shouldDefaultValuesBeApplied(additionalDocument: AdditionalDocument): Boolean = {
+    val documentTypeCodeMatches = additionalDocument.documentTypeCode
+      .map(documentTypeCodesRequiringOptionalFields.contains(_))
+      .getOrElse(false)
+
+    val documentStatusMatches = additionalDocument.documentStatus
+      .map(documentStatusesRequiringOptionalFields.contains(_))
+      .getOrElse(false)
+
+    documentTypeCodeMatches && documentStatusMatches
+  }
+
+  private def maybeDefault[T](value: Option[T], applyDefault: Boolean, default: T): Option[T] =
+    value match {
+      case None if applyDefault => Some(default)
+      case _                    => value
+    }
+
+  def createGoodsItemAdditionalDocument(additionalDocument: AdditionalDocument) = {
+    val applyDefaults = shouldDefaultValuesBeApplied(additionalDocument)
+
     GovernmentAgencyGoodsItemAdditionalDocument(
       categoryCode = additionalDocument.documentTypeCode.map(_.substring(0, 1)),
       typeCode = additionalDocument.documentTypeCode.map(_.substring(1)),
-      id = additionalDocument.documentIdentifier,
+      id = maybeDefault(additionalDocument.documentIdentifier, applyDefaults, "Not Applicable"),
       lpcoExemptionCode = additionalDocument.documentStatus,
       name = additionalDocument.documentStatusReason,
       submitter = additionalDocument.issuingAuthorityName.map { name =>
@@ -154,14 +176,14 @@ object AdditionalDocumentsBuilder {
         .map(
           date => DateTimeElement(DateTimeString(formatCode = dateTimeCode, value = date.toLocalDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"))))
         ),
-      writeOff = createAdditionalDocumentWriteOff(additionalDocument)
+      writeOff = createAdditionalDocumentWriteOff(additionalDocument, applyDefaults)
     )
+  }
 
-  private def createAdditionalDocumentWriteOff(additionalDocument: AdditionalDocument): Option[WriteOff] =
+  private def createAdditionalDocumentWriteOff(additionalDocument: AdditionalDocument, applyDefaults: Boolean): Option[WriteOff] =
     for {
-      documentWriteOff <- additionalDocument.documentWriteOff
-      measurementUnit <- documentWriteOff.measurementUnit
-      quantity <- documentWriteOff.documentQuantity
+      documentWriteOff <- maybeDefault(additionalDocument.documentWriteOff, applyDefaults, DocumentWriteOff(None, None))
+      measurementUnit <- maybeDefault(documentWriteOff.measurementUnit, applyDefaults, "GBP")
+      quantity <- maybeDefault(documentWriteOff.documentQuantity, applyDefaults, BigDecimal(0))
     } yield WriteOff(quantity = Some(Measure(unitCode = Some(measurementUnit), value = Some(quantity))))
-
 }

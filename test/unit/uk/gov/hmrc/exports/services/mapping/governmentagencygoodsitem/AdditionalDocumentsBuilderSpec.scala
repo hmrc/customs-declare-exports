@@ -17,8 +17,14 @@
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.{AdditionalDocument, Date}
+import uk.gov.hmrc.exports.models.declaration.{AdditionalDocument, Date, DocumentWriteOff}
+import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.AdditionalDocumentsBuilder.{
+  documentStatusesRequiringOptionalFields,
+  documentTypeCodesRequiringOptionalFields
+}
 import uk.gov.hmrc.wco.dec._
+
+import scala.BigDecimal
 
 class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoodsItemData {
   "AdditionalDocumentsBuilder" should {
@@ -56,26 +62,114 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
       writeOffQuantity.getValue mustBe documentQuantity.bigDecimal
     }
 
-    "map AdditionalDocument to GovernmentAgencyGoodsItemAdditionalDocument" in {
-      val additionalDocument = AdditionalDocument(
-        documentTypeCode = Some("DOC"),
-        documentIdentifier = Some("idpart"),
-        documentStatus = Some("status"),
-        documentStatusReason = Some("reason"),
-        issuingAuthorityName = Some("Issuing\nAuthority\rName"),
-        dateOfValidity = Some(Date(Some(10), Some(4), Some(2017))),
-        documentWriteOff = None
-      )
+    "map AdditionalDocument to GovernmentAgencyGoodsItemAdditionalDocument" when {
+      "all fields are present" in {
+        val additionalDocument = AdditionalDocument(
+          documentTypeCode = Some("DOC"),
+          documentIdentifier = Some("idpart"),
+          documentStatus = Some("status"),
+          documentStatusReason = Some("reason"),
+          issuingAuthorityName = Some("Issuing\nAuthority\rName"),
+          dateOfValidity = Some(Date(Some(10), Some(4), Some(2017))),
+          documentWriteOff = None
+        )
 
-      val wcoAdditionalDocument = AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument(additionalDocument)
+        val wcoAdditionalDocument = AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument(additionalDocument)
 
-      wcoAdditionalDocument.categoryCode mustBe Some("D")
-      wcoAdditionalDocument.typeCode mustBe Some("OC")
-      wcoAdditionalDocument.id mustBe Some("idpart")
-      wcoAdditionalDocument.lpcoExemptionCode mustBe Some("status")
-      wcoAdditionalDocument.name mustBe Some("reason")
-      wcoAdditionalDocument.effectiveDateTime mustBe Some(DateTimeElement(DateTimeString("102", "20170410")))
-      wcoAdditionalDocument.submitter.flatMap(_.name) mustBe Some("Issuing Authority Name")
+        wcoAdditionalDocument.categoryCode mustBe Some("D")
+        wcoAdditionalDocument.typeCode mustBe Some("OC")
+        wcoAdditionalDocument.id mustBe Some("idpart")
+        wcoAdditionalDocument.lpcoExemptionCode mustBe Some("status")
+        wcoAdditionalDocument.name mustBe Some("reason")
+        wcoAdditionalDocument.effectiveDateTime mustBe Some(DateTimeElement(DateTimeString("102", "20170410")))
+        wcoAdditionalDocument.submitter.flatMap(_.name) mustBe Some("Issuing Authority Name")
+      }
+
+      "optional fields are missing" that {
+        val docCodeRequiringDefaults = documentTypeCodesRequiringOptionalFields.headOption
+        val statusRequiringDefaults = documentStatusesRequiringOptionalFields.headOption
+
+        "do not require default values if missing" should {
+          "should remain empty when their values are empty" in {
+            val additionalDocument = AdditionalDocument(
+              documentTypeCode = Some("DOC"),
+              documentIdentifier = None,
+              documentStatus = None,
+              documentStatusReason = None,
+              issuingAuthorityName = None,
+              dateOfValidity = None,
+              documentWriteOff = None
+            )
+
+            val wcoAdditionalDocument = AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument(additionalDocument)
+
+            wcoAdditionalDocument.categoryCode mustBe Some("D")
+            wcoAdditionalDocument.typeCode mustBe Some("OC")
+            wcoAdditionalDocument.id mustBe None
+            wcoAdditionalDocument.lpcoExemptionCode mustBe None
+            wcoAdditionalDocument.name mustBe None
+            wcoAdditionalDocument.effectiveDateTime mustBe None
+            wcoAdditionalDocument.submitter.flatMap(_.name) mustBe None
+            wcoAdditionalDocument.writeOff mustBe None
+          }
+        }
+
+        "require default values if missing" should {
+          "should retain their values when their values are not missing" in {
+            val additionalDocument = AdditionalDocument(
+              documentTypeCode = docCodeRequiringDefaults,
+              documentIdentifier = Some("idpart"),
+              documentStatus = statusRequiringDefaults,
+              documentStatusReason = None,
+              issuingAuthorityName = None,
+              dateOfValidity = None,
+              documentWriteOff = Some(DocumentWriteOff(Some("USD"), Some(BigDecimal(1))))
+            )
+
+            val wcoAdditionalDocument = AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument(additionalDocument)
+
+            wcoAdditionalDocument.categoryCode mustBe docCodeRequiringDefaults.map(_.substring(0, 1))
+            wcoAdditionalDocument.typeCode mustBe docCodeRequiringDefaults.map(_.substring(1))
+            wcoAdditionalDocument.id mustBe Some("idpart")
+            wcoAdditionalDocument.lpcoExemptionCode mustBe statusRequiringDefaults
+            wcoAdditionalDocument.name mustBe None
+            wcoAdditionalDocument.effectiveDateTime mustBe None
+            wcoAdditionalDocument.submitter.flatMap(_.name) mustBe None
+
+            val writeOff = wcoAdditionalDocument.writeOff
+            writeOff.isDefined mustBe true
+            writeOff.get.quantity.flatMap(_.value) mustBe Some(BigDecimal(1))
+            writeOff.get.quantity.flatMap(_.unitCode) mustBe Some("USD")
+          }
+
+          "should take the default values when their values are missing" in {
+            val additionalDocument = AdditionalDocument(
+              documentTypeCode = docCodeRequiringDefaults,
+              documentIdentifier = Some("idpart"),
+              documentStatus = statusRequiringDefaults,
+              documentStatusReason = None,
+              issuingAuthorityName = None,
+              dateOfValidity = None,
+              documentWriteOff = None
+            )
+
+            val wcoAdditionalDocument = AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument(additionalDocument)
+
+            wcoAdditionalDocument.categoryCode mustBe docCodeRequiringDefaults.map(_.substring(0, 1))
+            wcoAdditionalDocument.typeCode mustBe docCodeRequiringDefaults.map(_.substring(1))
+            wcoAdditionalDocument.id mustBe Some("idpart")
+            wcoAdditionalDocument.lpcoExemptionCode mustBe statusRequiringDefaults
+            wcoAdditionalDocument.name mustBe None
+            wcoAdditionalDocument.effectiveDateTime mustBe None
+            wcoAdditionalDocument.submitter.flatMap(_.name) mustBe None
+
+            val writeOff = wcoAdditionalDocument.writeOff
+            writeOff.isDefined mustBe true
+            writeOff.get.quantity.flatMap(_.value) mustBe Some(BigDecimal(0))
+            writeOff.get.quantity.flatMap(_.unitCode) mustBe Some("GBP")
+          }
+        }
+      }
     }
   }
 }
