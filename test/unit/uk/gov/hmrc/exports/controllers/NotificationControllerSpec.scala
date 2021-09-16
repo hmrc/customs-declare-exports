@@ -47,7 +47,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
   import NotificationControllerSpec._
 
-  val getSubmissionNotificationsUri = "/submission-notifications/1234"
+  val getSubmissionNotificationsUri = "/submission/notifications/1234"
   val getAllNotificationsForUserUri = "/notifications"
   val saveNotificationUri = "/customs-declare-exports/notify"
 
@@ -82,7 +82,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
         when(notificationService.getNotifications(any()))
           .thenReturn(Future.successful(Seq(notification)))
 
-        val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
+        val result = routeGetFindById
 
         status(result) must be(OK)
         contentAsJson(result) must be(Json.toJson(Seq(notification))(ParsedNotification.FrontendFormat.notificationsWrites))
@@ -94,7 +94,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
         when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
         when(notificationService.getNotifications(any())).thenReturn(Future.successful(Seq.empty))
 
-        val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
+        val result = routeGetFindById
 
         status(result) must be(OK)
         contentAsJson(result) must be(Json.toJson(Seq.empty[ParsedNotification])(ParsedNotification.FrontendFormat.notificationsWrites))
@@ -105,7 +105,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       "submission not found" in {
         when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq.empty))
 
-        val result = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
+        val result = routeGetFindById
 
         status(result) must be(NOT_FOUND)
       }
@@ -115,11 +115,13 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       "not authenticated" in {
         userWithoutEori()
 
-        val failedResult = route(app, FakeRequest("GET", "/declarations/1234/submission/notifications")).get
+        val failedResult = routeGetFindById
 
         status(failedResult) must be(UNAUTHORIZED)
       }
     }
+
+    def routeGetFindById(): Future[Result] = route(app, FakeRequest(GET, getSubmissionNotificationsUri)).get
   }
 
   "Notification Controller on getAllNotificationsForUser" when {

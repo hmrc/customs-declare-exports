@@ -34,7 +34,7 @@ class SubmissionController @Inject()(
 )(implicit executionContext: ExecutionContext)
     extends RESTController(cc) with JSONResponses {
 
-  def create(id: String): Action[Unit] = authenticator.authorisedAction(parse.empty) { implicit request =>
+  def create(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     declarationService.findOne(id, request.eori).flatMap {
       case Some(declaration) =>
         if (declaration.isCompleted) {
@@ -46,25 +46,8 @@ class SubmissionController @Inject()(
     }
   }
 
-  def findByDucr(ducr: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    submissionService
-      .findAllSubmissionsBy(request.eori.value, SubmissionQueryParameters(ducr = Some(ducr)))
-      .map {
-        case Nil             => NotFound
-        case submission +: _ => Ok(submission)
-      }
-  }
-
   def findAllBy(queryParameters: SubmissionQueryParameters): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     submissionService.findAllSubmissionsBy(request.eori.value, queryParameters).map(Ok(_))
   }
 
-  def findById(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    submissionService
-      .findAllSubmissionsBy(request.eori.value, SubmissionQueryParameters(uuid = Some(id)))
-      .map {
-        case Nil             => NotFound
-        case submission +: _ => Ok(submission)
-      }
-  }
 }
