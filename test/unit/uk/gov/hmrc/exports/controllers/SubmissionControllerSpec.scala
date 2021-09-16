@@ -16,217 +16,146 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentMatchers.{any, eq => eqTo}
-import org.mockito.BDDMockito._
 import org.mockito.Mockito._
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.bind
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json.toJson
-import play.api.mvc.Result
+import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import testdata.ExportsDeclarationBuilder
-import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
+import testdata.SubmissionTestData.{submission, submission_2}
+import uk.gov.hmrc.auth.core.InsufficientEnrolments
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
+import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SubmissionControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestSupport with ExportsDeclarationBuilder {
+class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with ExportsDeclarationBuilder {
 
-  SharedMetricRegistries.clear()
-  override lazy val app: Application = GuiceApplicationBuilder()
-    .overrides(
-      bind[AuthConnector].to(mockAuthConnector),
-      bind[SubmissionService].to(submissionService),
-      bind[DeclarationService].to(declarationService)
-    )
-    .build()
+  private val cc = stubControllerComponents()
+  private val authenticator = new Authenticator(mockAuthConnector, cc)
   private val submissionService: SubmissionService = mock[SubmissionService]
   private val declarationService: DeclarationService = mock[DeclarationService]
 
+  private val controller = new SubmissionController(authenticator, submissionService, declarationService, cc)
+
   override def beforeEach(): Unit = {
     super.beforeEach()
+
     reset(mockAuthConnector, submissionService, declarationService)
+    withAuthorizedUser()
   }
 
-  "Create" should {
-    val post = FakeRequest("POST", "/declarations/id/submission")
+  "SubmissionController on create" when {
 
-    "return 201" when {
-      val declaration = aDeclaration(withId("id"), withStatus(DeclarationStatus.DRAFT))
-      val submission = Submission("id", userEori.value, "lrn", None, "ducr")
+    val fakePostRequest: Request[AnyContent] = FakeRequest("POST", "/submission")
 
-      "request is valid" in {
-        withAuthorizedUser()
-        given(declarationService.findOne(any(), any())).willReturn(Future.successful(Some(declaration)))
-        given(submissionService.submit(any())(any())).willReturn(Future.successful(submission))
+    "request is unauthorised" should {
+      "return 401 (Unauthorised)" in {
 
-        val result: Future[Result] = route(app, post).get
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        val result = controller.create("id")(fakePostRequest)
+
+        status(result) mustBe UNAUTHORIZED
+        verifyNoInteractions(declarationService)
+        verifyNoInteractions(submissionService)
+      }
+    }
+
+    "request is correct" should {
+      "return 201 (Created)" in {
+
+        val declaration = aDeclaration(withId("id"), withStatus(DeclarationStatus.DRAFT))
+        when(declarationService.findOne(any(), any())).thenReturn(Future.successful(Some(declaration)))
+        when(submissionService.submit(any())(any())).thenReturn(Future.successful(submission))
+
+        val result = controller.create("id")(fakePostRequest)
 
         status(result) mustBe CREATED
         contentAsJson(result) mustBe toJson(submission)
       }
     }
 
-    "return 409" when {
-      val declaration = aDeclaration(withId("id"), withStatus(DeclarationStatus.COMPLETE))
-      val submission = Submission("id", userEori.value, "lrn", None, "ducr")
+    "DeclarationService returns completed Declaration" should {
+      "return 409 (Conflict)" in {
 
-      "declaration is complete" in {
-        withAuthorizedUser()
-        given(declarationService.findOne(any(), any())).willReturn(Future.successful(Some(declaration)))
-        given(submissionService.submit(any())(any())).willReturn(Future.successful(submission))
+        val declaration = aDeclaration(withId("id"), withStatus(DeclarationStatus.COMPLETE))
+        when(declarationService.findOne(any(), any())).thenReturn(Future.successful(Some(declaration)))
+        when(submissionService.submit(any())(any())).thenReturn(Future.successful(submission))
 
-        val result: Future[Result] = route(app, post).get
+        val result = controller.create("id")(fakePostRequest)
 
         status(result) mustBe CONFLICT
         contentAsJson(result) mustBe toJson(ErrorResponse("Declaration has already been submitted"))
       }
     }
 
-    "return 404" when {
-      "declaration is not found" in {
-        withAuthorizedUser()
-        given(declarationService.findOne(any(), any())).willReturn(Future.successful(None))
+    "DeclarationService returns no Declaration for given UUID" should {
+      "return 404 (NotFound)" in {
 
-        val result: Future[Result] = route(app, post).get
+        when(declarationService.findOne(any(), any())).thenReturn(Future.successful(None))
+
+        val result = controller.create("id")(fakePostRequest)
 
         status(result) mustBe NOT_FOUND
-        verifyNoInteractions(submissionService)
-      }
-    }
-
-    "return 401" when {
-      "unauthorized" in {
-        withUnauthorizedUser(InsufficientEnrolments())
-        given(declarationService.findOne(any(), any())).willReturn(Future.successful(None))
-
-        val result: Future[Result] = route(app, post).get
-
-        status(result) mustBe UNAUTHORIZED
         verifyNoInteractions(submissionService)
       }
     }
   }
 
-  "Find All" should {
-    val get = FakeRequest("GET", "/submissions")
-    val submission = Submission("id", userEori.value, "lrn", None, "ducr")
-    val submissions = Seq(submission)
+  "SubmissionController on findAllBy" should {
 
-    "return 200" when {
-      "request is valid" in {
-        withAuthorizedUser()
-        given(submissionService.findAllSubmissionsBy(any(), any())).willReturn(Future.successful(submissions))
+    val fakeGetRequest: Request[AnyContent] = FakeRequest("GET", "/submissions")
 
-        val result: Future[Result] = route(app, get).get
+    "return 401 (Unauthorised)" when {
+      "request is unauthorised" in {
 
-        status(result) mustBe OK
-        contentAsJson(result) mustBe toJson(submissions)
-        verify(submissionService).findAllSubmissionsBy(eqTo(userEori.value), eqTo(SubmissionQueryParameters()))
-      }
-    }
-
-    "return 401" when {
-      "unauthorized" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result: Future[Result] = route(app, get).get
+        val result = controller.findAllBy(SubmissionQueryParameters())(fakeGetRequest)
 
         status(result) mustBe UNAUTHORIZED
         verifyNoInteractions(submissionService)
       }
     }
-  }
 
-  "Find By ID" should {
-    val get = FakeRequest("GET", "/declarations/id/submission")
-    val submission = Submission("id", userEori.value, "lrn", None, "ducr")
+    "return 200 (Ok) with the value returned by SubmissionService" when {
 
-    "return 200" when {
-      "request is valid" in {
-        withAuthorizedUser()
-        given(submissionService.findAllSubmissionsBy(any(), any())).willReturn(Future.successful(Seq(submission)))
+      "SubmissionService returns empty Sequence" in {
 
-        val result: Future[Result] = route(app, get).get
+        when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq.empty))
+
+        val result = controller.findAllBy(SubmissionQueryParameters())(fakeGetRequest)
 
         status(result) mustBe OK
-        contentAsJson(result) mustBe toJson(submission)
-        verify(submissionService).findAllSubmissionsBy(userEori.value, SubmissionQueryParameters(uuid = Some("id")))
+        contentAsJson(result) mustBe toJson(Seq.empty[Submission])
       }
-    }
 
-    "return 404" when {
-      "unknown ID" in {
-        withAuthorizedUser()
-        given(submissionService.findAllSubmissionsBy(any(), any())).willReturn(Future.successful(Seq.empty))
+      "SubmissionService returns non-empty Sequence" in {
 
-        val result: Future[Result] = route(app, get).get
+        when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission, submission_2)))
 
-        status(result) mustBe NOT_FOUND
-        contentAsString(result) mustBe empty
-        verify(submissionService).findAllSubmissionsBy(userEori.value, SubmissionQueryParameters(uuid = Some("id")))
-      }
-    }
-
-    "return 401" when {
-      "unauthorized" in {
-        withUnauthorizedUser(InsufficientEnrolments())
-
-        val result: Future[Result] = route(app, get).get
-
-        status(result) mustBe UNAUTHORIZED
-        verifyNoInteractions(submissionService)
-      }
-    }
-  }
-
-  "Find By DUCR" should {
-    val get = FakeRequest("GET", "/declarations/ducr/submission/ducr")
-    val submission = Submission("id", userEori.value, "lrn", None, "ducr")
-
-    "return 200" when {
-      "request is valid" in {
-        withAuthorizedUser()
-        given(submissionService.findAllSubmissionsBy(any(), any())).willReturn(Future.successful(Seq(submission)))
-
-        val result: Future[Result] = route(app, get).get
+        val result = controller.findAllBy(SubmissionQueryParameters())(fakeGetRequest)
 
         status(result) mustBe OK
-        contentAsJson(result) mustBe toJson(submission)
-        verify(submissionService).findAllSubmissionsBy(userEori.value, SubmissionQueryParameters(ducr = Some("ducr")))
+        contentAsJson(result) mustBe toJson(Seq(submission, submission_2))
       }
     }
 
-    "return 404" when {
-      "unknown EORI or DUCR" in {
-        withAuthorizedUser()
-        given(submissionService.findAllSubmissionsBy(any(), any())).willReturn(Future.successful(Seq.empty))
+    "call SubmissionService, passing SubmissionQueryParameters provided" in {
 
-        val result: Future[Result] = route(app, get).get
+      when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq.empty))
+      val queryParams = SubmissionQueryParameters(uuid = Some("testUuid"), ducr = Some("testDucr"), lrn = Some("testLrn"))
 
-        status(result) mustBe NOT_FOUND
-        contentAsString(result) mustBe empty
-        verify(submissionService).findAllSubmissionsBy(userEori.value, SubmissionQueryParameters(ducr = Some("ducr")))
-      }
-    }
+      controller.findAllBy(queryParams)(fakeGetRequest).futureValue
 
-    "return 401" when {
-      "unauthorized" in {
-        withUnauthorizedUser(InsufficientEnrolments())
-
-        val result: Future[Result] = route(app, get).get
-
-        status(result) mustBe UNAUTHORIZED
-        verifyNoInteractions(submissionService)
-      }
+      verify(submissionService).findAllSubmissionsBy(any(), eqTo(queryParams))
     }
   }
 }
