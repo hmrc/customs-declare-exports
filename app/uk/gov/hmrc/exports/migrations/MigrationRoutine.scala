@@ -17,14 +17,14 @@
 package uk.gov.hmrc.exports.migrations
 
 import scala.concurrent.Future
-
 import com.github.cloudyrock.mongock.{Mongock, MongockBuilder}
 import com.google.inject.Singleton
 import com.mongodb.{MongoClient, MongoClientURI}
+
 import javax.inject.Inject
 import play.api.Logger
 import uk.gov.hmrc.exports.config.{AppConfig, ExportsMigrationConfig}
-import uk.gov.hmrc.exports.migrations.changelogs.cache.RenameToAdditionalDocuments
+import uk.gov.hmrc.exports.migrations.changelogs.cache.{MakeTransportPaymentMethodNotOptional, RenameToAdditionalDocuments}
 import uk.gov.hmrc.exports.migrations.changelogs.notification.{MakeParsedDetailsOptional, SplitTheNotificationsCollection}
 import uk.gov.hmrc.exports.routines.{Routine, RoutinesExecutionContext}
 
@@ -54,6 +54,7 @@ class MigrationRoutine @Inject()(appConfig: AppConfig, exportsMigrationConfig: E
       .register(new MakeParsedDetailsOptional())
       .register(new SplitTheNotificationsCollection())
       .register(new RenameToAdditionalDocuments())
+      .register(new MakeTransportPaymentMethodNotOptional())
     val migrationTool = ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig)
 
     migrationTool.execute()
