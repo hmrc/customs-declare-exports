@@ -53,6 +53,35 @@ class InvoiceAmountBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         declaration.getInvoiceAmount.getCurrencyID must be("GBP")
       }
     }
+
+    "InvoiceAmount value" should {
+      "be prefixed with a zero if first char is a period" in {
+        val model = aDeclaration(withTotalNumberOfItems(totalAmountInvoiced = Some(".12")))
+        val declaration = new Declaration()
+
+        builder.buildThenAdd(model, declaration)
+
+        declaration.getInvoiceAmount.getValue.toString mustBe "0.12"
+      }
+
+      "have the trailing period removed if no digits appear after it" in {
+        val model = aDeclaration(withTotalNumberOfItems(totalAmountInvoiced = Some("12.")))
+        val declaration = new Declaration()
+
+        builder.buildThenAdd(model, declaration)
+
+        declaration.getInvoiceAmount.getValue.toString mustBe "12"
+      }
+
+      "have any commas removed if present" in {
+        val model = aDeclaration(withTotalNumberOfItems(totalAmountInvoiced = Some("12,000,000.10")))
+        val declaration = new Declaration()
+
+        builder.buildThenAdd(model, declaration)
+
+        declaration.getInvoiceAmount.getValue.toString mustBe "12000000.10"
+      }
+    }
   }
 
   private def builder = new InvoiceAmountBuilder()
