@@ -32,8 +32,9 @@ class InvoiceAmountBuilder @Inject()() extends ModifyingBuilder[ExportsDeclarati
 
   private def createInvoiceAmount(amount: String): DeclarationInvoiceAmountType = {
     val invoiceAmountType = new DeclarationInvoiceAmountType()
+    val amountMinusCommas = amount.replaceAll(",", "")
 
-    invoiceAmountType.setValue(new java.math.BigDecimal(amount))
+    invoiceAmountType.setValue(new java.math.BigDecimal(amountMinusCommas))
     invoiceAmountType.setCurrencyID("GBP")
 
     invoiceAmountType

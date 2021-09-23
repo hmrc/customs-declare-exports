@@ -37,7 +37,10 @@ class CurrencyExchangeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclar
   private def createCurrencyExchange(data: TotalNumberOfItems): Seq[CurrencyExchange] = {
     val currencyExchange = new CurrencyExchange()
 
-    data.exchangeRate.foreach(rate => currencyExchange.setRateNumeric(new java.math.BigDecimal(rate)))
+    data.exchangeRate.foreach { rate =>
+      val rateMinusCommas = rate.replaceAll(",", "")
+      currencyExchange.setRateNumeric(new java.math.BigDecimal(rateMinusCommas))
+    }
 
     Seq(currencyExchange)
   }

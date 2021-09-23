@@ -59,5 +59,37 @@ class CurrencyExchangeBuilderSpec extends UnitSpec with ExportsDeclarationBuilde
         declaration.getCurrencyExchange.get(0).getRateNumeric.intValue() mustBe 123
       }
     }
+
+    "exchange rate value" should {
+      "be prefixed with a zero if first char is a period" in {
+        val model = aDeclaration(withTotalNumberOfItems(exchangeRate = Some(".12")))
+        val declaration = new Declaration()
+
+        builder.buildThenAdd(model, declaration)
+
+        declaration.getCurrencyExchange must have(size(1))
+        declaration.getCurrencyExchange.get(0).getRateNumeric.toString mustBe "0.12"
+      }
+
+      "have the trailing period removed if no digits appear after it" in {
+        val model = aDeclaration(withTotalNumberOfItems(exchangeRate = Some("12.")))
+        val declaration = new Declaration()
+
+        builder.buildThenAdd(model, declaration)
+
+        declaration.getCurrencyExchange must have(size(1))
+        declaration.getCurrencyExchange.get(0).getRateNumeric.toString mustBe "12"
+      }
+
+      "have any commas removed if present" in {
+        val model = aDeclaration(withTotalNumberOfItems(exchangeRate = Some("12,000,000.10")))
+        val declaration = new Declaration()
+
+        builder.buildThenAdd(model, declaration)
+
+        declaration.getCurrencyExchange must have(size(1))
+        declaration.getCurrencyExchange.get(0).getRateNumeric.toString mustBe "12000000.10"
+      }
+    }
   }
 }
