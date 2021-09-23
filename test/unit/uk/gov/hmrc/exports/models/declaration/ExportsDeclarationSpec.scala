@@ -324,7 +324,6 @@ object ExportsDeclarationSpec {
       |  "previousDocuments": {
       |    "documents": [
       |      {
-      |        "documentCategory": "Y",
       |        "documentType": "IF3",
       |        "documentReference": "101SHIP2"
       |      }

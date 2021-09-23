@@ -18,8 +18,9 @@ package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.{MUCR, PreviousDocument, PreviousDocuments}
 import uk.gov.hmrc.exports.models.DeclarationType._
+import uk.gov.hmrc.exports.models.declaration.{MUCR, PreviousDocument, PreviousDocuments}
+import uk.gov.hmrc.exports.services.mapping.goodsshipment.PreviousDocumentsBuilder.{categoryCodeY, categoryCodeZ}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
@@ -37,7 +38,7 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
           val previousDocs = goodsShipment.getPreviousDocument
           previousDocs.size must be(1)
           previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
-          previousDocs.get(0).getCategoryCode.getValue must be("Z")
+          previousDocs.get(0).getCategoryCode.getValue must be(categoryCodeZ)
           previousDocs.get(0).getTypeCode.getValue must be("DCR")
           previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
         }
@@ -51,7 +52,7 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
         val previousDocs = goodsShipment.getPreviousDocument
         previousDocs.size must be(1)
         previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
-        previousDocs.get(0).getCategoryCode.getValue must be("Y")
+        previousDocs.get(0).getCategoryCode.getValue must be(categoryCodeY)
         previousDocs.get(0).getTypeCode.getValue must be("DCR")
         previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
       }
@@ -64,12 +65,12 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
         val previousDocs = goodsShipment.getPreviousDocument
         previousDocs.size must be(2)
         previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
-        previousDocs.get(0).getCategoryCode.getValue must be("Z")
+        previousDocs.get(0).getCategoryCode.getValue must be(categoryCodeZ)
         previousDocs.get(0).getTypeCode.getValue must be("DCR")
         previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
 
         previousDocs.get(1).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferencesWithEidr.eidrDateStamp.get)
-        previousDocs.get(1).getCategoryCode.getValue must be("Y")
+        previousDocs.get(1).getCategoryCode.getValue must be(categoryCodeY)
         previousDocs.get(1).getTypeCode.getValue must be("CLE")
         previousDocs.get(1).getLineNumeric must be(BigDecimal(1).bigDecimal)
       }
@@ -82,12 +83,12 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
         val previousDocs = goodsShipment.getPreviousDocument
         previousDocs.size must be(2)
         previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
-        previousDocs.get(0).getCategoryCode.getValue must be("Z")
+        previousDocs.get(0).getCategoryCode.getValue must be(categoryCodeZ)
         previousDocs.get(0).getTypeCode.getValue must be("DCR")
         previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
 
         previousDocs.get(1).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferencesWithMrn.mrn.get)
-        previousDocs.get(1).getCategoryCode.getValue must be("Y")
+        previousDocs.get(1).getCategoryCode.getValue must be(categoryCodeY)
         previousDocs.get(1).getTypeCode.getValue must be("SDE")
         previousDocs.get(1).getLineNumeric must be(BigDecimal(1).bigDecimal)
       }
@@ -102,12 +103,12 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
         val previousDocs = goodsShipment.getPreviousDocument
         previousDocs.size must be(2)
         previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
-        previousDocs.get(0).getCategoryCode.getValue must be("Z")
+        previousDocs.get(0).getCategoryCode.getValue must be(categoryCodeZ)
         previousDocs.get(0).getTypeCode.getValue must be("DCR")
         previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
 
         previousDocs.get(1).getID.getValue must be("DocumentReference")
-        previousDocs.get(1).getCategoryCode.getValue must be("X")
+        previousDocs.get(1).getCategoryCode.getValue must be(categoryCodeZ)
         previousDocs.get(1).getTypeCode.getValue must be("ABC")
         previousDocs.get(1).getLineNumeric must be(BigDecimal(123).bigDecimal)
 
@@ -122,12 +123,13 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
         val previousDocs = goodsShipment.getPreviousDocument
         previousDocs.size must be(1)
         previousDocs.get(0).getID.getValue must be(VALID_MUCR)
-        previousDocs.get(0).getCategoryCode.getValue must be("Z")
+        previousDocs.get(0).getCategoryCode.getValue must be(categoryCodeZ)
         previousDocs.get(0).getTypeCode.getValue must be("MCR")
         previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
       }
 
       "a MUCR has been specified along with other PreviousDocument elements" when {
+
         "PreviousDocument elements do not contain a MUCR value" in {
           val builder = new PreviousDocumentsBuilder
           val mucr = MUCR(VALID_MUCR)
@@ -139,12 +141,12 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
           val previousDocs = goodsShipment.getPreviousDocument
           previousDocs.size must be(2)
           previousDocs.get(0).getID.getValue must be(VALID_MUCR)
-          previousDocs.get(0).getCategoryCode.getValue must be("Z")
+          previousDocs.get(0).getCategoryCode.getValue must be(categoryCodeZ)
           previousDocs.get(0).getTypeCode.getValue must be("MCR")
           previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
 
           previousDocs.get(1).getID.getValue must be("DocumentReference")
-          previousDocs.get(1).getCategoryCode.getValue must be("X")
+          previousDocs.get(1).getCategoryCode.getValue must be(categoryCodeZ)
           previousDocs.get(1).getTypeCode.getValue must be("ABC")
           previousDocs.get(1).getLineNumeric must be(BigDecimal(123).bigDecimal)
         }
@@ -156,21 +158,19 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
           builder.buildThenAdd(mucr, goodsShipment)
 
           builder.buildThenAdd(
-            PreviousDocuments(
-              Seq(PreviousDocument(documentCategory = "Z", documentType = "MCR", documentReference = VALID_MUCR, goodsItemIdentifier = Some("1")))
-            ),
+            PreviousDocuments(Seq(PreviousDocument(documentType = "MCR", documentReference = VALID_MUCR, goodsItemIdentifier = Some("1")))),
             goodsShipment
           )
 
           val previousDocs = goodsShipment.getPreviousDocument
           previousDocs.size must be(2)
           previousDocs.get(0).getID.getValue must be(VALID_MUCR)
-          previousDocs.get(0).getCategoryCode.getValue must be("Z")
+          previousDocs.get(0).getCategoryCode.getValue must be(categoryCodeZ)
           previousDocs.get(0).getTypeCode.getValue must be("MCR")
           previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
 
           previousDocs.get(1).getID.getValue must be(VALID_MUCR)
-          previousDocs.get(1).getCategoryCode.getValue must be("Z")
+          previousDocs.get(1).getCategoryCode.getValue must be(categoryCodeZ)
           previousDocs.get(1).getTypeCode.getValue must be("MCR")
           previousDocs.get(1).getLineNumeric must be(BigDecimal(1).bigDecimal)
         }
@@ -192,7 +192,7 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
         val previousDocs = goodsShipment.getPreviousDocument
         previousDocs.size must be(1)
         previousDocs.get(0).getID.getValue must be("DocumentReference")
-        previousDocs.get(0).getCategoryCode.getValue must be("X")
+        previousDocs.get(0).getCategoryCode.getValue must be(categoryCodeZ)
         previousDocs.get(0).getTypeCode must be(null)
         previousDocs.get(0).getLineNumeric must be(BigDecimal(123).bigDecimal)
       }
@@ -205,21 +205,7 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
         val previousDocs = goodsShipment.getPreviousDocument
         previousDocs.size must be(1)
         previousDocs.get(0).getID must be(null)
-        previousDocs.get(0).getCategoryCode.getValue must be("X")
-        previousDocs.get(0).getTypeCode.getValue must be("ABC")
-        previousDocs.get(0).getLineNumeric must be(BigDecimal(123).bigDecimal)
-      }
-
-      "'document catagory' not supplied" in {
-        val builder = new PreviousDocumentsBuilder
-        val goodsShipment = new GoodsShipment
-        builder.buildThenAdd(PreviousDocuments(Seq(PreviousDocumentsBuilderSpec.correctPreviousDocument.copy(documentCategory = ""))), goodsShipment)
-
-        val previousDocs = goodsShipment.getPreviousDocument
-        previousDocs.size must be(1)
-
-        previousDocs.get(0).getID.getValue must be("DocumentReference")
-        previousDocs.get(0).getCategoryCode must be(null)
+        previousDocs.get(0).getCategoryCode.getValue must be(categoryCodeZ)
         previousDocs.get(0).getTypeCode.getValue must be("ABC")
         previousDocs.get(0).getLineNumeric must be(BigDecimal(123).bigDecimal)
       }
@@ -235,7 +221,7 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
         val previousDocs = goodsShipment.getPreviousDocument
         previousDocs.size must be(1)
         previousDocs.get(0).getID.getValue must be("DocumentReference")
-        previousDocs.get(0).getCategoryCode.getValue must be("X")
+        previousDocs.get(0).getCategoryCode.getValue must be(categoryCodeZ)
         previousDocs.get(0).getTypeCode.getValue must be("ABC")
         previousDocs.get(0).getLineNumeric must be(null)
       }
@@ -246,8 +232,8 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
 
 object PreviousDocumentsBuilderSpec extends ExportsDeclarationBuilder {
   val correctPreviousDocument =
-    PreviousDocument(documentCategory = "X", documentType = "ABC", documentReference = "DocumentReference", goodsItemIdentifier = Some("123"))
+    PreviousDocument(documentType = "ABC", documentReference = "DocumentReference", goodsItemIdentifier = Some("123"))
 
   val correctMucrPreviousDocument =
-    PreviousDocument(documentCategory = "Z", documentType = "MCR", documentReference = VALID_MUCR, goodsItemIdentifier = Some("1"))
+    PreviousDocument(documentType = "MCR", documentReference = VALID_MUCR, goodsItemIdentifier = Some("1"))
 }

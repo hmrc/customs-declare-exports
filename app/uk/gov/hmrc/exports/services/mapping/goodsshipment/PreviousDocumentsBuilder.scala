@@ -20,6 +20,7 @@ import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR, MUCR, PreviousDocument, PreviousDocuments}
 import uk.gov.hmrc.exports.models.DeclarationType.{DeclarationType, SUPPLEMENTARY}
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
+import uk.gov.hmrc.exports.services.mapping.goodsshipment.PreviousDocumentsBuilder.{categoryCodeY, categoryCodeZ}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.declaration_ds.dms._2.{PreviousDocumentCategoryCodeType, PreviousDocumentIdentificationIDType, PreviousDocumentTypeCodeType}
 
@@ -29,33 +30,21 @@ class PreviousDocumentsBuilder @Inject()() extends ModifyingBuilder[PreviousDocu
   private val mucrTypeCodeValue = "MCR"
   private val eidrTypeCodeValue = "CLE"
   private val mrnTypeCodeValue = "SDE"
-  private val categoryCodeY = "Y"
-  private val categoryCodeZ = "Z"
 
   override def buildThenAdd(model: PreviousDocuments, goodsShipment: GoodsShipment): Unit =
     if (isDefined(model)) {
       model.documents.foreach { data =>
-        goodsShipment.getPreviousDocument.add(createPreviousDocuments(data, goodsShipment.getPreviousDocument.size()))
+        goodsShipment.getPreviousDocument.add(createPreviousDocuments(data))
       }
     }
 
   private def isDefined(previousDocumentsData: PreviousDocuments): Boolean =
-    previousDocumentsData.documents.nonEmpty && previousDocumentsData.documents.forall(
-      doc =>
-        doc.goodsItemIdentifier.getOrElse("").nonEmpty ||
-          doc.documentReference.nonEmpty ||
-          doc.documentReference.nonEmpty ||
-          doc.documentCategory.nonEmpty
-    )
-
-  private def createPreviousDocuments(document: PreviousDocument, previousDocumentsSize: Int): GoodsShipment.PreviousDocument = {
-    val previousDocument = new GoodsShipment.PreviousDocument()
-
-    if (document.documentCategory.nonEmpty) {
-      val categoryCode = new PreviousDocumentCategoryCodeType()
-      categoryCode.setValue(document.documentCategory)
-      previousDocument.setCategoryCode(categoryCode)
+    previousDocumentsData.documents.nonEmpty && previousDocumentsData.documents.forall { doc =>
+      doc.goodsItemIdentifier.getOrElse("").nonEmpty || doc.documentReference.nonEmpty || doc.documentReference.nonEmpty
     }
+
+  private def createPreviousDocuments(document: PreviousDocument): GoodsShipment.PreviousDocument = {
+    val previousDocument = new GoodsShipment.PreviousDocument()
 
     if (document.documentReference.nonEmpty) {
       val id = new PreviousDocumentIdentificationIDType()
@@ -71,16 +60,20 @@ class PreviousDocumentsBuilder @Inject()() extends ModifyingBuilder[PreviousDocu
       previousDocument.setTypeCode(typeCode)
     }
 
+    val categoryCode = new PreviousDocumentCategoryCodeType()
+    categoryCode.setValue(categoryCodeZ)
+    previousDocument.setCategoryCode(categoryCode)
+
     previousDocument
   }
 
-  def buildThenAdd(model: ConsignmentReferences, `type`: DeclarationType, goodsShipment: GoodsShipment): Unit = {
-    if (isDefined(model)) {
-      goodsShipment.getPreviousDocument.add(createDucrDocument(model.ducr, `type`))
+  def buildThenAdd(consignmentReferences: ConsignmentReferences, `type`: DeclarationType, goodsShipment: GoodsShipment): Unit = {
+    if (isDefined(consignmentReferences)) {
+      goodsShipment.getPreviousDocument.add(createDucrDocument(consignmentReferences.ducr, `type`))
     }
 
-    model.eidrDateStamp.map(eidr => goodsShipment.getPreviousDocument.add(createEidrDateStampDocument(eidr)))
-    model.mrn.map(mrn => goodsShipment.getPreviousDocument.add(createMrnDateStampDocument(mrn)))
+    consignmentReferences.eidrDateStamp.map(eidr => goodsShipment.getPreviousDocument.add(createEidrDateStampDocument(eidr)))
+    consignmentReferences.mrn.map(mrn => goodsShipment.getPreviousDocument.add(createMrnDateStampDocument(mrn)))
   }
 
   private def isDefined(previousDocumentsData: ConsignmentReferences): Boolean = previousDocumentsData.ducr.nonEmpty
@@ -122,4 +115,10 @@ class PreviousDocumentsBuilder @Inject()() extends ModifyingBuilder[PreviousDocu
 
     previousDocument
   }
+}
+
+object PreviousDocumentsBuilder {
+
+  val categoryCodeY = "Y"
+  val categoryCodeZ = "Z"
 }
