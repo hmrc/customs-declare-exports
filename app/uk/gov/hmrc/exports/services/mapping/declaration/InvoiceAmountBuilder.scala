@@ -25,17 +25,17 @@ import wco.datamodel.wco.declaration_ds.dms._2._
 class InvoiceAmountBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
-    model.totalNumberOfItems
-      .flatMap(_.totalAmountInvoiced)
-      .map(createInvoiceAmount)
-      .foreach(declaration.setInvoiceAmount)
+    for {
+      tni <- model.totalNumberOfItems
+      amount <- tni.totalAmountInvoiced
+    } yield declaration.setInvoiceAmount(createInvoiceAmount(amount, tni.totalAmountInvoicedCurrency))
 
-  private def createInvoiceAmount(amount: String): DeclarationInvoiceAmountType = {
+  private def createInvoiceAmount(amount: String, currencyCode: Option[String]): DeclarationInvoiceAmountType = {
     val invoiceAmountType = new DeclarationInvoiceAmountType()
     val amountMinusCommas = amount.replaceAll(",", "")
 
     invoiceAmountType.setValue(new java.math.BigDecimal(amountMinusCommas))
-    invoiceAmountType.setCurrencyID("GBP")
+    invoiceAmountType.setCurrencyID(currencyCode.getOrElse("GBP"))
 
     invoiceAmountType
   }
