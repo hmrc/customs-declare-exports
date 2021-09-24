@@ -44,7 +44,7 @@ class InvoiceAmountBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       }
 
       "populated" in {
-        val model = aDeclaration(withTotalNumberOfItems(totalAmountInvoiced = Some("123.45")))
+        val model = aDeclaration(withTotalNumberOfItems(totalAmountInvoiced = Some("123.45"), totalAmountInvoicedCurrency = Some("GBP")))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -80,6 +80,28 @@ class InvoiceAmountBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         builder.buildThenAdd(model, declaration)
 
         declaration.getInvoiceAmount.getValue.toString mustBe "12000000.10"
+      }
+    }
+
+    "InvoiceAmountCurrency value" should {
+      "be taken from the model value if supplied" in {
+        val model = aDeclaration(withTotalNumberOfItems(totalAmountInvoiced = Some("123.45"), totalAmountInvoicedCurrency = Some("USD")))
+        val declaration = new Declaration()
+
+        builder.buildThenAdd(model, declaration)
+
+        declaration.getInvoiceAmount.getValue.doubleValue must be(123.45)
+        declaration.getInvoiceAmount.getCurrencyID must be("USD")
+      }
+
+      "default to 'GBP' if not supplied" in {
+        val model = aDeclaration(withTotalNumberOfItems(totalAmountInvoiced = Some("123.45"), totalAmountInvoicedCurrency = None))
+        val declaration = new Declaration()
+
+        builder.buildThenAdd(model, declaration)
+
+        declaration.getInvoiceAmount.getValue.doubleValue must be(123.45)
+        declaration.getInvoiceAmount.getCurrencyID must be("GBP")
       }
     }
   }
