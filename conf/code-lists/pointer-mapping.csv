@@ -2,7 +2,7 @@
 42A.D026,declaration.consignmentReferences.lrn,/customs-declare-exports/declaration/consignment-references
 42A.D013,declaration.typeCode,
 42A.228,declaration.items.size,
-42A.109,declaration.totalNumberOfItems.totalAmountInvoiced,/customs-declare-exports/declaration/total-numbers-of-items
+42A.109,declaration.totalNumberOfItems.totalAmountInvoiced,/customs-declare-exports/declaration/invoices-and-exchange-rate
 42A.149,declaration.totalPackageQuantity,/customs-declare-exports/declaration/total-package-quantity
 42A.504,declaration.locations.officeOfExit.circumstancesCode,
 42A.05A.R004,declaration.parties.representativeDetails.details.eori,/customs-declare-exports/declaration/representatives-eori-number
@@ -21,7 +21,7 @@
 42A.28A.18A.04A.245,declaration.parties.carrierDetails.details.address.postCode,/customs-declare-exports/declaration/carrier-address
 42A.28A.62A.098,declaration.borderTransport.paymentMethod,/customs-declare-exports/declaration/transport-payment
 42A.28A.62A.$1.64,declaration.locations.destinationCountries.countriesOfRouting.$1,/customs-declare-exports/declaration/countries-summary/
-42A.40A.118,declaration.totalNumberOfItems.exchangeRate,/customs-declare-exports/declaration/total-numbers-of-items
+42A.40A.118,declaration.totalNumberOfItems.exchangeRate,/customs-declare-exports/declaration/invoices-and-exchange-rate
 42A.57B.R123,declaration.declarantDetails.details.eori,/customs-declare-exports/declaration/[URL_PATH]
 42A.56A.G005,declaration.locations.officeOfExit.officeId,/customs-declare-exports/declaration/office-of-exit
 42A.57A.R032,declaration.parties.exporterDetails.details.eori,/customs-declare-exports/declaration/exporter-eori-number
