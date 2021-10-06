@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import java.time.{LocalDate, ZoneOffset}
-
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.api.ReadConcern
 import stubs.TestMongoDB.mongoConfiguration
@@ -27,6 +25,7 @@ import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo.format
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 
+import java.time.{LocalDate, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDeclarationBuilder {
@@ -57,6 +56,7 @@ class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDecl
   }
 
   "Update" should {
+
     "update the declaration" in {
       val declaration = aDeclaration(withType(DeclarationType.STANDARD), withId("id"), withEori("eori"))
       givenADeclarationExists(declaration)
@@ -78,6 +78,7 @@ class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDecl
   val eori = Eori("eori")
 
   "Find by ID & EORI" should {
+
     "return the persisted declaration" when {
       "one exists with eori and ID" in {
         val declaration = aDeclaration(withId("id"), withEori("eori"))
@@ -99,7 +100,9 @@ class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDecl
   }
 
   "Find by EORI" should {
+
     "return the persisted declarations" when {
+
       "some exist with eori" in {
         val eori1 = Eori("eori1")
         val declaration1 = aDeclaration(withId("id1"), withEori(eori1))
@@ -151,6 +154,7 @@ class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDecl
   }
 
   "Find with sort order" should {
+
     "return the declarations in accending order" in {
       val declaration1 = aDeclaration(withUpdateDate(2019, 1, 1))
       val declaration2 = aDeclaration(withUpdateDate(2019, 1, 2))
@@ -162,6 +166,7 @@ class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDecl
         .find(DeclarationSearch(eori), page, DeclarationSort(SortBy.UPDATED, SortDirection.ASC))
         .futureValue mustBe Paginated(Seq(declaration1, declaration2, declaration3), page, 3)
     }
+
     "return the declarations in decending order" in {
       val declaration1 = aDeclaration(withUpdateDate(2019, 1, 1))
       val declaration2 = aDeclaration(withUpdateDate(2019, 1, 2))
@@ -175,7 +180,56 @@ class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDecl
     }
   }
 
+  "MarkCompleted" when {
+
+    "declaration is NOT completed" should {
+
+      "return declaration before change" in {
+        val declaration = aDeclaration(withType(DeclarationType.STANDARD), withStatus(DeclarationStatus.DRAFT), withId("id"), withEori("eori"))
+        givenADeclarationExists(declaration)
+
+        repository.markCompleted("id", Eori("eori")).futureValue mustBe Some(declaration)
+      }
+
+      "change its status to COMPLETE" in {
+        val declaration = aDeclaration(withType(DeclarationType.STANDARD), withStatus(DeclarationStatus.DRAFT), withId("id"), withEori("eori"))
+        givenADeclarationExists(declaration)
+
+        repository.markCompleted("id", Eori("eori")).futureValue
+
+        val expectedDeclarationAfterUpdate = declaration.copy(status = DeclarationStatus.COMPLETE)
+        repository.find("id", Eori("eori")).futureValue mustBe Some(expectedDeclarationAfterUpdate)
+      }
+    }
+
+    "declaration is completed" should {
+
+      "return declaration before change" in {
+        val declaration = aDeclaration(withType(DeclarationType.STANDARD), withStatus(DeclarationStatus.COMPLETE), withId("id"), withEori("eori"))
+        givenADeclarationExists(declaration)
+
+        repository.markCompleted("id", Eori("eori")).futureValue mustBe Some(declaration)
+      }
+    }
+
+    "declaration is NOT present" should {
+
+      "return empty Option" in {
+
+        repository.markCompleted("id", Eori("eori")).futureValue mustBe empty
+      }
+
+      "not upsert a declaration" in {
+
+        repository.markCompleted("id", Eori("eori")).futureValue mustBe empty
+
+        repository.find("id", Eori("eori")).futureValue mustBe empty
+      }
+    }
+  }
+
   "Delete" should {
+
     "remove the declaration" in {
       val declaration = aDeclaration(withId("id"), withEori("eori"))
       givenADeclarationExists(declaration)
