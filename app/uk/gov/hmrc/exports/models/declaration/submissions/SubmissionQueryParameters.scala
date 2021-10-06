@@ -28,7 +28,7 @@ case class SubmissionQueryParameters(uuid: Option[String] = None, ducr: Option[S
 object SubmissionQueryParameters {
   implicit val format: OFormat[SubmissionQueryParameters] = Json.format[SubmissionQueryParameters]
 
-  implicit def queryStringBindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[SubmissionQueryParameters] =
+  implicit def queryStringBindable: QueryStringBindable[SubmissionQueryParameters] =
     new QueryStringBindable[SubmissionQueryParameters] {
 
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, SubmissionQueryParameters]] = {

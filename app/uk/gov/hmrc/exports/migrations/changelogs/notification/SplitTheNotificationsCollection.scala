@@ -102,6 +102,11 @@ class SplitTheNotificationsCollection extends MigrationDefinition with Logging {
 
         case (NotificationIsParsed, NotificationIsAlreadyMigrated) =>
           updateInNotificationsCollection(notificationDoc, fetchUnparsedNotificationId(notificationDoc))
+
+        case (_, _) =>
+          logger.warn(s"""Migration parameters in invalid state:
+               | [isNotificationParsed = $isNotificationParsed], [isNotificationAlreadyMigrated = $isNotificationAlreadyMigrated]
+               |""".stripMargin)
       }
 
       registryOfMigratedUnparsedNotifications + notificationHash

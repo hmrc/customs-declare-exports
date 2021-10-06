@@ -44,19 +44,15 @@ class Scheduler @Inject()(
     logger.info(
       s"Scheduling job [${job.name}] to run periodically at [${job.firstRunTime}] with interval [${job.interval.length} ${job.interval.unit}]"
     )
-    actorSystem.scheduler.schedule(
-      calcInitialDelay(job),
-      job.interval,
-      new Runnable() {
-        override def run(): Unit =
-          job.execute().map { _ =>
-            logger.info(s"Scheduled Job [${job.name}]: Completed Successfully")
-          } recover {
-            case t: Throwable =>
-              logger.error(s"Scheduled Job [${job.name}]: Failed", t)
-          }
-      }
-    )
+    actorSystem.scheduler.scheduleWithFixedDelay(calcInitialDelay(job), job.interval)(new Runnable() {
+      override def run(): Unit =
+        job.execute().map { _ =>
+          logger.info(s"Scheduled Job [${job.name}]: Completed Successfully")
+        } recover {
+          case t: Throwable =>
+            logger.error(s"Scheduled Job [${job.name}]: Failed", t)
+        }
+    })
   }
 
   applicationLifecycle.addStopHook(() => Future.successful(runningJobs.foreach(_.cancel())))
