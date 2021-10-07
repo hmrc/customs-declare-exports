@@ -20,7 +20,7 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.wco.dec._
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class CommodityBuilderSpec extends UnitSpec with GovernmentAgencyGoodsItemData {
+class CommodityBuilderSpec extends UnitSpec {
 
   "CommodityBuilder" should {
 

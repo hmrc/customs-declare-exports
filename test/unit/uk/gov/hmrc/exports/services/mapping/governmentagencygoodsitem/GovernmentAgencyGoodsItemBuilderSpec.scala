@@ -64,9 +64,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
             withCommodityMeasure(CommodityMeasure(Some("2"), Some(false), Some("90"), Some("100"))),
             withAdditionalFiscalReferenceData(AdditionalFiscalReferences(Seq(AdditionalFiscalReference("GB", "reference")))),
             withStatisticalValue(statisticalValue = "123"),
-            withCommodityDetails(
-              CommodityDetails(combinedNomenclatureCode = Some("classificationsId"), descriptionOfGoods = Some("commodityDescription"))
-            )
+            withCommodityDetails(CommodityDetails(combinedNomenclatureCode = Some("1234567890"), descriptionOfGoods = Some("commodityDescription")))
           )
           val exportsDeclaration = aDeclaration(withType(declarationType), withItem(exportItem))
 
@@ -100,9 +98,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
             withCommodityMeasure(CommodityMeasure(Some("2"), Some(false), Some("90"), Some("100"))),
             withAdditionalFiscalReferenceData(AdditionalFiscalReferences(Seq(AdditionalFiscalReference("GB", "reference")))),
             withStatisticalValue(statisticalValue = "123"),
-            withCommodityDetails(
-              CommodityDetails(combinedNomenclatureCode = Some("classificationsId"), descriptionOfGoods = Some("commodityDescription"))
-            )
+            withCommodityDetails(CommodityDetails(combinedNomenclatureCode = Some("1234567890"), descriptionOfGoods = Some("commodityDescription")))
           )
           val exportsDeclaration = aDeclaration(withType(declarationType), withItem(exportItem))
 
