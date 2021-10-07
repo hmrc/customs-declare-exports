@@ -55,7 +55,7 @@ class SchedulerSpec extends UnitSpec {
     super.beforeEach()
     given(config.clock) willReturn clock
     given(actorSystem.scheduler) willReturn internalScheduler
-    given(internalScheduler.schedule(any[FiniteDuration], any[FiniteDuration], any[Runnable])(any[ExecutionContext])) will runTheJobImmediately
+    given(internalScheduler.scheduleWithFixedDelay(any[FiniteDuration], any[FiniteDuration])(any[Runnable])(any[ExecutionContext])) will runTheJobImmediately
     given(job.execute()) willReturn Future.successful(())
   }
 
@@ -129,7 +129,7 @@ class SchedulerSpec extends UnitSpec {
   private def theSchedule: Schedule = {
     val intervalCaptor: ArgumentCaptor[FiniteDuration] = ArgumentCaptor.forClass(classOf[FiniteDuration])
     val initialDelayCaptor: ArgumentCaptor[FiniteDuration] = ArgumentCaptor.forClass(classOf[FiniteDuration])
-    verify(internalScheduler).schedule(initialDelayCaptor.capture(), intervalCaptor.capture(), any[Runnable])(any[ExecutionContext])
+    verify(internalScheduler).scheduleWithFixedDelay(initialDelayCaptor.capture(), intervalCaptor.capture())(any[Runnable])(any[ExecutionContext])
     Schedule(initialDelayCaptor.getValue, intervalCaptor.getValue)
   }
   private def whenTheSchedulerStarts(withJobs: Set[ScheduledJob] = Set(job)): Scheduler =
