@@ -59,7 +59,7 @@ object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
       anItem(
         withProcedureCodes(Some("1040"), Seq("000")),
         withStatisticalValue(statisticalValue = "1000"),
-        withCommodityDetails(CommodityDetails(combinedNomenclatureCode = Some("46021910"), descriptionOfGoods = Some("Straw for bottles"))),
+        withCommodityDetails(CommodityDetails(combinedNomenclatureCode = Some("4602191000"), descriptionOfGoods = Some("Straw for bottles"))),
         withPackageInformation(Some("PK"), Some(10), Some("RICH123")),
         withCommodityMeasure(CommodityMeasure(Some("10"), Some(false), Some("500"), Some("700"))),
         withAdditionalInformation("00400", "EXPORTER"),

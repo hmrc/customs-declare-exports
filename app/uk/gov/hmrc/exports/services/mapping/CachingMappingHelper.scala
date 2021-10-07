@@ -23,6 +23,8 @@ import uk.gov.hmrc.wco.dec._
 class CachingMappingHelper {
   val defaultMeasureCode = "KGM"
 
+  val commodityCodeMaxLength = 8
+
   import CachingMappingHelper._
 
   def commodityFromExportItem(exportItem: ExportItem): Option[Commodity] =
@@ -35,7 +37,10 @@ class CachingMappingHelper {
           exportItem.nactCodes.map(_.map(_.nactCode)).getOrElse(List.empty),
           exportItem.taricCodes.map(_.map(_.taricCode)).getOrElse(List.empty)
         ),
-        dangerousGoods = exportItem.dangerousGoodsCode.flatMap(_.dangerousGoodsCode).map(code => Seq(DangerousGoods(Some(code)))).getOrElse(Seq.empty)
+        dangerousGoods = exportItem.dangerousGoodsCode
+          .flatMap(_.dangerousGoodsCode)
+          .map(code => Seq(DangerousGoods(Some(code))))
+          .getOrElse(Seq.empty)
       )
     ).filter(isCommodityNonEmpty)
 
@@ -49,10 +54,10 @@ class CachingMappingHelper {
     taricCodes: Seq[String]
   ): Seq[Classification] =
     (
-      commodityCode.map(code => Classification(Some(code), identificationTypeCode = Some(CombinedNomenclatureCode.value))) ++
-        cusCode.map(code => Classification(Some(code), identificationTypeCode = Some(CUSCode.value))) ++
-        nationalAdditionalCodes.map(code => Classification(Some(code), identificationTypeCode = Some(NationalAdditionalCode.value))) ++
-        taricCodes.map(code => Classification(Some(code), identificationTypeCode = Some(TARICAdditionalCode.value)))
+      commodityCode.map(code => classification(code.take(commodityCodeMaxLength), CombinedNomenclatureCode.value)) ++
+        cusCode.map(code => classification(code, CUSCode.value)) ++
+        nationalAdditionalCodes.map(code => classification(code, NationalAdditionalCode.value)) ++
+        taricCodes.map(code => classification(code, TARICAdditionalCode.value))
     ).toSeq
 
   def mapGoodsMeasure(data: CommodityMeasure): Option[Commodity] = data match {
@@ -62,6 +67,9 @@ class CachingMappingHelper {
         Commodity(goodsMeasure = Some(GoodsMeasure(grossMass.map(createMeasure), netMass.map(createMeasure), supplementaryUnits.map(createMeasure))))
       )
   }
+
+  private def classification(code: String, identificationTypeCode: String): Classification =
+    Classification(Some(code), identificationTypeCode = Some(identificationTypeCode))
 
   private def createMeasure(unitValue: String) =
     try {

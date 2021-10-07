@@ -55,7 +55,7 @@ class CachingMappingHelperSpec extends UnitSpec {
         val exportItem = ExportItem(
           "id",
           statisticalValue = Some(StatisticalValue("10")),
-          commodityDetails = Some(CommodityDetails(Some("commodityCode"), Some("description"))),
+          commodityDetails = Some(CommodityDetails(Some("1234567890"), Some("description"))),
           dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("unDangerousGoodsCode"))),
           cusCode = Some(CUSCode(Some("cusCode"))),
           taricCodes = Some(List(TaricCode("taricAdditionalCodes"))),
@@ -68,7 +68,7 @@ class CachingMappingHelperSpec extends UnitSpec {
         commodity.dangerousGoods.size mustBe 1
         commodity.dangerousGoods.head.undgid mustBe Some("unDangerousGoodsCode")
         commodity.classifications.map(c => c.id) mustBe Seq(
-          Some("commodityCode"),
+          Some("12345678"),
           Some("cusCode"),
           Some("nationalAdditionalCodes"),
           Some("taricAdditionalCodes")
@@ -76,14 +76,14 @@ class CachingMappingHelperSpec extends UnitSpec {
       }
 
       "Only commodity code and description provided" in {
-        val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(Some("commodityCode"), Some("description"))))
+        val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(Some("1234567890"), Some("description"))))
 
         val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
 
         commodity.description mustBe Some("description")
         commodity.dangerousGoods mustBe Seq.empty
 
-        commodity.classifications.map(c => c.id) mustBe Seq(Some("commodityCode"))
+        commodity.classifications.map(c => c.id) mustBe Seq(Some("12345678"))
       }
 
       "Only commodity description stripped of new lines" in {
@@ -130,6 +130,5 @@ class CachingMappingHelperSpec extends UnitSpec {
       }
 
     }
-
   }
 }
