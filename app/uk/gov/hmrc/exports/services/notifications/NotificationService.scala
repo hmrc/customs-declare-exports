@@ -34,18 +34,8 @@ class NotificationService @Inject()(
 )(implicit executionContext: ExecutionContext) {
 
   def getNotifications(submission: Submission): Future[Seq[ParsedNotification]] = {
-
-    def updateErrorUrls(notification: ParsedNotification): ParsedNotification = {
-      val updatedDetails = notification.details.copy(errors = notification.details.errors.map { error =>
-        val url = error.pointer.flatMap(WCOPointerMappingService.getUrlBasedOnErrorPointer)
-        error.addUrl(url)
-      })
-
-      notification.copy(details = updatedDetails)
-    }
-
     val conversationIds = submission.actions.map(_.id)
-    notificationRepository.findNotificationsByActionIds(conversationIds).map(_.map(updateErrorUrls))
+    notificationRepository.findNotificationsByActionIds(conversationIds)
   }
 
   def getAllNotificationsForUser(eori: String): Future[Seq[ParsedNotification]] =
