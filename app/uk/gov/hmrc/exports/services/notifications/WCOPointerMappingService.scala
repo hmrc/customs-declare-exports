@@ -33,21 +33,10 @@ object WCOPointerMappingService {
     val errors: List[List[String]] = reader.all()
 
     errors.map {
-      case List(wcoPattern, exportsPattern, url) =>
-        PointerMapping(PointerPattern(wcoPattern.trim), PointerPattern(exportsPattern.trim), applyUrl(url))
+      case List(wcoPattern, exportsPattern) =>
+        PointerMapping(PointerPattern(wcoPattern.trim), PointerPattern(exportsPattern.trim))
     }.toSet
   }
-
-  private def applyUrl(url: String): Option[String] =
-    if (url.isEmpty) None else Some(url)
-
-  def getUrlBasedOnErrorPointer(pointer: Pointer): Option[String] =
-    mappings.find(_.exportsPattern matches pointer.pattern) match {
-      case Some(pointerMapping) if pointerMapping.url.isDefined => pointerMapping.url
-      case _ =>
-        logger.warn("There is no url for pointer: " + pointer)
-        None
-    }
 
   def mapWCOPointerToExportsPointer(pointer: Pointer): Option[Pointer] =
     mappings.find(_.wcoPattern matches pointer.pattern) match {
