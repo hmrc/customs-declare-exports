@@ -23,7 +23,6 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers.yes
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 
 class ExportsDeclarationSpec extends UnitSpec {
@@ -94,7 +93,7 @@ object ExportsDeclarationSpec {
     dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),
     consignmentReferences = Some(consignmentReferences),
-    linkDucrToMucr = Some(YesNoAnswer(yes)),
+    linkDucrToMucr = Some(YesNoAnswer.yes),
     mucr = Some(mucr),
     transport = transport,
     parties = parties,
@@ -116,7 +115,7 @@ object ExportsDeclarationSpec {
     dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),
     consignmentReferences = Some(consignmentReferences),
-    linkDucrToMucr = Some(YesNoAnswer(yes)),
+    linkDucrToMucr = Some(YesNoAnswer.yes),
     mucr = Some(mucr),
     transport = transport,
     parties = parties,

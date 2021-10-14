@@ -18,16 +18,20 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.parties
 
 import org.mockito.ArgumentMatchersSugar.any
 import org.scalatest.EitherValues
+import testdata.ExportsDeclarationBuilder
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.{DeclarationHolder, EntityDetails, EoriSource, Parties, YesNoAnswer}
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
+import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
+import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoStringAnswers
+import uk.gov.hmrc.exports.models.DeclarationType.CLEARANCE
+import uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserError
 
 import scala.xml.NodeSeq
 
-class PartiesParserSpec extends UnitSpec with EitherValues {
+class PartiesParserSpec extends UnitSpec with EitherValues with ExportsDeclarationBuilder with ExportsItemBuilder {
   private val entityDetailsParser = mock[EntityDetailsParser]
   private val functionCodeParser = mock[AgentFunctionCodeParser]
   private val declarationHolderParser = mock[DeclarationHolderParser]
@@ -178,7 +182,126 @@ class PartiesParserSpec extends UnitSpec with EitherValues {
           .flatMap(_.isRequired)
 
         declarationHoldersDataIsRequired.isDefined mustBe true
-        declarationHoldersDataIsRequired.get mustBe YesNoAnswer(YesNoAnswers.yes)
+        declarationHoldersDataIsRequired.get mustBe YesNoAnswer.yes
+      }
+    }
+  }
+
+  "PartiesParser setInferredValues" when {
+    "declaration type is CLEARANCE" should {
+      "set isExs" when {
+        val address = Address("fullName", "addressLine", "townOrCity", "postCode", "country")
+
+        "consignor address present" in {
+          val dec = aDeclaration(withType(CLEARANCE), withConsignorDetails(Some(eori), None))
+
+          val inferredDec = PartiesParser.setInferredValues(dec)
+          inferredDec.parties.isExs.isDefined mustBe true
+          inferredDec.parties.isExs.get.isExs mustBe YesNoStringAnswers.yes
+        }
+
+        "consignor eori present" in {
+          val dec = aDeclaration(withType(CLEARANCE), withConsignorDetails(None, Some(address)))
+
+          val inferredDec = PartiesParser.setInferredValues(dec)
+          inferredDec.parties.isExs.isDefined mustBe true
+          inferredDec.parties.isExs.get.isExs mustBe YesNoStringAnswers.yes
+        }
+
+        "consignor address & eori are present" in {
+          val dec = aDeclaration(withType(CLEARANCE), withConsignorDetails(Some(eori), Some(address)))
+
+          val inferredDec = PartiesParser.setInferredValues(dec)
+          inferredDec.parties.isExs.isDefined mustBe true
+          inferredDec.parties.isExs.get.isExs mustBe YesNoStringAnswers.yes
+        }
+
+        "neither consignor address or eori is present" in {
+          val dec = aDeclaration(withType(CLEARANCE), withConsignorDetails(None, None))
+
+          val inferredDec = PartiesParser.setInferredValues(dec)
+          inferredDec.parties.isExs.isDefined mustBe true
+          inferredDec.parties.isExs.get.isExs mustBe YesNoStringAnswers.no
+        }
+      }
+
+      "set isEntryIntoDeclarantsRecords to true" when {
+        PartiesParser.targetProcedureCodes.foreach { procedureCode =>
+          s"one or more of the items procedure codes equals: $procedureCode" in {
+            val dec = aDeclaration(withType(CLEARANCE), withItems(2), withItems(anItem(withProcedureCodes(Some(procedureCode)))))
+
+            val inferredDec = PartiesParser.setInferredValues(dec)
+            inferredDec.parties.isEntryIntoDeclarantsRecords.isDefined mustBe true
+            inferredDec.parties.isEntryIntoDeclarantsRecords.get mustBe YesNoAnswer.yes
+          }
+        }
+      }
+
+      "set isEntryIntoDeclarantsRecords to false" when {
+        "none of the items procedure codes contains: 1007, 1040, 1042, 1044, 1100, 2100, 2144, 2151, 2154, 2200, 2244, 2300, 3151, 3153, 3154 or 3171" in {
+          val dec = aDeclaration(withType(CLEARANCE), withItems(6))
+
+          val inferredDec = PartiesParser.setInferredValues(dec)
+          inferredDec.parties.isEntryIntoDeclarantsRecords.isDefined mustBe true
+          inferredDec.parties.isEntryIntoDeclarantsRecords.get mustBe YesNoAnswer.no
+        }
+      }
+
+      "set personPresentingGoodsDetails" when {
+        PartiesParser.targetProcedureCodes.foreach { procedureCode =>
+          s"one or more of the items procedure codes equals: $procedureCode" should {
+            "set the value of the declarant's eori if provided" in {
+              val dec = aDeclaration(
+                withType(CLEARANCE),
+                withItems(2),
+                withItems(anItem(withProcedureCodes(Some(procedureCode)))),
+                withDeclarantDetails(Some(eori), None)
+              )
+
+              val inferredDec = PartiesParser.setInferredValues(dec)
+              inferredDec.parties.personPresentingGoodsDetails.isDefined mustBe true
+              inferredDec.parties.personPresentingGoodsDetails.get.eori mustBe Eori(eori)
+            }
+
+            "set to None if the declarant's eori is not provided" in {
+              val dec = aDeclaration(
+                withType(CLEARANCE),
+                withItems(2),
+                withItems(anItem(withProcedureCodes(Some(procedureCode)))),
+                withDeclarantDetails(None, None)
+              )
+
+              val inferredDec = PartiesParser.setInferredValues(dec)
+              inferredDec.parties.personPresentingGoodsDetails.isDefined mustBe false
+            }
+          }
+        }
+      }
+    }
+
+    Seq(DeclarationType.STANDARD, DeclarationType.SUPPLEMENTARY, DeclarationType.OCCASIONAL, DeclarationType.SIMPLIFIED).foreach { decType =>
+      s"declaration type is $decType" should {
+        "not set isExs" in {
+          val dec = aDeclaration(withType(decType), withConsignorDetails(Some(eori), None))
+
+          val inferredDec = PartiesParser.setInferredValues(dec)
+          inferredDec.parties.isExs.isDefined mustBe false
+        }
+
+        "not set isEntryIntoDeclarantsRecords" in {
+          val dec = aDeclaration(withType(decType), withItems(6))
+
+          val inferredDec = PartiesParser.setInferredValues(dec)
+          inferredDec.parties.isEntryIntoDeclarantsRecords.isDefined mustBe false
+        }
+
+        "not set personPresentingGoodsDetails" in {
+          val dec =
+            aDeclaration(withType(decType), withItems(2), withItems(anItem(withProcedureCodes(Some("1007")))), withDeclarantDetails(Some(eori), None))
+
+          val inferredDec = PartiesParser.setInferredValues(dec)
+          inferredDec.parties.personPresentingGoodsDetails.isDefined mustBe false
+        }
       }
     }
   }

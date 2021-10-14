@@ -22,7 +22,6 @@ import org.mockito.ArgumentMatchersSugar.any
 import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 import uk.gov.hmrc.exports.models.declaration.{ModeOfTransportCode, Transport, TransportPayment, YesNoAnswer}
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserError
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
@@ -86,7 +85,7 @@ class TransportParserSpec extends UnitSpec with EitherValues {
     "set Transport.expressConsignment to 'yes'" when {
       "the '/ DeclarationSpecificCircumstancesCodeCodeType' element has 'A20' as value" in {
         val result = transportParser.parse(expressConsignmentXml(Some("A20")))
-        result.value.expressConsignment.get mustBe YesNoAnswer(YesNoAnswers.yes)
+        result.value.expressConsignment.get mustBe YesNoAnswer.yes
       }
     }
 

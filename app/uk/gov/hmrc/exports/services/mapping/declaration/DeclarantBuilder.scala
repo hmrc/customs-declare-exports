@@ -17,7 +17,6 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
@@ -39,7 +38,7 @@ class DeclarantBuilder @Inject()(countriesService: CountriesService) extends Mod
         .foreach(declaration.setDeclarant)
 
   private def isEidrWithPersonPresentingGoodsDetails(model: ExportsDeclaration): Boolean =
-    model.parties.isEntryIntoDeclarantsRecords.contains(YesNoAnswer(YesNoAnswers.yes)) && model.parties.personPresentingGoodsDetails.isDefined
+    model.parties.isEntryIntoDeclarantsRecords.contains(YesNoAnswer.yes) && model.parties.personPresentingGoodsDetails.isDefined
 
   private def mapPersonPresentingGoodsDetailsToWCODeclarant(personPresentingGoodsDetails: PersonPresentingGoodsDetails): Declarant = {
 

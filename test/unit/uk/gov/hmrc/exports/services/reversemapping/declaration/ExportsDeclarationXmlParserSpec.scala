@@ -20,7 +20,6 @@ import org.mockito.ArgumentMatchersSugar.any
 import org.scalatest.EitherValues
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.STANDARD_PRE_LODGED
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.items.ItemsParser
@@ -120,7 +119,7 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
 
         result.isRight mustBe true
         result.value mustBe an[ExportsDeclaration]
-        result.value.linkDucrToMucr.get mustBe YesNoAnswer(YesNoAnswers.yes)
+        result.value.linkDucrToMucr.get mustBe YesNoAnswer.yes
       }
     }
 

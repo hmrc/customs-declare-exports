@@ -19,7 +19,6 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 import scala.xml.NodeSeq
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
@@ -60,7 +59,7 @@ class TransportParser @Inject()(containersParser: ContainersParser) extends Decl
 
   private def parseExpressConsignment(inputXml: NodeSeq): Option[YesNoAnswer] = {
     val specificCircumstances = (inputXml \ Declaration \ DeclarationSpecificCircumstancesCodeCodeType).text
-    if (specificCircumstances == "A20") Some(YesNoAnswer(YesNoAnswers.yes)) else None
+    if (specificCircumstances == "A20") Some(YesNoAnswer.yes) else None
   }
 
   private def parseDepartureTransportMeans(inputXml: NodeSeq): NodeSeq =
