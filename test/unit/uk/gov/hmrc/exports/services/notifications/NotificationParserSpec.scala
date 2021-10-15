@@ -61,6 +61,16 @@ class NotificationParserSpec extends UnitSpec {
           result mustBe testNotification.asDomainModel
         }
       }
+
+      "contains error element 67A with a sequence number" should {
+        "ignore the sequence number for that section" in {
+          val testNotification = exampleRejectNotification(mrn, with67ASequenceNo = true)
+
+          val result = notificationParser.parse(testNotification.asXml)
+
+          result mustBe testNotification.asDomainModel
+        }
+      }
     }
 
     "provided with notification containing multiple Response elements" should {
