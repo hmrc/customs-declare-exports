@@ -62,6 +62,8 @@ class NotificationParser {
       }
     } else Seq.empty
 
+  private val pointerSection67A = Some(PointerSection("67A", PointerSectionType.FIELD))
+
   private def buildErrorPointer(singleErrorXml: Node): Option[Pointer] = {
     val pointersXml = singleErrorXml \ "Pointer"
 
@@ -75,9 +77,10 @@ class NotificationParser {
 
       /**
         * Sequence Numeric define what item is related with error, this is for future implementation - optional
+        * Additional filter to ignore any sequence numbers for section 67A (CEDS-3527)
         */
       val sequenceNumeric: Option[PointerSection] =
-        if ((singlePointerXml \ "SequenceNumeric").nonEmpty)
+        if ((singlePointerXml \ "SequenceNumeric").nonEmpty && documentSectionCode != pointerSection67A)
           Some(PointerSection((singlePointerXml \ "SequenceNumeric").text, PointerSectionType.SEQUENCE))
         else None
 
@@ -97,5 +100,4 @@ class NotificationParser {
     if (exportsPointer.isEmpty) logger.warn(s"Missing pointer mapping for [${wcoPointer}]")
     exportsPointer
   }
-
 }

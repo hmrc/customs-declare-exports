@@ -69,7 +69,8 @@ object ExampleXmlAndNotificationDetailsPair {
   //noinspection ScalaStyle
   def exampleRejectNotification(
     mrn: String,
-    dateTime: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(formatter304)
+    dateTime: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(formatter304),
+    with67ASequenceNo: Boolean = false
   ): ExampleXmlAndNotificationDetailsPair = ExampleXmlAndNotificationDetailsPair(
     asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
@@ -90,6 +91,7 @@ object ExampleXmlAndNotificationDetailsPair {
             <DocumentSectionCode>42A</DocumentSectionCode>
           </Pointer>
           <Pointer>
+            {if (with67ASequenceNo) <SequenceNumeric>1</SequenceNumeric>}
             <DocumentSectionCode>67A</DocumentSectionCode>
           </Pointer>
           <Pointer>
