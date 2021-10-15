@@ -100,10 +100,13 @@ case class YesNoAnswer(answer: String)
 object YesNoAnswer {
   implicit val format: OFormat[YesNoAnswer] = Json.format[YesNoAnswer]
 
-  object YesNoAnswers {
+  object YesNoStringAnswers {
     val yes = "Yes"
     val no = "No"
   }
+
+  val yes = YesNoAnswer(YesNoStringAnswers.yes)
+  val no = YesNoAnswer(YesNoStringAnswers.no)
 }
 
 case class PersonPresentingGoodsDetails(eori: Eori)

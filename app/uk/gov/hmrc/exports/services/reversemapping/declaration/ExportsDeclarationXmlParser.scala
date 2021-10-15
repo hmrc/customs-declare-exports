@@ -18,7 +18,6 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType._
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
@@ -47,8 +46,10 @@ class ExportsDeclarationXmlParser @Inject()(
     buildExportsDeclaration(declarationXml)(mappingContext)
   }
 
-  private def buildExportsDeclaration(declarationXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[ExportsDeclaration] =
-    for {
+  private def buildExportsDeclaration(declarationXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[ExportsDeclaration] = {
+
+    //set fields from values found in xml
+    val decFromXmlValues = for {
       additionalDeclarationType <- additionalDeclarationTypeParser.parse(declarationXml)
       declarationType <- deriveDeclarationType(additionalDeclarationType)
       consignmentReferences <- consignmentReferencesParser.parse(declarationXml)
@@ -69,7 +70,7 @@ class ExportsDeclarationXmlParser @Inject()(
         dispatchLocation = None,
         additionalDeclarationType = additionalDeclarationType,
         consignmentReferences = consignmentReferences,
-        linkDucrToMucr = mucr.map(_ => YesNoAnswer(YesNoAnswers.yes)),
+        linkDucrToMucr = mucr.map(_ => YesNoAnswer.yes),
         mucr = mucr,
         transport = transport,
         parties = parties,
@@ -79,6 +80,10 @@ class ExportsDeclarationXmlParser @Inject()(
         previousDocuments = None,
         natureOfTransaction = None
       )
+
+    //infer other values not present in the xml
+    decFromXmlValues.map(PartiesParser.setInferredValues(_))
+  }
 
   private def deriveDeclarationType(additionalDeclarationType: Option[AdditionalDeclarationType]): XmlParserResult[DeclarationType] =
     additionalDeclarationType.map { adt =>

@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{JsSuccess, Json}
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoStringAnswers
 
 class TransportSpec extends UnitSpec {
 
@@ -37,7 +37,7 @@ class TransportSpec extends UnitSpec {
     )
 
     val transport = Transport(
-      expressConsignment = Some(YesNoAnswer(YesNoAnswers.yes)),
+      expressConsignment = Some(YesNoAnswer.yes),
       transportPayment = Some(TransportPayment(paymentMethod = "payment-method")),
       containers = Some(Seq(Container(id = "container-id", seals = Seq(Seal(id = "seal-id"))))),
       borderModeOfTransportCode = Some(TransportLeavingTheBorder(Some(ModeOfTransportCode.Road))),

@@ -20,7 +20,7 @@ import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoStringAnswers
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import scala.xml.{Elem, NodeSeq}
@@ -127,7 +127,7 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
     "set ExportItem.fiscalInformation to 'yes'" when {
       "at least one '/ GovernmentAgencyGoodsItem / DomesticDutyTaxParty' element is present" in {
         val result = singleItemParser.parse(additionalFiscalReferencesData(List("GB12345678")))
-        result.value.fiscalInformation.get.onwardSupplyRelief mustBe YesNoAnswers.yes
+        result.value.fiscalInformation.get.onwardSupplyRelief mustBe YesNoStringAnswers.yes
       }
     }
 
@@ -397,7 +397,7 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
 
     "set ExportItem.additionalInformation to the expected value" when {
 
-      val noExpectedAdditionalInformation = AdditionalInformations(Some(YesNoAnswer(YesNoAnswers.no)), List.empty)
+      val noExpectedAdditionalInformation = AdditionalInformations(Some(YesNoAnswer.no), List.empty)
 
       "the '/ GovernmentAgencyGoodsItem / AdditionalInformation' element is NOT present" in {
         val result = singleItemParser.parse(inputXml)
@@ -421,7 +421,7 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
         val result = singleItemParser.parse(additionalInformation(List(additionalInformationForXml)))
 
         val additionalInfo = result.value.additionalInformation.get
-        additionalInfo.isRequired.get mustBe YesNoAnswer(YesNoAnswers.yes)
+        additionalInfo.isRequired.get mustBe YesNoAnswer.yes
         additionalInfo.items.head mustBe expectedAdditionalInformation
       }
 
@@ -433,7 +433,7 @@ class SingleItemParserSpec extends UnitSpec with EitherValues {
 
         val additionalInfos = result.value.additionalInformation.get
 
-        additionalInfos.isRequired.get mustBe YesNoAnswer(YesNoAnswers.yes)
+        additionalInfos.isRequired.get mustBe YesNoAnswer.yes
 
         additionalInfos.items.size mustBe 2
         additionalInfos.items.head mustBe expectedAdditionalInformation

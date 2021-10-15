@@ -22,7 +22,7 @@ import scala.xml.NodeSeq
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoStringAnswers
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
@@ -59,7 +59,7 @@ class SingleItemParser @Inject()(packageInformationParser: PackageInformationPar
     }
 
   private def parseFiscalInformation(domesticDutyTaxParties: NodeSeq): Option[FiscalInformation] =
-    if (domesticDutyTaxParties.nonEmpty) Some(FiscalInformation(YesNoAnswers.yes)) else None
+    if (domesticDutyTaxParties.nonEmpty) Some(FiscalInformation(YesNoStringAnswers.yes)) else None
 
   private def parseAdditionalFiscalReferencesData(domesticDutyTaxParties: NodeSeq): Option[AdditionalFiscalReferences] = {
     val references = (domesticDutyTaxParties \ ID).flatMap { reference =>

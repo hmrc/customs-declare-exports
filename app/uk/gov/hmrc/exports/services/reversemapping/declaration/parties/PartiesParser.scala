@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.parties
 
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoAnswers
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoStringAnswers
 import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.exports.models.DeclarationType.CLEARANCE
+import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
@@ -55,7 +57,7 @@ class PartiesParser @Inject()(
         declarantDetails = Some(DeclarantDetails(EntityDetails(Some(context.eori), None))),
         declarantIsExporter = defineDeclarantIsExporter(maybeExporterEntityDetails),
         representativeDetails = defineRepresentativeDetails(maybeRepresentativeEntityDetails, maybeRepresentativeFunctionCode),
-        declarationHoldersData = maybeHolders.map(DeclarationHolders(_, Some(YesNoAnswer(YesNoAnswers.yes))))
+        declarationHoldersData = maybeHolders.map(DeclarationHolders(_, Some(YesNoAnswer.yes)))
       )
     }
 
@@ -66,7 +68,7 @@ class PartiesParser @Inject()(
       exporterEntityDetails <- maybeExporterEntityDetails
       exporterEori <- exporterEntityDetails.eori
       if exporterEori.equals(context.eori)
-    } yield DeclarantIsExporter(YesNoAnswers.yes)
+    } yield DeclarantIsExporter(YesNoStringAnswers.yes)
 
   //the ConsigneeDetails section should never have an eori, so remove if present
   private def filterOutEori(details: ConsigneeDetails): ConsigneeDetails =
@@ -78,5 +80,42 @@ class PartiesParser @Inject()(
     val representativeEntityDetails = maybeEntityDetails.getOrElse(EntityDetails(Some(context.eori), None))
 
     Some(RepresentativeDetails(Some(representativeEntityDetails), maybeFunctionCode, None))
+  }
+}
+
+object PartiesParser {
+  val targetProcedureCodes =
+    List("1007", "1040", "1042", "1044", "1100", "2100", "2144", "2151", "2154", "2200", "2244", "2300", "3151", "3153", "3154", "3171")
+
+  def setInferredValues(explicitDec: ExportsDeclaration): ExportsDeclaration = {
+
+    def containsTargetProcedureCodes(): Boolean = {
+      val matchResults = for {
+        item <- explicitDec.items
+        procedureCode <- item.procedureCodes
+      } yield procedureCode.procedureCode.map(targetProcedureCodes.contains(_)).getOrElse(false)
+
+      matchResults.contains(true)
+    }
+
+    if (explicitDec.`type` == CLEARANCE) {
+      val isExs = explicitDec.parties.consignorDetails
+        .flatMap(details => details.details.eori orElse details.details.address)
+        .fold(YesNoStringAnswers.no)(_ => YesNoStringAnswers.yes)
+
+      val matchesTargetProcedureCodes = containsTargetProcedureCodes()
+
+      val maybeEntryIntoDec = if (matchesTargetProcedureCodes) Some(YesNoAnswer.yes) else Some(YesNoAnswer.no)
+      val maybePersonPresenting =
+        if (matchesTargetProcedureCodes)
+          explicitDec.parties.declarantDetails.flatMap(decDetails => decDetails.details.eori.map(eori => PersonPresentingGoodsDetails(Eori(eori))))
+        else
+          None
+
+      explicitDec.copy(
+        parties = explicitDec.parties
+          .copy(isExs = Some(IsExs(isExs)), isEntryIntoDeclarantsRecords = maybeEntryIntoDec, personPresentingGoodsDetails = maybePersonPresenting)
+      )
+    } else explicitDec
   }
 }
