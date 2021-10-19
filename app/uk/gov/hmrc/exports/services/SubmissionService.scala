@@ -55,9 +55,11 @@ class SubmissionService @Inject()(
     logProgress(declaration, "Beginning Submission")
 
     val metaData = metrics.timeCall(Timers.submissionProduceMetaDataTimer)(wcoMapperService.produceMetaData(declaration))
+
     val lrn = wcoMapperService
       .declarationLrn(metaData)
       .getOrElse(throw new IllegalArgumentException("A LRN is required"))
+
     val ducr = wcoMapperService
       .declarationDucr(metaData)
       .getOrElse(throw new IllegalArgumentException("A DUCR is required"))

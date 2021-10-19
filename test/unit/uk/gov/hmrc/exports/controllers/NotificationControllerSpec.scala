@@ -79,7 +79,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     "return 200" when {
       "submission found" in {
         when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
-        when(notificationService.getNotifications(any()))
+        when(notificationService.findAllNotifications(any()))
           .thenReturn(Future.successful(Seq(notification)))
 
         val result = routeGetFindById
@@ -92,7 +92,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     "not return notifications" when {
       "those notifications have not had the details parsed from them" in {
         when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
-        when(notificationService.getNotifications(any())).thenReturn(Future.successful(Seq.empty))
+        when(notificationService.findAllNotifications(any())).thenReturn(Future.successful(Seq.empty))
 
         val result = routeGetFindById
 
@@ -130,7 +130,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
       "return Ok status" in {
         val notificationsFromService = Seq(notification, notification_2, notification_3)
-        when(notificationService.getAllNotificationsForUser(any()))
+        when(notificationService.findAllNotificationsForUser(any()))
           .thenReturn(Future.successful(notificationsFromService))
 
         val result = routeGetAllNotificationsForUser()
@@ -140,7 +140,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
       "return all Notifications returned by Notification Service" in {
         val notificationsFromService = Seq(notification, notification_2, notification_3)
-        when(notificationService.getAllNotificationsForUser(any()))
+        when(notificationService.findAllNotificationsForUser(any()))
           .thenReturn(Future.successful(notificationsFromService))
 
         val result = routeGetAllNotificationsForUser()
@@ -150,7 +150,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
       "return only those Notifications returned by Notification Service that have been parsed" in {
         val notificationsFromService = Seq(notification, notification_2, notification_3)
-        when(notificationService.getAllNotificationsForUser(any()))
+        when(notificationService.findAllNotificationsForUser(any()))
           .thenReturn(Future.successful(notificationsFromService))
 
         val result = routeGetAllNotificationsForUser()
@@ -162,12 +162,12 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
       "call Notification Service once" in {
         val notificationsFromService = Seq(notification, notification_2, notification_3)
-        when(notificationService.getAllNotificationsForUser(any()))
+        when(notificationService.findAllNotificationsForUser(any()))
           .thenReturn(Future.successful(notificationsFromService))
 
         routeGetAllNotificationsForUser().futureValue
 
-        verify(notificationService).getAllNotificationsForUser(any())
+        verify(notificationService).findAllNotificationsForUser(any())
       }
     }
 

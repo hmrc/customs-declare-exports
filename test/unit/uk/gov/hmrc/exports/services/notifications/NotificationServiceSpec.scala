@@ -82,14 +82,14 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
     "everything works correctly" should {
 
       "return all Notifications returned by Notification Repository" in new GetAllNotificationsForUserHappyPathTest {
-        val returnedNotifications = notificationService.getAllNotificationsForUser(eori).futureValue
+        val returnedNotifications = notificationService.findAllNotificationsForUser(eori).futureValue
 
         returnedNotifications.length must equal(3)
         notificationsToBeReturned.foreach(returnedNotifications must contain(_))
       }
 
       "call SubmissionRepository and NotificationRepository afterwards" in new GetAllNotificationsForUserHappyPathTest {
-        notificationService.getAllNotificationsForUser(eori).futureValue
+        notificationService.findAllNotificationsForUser(eori).futureValue
 
         val inOrder: InOrder = Mockito.inOrder(submissionRepository, notificationRepository)
         inOrder.verify(submissionRepository).findBy(any, any)
@@ -97,13 +97,13 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       }
 
       "call SubmissionRepository, passing EORI provided" in new GetAllNotificationsForUserHappyPathTest {
-        notificationService.getAllNotificationsForUser(eori).futureValue
+        notificationService.findAllNotificationsForUser(eori).futureValue
 
         verify(submissionRepository).findBy(eqTo(eori), eqTo(SubmissionQueryParameters()))
       }
 
       "call NotificationRepository, passing all conversation IDs" in new GetAllNotificationsForUserHappyPathTest {
-        notificationService.getAllNotificationsForUser(eori).futureValue
+        notificationService.findAllNotificationsForUser(eori).futureValue
 
         val conversationIdCaptor: ArgumentCaptor[Seq[String]] = ArgumentCaptor.forClass(classOf[Seq[String]])
         verify(notificationRepository).findNotificationsByActionIds(conversationIdCaptor.capture())
@@ -120,13 +120,13 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       "return empty list" in {
         when(submissionRepository.findBy(any, any)).thenReturn(Future.successful(Seq.empty))
 
-        notificationService.getAllNotificationsForUser(eori).futureValue must equal(Seq.empty)
+        notificationService.findAllNotificationsForUser(eori).futureValue must equal(Seq.empty)
       }
 
       "not call NotificationRepository" in {
         when(submissionRepository.findBy(any, any)).thenReturn(Future.successful(Seq.empty))
 
-        notificationService.getAllNotificationsForUser(eori).futureValue
+        notificationService.findAllNotificationsForUser(eori).futureValue
 
         verifyNoInteractions(notificationRepository)
       }
@@ -140,7 +140,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
         when(notificationRepository.findNotificationsByActionIds(any))
           .thenReturn(Future.successful(Seq.empty))
 
-        notificationService.getAllNotificationsForUser(eori).futureValue must equal(Seq.empty)
+        notificationService.findAllNotificationsForUser(eori).futureValue must equal(Seq.empty)
       }
     }
   }
@@ -159,7 +159,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       when(notificationRepository.findNotificationsByActionIds(any[Seq[String]]))
         .thenReturn(Future.successful(notifications))
 
-      notificationService.getNotifications(submission).futureValue mustBe notifications
+      notificationService.findAllNotifications(submission).futureValue mustBe notifications
 
       verify(notificationRepository).findNotificationsByActionIds(Seq("id1"))
     }
