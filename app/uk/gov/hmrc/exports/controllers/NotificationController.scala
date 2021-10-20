@@ -52,8 +52,8 @@ class NotificationController @Inject()(
     }
   }
 
-  def findLatest(id: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
-    retrieveSubmissions(request.eori, id) flatMap {
+  def findLatest(submissionId: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
+    retrieveSubmissions(request.eori, submissionId) flatMap {
       case Nil             => Future.successful(NotFound("Submission not found"))
       case submission +: _ => notificationsService.findLatestNotification(submission).map { maybeNotification =>
         maybeNotification.fold(NotFound("Notification not found"))(Ok(_))
