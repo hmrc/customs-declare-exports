@@ -63,6 +63,38 @@ class ParsedNotificationRepositorySpec extends IntegrationTestBaseSpec {
     }
   }
 
+  "Notification Repository on findLatestNotification" when {
+
+    "no actionsIds are given" should {
+      "return None" in {
+        repo.findLatestNotification(Seq.empty).futureValue must equal(None)
+      }
+    }
+
+    "there is no Notification with the given actionId" should {
+      "return None" in {
+        repo.findLatestNotification(Seq(actionId)).futureValue must equal(None)
+      }
+    }
+
+    "there is a Notification with the given actionId" should {
+      "return it" in {
+        repo.insert(notification).futureValue
+        repo.findLatestNotification(Seq(actionId)).futureValue.head must equal(notification)
+      }
+    }
+
+    "there are multiple Notifications with given actionId" should {
+      "return the last received Notification" in {
+        repo.insert(notification).futureValue
+        repo.insert(notification_2).futureValue
+        repo.insert(notification_3).futureValue
+
+        repo.findLatestNotification(Seq(actionId, actionId_2, actionId_3)).futureValue.head must equal(notification_3)
+      }
+    }
+  }
+
   "Notification Repository on findNotificationsByActionId" when {
 
     "there is no Notification with given actionId" should {

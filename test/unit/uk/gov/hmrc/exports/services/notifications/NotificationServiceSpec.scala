@@ -16,6 +16,12 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
+import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
+import java.util.UUID
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 import akka.actor.Cancellable
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
@@ -25,21 +31,17 @@ import org.scalatest.concurrent.IntegrationPatience
 import reactivemongo.bson.BSONObjectID
 import testdata.ExportsTestData._
 import testdata.RepositoryTestData._
-import testdata.SubmissionTestData.{submission, _}
+import testdata.SubmissionTestData._
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
 import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification, UnparsedNotification}
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.ACCEPTED
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, UnparsedNotificationWorkItemRepository}
 import uk.gov.hmrc.exports.services.notifications.receiptactions.NotificationReceiptActionsScheduler
 import uk.gov.hmrc.workitem.{ToDo, WorkItem}
-
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
-import java.util.UUID
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
 
@@ -71,7 +73,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
     super.afterEach()
   }
 
-  "NotificationService on getAllNotificationsForUser" when {
+  "NotificationService on findAllNotificationsForUser" when {
 
     trait GetAllNotificationsForUserHappyPathTest {
       when(submissionRepository.findBy(any, any)).thenReturn(Future.successful(Seq(submission, submission_2)))
@@ -135,17 +137,15 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
     "NotificationRepository on findNotificationsByConversationIds returns empty list" should {
 
       "return empty list" in {
-        when(submissionRepository.findBy(any, any))
-          .thenReturn(Future.successful(Seq(submission, submission_2)))
-        when(notificationRepository.findNotificationsByActionIds(any))
-          .thenReturn(Future.successful(Seq.empty))
+        when(submissionRepository.findBy(any, any)).thenReturn(Future.successful(Seq(submission, submission_2)))
+        when(notificationRepository.findNotificationsByActionIds(any)).thenReturn(Future.successful(Seq.empty))
 
         notificationService.findAllNotificationsForUser(eori).futureValue must equal(Seq.empty)
       }
     }
   }
 
-  "NotificationService on getNotifications" should {
+  "NotificationService on findAllNotifications" should {
 
     "retrieve by conversation IDs" in {
       val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", Seq(Action("id1", SubmissionRequest)))
@@ -153,15 +153,41 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
         ParsedNotification(
           unparsedNotificationId = UUID.randomUUID(),
           actionId = "id1",
-          details = NotificationDetails("mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), SubmissionStatus.ACCEPTED, Seq.empty)
+          details = NotificationDetails("mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), ACCEPTED, Seq.empty)
         )
       )
-      when(notificationRepository.findNotificationsByActionIds(any[Seq[String]]))
-        .thenReturn(Future.successful(notifications))
+      when(notificationRepository.findNotificationsByActionIds(any[Seq[String]])).thenReturn(Future.successful(notifications))
 
       notificationService.findAllNotifications(submission).futureValue mustBe notifications
 
       verify(notificationRepository).findNotificationsByActionIds(Seq("id1"))
+    }
+  }
+
+  "NotificationService on findLatestNotification" should {
+
+    "return the expected notification" when {
+      "the notification repository op is successful" in {
+        val details = NotificationDetails("mrn", ZonedDateTime.now, ACCEPTED, Seq.empty)
+        val notification = ParsedNotification(unparsedNotificationId = UUID.randomUUID(), actionId = "id1", details = details)
+        when(notificationRepository.findLatestNotification(any[Seq[String]])).thenReturn(Future.successful(Some(notification)))
+
+        val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", Seq(Action("id1", SubmissionRequest)))
+        notificationService.findLatestNotification(submission).futureValue.head mustBe notification
+
+        verify(notificationRepository).findLatestNotification(Seq("id1"))
+      }
+    }
+
+    "return None" when {
+      "the notification repository op is not successful" in {
+        when(notificationRepository.findLatestNotification(any[Seq[String]])).thenReturn(Future.successful(None))
+
+        val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", Seq(Action("id1", SubmissionRequest)))
+        notificationService.findLatestNotification(submission).futureValue mustBe None
+
+        verify(notificationRepository).findLatestNotification(Seq("id1"))
+      }
     }
   }
 

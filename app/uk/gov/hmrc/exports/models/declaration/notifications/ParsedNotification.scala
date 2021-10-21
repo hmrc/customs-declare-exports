@@ -36,15 +36,15 @@ object ParsedNotification {
   }
 
   object FrontendFormat {
-    implicit val writes: Writes[ParsedNotification] = new Writes[ParsedNotification] {
-      def writes(notification: ParsedNotification): JsObject = Json.obj(
-        "actionId" -> notification.actionId,
-        "mrn" -> notification.details.mrn,
-        "dateTimeIssued" -> notification.details.dateTimeIssued,
-        "status" -> notification.details.status,
-        "errors" -> notification.details.errors
+    implicit val writes: Writes[ParsedNotification] =
+      (notification: ParsedNotification) =>
+        Json.obj(
+          "actionId" -> notification.actionId,
+          "mrn" -> notification.details.mrn,
+          "dateTimeIssued" -> notification.details.dateTimeIssued,
+          "status" -> notification.details.status,
+          "errors" -> notification.details.errors
       )
-    }
 
     implicit val notificationsWrites: Writes[Seq[ParsedNotification]] = Writes.seq(writes)
   }

@@ -22,9 +22,7 @@ import scala.xml.NodeSeq
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionQueryParameters}
-import uk.gov.hmrc.exports.repositories.{
-  ParsedNotificationRepository, SubmissionRepository, UnparsedNotificationWorkItemRepository
-}
+import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, UnparsedNotificationWorkItemRepository}
 import uk.gov.hmrc.exports.services.notifications.receiptactions._
 
 @Singleton

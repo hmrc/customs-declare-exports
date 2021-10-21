@@ -18,7 +18,6 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{JsSuccess, Json}
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoStringAnswers
 
 class TransportSpec extends UnitSpec {
 

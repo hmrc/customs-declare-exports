@@ -38,17 +38,19 @@ import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.NotificationService
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
-
 import scala.concurrent.Future
 import scala.util.Random
 import scala.xml.{Elem, NodeSeq}
+
+import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification.FrontendFormat
 
 class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestSupport {
 
   import NotificationControllerSpec._
 
-  val getSubmissionNotificationsUri = "/submission/notifications/1234"
-  val getAllNotificationsForUserUri = "/notifications"
+  val findSubmissionNotificationsUri = "/submission/notifications/1234"
+  val findLatestNotificationUri = "/submission/latest-notification/1234"
+  val findAllNotificationsForUserUri = "/notifications"
   val saveNotificationUri = "/customs-declare-exports/notify"
 
   SharedMetricRegistries.clear()
@@ -74,18 +76,17 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     super.afterEach()
   }
 
-  "Notification Controller on findById" should {
+  "Notification Controller on findAll" should {
 
     "return 200" when {
       "submission found" in {
         when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
-        when(notificationService.findAllNotifications(any()))
-          .thenReturn(Future.successful(Seq(notification)))
+        when(notificationService.findAllNotifications(any())).thenReturn(Future.successful(Seq(notification)))
 
-        val result = routeGetFindById
+        val result = routeGetFindAll
 
         status(result) must be(OK)
-        contentAsJson(result) must be(Json.toJson(Seq(notification))(ParsedNotification.FrontendFormat.notificationsWrites))
+        contentAsJson(result) must be(Json.toJson(Seq(notification))(FrontendFormat.notificationsWrites))
       }
     }
 
@@ -94,10 +95,10 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
         when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
         when(notificationService.findAllNotifications(any())).thenReturn(Future.successful(Seq.empty))
 
-        val result = routeGetFindById
+        val result = routeGetFindAll
 
         status(result) must be(OK)
-        contentAsJson(result) must be(Json.toJson(Seq.empty[ParsedNotification])(ParsedNotification.FrontendFormat.notificationsWrites))
+        contentAsJson(result) must be(Json.toJson(Seq.empty[ParsedNotification])(FrontendFormat.notificationsWrites))
       }
     }
 
@@ -105,7 +106,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       "submission not found" in {
         when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq.empty))
 
-        val result = routeGetFindById
+        val result = routeGetFindAll
 
         status(result) must be(NOT_FOUND)
       }
@@ -115,23 +116,69 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       "not authenticated" in {
         userWithoutEori()
 
-        val failedResult = routeGetFindById
+        val failedResult = routeGetFindAll
 
         status(failedResult) must be(UNAUTHORIZED)
       }
     }
 
-    def routeGetFindById(): Future[Result] = route(app, FakeRequest(GET, getSubmissionNotificationsUri)).get
+    def routeGetFindAll: Future[Result] = route(app, FakeRequest(GET, findSubmissionNotificationsUri)).get
   }
 
-  "Notification Controller on getAllNotificationsForUser" when {
+  "Notification Controller on findLatest" should {
+
+    "return 200" when {
+      "submission found" in {
+        when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
+        when(notificationService.findLatestNotification(any())).thenReturn(Future.successful(Option(notification)))
+
+        val result = routeGetFindLatest
+
+        status(result) must be(OK)
+        contentAsJson(result) must be(Json.toJson(notification)(FrontendFormat.writes))
+      }
+    }
+
+    "return 400" when {
+
+      "submission not found" in {
+        when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq.empty))
+
+        val result = routeGetFindLatest
+
+        status(result) must be(NOT_FOUND)
+      }
+
+      "no notifications have been received for that submission" in {
+        when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
+        when(notificationService.findLatestNotification(any())).thenReturn(Future.successful(None))
+
+        val result = routeGetFindLatest
+
+        status(result) must be(NOT_FOUND)
+      }
+    }
+
+    "return 401" when {
+      "not authenticated" in {
+        userWithoutEori()
+
+        val failedResult = routeGetFindLatest
+
+        status(failedResult) must be(UNAUTHORIZED)
+      }
+    }
+
+    def routeGetFindLatest: Future[Result] = route(app, FakeRequest(GET, findLatestNotificationUri)).get
+  }
+
+  "Notification Controller on findAllNotificationsForUser" when {
 
     "everything works correctly" should {
 
       "return Ok status" in {
         val notificationsFromService = Seq(notification, notification_2, notification_3)
-        when(notificationService.findAllNotificationsForUser(any()))
-          .thenReturn(Future.successful(notificationsFromService))
+        when(notificationService.findAllNotificationsForUser(any())).thenReturn(Future.successful(notificationsFromService))
 
         val result = routeGetAllNotificationsForUser()
 
@@ -140,30 +187,25 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
       "return all Notifications returned by Notification Service" in {
         val notificationsFromService = Seq(notification, notification_2, notification_3)
-        when(notificationService.findAllNotificationsForUser(any()))
-          .thenReturn(Future.successful(notificationsFromService))
+        when(notificationService.findAllNotificationsForUser(any())).thenReturn(Future.successful(notificationsFromService))
 
         val result = routeGetAllNotificationsForUser()
 
-        contentAsJson(result) must equal(Json.toJson(notificationsFromService)(ParsedNotification.FrontendFormat.notificationsWrites))
+        contentAsJson(result) must equal(Json.toJson(notificationsFromService)(FrontendFormat.notificationsWrites))
       }
 
       "return only those Notifications returned by Notification Service that have been parsed" in {
         val notificationsFromService = Seq(notification, notification_2, notification_3)
-        when(notificationService.findAllNotificationsForUser(any()))
-          .thenReturn(Future.successful(notificationsFromService))
+        when(notificationService.findAllNotificationsForUser(any())).thenReturn(Future.successful(notificationsFromService))
 
         val result = routeGetAllNotificationsForUser()
 
-        contentAsJson(result) must equal(
-          Json.toJson(Seq(notification, notification_2, notification_3))(ParsedNotification.FrontendFormat.notificationsWrites)
-        )
+        contentAsJson(result) must equal(Json.toJson(Seq(notification, notification_2, notification_3))(FrontendFormat.notificationsWrites))
       }
 
       "call Notification Service once" in {
         val notificationsFromService = Seq(notification, notification_2, notification_3)
-        when(notificationService.findAllNotificationsForUser(any()))
-          .thenReturn(Future.successful(notificationsFromService))
+        when(notificationService.findAllNotificationsForUser(any())).thenReturn(Future.successful(notificationsFromService))
 
         routeGetAllNotificationsForUser().futureValue
 
@@ -191,7 +233,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     }
 
     def routeGetAllNotificationsForUser(headers: Map[String, String] = validHeaders): Future[Result] =
-      route(app, FakeRequest(GET, getAllNotificationsForUserUri).withHeaders(headers.toSeq: _*)).get
+      route(app, FakeRequest(GET, findAllNotificationsForUserUri).withHeaders(headers.toSeq: _*)).get
   }
 
   "Notification Controller on saveNotification" when {
@@ -246,9 +288,12 @@ object NotificationControllerSpec {
 
   private lazy val responseFunctionCodes: Seq[String] =
     Seq("01", "02", "03", "05", "06", "07", "08", "09", "10", "11", "16", "17", "18")
+
   private lazy val randomResponseFunctionCode: String = responseFunctionCodes(Random.nextInt(responseFunctionCodes.length))
-  private def dateTimeElement(dateTimeVal: DateTime) =
+
+  private def dateTimeElement(dateTimeVal: DateTime): Option[ResponseDateTimeElement] =
     Some(ResponseDateTimeElement(DateTimeString("102", dateTimeVal.toString("yyyyMMdd"))))
+
   val response: Seq[Response] = Seq(
     Response(
       functionCode = randomResponseFunctionCode,

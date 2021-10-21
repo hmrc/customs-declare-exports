@@ -90,10 +90,12 @@ class LockManager(
     this.tries = 0
   }
 
+  private lazy val maxDate = new Date(Long.MaxValue)
+
   private def handleLockException(acquiringLock: Boolean): Unit = {
     this.tries += 1
     if (this.tries >= config.lockMaxTries) {
-      updateStatus(null)
+      updateStatus(maxDate)
       throw new LockManagerException("MaxTries(" + config.lockMaxTries + ") reached")
     }
     val currentLockOpt = repository.findByKey(DefaultKey)
@@ -133,7 +135,7 @@ class LockManager(
   private def releaseLock(lockKey: String): Unit = {
     logger.info("ExportsMigrationTool is trying to release the lock.")
     repository.removeByKeyAndOwner(lockKey, this.lockOwner)
-    this.lockExpiresAt = null
+    this.lockExpiresAt = maxDate
     logger.info("ExportsMigrationTool released the lock")
   }
 
