@@ -16,21 +16,22 @@
 
 package uk.gov.hmrc.exports.controllers
 
+import scala.concurrent.{ExecutionContext, Future}
+import scala.xml.NodeSeq
+
 import com.google.inject.Singleton
-import play.api.mvc.{PlayBodyParsers, _}
+import javax.inject.Inject
+import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.{Counters, Timers}
+import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification.FrontendFormat._
-import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionQueryParameters
+import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionQueryParameters}
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.NotificationService
-
-import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.NodeSeq
 
 @Singleton
 class NotificationController @Inject()(
@@ -44,23 +45,32 @@ class NotificationController @Inject()(
 )(implicit executionContext: ExecutionContext)
     extends Authenticator(authConnector, cc) with JSONResponses {
 
-  def findById(id: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
-    submissionService.findAllSubmissionsBy(request.eori.value, SubmissionQueryParameters(uuid = Some(id))) flatMap {
+  def findAll(submissionId: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
+    retrieveSubmissions(request.eori, submissionId) flatMap {
       case Nil             => Future.successful(NotFound)
-      case submission +: _ => notificationsService.getNotifications(submission).map(Ok(_))
+      case submission +: _ => notificationsService.findAllNotifications(submission).map(Ok(_))
+    }
+  }
+
+  def findLatest(submissionId: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
+    retrieveSubmissions(request.eori, submissionId) flatMap {
+      case Nil => Future.successful(NotFound("Submission not found"))
+      case submission +: _ =>
+        notificationsService.findLatestNotification(submission).map { maybeNotification =>
+          maybeNotification.fold(NotFound("Notification not found"))(Ok(_))
+        }
     }
   }
 
   //TODO response should be streamed or paginated depending on the no of notifications.
   //TODO Return NO CONTENT (204) when there are no notifications
-  def getAllNotificationsForUser(): Action[AnyContent] =
-    authorisedAction(bodyParsers.default) { implicit request =>
-      notificationsService
-        .getAllNotificationsForUser(request.eori.value)
-        .map(notifications => Ok(notifications))
-    }
+  val findAllNotificationsForUser: Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
+    notificationsService
+      .findAllNotificationsForUser(request.eori.value)
+      .map(notifications => Ok(notifications))
+  }
 
-  def saveNotification(): Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
+  val saveNotification: Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
     metrics.incrementCounter(Counters.notificationCounter)
 
     headerValidator.validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
@@ -73,4 +83,7 @@ class NotificationController @Inject()(
       case Left(_) => Future.successful(Accepted)
     }
   }
+
+  private def retrieveSubmissions(eori: Eori, submissionId: String): Future[Seq[Submission]] =
+    submissionService.findAllSubmissionsBy(eori.value, SubmissionQueryParameters(uuid = Some(submissionId)))
 }

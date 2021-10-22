@@ -35,8 +35,8 @@ class SubmissionController @Inject()(
 )(implicit executionContext: ExecutionContext)
     extends RESTController(cc) with JSONResponses {
 
-  def create(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    declarationRepository.markCompleted(id, request.eori).flatMap {
+  def create(declarationId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    declarationRepository.markCompleted(declarationId, request.eori).flatMap {
 
       case Some(declarationBeforeUpdate) =>
         if (declarationBeforeUpdate.isCompleted) {

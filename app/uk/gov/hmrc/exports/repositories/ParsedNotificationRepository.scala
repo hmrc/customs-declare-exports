@@ -16,17 +16,18 @@
 
 package uk.gov.hmrc.exports.repositories
 
+import scala.concurrent.{ExecutionContext, Future}
+
+import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsString, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
+import reactivemongo.play.json.collection.Helpers.idWrites
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ParsedNotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: ExecutionContext)
@@ -45,6 +46,14 @@ class ParsedNotificationRepository @Inject()(mc: ReactiveMongoComponent)(implici
     Index(Seq("details.mrn" -> IndexType.Ascending), name = Some("detailsMrnIdx")),
     Index(Seq("actionId" -> IndexType.Ascending), name = Some("actionIdIdx"))
   )
+
+  def findLatestNotification(actionIds: Seq[String]): Future[Option[ParsedNotification]] =
+    if (actionIds.isEmpty) Future.successful(None)
+    else {
+      val query = Json.obj("$or" -> actionIds.map(id => Json.obj("actionId" -> JsString(id))))
+      val sort = Json.obj("details.dateTimeIssued" -> -1)
+      collection.find(query, None).sort(sort).one[ParsedNotification]
+    }
 
   def findNotificationsByActionId(actionId: String): Future[Seq[ParsedNotification]] =
     find("actionId" -> JsString(actionId))

@@ -40,5 +40,4 @@ class SendEmailForDmsDocAction @Inject()(
           Future.successful((): Unit)
       }
     }
-
 }
