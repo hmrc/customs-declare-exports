@@ -16,26 +16,26 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
+import scala.xml.{Elem, NodeSeq}
+
 import testdata.ExportsTestData.eori
 import testdata.ReverseMappingTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR}
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
-import scala.xml.{Elem, NodeSeq}
-
 class ConsignmentReferencesParserSpec extends UnitSpec {
 
   private implicit val context = MappingContext(eori)
-  private val parser = new ConsignmentReferencesParser
+
+  private val adtParser = new AdditionalDeclarationTypeParser
+  private val parser = new ConsignmentReferencesParser(adtParser)
 
   "ConsignmentReferencesParser on parse" should {
 
     "return Right with empty Option" when {
       "provided with XML containing none of relevant fields" in {
-
         val input = inputXml()
-
         parser.parse(input) mustBe Right(None)
       }
     }
@@ -43,28 +43,70 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
     "return Right with correct ConsignmentReferences" when {
 
       "provided with XML containing: PreviousDocument with TypeCode 'DCR' and ID, FunctionalReferenceID" in {
-
-        val input = inputXml(previousDocument = Some(PreviousDocument(id = "ducr")), functionalReferenceId = Some("functionalReferenceId"))
+        val input = inputXml(previousDocument = List(PreviousDocument(id = "ducr")), functionalReferenceId = Some("referenceId"))
 
         val result = parser.parse(input)
 
-        val expectedResult = Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = "functionalReferenceId"))
+        val expectedResult = Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = "referenceId"))
 
         result mustBe Right(expectedResult)
       }
 
       "provided with XML containing: PreviousDocument with TypeCode 'DCR' and ID, FunctionalReferenceID, TraderAssignedReferenceID" in {
-
         val input = inputXml(
-          previousDocument = Some(PreviousDocument(id = "ducr")),
-          functionalReferenceId = Some("functionalReferenceId"),
-          traderAssignedReferenceID = Some("traderAssignedReferenceID")
+          previousDocument = List(PreviousDocument(id = "ducr")),
+          functionalReferenceId = Some("referenceId"),
+          traderAssignedReferenceID = Some("traderReferenceID")
         )
 
         val result = parser.parse(input)
 
         val expectedResult =
-          Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = "functionalReferenceId", personalUcr = Some("traderAssignedReferenceID")))
+          Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = "referenceId", personalUcr = Some("traderReferenceID")))
+
+        result mustBe Right(expectedResult)
+      }
+
+      "provided with XML containing: 'Z' (SUPPLEMENTARY_EIDR) as AdditionalDeclarationType and PreviousDocument with TypeCode 'SDE'" in {
+        val input = inputXml(
+          functionalReferenceId = Some("referenceId"),
+          typeCode = Some("EXZ"),
+          previousDocument = List(PreviousDocument(id = "ducr"), PreviousDocument(id = "someDateStamp", typeCode = "SDE"))
+        )
+
+        val result = parser.parse(input)
+
+        val expectedResult =
+          Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = "referenceId", eidrDateStamp = Some("someDateStamp")))
+
+        result mustBe Right(expectedResult)
+      }
+
+      "provided with XML containing: 'Y' (SUPPLEMENTARY_SIMPLIFIED) as AdditionalDeclarationType and PreviousDocument with TypeCode 'CLE'" in {
+        val input = inputXml(
+          functionalReferenceId = Some("referenceId"),
+          typeCode = Some("EXY"),
+          previousDocument = List(PreviousDocument(id = "ducr"), PreviousDocument(id = "someMrn", typeCode = "CLE"))
+        )
+
+        val result = parser.parse(input)
+
+        val expectedResult =
+          Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = "referenceId", mrn = Some("someMrn")))
+
+        result mustBe Right(expectedResult)
+      }
+
+      "provided with XML not containing an AdditionalDeclarationType" in {
+        val input = inputXml(
+          functionalReferenceId = Some("referenceId"),
+          previousDocument = List(PreviousDocument(id = "ducr"), PreviousDocument(id = "someMrn", typeCode = "CLE"))
+        )
+
+        val result = parser.parse(input)
+
+        val expectedResult =
+          Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = "referenceId", personalUcr = None, eidrDateStamp = None, mrn = None))
 
         result mustBe Right(expectedResult)
       }
@@ -73,37 +115,32 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
     "return Left with XmlParserError" when {
 
       "provided with XML containing: PreviousDocument with TypeCode 'DCR' and ID" in {
-
-        val input = inputXml(previousDocument = Some(PreviousDocument(id = "typeCodeId")))
+        val input = inputXml(previousDocument = List(PreviousDocument(id = "typeCodeId")))
 
         parser.parse(input).isLeft mustBe true
       }
 
       "provided with XML containing: PreviousDocument with TypeCode 'DCR' and ID, TraderAssignedReferenceID" in {
-
         val input =
-          inputXml(previousDocument = Some(PreviousDocument(id = "typeCodeId")), traderAssignedReferenceID = Some("traderAssignedReferenceID"))
+          inputXml(previousDocument = List(PreviousDocument(id = "typeCodeId")), traderAssignedReferenceID = Some("traderReferenceID"))
 
         parser.parse(input).isLeft mustBe true
       }
 
       "provided with XML containing: FunctionalReferenceID" in {
-
-        val input = inputXml(functionalReferenceId = Some("functionalReferenceId"))
+        val input = inputXml(functionalReferenceId = Some("referenceId"))
 
         parser.parse(input).isLeft mustBe true
       }
 
       "provided with XML containing: FunctionalReferenceID, TraderAssignedReferenceID" in {
-
-        val input = inputXml(functionalReferenceId = Some("functionalReferenceId"), traderAssignedReferenceID = Some("traderAssignedReferenceID"))
+        val input = inputXml(functionalReferenceId = Some("referenceId"), traderAssignedReferenceID = Some("traderReferenceID"))
 
         parser.parse(input).isLeft mustBe true
       }
 
       "provided with XML containing: TraderAssignedReferenceID" in {
-
-        val input = inputXml(traderAssignedReferenceID = Some("traderAssignedReferenceID"))
+        val input = inputXml(traderAssignedReferenceID = Some("traderReferenceID"))
 
         parser.parse(input).isLeft mustBe true
       }
@@ -113,8 +150,9 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
   private case class PreviousDocument(id: String, typeCode: String = "DCR")
 
   private def inputXml(
-    previousDocument: Option[PreviousDocument] = None,
     functionalReferenceId: Option[String] = None,
+    typeCode: Option[String] = None,
+    previousDocument: List[PreviousDocument] = List.empty,
     traderAssignedReferenceID: Option[String] = None
   ): Elem = ReverseMappingTestData.inputXmlMetaData {
     <ns3:Declaration>
@@ -123,20 +161,24 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
           <ns3:FunctionalReferenceID>{refId}</ns3:FunctionalReferenceID>
         }.getOrElse(NodeSeq.Empty)
       }
+      {
+        typeCode.map { code =>
+          <ns3:TypeCode>{code}</ns3:TypeCode>
+        }.getOrElse(NodeSeq.Empty)
+      }
       <ns3:GoodsShipment>
         { previousDocument.map { prevDoc =>
-        <ns3:PreviousDocument>
-          <ns3:TypeCode>{prevDoc.typeCode}</ns3:TypeCode>
-          <ns3:ID>{prevDoc.id}</ns3:ID>
-        </ns3:PreviousDocument>
-      }.getOrElse(NodeSeq.Empty) }
+          <ns3:PreviousDocument>
+            <ns3:TypeCode>{prevDoc.typeCode}</ns3:TypeCode>
+            <ns3:ID>{prevDoc.id}</ns3:ID>
+          </ns3:PreviousDocument>
+        } }
         { traderAssignedReferenceID.map { refId =>
-        <ns3:UCR>
-          <ns3:TraderAssignedReferenceID>{refId}</ns3:TraderAssignedReferenceID>
-        </ns3:UCR>
-      }.getOrElse(NodeSeq.Empty) }
+          <ns3:UCR>
+            <ns3:TraderAssignedReferenceID>{refId}</ns3:TraderAssignedReferenceID>
+          </ns3:UCR>
+        }.getOrElse(NodeSeq.Empty) }
       </ns3:GoodsShipment>
     </ns3:Declaration>
   }
-
 }
