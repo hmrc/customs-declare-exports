@@ -101,7 +101,7 @@ class SchedulerSpec extends UnitSpec {
       verify(job).execute()
     }
 
-    "Fail to schedule job given a run date in the past" in {
+    "Delay to schedule job given a run date in the past" in {
       // Given
       given(job.interval) willReturn 3.seconds
       given(job.firstRunTime) willReturn Some(LocalTime.parse("12:00"))
@@ -109,21 +109,23 @@ class SchedulerSpec extends UnitSpec {
       given(util.nextRun(any[LocalTime], any[FiniteDuration])).willReturn("2018-12-25T11:59:59")
 
       // When
-      intercept[IllegalArgumentException] {
-        whenTheSchedulerStarts()
-      }
-      verifyNoMoreInteractions(internalScheduler)
+      whenTheSchedulerStarts()
+
+      // Then
+      val schedule = theSchedule
+      schedule.interval mustBe 3.seconds
+      schedule.initialDelay mustBe 1.seconds
+
+      verify(job).execute()
     }
   }
 
-  private def runTheJobImmediately: Answer[Cancellable] = new Answer[Cancellable] {
-    override def answer(invocation: InvocationOnMock): Cancellable = {
-      val arg: Runnable = invocation.getArgument(2)
-      if (arg != null) {
-        arg.run()
-      }
-      Cancellable.alreadyCancelled
+  private def runTheJobImmediately: Answer[Cancellable] = (invocation: InvocationOnMock) => {
+    val arg: Runnable = invocation.getArgument(2)
+    if (arg != null) {
+      arg.run
     }
+    Cancellable.alreadyCancelled
   }
 
   private def theSchedule: Schedule = {
