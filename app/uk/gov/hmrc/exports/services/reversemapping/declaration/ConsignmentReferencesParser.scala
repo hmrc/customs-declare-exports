@@ -17,15 +17,22 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import scala.xml.NodeSeq
-import uk.gov.hmrc.exports.models.declaration.{ConsignmentReferences, DUCR}
+
+import javax.inject.Inject
+import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.{AdtMaybe, SUPPLEMENTARY_EIDR, SUPPLEMENTARY_SIMPLIFIED}
+import uk.gov.hmrc.exports.models.declaration.{AdditionalDeclarationType, ConsignmentReferences, DUCR}
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
-import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
-class ConsignmentReferencesParser extends DeclarationXmlParser[Option[ConsignmentReferences]] {
+class ConsignmentReferencesParser @Inject()(additionalDeclarationTypeParser: AdditionalDeclarationTypeParser)
+    extends DeclarationXmlParser[Option[ConsignmentReferences]] {
 
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Option[ConsignmentReferences]] = {
-    val ducrOpt = (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
+    val previousDocumentNode = (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
+    val additionalDeclarationType: XmlParserResult[AdtMaybe] = additionalDeclarationTypeParser.parse(inputXml)
+
+    val ducrOpt = previousDocumentNode
       .find(previousDocument => (previousDocument \ TypeCode).text == "DCR")
       .map(previousDocument => (previousDocument \ ID).text)
       .map(DUCR(_))
@@ -34,14 +41,17 @@ class ConsignmentReferencesParser extends DeclarationXmlParser[Option[Consignmen
 
     val personalUcrOpt = (inputXml \ Declaration \ GoodsShipment \ UCR \ TraderAssignedReferenceID).toStringOption
 
+    val eidrDateStamp = parseEidrDateStamp(additionalDeclarationType, previousDocumentNode)
+    val mrn = parseMrn(additionalDeclarationType, previousDocumentNode)
+
     val areBothMandatoryFieldsPresent = ducrOpt.nonEmpty && lrnOpt.nonEmpty
-    val areAllFieldsEmpty = ducrOpt.isEmpty && lrnOpt.isEmpty && personalUcrOpt.isEmpty
+    val areAllFieldsEmpty = ducrOpt.isEmpty && lrnOpt.isEmpty && personalUcrOpt.isEmpty && eidrDateStamp.isEmpty && mrn.isEmpty
 
     if (areBothMandatoryFieldsPresent) {
       Right(for {
         ducr <- ducrOpt
         lrn <- lrnOpt
-      } yield ConsignmentReferences(ducr, lrn, personalUcrOpt))
+      } yield ConsignmentReferences(ducr, lrn, personalUcrOpt, eidrDateStamp, mrn))
     } else if (areAllFieldsEmpty) {
       Right(None)
     } else {
@@ -49,4 +59,25 @@ class ConsignmentReferencesParser extends DeclarationXmlParser[Option[Consignmen
     }
   }
 
+  private def parseEidrDateStamp(additionalDeclarationType: XmlParserResult[AdtMaybe], previousDocumentNode: NodeSeq): Option[String] =
+    mrnOrEidrDateStamp(additionalDeclarationType, SUPPLEMENTARY_EIDR, previousDocumentNode, "SDE")
+
+  private def parseMrn(additionalDeclarationType: XmlParserResult[AdtMaybe], previousDocumentNode: NodeSeq): Option[String] =
+    mrnOrEidrDateStamp(additionalDeclarationType, SUPPLEMENTARY_SIMPLIFIED, previousDocumentNode, "CLE")
+
+  private def mrnOrEidrDateStamp(
+    additionalDeclarationType: XmlParserResult[AdtMaybe],
+    adtValue: AdditionalDeclarationType.Value,
+    previousDocumentNode: NodeSeq,
+    typeCode: String
+  ): Option[String] =
+    additionalDeclarationType.map {
+      _.flatMap { adt =>
+        if (adt == adtValue) {
+          previousDocumentNode
+            .find(previousDocument => (previousDocument \ TypeCode).text == typeCode)
+            .flatMap(previousDocument => (previousDocument \ ID).toStringOption)
+        } else None
+      }
+    }.toOption.flatten
 }

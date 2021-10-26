@@ -19,6 +19,4 @@ package uk.gov.hmrc.exports.models
 object StringOption {
 
   def apply(str: String): Option[String] = Option(str.trim).filter(_.nonEmpty)
-
-  def empty: Option[String] = None
 }

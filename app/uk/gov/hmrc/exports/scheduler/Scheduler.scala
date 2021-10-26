@@ -68,7 +68,9 @@ class Scheduler @Inject()(
     val now = Instant.now(appConfig.clock)
 
     if (datetime.isBefore(now))
-      throw new IllegalArgumentException(s"Expected a future or present datetime but was [$datetime]")
+//    throw new IllegalArgumentException(s"Expected a future or present datetime (now is $now) but was [$datetime]")
+      FiniteDuration(now.until(now.plusSeconds(1), ChronoUnit.SECONDS), TimeUnit.SECONDS)
     else FiniteDuration(now.until(datetime, ChronoUnit.SECONDS), TimeUnit.SECONDS)
+
   }
 }
