@@ -7,13 +7,13 @@ object AppDependencies {
 
   val compile = Seq(
     "uk.gov.hmrc"                    %%  "simple-reactivemongo"         % "8.0.0-play-28",
-    "uk.gov.hmrc"                    %%  "bootstrap-backend-play-28"    % "5.3.0",
-    "uk.gov.hmrc"                    %%  "wco-dec"                      % "0.35.0",
+    "uk.gov.hmrc"                    %%  "bootstrap-backend-play-28"    % "5.16.0",
+    "uk.gov.hmrc"                    %%  "wco-dec"                      % "0.36.0",
     "uk.gov.hmrc"                    %%  "logback-json-logger"          % "5.1.0",
     "com.github.cloudyrock.mongock"  %   "mongock-core"                 % "2.0.2",
     "org.mongodb.scala"              %%  "mongo-scala-driver"           % "2.9.0",
     "com.github.tototoshi"           %%  "scala-csv"                    % "1.3.8",
-    "uk.gov.hmrc"                    %%  "work-item-repo"               % "8.0.0-play-28",
+    "uk.gov.hmrc"                    %%  "work-item-repo"               % "8.1.0-play-28",
     "com.fasterxml.jackson.module"   %%  "jackson-module-scala"         % "2.12.3"
   )
 
