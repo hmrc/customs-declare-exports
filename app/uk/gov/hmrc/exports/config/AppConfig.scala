@@ -57,6 +57,9 @@ class AppConfig @Inject()(val configuration: Configuration, val environment: Env
   lazy val developerHubClientId: String =
     servicesConfig.getString("microservice.services.customs-declarations.client-id")
 
+  lazy val tariffCommoditiesUri: String =
+    s"${servicesConfig.baseUrl("tariff-api")}/commodities"
+
   lazy val draftTimeToLive: FiniteDuration =
     servicesConfig.getDuration("draft.timeToLive").asInstanceOf[FiniteDuration]
 

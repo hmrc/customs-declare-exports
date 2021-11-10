@@ -22,6 +22,10 @@ private[metrics] object MetricIdentifiers {
     val notificationReceiptHandling = "notification"
   }
 
+  object TariffAPIMetric {
+    val commodities = "tariff.commodities"
+  }
+
   object UpstreamMetric {
     val customsDeclarations = "upstream.customs-declarations"
   }

@@ -125,6 +125,8 @@ object ExportsMetrics {
   object Timers {
     val notificationTimer: Timer = Timer(NotificationMetric.notificationReceiptHandling)
 
+    val tariffCommoditiesTimer: Timer = Timer(TariffAPIMetric.commodities)
+
     val upstreamCustomsDeclarationsTimer: Timer = Timer(UpstreamMetric.customsDeclarations)
 
     val declarationFindAllTimer: Timer = Timer(DeclarationMetric.findAll)
