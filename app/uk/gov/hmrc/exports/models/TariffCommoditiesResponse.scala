@@ -17,5 +17,3 @@
 package uk.gov.hmrc.exports.models
 
 case class TariffCommoditiesResponse(status: Int, commodityJson: Option[String] = None)
-
-

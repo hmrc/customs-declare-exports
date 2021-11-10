@@ -59,14 +59,9 @@ class TariffCommoditiesConnector @Inject()(appConfig: AppConfig, httpClient: Htt
     }
   }
 
-  private def commoditiesUrl(commodityCode: String): URL = new URL(
-    s"${appConfig.tariffCommoditiesUri}/id/$commodityCode"
-  )
+  private def commoditiesUrl(commodityCode: String): URL = new URL(s"${appConfig.tariffCommoditiesUri}/id/$commodityCode")
 
-  private def headers(): Seq[(String, String)] = Seq(
-    HeaderNames.ACCEPT -> MimeTypes.JSON,
-    HeaderNames.CONTENT_TYPE -> ContentTypes.JSON
-  )
+  private def headers(): Seq[(String, String)] = Seq(HeaderNames.ACCEPT -> MimeTypes.JSON, HeaderNames.CONTENT_TYPE -> ContentTypes.JSON)
 
   private val ApplicationErrorStatus = 4
   private val ServerErrorStatus = 5
