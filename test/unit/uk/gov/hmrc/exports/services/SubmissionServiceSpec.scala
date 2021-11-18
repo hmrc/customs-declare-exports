@@ -80,10 +80,10 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(wcoMapperService.toXml(any())).thenReturn("xml")
         when(customsDeclarationsConnector.submitCancellation(any(), any())(any()))
           .thenReturn(Future.successful("conv-id"))
-        when(submissionRepository.findSubmissionByMrn(any())).thenReturn(Future.successful(Some(submission)))
+        when(submissionRepository.findSubmissionByMrnAndEori(any(), any())).thenReturn(Future.successful(Some(submission)))
         when(submissionRepository.addAction(any[String](), any())).thenReturn(Future.successful(Some(submission)))
 
-        submissionService.cancel("eori", cancellation).futureValue mustBe CancellationRequested
+        submissionService.cancel("eori", cancellation).futureValue mustBe CancellationRequestSent
       }
 
       "submission is missing" in {
@@ -91,9 +91,9 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(wcoMapperService.toXml(any())).thenReturn("xml")
         when(customsDeclarationsConnector.submitCancellation(any(), any())(any()))
           .thenReturn(Future.successful("conv-id"))
-        when(submissionRepository.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
+        when(submissionRepository.findSubmissionByMrnAndEori(any(), any())).thenReturn(Future.successful(None))
 
-        submissionService.cancel("eori", cancellation).futureValue mustBe MissingDeclaration
+        submissionService.cancel("eori", cancellation).futureValue mustBe MrnNotFound
       }
 
       "submission exists and previously cancelled" in {
@@ -101,10 +101,10 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(wcoMapperService.toXml(any())).thenReturn("xml")
         when(customsDeclarationsConnector.submitCancellation(any(), any())(any()))
           .thenReturn(Future.successful("conv-id"))
-        when(submissionRepository.findSubmissionByMrn(any()))
+        when(submissionRepository.findSubmissionByMrnAndEori(any(), any()))
           .thenReturn(Future.successful(Some(submissionCancelled)))
 
-        submissionService.cancel("eori", cancellation).futureValue mustBe CancellationRequestExists
+        submissionService.cancel("eori", cancellation).futureValue mustBe CancellationAlreadyRequested
       }
     }
   }

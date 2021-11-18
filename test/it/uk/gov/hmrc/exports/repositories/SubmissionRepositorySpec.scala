@@ -189,6 +189,31 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
     }
   }
 
+  "Submission Repository on findSubmissionByMrnAndEori" when {
+
+    "there is no Submission with given MRN" should {
+      "return empty Option" in {
+        repo.findSubmissionByMrnAndEori(mrn, eori).futureValue mustNot be(defined)
+      }
+    }
+
+    "there is a Submission with given MRN" that {
+      "has different eori should return empty Option" in {
+        repo.save(submission).futureValue
+
+        repo.findSubmissionByMrnAndEori(mrn, "wrong").futureValue mustNot be(defined)
+      }
+
+      "has correct eori should return this Submission" in {
+        repo.save(submission).futureValue
+
+        val retrievedSubmission = repo.findSubmissionByMrnAndEori(mrn, eori).futureValue
+
+        retrievedSubmission.value must equal(submission)
+      }
+    }
+  }
+
   "SubmissionRepository on findBy" when {
 
     "querying with empty SubmissionQueryParameters" should {

@@ -20,44 +20,42 @@ import play.api.libs.json._
 
 sealed trait CancellationStatus
 
+case object MrnNotFound extends CancellationStatus
+case object CancellationAlreadyRequested extends CancellationStatus
+case object CancellationRequestSent extends CancellationStatus
+
 object CancellationStatus {
+
+  val MrnNotFoundName = MrnNotFound.toString
+  val CancellationAlreadyRequestedName = CancellationAlreadyRequested.toString
+  val CancellationRequestSentName = CancellationRequestSent.toString
 
   def unapply(status: CancellationStatus): Option[(String, JsValue)] = {
     val (prod: Product, sub) = status match {
-      case CancellationRequestExists =>
-        (CancellationRequestExists, Json.toJson(CancellationRequestExists.toString))
-      case CancellationRequested =>
-        (CancellationRequested, Json.toJson(CancellationRequested.toString))
-      case MissingDeclaration =>
-        (MissingDeclaration, Json.toJson(MissingDeclaration.toString))
+      case CancellationAlreadyRequested => (CancellationAlreadyRequested, Json.toJson(CancellationAlreadyRequestedName))
+      case CancellationRequestSent      => (CancellationRequestSent, Json.toJson(CancellationRequestSentName))
+      case MrnNotFound                  => (MrnNotFound, Json.toJson(MrnNotFoundName))
     }
     Some(prod.productPrefix -> sub)
   }
 
   def apply(`class`: String, data: JsValue): CancellationStatus =
     `class` match {
-      case "CancellationRequestExists" => CancellationRequestExists
-      case "CancellationRequested"     => CancellationRequested
-      case "MissingDeclaration"        => MissingDeclaration
+      case CancellationAlreadyRequestedName => CancellationAlreadyRequested
+      case CancellationRequestSentName      => CancellationRequestSent
+      case MrnNotFoundName                  => MrnNotFound
     }
 
   implicit object CancellationStatusReads extends Reads[CancellationStatus] {
     def reads(jsValue: JsValue): JsResult[CancellationStatus] = jsValue match {
-      case JsString("CancellationRequestExists") => JsSuccess(CancellationRequestExists)
-      case JsString("CancellationRequested")     => JsSuccess(CancellationRequested)
-      case JsString("MissingDeclaration")        => JsSuccess(MissingDeclaration)
-      case _                                     => JsError("Incorrect cancellation status")
+      case JsString(CancellationAlreadyRequestedName) => JsSuccess(CancellationAlreadyRequested)
+      case JsString(CancellationRequestSentName)      => JsSuccess(CancellationRequestSent)
+      case JsString(MrnNotFoundName)                  => JsSuccess(MrnNotFound)
+      case _                                          => JsError("Incorrect cancellation status")
     }
   }
 
   implicit object CancellationStatusWrites extends Writes[CancellationStatus] {
     def writes(status: CancellationStatus): JsValue = JsString(status.toString)
   }
-
 }
-
-case object CancellationRequestExists extends CancellationStatus
-
-case object CancellationRequested extends CancellationStatus
-
-case object MissingDeclaration extends CancellationStatus

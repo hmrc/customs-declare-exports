@@ -57,38 +57,34 @@ class CancellationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     "return 200" when {
       "request is valid" in {
         withAuthorizedUser()
-        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(CancellationRequested))
+        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(CancellationRequestSent))
 
         val result: Future[Result] = route(app, post.withJsonBody(toJson(cancellation))).get
 
         status(result) mustBe OK
-        contentAsString(result) mustBe empty
+        contentAsJson(result) mustBe Json.toJson(CancellationRequestSent.toString)
         verify(submissionService).cancel(refEq(userEori.value), refEq(cancellation))(any())
       }
-    }
 
-    "return 409" when {
       "cancellation exists" in {
         withAuthorizedUser()
-        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(CancellationRequestExists))
+        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(CancellationAlreadyRequested))
 
         val result: Future[Result] = route(app, post.withJsonBody(toJson(cancellation))).get
 
-        status(result) mustBe CONFLICT
-        contentAsString(result) mustBe empty
+        status(result) mustBe OK
+        contentAsJson(result) mustBe Json.toJson(CancellationAlreadyRequested.toString)
         verify(submissionService).cancel(refEq(userEori.value), refEq(cancellation))(any())
       }
-    }
 
-    "return 404" when {
       "declaration doesnt exist" in {
         withAuthorizedUser()
-        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(MissingDeclaration))
+        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(MrnNotFound))
 
         val result: Future[Result] = route(app, post.withJsonBody(toJson(cancellation))).get
 
-        status(result) mustBe NOT_FOUND
-        contentAsString(result) mustBe empty
+        status(result) mustBe OK
+        contentAsJson(result) mustBe Json.toJson(MrnNotFound.toString)
         verify(submissionService).cancel(refEq(userEori.value), refEq(cancellation))(any())
       }
     }
@@ -96,7 +92,7 @@ class CancellationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     "return 400" when {
       "invalid json" in {
         withAuthorizedUser()
-        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(CancellationRequested))
+        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(CancellationRequestSent))
         val payload = toJson(cancellation).as[JsObject] - "changeReason"
 
         val result: Future[Result] = route(app, post.withJsonBody(toJson(payload))).get
