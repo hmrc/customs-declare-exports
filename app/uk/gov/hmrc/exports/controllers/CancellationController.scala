@@ -20,12 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
-import uk.gov.hmrc.exports.models.declaration.submissions.{
-  CancellationRequestExists,
-  CancellationRequested,
-  MissingDeclaration,
-  SubmissionCancellation
-}
+import uk.gov.hmrc.exports.models.declaration.submissions.{CancellationAlreadyRequested, CancellationRequestSent, MrnNotFound, SubmissionCancellation}
 import uk.gov.hmrc.exports.services.SubmissionService
 
 import scala.concurrent.ExecutionContext
@@ -41,11 +36,8 @@ class CancellationController @Inject()(
 
   def create(): Action[SubmissionCancellation] =
     authenticator.authorisedAction(parsingJson[SubmissionCancellation]) { implicit request =>
-      submissionService.cancel(request.eori.value, request.body) map {
-        case CancellationRequested     => Ok
-        case CancellationRequestExists => Conflict
-        case MissingDeclaration        => NotFound
+      submissionService.cancel(request.eori.value, request.body).map { cancelationStatus =>
+        Ok(cancelationStatus)
       }
     }
-
 }

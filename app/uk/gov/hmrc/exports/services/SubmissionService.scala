@@ -115,34 +115,38 @@ class SubmissionService @Inject()(
       }
     }
 
-  def cancel(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationStatus] = {
+  def cancel(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationStatus] =
+    submissionRepository.findSubmissionByMrnAndEori(cancellation.mrn, eori).flatMap {
+      case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationAlreadyRequested)
+      case Some(submission)                                             => sendCancelationRequest(submission, cancellation)
+      case _                                                            => Future.successful(MrnNotFound)
+    }
+
+  private def sendCancelationRequest(submission: Submission, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier) = {
     val metadata: MetaData = metaDataBuilder.buildRequest(
       cancellation.functionalReferenceId,
       cancellation.mrn,
       cancellation.statementDescription,
       cancellation.changeReason,
-      eori
+      submission.eori
     )
+
     val xml: String = wcoMapperService.toXml(metadata)
-    customsDeclarationsConnector.submitCancellation(eori, xml).flatMap { convId =>
-      updateSubmissionInDB(cancellation.mrn, convId)
+    customsDeclarationsConnector.submitCancellation(submission.eori, xml).flatMap { conversationId =>
+      updateSubmissionInDB(cancellation.mrn, conversationId)
     }
   }
 
   def findAllSubmissionsBy(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] =
     submissionRepository.findBy(eori, queryParameters)
 
-  private def updateSubmissionInDB(mrn: String, conversationId: String): Future[CancellationStatus] =
-    submissionRepository.findSubmissionByMrn(mrn).flatMap {
-      case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationRequestExists)
-      case Some(_) =>
-        val newAction = Action(requestType = CancellationRequest, id = conversationId)
-        submissionRepository.addAction(mrn, newAction).map {
-          case Some(_) => CancellationRequested
-          case None    => MissingDeclaration
-        }
-      case None => Future.successful(MissingDeclaration)
+  private def updateSubmissionInDB(mrn: String, conversationId: String): Future[CancellationStatus] = {
+    val newAction = Action(requestType = CancellationRequest, id = conversationId)
+    submissionRepository.addAction(mrn, newAction).map {
+      case Some(_) => CancellationRequestSent
+      case None    => MrnNotFound
     }
+  }
 
   private def isSubmissionAlreadyCancelled(submission: Submission): Boolean =
     submission.actions.exists(_.requestType == CancellationRequest)

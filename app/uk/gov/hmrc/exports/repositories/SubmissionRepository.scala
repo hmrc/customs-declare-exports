@@ -59,6 +59,8 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
 
   def findSubmissionByMrn(mrn: String): Future[Option[Submission]] = find("mrn" -> mrn).map(_.headOption)
 
+  def findSubmissionByMrnAndEori(mrn: String, eori: String): Future[Option[Submission]] = find("mrn" -> mrn, "eori" -> eori).map(_.headOption)
+
   def findBy(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] = {
     val query = Json.toJson(queryParameters).as[JsObject] + (otherField = ("eori", JsString(eori)))
     collection
