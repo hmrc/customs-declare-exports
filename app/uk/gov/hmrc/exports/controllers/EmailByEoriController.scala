@@ -21,6 +21,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.exports.connectors.CustomsDataStoreConnector
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
+import uk.gov.hmrc.exports.models.emails.Email
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext
@@ -34,8 +35,8 @@ class EmailByEoriController @Inject()(authenticator: Authenticator, customsDataS
     customsDataStoreConnector
       .getEmailAddress(eori)
       .map {
-        case Some(emailAddress) => Ok(Json.toJson(emailAddress))
-        case None               => NotFound
+        case Some(Email(email, deliverable)) => Ok(Json.toJson(Email(email, deliverable)))
+        case _                               => NotFound
       }
       .recover { case _ => InternalServerError }
   }
