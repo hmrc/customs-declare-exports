@@ -33,7 +33,7 @@ class CustomsDataStoreConnectorSpec extends IntegrationTestSpec {
 
   "CustomsDataStoreConnector.getEmailAddress" when {
 
-    "email service responds with OK (200) and deliverable = true flag" should {
+    "email service responds with OK (200) and email is deliverable" should {
 
       "return a valid Email instance" in {
         val testVerifiedEmailJson = """{"address":"some@email.com","timestamp": "2020-03-20T01:02:03Z"}"""
@@ -48,7 +48,7 @@ class CustomsDataStoreConnectorSpec extends IntegrationTestSpec {
       }
     }
 
-    "email service responds with OK (200) and deliverable = false flag" should {
+    "email service responds with OK (200) and email is undeliverable" should {
 
       "return a valid Email instance" in {
         val testUndeliverableEmailJson = """{
