@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.connectors
 import javax.inject.Inject
 import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.emails.VerifiedEmailAddress
+import uk.gov.hmrc.exports.models.emails.{Email, EmailResponse}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, Upstream4xxResponse}
 
@@ -29,12 +29,19 @@ class CustomsDataStoreConnector @Inject()(http: HttpClient)(implicit appConfig: 
 
   import CustomsDataStoreConnector._
 
-  def getEmailAddress(eori: String)(implicit ec: ExecutionContext): Future[Option[VerifiedEmailAddress]] = {
+  def getEmailAddress(eori: String)(implicit ec: ExecutionContext): Future[Option[Email]] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    http.GET[Option[VerifiedEmailAddress]](verifiedEmailUrl(eori)).recover {
-      case Upstream4xxResponse(_, NOT_FOUND, _, _) => None
-    }
+    http
+      .GET[EmailResponse](verifiedEmailUrl(eori))
+      .map {
+        case EmailResponse(email, _, None) => Some(Email(email, deliverable = true))
+        case EmailResponse(email, _, _)    => Some(Email(email, deliverable = false))
+        case _                             => None
+      }
+      .recover {
+        case Upstream4xxResponse(_, NOT_FOUND, _, _) => None
+      }
   }
 }
 

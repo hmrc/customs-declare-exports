@@ -16,8 +16,6 @@
 
 package testdata
 
-import java.time.ZonedDateTime
-
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.http.HeaderNames.CONTENT_TYPE
@@ -25,7 +23,7 @@ import play.api.http.{ContentTypes, HeaderNames}
 import testdata.TestDataHelper.randomAlphanumericString
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames._
 import uk.gov.hmrc.exports.models.Eori
-import uk.gov.hmrc.exports.models.emails.VerifiedEmailAddress
+import uk.gov.hmrc.exports.models.emails.Email
 import uk.gov.hmrc.wco.dec.{DateTimeString, MetaData, ResponseDateTimeElement, Declaration => WcoDeclaration}
 
 object ExportsTestData {
@@ -59,7 +57,7 @@ object ExportsTestData {
   val now: DateTime = DateTime.now.withZone(DateTimeZone.UTC)
   val eidrDateStamp = "20001231"
 
-  val verifiedEmailAddress = VerifiedEmailAddress("some@email.com", ZonedDateTime.now)
+  val verifiedEmailAddress = Email("some@email.com", true)
 
   val dtfOut = DateTimeFormat.forPattern("yyyyMMddHHmmss")
   def dateTimeElement(dateTimeVal: DateTime) =

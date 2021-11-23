@@ -14,7 +14,8 @@ object AppDependencies {
     "org.mongodb.scala"              %%  "mongo-scala-driver"           % "2.9.0",
     "com.github.tototoshi"           %%  "scala-csv"                    % "1.3.8",
     "uk.gov.hmrc"                    %%  "work-item-repo"               % "8.1.0-play-28",
-    "com.fasterxml.jackson.module"   %%  "jackson-module-scala"         % "2.12.3"
+    "com.fasterxml.jackson.module"   %%  "jackson-module-scala"         % "2.12.3",
+    "com.typesafe.play"              %%  "play-json-joda"                % "2.6.14"
   )
 
   val test = Seq(

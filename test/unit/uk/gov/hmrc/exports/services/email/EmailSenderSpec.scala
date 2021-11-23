@@ -51,7 +51,7 @@ class EmailSenderSpec extends UnitSpec {
   "EmailSender on sendEmailForDmsDocNotification" when {
 
     val testSubmission = SubmissionTestData.submission
-    val testVerifiedEmailAddress: VerifiedEmailAddress = ExportsTestData.verifiedEmailAddress
+    val testVerifiedEmailAddress: Email = ExportsTestData.verifiedEmailAddress
     val testNotification = NotificationTestData.notification
 
     "everything works correctly" should {

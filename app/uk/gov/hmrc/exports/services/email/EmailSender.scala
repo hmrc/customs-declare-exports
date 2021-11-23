@@ -37,7 +37,10 @@ class EmailSender @Inject()(
     obtainEori(mrn).flatMap {
       case Some(eori) =>
         obtainEmailAddress(eori).flatMap {
-          case Some(verifiedEmailAddress) => sendEmail(mrn, eori, verifiedEmailAddress)
+          case Some(email) if email.deliverable => sendEmail(mrn, eori, email)
+          case Some(_) =>
+            logger.warn(s"Email address for EORI: [$eori] was not deliverable")
+            Future.successful(MissingData)
           case None =>
             logger.warn(s"Email address for EORI: [$eori] was not found or it is not verified yet")
             Future.successful(MissingData)
@@ -50,14 +53,12 @@ class EmailSender @Inject()(
   private def obtainEori(mrn: String)(implicit ec: ExecutionContext): Future[Option[String]] =
     submissionRepository.findSubmissionByMrn(mrn).map(_.map(_.eori))
 
-  private def obtainEmailAddress(eori: String)(implicit ec: ExecutionContext): Future[Option[VerifiedEmailAddress]] =
+  private def obtainEmailAddress(eori: String)(implicit ec: ExecutionContext): Future[Option[Email]] =
     customsDataStoreConnector.getEmailAddress(eori)
 
-  private def sendEmail(mrn: String, eori: String, verifiedEmailAddress: VerifiedEmailAddress)(
-    implicit ec: ExecutionContext
-  ): Future[SendEmailResult] = {
+  private def sendEmail(mrn: String, eori: String, email: Email)(implicit ec: ExecutionContext): Future[SendEmailResult] = {
     val emailParameters = EmailParameters(Map(EmailParameter.MRN -> mrn))
-    val sendEmailRequest = SendEmailRequest(List(verifiedEmailAddress.address), TemplateId.DMSDOC_NOTIFICATION, emailParameters)
+    val sendEmailRequest = SendEmailRequest(List(email.address), TemplateId.DMSDOC_NOTIFICATION, emailParameters)
 
     emailConnector
       .sendEmail(sendEmailRequest)

@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import java.time.ZonedDateTime
-
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
@@ -26,7 +24,7 @@ import testdata.ExportsTestData
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.connectors.CustomsDataStoreConnector
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
-import uk.gov.hmrc.exports.models.emails.VerifiedEmailAddress
+import uk.gov.hmrc.exports.models.emails.Email
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -49,8 +47,21 @@ class EmailByEoriControllerUnitSpec extends UnitSpec with AuthTestSupport {
 
   "GET EmailIfVerified endpoint" should {
 
-    "return 200(OK) status if the email address for the given EORI is verified" in {
-      val expectedEmailAddress = VerifiedEmailAddress("some@email.com", ZonedDateTime.now)
+    "return 200(OK) status and deliverable = true if the email address for the given EORI is verified" in {
+      val expectedEmailAddress = Email("some@email.com", deliverable = true)
+
+      when(connector.getEmailAddress(any[String])(any[ExecutionContext]))
+        .thenReturn(Future.successful(Some(expectedEmailAddress)))
+
+      val response = controller.getEmailIfVerified(ExportsTestData.eori)(fakeRequest)
+      status(response) mustBe OK
+      contentAsJson(response) mustBe Json.toJson(expectedEmailAddress)
+
+      verify(connector).getEmailAddress(eqTo(ExportsTestData.eori))(any[ExecutionContext])
+    }
+
+    "return 200(OK) status and deliverable = false if the email address for the given EORI is not deliverable" in {
+      val expectedEmailAddress = Email("some@email.com", deliverable = false)
 
       when(connector.getEmailAddress(any[String])(any[ExecutionContext]))
         .thenReturn(Future.successful(Some(expectedEmailAddress)))
@@ -84,6 +95,6 @@ class EmailByEoriControllerUnitSpec extends UnitSpec with AuthTestSupport {
     }
   }
 
-  def upstreamErrorResponse(status: Int): Future[Option[VerifiedEmailAddress]] =
+  def upstreamErrorResponse(status: Int): Future[Option[Email]] =
     Future.failed(UpstreamErrorResponse("An error", status))
 }

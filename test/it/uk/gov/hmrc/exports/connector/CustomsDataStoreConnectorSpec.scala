@@ -16,15 +16,13 @@
 
 package uk.gov.hmrc.exports.connector
 
-import java.time.ZonedDateTime
-
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import testdata.ExportsTestData
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.CustomsDataStoreConnector
-import uk.gov.hmrc.exports.models.emails.VerifiedEmailAddress
+import uk.gov.hmrc.exports.models.emails.Email
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -35,16 +33,51 @@ class CustomsDataStoreConnectorSpec extends IntegrationTestSpec {
 
   "CustomsDataStoreConnector.getEmailAddress" when {
 
-    "email service responds with OK (200)" should {
+    "email service responds with OK (200) and email is deliverable" should {
 
-      "return a valid VerifiedEmailAddress instance" in {
-        val testVerifiedEmailAddress = VerifiedEmailAddress("some@email.com", ZonedDateTime.now)
+      "return a valid Email instance" in {
+        val testVerifiedEmailJson = """{"address":"some@email.com","timestamp": "2020-03-20T01:02:03Z"}"""
+        val testVerifiedEmailAddress = Email("some@email.com", deliverable = true)
         val path = s"/customs-data-store/eori/${ExportsTestData.eori}/verified-email"
-        getFromDownstreamService(path, OK, Some(Json.toJson(testVerifiedEmailAddress).toString))
+        getFromDownstreamService(path, OK, Some(testVerifiedEmailJson))
 
         val response = connector.getEmailAddress(ExportsTestData.eori).futureValue
 
         response mustBe Some(testVerifiedEmailAddress)
+        verifyGetFromDownStreamService(path)
+      }
+    }
+
+    "email service responds with OK (200) and email is undeliverable" should {
+
+      "return a valid Email instance" in {
+        val testUndeliverableEmailJson = """{
+                                              |    "address": "some@email.com",
+                                              |    "timestamp": "2020-03-20T01:02:03Z",
+                                              |    "undeliverable": {
+                                              |          "subject": "subject-example",
+                                              |          "eventId": "example-id",
+                                              |          "groupId": "example-group-id",
+                                              |          "timestamp": "2021-05-14T10:59:45.811+01:00",
+                                              |          "event": {
+                                              |                     "id": "example-id",
+                                              |                    "event": "someEvent",
+                                              |                    "emailAddress": "some@email.com",
+                                              |                    "detected": "2021-05-14T10:59:45.811+01:00",
+                                              |                    "code": 12,
+                                              |                    "reason": "Inbox full",
+                                              |                    "enrolment": "HMRC-CUS-ORG~EORINumber~testEori"
+                                              |        }
+                                              |     }
+                                              |}""".stripMargin
+
+        val testUndeliverableEmailAddress = Email("some@email.com", deliverable = false)
+        val path = s"/customs-data-store/eori/${ExportsTestData.eori}/verified-email"
+        getFromDownstreamService(path, OK, Some(testUndeliverableEmailJson))
+
+        val response = connector.getEmailAddress(ExportsTestData.eori).futureValue
+
+        response mustBe Some(testUndeliverableEmailAddress)
         verifyGetFromDownStreamService(path)
       }
     }
