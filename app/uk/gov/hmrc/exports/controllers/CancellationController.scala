@@ -16,23 +16,18 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import javax.inject.{Inject, Singleton}
 import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
-import uk.gov.hmrc.exports.controllers.util.HeaderValidator
-import uk.gov.hmrc.exports.models.declaration.submissions.{CancellationAlreadyRequested, CancellationRequestSent, MrnNotFound, SubmissionCancellation}
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionCancellation
 import uk.gov.hmrc.exports.services.SubmissionService
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class CancellationController @Inject()(
-  authenticator: Authenticator,
-  submissionService: SubmissionService,
-  headerValidator: HeaderValidator,
-  cc: ControllerComponents
-)(implicit executionContext: ExecutionContext)
-    extends RESTController(cc) with JSONResponses {
+class CancellationController @Inject()(authenticator: Authenticator, submissionService: SubmissionService, cc: ControllerComponents)(
+  implicit executionContext: ExecutionContext
+) extends RESTController(cc) with JSONResponses {
 
   def create(): Action[SubmissionCancellation] =
     authenticator.authorisedAction(parsingJson[SubmissionCancellation]) { implicit request =>
