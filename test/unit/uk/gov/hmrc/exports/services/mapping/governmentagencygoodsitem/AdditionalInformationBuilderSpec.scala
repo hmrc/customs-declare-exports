@@ -58,9 +58,7 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
     "populate additional information given declarantIsExporter" in {
       val declaration = aDeclaration(withDeclarantIsExporter())
       val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
-      val additionalInformation = new AdditionalInformation(
-        code = "00400", description = "EXPORTER"
-      )
+      val additionalInformation = new AdditionalInformation(code = "00400", description = "EXPORTER")
 
       builder.buildThenAdd(declaration, governmentAgencyGoodsItem)
 
