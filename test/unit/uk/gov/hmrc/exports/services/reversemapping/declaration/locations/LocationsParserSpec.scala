@@ -18,16 +18,20 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.locations
 
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchersSugar._
-import org.scalatest.EitherValues
+import org.scalatest.{EitherValues, GivenWhenThen}
 import testdata.ExportsTestData
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.{SUPPLEMENTARY_EIDR, SUPPLEMENTARY_SIMPLIFIED}
+import uk.gov.hmrc.exports.models.declaration.InlandOrBorder.{Border, Inland}
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
+import uk.gov.hmrc.exports.services.reversemapping.declaration.AdditionalDeclarationTypeParser
 
-import scala.xml.NodeSeq
+import scala.xml.{Elem, NodeSeq}
 
-class LocationsParserSpec extends UnitSpec with EitherValues {
+class LocationsParserSpec extends UnitSpec with EitherValues with GivenWhenThen {
 
+  private val adtParser = mock[AdditionalDeclarationTypeParser]
   private val countryParser = mock[CountryParser]
   private val goodsLocationParser = mock[GoodsLocationParser]
   private val officeOfExitParser = mock[OfficeOfExitParser]
@@ -36,6 +40,7 @@ class LocationsParserSpec extends UnitSpec with EitherValues {
   private val inlandModeOfTransportCodeParser = mock[InlandModeOfTransportCodeParser]
 
   private val parser = new LocationsParser(
+    adtParser,
     countryParser,
     goodsLocationParser,
     officeOfExitParser,
@@ -56,6 +61,7 @@ class LocationsParserSpec extends UnitSpec with EitherValues {
       inlandModeOfTransportCodeParser
     )
 
+    when(adtParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
     when(countryParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
     when(goodsLocationParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
     when(officeOfExitParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
@@ -68,38 +74,9 @@ class LocationsParserSpec extends UnitSpec with EitherValues {
 
   "LocationsParser on parse" should {
 
-    val originationCountryElement: NodeSeq = <ns3:ID>GB</ns3:ID>
-    val destinationCountryElement: NodeSeq = <ns3:CountryCode>FR</ns3:CountryCode>
-    val routingCountryElement_1: NodeSeq = <ns3:RoutingCountryCode>DE</ns3:RoutingCountryCode>
-    val routingCountryElement_2: NodeSeq = <ns3:RoutingCountryCode>DK</ns3:RoutingCountryCode>
-
-    val xml = <meta>
-      <ns3:Declaration>
-        <ns3:GoodsShipment>
-          <ns3:ExportCountry>
-            {originationCountryElement}
-          </ns3:ExportCountry>
-          <ns3:Destination>
-            {destinationCountryElement}
-          </ns3:Destination>
-        </ns3:GoodsShipment>
-        <ns3:Consignment>
-          <ns3:Itinerary>
-            <ns3:SequenceNumeric>0</ns3:SequenceNumeric>
-            {routingCountryElement_1}
-          </ns3:Itinerary>
-          <ns3:Itinerary>
-            <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
-            {routingCountryElement_2}
-          </ns3:Itinerary>
-        </ns3:Consignment>
-      </ns3:Declaration>
-    </meta>
-
-    "call all sub-parsers" that {
+    "call all sub-parsers" when {
 
       "require the whole XML as parameter" in {
-
         parser.parse(xml)
 
         verify(goodsLocationParser).parse(eqTo(xml))(eqTo(mappingContext))
@@ -145,7 +122,7 @@ class LocationsParserSpec extends UnitSpec with EitherValues {
       }
     }
 
-    "return Right with Locations" that {
+    "return Right with Locations" when {
 
       "has originationCountry set to value returned by CountryParser" in {
 
@@ -273,4 +250,76 @@ class LocationsParserSpec extends UnitSpec with EitherValues {
       }
     }
   }
+
+  "LocationsParser on parse" should {
+
+    "return Right with Locations" when {
+      "has inlandOrBorder set to 'Inland'" when {
+        "InlandModeOfTransportCode is defined" in {
+          And("Additional Declaration Type is one of STANDARD or SUPPLEMENTARY-SIMPLIFIED")
+          when(adtParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(SUPPLEMENTARY_SIMPLIFIED)))
+
+          val inlandModeOfTransportCode = InlandModeOfTransportCode(Some(ModeOfTransportCode.Maritime))
+          when(inlandModeOfTransportCodeParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(inlandModeOfTransportCode)))
+
+          val result = parser.parse(xml)
+
+          result.isRight mustBe true
+          result.value.inlandOrBorder.value mustBe Inland
+        }
+      }
+
+      "has inlandOrBorder set to 'Border'" when {
+        "InlandModeOfTransportCode is NOT defined" in {
+          And("Additional Declaration Type is one of STANDARD or SUPPLEMENTARY-SIMPLIFIED")
+          when(adtParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(SUPPLEMENTARY_SIMPLIFIED)))
+
+          val result = parser.parse(xml)
+
+          result.isRight mustBe true
+          result.value.inlandOrBorder.value mustBe Border
+        }
+      }
+
+      "has inlandOrBorder set to 'None'" when {
+        "Additional Declaration Type is NOT one of STANDARD or SUPPLEMENTARY-SIMPLIFIED" in {
+          when(adtParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(SUPPLEMENTARY_EIDR)))
+          val result = parser.parse(xml)
+
+          result.isRight mustBe true
+          result.value.inlandOrBorder mustBe None
+        }
+      }
+    }
+  }
+
+  val originationCountryElement: NodeSeq = <ns3:ID>GB</ns3:ID>
+  val destinationCountryElement: NodeSeq = <ns3:CountryCode>FR</ns3:CountryCode>
+  val routingCountryElement_1: NodeSeq = <ns3:RoutingCountryCode>DE</ns3:RoutingCountryCode>
+  val routingCountryElement_2: NodeSeq = <ns3:RoutingCountryCode>DK</ns3:RoutingCountryCode>
+
+  // typeCode by default => SUPPLEMENTARY-SIMPLIFIED as ADT
+  val xml: Elem =
+    <meta>
+      <ns3:Declaration>
+        <ns3:GoodsShipment>
+          <ns3:ExportCountry>
+            {originationCountryElement}
+          </ns3:ExportCountry>
+          <ns3:Destination>
+            {destinationCountryElement}
+          </ns3:Destination>
+        </ns3:GoodsShipment>
+        <ns3:Consignment>
+          <ns3:Itinerary>
+            <ns3:SequenceNumeric>0</ns3:SequenceNumeric>
+            {routingCountryElement_1}
+          </ns3:Itinerary>
+          <ns3:Itinerary>
+            <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+            {routingCountryElement_2}
+          </ns3:Itinerary>
+        </ns3:Consignment>
+      </ns3:Declaration>
+    </meta>
 }

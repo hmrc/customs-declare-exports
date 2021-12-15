@@ -52,6 +52,9 @@ case class InlandOrBorder(location: String)
 
 object InlandOrBorder {
   implicit val format = Json.format[InlandOrBorder]
+
+  val Border = new InlandOrBorder("Border")
+  val Inland = new InlandOrBorder("Inland")
 }
 
 case class InlandModeOfTransportCode(inlandModeOfTransportCode: Option[ModeOfTransportCode])
