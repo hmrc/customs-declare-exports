@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
+import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalInformation
 import uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem
 
-class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder {
+class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder with ExportsDeclarationBuilder {
 
   private val additionalInformation = AdditionalInformation("code", "description")
   private val builder = new AdditionalInformationBuilder()
@@ -52,6 +53,25 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
         .get(0)
         .getStatementDescription
         .getValue mustBe additionalInformation.description
+    }
+
+    "populate additional information given declarantIsExporter" in {
+      val declaration = aDeclaration(withDeclarantIsExporter())
+      val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
+      val additionalInformation = new AdditionalInformation(code = "00400", description = "EXPORTER")
+
+      builder.buildThenAdd(declaration, governmentAgencyGoodsItem)
+
+      governmentAgencyGoodsItem.getAdditionalInformation mustNot be(empty)
+      governmentAgencyGoodsItem.getAdditionalInformation
+        .get(0)
+        .getStatementCode
+        .getValue mustBe additionalInformation.code
+      governmentAgencyGoodsItem.getAdditionalInformation
+        .get(0)
+        .getStatementDescription
+        .getValue mustBe additionalInformation.description
+
     }
 
     "remove new-lines from additional information description" in {
