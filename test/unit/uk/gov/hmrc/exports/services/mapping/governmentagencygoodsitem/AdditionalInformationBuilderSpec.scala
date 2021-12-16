@@ -86,7 +86,6 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
 
     }
 
-
     "remove new-lines from additional information description" in {
       val exportItem = anItem(withAdditionalInformation(additionalInformation.copy(description = "some\ndescription")))
       val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
