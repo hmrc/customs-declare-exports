@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
-import uk.gov.hmrc.exports.models.declaration.{AdditionalInformation, ExportItem, ExportsDeclaration}
+import uk.gov.hmrc.exports.models.declaration.{AdditionalInformation, DeclarantIsExporter, ExportItem}
 import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper._
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -43,14 +43,29 @@ class AdditionalInformationBuilder @Inject()() extends ModifyingBuilder[ExportIt
       }
     }
 
-  def buildThenAdd(exportsDeclaration: ExportsDeclaration, wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem): Unit =
-    exportsDeclaration.parties.declarantIsExporter match {
-      case Some(declarantIsExporter) if declarantIsExporter.isExporter =>
-        val additionalInformation = new AdditionalInformation(code = "00400", description = "EXPORTER")
-        wcoGovernmentAgencyGoodsItem.getAdditionalInformation.add(buildAdditionalInformation(additionalInformation))
+  def buildThenAdd(
+    exportItem: ExportItem,
+    declarantIsExporter: Option[DeclarantIsExporter],
+    wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem
+  ): Unit = {
 
+    val additionalInformation = AdditionalInformation(code = "00400", description = "EXPORTER")
+
+    lazy val infoEnteredByUser = exportItem.additionalInformation.exists { additionalInformationData =>
+      {
+        additionalInformationData.items.exists {
+          case `additionalInformation` => true
+          case _                       => false
+        }
+      }
+    }
+
+    declarantIsExporter match {
+      case Some(isExporter) if isExporter.isExporter && !infoEnteredByUser =>
+        wcoGovernmentAgencyGoodsItem.getAdditionalInformation.add(buildAdditionalInformation(additionalInformation))
       case _ => ()
     }
+  }
 
   def buildThenAdd(statementDescription: String, declaration: Declaration): Unit = {
     val additionalInformation = new Declaration.AdditionalInformation()

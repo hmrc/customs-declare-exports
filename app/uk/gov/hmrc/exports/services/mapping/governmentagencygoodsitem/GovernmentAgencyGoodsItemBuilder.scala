@@ -48,7 +48,7 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
       packagingBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
       governmentProcedureBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
       additionalInformationBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
-      additionalInformationBuilder.buildThenAdd(exportsCacheModel, wcoGovernmentAgencyGoodsItem)
+      additionalInformationBuilder.buildThenAdd(exportItem, exportsCacheModel.parties.declarantIsExporter, wcoGovernmentAgencyGoodsItem)
       additionalDocumentsBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
 
       buildCommodityMeasurements(exportItem, wcoGovernmentAgencyGoodsItem, exportsCacheModel.`type`)
