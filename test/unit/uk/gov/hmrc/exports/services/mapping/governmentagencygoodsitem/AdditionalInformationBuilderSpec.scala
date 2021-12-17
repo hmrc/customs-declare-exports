@@ -26,6 +26,8 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGo
 class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder with ExportsDeclarationBuilder {
 
   private val additionalInformation = AdditionalInformation("code", "description")
+  private val additionalInformationForExporter = AdditionalInformation(code = "00400", description = "EXPORTER")
+
   private val builder = new AdditionalInformationBuilder()
 
   "build then add from ExportsDeclaration" should {
@@ -44,7 +46,7 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
 
       builder.buildThenAdd(exportItem, governmentAgencyGoodsItem)
 
-      governmentAgencyGoodsItem.getAdditionalInformation mustNot be(empty)
+      governmentAgencyGoodsItem.getAdditionalInformation.size must be(1)
       governmentAgencyGoodsItem.getAdditionalInformation
         .get(0)
         .getStatementCode
@@ -55,22 +57,32 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
         .getValue mustBe additionalInformation.description
     }
 
-    "populate additional information given declarantIsExporter" in {
+    "populate additional information given declarantIsExporter when user has NOT already given additional info" in {
       val declaration = aDeclaration(withDeclarantIsExporter())
       val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
-      val additionalInformation = new AdditionalInformation(code = "00400", description = "EXPORTER")
 
-      builder.buildThenAdd(declaration, governmentAgencyGoodsItem)
+      builder.buildThenAdd(anItem(), declaration.parties.declarantIsExporter, governmentAgencyGoodsItem)
 
-      governmentAgencyGoodsItem.getAdditionalInformation mustNot be(empty)
+      governmentAgencyGoodsItem.getAdditionalInformation.size must be(1)
       governmentAgencyGoodsItem.getAdditionalInformation
         .get(0)
         .getStatementCode
-        .getValue mustBe additionalInformation.code
+        .getValue mustBe additionalInformationForExporter.code
       governmentAgencyGoodsItem.getAdditionalInformation
         .get(0)
         .getStatementDescription
-        .getValue mustBe additionalInformation.description
+        .getValue mustBe additionalInformationForExporter.description
+
+    }
+
+    "NOT populate additional information given declarantIsExporter when user has already given additional info" in {
+      val exportItem = anItem(withAdditionalInformation(additionalInformationForExporter))
+      val declaration = aDeclaration(withDeclarantIsExporter())
+      val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
+
+      builder.buildThenAdd(exportItem, declaration.parties.declarantIsExporter, governmentAgencyGoodsItem)
+
+      governmentAgencyGoodsItem.getAdditionalInformation mustBe empty
 
     }
 

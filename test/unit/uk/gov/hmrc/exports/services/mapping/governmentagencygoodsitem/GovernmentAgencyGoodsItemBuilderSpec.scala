@@ -84,7 +84,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
           verify(additionalInformationBuilder)
             .buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
           verify(additionalInformationBuilder)
-            .buildThenAdd(refEq(exportsDeclaration), any[GoodsShipment.GovernmentAgencyGoodsItem])
+            .buildThenAdd(refEq(exportItem), refEq(exportsDeclaration.parties.declarantIsExporter), any[GoodsShipment.GovernmentAgencyGoodsItem])
           verify(additionalDocumentsBuilder)
             .buildThenAdd(refEq(exportItem), any[GoodsShipment.GovernmentAgencyGoodsItem])
           verify(commodityBuilder)
