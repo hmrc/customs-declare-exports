@@ -51,12 +51,8 @@ class AdditionalInformationBuilder @Inject()() extends ModifyingBuilder[ExportIt
 
     val additionalInformation = AdditionalInformation(code = "00400", description = "EXPORTER")
 
-    lazy val infoEnteredByUser = exportItem.additionalInformation.exists { additionalInformationData =>
-      {
-        additionalInformationData.items.exists {
-          case `additionalInformation` => true
-          case _                       => false
-        }
+    lazy val infoEnteredByUser = exportItem.additionalInformation.exists { additionalInformationData => {
+        additionalInformationData.items.contains(additionalInformation)
       }
     }
 
