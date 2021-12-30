@@ -16,17 +16,21 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.locations
 
+import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.{STANDARD_FRONTIER, STANDARD_PRE_LODGED, SUPPLEMENTARY_SIMPLIFIED}
+import uk.gov.hmrc.exports.models.declaration.InlandOrBorder.{Border, Inland}
 import uk.gov.hmrc.exports.models.declaration.{Country, Locations}
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
+import uk.gov.hmrc.exports.services.reversemapping.declaration.locations.LocationsParser.additionalDeclTypesForInlandOrBorder
+import uk.gov.hmrc.exports.services.reversemapping.declaration.{AdditionalDeclarationTypeParser, DeclarationXmlParser}
 
 import javax.inject.{Inject, Singleton}
 import scala.xml.NodeSeq
 
 @Singleton
 class LocationsParser @Inject()(
+  additionalDeclarationTypeParser: AdditionalDeclarationTypeParser,
   countryParser: CountryParser,
   goodsLocationParser: GoodsLocationParser,
   officeOfExitParser: OfficeOfExitParser,
@@ -48,6 +52,17 @@ class LocationsParser @Inject()(
     } yield {
       val hasRoutingCountries = Some(routingCountries.nonEmpty)
 
+      val inlandOrBorder =
+        additionalDeclarationTypeParser
+          .parse(inputXml)
+          .map { maybeAdditionalDeclType =>
+            if (!maybeAdditionalDeclType.exists(additionalDeclTypesForInlandOrBorder.contains(_))) None
+            else if (inlandModeOfTransportCode.exists(_.inlandModeOfTransportCode.isDefined)) Some(Inland)
+            else Some(Border)
+          }
+          .toOption
+          .flatten
+
       Locations(
         originationCountry = originationCountry,
         destinationCountry = destinationCountry,
@@ -57,11 +72,15 @@ class LocationsParser @Inject()(
         officeOfExit = officeOfExit,
         supervisingCustomsOffice = supervisingCustomsOffice,
         warehouseIdentification = warehouseIdentification,
+        inlandOrBorder = inlandOrBorder,
         inlandModeOfTransportCode = inlandModeOfTransportCode
       )
     }
 
   private def parseRoutingCountries(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Seq[Country]] =
     (inputXml \ Declaration \ Consignment \ Itinerary \ RoutingCountryCode).map(countryParser.parse).toEitherOfList.map(_.flatten)
+}
 
+object LocationsParser {
+  val additionalDeclTypesForInlandOrBorder = List(STANDARD_FRONTIER, STANDARD_PRE_LODGED, SUPPLEMENTARY_SIMPLIFIED)
 }

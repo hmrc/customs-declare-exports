@@ -48,6 +48,15 @@ object SupervisingCustomsOffice {
   implicit val format = Json.format[SupervisingCustomsOffice]
 }
 
+case class InlandOrBorder(location: String)
+
+object InlandOrBorder {
+  implicit val format = Json.format[InlandOrBorder]
+
+  val Border = new InlandOrBorder("Border")
+  val Inland = new InlandOrBorder("Inland")
+}
+
 case class InlandModeOfTransportCode(inlandModeOfTransportCode: Option[ModeOfTransportCode])
 
 object InlandModeOfTransportCode {
@@ -63,6 +72,7 @@ case class Locations(
   officeOfExit: Option[OfficeOfExit] = None,
   supervisingCustomsOffice: Option[SupervisingCustomsOffice] = None,
   warehouseIdentification: Option[WarehouseIdentification] = None,
+  inlandOrBorder: Option[InlandOrBorder] = None,
   inlandModeOfTransportCode: Option[InlandModeOfTransportCode] = None
 )
 

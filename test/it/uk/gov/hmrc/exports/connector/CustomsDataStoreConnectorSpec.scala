@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.connector
 
-import play.api.libs.json.Json
 import play.api.test.Helpers._
 import testdata.ExportsTestData
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
