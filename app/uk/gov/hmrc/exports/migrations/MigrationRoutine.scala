@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.migrations
 
-import com.github.cloudyrock.mongock.{Mongock, MongockBuilder}
 import com.google.inject.Singleton
 import com.mongodb.{MongoClient, MongoClientURI}
 import play.api.Logger
