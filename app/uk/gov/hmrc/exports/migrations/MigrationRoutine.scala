@@ -56,5 +56,5 @@ class MigrationRoutine @Inject()(appConfig: AppConfig)(implicit mec: RoutinesExe
   }
 
   private def minutesToMillis(minutes: Int): Long = minutes * 60L * 1000L
-  
+
 }
