@@ -37,7 +37,7 @@ class MigrationRoutine @Inject()(appConfig: AppConfig)(implicit mec: RoutinesExe
   private val db = client.getDatabase(uri.getDatabase)
 
   def execute(): Future[Unit] = Future {
-    logger.info("Exports Migration feature enabled. Starting migration with ExportsMigrationTool")
+    logger.info("Starting migration with ExportsMigrationTool")
     migrateWithExportsMigrationTool()
   }
 
