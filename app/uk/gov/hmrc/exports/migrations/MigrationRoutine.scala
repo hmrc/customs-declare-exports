@@ -16,21 +16,19 @@
 
 package uk.gov.hmrc.exports.migrations
 
-import scala.concurrent.Future
-import com.github.cloudyrock.mongock.{Mongock, MongockBuilder}
 import com.google.inject.Singleton
 import com.mongodb.{MongoClient, MongoClientURI}
-
-import javax.inject.Inject
 import play.api.Logger
-import uk.gov.hmrc.exports.config.{AppConfig, ExportsMigrationConfig}
+import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.migrations.changelogs.cache.{MakeTransportPaymentMethodNotOptional, RenameToAdditionalDocuments}
 import uk.gov.hmrc.exports.migrations.changelogs.notification.{MakeParsedDetailsOptional, SplitTheNotificationsCollection}
 import uk.gov.hmrc.exports.routines.{Routine, RoutinesExecutionContext}
 
+import javax.inject.Inject
+import scala.concurrent.Future
+
 @Singleton
-class MigrationRoutine @Inject()(appConfig: AppConfig, exportsMigrationConfig: ExportsMigrationConfig)(implicit mec: RoutinesExecutionContext)
-    extends Routine {
+class MigrationRoutine @Inject()(appConfig: AppConfig)(implicit mec: RoutinesExecutionContext) extends Routine {
 
   private val logger = Logger(this.getClass)
 
@@ -39,13 +37,8 @@ class MigrationRoutine @Inject()(appConfig: AppConfig, exportsMigrationConfig: E
   private val db = client.getDatabase(uri.getDatabase)
 
   def execute(): Future[Unit] = Future {
-    if (exportsMigrationConfig.isExportsMigrationEnabled) {
-      logger.info("Exports Migration feature enabled. Starting migration with ExportsMigrationTool")
-      migrateWithExportsMigrationTool()
-    } else {
-      logger.info("Exports Migration feature disabled. Starting migration with Mongock")
-      migrateWithMongock()
-    }
+    logger.info("Starting migration with ExportsMigrationTool")
+    migrateWithExportsMigrationTool()
   }
 
   private def migrateWithExportsMigrationTool(): Unit = {
@@ -64,16 +57,4 @@ class MigrationRoutine @Inject()(appConfig: AppConfig, exportsMigrationConfig: E
 
   private def minutesToMillis(minutes: Int): Long = minutes * 60L * 1000L
 
-  private def migrateWithMongock(): Unit = {
-    val lockAcquiredForMinutes = 3
-    val maxWaitingForLockMinutes = 5
-    val maxTries = 10
-
-    val runner: Mongock = new MongockBuilder(client, uri.getDatabase, "uk.gov.hmrc.exports.mongock.changesets")
-      .setLockConfig(lockAcquiredForMinutes, maxWaitingForLockMinutes, maxTries)
-      .build()
-
-    runner.execute()
-    runner.close()
-  }
 }
