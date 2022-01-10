@@ -5,6 +5,7 @@ This microservice is part of Customs Exports Declaration Service (CEDS). It is d
 
 It provides functionality to manage declaration-related data before and after it has been submitted.
 
+
 ## Prerequisites
 This service is written in [Scala](http://www.scala-lang.org/) and [Play](http://playframework.com/), so needs at a [JRE](https://www.java.com/en/download/) to run and a JDK for development.
 
@@ -26,8 +27,28 @@ This repository contains unit and integration tests for the service. In order to
 
 `sbt it:test` - for integration tests
 
-## Developer notes
 
+## Test Only endpoints
+### /test-only/create-submitted-dec-record
+This endpoint is designed to quickly insert all the required db documents into the collections to represent a new accepted declaration submission. It does not make any downstream requests or auth checks
+and is designed specifically to be used by QAs to populated the db collections en masse quickly.
+
+It will randomly (50/50 chance) also insert an extra notification of type DMSDOC.
+
+To enable this endpoint you must specify at startup the test-only conf file like this:
+
+`sbt run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes`
+
+You can then call the endpoint like this:
+
+`curl --location --request POST 'http://localhost:6792/test-only/create-submitted-dec-record' --header 'Content-Type: application/json' --data-raw '{"eori": "GB1234567890"}'`
+
+You will receive back the following response (if successful):
+
+`"EORI:GB1234567890, LRN:7SLXFBE0CKH2WNRRRKR7NZ, MRN:36GBRJYXDBZL4F9YZ, CREATED WITH DMSDOC"`
+
+
+## Developer notes
 
 ### Feature flags
 This service uses feature flags to enable/disable some of its features. These can be changed/overridden in config under `microservice.features.<featureName>` key.
@@ -80,6 +101,7 @@ Inserted 1059 - 16 for GB1713564034
 Inserted 1471 - 412 for GB1026524884
 Inserted 2094 - 623 for GB1585987871
 ```
+
 
 ## License
 

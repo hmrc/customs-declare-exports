@@ -78,9 +78,7 @@ trait ExportsDeclarationBuilder {
 
   def withoutAdditionalDeclarationType(): ExportsDeclarationModifier = _.copy(additionalDeclarationType = None)
 
-  def withAdditionalDeclarationType(
-    decType: AdditionalDeclarationType = AdditionalDeclarationType.STANDARD_FRONTIER
-  ): ExportsDeclarationModifier =
+  def withAdditionalDeclarationType(decType: AdditionalDeclarationType = AdditionalDeclarationType.STANDARD_FRONTIER): ExportsDeclarationModifier =
     _.copy(additionalDeclarationType = Some(decType))
 
   def withoutDispatchLocation: ExportsDeclarationModifier = _.copy(dispatchLocation = None)
@@ -103,12 +101,8 @@ trait ExportsDeclarationBuilder {
     declaration =>
       declaration.copy(
         transport = declaration.transport
-          .copy(
-            borderModeOfTransportCode = None,
-            meansOfTransportOnDepartureIDNumber = None,
-            meansOfTransportOnDepartureType = None
-          )
-      )
+          .copy(borderModeOfTransportCode = None, meansOfTransportOnDepartureIDNumber = None, meansOfTransportOnDepartureType = None)
+    )
 
   def withDepartureTransport(
     borderModeOfTransportCode: ModeOfTransportCode = ModeOfTransportCode.Empty,
@@ -133,7 +127,7 @@ trait ExportsDeclarationBuilder {
           meansOfTransportOnDepartureIDNumber = Some(meansOfTransportOnDepartureIDNumber),
           meansOfTransportOnDepartureType = Some(meansOfTransportOnDepartureType)
         )
-      )
+    )
 
   def withoutContainerData(): ExportsDeclarationModifier =
     declaration => declaration.copy(transport = declaration.transport.copy(containers = None))
@@ -148,19 +142,16 @@ trait ExportsDeclarationBuilder {
     cache => cache.copy(parties = cache.parties.copy(exporterDetails = None))
 
   def withExporterDetails(eori: Option[String] = None, address: Option[Address] = None): ExportsDeclarationModifier =
-    cache =>
-      cache.copy(parties = cache.parties.copy(exporterDetails = Some(ExporterDetails(EntityDetails(eori, address)))))
+    cache => cache.copy(parties = cache.parties.copy(exporterDetails = Some(ExporterDetails(EntityDetails(eori, address)))))
 
   def withoutConsigneeDetails(): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(consigneeDetails = None))
 
   def withConsigneeDetails(eori: Option[String], address: Option[Address]): ExportsDeclarationModifier =
-    cache =>
-      cache.copy(parties = cache.parties.copy(consigneeDetails = Some(ConsigneeDetails(EntityDetails(eori, address)))))
+    cache => cache.copy(parties = cache.parties.copy(consigneeDetails = Some(ConsigneeDetails(EntityDetails(eori, address)))))
 
   def withConsignorDetails(eori: Option[String], address: Option[Address]): ExportsDeclarationModifier =
-    cache =>
-      cache.copy(parties = cache.parties.copy(consignorDetails = Some(ConsignorDetails(EntityDetails(eori, address)))))
+    cache => cache.copy(parties = cache.parties.copy(consignorDetails = Some(ConsignorDetails(EntityDetails(eori, address)))))
 
   def withoutIsEntryIntoDeclarantsRecords(): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(isEntryIntoDeclarantsRecords = None))
@@ -172,15 +163,13 @@ trait ExportsDeclarationBuilder {
     cache => cache.copy(parties = cache.parties.copy(personPresentingGoodsDetails = None))
 
   def withPersonPresentingGoodsDetails(eori: Eori): ExportsDeclarationModifier =
-    cache =>
-      cache.copy(parties = cache.parties.copy(personPresentingGoodsDetails = Some(PersonPresentingGoodsDetails(eori))))
+    cache => cache.copy(parties = cache.parties.copy(personPresentingGoodsDetails = Some(PersonPresentingGoodsDetails(eori))))
 
   def withoutDeclarantDetails(): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(declarantDetails = None))
 
   def withDeclarantDetails(eori: Option[String] = None, address: Option[Address] = None): ExportsDeclarationModifier =
-    cache =>
-      cache.copy(parties = cache.parties.copy(declarantDetails = Some(DeclarantDetails(EntityDetails(eori, address)))))
+    cache => cache.copy(parties = cache.parties.copy(declarantDetails = Some(DeclarantDetails(EntityDetails(eori, address)))))
 
   def withDeclarantIsExporter(answer: String = "Yes"): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(declarantIsExporter = Some(DeclarantIsExporter(answer))))
@@ -197,13 +186,10 @@ trait ExportsDeclarationBuilder {
       cache.copy(
         parties = cache.parties
           .copy(representativeDetails = Some(RepresentativeDetails(details, statusCode, representingAnotherAgent)))
-      )
+    )
 
   def withDeclarationAdditionalActors(data: DeclarationAdditionalActor*): ExportsDeclarationModifier =
-    cache =>
-      cache.copy(
-        parties = cache.parties.copy(declarationAdditionalActorsData = Some(DeclarationAdditionalActors(data)))
-      )
+    cache => cache.copy(parties = cache.parties.copy(declarationAdditionalActorsData = Some(DeclarationAdditionalActors(data))))
 
   def withoutDeclarationHolders(): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(declarationHoldersData = None))
@@ -218,8 +204,7 @@ trait ExportsDeclarationBuilder {
     cache => cache.copy(parties = cache.parties.copy(carrierDetails = None))
 
   def withCarrierDetails(eori: Option[String] = None, address: Option[Address] = None): ExportsDeclarationModifier =
-    cache =>
-      cache.copy(parties = cache.parties.copy(carrierDetails = Some(CarrierDetails(EntityDetails(eori, address)))))
+    cache => cache.copy(parties = cache.parties.copy(carrierDetails = Some(CarrierDetails(EntityDetails(eori, address)))))
 
   def withoutOriginationCountry(): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(originationCountry = None))
@@ -239,9 +224,7 @@ trait ExportsDeclarationBuilder {
   def withoutRoutingCountries(): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(routingCountries = Seq.empty))
 
-  def withRoutingCountries(
-    countries: Seq[Country] = Seq(Country(Some("GB")), Country(Some("PL")))
-  ): ExportsDeclarationModifier =
+  def withRoutingCountries(countries: Seq[Country] = Seq(Country(Some("GB")), Country(Some("PL")))): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(routingCountries = countries))
 
   def withoutGoodsLocation(): ExportsDeclarationModifier =
@@ -252,26 +235,15 @@ trait ExportsDeclarationBuilder {
   }
 
   def withWarehouseIdentification(warehouseIdentification: String): ExportsDeclarationModifier = { m =>
-    m.copy(
-      locations =
-        m.locations.copy(warehouseIdentification = Some(WarehouseIdentification(Some(warehouseIdentification))))
-    )
+    m.copy(locations = m.locations.copy(warehouseIdentification = Some(WarehouseIdentification(Some(warehouseIdentification)))))
   }
 
-  def withInlandModeOfTransport(
-    inlandModeOfTransportCode: ModeOfTransportCode = ModeOfTransportCode.Empty
-  ): ExportsDeclarationModifier = { m =>
-    m.copy(
-      locations =
-        m.locations.copy(inlandModeOfTransportCode = Some(InlandModeOfTransportCode(Some(inlandModeOfTransportCode))))
-    )
+  def withInlandModeOfTransport(inlandModeOfTransportCode: ModeOfTransportCode = ModeOfTransportCode.Empty): ExportsDeclarationModifier = { m =>
+    m.copy(locations = m.locations.copy(inlandModeOfTransportCode = Some(InlandModeOfTransportCode(Some(inlandModeOfTransportCode)))))
   }
 
   def withSupervisingCustomsOffice(supervisingCustomsOffice: String): ExportsDeclarationModifier = { m =>
-    m.copy(
-      locations =
-        m.locations.copy(supervisingCustomsOffice = Some(SupervisingCustomsOffice(Some(supervisingCustomsOffice))))
-    )
+    m.copy(locations = m.locations.copy(supervisingCustomsOffice = Some(SupervisingCustomsOffice(Some(supervisingCustomsOffice)))))
   }
 
   def withoutOfficeOfExit(): ExportsDeclarationModifier =
@@ -299,10 +271,7 @@ trait ExportsDeclarationBuilder {
     exchangeRate: Option[String] = None,
     totalPackage: String = "1"
   ): ExportsDeclarationModifier =
-    _.copy(
-      totalNumberOfItems =
-        Some(TotalNumberOfItems(totalAmountInvoiced, totalAmountInvoicedCurrency, exchangeRate, Some(totalPackage)))
-    )
+    _.copy(totalNumberOfItems = Some(TotalNumberOfItems(totalAmountInvoiced, totalAmountInvoicedCurrency, exchangeRate, Some(totalPackage))))
 
   def withoutNatureOfTransaction(): ExportsDeclarationModifier = _.copy(natureOfTransaction = None)
 
@@ -317,7 +286,7 @@ trait ExportsDeclarationBuilder {
           meansOfTransportCrossingTheBorderNationality = None,
           meansOfTransportCrossingTheBorderType = None
         )
-      )
+    )
 
   def withBorderTransport(
     meansOfTransportCrossingTheBorderNationality: Option[String] = None,
@@ -331,14 +300,14 @@ trait ExportsDeclarationBuilder {
           meansOfTransportCrossingTheBorderType = Some(meansOfTransportCrossingTheBorderType),
           meansOfTransportCrossingTheBorderIDNumber = meansOfTransportCrossingTheBorderIDNumber
         )
-      )
+    )
 
   def withTransportPayment(payment: String): ExportsDeclarationModifier =
     declaration =>
       declaration.copy(
         transport = declaration.transport
           .copy(expressConsignment = Some(YesNoAnswer.yes), transportPayment = Some(TransportPayment(payment)))
-      )
+    )
 
   def withUpdateDate(year: Int, month: Int, dayOfMonth: Int): ExportsDeclarationModifier =
     _.copy(updatedDateTime = LocalDateTime.of(year, month, dayOfMonth, 10, 0, 0).toInstant(ZoneOffset.UTC))
