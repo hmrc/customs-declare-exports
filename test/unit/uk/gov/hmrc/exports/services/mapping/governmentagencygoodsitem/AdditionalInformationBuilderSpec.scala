@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
-import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalInformation
 import uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem
 

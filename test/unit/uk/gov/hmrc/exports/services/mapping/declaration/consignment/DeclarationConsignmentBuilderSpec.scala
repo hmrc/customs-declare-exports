@@ -17,12 +17,12 @@
 package uk.gov.hmrc.exports.services.mapping.declaration.consignment
 
 import org.mockito.ArgumentMatchers._
-import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.ConsignmentConsignorBuilder
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentCarrierBuilder
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class DeclarationConsignmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {

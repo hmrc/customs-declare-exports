@@ -22,7 +22,6 @@ import play.api.libs.json.Json.toJson
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import testdata.ExportsDeclarationBuilder
 import testdata.SubmissionTestData.{submission, submission_2}
 import uk.gov.hmrc.auth.core.InsufficientEnrolments
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
@@ -32,6 +31,7 @@ import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.services.SubmissionService
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

@@ -17,14 +17,13 @@
 package uk.gov.hmrc.exports.services
 
 import scala.concurrent.Future
-
 import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
-import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
 class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
 

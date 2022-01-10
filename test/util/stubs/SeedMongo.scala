@@ -17,11 +17,11 @@
 package stubs
 
 import reactivemongo.api.{MongoConnection, MongoDriver}
-import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, _}
 import uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
-import java.util.UUID
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
+import java.util.UUID
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 

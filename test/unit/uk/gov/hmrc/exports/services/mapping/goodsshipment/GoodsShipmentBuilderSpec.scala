@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.services.mapping.goodsshipment
 import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.Mockito
 import org.mockito.Mockito.verifyNoInteractions
-import testdata.{ExportsDeclarationBuilder, ExportsTestData}
+import testdata.ExportsTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration._
@@ -29,6 +29,7 @@ import uk.gov.hmrc.exports.services.mapping.goodsshipment.PreviousDocumentsBuild
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.UCRBuilderSpec.correctConsignmentReferences
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.{ConsignmentBuilder, GoodsLocationBuilderSpec}
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.GovernmentAgencyGoodsItemBuilder
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {

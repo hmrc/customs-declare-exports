@@ -18,7 +18,6 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.parties
 
 import org.mockito.ArgumentMatchersSugar.any
 import org.scalatest.EitherValues
-import testdata.ExportsDeclarationBuilder
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
@@ -28,6 +27,7 @@ import uk.gov.hmrc.exports.models.DeclarationType.CLEARANCE
 import uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserError
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
 import scala.xml.NodeSeq
 

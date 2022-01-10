@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class ExitOfficeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
