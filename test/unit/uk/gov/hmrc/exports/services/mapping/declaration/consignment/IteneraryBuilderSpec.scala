@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration.consignment
 
-import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.Country
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class IteneraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {

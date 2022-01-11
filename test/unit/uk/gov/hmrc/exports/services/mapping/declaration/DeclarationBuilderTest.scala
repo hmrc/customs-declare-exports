@@ -17,12 +17,12 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
-import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.mapping.AuthorisationHoldersBuilder
 import uk.gov.hmrc.exports.services.mapping.declaration.consignment.DeclarationConsignmentBuilder
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.GoodsShipmentBuilder
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.AdditionalInformationBuilder
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {

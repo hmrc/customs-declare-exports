@@ -17,19 +17,17 @@
 package uk.gov.hmrc.exports.connector
 
 import java.util.UUID
-
 import scala.concurrent.Future
-
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.http.ContentTypes
 import play.api.mvc.Codec
 import play.api.test.Helpers._
-import testdata.ExportsDeclarationBuilder
 import testdata.ExportsTestData._
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import uk.gov.hmrc.http.InternalServerException
 
 class CustomsDeclarationsConnectorSpec extends IntegrationTestSpec with ExportsDeclarationBuilder {

@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
-import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.services.CountriesService
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class DestinationBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {

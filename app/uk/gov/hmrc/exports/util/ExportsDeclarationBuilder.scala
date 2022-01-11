@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package testdata
+package uk.gov.hmrc.exports.util
 
-import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
+import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
+import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 
 import java.time.{LocalDateTime, ZoneOffset}
 import java.util.UUID
@@ -183,7 +183,10 @@ trait ExportsDeclarationBuilder {
     representingAnotherAgent: Option[String] = Some("Yes")
   ): ExportsDeclarationModifier =
     cache =>
-      cache.copy(parties = cache.parties.copy(representativeDetails = Some(RepresentativeDetails(details, statusCode, representingAnotherAgent))))
+      cache.copy(
+        parties = cache.parties
+          .copy(representativeDetails = Some(RepresentativeDetails(details, statusCode, representingAnotherAgent)))
+    )
 
   def withDeclarationAdditionalActors(data: DeclarationAdditionalActor*): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(declarationAdditionalActorsData = Some(DeclarationAdditionalActors(data))))
@@ -203,12 +206,14 @@ trait ExportsDeclarationBuilder {
   def withCarrierDetails(eori: Option[String] = None, address: Option[Address] = None): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(carrierDetails = Some(CarrierDetails(EntityDetails(eori, address)))))
 
-  def withoutOriginationCountry(): ExportsDeclarationModifier = cache => cache.copy(locations = cache.locations.copy(originationCountry = None))
+  def withoutOriginationCountry(): ExportsDeclarationModifier =
+    cache => cache.copy(locations = cache.locations.copy(originationCountry = None))
 
   def withOriginationCountry(country: Country = Country(Some("GB"))): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(originationCountry = Some(country)))
 
-  def withoutDestinationCountry(): ExportsDeclarationModifier = cache => cache.copy(locations = cache.locations.copy(destinationCountry = None))
+  def withoutDestinationCountry(): ExportsDeclarationModifier =
+    cache => cache.copy(locations = cache.locations.copy(destinationCountry = None))
 
   def withEmptyDestinationCountry(): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(destinationCountry = Some(Country(None))))
@@ -216,7 +221,8 @@ trait ExportsDeclarationBuilder {
   def withDestinationCountry(country: Country = Country(Some("GB"))): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(destinationCountry = Some(country)))
 
-  def withoutRoutingCountries(): ExportsDeclarationModifier = cache => cache.copy(locations = cache.locations.copy(routingCountries = Seq.empty))
+  def withoutRoutingCountries(): ExportsDeclarationModifier =
+    cache => cache.copy(locations = cache.locations.copy(routingCountries = Seq.empty))
 
   def withRoutingCountries(countries: Seq[Country] = Seq(Country(Some("GB")), Country(Some("PL")))): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(routingCountries = countries))
@@ -299,7 +305,8 @@ trait ExportsDeclarationBuilder {
   def withTransportPayment(payment: String): ExportsDeclarationModifier =
     declaration =>
       declaration.copy(
-        transport = declaration.transport.copy(expressConsignment = Some(YesNoAnswer.yes), transportPayment = Some(TransportPayment(payment)))
+        transport = declaration.transport
+          .copy(expressConsignment = Some(YesNoAnswer.yes), transportPayment = Some(TransportPayment(payment)))
     )
 
   def withUpdateDate(year: Int, month: Int, dayOfMonth: Int): ExportsDeclarationModifier =

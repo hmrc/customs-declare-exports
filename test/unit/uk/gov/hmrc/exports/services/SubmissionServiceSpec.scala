@@ -18,7 +18,6 @@ package uk.gov.hmrc.exports.services
 
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
-import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
@@ -27,6 +26,7 @@ import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclara
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
 import uk.gov.hmrc.exports.services.notifications.receiptactions.SendEmailForDmsDocAction
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 

@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
-import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration.{MUCR, PreviousDocument, PreviousDocuments}
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.PreviousDocumentsBuilder.{categoryCodeY, categoryCodeZ}
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {

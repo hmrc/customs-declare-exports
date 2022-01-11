@@ -17,10 +17,10 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.scalatest.{Assertion, GivenWhenThen}
-import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.STANDARD_PRE_LODGED
 import uk.gov.hmrc.exports.models.declaration.{Country, ExportsDeclaration}
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class TypeCodeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder with GivenWhenThen {

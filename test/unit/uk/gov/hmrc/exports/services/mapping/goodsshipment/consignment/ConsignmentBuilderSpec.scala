@@ -17,11 +17,11 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import com.google.inject.Guice
-import testdata.ExportsDeclarationBuilder
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class ConsignmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
