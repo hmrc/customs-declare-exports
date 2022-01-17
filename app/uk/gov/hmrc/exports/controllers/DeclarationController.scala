@@ -59,7 +59,7 @@ class DeclarationController @Inject()(
           val response = ErrorResponse("Cannot update a declaration once it is COMPLETE")
           logPayload("Update Declaration Response", response)
           Future.successful(BadRequest(response))
-        case Some(_) =>
+        case Some(_) => {
           declarationService
             .update(ExportsDeclaration(id, request.eori, request.body))
             .map(logPayload("Update Declaration Response", _))
@@ -67,6 +67,7 @@ class DeclarationController @Inject()(
               case Some(declaration) => Ok(declaration)
               case None              => NotFound
             }
+        }
         case None =>
           logPayload("Update Declaration Response", "Not Found")
           Future.successful(NotFound)

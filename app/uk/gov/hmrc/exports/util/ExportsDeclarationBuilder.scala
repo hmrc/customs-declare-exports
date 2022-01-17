@@ -57,6 +57,7 @@ trait ExportsDeclarationBuilder {
     parties = Parties(),
     locations = Locations(),
     items = Seq.empty,
+    readyForSubmission = None,
     totalNumberOfItems = None,
     previousDocuments = None,
     natureOfTransaction = None

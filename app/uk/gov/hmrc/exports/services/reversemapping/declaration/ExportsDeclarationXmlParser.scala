@@ -76,13 +76,14 @@ class ExportsDeclarationXmlParser @Inject()(
         parties = parties,
         locations = locations,
         items = items,
+        readyForSubmission = Some(true),
         totalNumberOfItems = None,
         previousDocuments = None,
         natureOfTransaction = None
       )
 
     //infer other values not present in the xml
-    decFromXmlValues.map(PartiesParser.setInferredValues(_))
+    decFromXmlValues.map(PartiesParser.setInferredValues)
   }
 
   private def deriveDeclarationType(additionalDeclarationType: Option[AdditionalDeclarationType]): XmlParserResult[DeclarationType] =
