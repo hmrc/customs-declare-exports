@@ -37,6 +37,7 @@ case class ExportsDeclarationRequest(
   parties: Parties = Parties(),
   locations: Locations = Locations(),
   items: Seq[ExportItem] = Seq.empty,
+  containersSectionAnswered: Boolean = false,
   totalNumberOfItems: Option[TotalNumberOfItems] = None,
   previousDocuments: Option[PreviousDocuments] = None,
   natureOfTransaction: Option[NatureOfTransaction] = None

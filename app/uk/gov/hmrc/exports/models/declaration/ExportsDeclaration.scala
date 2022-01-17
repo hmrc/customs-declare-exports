@@ -42,6 +42,7 @@ case class ExportsDeclaration(
   parties: Parties,
   locations: Locations,
   items: Seq[ExportItem],
+  containersSectionAnswered: Boolean,
   totalNumberOfItems: Option[TotalNumberOfItems],
   previousDocuments: Option[PreviousDocuments],
   natureOfTransaction: Option[NatureOfTransaction]
@@ -69,6 +70,7 @@ object ExportsDeclaration {
       parties = declarationRequest.parties,
       locations = declarationRequest.locations,
       items = declarationRequest.items,
+      containersSectionAnswered = declarationRequest.containersSectionAnswered,
       totalNumberOfItems = declarationRequest.totalNumberOfItems,
       previousDocuments = declarationRequest.previousDocuments,
       natureOfTransaction = declarationRequest.natureOfTransaction
