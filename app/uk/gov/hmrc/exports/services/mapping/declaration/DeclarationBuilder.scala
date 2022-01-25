@@ -20,7 +20,6 @@ import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.mapping.AuthorisationHoldersBuilder
 import uk.gov.hmrc.exports.services.mapping.declaration.consignment.DeclarationConsignmentBuilder
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.GoodsShipmentBuilder
-import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.AdditionalInformationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 import javax.inject.Inject
@@ -70,6 +69,7 @@ class DeclarationBuilder @Inject()(
     declarationConsignmentBuilder.buildThenAdd(model, declaration)
     authorisationHoldersBuilder.buildThenAdd(model, declaration)
     currencyExchangeBuilder.buildThenAdd(model, declaration)
+    additionalInformationBuilder.buildThenAdd(model, declaration)
 
     declaration
   }

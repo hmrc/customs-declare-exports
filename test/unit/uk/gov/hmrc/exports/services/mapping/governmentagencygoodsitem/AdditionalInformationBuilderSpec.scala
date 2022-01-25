@@ -98,25 +98,4 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
         .getValue mustBe "some description"
     }
   }
-
-  "build then add from description" should {
-    "append to declaration" in {
-      val declaration = new Declaration()
-
-      builder.buildThenAdd("description", declaration)
-
-      declaration.getAdditionalInformation must have(size(1))
-      val additionalInfo = declaration.getAdditionalInformation.get(0)
-      additionalInfo.getStatementTypeCode.getValue mustBe "AES"
-      additionalInfo.getStatementDescription.getValue mustBe "description"
-      additionalInfo.getPointer must have(size(2))
-      val pointer1 = additionalInfo.getPointer.get(0)
-      val pointer2 = additionalInfo.getPointer.get(1)
-      pointer1.getSequenceNumeric.intValue mustBe 1
-      pointer1.getDocumentSectionCode.getValue mustBe "42A"
-      pointer2.getDocumentSectionCode.getValue mustBe "06A"
-    }
-
-  }
-
 }
