@@ -99,6 +99,7 @@ object ExportsDeclarationSpec {
     parties = parties,
     locations = locations,
     items = Seq(item),
+    readyForSubmission = Some(true),
     totalNumberOfItems = Some(totalNumberOfItems),
     previousDocuments = Some(previousDocuments),
     natureOfTransaction = Some(natureOfTransaction)
@@ -121,6 +122,7 @@ object ExportsDeclarationSpec {
     parties = parties,
     locations = locations,
     items = Seq(item),
+    readyForSubmission = Some(true),
     totalNumberOfItems = Some(totalNumberOfItems),
     previousDocuments = Some(previousDocuments),
     natureOfTransaction = Some(natureOfTransaction)
@@ -330,6 +332,7 @@ object ExportsDeclarationSpec {
       |  },
       |  "natureOfTransaction": {
       |    "natureType": "1"
-      |  }
+      |  },
+      |  "readyForSubmission": true
       |}""".stripMargin
 }
