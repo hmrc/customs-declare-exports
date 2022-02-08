@@ -25,37 +25,39 @@ import wco.datamodel.wco.declaration_ds.dms._2._
 
 class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, t: Declaration): Unit = {
-    val transportMeans = new Declaration.BorderTransportMeans()
     val transport = model.transport
-    val hasDeparture = transport.hasDepartureTransportCode
+
+    val hasTransportLeavingTheBorder = transport.hasTransportLeavingTheBorder
     val hasBorder = transport.hasBorderTransportDetails
-    if (hasDeparture || hasBorder) {
-      if (hasDeparture) {
-        appendDepartureTransport(transport, transportMeans)
-      }
-      if (hasBorder) {
-        appendBorderTransport(transport, transportMeans)
-      }
+    val hasDepartureTransport = transport.hasDepartureTransportDetails
+
+    if (hasTransportLeavingTheBorder || hasBorder || hasDepartureTransport) {
+      val transportMeans = new Declaration.BorderTransportMeans
+
+      if (hasTransportLeavingTheBorder) appendTransportLeavingTheBorder(transport, transportMeans)
+
+      if (hasBorder) appendBorderTransport(transport, transportMeans)
+      else if (hasDepartureTransport) appendDepartureTransport(transport, transportMeans)
+
       t.setBorderTransportMeans(transportMeans)
     }
   }
 
   private def appendBorderTransport(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit = {
     data.meansOfTransportCrossingTheBorderIDNumber.foreach { value =>
-      val id = new BorderTransportMeansIdentificationIDType()
+      val id = new BorderTransportMeansIdentificationIDType
       id.setValue(value)
       transportMeans.setID(id)
     }
 
     data.meansOfTransportCrossingTheBorderType.foreach { transportType =>
-      val identificationTypeCode = new BorderTransportMeansIdentificationTypeCodeType()
+      val identificationTypeCode = new BorderTransportMeansIdentificationTypeCodeType
       identificationTypeCode.setValue(transportType)
-
       transportMeans.setIdentificationTypeCode(identificationTypeCode)
     }
 
     if (data.meansOfTransportCrossingTheBorderNationality.isDefined) {
-      val registrationNationalityCode = new BorderTransportMeansRegistrationNationalityCodeType()
+      val registrationNationalityCode = new BorderTransportMeansRegistrationNationalityCodeType
       registrationNationalityCode.setValue(
         countriesService.allCountries
           .find(country => data.meansOfTransportCrossingTheBorderNationality.contains(country.countryName))
@@ -66,13 +68,27 @@ class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) 
     }
   }
 
-  private def appendDepartureTransport(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit =
+  private def appendDepartureTransport(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit = {
+    data.meansOfTransportOnDepartureIDNumber.foreach { value =>
+      val id = new BorderTransportMeansIdentificationIDType
+      id.setValue(value)
+      transportMeans.setID(id)
+    }
+
+    data.meansOfTransportOnDepartureType.foreach { transportType =>
+      val identificationTypeCode = new BorderTransportMeansIdentificationTypeCodeType
+      identificationTypeCode.setValue(transportType)
+      transportMeans.setIdentificationTypeCode(identificationTypeCode)
+    }
+  }
+
+  private def appendTransportLeavingTheBorder(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit =
     for {
       transportLeavingTheBorder <- data.borderModeOfTransportCode
       modeOfTransportCode <- transportLeavingTheBorder.code
       if modeOfTransportCode.isValidCode
     } {
-      val modeCode = new BorderTransportMeansModeCodeType()
+      val modeCode = new BorderTransportMeansModeCodeType
       modeCode.setValue(modeOfTransportCode.value)
       transportMeans.setModeCode(modeCode)
     }
