@@ -26,6 +26,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   val mockCountriesService = mock[CountriesService]
+
   when(mockCountriesService.allCountries)
     .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
@@ -39,7 +40,21 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getBorderTransportMeans must be(null)
+        Option(declaration.getBorderTransportMeans) mustBe None
+      }
+
+      "no border transport, only departure transport" in {
+        val declaration = new Declaration()
+
+        val model = aDeclaration(
+          withoutBorderTransport(),
+          withDepartureTransport(meansOfTransportOnDepartureType = "type", meansOfTransportOnDepartureIDNumber = "id")
+        )
+        builder.buildThenAdd(model, declaration)
+
+        declaration.getBorderTransportMeans.getID.getValue must be("id")
+        declaration.getBorderTransportMeans.getIdentificationTypeCode.getValue must be("type")
+        Option(declaration.getBorderTransportMeans.getRegistrationNationalityCode) mustBe None
       }
 
       "transport details only" in {
@@ -90,7 +105,7 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
 
         builder.buildThenAdd(model, declaration)
 
-        declaration.getBorderTransportMeans.getModeCode must be(null)
+        Option(declaration.getBorderTransportMeans.getModeCode) mustBe None
       }
 
       "fully populated" in {

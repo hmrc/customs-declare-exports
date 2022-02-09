@@ -40,11 +40,11 @@ case class Transport(
       meansOfTransportCrossingTheBorderType.nonEmpty ||
       meansOfTransportCrossingTheBorderNationality.nonEmpty
 
-  def hasDepartureTransportCode: Boolean =
-    borderModeOfTransportCode.nonEmpty
-
   def hasDepartureTransportDetails: Boolean =
     meansOfTransportOnDepartureIDNumber.nonEmpty || meansOfTransportOnDepartureType.nonEmpty
+
+  def hasTransportLeavingTheBorder: Boolean =
+    borderModeOfTransportCode.nonEmpty
 
   def isMeansOfTransportOnDepartureDefined: Boolean = meansOfTransportOnDepartureType.exists(_ != Transport.optionNone)
 }
