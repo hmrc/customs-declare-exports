@@ -37,7 +37,7 @@ class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) 
       if (hasTransportLeavingTheBorder) appendTransportLeavingTheBorder(transport, transportMeans)
 
       if (hasBorder) appendBorderTransport(transport, transportMeans)
-      else if (hasDepartureTransport) appendDepartureTransport(transport, transportMeans)
+      else if (hasDepartureTransport) appendBorderTransportWithDepartureValue(transport, transportMeans)
 
       t.setBorderTransportMeans(transportMeans)
     }
@@ -68,7 +68,7 @@ class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) 
     }
   }
 
-  private def appendDepartureTransport(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit = {
+  private def appendBorderTransportWithDepartureValue(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit = {
     data.meansOfTransportOnDepartureIDNumber.foreach { value =>
       val id = new BorderTransportMeansIdentificationIDType
       id.setValue(value)

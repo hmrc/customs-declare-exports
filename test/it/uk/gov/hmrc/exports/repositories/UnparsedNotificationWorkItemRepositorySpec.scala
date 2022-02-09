@@ -1,6 +1,7 @@
 package uk.gov.hmrc.exports.repositories
 
 import org.joda.time.DateTime.now
+import org.scalatest.concurrent.Eventually
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.core.errors.DatabaseException
 import stubs.TestMongoDB
@@ -11,9 +12,10 @@ import uk.gov.hmrc.exports.base.IntegrationTestBaseSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 
 import java.util.UUID
+import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class UnparsedNotificationWorkItemRepositorySpec extends IntegrationTestBaseSpec {
+class UnparsedNotificationWorkItemRepositorySpec extends IntegrationTestBaseSpec with Eventually {
 
   private val repo = GuiceApplicationBuilder().configure(mongoConfiguration).injector.instanceOf[UnparsedNotificationWorkItemRepository]
 
@@ -30,10 +32,11 @@ class UnparsedNotificationWorkItemRepositorySpec extends IntegrationTestBaseSpec
 
       repo.pushNew(testUnparsedNotification).futureValue
 
-      val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
-
-      result mustBe defined
-      result.get.item mustBe testUnparsedNotification
+      eventually(timeout(2 seconds), interval(100 millis)) {
+        val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
+        result mustBe defined
+        result.get.item mustBe testUnparsedNotification
+      }
     }
 
     "return Exception" when {
