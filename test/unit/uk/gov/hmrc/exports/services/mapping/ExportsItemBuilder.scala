@@ -92,6 +92,12 @@ trait ExportsItemBuilder {
   def withAdditionalDocuments(docs: AdditionalDocuments): ItemModifier =
     cache => cache.copy(additionalDocuments = Some(docs))
 
+  def withLicenseRequired(): ItemModifier =
+    cache => cache.copy(isLicenseRequired = Some(true))
+
+  def withLicenseNotRequired(): ItemModifier =
+    cache => cache.copy(isLicenseRequired = Some(false))
+
   private def uuid: String = UUID.randomUUID().toString
 
 }

@@ -34,8 +34,8 @@ class AdditionalInformationBuilder @Inject()() extends ModifyingBuilder[ExportsD
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit = {
     val maybeLast3CharsOfGoodsLocation = model.locations.goodsLocation.flatMap(_.identificationOfLocation).map(_.takeRight(3).toUpperCase)
 
-    if (maybeLast3CharsOfGoodsLocation == Some("GVM")) {
-      declaration.getAdditionalInformation().add(buildAdditionalInformation(model))
+    if (maybeLast3CharsOfGoodsLocation contains "GVM") {
+      declaration.getAdditionalInformation.add(buildAdditionalInformation(model))
     }
   }
 

@@ -17,16 +17,28 @@
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.{AdditionalDocument, Date, DocumentWriteOff}
+import uk.gov.hmrc.exports.models.declaration.{AdditionalDocument, AdditionalDocuments, Date, DocumentWriteOff, ExportItem}
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.AdditionalDocumentsBuilder.{
   documentStatusesRequiringOptionalFields,
   documentTypeCodesRequiringOptionalFields
 }
 import uk.gov.hmrc.wco.dec._
+import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem
 
 import scala.BigDecimal
 
 class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoodsItemData {
+
+  private val additionalDocument = AdditionalDocument(
+    documentTypeCode = Some("DOC"),
+    documentIdentifier = Some("idpart"),
+    documentStatus = Some("status"),
+    documentStatusReason = Some("reason"),
+    issuingAuthorityName = Some("Issuing\nAuthority\rName"),
+    dateOfValidity = Some(Date(Some(10), Some(4), Some(2017))),
+    documentWriteOff = None
+  )
+
   "AdditionalDocumentsBuilder" should {
     "map correctly when values are present" in {
 
@@ -62,17 +74,36 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
       writeOffQuantity.getValue mustBe documentQuantity.bigDecimal
     }
 
+    "map document from 'Is License Required' No" when {
+      "docs already exist" in {
+
+        val additionalDocumentsBuilder = new AdditionalDocumentsBuilder()
+        val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
+
+        val item =
+          ExportItem(id = "id", additionalDocuments = Some(AdditionalDocuments(None, Seq(additionalDocument))), isLicenseRequired = Some(false))
+
+        additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
+
+        governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 2
+
+      }
+      "docs do not exist" in {
+
+        val additionalDocumentsBuilder = new AdditionalDocumentsBuilder()
+        val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
+
+        val item = ExportItem(id = "id", isLicenseRequired = Some(false))
+
+        additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
+
+        governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 1
+
+      }
+    }
+
     "map AdditionalDocument to GovernmentAgencyGoodsItemAdditionalDocument" when {
       "all fields are present" in {
-        val additionalDocument = AdditionalDocument(
-          documentTypeCode = Some("DOC"),
-          documentIdentifier = Some("idpart"),
-          documentStatus = Some("status"),
-          documentStatusReason = Some("reason"),
-          issuingAuthorityName = Some("Issuing\nAuthority\rName"),
-          dateOfValidity = Some(Date(Some(10), Some(4), Some(2017))),
-          documentWriteOff = None
-        )
 
         val wcoAdditionalDocument = AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument(additionalDocument)
 

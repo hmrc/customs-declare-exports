@@ -32,13 +32,40 @@ import scala.collection.JavaConverters._
 
 class AdditionalDocumentsBuilder @Inject()() extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
 
-  def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem): Unit =
-    exportItem.additionalDocuments.foreach {
-      _.documents.map(AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument).foreach { goodsItemAdditionalDocument =>
+  def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem): Unit = {
+
+    val additionalDocs = exportItem.additionalDocuments.map(_.documents)
+
+    val cdsWaiver = exportItem.isLicenseRequired.flatMap {
+      case true => None
+      case false =>
+        Some(
+          AdditionalDocument(
+            documentTypeCode = None,
+            documentIdentifier = None,
+            documentStatus = None,
+            documentStatusReason = Some("CDS WAIVER"),
+            issuingAuthorityName = None,
+            dateOfValidity = None,
+            documentWriteOff = None
+          )
+        )
+    }
+
+    val docsWithWaiver = cdsWaiver.fold(additionalDocs) { waiver =>
+      additionalDocs match {
+        case Some(docs @ _ :: _) => Some(docs :+ waiver)
+        case _                   => Some(Seq(waiver))
+      }
+    }
+
+    docsWithWaiver foreach {
+      _.map(AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument) foreach { goodsItemAdditionalDocument =>
         wcoGovernmentAgencyGoodsItem.getAdditionalDocument
           .add(AdditionalDocumentsBuilder.createAdditionalDocument(goodsItemAdditionalDocument))
       }
     }
+  }
 
 }
 
@@ -143,13 +170,9 @@ object AdditionalDocumentsBuilder {
   val documentStatusesRequiringOptionalFields = Seq("UA", "UE", "UP", "US", "XX", "XW")
 
   private def shouldDefaultValuesBeApplied(additionalDocument: AdditionalDocument): Boolean = {
-    val documentTypeCodeMatches = additionalDocument.documentTypeCode
-      .map(documentTypeCodesRequiringOptionalFields.contains(_))
-      .getOrElse(false)
+    val documentTypeCodeMatches = additionalDocument.documentTypeCode.exists(documentTypeCodesRequiringOptionalFields.contains)
 
-    val documentStatusMatches = additionalDocument.documentStatus
-      .map(documentStatusesRequiringOptionalFields.contains(_))
-      .getOrElse(false)
+    val documentStatusMatches = additionalDocument.documentStatus.exists(documentStatusesRequiringOptionalFields.contains)
 
     documentTypeCodeMatches && documentStatusMatches
   }
