@@ -41,7 +41,7 @@ class AdditionalDocumentsBuilder @Inject()() extends ModifyingBuilder[ExportItem
       case false =>
         Some(
           AdditionalDocument(
-            documentTypeCode = None,
+            documentTypeCode = Some("999L"),
             documentIdentifier = None,
             documentStatus = None,
             documentStatusReason = Some("CDS WAIVER"),

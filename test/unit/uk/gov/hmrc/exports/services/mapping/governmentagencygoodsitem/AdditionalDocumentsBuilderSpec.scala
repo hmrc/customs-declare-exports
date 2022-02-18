@@ -86,6 +86,8 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
         additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
 
         governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 2
+        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getName.getValue mustBe "CDS WAIVER"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getTypeCode.getValue mustBe "999L"
 
       }
       "docs do not exist" in {
@@ -98,6 +100,8 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
         additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
 
         governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 1
+        governmentAgencyGoodsItem.getAdditionalDocument.get(0).getName.getValue mustBe "CDS WAIVER"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(0).getTypeCode.getValue mustBe "999L"
 
       }
     }
