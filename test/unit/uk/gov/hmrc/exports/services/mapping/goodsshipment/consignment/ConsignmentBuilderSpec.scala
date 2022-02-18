@@ -49,7 +49,7 @@ class ConsignmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
               withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
               withDepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, meansOfTransportOnDepartureIDNumber),
               withType(declarationType),
-              withBorderTransport(Some("Portugal"), "40", Some("1234567878ui")),
+              withBorderTransport(Some("Portugal"), Some("40"), Some("1234567878ui")),
               withContainerData(Container("container", Seq(Seal("seal1"), Seal("seal2"))))
             )
 

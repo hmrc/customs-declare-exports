@@ -39,48 +39,50 @@ class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) 
       if (hasBorder) appendBorderTransport(transport, transportMeans)
       else if (hasDepartureTransport) appendBorderTransportWithDepartureValue(transport, transportMeans)
 
+      appendRegistrationNationalityCode(transport, transportMeans)
+
       t.setBorderTransportMeans(transportMeans)
     }
   }
 
   private def appendBorderTransport(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit = {
-    data.meansOfTransportCrossingTheBorderIDNumber.foreach { value =>
+    data.meansOfTransportCrossingTheBorderIDNumber.filter(_.trim.nonEmpty).foreach { value =>
       val id = new BorderTransportMeansIdentificationIDType
       id.setValue(value)
       transportMeans.setID(id)
     }
 
-    data.meansOfTransportCrossingTheBorderType.foreach { transportType =>
+    data.meansOfTransportCrossingTheBorderType.filter(_.trim.nonEmpty).foreach { transportType =>
       val identificationTypeCode = new BorderTransportMeansIdentificationTypeCodeType
       identificationTypeCode.setValue(transportType)
       transportMeans.setIdentificationTypeCode(identificationTypeCode)
-    }
-
-    if (data.meansOfTransportCrossingTheBorderNationality.isDefined) {
-      val registrationNationalityCode = new BorderTransportMeansRegistrationNationalityCodeType
-      registrationNationalityCode.setValue(
-        countriesService.allCountries
-          .find(country => data.meansOfTransportCrossingTheBorderNationality.contains(country.countryName))
-          .map(_.countryCode)
-          .getOrElse("")
-      )
-      transportMeans.setRegistrationNationalityCode(registrationNationalityCode)
     }
   }
 
   private def appendBorderTransportWithDepartureValue(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit = {
-    data.meansOfTransportOnDepartureIDNumber.foreach { value =>
+    data.meansOfTransportOnDepartureIDNumber.filter(_.trim.nonEmpty).foreach { value =>
       val id = new BorderTransportMeansIdentificationIDType
       id.setValue(value)
       transportMeans.setID(id)
     }
 
-    data.meansOfTransportOnDepartureType.foreach { transportType =>
+    data.meansOfTransportOnDepartureType.filter(_.trim.nonEmpty).foreach { transportType =>
       val identificationTypeCode = new BorderTransportMeansIdentificationTypeCodeType
       identificationTypeCode.setValue(transportType)
       transportMeans.setIdentificationTypeCode(identificationTypeCode)
     }
   }
+
+  private def appendRegistrationNationalityCode(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit =
+    data.meansOfTransportCrossingTheBorderNationality.foreach { transportCrossingTheBorderNationality =>
+      countriesService.allCountries
+        .find(country => transportCrossingTheBorderNationality.contains(country.countryName))
+        .foreach { country =>
+          val registrationNationalityCode = new BorderTransportMeansRegistrationNationalityCodeType
+          registrationNationalityCode.setValue(country.countryCode)
+          transportMeans.setRegistrationNationalityCode(registrationNationalityCode)
+        }
+    }
 
   private def appendTransportLeavingTheBorder(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit =
     for {

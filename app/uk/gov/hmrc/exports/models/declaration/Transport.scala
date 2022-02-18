@@ -36,9 +36,8 @@ case class Transport(
   meansOfTransportCrossingTheBorderIDNumber: Option[String] = None
 ) {
   def hasBorderTransportDetails: Boolean =
-    meansOfTransportCrossingTheBorderIDNumber.isDefined ||
-      meansOfTransportCrossingTheBorderType.nonEmpty ||
-      meansOfTransportCrossingTheBorderNationality.nonEmpty
+    meansOfTransportCrossingTheBorderIDNumber.exists(_.nonEmpty) &&
+      meansOfTransportCrossingTheBorderType.exists(_.nonEmpty)
 
   def hasDepartureTransportDetails: Boolean =
     meansOfTransportOnDepartureIDNumber.nonEmpty || meansOfTransportOnDepartureType.nonEmpty
