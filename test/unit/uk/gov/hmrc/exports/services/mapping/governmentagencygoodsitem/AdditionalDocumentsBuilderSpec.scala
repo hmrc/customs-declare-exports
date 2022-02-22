@@ -87,7 +87,8 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
 
         governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 2
         governmentAgencyGoodsItem.getAdditionalDocument.get(1).getName.getValue mustBe "CDS WAIVER"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getTypeCode.getValue mustBe "999L"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getTypeCode.getValue mustBe "99L"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getCategoryCode.getValue mustBe "9"
 
       }
       "docs do not exist" in {
@@ -101,8 +102,8 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
 
         governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 1
         governmentAgencyGoodsItem.getAdditionalDocument.get(0).getName.getValue mustBe "CDS WAIVER"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(0).getTypeCode.getValue mustBe "999L"
-
+        governmentAgencyGoodsItem.getAdditionalDocument.get(0).getTypeCode.getValue mustBe "99L"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(0).getCategoryCode.getValue mustBe "9"
       }
     }
 

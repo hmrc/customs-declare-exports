@@ -34,27 +34,33 @@ class AdditionalDocumentsBuilder @Inject()() extends ModifyingBuilder[ExportItem
 
   def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem): Unit = {
 
-    val additionalDocs: Option[Seq[AdditionalDocument]] = exportItem.additionalDocuments.map(_.documents)
-
-    val govAdditionalDocs: Option[Seq[GovernmentAgencyGoodsItemAdditionalDocument]] = additionalDocs map {
-      _.map(AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument)
-    }
+    val additionalDocs = exportItem.additionalDocuments.map(_.documents)
 
     val cdsWaiver = exportItem.isLicenseRequired.flatMap {
       case true => None
       case false =>
-        Some(GovernmentAgencyGoodsItemAdditionalDocument(categoryCode = Some("999L"), typeCode = Some("999L"), name = Some("CDS WAIVER")))
+        Some(
+          AdditionalDocument(
+            documentTypeCode = Some("999L"),
+            documentIdentifier = None,
+            documentStatus = None,
+            documentStatusReason = Some("CDS WAIVER"),
+            issuingAuthorityName = None,
+            dateOfValidity = None,
+            documentWriteOff = None
+          )
+        )
     }
 
-    val docsWithWaiver: Option[Seq[GovernmentAgencyGoodsItemAdditionalDocument]] = cdsWaiver.fold(govAdditionalDocs) { waiver =>
-      govAdditionalDocs match {
+    val docsWithWaiver = cdsWaiver.fold(additionalDocs) { waiver =>
+      additionalDocs match {
         case Some(docs @ _ :: _) => Some(docs :+ waiver)
         case _                   => Some(Seq(waiver))
       }
     }
 
     docsWithWaiver foreach {
-      _ foreach { goodsItemAdditionalDocument =>
+      _ map AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument foreach { goodsItemAdditionalDocument =>
         wcoGovernmentAgencyGoodsItem.getAdditionalDocument
           .add(AdditionalDocumentsBuilder.createAdditionalDocument(goodsItemAdditionalDocument))
       }
