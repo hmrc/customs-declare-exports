@@ -291,14 +291,14 @@ trait ExportsDeclarationBuilder {
 
   def withBorderTransport(
     meansOfTransportCrossingTheBorderNationality: Option[String] = None,
-    meansOfTransportCrossingTheBorderType: String = "",
+    meansOfTransportCrossingTheBorderType: Option[String] = None,
     meansOfTransportCrossingTheBorderIDNumber: Option[String] = None
   ): ExportsDeclarationModifier =
     declaration =>
       declaration.copy(
         transport = declaration.transport.copy(
           meansOfTransportCrossingTheBorderNationality = meansOfTransportCrossingTheBorderNationality,
-          meansOfTransportCrossingTheBorderType = Some(meansOfTransportCrossingTheBorderType),
+          meansOfTransportCrossingTheBorderType = meansOfTransportCrossingTheBorderType,
           meansOfTransportCrossingTheBorderIDNumber = meansOfTransportCrossingTheBorderIDNumber
         )
     )
