@@ -46,9 +46,7 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
       name = Some("actionIdIdx"),
       partialFilter = Some(BSONDocument(Seq("actions.id" -> BSONDocument("$exists" -> BSONBoolean(true)))))
     ),
-    Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
-    Index(Seq("eori" -> IndexType.Ascending, "action.requestTimestamp" -> IndexType.Descending), name = Some("actionOrderedEori")),
-    Index(Seq("updatedDateTime" -> IndexType.Ascending), name = Some("updateTimeIdx"))
+    Index(Seq("eori" -> IndexType.Ascending, "action.requestTimestamp" -> IndexType.Descending), name = Some("actionOrderedEori"))
   )
 
   def findOrCreate(eori: Eori, id: String, onMissing: Submission): Future[Submission] =
