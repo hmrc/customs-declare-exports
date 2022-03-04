@@ -33,11 +33,11 @@ class EmailSender @Inject()(
   emailConnector: EmailConnector
 ) extends Logging {
 
-  def sendEmailForDmsDocNotification(mrn: String)(implicit ec: ExecutionContext): Future[SendEmailResult] =
-    obtainEori(mrn).flatMap {
+  def sendEmailForDmsDocNotification(sendEmailDetails: SendEmailDetails)(implicit ec: ExecutionContext): Future[SendEmailResult] =
+    obtainEori(sendEmailDetails.actionId).flatMap {
       case Some(eori) =>
         obtainEmailAddress(eori).flatMap {
-          case Some(email) if email.deliverable => sendEmail(mrn, eori, email)
+          case Some(email) if email.deliverable => sendEmail(sendEmailDetails.mrn, eori, email)
           case Some(_) =>
             logger.warn(s"Email address for EORI: [$eori] was not deliverable")
             Future.successful(MissingData)
@@ -46,12 +46,12 @@ class EmailSender @Inject()(
             Future.successful(MissingData)
         }
       case None =>
-        logger.warn(s"Could not obtain EORI number for MRN: [$mrn]")
+        logger.warn(s"Could not obtain EORI number for MRN: [${sendEmailDetails.mrn}]")
         Future.successful(MissingData)
     }
 
-  private def obtainEori(mrn: String)(implicit ec: ExecutionContext): Future[Option[String]] =
-    submissionRepository.findSubmissionByMrn(mrn).map(_.map(_.eori))
+  private def obtainEori(conversationId: String)(implicit ec: ExecutionContext): Future[Option[String]] =
+    submissionRepository.findByConversationId(conversationId).map(_.map(_.eori))
 
   private def obtainEmailAddress(eori: String)(implicit ec: ExecutionContext): Future[Option[Email]] =
     customsDataStoreConnector.getEmailAddress(eori)

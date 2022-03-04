@@ -32,8 +32,12 @@ case class Submission(
 
 object Submission {
 
+  @deprecated
   def apply(declaration: ExportsDeclaration, lrn: String, ducr: String): Submission =
     new Submission(declaration.id, declaration.eori, lrn, None, ducr, Seq.empty)
+
+  def apply(declaration: ExportsDeclaration, lrn: String, ducr: String, action: Action): Submission =
+    new Submission(declaration.id, declaration.eori, lrn, None, ducr, Seq(action))
 
   implicit val formats = Json.format[Submission]
 }

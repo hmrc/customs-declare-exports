@@ -55,9 +55,13 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
       case submissions => Future.successful(submissions.head)
     }
 
+  @deprecated
   def findSubmissionByMrn(mrn: String): Future[Option[Submission]] = find("mrn" -> mrn).map(_.headOption)
 
-  def findSubmissionByMrnAndEori(mrn: String, eori: String): Future[Option[Submission]] = find("mrn" -> mrn, "eori" -> eori).map(_.headOption)
+  //TODO: see why we are looking up by MRN field that is not indexed!
+  def findSubmissionByMrnAndEori(mrn: String, eori: String): Future[Option[Submission]] = find("eori" -> eori, "mrn" -> mrn).map(_.headOption)
+
+  def findByConversationId(conversationId: String): Future[Option[Submission]] = find("actions.id" -> conversationId).map(_.headOption)
 
   def findBy(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] = {
     val query = Json.toJson(queryParameters).as[JsObject] + (otherField = ("eori", JsString(eori)))

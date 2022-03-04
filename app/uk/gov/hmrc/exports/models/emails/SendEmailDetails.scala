@@ -20,7 +20,7 @@ import play.api.libs.json._
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
-case class SendEmailDetails(notificationId: BSONObjectID, mrn: String, alertTriggered: Boolean = false)
+case class SendEmailDetails(notificationId: BSONObjectID, mrn: String, actionId: String, alertTriggered: Boolean = false)
 
 object SendEmailDetails {
   implicit val idFormat = ReactiveMongoFormats.objectIdFormats

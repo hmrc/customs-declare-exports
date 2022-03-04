@@ -53,10 +53,15 @@ class ParseAndSaveAction @Inject()(
       })
       .map(_ => ())
 
-  private def updateRelatedSubmission(notification: ParsedNotification): Future[Option[Submission]] =
-    submissionRepository.updateMrn(notification.actionId, notification.details.mrn).andThen {
-      case Success(None) =>
-        logger.warn(s"Could not find Submission to update for actionId: ${notification.actionId}")
+  private def updateRelatedSubmission(notification: ParsedNotification): Future[Option[Submission]] = {
+    submissionRepository.findByConversationId(notification.actionId).flatMap { maybeSubmission =>
+      if (maybeSubmission.exists(_.mrn.isEmpty)) {
+        submissionRepository.updateMrn(notification.actionId, notification.details.mrn).andThen {
+          case Success(None) =>
+            logger.warn(s"Could not find Submission to update for actionId: ${notification.actionId}")
+        }
+      } else
+        Future.successful(maybeSubmission)
     }
-
+  }
 }
