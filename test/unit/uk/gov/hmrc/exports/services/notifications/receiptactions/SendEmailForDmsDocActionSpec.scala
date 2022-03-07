@@ -66,7 +66,8 @@ class SendEmailForDmsDocActionSpec extends UnitSpec {
       val testNotification = notification.copy(details = notification.details.copy(status = SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED))
       val testActionId = testNotification.actionId
 
-      val testSendEmailDetails = SendEmailDetails(notificationId = testNotification._id, mrn = testNotification.details.mrn)
+      val testSendEmailDetails =
+        SendEmailDetails(notificationId = testNotification._id, mrn = testNotification.details.mrn, actionId = testNotification.actionId)
       val testWorkItem = WorkItem(
         id = BSONObjectID.generate,
         receivedAt = DateTime.now,

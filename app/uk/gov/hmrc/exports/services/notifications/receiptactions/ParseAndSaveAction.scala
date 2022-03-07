@@ -53,7 +53,7 @@ class ParseAndSaveAction @Inject()(
       })
       .map(_ => ())
 
-  private def updateRelatedSubmission(notification: ParsedNotification): Future[Option[Submission]] = {
+  private def updateRelatedSubmission(notification: ParsedNotification): Future[Option[Submission]] =
     submissionRepository.findByConversationId(notification.actionId).flatMap { maybeSubmission =>
       if (maybeSubmission.exists(_.mrn.isEmpty)) {
         submissionRepository.updateMrn(notification.actionId, notification.details.mrn).andThen {
@@ -63,5 +63,4 @@ class ParseAndSaveAction @Inject()(
       } else
         Future.successful(maybeSubmission)
     }
-  }
 }

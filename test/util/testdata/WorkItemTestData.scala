@@ -24,7 +24,8 @@ import uk.gov.hmrc.workitem.{ProcessingStatus, WorkItem}
 
 object WorkItemTestData {
 
-  def buildTestSendEmailDetails: SendEmailDetails = SendEmailDetails(notificationId = BSONObjectID.generate, mrn = ExportsTestData.mrn)
+  def buildTestSendEmailDetails: SendEmailDetails =
+    SendEmailDetails(notificationId = BSONObjectID.generate, mrn = ExportsTestData.mrn, actionId = "actionId")
 
   def buildTestSendEmailWorkItem(status: ProcessingStatus, updatedAt: DateTime = now, availableAt: DateTime = now): WorkItem[SendEmailDetails] =
     buildTestWorkItem(status, updatedAt, availableAt, item = buildTestSendEmailDetails)
@@ -39,5 +40,4 @@ object WorkItemTestData {
       failureCount = 0,
       item = item
     )
-
 }

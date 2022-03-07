@@ -194,7 +194,8 @@ class SendEmailsJobSpec extends UnitSpec {
 
           def prepareTestScenario(): Unit = {
             whenThereIsWorkItemAvailable()
-            when(emailSender.sendEmailForDmsDocNotification(any[String])(any[ExecutionContext])).thenReturn(Future.successful(EmailAccepted))
+            when(emailSender.sendEmailForDmsDocNotification(any[SendEmailDetails])(any[ExecutionContext]))
+              .thenReturn(Future.successful(EmailAccepted))
             when(sendEmailWorkItemRepository.complete(any[BSONObjectID], any[ProcessingStatus with ResultStatus])(any))
               .thenReturn(Future.successful(true))
             when(emailCancellationValidator.isEmailSendingCancelled(any[SendEmailDetails])(any)).thenReturn(Future.successful(false))
@@ -229,7 +230,7 @@ class SendEmailsJobSpec extends UnitSpec {
 
           def prepareTestScenario(): Unit = {
             whenThereIsWorkItemAvailable()
-            when(emailSender.sendEmailForDmsDocNotification(any[String])(any[ExecutionContext]))
+            when(emailSender.sendEmailForDmsDocNotification(any[SendEmailDetails])(any[ExecutionContext]))
               .thenReturn(Future.successful(BadEmailRequest("Test BadEmailRequest message")))
             when(sendEmailWorkItemRepository.markAs(any[BSONObjectID], any[ProcessingStatus with ResultStatus], any[Option[DateTime]])(any))
               .thenReturn(Future.successful(true))
@@ -265,7 +266,7 @@ class SendEmailsJobSpec extends UnitSpec {
 
           def prepareTestScenario(): Unit = {
             whenThereIsWorkItemAvailable()
-            when(emailSender.sendEmailForDmsDocNotification(any[String])(any[ExecutionContext])).thenReturn(Future.successful(MissingData))
+            when(emailSender.sendEmailForDmsDocNotification(any[SendEmailDetails])(any[ExecutionContext])).thenReturn(Future.successful(MissingData))
             when(sendEmailWorkItemRepository.markAs(any[BSONObjectID], any[ProcessingStatus with ResultStatus], any[Option[DateTime]])(any))
               .thenReturn(Future.successful(true))
             when(emailCancellationValidator.isEmailSendingCancelled(any[SendEmailDetails])(any)).thenReturn(Future.successful(false))
@@ -300,7 +301,7 @@ class SendEmailsJobSpec extends UnitSpec {
 
           def prepareTestScenario(): Unit = {
             whenThereIsWorkItemAvailable()
-            when(emailSender.sendEmailForDmsDocNotification(any[String])(any[ExecutionContext]))
+            when(emailSender.sendEmailForDmsDocNotification(any[SendEmailDetails])(any[ExecutionContext]))
               .thenReturn(Future.successful(InternalEmailServiceError("Test InternalEmailServiceError message")))
             when(sendEmailWorkItemRepository.markAs(any[BSONObjectID], any[ProcessingStatus with ResultStatus], any[Option[DateTime]])(any))
               .thenReturn(Future.successful(true))

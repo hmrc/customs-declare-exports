@@ -42,7 +42,10 @@ class ParsedNotificationRepository @Inject()(mc: ReactiveMongoComponent)(implici
     mongo().collection[JSONCollection](collectionName, failoverStrategy = RepositorySettings.failoverStrategy)
 
   override def indexes: Seq[Index] = Seq(
-    Index(Seq("actionId" -> IndexType.Ascending, "details.dateTimeIssued" -> IndexType.Ascending), name = Some("detailsDateTimeIssuedOrderedActionId"))
+    Index(
+      Seq("actionId" -> IndexType.Ascending, "details.dateTimeIssued" -> IndexType.Ascending),
+      name = Some("detailsDateTimeIssuedOrderedActionId")
+    )
   )
 
   def findLatestNotification(actionIds: Seq[String]): Future[Option[ParsedNotification]] =

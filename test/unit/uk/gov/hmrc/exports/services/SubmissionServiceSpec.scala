@@ -49,10 +49,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     customsDeclarationsConnector = customsDeclarationsConnector,
     submissionRepository = submissionRepository,
     declarationRepository = declarationRepository,
-    notificationRepository = notificationRepository,
     metaDataBuilder = metaDataBuilder,
     wcoMapperService = wcoMapperService,
-    sendEmailForDmsDocAction = sendEmailForDmsDocAction,
     metrics = exportsMetrics
   )(ExecutionContext.global)
 
@@ -110,12 +108,6 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
   }
 
   "SubmissionService on submit" should {
-    def theActionAdded(): Action = {
-      val captor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])
-      verify(submissionRepository).addAction(any[Submission](), captor.capture())
-      captor.getValue
-    }
-
     def theDeclarationUpdated(index: Int = 0): ExportsDeclaration = {
       val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
       verify(declarationRepository, atLeastOnce).update(captor.capture())
@@ -124,7 +116,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
     def theSubmissionCreated(): Submission = {
       val captor: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
-      verify(submissionRepository).findOrCreate(any(), any(), captor.capture())
+      verify(submissionRepository).save(captor.capture())
       captor.getValue
     }
 
@@ -136,7 +128,10 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         actionId = "id1",
         details = NotificationDetails("mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneOffset.UTC), SubmissionStatus.ACCEPTED, Seq.empty)
       )
-      val submission = Submission(declaration, "lrn", "mrn")
+
+      val newAction = Action(id = "conv-id", requestType = SubmissionRequest, requestTimestamp = notification.details.dateTimeIssued)
+
+      val submission = Submission(declaration, "lrn", "mrn", newAction)
 
       "declaration is valid" in {
         // Given
@@ -144,7 +139,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
         when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
         when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(submissionRepository.findOrCreate(any(), any(), any())).thenReturn(Future.successful(mock[Submission]))
+        when(submissionRepository.save(any())).thenReturn(Future.successful(submission))
         when(customsDeclarationsConnector.submitDeclaration(any(), any())(any()))
           .thenReturn(Future.successful("conv-id"))
         when(submissionRepository.addAction(any[Submission](), any())).thenReturn(Future.successful(submission))
@@ -154,9 +149,10 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         submissionService.submit(declaration).futureValue mustBe submission
 
         // Then
-        theSubmissionCreated() mustBe Submission(declaration, "lrn", "ducr")
+        val submissionCreated = theSubmissionCreated()
+        val action = submissionCreated.actions.head
+        submissionCreated mustBe Submission(declaration, "lrn", "ducr", action)
 
-        val action = theActionAdded()
         action.id mustBe "conv-id"
         action.requestType mustBe SubmissionRequest
 
@@ -170,7 +166,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
         when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
         when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(submissionRepository.findOrCreate(any(), any(), any())).thenReturn(Future.successful(mock[Submission]))
+        when(submissionRepository.save(any())).thenReturn(Future.successful(submission))
         when(customsDeclarationsConnector.submitDeclaration(any(), any())(any()))
           .thenReturn(Future.successful("conv-id"))
         when(submissionRepository.addAction(any[Submission](), any())).thenReturn(Future.successful(mock[Submission]))
@@ -182,14 +178,15 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         submissionService.submit(declaration).futureValue mustBe submission
 
         // Then
-        theSubmissionCreated() mustBe Submission(declaration, "lrn", "ducr")
+        val submissionCreated = theSubmissionCreated()
+        val action = submissionCreated.actions.head
+        submissionCreated mustBe Submission(declaration, "lrn", "ducr", action)
 
-        val action = theActionAdded()
         action.id mustBe "conv-id"
         action.requestType mustBe SubmissionRequest
 
-        verify(submissionRepository).updateMrn(meq("conv-id"), meq("mrn"))
-        verify(sendEmailForDmsDocAction).execute(meq("conv-id"))
+        //verify(submissionRepository).updateMrn(meq("conv-id"), meq("mrn"))
+        //verify(sendEmailForDmsDocAction).execute(meq("conv-id"))
       }
     }
 
@@ -201,7 +198,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
         when(wcoMapperService.toXml(any())).thenReturn("xml")
         when(declarationRepository.update(any())).thenReturn(Future.successful(Some(mock[ExportsDeclaration])))
-        when(submissionRepository.findOrCreate(any(), any(), any())).thenReturn(Future.successful(mock[Submission]))
+        when(submissionRepository.save(any())).thenReturn(Future.successful(mock[Submission]))
         when(customsDeclarationsConnector.submitDeclaration(any(), any())(any()))
           .thenReturn(Future.failed(new RuntimeException("Some error")))
 
@@ -213,7 +210,10 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         }
 
         // Then
-        theSubmissionCreated() mustBe Submission(declaration, "lrn", "ducr")
+        /* NO INTERACTIONS WITH SUBMISSION REPO
+        val submissionCreated = theSubmissionCreated()
+        val action = submissionCreated.actions.head
+        submissionCreated mustBe Submission(declaration, "lrn", "ducr", action)*/
 
         verify(submissionRepository, never).addAction(any[Submission], any[Action])
 

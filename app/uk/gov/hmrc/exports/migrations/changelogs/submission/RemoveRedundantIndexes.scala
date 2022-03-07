@@ -77,14 +77,16 @@ class RemoveRedundantIndexes extends MigrationDefinition {
     logger.info(s"Applying '${migrationInformation.id}' db migration... Done.")
   }
 
-  private def dropIndexesIfTheyExist(collection: MongoCollection[Document], indexNamesToDrop: Seq[String]) = {
-    collection.listIndexes()
-      .iterator().asScala.toSeq
-      .filter( doc => indexNamesToDrop.contains(doc.getString("name")))
-      .foreach{ doc =>
+  private def dropIndexesIfTheyExist(collection: MongoCollection[Document], indexNamesToDrop: Seq[String]) =
+    collection
+      .listIndexes()
+      .iterator()
+      .asScala
+      .toSeq
+      .filter(doc => indexNamesToDrop.contains(doc.getString("name")))
+      .foreach { doc =>
         val idxName = doc.getString("name")
         collection.dropIndex(idxName)
         logger.info(s"Dropped Index '$idxName' of collection ${collection.getNamespace} as part of db migration!")
       }
-  }
 }
