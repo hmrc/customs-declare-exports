@@ -81,7 +81,7 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
         val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
 
         val item =
-          ExportItem(id = "id", additionalDocuments = Some(AdditionalDocuments(None, Seq(additionalDocument))), isLicenseRequired = Some(false))
+          ExportItem(id = "id", additionalDocuments = Some(AdditionalDocuments(None, Seq(additionalDocument))), isLicenceRequired = Some(false))
 
         additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
 
@@ -96,7 +96,7 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
         val additionalDocumentsBuilder = new AdditionalDocumentsBuilder()
         val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
 
-        val item = ExportItem(id = "id", isLicenseRequired = Some(false))
+        val item = ExportItem(id = "id", isLicenceRequired = Some(false))
 
         additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
 

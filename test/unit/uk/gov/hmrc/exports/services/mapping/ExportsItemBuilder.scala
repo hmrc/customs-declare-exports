@@ -93,10 +93,10 @@ trait ExportsItemBuilder {
     cache => cache.copy(additionalDocuments = Some(docs))
 
   def withLicenseRequired(): ItemModifier =
-    cache => cache.copy(isLicenseRequired = Some(true))
+    cache => cache.copy(isLicenceRequired = Some(true))
 
   def withLicenseNotRequired(): ItemModifier =
-    cache => cache.copy(isLicenseRequired = Some(false))
+    cache => cache.copy(isLicenceRequired = Some(false))
 
   private def uuid: String = UUID.randomUUID().toString
 
