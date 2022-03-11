@@ -36,7 +36,7 @@ class AdditionalDocumentsBuilder @Inject()() extends ModifyingBuilder[ExportItem
 
     val additionalDocs = exportItem.additionalDocuments.map(_.documents)
 
-    val cdsWaiver = exportItem.isLicenseRequired.flatMap {
+    val cdsWaiver = exportItem.isLicenceRequired.flatMap {
       case true => None
       case false =>
         Some(
