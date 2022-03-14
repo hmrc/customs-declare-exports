@@ -27,9 +27,9 @@ class ReattemptNotificationParsingRoutine @Inject()(notificationReceiptActionsRu
 ) extends Routine with Logging {
 
   def execute(): Future[Unit] = {
-    logger.info("Starting ReattemptNotificationParsingRoutine...")
+    logger.debug("Starting ReattemptNotificationParsingRoutine...")
     notificationReceiptActionsRunner.runNow(parseFailed = true).map { _ =>
-      logger.info("Finished ReattemptNotificationParsingRoutine")
+      logger.debug("Finished ReattemptNotificationParsingRoutine")
     }
   }
 }

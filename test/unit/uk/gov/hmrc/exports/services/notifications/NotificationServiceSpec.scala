@@ -64,7 +64,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
     reset(submissionRepository, unparsedNotificationWorkItemRepository, notificationRepository, notificationReceiptActionsScheduler)
 
     when(notificationRepository.insert(any)(any)).thenReturn(Future.successful(dummyWriteResultSuccess))
-    when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(Some(submission)))
+    when(submissionRepository.setMrnIfMissing(any, any)).thenReturn(Future.successful(Some(submission)))
     when(notificationReceiptActionsScheduler.scheduleActionsExecution()).thenReturn(Cancellable.alreadyCancelled)
   }
 

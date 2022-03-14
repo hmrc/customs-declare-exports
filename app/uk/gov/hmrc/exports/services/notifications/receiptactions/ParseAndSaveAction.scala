@@ -21,10 +21,9 @@ import play.api.Logging
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.notifications.NotificationFactory
+import uk.gov.hmrc.exports.services.notifications.{NotificationFactory, NotificationProcessingException}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Success
 
 @Singleton
 class ParseAndSaveAction @Inject()(
@@ -47,20 +46,29 @@ class ParseAndSaveAction @Inject()(
     Future
       .sequence(notifications.map { notification =>
         for {
-          _ <- notificationRepository.insert(notification)
           _ <- updateRelatedSubmission(notification)
+          _ <- notificationRepository.insert(notification)
         } yield ()
       })
       .map(_ => ())
 
   private def updateRelatedSubmission(notification: ParsedNotification): Future[Option[Submission]] =
-    submissionRepository.findByConversationId(notification.actionId).flatMap { maybeSubmission =>
-      if (maybeSubmission.exists(_.mrn.isEmpty)) {
-        submissionRepository.updateMrn(notification.actionId, notification.details.mrn).andThen {
-          case Success(None) =>
-            logger.warn(s"Could not find Submission to update for actionId: ${notification.actionId}")
+    submissionRepository
+      .findByConversationId(notification.actionId)
+      .flatMap { maybeSubmission =>
+        maybeSubmission match {
+          case Some(Submission(_, _, _, None, _, _)) =>
+            submissionRepository.setMrnIfMissing(notification.actionId, notification.details.mrn)
+          case _ =>
+            Future.successful(maybeSubmission)
         }
-      } else
-        Future.successful(maybeSubmission)
-    }
+      }
+      .flatMap { maybeSubmission =>
+        maybeSubmission match {
+          case Some(_) =>
+            Future.successful(maybeSubmission)
+          case None =>
+            Future.failed(new NotificationProcessingException("No submission record was found for received notification!"))
+        }
+      }
 }

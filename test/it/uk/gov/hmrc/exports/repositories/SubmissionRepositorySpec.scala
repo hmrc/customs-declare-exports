@@ -23,7 +23,6 @@ import stubs.TestMongoDB.mongoConfiguration
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
 import uk.gov.hmrc.exports.base.IntegrationTestBaseSpec
-import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.submissions._
 
 import java.util.UUID
@@ -45,8 +44,8 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
       "return true" in {
         repo.save(submission).futureValue must be(submission)
 
-        val submissionInDB = repo.findSubmissionByMrn(mrn).futureValue
-        submissionInDB must be(defined)
+        val submissionInDB = repo.findBy(eori, SubmissionQueryParameters(Some(uuid))).futureValue
+        submissionInDB.headOption must be(defined)
       }
     }
 
@@ -80,32 +79,35 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
     }
   }
 
-  "Submission Repository on updateMrn" should {
+  "Submission Repository on setMrnIfMissing" should {
 
     "return empty Option" when {
       "there is no Submission with given ConversationId" in {
         val newMrn = mrn_2
-        repo.updateMrn(actionId, newMrn).futureValue mustNot be(defined)
+        repo.setMrnIfMissing(actionId, newMrn).futureValue mustNot be(defined)
+      }
+
+      "there is a Submission containing Action with given ConversationId and MRN is Some" in {
+        repo.save(submission).futureValue
+
+        val updatedSubmission = repo.setMrnIfMissing(actionId, mrn_2).futureValue
+
+        updatedSubmission.isDefined mustBe false
+
+        val submissionRecord = repo.findBy(eori, SubmissionQueryParameters(uuid = Some(submission.uuid))).futureValue
+        submissionRecord.head.mrn mustBe submission.mrn
       }
     }
 
     "return Submission updated" when {
-      "there is a Submission containing Action with given ConversationId" in {
-        repo.save(submission).futureValue
+      "there is a Submission containing Action with given ConversationId and MRN is None" in {
+        repo.save(submission.copy(mrn = None)).futureValue
         val newMrn = mrn_2
         val expectedUpdatedSubmission = submission.copy(mrn = Some(newMrn))
 
-        val updatedSubmission = repo.updateMrn(actionId, newMrn).futureValue
+        val updatedSubmission = repo.setMrnIfMissing(actionId, newMrn).futureValue
 
         updatedSubmission.value must equal(expectedUpdatedSubmission)
-      }
-
-      "new MRN is the same as the old one" in {
-        repo.save(submission).futureValue
-
-        val updatedSubmission = repo.updateMrn(actionId, mrn).futureValue
-
-        updatedSubmission.value must equal(submission)
       }
     }
   }
@@ -150,41 +152,6 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
 
         result mustNot be(empty)
         result.head.actions.map(_.id) must contain(action.id)
-      }
-    }
-  }
-
-  "Submission Repository on findOrCreate" when {
-    "there is submission" should {
-      "return existing submission" in {
-        repo.save(submission_2).futureValue
-        val result = repo.findOrCreate(Eori(submission_2.eori), submission_2.uuid, submission).futureValue
-        result.actions mustEqual submission_2.actions
-      }
-    }
-    "there no submission" should {
-      "insert provided submission" in {
-        val result = repo.findOrCreate(Eori(submission_2.eori), submission_2.uuid, submission).futureValue
-        result.actions mustEqual submission.actions
-      }
-    }
-  }
-
-  "Submission Repository on findSubmissionByMrn" when {
-
-    "there is no Submission with given MRN" should {
-      "return empty Option" in {
-        repo.findSubmissionByMrn(mrn).futureValue mustNot be(defined)
-      }
-    }
-
-    "there is a Submission with given MRN" should {
-      "return this Submission" in {
-        repo.save(submission).futureValue
-
-        val retrievedSubmission = repo.findSubmissionByMrn(mrn).futureValue
-
-        retrievedSubmission.value must equal(submission)
       }
     }
   }

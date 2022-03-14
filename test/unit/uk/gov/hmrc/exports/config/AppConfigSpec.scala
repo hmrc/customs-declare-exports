@@ -41,6 +41,7 @@ class AppConfigSpec extends AnyFunSuite with Matchers with GuiceOneAppPerSuite {
   val draftTimeToLive: FiniteDuration = 30.days
   val purgeDraftDeclarations = JobConfig(LocalTime.of(23, 30), 1.day)
   val sendEmailsJobInterval: FiniteDuration = 5.minutes
+  val notificationReattemptInterval: FiniteDuration = 60.seconds
   val sendEmailPagerDutyAlertTriggerDelay: FiniteDuration = 1.day
   val consideredFailedBeforeWorkItem: FiniteDuration = 4.minutes
   val customsDeclarationsInformationBaseUrl = "http://localhost:9834"
@@ -87,6 +88,10 @@ class AppConfigSpec extends AnyFunSuite with Matchers with GuiceOneAppPerSuite {
 
   test(s"sendEmailsJobInterval must be $sendEmailsJobInterval") {
     appConfig.sendEmailsJobInterval mustBe sendEmailsJobInterval
+  }
+
+  test(s"notificationReattemptInterval must be $notificationReattemptInterval") {
+    appConfig.notificationReattemptInterval mustBe notificationReattemptInterval
   }
 
   test(s"consideredFailedBeforeWorkItem must be $consideredFailedBeforeWorkItem") {
