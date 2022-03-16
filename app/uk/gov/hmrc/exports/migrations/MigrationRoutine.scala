@@ -22,6 +22,7 @@ import play.api.Logger
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.migrations.changelogs.cache.{MakeTransportPaymentMethodNotOptional, RenameToAdditionalDocuments}
 import uk.gov.hmrc.exports.migrations.changelogs.notification.{MakeParsedDetailsOptional, SplitTheNotificationsCollection}
+import uk.gov.hmrc.exports.migrations.changelogs.submission.RemoveRedundantIndexes
 import uk.gov.hmrc.exports.routines.{Routine, RoutinesExecutionContext}
 
 import javax.inject.Inject
@@ -48,6 +49,7 @@ class MigrationRoutine @Inject()(appConfig: AppConfig)(implicit mec: RoutinesExe
       .register(new SplitTheNotificationsCollection())
       .register(new RenameToAdditionalDocuments())
       .register(new MakeTransportPaymentMethodNotOptional())
+      .register(new RemoveRedundantIndexes())
     val migrationTool = ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig)
 
     migrationTool.execute()

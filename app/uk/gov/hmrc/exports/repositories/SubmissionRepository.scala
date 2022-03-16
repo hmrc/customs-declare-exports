@@ -24,7 +24,6 @@ import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONBoolean, BSONDocument, BSONObjectID}
 import reactivemongo.play.json.ImplicitBSONHandlers
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionQueryParameters}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
@@ -46,20 +45,13 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
       name = Some("actionIdIdx"),
       partialFilter = Some(BSONDocument(Seq("actions.id" -> BSONDocument("$exists" -> BSONBoolean(true)))))
     ),
-    Index(Seq("eori" -> IndexType.Ascending), name = Some("eoriIdx")),
-    Index(Seq("eori" -> IndexType.Ascending, "action.requestTimestamp" -> IndexType.Descending), name = Some("actionOrderedEori")),
-    Index(Seq("updatedDateTime" -> IndexType.Ascending), name = Some("updateTimeIdx"))
+    Index(Seq("eori" -> IndexType.Ascending, "action.requestTimestamp" -> IndexType.Descending), name = Some("actionOrderedEori"))
   )
 
-  def findOrCreate(eori: Eori, id: String, onMissing: Submission): Future[Submission] =
-    findBy(eori.value, SubmissionQueryParameters(uuid = Some(id))).flatMap {
-      case Nil         => save(onMissing)
-      case submissions => Future.successful(submissions.head)
-    }
+  //looking up by MRN field that is not indexed (eori is though)! This is for the cancelation request processing!
+  def findSubmissionByMrnAndEori(mrn: String, eori: String): Future[Option[Submission]] = find("eori" -> eori, "mrn" -> mrn).map(_.headOption)
 
-  def findSubmissionByMrn(mrn: String): Future[Option[Submission]] = find("mrn" -> mrn).map(_.headOption)
-
-  def findSubmissionByMrnAndEori(mrn: String, eori: String): Future[Option[Submission]] = find("mrn" -> mrn, "eori" -> eori).map(_.headOption)
+  def findByConversationId(conversationId: String): Future[Option[Submission]] = find("actions.id" -> conversationId).map(_.headOption)
 
   def findBy(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] = {
     val query = Json.toJson(queryParameters).as[JsObject] + (otherField = ("eori", JsString(eori)))
@@ -75,8 +67,8 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
     submission
   }
 
-  def updateMrn(conversationId: String, newMrn: String): Future[Option[Submission]] = {
-    val query = Json.obj("actions.id" -> conversationId)
+  def setMrnIfMissing(conversationId: String, newMrn: String): Future[Option[Submission]] = {
+    val query = Json.obj("actions.id" -> conversationId, "mrn" -> Json.obj("$exists" -> false))
     val update = Json.obj("$set" -> Json.obj("mrn" -> newMrn))
     performUpdate(query, update)
   }

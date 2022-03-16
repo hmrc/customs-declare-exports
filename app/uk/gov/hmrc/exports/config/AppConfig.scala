@@ -66,6 +66,10 @@ class AppConfig @Inject()(val configuration: Configuration, val environment: Env
   )
 
   lazy val sendEmailsJobInterval: FiniteDuration = servicesConfig.getDuration("scheduler.send-emails.interval").asInstanceOf[FiniteDuration]
+
+  lazy val notificationReattemptInterval: FiniteDuration =
+    servicesConfig.getDuration("scheduler.notification-reattempt.interval").asInstanceOf[FiniteDuration]
+
   lazy val consideredFailedBeforeWorkItem: FiniteDuration =
     servicesConfig.getDuration("workItem.sendEmail.consideredFailedBefore").asInstanceOf[FiniteDuration]
   lazy val sendEmailPagerDutyAlertTriggerDelay: FiniteDuration =

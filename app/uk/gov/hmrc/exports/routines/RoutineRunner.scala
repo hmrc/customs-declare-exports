@@ -18,17 +18,20 @@ package uk.gov.hmrc.exports.routines
 
 import akka.actor.{ActorSystem, Cancellable}
 import play.api.inject.ApplicationLifecycle
+import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.migrations.MigrationRoutine
 
 import javax.inject.Inject
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.Random
 
 class RoutineRunner @Inject()(
   migrationRunner: MigrationRoutine,
   reattemptParsing: ReattemptNotificationParsingRoutine,
   actorSystem: ActorSystem,
-  applicationLifecycle: ApplicationLifecycle
+  applicationLifecycle: ApplicationLifecycle,
+  appConfig: AppConfig
 )(implicit ec: RoutinesExecutionContext) {
 
   val migrationTask: Cancellable = actorSystem.scheduler.scheduleOnce(0.seconds) {
@@ -39,4 +42,11 @@ class RoutineRunner @Inject()(
   }
 
   applicationLifecycle.addStopHook(() => Future.successful(migrationTask.cancel()))
+
+  val randomInitalDelay: FiniteDuration = Random.nextInt(30).seconds
+  val periodicTask: Cancellable = actorSystem.scheduler.scheduleWithFixedDelay(randomInitalDelay, appConfig.notificationReattemptInterval) { () =>
+    reattemptParsing.execute()
+  }
+
+  applicationLifecycle.addStopHook(() => Future.successful(periodicTask.cancel()))
 }

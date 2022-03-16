@@ -20,29 +20,23 @@ import play.api.Logger
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.{Monitors, Timers}
-import uk.gov.hmrc.exports.models.Eori
-import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.models.declaration.submissions._
+import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
-import uk.gov.hmrc.exports.services.notifications.receiptactions.SendEmailForDmsDocAction
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Success
 
 @Singleton
 class SubmissionService @Inject()(
   customsDeclarationsConnector: CustomsDeclarationsConnector,
   submissionRepository: SubmissionRepository,
   declarationRepository: DeclarationRepository,
-  notificationRepository: ParsedNotificationRepository,
   metaDataBuilder: CancellationMetaDataBuilder,
   wcoMapperService: WcoMapperService,
-  sendEmailForDmsDocAction: SendEmailForDmsDocAction,
   metrics: ExportsMetrics
 )(implicit executionContext: ExecutionContext) {
 
@@ -68,26 +62,18 @@ class SubmissionService @Inject()(
 
     logProgress(declaration, "Submitting to the Declaration API")
     for {
-      // Create the Submission
-      submission <- metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer)(
-        submissionRepository.findOrCreate(Eori(declaration.eori), declaration.id, Submission(declaration, lrn, ducr))
-      )
-      _ = logProgress(declaration, "Found/Created Submission")
-
       // Submit the declaration to the Dec API
       // Revert the declaration status back to DRAFT if it fails
-      _ = logProgress(declaration, "Submitting to the Declaration API")
       conversationId: String <- metrics.timeAsyncCall(Timers.submissionSendToDecApiTimer)(submit(declaration, payload))
       _ = logProgress(declaration, "Submitted to the Declaration API Successfully")
 
-      // Append the "Submission" action & a MRN if already available
+      // Create the Submission with action
       action = Action(id = conversationId, requestType = SubmissionRequest)
-      savedSubmission1 <- metrics.timeAsyncCall(Timers.submissionAddSubmissionActionTimer)(submissionRepository.addAction(submission, action))
-      savedSubmission2 <- metrics.timeAsyncCall(Timers.submissionAppendMrnToSubmissionTimer)(
-        appendMRNIfAlreadyAvailable(savedSubmission1, conversationId)
+      submission <- metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer)(
+        submissionRepository.save(Submission(declaration, lrn, ducr, action))
       )
-      _ = logProgress(declaration, "Submission Complete")
-    } yield savedSubmission2
+      _ = logProgress(declaration, "New submission creation completed")
+    } yield submission
   }
 
   private def submit(declaration: ExportsDeclaration, payload: String)(implicit hc: HeaderCarrier): Future[String] =
@@ -98,21 +84,6 @@ class SubmissionService @Inject()(
           logProgress(declaration, "Reverted declaration to DRAFT")
           Future.failed[String](throwable)
         }
-    }
-
-  private def appendMRNIfAlreadyAvailable(submission: Submission, actionId: String): Future[Submission] =
-    notificationRepository.findNotificationsByActionId(actionId).flatMap { notifications =>
-      notifications.headOption match {
-        case Some(ParsedNotification(_, _, _, details)) =>
-          submissionRepository
-            .updateMrn(actionId, details.mrn)
-            .map(_.getOrElse(submission))
-            .andThen {
-              case Success(_) =>
-                sendEmailForDmsDocAction.execute(actionId)
-            }
-        case _ => Future.successful(submission)
-      }
     }
 
   def cancel(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationStatus] =

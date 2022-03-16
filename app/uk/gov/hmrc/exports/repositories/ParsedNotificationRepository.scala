@@ -42,9 +42,10 @@ class ParsedNotificationRepository @Inject()(mc: ReactiveMongoComponent)(implici
     mongo().collection[JSONCollection](collectionName, failoverStrategy = RepositorySettings.failoverStrategy)
 
   override def indexes: Seq[Index] = Seq(
-    Index(Seq("details.dateTimeIssued" -> IndexType.Ascending), name = Some("detailsDateTimeIssuedIdx")),
-    Index(Seq("details.mrn" -> IndexType.Ascending), name = Some("detailsMrnIdx")),
-    Index(Seq("actionId" -> IndexType.Ascending), name = Some("actionIdIdx"))
+    Index(
+      Seq("actionId" -> IndexType.Ascending, "details.dateTimeIssued" -> IndexType.Ascending),
+      name = Some("detailsDateTimeIssuedOrderedActionId")
+    )
   )
 
   def findLatestNotification(actionIds: Seq[String]): Future[Option[ParsedNotification]] =
@@ -63,6 +64,4 @@ class ParsedNotificationRepository @Inject()(mc: ReactiveMongoComponent)(implici
       case Seq() => Future.successful(Seq.empty)
       case _     => find("$or" -> actionIds.map(id => Json.obj("actionId" -> JsString(id))))
     }
-
-  def findNotificationsByMrn(mrn: String): Future[Seq[ParsedNotification]] = find("details.mrn" -> JsString(mrn))
 }

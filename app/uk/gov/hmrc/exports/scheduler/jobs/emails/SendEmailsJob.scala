@@ -91,7 +91,7 @@ class SendEmailsJob @Inject()(
   }
 
   private def sendEmail(workItem: WorkItem[SendEmailDetails]): Future[SendEmailResult] =
-    emailSender.sendEmailForDmsDocNotification(workItem.item.mrn).andThen {
+    emailSender.sendEmailForDmsDocNotification(workItem.item).andThen {
       case Success(EmailAccepted) =>
         logger.info(s"Email sent for MRN: ${workItem.item.mrn}")
         sendEmailWorkItemRepository.complete(workItem.id, Succeeded)

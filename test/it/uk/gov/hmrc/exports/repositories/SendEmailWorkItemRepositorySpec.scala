@@ -58,8 +58,8 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
       "trying to insert WorkItem with duplicated 'notificationId' field" in {
 
         val id = BSONObjectID.generate
-        val testSendEmailWorkItem_1 = SendEmailDetails(notificationId = id, mrn = ExportsTestData.mrn)
-        val testSendEmailWorkItem_2 = SendEmailDetails(notificationId = id, mrn = ExportsTestData.mrn_2)
+        val testSendEmailWorkItem_1 = SendEmailDetails(notificationId = id, mrn = ExportsTestData.mrn, actionId = "actionId")
+        val testSendEmailWorkItem_2 = SendEmailDetails(notificationId = id, mrn = ExportsTestData.mrn_2, actionId = "actionId")
 
         repo.pushNew(testSendEmailWorkItem_1).futureValue
 

@@ -74,7 +74,12 @@ class PagerDutyAlertValidatorSpec extends UnitSpec {
             availableAt = now,
             status = testDefinition.workItemStatus,
             failureCount = 0,
-            item = SendEmailDetails(notificationId = BSONObjectID.generate, mrn = ExportsTestData.mrn, alertTriggered = testDefinition.alertTriggered)
+            item = SendEmailDetails(
+              notificationId = BSONObjectID.generate,
+              mrn = ExportsTestData.mrn,
+              actionId = "actionId",
+              alertTriggered = testDefinition.alertTriggered
+            )
           )
 
           pagerDutyAlertManager.isPagerDutyAlertRequiredFor(testWorkItem) mustBe testDefinition.expectedResult
@@ -82,7 +87,6 @@ class PagerDutyAlertValidatorSpec extends UnitSpec {
       }
     }
   }
-
 }
 
 object PagerDutyAlertValidatorSpec {

@@ -14,15 +14,6 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models.emails
+package uk.gov.hmrc.exports.services.notifications
 
-import play.api.libs.json._
-import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
-
-case class SendEmailDetails(notificationId: BSONObjectID, mrn: String, actionId: String, alertTriggered: Boolean = false)
-
-object SendEmailDetails {
-  implicit val idFormat = ReactiveMongoFormats.objectIdFormats
-  implicit val sendEmailWorkItemFormats: OFormat[SendEmailDetails] = Json.format[SendEmailDetails]
-}
+final class NotificationProcessingException(message: String) extends RuntimeException(message)

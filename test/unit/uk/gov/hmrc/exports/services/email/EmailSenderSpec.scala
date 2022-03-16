@@ -17,13 +17,14 @@
 package uk.gov.hmrc.exports.services.email
 
 import org.mockito.ArgumentMatchers.{any, anyString, eq => eqTo}
+import reactivemongo.bson.BSONObjectID
 import testdata.ExportsTestData.mrn
 import testdata.notifications.NotificationTestData
 import testdata.{ExportsTestData, SubmissionTestData}
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.connectors.{CustomsDataStoreConnector, EmailConnector}
 import uk.gov.hmrc.exports.models.emails.SendEmailResult.{BadEmailRequest, EmailAccepted, InternalEmailServiceError, MissingData}
-import uk.gov.hmrc.exports.models.emails._
+import uk.gov.hmrc.exports.models.emails.{SendEmailDetails, _}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -48,6 +49,8 @@ class EmailSenderSpec extends UnitSpec {
     super.afterEach()
   }
 
+  private val sendEmailDetails = SendEmailDetails(BSONObjectID.generate, mrn, actionId = "actionId")
+
   "EmailSender on sendEmailForDmsDocNotification" when {
 
     val testSubmission = SubmissionTestData.submission
@@ -57,41 +60,40 @@ class EmailSenderSpec extends UnitSpec {
     "everything works correctly" should {
 
       "return successful Future" in {
-        when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(Some(testSubmission)))
+        when(submissionRepository.findByConversationId(anyString())).thenReturn(Future.successful(Some(testSubmission)))
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(Some(testVerifiedEmailAddress)))
         when(emailConnector.sendEmail(any[SendEmailRequest])(any())).thenReturn(Future.successful(EmailAccepted))
 
-        emailSender.sendEmailForDmsDocNotification(mrn).futureValue mustBe EmailAccepted
+        emailSender.sendEmailForDmsDocNotification(sendEmailDetails).futureValue mustBe EmailAccepted
       }
 
       "call SubmissionRepository with correct parameters" in {
-        when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(Some(testSubmission)))
+        when(submissionRepository.findByConversationId(anyString())).thenReturn(Future.successful(Some(testSubmission)))
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(Some(testVerifiedEmailAddress)))
         when(emailConnector.sendEmail(any[SendEmailRequest])(any())).thenReturn(Future.successful(EmailAccepted))
 
-        emailSender.sendEmailForDmsDocNotification(mrn).futureValue
+        emailSender.sendEmailForDmsDocNotification(sendEmailDetails).futureValue
 
-        val expectedMrn = testNotification.details.mrn
-        verify(submissionRepository).findSubmissionByMrn(eqTo(expectedMrn))
+        verify(submissionRepository).findByConversationId(eqTo(sendEmailDetails.actionId))
       }
 
       "call CustomsDataStoreConnector with correct parameters" in {
-        when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(Some(testSubmission)))
+        when(submissionRepository.findByConversationId(anyString())).thenReturn(Future.successful(Some(testSubmission)))
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(Some(testVerifiedEmailAddress)))
         when(emailConnector.sendEmail(any[SendEmailRequest])(any())).thenReturn(Future.successful(EmailAccepted))
 
-        emailSender.sendEmailForDmsDocNotification(mrn).futureValue
+        emailSender.sendEmailForDmsDocNotification(sendEmailDetails).futureValue
 
         val expectedEori = testSubmission.eori
         verify(customsDataStoreConnector).getEmailAddress(eqTo(expectedEori))(any())
       }
 
       "call EmailConnector with correct parameters" in {
-        when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(Some(testSubmission)))
+        when(submissionRepository.findByConversationId(anyString())).thenReturn(Future.successful(Some(testSubmission)))
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(Some(testVerifiedEmailAddress)))
         when(emailConnector.sendEmail(any[SendEmailRequest])(any())).thenReturn(Future.successful(EmailAccepted))
 
-        emailSender.sendEmailForDmsDocNotification(mrn).futureValue
+        emailSender.sendEmailForDmsDocNotification(sendEmailDetails).futureValue
 
         val expectedSendEmailRequest = SendEmailRequest(
           List(testVerifiedEmailAddress.address),
@@ -105,23 +107,23 @@ class EmailSenderSpec extends UnitSpec {
     "SubmissionRepository returns empty Option" should {
 
       "return successful Future with MissingData" in {
-        when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(None))
+        when(submissionRepository.findByConversationId(anyString())).thenReturn(Future.successful(None))
 
-        emailSender.sendEmailForDmsDocNotification(mrn).futureValue mustBe MissingData
+        emailSender.sendEmailForDmsDocNotification(sendEmailDetails).futureValue mustBe MissingData
       }
 
       "not call CustomsDataStoreConnector" in {
-        when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(None))
+        when(submissionRepository.findByConversationId(anyString())).thenReturn(Future.successful(None))
 
-        emailSender.sendEmailForDmsDocNotification(mrn).futureValue
+        emailSender.sendEmailForDmsDocNotification(sendEmailDetails).futureValue
 
         verifyZeroInteractions(customsDataStoreConnector)
       }
 
       "not call EmailConnector" in {
-        when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(None))
+        when(submissionRepository.findByConversationId(anyString())).thenReturn(Future.successful(None))
 
-        emailSender.sendEmailForDmsDocNotification(mrn).futureValue
+        emailSender.sendEmailForDmsDocNotification(sendEmailDetails).futureValue
 
         verifyZeroInteractions(emailConnector)
       }
@@ -130,17 +132,17 @@ class EmailSenderSpec extends UnitSpec {
     "CustomsDataStoreConnector returns empty Option" should {
 
       "return successful Future with MissingData" in {
-        when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(Some(testSubmission)))
+        when(submissionRepository.findByConversationId(anyString())).thenReturn(Future.successful(Some(testSubmission)))
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(None))
 
-        emailSender.sendEmailForDmsDocNotification(mrn).futureValue mustBe MissingData
+        emailSender.sendEmailForDmsDocNotification(sendEmailDetails).futureValue mustBe MissingData
       }
 
       "not call EmailConnector" in {
-        when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(Some(testSubmission)))
+        when(submissionRepository.findByConversationId(anyString())).thenReturn(Future.successful(Some(testSubmission)))
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(None))
 
-        emailSender.sendEmailForDmsDocNotification(mrn).futureValue
+        emailSender.sendEmailForDmsDocNotification(sendEmailDetails).futureValue
 
         verifyZeroInteractions(emailConnector)
       }
@@ -149,25 +151,26 @@ class EmailSenderSpec extends UnitSpec {
     "EmailConnector returns BadEmailRequest" should {
 
       "return successful Future with ServerResponse" in {
-        when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(Some(testSubmission)))
+        when(submissionRepository.findByConversationId(anyString())).thenReturn(Future.successful(Some(testSubmission)))
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(Some(testVerifiedEmailAddress)))
         when(emailConnector.sendEmail(any[SendEmailRequest])(any())).thenReturn(Future.successful(BadEmailRequest("Test BadEmailRequest message")))
 
-        emailSender.sendEmailForDmsDocNotification(mrn).futureValue mustBe BadEmailRequest("Test BadEmailRequest message")
+        emailSender.sendEmailForDmsDocNotification(sendEmailDetails).futureValue mustBe BadEmailRequest("Test BadEmailRequest message")
       }
     }
 
     "EmailConnector returns InternalEmailServiceError" should {
 
       "return successful Future with ServerResponse" in {
-        when(submissionRepository.findSubmissionByMrn(anyString())).thenReturn(Future.successful(Some(testSubmission)))
+        when(submissionRepository.findByConversationId(anyString())).thenReturn(Future.successful(Some(testSubmission)))
         when(customsDataStoreConnector.getEmailAddress(anyString())(any())).thenReturn(Future.successful(Some(testVerifiedEmailAddress)))
         when(emailConnector.sendEmail(any[SendEmailRequest])(any()))
           .thenReturn(Future.successful(InternalEmailServiceError("Test InternalEmailServiceError message")))
 
-        emailSender.sendEmailForDmsDocNotification(mrn).futureValue mustBe InternalEmailServiceError("Test InternalEmailServiceError message")
+        emailSender.sendEmailForDmsDocNotification(sendEmailDetails).futureValue mustBe InternalEmailServiceError(
+          "Test InternalEmailServiceError message"
+        )
       }
     }
   }
-
 }

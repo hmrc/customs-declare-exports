@@ -29,7 +29,7 @@ private[emails] class EmailCancellationValidator @Inject()(notificationRepositor
   private val statusesCancellingEmailSending = Set(REJECTED, CLEARED, CANCELLED)
 
   def isEmailSendingCancelled(sendEmailDetails: SendEmailDetails)(implicit ec: ExecutionContext): Future[Boolean] =
-    notificationRepository.findNotificationsByMrn(sendEmailDetails.mrn).map { notifications =>
+    notificationRepository.findNotificationsByActionId(sendEmailDetails.actionId).map { notifications =>
       val currentDmsDocNotification = notifications
         .find(_._id == sendEmailDetails.notificationId)
         .getOrElse(throw new IllegalStateException(s"Cannot find DMSDOC Notification with id: [${sendEmailDetails.notificationId}]"))

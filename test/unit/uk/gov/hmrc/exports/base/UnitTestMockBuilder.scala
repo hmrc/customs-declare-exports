@@ -50,9 +50,8 @@ object UnitTestMockBuilder extends MockitoSugar {
     when(submissionRepositoryMock.addAction(any[String](), any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.addAction(any[Submission](), any())).thenReturn(Future.successful(mock[Submission]))
     when(submissionRepositoryMock.findBy(any(), any())).thenReturn(Future.successful(Seq.empty))
-    when(submissionRepositoryMock.findSubmissionByMrn(any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.save(any())).thenReturn(Future.successful(mock[Submission]))
-    when(submissionRepositoryMock.updateMrn(any(), any())).thenReturn(Future.successful(None))
+    when(submissionRepositoryMock.setMrnIfMissing(any(), any())).thenReturn(Future.successful(None))
     submissionRepositoryMock
   }
 
