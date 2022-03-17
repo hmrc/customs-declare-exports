@@ -42,23 +42,22 @@ class ParseAndSaveAction @Inject()(
       Future.successful((): Unit)
   }
 
-  private def save(notifications: Seq[ParsedNotification]): Future[Unit] =
-    Future
-      .sequence(notifications.map { notification =>
-        for {
-          _ <- updateRelatedSubmission(notification)
-          _ <- notificationRepository.insert(notification)
-        } yield ()
-      })
-      .map(_ => ())
+  private def save(notifications: Seq[ParsedNotification]): Future[Unit] = {
+    val firstNotification = notifications.head
 
-  private def updateRelatedSubmission(notification: ParsedNotification): Future[Option[Submission]] =
+    //first - update the related submission records (an idempotent operation)
+    findRelatedSubmissionAndUpdateIfRequired(firstNotification.actionId, firstNotification.details.mrn).flatMap { _ => //second - if submission record found then persist all notifications
+      notificationRepository.bulkInsert(notifications)
+    }.map(_ => ())
+  }
+
+  private def findRelatedSubmissionAndUpdateIfRequired(actionId: String, mrn: String): Future[Option[Submission]] =
     submissionRepository
-      .findByConversationId(notification.actionId)
+      .findByConversationId(actionId)
       .flatMap { maybeSubmission =>
         maybeSubmission match {
           case Some(Submission(_, _, _, None, _, _)) =>
-            submissionRepository.updateMrn(notification.actionId, notification.details.mrn)
+            submissionRepository.updateMrn(actionId, mrn)
           case _ =>
             Future.successful(maybeSubmission)
         }

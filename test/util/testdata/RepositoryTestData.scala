@@ -16,7 +16,7 @@
 
 package testdata
 
-import reactivemongo.api.commands.{LastError, WriteResult}
+import reactivemongo.api.commands.{LastError, MultiBulkWriteResult, WriteResult}
 
 import scala.util.control.NoStackTrace
 
@@ -24,6 +24,9 @@ object RepositoryTestData {
 
   val dummyWriteResultSuccess: WriteResult =
     LastError(true, None, None, None, 0, None, false, None, None, false, None, None)
+
+  val dummyMultiBulkWriteResultSuccess: MultiBulkWriteResult =
+    MultiBulkWriteResult(dummyWriteResultSuccess)
 
   def dummyWriteResultFailure(exceptionMessage: String = "Test Exception message"): RuntimeException =
     new RuntimeException(exceptionMessage) with NoStackTrace

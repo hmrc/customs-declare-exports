@@ -20,7 +20,7 @@ import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.{InOrder, Mockito}
 import testdata.ExportsTestData.{actionId, mrn}
-import testdata.RepositoryTestData.{dummyWriteResultFailure, dummyWriteResultSuccess}
+import testdata.RepositoryTestData.{dummyMultiBulkWriteResultSuccess, dummyWriteResultFailure}
 import testdata.SubmissionTestData.submission
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
 import testdata.notifications.NotificationTestData.{notification, notificationUnparsed}
@@ -46,7 +46,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
     reset(submissionRepository, notificationRepository, notificationFactory)
 
     when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq(notification))
-    when(notificationRepository.insert(any)(any)).thenReturn(Future.successful(dummyWriteResultSuccess))
+    when(notificationRepository.bulkInsert(any)(any)).thenReturn(Future.successful(dummyMultiBulkWriteResultSuccess))
     when(submissionRepository.findByConversationId(any)).thenReturn(Future.successful(Some(submission)))
   }
 
@@ -82,7 +82,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
           val inOrder: InOrder = Mockito.inOrder(notificationFactory, notificationRepository, submissionRepository)
           inOrder.verify(notificationFactory).buildNotifications(any[UnparsedNotification])
           inOrder.verify(submissionRepository).findByConversationId(any[String])
-          inOrder.verify(notificationRepository).insert(any[ParsedNotification])(any)
+          inOrder.verify(notificationRepository).bulkInsert(any[Seq[ParsedNotification]])(any)
         }
 
         "call NotificationFactory passing actionId and payload from Notification provided" in {
@@ -93,12 +93,12 @@ class ParseAndSaveActionSpec extends UnitSpec {
           verify(notificationFactory).buildNotifications(eqTo(inputNotification))
         }
 
-        "call NotificationRepository.insert passing Notification returned by NotificationFactory" in {
+        "call NotificationRepository.bulkInsert passing Notification returned by NotificationFactory" in {
           when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq(testNotification))
 
           parseAndSaveProcess.execute(inputNotification).futureValue
 
-          verify(notificationRepository).insert(eqTo(testNotification))(any)
+          verify(notificationRepository).bulkInsert(eqTo(Seq(testNotification)))(any)
         }
 
         "call SubmissionRepository passing actionId in the Notification" in {
@@ -147,10 +147,10 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
           parseAndSaveProcess.execute(inputNotification).futureValue
 
-          val inOrder: InOrder = Mockito.inOrder(notificationFactory, notificationRepository, submissionRepository)
+          val inOrder: InOrder = Mockito.inOrder(notificationFactory, submissionRepository, notificationRepository)
           inOrder.verify(notificationFactory).buildNotifications(any[UnparsedNotification])
-          inOrder.verify(submissionRepository, times(2)).findByConversationId(any[String])
-          verify(notificationRepository, atMost(2)).insert(any[ParsedNotification])(any)
+          inOrder.verify(submissionRepository).findByConversationId(any[String])
+          inOrder.verify(notificationRepository).bulkInsert(any[Seq[ParsedNotification]])(any)
         }
 
         "call NotificationFactory passing actionId and payload from Notification provided" in {
@@ -161,14 +161,12 @@ class ParseAndSaveActionSpec extends UnitSpec {
           verify(notificationFactory).buildNotifications(eqTo(inputNotification))
         }
 
-        "call NotificationRepository.insert passing Notifications returned by NotificationFactory" in {
+        "call NotificationRepository.bulkInsert passing Notifications returned by NotificationFactory" in {
           when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(testNotifications)
 
           parseAndSaveProcess.execute(inputNotification).futureValue
 
-          testNotifications.foreach { notification =>
-            verify(notificationRepository).insert(eqTo(notification))(any)
-          }
+          verify(notificationRepository).bulkInsert(eqTo(testNotifications))(any)
         }
 
         "call SubmissionRepository passing actionId in the Notifications" in {
@@ -176,7 +174,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
           parseAndSaveProcess.execute(inputNotification).futureValue
 
-          verify(submissionRepository, times(2)).findByConversationId(eqTo(actionId))
+          verify(submissionRepository).findByConversationId(eqTo(actionId))
           verify(submissionRepository, never).updateMrn(eqTo(actionId), eqTo(mrn))
         }
 
@@ -187,7 +185,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
           parseAndSaveProcess.execute(inputNotification).futureValue
 
-          verify(submissionRepository, times(2)).updateMrn(eqTo(actionId), eqTo(mrn))
+          verify(submissionRepository).updateMrn(eqTo(actionId), eqTo(mrn))
         }
       }
 
@@ -292,7 +290,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
       "return failed Future" in {
         val exceptionMsg = "Test Exception message"
-        when(notificationRepository.insert(any)(any))
+        when(notificationRepository.bulkInsert(any)(any))
           .thenReturn(Future.failed(dummyWriteResultFailure(exceptionMsg)))
 
         parseAndSaveProcess.execute(notificationUnparsed).failed.futureValue must have message exceptionMsg
