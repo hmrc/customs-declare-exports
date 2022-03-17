@@ -107,17 +107,17 @@ class ParseAndSaveActionSpec extends UnitSpec {
           parseAndSaveProcess.execute(inputNotification).futureValue
 
           verify(submissionRepository).findByConversationId(eqTo(actionId))
-          verify(submissionRepository, never).setMrnIfMissing(eqTo(actionId), eqTo(mrn))
+          verify(submissionRepository, never).updateMrn(eqTo(actionId), eqTo(mrn))
         }
 
         "call SubmissionRepository updating the MRN contained in the Notification if not already set in the Submission record" in {
           when(submissionRepository.findByConversationId(any)).thenReturn(Future.successful(Some(submission.copy(mrn = None))))
           when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq(testNotification))
-          when(submissionRepository.setMrnIfMissing(any, any)).thenReturn(Future.successful(Some(submission)))
+          when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(Some(submission)))
 
           parseAndSaveProcess.execute(inputNotification).futureValue
 
-          verify(submissionRepository).setMrnIfMissing(eqTo(actionId), eqTo(mrn))
+          verify(submissionRepository).updateMrn(eqTo(actionId), eqTo(mrn))
         }
       }
 
@@ -177,17 +177,17 @@ class ParseAndSaveActionSpec extends UnitSpec {
           parseAndSaveProcess.execute(inputNotification).futureValue
 
           verify(submissionRepository, times(2)).findByConversationId(eqTo(actionId))
-          verify(submissionRepository, never).setMrnIfMissing(eqTo(actionId), eqTo(mrn))
+          verify(submissionRepository, never).updateMrn(eqTo(actionId), eqTo(mrn))
         }
 
         "call SubmissionRepository updating the MRN contained in the Notification if not already set in the Submission record" in {
           when(submissionRepository.findByConversationId(any)).thenReturn(Future.successful(Some(submission.copy(mrn = None))))
           when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(testNotifications)
-          when(submissionRepository.setMrnIfMissing(any, any)).thenReturn(Future.successful(Some(submission)))
+          when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(Some(submission)))
 
           parseAndSaveProcess.execute(inputNotification).futureValue
 
-          verify(submissionRepository, times(2)).setMrnIfMissing(eqTo(actionId), eqTo(mrn))
+          verify(submissionRepository, times(2)).updateMrn(eqTo(actionId), eqTo(mrn))
         }
       }
 
@@ -238,7 +238,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
           "update the submission record's MRN value" in {
             val noMrnSubmission = submission.copy(mrn = None)
             when(submissionRepository.findByConversationId(any)).thenReturn(Future.successful(Some(noMrnSubmission)))
-            when(submissionRepository.setMrnIfMissing(any, any)).thenReturn(Future.successful(Some(noMrnSubmission)))
+            when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(Some(noMrnSubmission)))
             when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq(testNotification))
 
             parseAndSaveProcess.execute(inputNotification).futureValue
@@ -252,7 +252,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
             when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq(testNotification))
 
             parseAndSaveProcess.execute(inputNotification).futureValue
-            verify(submissionRepository, never).setMrnIfMissing(eqTo(actionId), eqTo(mrn))
+            verify(submissionRepository, never).updateMrn(eqTo(actionId), eqTo(mrn))
           }
         }
       }
@@ -303,7 +303,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
       "result in throwing a NotificationProcessingException" in {
         when(submissionRepository.findByConversationId(any)).thenReturn(Future.successful(Some(submission.copy(mrn = None))))
-        when(submissionRepository.setMrnIfMissing(any, any)).thenReturn(Future.successful(None))
+        when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(None))
 
         val throwable = parseAndSaveProcess.execute(notificationUnparsed).failed.futureValue
         throwable.getMessage mustBe "No submission record was found for received notification!"
@@ -342,7 +342,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
       "returns WriteResult with Error" should {
         "not then call the NotificationRepository" in {
           val exceptionMsg = "Test Exception message"
-          when(submissionRepository.setMrnIfMissing(any, any))
+          when(submissionRepository.updateMrn(any, any))
             .thenReturn(Future.failed(dummyWriteResultFailure(exceptionMsg)))
 
           verifyNoInteractions(notificationRepository)
@@ -351,7 +351,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
       "returns a None" should {
         "not then call the NotificationRepository" in {
-          when(submissionRepository.setMrnIfMissing(any, any))
+          when(submissionRepository.updateMrn(any, any))
             .thenReturn(Future.successful(None))
 
           verifyNoInteractions(notificationRepository)

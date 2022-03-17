@@ -67,8 +67,8 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
     submission
   }
 
-  def setMrnIfMissing(conversationId: String, newMrn: String): Future[Option[Submission]] = {
-    val query = Json.obj("actions.id" -> conversationId, "mrn" -> Json.obj("$exists" -> false))
+  def updateMrn(conversationId: String, newMrn: String): Future[Option[Submission]] = {
+    val query = Json.obj("actions.id" -> conversationId)
     val update = Json.obj("$set" -> Json.obj("mrn" -> newMrn))
     performUpdate(query, update)
   }

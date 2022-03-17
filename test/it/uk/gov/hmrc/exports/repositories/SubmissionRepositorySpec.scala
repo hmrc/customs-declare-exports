@@ -84,18 +84,7 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
     "return empty Option" when {
       "there is no Submission with given ConversationId" in {
         val newMrn = mrn_2
-        repo.setMrnIfMissing(actionId, newMrn).futureValue mustNot be(defined)
-      }
-
-      "there is a Submission containing Action with given ConversationId and MRN is Some" in {
-        repo.save(submission).futureValue
-
-        val updatedSubmission = repo.setMrnIfMissing(actionId, mrn_2).futureValue
-
-        updatedSubmission.isDefined mustBe false
-
-        val submissionRecord = repo.findBy(eori, SubmissionQueryParameters(uuid = Some(submission.uuid))).futureValue
-        submissionRecord.head.mrn mustBe submission.mrn
+        repo.updateMrn(actionId, newMrn).futureValue mustNot be(defined)
       }
     }
 
@@ -105,7 +94,7 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
         val newMrn = mrn_2
         val expectedUpdatedSubmission = submission.copy(mrn = Some(newMrn))
 
-        val updatedSubmission = repo.setMrnIfMissing(actionId, newMrn).futureValue
+        val updatedSubmission = repo.updateMrn(actionId, newMrn).futureValue
 
         updatedSubmission.value must equal(expectedUpdatedSubmission)
       }
