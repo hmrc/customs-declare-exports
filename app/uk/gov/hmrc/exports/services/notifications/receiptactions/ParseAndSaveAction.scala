@@ -58,7 +58,7 @@ class ParseAndSaveAction @Inject()(
       .flatMap { maybeSubmission =>
         maybeSubmission match {
           case Some(Submission(_, _, _, None, _, _)) =>
-            submissionRepository.setMrnIfMissing(notification.actionId, notification.details.mrn)
+            submissionRepository.updateMrn(notification.actionId, notification.details.mrn)
           case _ =>
             Future.successful(maybeSubmission)
         }

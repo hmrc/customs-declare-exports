@@ -140,7 +140,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         actionGenerated.id mustBe "conv-id"
         actionGenerated.requestType mustBe SubmissionRequest
 
-        verify(submissionRepository, never).setMrnIfMissing(any[String], any[String])
+        verify(submissionRepository, never).updateMrn(any[String], any[String])
         verify(sendEmailForDmsDocAction, never).execute(any[String])
       }
     }
