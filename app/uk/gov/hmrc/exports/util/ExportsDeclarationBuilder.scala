@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatu
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration._
 
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 
 //noinspection ScalaStyle
 trait ExportsDeclarationBuilder extends ExportsItemBuilder {
@@ -328,4 +328,10 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
   def withMUCR(mucr: String): ExportsDeclarationModifier =
     cache => cache.copy(linkDucrToMucr = Some(YesNoAnswer.yes), mucr = Some(MUCR(mucr)))
+
+  def withReadyForSubmission(): ExportsDeclarationModifier =
+    declaration => declaration.copy(readyForSubmission = Some(true))
+
+  def withUpdatedDateTime(updatedDateTime: Instant = LocalDateTime.now().toInstant(ZoneOffset.UTC)): ExportsDeclarationModifier =
+    declaration => declaration.copy(updatedDateTime = updatedDateTime)
 }

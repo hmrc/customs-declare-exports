@@ -54,17 +54,17 @@ object GenerateDraftDecController extends ExportsDeclarationBuilder {
     withAdditionalDeclarationType(),
     withDispatchLocation(),
     withConsignmentReferences(lrn = randomLrn()),
-    withDepartureTransport(),
+    withDepartureTransport(ModeOfTransportCode.Maritime, "11", "SHIP1"),
     withContainerData(Container("container", Seq(Seal("seal1"), Seal("seal2")))),
     withPreviousDocuments(PreviousDocument("IF3", "101SHIP2", None)),
     withExporterDetails(Some(request.body.eori)),
     withDeclarantDetails(Some(request.body.eori)),
     withDeclarantIsExporter(),
-    withConsigneeDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "United States of America"))),
+    withConsigneeDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "Portugal, Including Azores and Madeira"))),
     withConsignorDetails(Some("9GB1234567ABCDEG"), None),
-    withCarrierDetails(None, Some(Address("XYZ Carrier", "School Road", "London", "WS1 2AB", "United Kingdom"))),
+    withCarrierDetails(None, Some(Address("XYZ Carrier", "School Road", "London", "WS1 2AB", "United Kingdom, Great Britain, Northern Ireland"))),
     withIsEntryIntoDeclarantsRecords(),
-    withPersonPresentingGoodsDetails(eori = Eori("PersonPresentingGoodsEori")),
+    withPersonPresentingGoodsDetails(eori = Eori("GB1234567890")),
     withRepresentativeDetails(Some(EntityDetails(Some("GB717572504502809"), None)), Some("3")),
     withDeclarationHolders(DeclarationHolder(Some("AEOC"), Some("GB717572504502811"), Some(EoriSource.OtherEori))),
     withOriginationCountry(),
@@ -80,7 +80,9 @@ object GenerateDraftDecController extends ExportsDeclarationBuilder {
     withItems(request.body.itemCount),
     withTotalNumberOfItems(),
     withNatureOfTransaction("1"),
-    withBorderTransport()
+    withBorderTransport(Some("Portugal"), Some("40"), Some("1234567878ui")),
+    withReadyForSubmission(),
+    withUpdatedDateTime()
   )
 
   private def randomLrn() = randomAlphanumericString(22)
