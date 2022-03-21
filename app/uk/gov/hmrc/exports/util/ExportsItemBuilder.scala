@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services.mapping
-
-import java.util.UUID
+package uk.gov.hmrc.exports.util
 
 import uk.gov.hmrc.exports.models.declaration._
+
+import java.util.UUID
 
 trait ExportsItemBuilder {
 
@@ -98,6 +98,5 @@ trait ExportsItemBuilder {
   def withLicenseNotRequired(): ItemModifier =
     cache => cache.copy(isLicenceRequired = Some(false))
 
-  private def uuid: String = UUID.randomUUID().toString
-
+  protected def uuid: String = UUID.randomUUID().toString
 }

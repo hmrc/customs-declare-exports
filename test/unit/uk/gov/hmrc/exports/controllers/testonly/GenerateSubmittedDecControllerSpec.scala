@@ -67,7 +67,7 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with GuiceOneAppPerSui
     reset(parsedNotificationRepository, submissionRepository, declarationRepository)
   }
 
-  "TestOnlyController" should {
+  "GenerateSubmittedDecController" should {
     val post = FakeRequest("POST", "/test-only/create-submitted-dec-record")
     val eoriSpecified = "asdasd"
 

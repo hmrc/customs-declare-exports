@@ -29,17 +29,17 @@ This repository contains unit and integration tests for the service. In order to
 
 
 ## Test Only endpoints
+To enable these endpoint you must specify at startup the test-only conf file like this:
+
+`sbt run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes`
+
 ### /test-only/create-submitted-dec-record
 This endpoint is designed to quickly insert all the required db documents into the collections to represent a new accepted declaration submission. It does not make any downstream requests or auth checks
 and is designed specifically to be used by QAs to populated the db collections en masse quickly.
 
 It will randomly (50/50 chance) also insert an extra notification of type DMSDOC.
 
-To enable this endpoint you must specify at startup the test-only conf file like this:
-
-`sbt run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes`
-
-You can then call the endpoint like this:
+You can call the endpoint like this:
 
 `curl --location --request POST 'http://localhost:6792/test-only/create-submitted-dec-record' --header 'Content-Type: application/json' --data-raw '{"eori": "GB1234567890"}'`
 
@@ -47,6 +47,17 @@ You will receive back the following response (if successful):
 
 `"EORI:GB1234567890, LRN:7SLXFBE0CKH2WNRRRKR7NZ, MRN:36GBRJYXDBZL4F9YZ, CREATED WITH DMSDOC"`
 
+### /test-only/create-draft-dec-record
+This endpoint is designed to quickly create a new fully populated draft declaration with X specified number of items (see `itemCount` field of payload). It is designed specifically to be used by QAs in performance tests 
+to populate the declarations collection with many item (50+ item) draft declarations ready to be submitted.
+
+You can call the endpoint like this:
+
+`curl --location --request POST 'http://localhost:6792/test-only/create-draft-dec-record' --header 'Content-Type: application/json' --data-raw '{"eori": "GB7172755022922", "itemCount" : 3}'`
+
+You will receive back the following response (if successful):
+
+`{"declarationId": "a1c6c136-6552-485a-81a1-dd2973d5843d"}`
 
 ## Developer notes
 

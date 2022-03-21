@@ -13,3 +13,5 @@
 ->          /                                             prod.Routes
 
 POST        /test-only/create-submitted-dec-record        uk.gov.hmrc.exports.controllers.testonly.GenerateSubmittedDecController.createSubmittedDecDocuments
+
+POST        /test-only/create-draft-dec-record            uk.gov.hmrc.exports.controllers.testonly.GenerateDraftDecController.createDraftDec

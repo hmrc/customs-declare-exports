@@ -23,10 +23,9 @@ import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration._
 
 import java.time.{LocalDateTime, ZoneOffset}
-import java.util.UUID
 
 //noinspection ScalaStyle
-trait ExportsDeclarationBuilder {
+trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
   private type ExportsDeclarationModifier = ExportsDeclaration => ExportsDeclaration
   protected val VALID_PERSONAL_UCR = "5GB123456789000"
@@ -62,8 +61,6 @@ trait ExportsDeclarationBuilder {
     previousDocuments = None,
     natureOfTransaction = None
   )
-
-  private def uuid: String = UUID.randomUUID().toString
 
   // ************************************************* Builders ********************************************************
 
@@ -261,8 +258,24 @@ trait ExportsDeclarationBuilder {
   def withItems(item1: ExportItem, others: ExportItem*): ExportsDeclarationModifier =
     _.copy(items = Seq(item1) ++ others)
 
-  def withItems(count: Int): ExportsDeclarationModifier =
-    cache => cache.copy(items = cache.items ++ (1 to count).map(_ => ExportItem(id = uuid)).toSet)
+  private val itemModifiers = Seq(
+    withProcedureCodes(Some("1041"), Seq("000")),
+    withStatisticalValue(statisticalValue = "1000"),
+    withCommodityDetails(CommodityDetails(combinedNomenclatureCode = Some("4602191000"), descriptionOfGoods = Some("Straw for bottles"))),
+    withPackageInformation(Some("PK"), Some(10), Some("RICH123")),
+    withCommodityMeasure(CommodityMeasure(Some("10"), Some(false), Some("500"), Some("700"))),
+    withAdditionalInformation("00400", "EXPORTER"),
+    withAdditionalDocuments(Some(YesNoAnswer.yes), AdditionalDocument(Some("C501"), Some("GBAEOC71757250450281"), None, None, None, None, None))
+  )
+
+  def withItems(count: Int): ExportsDeclarationModifier = {
+    val items = (1 to count).map { idx =>
+      itemModifiers.foldLeft(ExportItem(id = uuid, sequenceId = idx))((current, modifier) => modifier(current))
+    }
+
+    cache =>
+      cache.copy(items = cache.items ++ items.toSet)
+  }
 
   def withoutTotalNumberOfItems(): ExportsDeclarationModifier = _.copy(totalNumberOfItems = None)
 
