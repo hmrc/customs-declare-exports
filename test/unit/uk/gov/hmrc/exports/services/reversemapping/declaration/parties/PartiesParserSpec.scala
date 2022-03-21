@@ -24,10 +24,9 @@ import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoStringAnswers
 import uk.gov.hmrc.exports.models.DeclarationType.CLEARANCE
-import uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserError
-import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, ExportsItemBuilder}
 
 import scala.xml.NodeSeq
 

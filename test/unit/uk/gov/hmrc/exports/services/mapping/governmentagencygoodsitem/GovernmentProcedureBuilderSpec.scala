@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
+import uk.gov.hmrc.exports.util.ExportsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem
 
 class GovernmentProcedureBuilderSpec extends UnitSpec with GovernmentAgencyGoodsItemData with ExportsItemBuilder {

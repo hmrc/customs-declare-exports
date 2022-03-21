@@ -18,9 +18,8 @@ package uk.gov.hmrc.exports.services.mapping.declaration
 
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.Address
-import uk.gov.hmrc.exports.services.mapping.ExportsItemBuilder
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.GoodsLocationBuilderSpec
-import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, ExportsItemBuilder}
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder with ExportsDeclarationBuilder {
