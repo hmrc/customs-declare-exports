@@ -26,7 +26,6 @@ import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
-import scala.util.Random
 
 @Singleton
 class GenerateDraftDecController @Inject()(declarationRepository: DeclarationRepository, cc: ControllerComponents)(
@@ -46,14 +45,14 @@ class GenerateDraftDecController @Inject()(declarationRepository: DeclarationRep
 }
 
 object GenerateDraftDecController extends ExportsDeclarationBuilder {
-  case class CreateDraftDecDocumentsRequest(eori: String, itemCount: Int = 1)
+  case class CreateDraftDecDocumentsRequest(eori: String, itemCount: Int = 1, lrn: String)
 
   def createDeclaration()(implicit request: Request[CreateDraftDecDocumentsRequest]) = aDeclaration(
     withEori(request.body.eori),
     withStatus(DeclarationStatus.DRAFT),
     withAdditionalDeclarationType(),
     withDispatchLocation(),
-    withConsignmentReferences(lrn = randomLrn()),
+    withConsignmentReferences(lrn = request.body.lrn),
     withDepartureTransport(ModeOfTransportCode.Maritime, "11", "SHIP1"),
     withContainerData(Container("container", Seq(Seal("seal1"), Seal("seal2")))),
     withPreviousDocuments(PreviousDocument("IF3", "101SHIP2", None)),
@@ -84,7 +83,4 @@ object GenerateDraftDecController extends ExportsDeclarationBuilder {
     withReadyForSubmission(),
     withUpdatedDateTime()
   )
-
-  private def randomLrn() = randomAlphanumericString(22)
-  private def randomAlphanumericString(length: Int): String = Random.alphanumeric.take(length).mkString.toUpperCase
 }

@@ -59,7 +59,8 @@ class GenerateDraftDecControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
           Future.successful(invocation.getArguments.head.asInstanceOf[ExportsDeclaration])
         })
 
-        val result: Future[Result] = route(app, post.withJsonBody(Json.obj("eori" -> eoriSpecified, "itemCount" -> itemCount))).get
+        val result: Future[Result] =
+          route(app, post.withJsonBody(Json.obj("eori" -> eoriSpecified, "itemCount" -> itemCount, "lrn" -> s"SOMELRN$itemCount"))).get
 
         status(result) must be(OK)
 

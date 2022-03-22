@@ -53,7 +53,7 @@ to populate the declarations collection with many item (50+ item) draft declarat
 
 You can call the endpoint like this:
 
-`curl --location --request POST 'http://localhost:6792/test-only/create-draft-dec-record' --header 'Content-Type: application/json' --data-raw '{"eori": "GB7172755022922", "itemCount" : 3}'`
+`curl --location --request POST 'http://localhost:6792/test-only/create-draft-dec-record' --header 'Content-Type: application/json' --data-raw '{"eori": "GB7172755022922", "itemCount" : 3, "lrn" : "SOMELRN""}'`
 
 You will receive back the following response (if successful):
 
