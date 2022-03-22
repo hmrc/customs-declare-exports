@@ -17,7 +17,6 @@
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
 import org.mockito.ArgumentMatchersSugar.any
-import play.api.test.Helpers._
 import testdata.ExportsTestData._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
@@ -97,6 +96,13 @@ class EmailCancellationValidatorSpec extends UnitSpec {
           emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe false
         }
       }
+
+      "there are newer Notifications but their notificationIds do not match" in {
+        when(notificationRepository.findNotificationsByActionId(any[String]))
+          .thenReturn(Future.successful(Seq(dmsDocNotification.copy(actionId = actionId_2))))
+
+        emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe false
+      }
     }
 
     "return true" when {
@@ -127,19 +133,6 @@ class EmailCancellationValidatorSpec extends UnitSpec {
 
           emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe true
         }
-      }
-    }
-
-    "throw an Exception" when {
-
-      "NotificationRepository does not return DMSDOC Notification for which email should be sent" in {
-        val otherNotification = createNotification(firstDate.plusHours(2), ADDITIONAL_DOCUMENTS_REQUIRED)
-        when(notificationRepository.findNotificationsByActionId(any[String])).thenReturn(Future.successful(Seq(otherNotification)))
-
-        val sendEmailDetails =
-          SendEmailDetails(notificationId = dmsDocNotification._id, mrn = dmsDocNotification.details.mrn, actionId = dmsDocNotification.actionId)
-
-        an[IllegalStateException] mustBe thrownBy { await(emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails)) }
       }
     }
   }

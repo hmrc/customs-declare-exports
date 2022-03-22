@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
+import play.api.Logging
+
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.{CANCELLED, CLEARED, REJECTED}
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
@@ -24,20 +26,23 @@ import uk.gov.hmrc.exports.repositories.ParsedNotificationRepository
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-private[emails] class EmailCancellationValidator @Inject()(notificationRepository: ParsedNotificationRepository) {
+private[emails] class EmailCancellationValidator @Inject()(notificationRepository: ParsedNotificationRepository) extends Logging {
 
   private val statusesCancellingEmailSending = Set(REJECTED, CLEARED, CANCELLED)
 
   def isEmailSendingCancelled(sendEmailDetails: SendEmailDetails)(implicit ec: ExecutionContext): Future[Boolean] =
     notificationRepository.findNotificationsByActionId(sendEmailDetails.actionId).map { notifications =>
-      val currentDmsDocNotification = notifications
+      notifications
         .find(_._id == sendEmailDetails.notificationId)
-        .getOrElse(throw new IllegalStateException(s"Cannot find DMSDOC Notification with id: [${sendEmailDetails.notificationId}]"))
+        .map { currentDmsDocNotification =>
+          val notificationsAfterCurrentDmsDocNotification =
+            notifications.filter(_.details.dateTimeIssued.isAfter(currentDmsDocNotification.details.dateTimeIssued))
 
-      val notificationsAfterCurrentDmsDocNotification =
-        notifications.filter(_.details.dateTimeIssued.isAfter(currentDmsDocNotification.details.dateTimeIssued))
-
-      notificationsAfterCurrentDmsDocNotification.exists(n => statusesCancellingEmailSending.contains(n.details.status))
+          notificationsAfterCurrentDmsDocNotification.exists(n => statusesCancellingEmailSending.contains(n.details.status))
+        }
+        .getOrElse {
+          logger.warn(s"Cannot find DMSDOC Notification with id: [${sendEmailDetails.notificationId}]")
+          false
+        }
     }
-
 }
