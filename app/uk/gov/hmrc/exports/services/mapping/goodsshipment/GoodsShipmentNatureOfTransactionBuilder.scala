@@ -26,7 +26,7 @@ class GoodsShipmentNatureOfTransactionBuilder @Inject()() extends ModifyingBuild
   override def buildThenAdd(natureOfTransaction: NatureOfTransaction, goodsShipment: GoodsShipment) {
     if (isDefined(natureOfTransaction)) {
       val natureOfTransactionWCO = new GoodsShipmentTransactionNatureCodeType()
-      natureOfTransactionWCO.setValue(natureOfTransaction.natureType)
+      natureOfTransactionWCO.setValue(natureOfTransaction.natureType.take(1))
       goodsShipment.setTransactionNatureCode(natureOfTransactionWCO)
     }
   }
