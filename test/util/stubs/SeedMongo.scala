@@ -64,7 +64,7 @@ object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
         withAdditionalDocuments(Some(YesNoAnswer.yes), AdditionalDocument(Some("C501"), Some("GBAEOC71757250450281"), None, None, None, None, None))
       )
     ),
-    withTotalNumberOfItems(Some("56764"), Some("GBP"), Some("1.49"), "1"),
+    withTotalNumberOfItems(Some("56764"), Some("GBP"), Some("yes"), Some("1.49"), "1"),
     withPreviousDocuments(PreviousDocument("IF3", "101SHIP2", None)),
     withNatureOfTransaction("1")
   )
