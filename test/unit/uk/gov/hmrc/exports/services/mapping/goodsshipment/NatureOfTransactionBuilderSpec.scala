@@ -27,23 +27,24 @@ class NatureOfTransactionBuilderSpec extends UnitSpec {
     "correctly map to the WCO-DEC GoodsShipment.TransactionNatureCodeType instance" when {
       "'identifier' has been supplied" in {
         val builder = new GoodsShipmentNatureOfTransactionBuilder
-
-        val natureOfTransaction: NatureOfTransaction = NatureOfTransaction("1")
         val goodsShipment: Declaration.GoodsShipment = new GoodsShipment
 
-        builder.buildThenAdd(natureOfTransaction, goodsShipment)
-
+        builder.buildThenAdd(NatureOfTransaction("1"), goodsShipment)
         goodsShipment.getTransactionNatureCode.getValue must be("1")
       }
       "'identifier' has not been supplied" in {
         val builder = new GoodsShipmentNatureOfTransactionBuilder
-
-        val natureOfTransaction: NatureOfTransaction = NatureOfTransaction("")
         val goodsShipment: Declaration.GoodsShipment = new GoodsShipment
 
-        builder.buildThenAdd(natureOfTransaction, goodsShipment)
-
+        builder.buildThenAdd(NatureOfTransaction(""), goodsShipment)
         goodsShipment.getTransactionNatureCode must be(null)
+      }
+      "'identifier' with surplus chars has been supplied" in {
+        val builder = new GoodsShipmentNatureOfTransactionBuilder
+        val goodsShipment: Declaration.GoodsShipment = new GoodsShipment
+
+        builder.buildThenAdd(NatureOfTransaction("1A"), goodsShipment)
+        goodsShipment.getTransactionNatureCode.getValue must be("1")
       }
     }
   }
