@@ -191,6 +191,7 @@ object CacheChangeLogSpec {
       |        "borderModeOfTransportCode": "1",
       |        "meansOfTransportOnDepartureType": "11",
       |        "meansOfTransportOnDepartureIDNumber": "123456754323356",
+      |        "transportCrossingTheBorderNationality": { "countryName": "United Kingdom" },
       |        "meansOfTransportCrossingTheBorderNationality": "United Kingdom",
       |        "meansOfTransportCrossingTheBorderType": "11",
       |        "meansOfTransportCrossingTheBorderIDNumber": "Superfast Hawk Millenium"
@@ -376,6 +377,7 @@ object CacheChangeLogSpec {
       |    "meansOfTransportOnDepartureType": "11",
       |    "meansOfTransportOnDepartureIDNumber": "123456754323356",
       |    "meansOfTransportCrossingTheBorderNationality": "United Kingdom",
+      |    "transportCrossingTheBorderNationality": { "countryName": "United Kingdom" },
       |    "meansOfTransportCrossingTheBorderType": "11",
       |    "meansOfTransportCrossingTheBorderIDNumber": "Superfast Hawk Millenium"
       |  },
@@ -559,6 +561,7 @@ object CacheChangeLogSpec {
       |    "meansOfTransportOnDepartureType": "11",
       |    "meansOfTransportOnDepartureIDNumber": "123456754323356",
       |    "meansOfTransportCrossingTheBorderNationality": "United Kingdom",
+      |    "transportCrossingTheBorderNationality": { "countryName": "United Kingdom" },
       |    "meansOfTransportCrossingTheBorderType": "11",
       |    "meansOfTransportCrossingTheBorderIDNumber": "Superfast Hawk Millenium"
       |  },
@@ -744,6 +747,7 @@ object CacheChangeLogSpec {
       |    "meansOfTransportOnDepartureType": "11",
       |    "meansOfTransportOnDepartureIDNumber": "123456754323356",
       |    "meansOfTransportCrossingTheBorderNationality": "United Kingdom",
+      |    "transportCrossingTheBorderNationality": { "countryName": "United Kingdom" },
       |    "meansOfTransportCrossingTheBorderType": "11",
       |    "meansOfTransportCrossingTheBorderIDNumber": "Superfast Hawk Millenium"
       |  },
@@ -931,6 +935,7 @@ object CacheChangeLogSpec {
       |    "meansOfTransportOnDepartureType": "11",
       |    "meansOfTransportOnDepartureIDNumber": "123456754323356",
       |    "meansOfTransportCrossingTheBorderNationality": "United Kingdom",
+      |    "transportCrossingTheBorderNationality": { "countryName": "United Kingdom" },
       |    "meansOfTransportCrossingTheBorderType": "11",
       |    "meansOfTransportCrossingTheBorderIDNumber": "Superfast Hawk Millenium"
       |  },
@@ -1118,6 +1123,7 @@ object CacheChangeLogSpec {
       |    "meansOfTransportOnDepartureType": "11",
       |    "meansOfTransportOnDepartureIDNumber": "123456754323356",
       |    "meansOfTransportCrossingTheBorderNationality": "United Kingdom",
+      |    "transportCrossingTheBorderNationality": { "countryName": "United Kingdom" },
       |    "meansOfTransportCrossingTheBorderType": "11",
       |    "meansOfTransportCrossingTheBorderIDNumber": "Superfast Hawk Millenium"
       |  },
@@ -1305,6 +1311,7 @@ object CacheChangeLogSpec {
                                            |    "meansOfTransportOnDepartureType": "11",
                                            |    "meansOfTransportOnDepartureIDNumber": "123456754323356",
                                            |    "meansOfTransportCrossingTheBorderNationality": "United Kingdom",
+                                           |    "transportCrossingTheBorderNationality": { "countryName": "United Kingdom" },
                                            |    "meansOfTransportCrossingTheBorderType": "11",
                                            |    "meansOfTransportCrossingTheBorderIDNumber": "Superfast Hawk Millenium"
                                            |  },

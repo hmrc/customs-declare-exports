@@ -35,7 +35,8 @@ class ExportsDeclarationSpec extends UnitSpec {
     }
 
     "be set to initial state when without references" in {
-      ExportsDeclaration(id, Eori(eori), exportsDeclarationRequest.copy(consignmentReferences = None)).status mustBe DeclarationStatus.INITIAL
+      val declarationRequest = exportsDeclarationRequest.copy(consignmentReferences = None)
+      ExportsDeclaration(id, Eori(eori), declarationRequest).status mustBe DeclarationStatus.INITIAL
     }
   }
 
@@ -77,7 +78,6 @@ object ExportsDeclarationSpec {
   private val additionalDeclarationType = mock[AdditionalDeclarationType]
   private val consignmentReferences = mock[ConsignmentReferences]
   private val mucr = MUCR("CZYX123A")
-  private val transport = mock[Transport]
   private val parties = mock[Parties]
   private val locations = mock[Locations]
   private val item = mock[ExportItem]
@@ -95,7 +95,7 @@ object ExportsDeclarationSpec {
     consignmentReferences = Some(consignmentReferences),
     linkDucrToMucr = Some(YesNoAnswer.yes),
     mucr = Some(mucr),
-    transport = transport,
+    transport = Transport(),
     parties = parties,
     locations = locations,
     items = Seq(item),
@@ -118,7 +118,7 @@ object ExportsDeclarationSpec {
     consignmentReferences = Some(consignmentReferences),
     linkDucrToMucr = Some(YesNoAnswer.yes),
     mucr = Some(mucr),
-    transport = transport,
+    transport = Transport(),
     parties = parties,
     locations = locations,
     items = Seq(item),
@@ -167,6 +167,7 @@ object ExportsDeclarationSpec {
       |    ],
       |    "inlandModeOfTransportCode": "1",
       |    "meansOfTransportCrossingTheBorderNationality": "United Kingdom",
+      |    "transportCrossingTheBorderNationality": { "countryName": "United Kingdom" },
       |    "meansOfTransportCrossingTheBorderType": "11",
       |    "meansOfTransportCrossingTheBorderIDNumber": "Boaty McBoatface",
       |    "borderModeOfTransportCode": {

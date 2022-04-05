@@ -45,48 +45,57 @@ class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) 
     }
   }
 
-  private def appendBorderTransport(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit = {
-    data.meansOfTransportCrossingTheBorderIDNumber.filter(_.trim.nonEmpty).foreach { value =>
+  private def appendBorderTransport(transport: Transport, transportMeans: Declaration.BorderTransportMeans): Unit = {
+    transport.meansOfTransportCrossingTheBorderIDNumber.filter(_.trim.nonEmpty).foreach { value =>
       val id = new BorderTransportMeansIdentificationIDType
       id.setValue(value)
       transportMeans.setID(id)
     }
 
-    data.meansOfTransportCrossingTheBorderType.filter(_.trim.nonEmpty).foreach { transportType =>
+    transport.meansOfTransportCrossingTheBorderType.filter(_.trim.nonEmpty).foreach { transportType =>
       val identificationTypeCode = new BorderTransportMeansIdentificationTypeCodeType
       identificationTypeCode.setValue(transportType)
       transportMeans.setIdentificationTypeCode(identificationTypeCode)
     }
   }
 
-  private def appendBorderTransportWithDepartureValue(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit = {
-    data.meansOfTransportOnDepartureIDNumber.filter(_.trim.nonEmpty).foreach { value =>
+  private def appendBorderTransportWithDepartureValue(transport: Transport, transportMeans: Declaration.BorderTransportMeans): Unit = {
+    transport.meansOfTransportOnDepartureIDNumber.filter(_.trim.nonEmpty).foreach { value =>
       val id = new BorderTransportMeansIdentificationIDType
       id.setValue(value)
       transportMeans.setID(id)
     }
 
-    data.meansOfTransportOnDepartureType.filter(_.trim.nonEmpty).foreach { transportType =>
+    transport.meansOfTransportOnDepartureType.filter(_.trim.nonEmpty).foreach { transportType =>
       val identificationTypeCode = new BorderTransportMeansIdentificationTypeCodeType
       identificationTypeCode.setValue(transportType)
       transportMeans.setIdentificationTypeCode(identificationTypeCode)
     }
   }
 
-  private def appendRegistrationNationalityCode(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit =
-    data.meansOfTransportCrossingTheBorderNationality.foreach { transportCrossingTheBorderNationality =>
-      countriesService.allCountries
-        .find(country => transportCrossingTheBorderNationality.contains(country.countryName))
-        .foreach { country =>
-          val registrationNationalityCode = new BorderTransportMeansRegistrationNationalityCodeType
-          registrationNationalityCode.setValue(country.countryCode)
-          transportMeans.setRegistrationNationalityCode(registrationNationalityCode)
-        }
+  private def appendRegistrationNationalityCode(transport: Transport, transportMeans: Declaration.BorderTransportMeans): Unit = {
+
+    def sendRegistrationNationalityCode(countryCode: String): Unit = {
+      val registrationNationalityCode = new BorderTransportMeansRegistrationNationalityCodeType
+      registrationNationalityCode.setValue(countryCode)
+      transportMeans.setRegistrationNationalityCode(registrationNationalityCode)
     }
 
-  private def appendTransportLeavingTheBorder(data: Transport, transportMeans: Declaration.BorderTransportMeans): Unit =
+    transport.transportCrossingTheBorderNationality.foreach {
+      _.countryName match {
+        case Some(countryName) =>
+          countriesService.allCountries.find(_.countryName == countryName).foreach { country =>
+            sendRegistrationNationalityCode(country.countryCode)
+          }
+
+        case _ => sendRegistrationNationalityCode("GB")
+      }
+    }
+  }
+
+  private def appendTransportLeavingTheBorder(transport: Transport, transportMeans: Declaration.BorderTransportMeans): Unit =
     for {
-      transportLeavingTheBorder <- data.borderModeOfTransportCode
+      transportLeavingTheBorder <- transport.borderModeOfTransportCode
       modeOfTransportCode <- transportLeavingTheBorder.code
       if modeOfTransportCode.isValidCode
     } {

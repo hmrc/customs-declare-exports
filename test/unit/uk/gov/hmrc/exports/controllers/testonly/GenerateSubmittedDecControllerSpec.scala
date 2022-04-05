@@ -16,28 +16,27 @@
 
 package uk.gov.hmrc.exports.controllers.testonly
 
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
+import org.mockito.BDDMockito.`given`
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
-import org.mockito.ArgumentCaptor
-import org.mockito.BDDMockito.`given`
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.FakeRequest
-import play.api.Application
 import play.api.libs.json.Json
 import play.api.mvc.Result
+import play.api.test.FakeRequest
 import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsJson, _}
 import reactivemongo.api.commands.LastError
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
+import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
-import scala.collection.Map
 import scala.concurrent.Future
 
 class GenerateSubmittedDecControllerSpec extends UnitSpec with GuiceOneAppPerSuite with ExportsDeclarationBuilder {
@@ -85,8 +84,8 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with GuiceOneAppPerSui
       val captorParsedNotification: ArgumentCaptor[ParsedNotification] = ArgumentCaptor.forClass(classOf[ParsedNotification])
       when(parsedNotificationRepository.insert(captorParsedNotification.capture())(any())).thenReturn(Future.successful(writeResult))
 
-      val request: Map[String, String] = Map("eori" -> eoriSpecified)
-      val result: Future[Result] = route(app, post.withJsonBody(Json.toJson(request))).get
+      val request = Json.obj("eori" -> eoriSpecified)
+      val result: Future[Result] = route(app, post.withJsonBody(request)).get
 
       status(result) must be(OK)
 
@@ -109,8 +108,8 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with GuiceOneAppPerSui
       given(submissionRepository.save(any())).willReturn(Future.successful(submission))
       given(parsedNotificationRepository.insert(any())(any())).willReturn(Future.successful(writeResult))
 
-      val request: Map[String, String] = Map("eori" -> eoriSpecified)
-      val result: Future[Result] = route(app, post.withJsonBody(Json.toJson(request))).get
+      val request = Json.obj("eori" -> eoriSpecified)
+      val result: Future[Result] = route(app, post.withJsonBody(request)).get
 
       status(result) must be(OK)
 
@@ -123,8 +122,8 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with GuiceOneAppPerSui
       given(submissionRepository.save(any())).willReturn(Future.successful(submission))
       given(parsedNotificationRepository.insert(any())(any())).willReturn(Future.successful(writeResult))
 
-      val request: Map[String, String] = Map("eori" -> eoriSpecified)
-      val result: Future[Result] = route(app, post.withJsonBody(Json.toJson(request))).get
+      val request = Json.obj("eori" -> eoriSpecified)
+      val result: Future[Result] = route(app, post.withJsonBody(request)).get
 
       status(result) must be(OK)
 
