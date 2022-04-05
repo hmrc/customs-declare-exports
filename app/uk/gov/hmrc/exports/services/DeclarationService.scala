@@ -34,7 +34,8 @@ class DeclarationService @Inject()(declarationRepository: DeclarationRepository)
   def find(search: DeclarationSearch, pagination: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] =
     declarationRepository.find(search, pagination, sort)
 
-  def findOne(id: String, eori: Eori): Future[Option[ExportsDeclaration]] = declarationRepository.find(id, eori)
+  def findOne(id: String, eori: Eori): Future[Option[ExportsDeclaration]] =
+    declarationRepository.find(id, eori)
 
   def deleteOne(declaration: ExportsDeclaration): Future[Unit] = declarationRepository.delete(declaration)
 

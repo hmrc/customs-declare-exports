@@ -81,8 +81,14 @@ class DeclarationController @Inject()(
 
   def findById(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     declarationService.findOne(id, request.eori).map {
-      case Some(declaration) => Ok(declaration)
-      case None              => NotFound
+      case Some(declaration) =>
+        // Temporary. When working on CEDS-3767 this line should be removed.
+        val transport = ExportsDeclaration.copyTransportCrossingTheBorderNationality(declaration.transport)
+
+        // Temporary. When working on CEDS-3767 this line should read again => Ok(declaration)
+        Ok(declaration.copy(transport = transport))
+
+      case None => NotFound
     }
   }
 

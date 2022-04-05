@@ -113,6 +113,7 @@ object MakeTransportPaymentMethodNotOptionalSpec {
       |    "meansOfTransportOnDepartureType": "11",
       |    "meansOfTransportOnDepartureIDNumber": "BLUE MASTER II",
       |    "meansOfTransportCrossingTheBorderNationality": "Marshall Islands (the)",
+      |    "transportCrossingTheBorderNationality": { "countryName": "Marshall Islands (the)" },
       |    "meansOfTransportCrossingTheBorderType": "11",
       |    "meansOfTransportCrossingTheBorderIDNumber": "BLUE MASTER II"
       |  }
@@ -133,6 +134,7 @@ object MakeTransportPaymentMethodNotOptionalSpec {
       |    "meansOfTransportOnDepartureType": "11",
       |    "meansOfTransportOnDepartureIDNumber": "BLUE MASTER II",
       |    "meansOfTransportCrossingTheBorderNationality": "Marshall Islands (the)",
+      |    "transportCrossingTheBorderNationality": { "countryName": "Marshall Islands (the)" },
       |    "meansOfTransportCrossingTheBorderType": "11",
       |    "meansOfTransportCrossingTheBorderIDNumber": "BLUE MASTER II"
       |  }
@@ -156,6 +158,7 @@ object MakeTransportPaymentMethodNotOptionalSpec {
       |    "meansOfTransportOnDepartureType": "11",
       |    "meansOfTransportOnDepartureIDNumber": "BLUE MASTER II",
       |    "meansOfTransportCrossingTheBorderNationality": "Marshall Islands (the)",
+      |    "transportCrossingTheBorderNationality": { "countryName": "Marshall Islands (the)" },
       |    "meansOfTransportCrossingTheBorderType": "11",
       |    "meansOfTransportCrossingTheBorderIDNumber": "BLUE MASTER II"
       |  }
