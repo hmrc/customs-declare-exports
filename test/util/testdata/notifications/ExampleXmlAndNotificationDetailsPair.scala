@@ -18,8 +18,7 @@ package testdata.notifications
 
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatter.ofPattern
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
-
+import java.time.{LocalDateTime, ZonedDateTime, ZoneId, ZoneOffset}
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection}
 import uk.gov.hmrc.exports.models.PointerSectionType.{FIELD, SEQUENCE}
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, NotificationError}
@@ -32,11 +31,11 @@ final case class ExampleXmlAndNotificationDetailsPair(asXml: Elem = <empty/>, as
 
 object ExampleXmlAndNotificationDetailsPair {
 
-  private val formatter304 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
+  val formatter304 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
 
   def exampleReceivedNotification(
     mrn: String,
-    dateTime: String = LocalDateTime.now().atZone(ZoneId.of("UCT")).format(formatter304)
+    dateTime: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UCT"))
   ): ExampleXmlAndNotificationDetailsPair = ExampleXmlAndNotificationDetailsPair(
     asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
@@ -49,7 +48,7 @@ object ExampleXmlAndNotificationDetailsPair {
         <FunctionCode>02</FunctionCode>
         <FunctionalReferenceID>1234555</FunctionalReferenceID>
         <IssueDateTime>
-          <DateTimeString formatCode="304">{dateTime}</DateTimeString>
+          <DateTimeString formatCode="304">{dateTime.format(formatter304)}</DateTimeString>
         </IssueDateTime>
         <Declaration>
           <ID>{mrn}</ID>
@@ -59,7 +58,7 @@ object ExampleXmlAndNotificationDetailsPair {
     asDomainModel = Seq(
       NotificationDetails(
         mrn = mrn,
-        dateTimeIssued = ZonedDateTime.of(LocalDateTime.parse(dateTime, formatter304), ZoneId.of("UTC")),
+        dateTimeIssued = ZonedDateTime.ofInstant(dateTime.toInstant, ZoneId.of("UCT")).withNano(0),
         status = SubmissionStatus.RECEIVED,
         errors = Seq.empty
       )
