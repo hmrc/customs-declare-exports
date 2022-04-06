@@ -29,7 +29,7 @@ import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
-import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
+import java.time.{ZoneOffset, ZonedDateTime}
 import scala.concurrent.{ExecutionContext, Future}
 
 class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with MockMetrics {
@@ -112,7 +112,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     "submit to the Dec API" when {
       val declaration = aDeclaration()
 
-      val dateTimeIssued = ZonedDateTime.of(LocalDateTime.now(), ZoneOffset.UTC)
+      val dateTimeIssued = ZonedDateTime.now(ZoneOffset.UTC)
 
       val newAction = Action(id = "conv-id", requestType = SubmissionRequest, requestTimestamp = dateTimeIssued)
 

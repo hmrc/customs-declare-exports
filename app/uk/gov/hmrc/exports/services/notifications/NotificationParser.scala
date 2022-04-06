@@ -16,28 +16,27 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
-import java.time.format.DateTimeFormatter
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
-
 import play.api.Logger
+import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, NotificationError}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
-import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 
+import java.time.format.DateTimeFormatter
+import java.time.{ZoneId, ZonedDateTime}
 import scala.xml.{Node, NodeSeq}
 
 class NotificationParser {
 
   private val logger = Logger(this.getClass)
 
+  private val formatter304 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
+
   def parse(notificationXml: NodeSeq): Seq[NotificationDetails] = {
     val responsesXml = notificationXml \ "Response"
 
     responsesXml.map { singleResponseXml =>
       val mrn = (singleResponseXml \ "Declaration" \ "ID").text
-      val formatter304 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
-      val dateTimeIssued =
-        ZonedDateTime.of(LocalDateTime.parse((singleResponseXml \ "IssueDateTime" \ "DateTimeString").text, formatter304), ZoneId.of("UTC"))
+      val dateTimeIssued = ZonedDateTime.parse((singleResponseXml \ "IssueDateTime" \ "DateTimeString").text, formatter304)
       val functionCode = (singleResponseXml \ "FunctionCode").text
 
       val nameCode =
@@ -47,7 +46,12 @@ class NotificationParser {
 
       val errors = buildErrors(singleResponseXml)
 
-      NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = SubmissionStatus.retrieve(functionCode, nameCode), errors = errors)
+      NotificationDetails(
+        mrn = mrn,
+        dateTimeIssued = dateTimeIssued.withZoneSameInstant(ZoneId.of("UTC")),
+        status = SubmissionStatus.retrieve(functionCode, nameCode),
+        errors = errors
+      )
     }
   }
 

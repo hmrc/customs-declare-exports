@@ -16,17 +16,17 @@
 
 package testdata
 
-import java.time.temporal.ChronoUnit.HOURS
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
-import java.util.UUID
-
 import testdata.ExportsTestData._
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest, Submission, SubmissionRequest}
 
+import java.time.{ZoneId, ZonedDateTime}
+import java.time.temporal.ChronoUnit.HOURS
+import java.util.UUID
+
 object SubmissionTestData {
 
-  private val instant1971: ZonedDateTime = ZonedDateTime.of(LocalDateTime.of(1971, 1, 1, 1, 1), ZoneId.of("UTC"))
-  private val instant1972 = ZonedDateTime.of(LocalDateTime.of(1972, 1, 1, 1, 1), ZoneId.of("UTC"))
+  private val instant1971: ZonedDateTime = ZonedDateTime.of(1971, 1, 1, 1, 1, 0, 0, ZoneId.of("UTC"))
+  private val instant1972 = ZonedDateTime.of(1972, 1, 1, 1, 1, 0, 0, ZoneId.of("UTC"))
 
   lazy val action = Action(requestType = SubmissionRequest, id = actionId)
   lazy val action_2 =

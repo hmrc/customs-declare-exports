@@ -54,7 +54,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
   "EmailSendingValidator on isEmailSendingCancelled" should {
 
     val zone: ZoneId = ZoneId.of("Europe/London")
-    val firstDate = ZonedDateTime.of(LocalDateTime.of(2020, 6, 1, 10, 10), zone)
+    val firstDate = ZonedDateTime.of(2020, 6, 1, 10, 10, 0, 0, zone)
 
     val dmsDocNotification = createNotification(firstDate, ADDITIONAL_DOCUMENTS_REQUIRED)
     val sendEmailDetails =

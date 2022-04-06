@@ -21,9 +21,26 @@ import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.NotificationDetails
 
+import java.time.ZonedDateTime
+
 class NotificationParserSpec extends UnitSpec {
 
   private val notificationParser = new NotificationParser()
+
+  private def compareNotificationSequences(actual: Seq[NotificationDetails], expected: Seq[NotificationDetails]) = {
+    actual.size mustBe expected.size
+
+    val actualVsExpected = actual.zip(expected)
+    actualVsExpected.foreach {
+      case (actual, expected) =>
+        actual.mrn mustBe expected.mrn
+        actual.status mustBe expected.status
+        withClue(s"Check if actual '${actual.dateTimeIssued.toInstant()}' is equal to expected '${expected.dateTimeIssued.toInstant()}'?") {
+          actual.dateTimeIssued.toInstant().equals(expected.dateTimeIssued.toInstant()) mustBe true
+        }
+        actual.errors mustBe expected.errors
+    }
+  }
 
   "NotificationParser on parse" when {
 
@@ -47,7 +64,7 @@ class NotificationParserSpec extends UnitSpec {
 
           val result = notificationParser.parse(testNotification.asXml)
 
-          result mustBe testNotification.asDomainModel
+          compareNotificationSequences(result, testNotification.asDomainModel)
         }
       }
 
@@ -58,7 +75,7 @@ class NotificationParserSpec extends UnitSpec {
 
           val result = notificationParser.parse(testNotification.asXml)
 
-          result mustBe testNotification.asDomainModel
+          compareNotificationSequences(result, testNotification.asDomainModel)
         }
       }
 
@@ -68,7 +85,7 @@ class NotificationParserSpec extends UnitSpec {
 
           val result = notificationParser.parse(testNotification.asXml)
 
-          result mustBe testNotification.asDomainModel
+          compareNotificationSequences(result, testNotification.asDomainModel)
         }
       }
     }
@@ -80,7 +97,7 @@ class NotificationParserSpec extends UnitSpec {
 
         val result = notificationParser.parse(testNotification.asXml)
 
-        result mustBe testNotification.asDomainModel
+        compareNotificationSequences(result, testNotification.asDomainModel)
       }
     }
 
@@ -92,6 +109,33 @@ class NotificationParserSpec extends UnitSpec {
         an[Exception] mustBe thrownBy(notificationParser.parse(testNotification.asXml))
       }
     }
-  }
 
+    "provided with notification with a IssueDateTime value " should {
+      "correctly parse the dateTime to a UTC value" when {
+        "it contains an offset value of +00 (UTC)" in {
+          val testNotification = exampleReceivedNotification(mrn, ZonedDateTime.from(formatter304.parse("20221231235959+00")))
+
+          val result = notificationParser.parse(testNotification.asXml)
+
+          compareNotificationSequences(result, testNotification.asDomainModel)
+        }
+
+        "it contains an offset value of +01 (BST)" in {
+          val testNotification = exampleReceivedNotification(mrn, ZonedDateTime.from(formatter304.parse("20221231235959+01")))
+
+          val result = notificationParser.parse(testNotification.asXml)
+
+          compareNotificationSequences(result, testNotification.asDomainModel)
+        }
+
+        "it contains an offset value of -01 " in {
+          val testNotification = exampleReceivedNotification(mrn, ZonedDateTime.from(formatter304.parse("20221231235959-01")))
+
+          val result = notificationParser.parse(testNotification.asXml)
+
+          compareNotificationSequences(result, testNotification.asDomainModel)
+        }
+      }
+    }
+  }
 }
