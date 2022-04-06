@@ -31,13 +31,14 @@ class NotificationParserSpec extends UnitSpec {
     actual.size mustBe expected.size
 
     val actualVsExpected = actual.zip(expected)
-    actualVsExpected.foreach { case (actual, expected) =>
-      actual.mrn mustBe expected.mrn
-      actual.status mustBe expected.status
-      withClue(s"Check if actual '${actual.dateTimeIssued.toInstant()}' is equal to expected '${expected.dateTimeIssued.toInstant()}'?") {
-        actual.dateTimeIssued.toInstant().equals(expected.dateTimeIssued.toInstant()) mustBe true
-      }
-      actual.errors mustBe expected.errors
+    actualVsExpected.foreach {
+      case (actual, expected) =>
+        actual.mrn mustBe expected.mrn
+        actual.status mustBe expected.status
+        withClue(s"Check if actual '${actual.dateTimeIssued.toInstant()}' is equal to expected '${expected.dateTimeIssued.toInstant()}'?") {
+          actual.dateTimeIssued.toInstant().equals(expected.dateTimeIssued.toInstant()) mustBe true
+        }
+        actual.errors mustBe expected.errors
     }
   }
 

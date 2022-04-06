@@ -21,8 +21,8 @@ import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 
+import java.time.{ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 import java.util.UUID
 
 class ParsedNotificationSpec extends UnitSpec {
@@ -33,20 +33,20 @@ class ParsedNotificationSpec extends UnitSpec {
     val id = BSONObjectID.generate
     val unparsedNotificationId = UUID.randomUUID()
     val actionId = "123"
-    val dateTime = LocalDateTime.now()
+    val dateTime = ZonedDateTime.now(ZoneId.of("UCT"))
     val mrn = "id1"
 
     val notification = ParsedNotification(
       _id = id,
       unparsedNotificationId,
       actionId = actionId,
-      details = NotificationDetails(mrn, ZonedDateTime.of(dateTime, ZoneId.of("UCT")), SubmissionStatus.ACCEPTED, Seq.empty)
+      details = NotificationDetails(mrn, dateTime, SubmissionStatus.ACCEPTED, Seq.empty)
     )
 
     "have json writes that produce object which could be parsed by the front end service" in {
       val json = Json.toJson(notification)(ParsedNotification.FrontendFormat.writes)
 
-      json.toString() mustBe ParsedNotificationSpec.serialisedWithFrontendFormat(actionId, mrn, dateTime.atZone(ZoneId.of("UCT")).format(formatter))
+      json.toString() mustBe ParsedNotificationSpec.serialisedWithFrontendFormat(actionId, mrn, dateTime.format(formatter))
     }
 
     "have json writes that produce object which could be parsed by the database" in {
@@ -57,7 +57,7 @@ class ParsedNotificationSpec extends UnitSpec {
         unparsedNotificationId.toString,
         actionId,
         mrn,
-        dateTime.atZone(ZoneId.of("UCT")).format(formatter)
+        dateTime.format(formatter)
       )
     }
   }

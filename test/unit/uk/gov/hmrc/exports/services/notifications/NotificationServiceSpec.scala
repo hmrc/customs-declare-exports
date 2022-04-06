@@ -16,17 +16,11 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
-import java.util.UUID
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-
 import akka.actor.Cancellable
 import org.joda.time.DateTime
+import org.mockito.{ArgumentCaptor, InOrder, Mockito}
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.Mockito._
-import org.mockito.{ArgumentCaptor, InOrder, Mockito}
 import org.scalatest.concurrent.IntegrationPatience
 import reactivemongo.bson.BSONObjectID
 import testdata.ExportsTestData._
@@ -37,11 +31,16 @@ import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification, UnparsedNotification}
-import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.ACCEPTED
 import uk.gov.hmrc.exports.models.declaration.submissions._
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.ACCEPTED
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, UnparsedNotificationWorkItemRepository}
 import uk.gov.hmrc.exports.services.notifications.receiptactions.NotificationReceiptActionsScheduler
 import uk.gov.hmrc.workitem.{ToDo, WorkItem}
+
+import java.time.{ZoneId, ZonedDateTime}
+import java.util.UUID
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
 
@@ -153,7 +152,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
         ParsedNotification(
           unparsedNotificationId = UUID.randomUUID(),
           actionId = "id1",
-          details = NotificationDetails("mrn", ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), ACCEPTED, Seq.empty)
+          details = NotificationDetails("mrn", ZonedDateTime.now(ZoneId.of("UTC")), ACCEPTED, Seq.empty)
         )
       )
       when(notificationRepository.findNotificationsByActionIds(any[Seq[String]])).thenReturn(Future.successful(notifications))

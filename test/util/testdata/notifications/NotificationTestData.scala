@@ -21,12 +21,12 @@ import play.api.mvc.Codec
 import testdata.ExportsTestData.{actionId, actionId_2, actionId_4, mrn}
 import testdata.TestDataHelper
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
+import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, NotificationError, ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
-import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 
+import java.time.{ZoneId, ZonedDateTime}
 import java.time.temporal.ChronoUnit.MINUTES
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 import java.util.UUID
 import scala.util.Random
 import scala.xml.Elem
@@ -82,7 +82,7 @@ object NotificationTestData {
   private lazy val functionCodesRandomised: Iterator[String] = Random.shuffle(functionCodes).toIterator
   private def randomResponseFunctionCode: String = functionCodesRandomised.next()
 
-  val dateTimeIssued: ZonedDateTime = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"))
+  val dateTimeIssued: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC"))
   val dateTimeIssued_2: ZonedDateTime = dateTimeIssued.plus(3, MINUTES)
   val dateTimeIssued_3: ZonedDateTime = dateTimeIssued_2.plus(3, MINUTES)
   val functionCode: String = randomResponseFunctionCode

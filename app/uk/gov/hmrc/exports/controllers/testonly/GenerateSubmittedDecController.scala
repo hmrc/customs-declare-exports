@@ -27,7 +27,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.{ACCE
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
+import java.time.{ZoneId, ZonedDateTime}
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -85,12 +85,8 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
   def createNotification(declaration: ExportsDeclaration, status: SubmissionStatus = ACCEPTED) = ParsedNotification(
     unparsedNotificationId = UUID.randomUUID(),
     actionId = UUID.randomUUID().toString,
-    details = NotificationDetails(
-      declaration.consignmentReferences.flatMap(_.mrn).getOrElse(""),
-      ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")),
-      status,
-      Seq.empty
-    )
+    details =
+      NotificationDetails(declaration.consignmentReferences.flatMap(_.mrn).getOrElse(""), ZonedDateTime.now(ZoneId.of("UTC")), status, Seq.empty)
   )
 
   def createDeclaration()(implicit request: Request[CreateSubmitDecDocumentsRequest]) = aDeclaration(

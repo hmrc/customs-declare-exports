@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatu
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration._
 
-import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.time.{Instant, ZoneOffset, ZonedDateTime}
 
 //noinspection ScalaStyle
 trait ExportsDeclarationBuilder extends ExportsItemBuilder {
@@ -43,8 +43,8 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     id = uuid,
     eori = "eori",
     status = DeclarationStatus.COMPLETE,
-    createdDateTime = LocalDateTime.of(2019, 1, 1, 0, 0, 0).toInstant(ZoneOffset.UTC),
-    updatedDateTime = LocalDateTime.of(2019, 2, 2, 0, 0, 0).toInstant(ZoneOffset.UTC),
+    createdDateTime = ZonedDateTime.of(2019, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC).toInstant,
+    updatedDateTime = ZonedDateTime.of(2019, 2, 2, 0, 0, 0, 0, ZoneOffset.UTC).toInstant,
     sourceId = None,
     `type` = DeclarationType.STANDARD,
     dispatchLocation = None,
@@ -335,7 +335,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     )
 
   def withUpdateDate(year: Int, month: Int, dayOfMonth: Int): ExportsDeclarationModifier =
-    _.copy(updatedDateTime = LocalDateTime.of(year, month, dayOfMonth, 10, 0, 0).toInstant(ZoneOffset.UTC))
+    _.copy(updatedDateTime = ZonedDateTime.of(year, month, dayOfMonth, 10, 0, 0, 0, ZoneOffset.UTC).toInstant)
 
   def withMUCR(mucr: String): ExportsDeclarationModifier =
     cache => cache.copy(linkDucrToMucr = Some(YesNoAnswer.yes), mucr = Some(MUCR(mucr)))
@@ -343,6 +343,6 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
   def withReadyForSubmission(): ExportsDeclarationModifier =
     declaration => declaration.copy(readyForSubmission = Some(true))
 
-  def withUpdatedDateTime(updatedDateTime: Instant = LocalDateTime.now().toInstant(ZoneOffset.UTC)): ExportsDeclarationModifier =
+  def withUpdatedDateTime(updatedDateTime: Instant = Instant.now()): ExportsDeclarationModifier =
     declaration => declaration.copy(updatedDateTime = updatedDateTime)
 }

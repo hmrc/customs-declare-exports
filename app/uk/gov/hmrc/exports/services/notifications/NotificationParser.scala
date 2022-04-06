@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 
 import java.time.format.DateTimeFormatter
-import java.time.{ZonedDateTime, ZoneId}
+import java.time.{ZoneId, ZonedDateTime}
 import scala.xml.{Node, NodeSeq}
 
 class NotificationParser {
@@ -46,7 +46,12 @@ class NotificationParser {
 
       val errors = buildErrors(singleResponseXml)
 
-      NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued.withZoneSameInstant(ZoneId.of("UTC")), status = SubmissionStatus.retrieve(functionCode, nameCode), errors = errors)
+      NotificationDetails(
+        mrn = mrn,
+        dateTimeIssued = dateTimeIssued.withZoneSameInstant(ZoneId.of("UTC")),
+        status = SubmissionStatus.retrieve(functionCode, nameCode),
+        errors = errors
+      )
     }
   }
 
