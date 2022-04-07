@@ -331,9 +331,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
   def withTransportCountry(transportCountry: Option[String]): ExportsDeclarationModifier =
     declaration =>
-      declaration.copy(
-        transport = declaration.transport.copy(transportCrossingTheBorderNationality = Some(TransportCountry(transportCountry)))
-      )
+      declaration.copy(transport = declaration.transport.copy(transportCrossingTheBorderNationality = Some(TransportCountry(transportCountry))))
 
   def withTransportPayment(payment: String): ExportsDeclarationModifier =
     declaration =>

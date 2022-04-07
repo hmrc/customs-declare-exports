@@ -166,9 +166,9 @@ class TransportParserSpec extends UnitSpec with EitherValues {
 
     "set Transport.transportCrossingTheBorderNationality to the expected value" when {
       "the '/ BorderTransportMeans / RegistrationNationalityCode' element is present" in {
-        val expectedValue = "GB"
-        val result = transportParser.parse(transportCrossingTheBorderNationality(Some(expectedValue)))
-        result.value.transportCrossingTheBorderNationality.get mustBe expectedValue
+        val expectedValue = Some("GB")
+        val result = transportParser.parse(transportCrossingTheBorderNationality(expectedValue))
+        result.value.transportCrossingTheBorderNationality.value.countryName mustBe expectedValue
       }
     }
 

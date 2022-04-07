@@ -59,10 +59,7 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
 
       "no departure transport, only border transport" in {
         val model = aDeclaration(
-          withBorderTransport(
-            meansOfTransportCrossingTheBorderType = Some("type"),
-            meansOfTransportCrossingTheBorderIDNumber = Some("id")
-          ),
+          withBorderTransport(meansOfTransportCrossingTheBorderType = Some("type"), meansOfTransportCrossingTheBorderIDNumber = Some("id")),
           withTransportCountry(Some("United Kingdom")),
           withoutDepartureTransport()
         )
@@ -127,10 +124,7 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
 
       "fully populated" in {
         val model = aDeclaration(
-          withBorderTransport(
-            meansOfTransportCrossingTheBorderType = Some("type"),
-            meansOfTransportCrossingTheBorderIDNumber = Some("id")
-          ),
+          withBorderTransport(meansOfTransportCrossingTheBorderType = Some("type"), meansOfTransportCrossingTheBorderIDNumber = Some("id")),
           withTransportCountry(Some("United Kingdom")),
           withDepartureTransport(borderModeOfTransportCode = ModeOfTransportCode.Road)
         )
