@@ -29,9 +29,10 @@ class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) 
 
     val hasTransportLeavingTheBorder = transport.hasTransportLeavingTheBorder
     val hasBorder = transport.hasBorderTransportDetails
+    val hasTransportCountry = transport.hasTransportCountry
     val hasDepartureTransport = transport.hasDepartureTransportDetails
 
-    if (hasTransportLeavingTheBorder || hasBorder || hasDepartureTransport) {
+    if (hasTransportLeavingTheBorder || hasBorder || hasTransportCountry || hasDepartureTransport) {
       val transportMeans = new Declaration.BorderTransportMeans
 
       if (hasTransportLeavingTheBorder) appendTransportLeavingTheBorder(transport, transportMeans)
@@ -39,7 +40,7 @@ class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) 
       if (hasBorder) appendBorderTransport(transport, transportMeans)
       else if (hasDepartureTransport) appendBorderTransportWithDepartureValue(transport, transportMeans)
 
-      appendRegistrationNationalityCode(transport, transportMeans)
+      if (hasTransportCountry) appendRegistrationNationalityCode(transport, transportMeans)
 
       t.setBorderTransportMeans(transportMeans)
     }

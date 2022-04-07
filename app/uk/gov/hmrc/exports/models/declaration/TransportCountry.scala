@@ -18,13 +18,9 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 
-case class BorderNationality(countryName: Option[String])
+case class TransportCountry(countryName: Option[String])
 
-object BorderNationality {
+object TransportCountry {
 
-  implicit val format: OFormat[BorderNationality] = Json.format[BorderNationality]
-
-  // Temporary. To remove when working on CEDS-3767
-  def setBorderNationalityIfAny(meansOfTransportCrossingTheBorderNationality: Option[String]): Option[BorderNationality] =
-    meansOfTransportCrossingTheBorderNationality.flatMap(countryName => Some(BorderNationality(Some(countryName))))
+  implicit val format: OFormat[TransportCountry] = Json.format[TransportCountry]
 }

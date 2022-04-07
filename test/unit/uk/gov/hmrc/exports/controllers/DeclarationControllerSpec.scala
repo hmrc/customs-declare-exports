@@ -35,7 +35,7 @@ import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
-import uk.gov.hmrc.exports.models.declaration.{BorderNationality, DeclarationStatus, ExportsDeclaration, Transport}
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.DeclarationService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
@@ -231,26 +231,6 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
         contentAsJson(result) mustBe toJson(declaration)
         verify(declarationService).findOne("id", userEori)
       }
-    }
-
-    // Temporary. To remove when working on CEDS-3767
-    "copy Transport.meansOfTransportCrossingTheBorderNationality to Transport.transportCrossingTheBorderNationality" in {
-      withAuthorizedUser()
-
-      val declaration = aDeclaration(withId("id"), withEori(userEori))
-        .copy(transport = Transport(meansOfTransportCrossingTheBorderNationality = Some("United Kingdom")))
-
-      given(declarationService.findOne(anyString(), any[Eori]())).willReturn(Future.successful(Some(declaration)))
-
-      val result: Future[Result] = route(app, get).get
-
-      status(result) must be(OK)
-
-      val expectedDeclaration = declaration.copy(
-        transport = declaration.transport.copy(transportCrossingTheBorderNationality = Some(BorderNationality(Some("United Kingdom"))))
-      )
-      contentAsJson(result) mustBe toJson(expectedDeclaration)
-      verify(declarationService).findOne("id", userEori)
     }
 
     "return 404" when {

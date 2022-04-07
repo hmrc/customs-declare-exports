@@ -20,7 +20,6 @@ import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
-import uk.gov.hmrc.exports.models.declaration.BorderNationality.setBorderNationalityIfAny
 import uk.gov.hmrc.exports.models.declaration._
 
 import java.time.{Instant, ZoneOffset, ZonedDateTime}
@@ -304,31 +303,37 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
   def withNatureOfTransaction(natureType: String): ExportsDeclarationModifier =
     _.copy(natureOfTransaction = Some(NatureOfTransaction(natureType)))
 
-  def withoutBorderTransport(): ExportsDeclarationModifier =
+  val withoutBorderTransport: ExportsDeclarationModifier =
     declaration =>
       declaration.copy(
         transport = declaration.transport.copy(
           meansOfTransportCrossingTheBorderIDNumber = None,
           meansOfTransportCrossingTheBorderNationality = None,
-          transportCrossingTheBorderNationality = None,
           meansOfTransportCrossingTheBorderType = None
         )
     )
 
   def withBorderTransport(
-    meansOfTransportCrossingTheBorderNationality: Option[String] = None,
     meansOfTransportCrossingTheBorderType: Option[String] = None,
     meansOfTransportCrossingTheBorderIDNumber: Option[String] = None
   ): ExportsDeclarationModifier =
     declaration =>
       declaration.copy(
         transport = declaration.transport.copy(
-          meansOfTransportCrossingTheBorderNationality = meansOfTransportCrossingTheBorderNationality,
-          transportCrossingTheBorderNationality = setBorderNationalityIfAny(meansOfTransportCrossingTheBorderNationality),
+          meansOfTransportCrossingTheBorderNationality = None,
           meansOfTransportCrossingTheBorderType = meansOfTransportCrossingTheBorderType,
           meansOfTransportCrossingTheBorderIDNumber = meansOfTransportCrossingTheBorderIDNumber
         )
     )
+
+  val withoutTransportCountry: ExportsDeclarationModifier =
+    declaration => declaration.copy(transport = declaration.transport.copy(transportCrossingTheBorderNationality = None))
+
+  def withTransportCountry(transportCountry: Option[String]): ExportsDeclarationModifier =
+    declaration =>
+      declaration.copy(
+        transport = declaration.transport.copy(transportCrossingTheBorderNationality = Some(TransportCountry(transportCountry)))
+      )
 
   def withTransportPayment(payment: String): ExportsDeclarationModifier =
     declaration =>

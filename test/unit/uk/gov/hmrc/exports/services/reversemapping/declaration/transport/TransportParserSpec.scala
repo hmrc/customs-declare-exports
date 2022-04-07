@@ -157,18 +157,18 @@ class TransportParserSpec extends UnitSpec with EitherValues {
       }
     }
 
-    "set Transport.meansOfTransportCrossingTheBorderNationality to None" when {
+    "set Transport.transportCrossingTheBorderNationality to None" when {
       "the '/ BorderTransportMeans / RegistrationNationalityCode' element is NOT present" in {
-        val result = transportParser.parse(meansOfTransportCrossingTheBorderNationality())
-        result.value.meansOfTransportCrossingTheBorderNationality mustBe None
+        val result = transportParser.parse(transportCrossingTheBorderNationality())
+        result.value.transportCrossingTheBorderNationality mustBe None
       }
     }
 
-    "set Transport.meansOfTransportCrossingTheBorderNationality to the expected value" when {
+    "set Transport.transportCrossingTheBorderNationality to the expected value" when {
       "the '/ BorderTransportMeans / RegistrationNationalityCode' element is present" in {
         val expectedValue = "GB"
-        val result = transportParser.parse(meansOfTransportCrossingTheBorderNationality(Some(expectedValue)))
-        result.value.meansOfTransportCrossingTheBorderNationality.get mustBe expectedValue
+        val result = transportParser.parse(transportCrossingTheBorderNationality(Some(expectedValue)))
+        result.value.transportCrossingTheBorderNationality.get mustBe expectedValue
       }
     }
 
@@ -234,7 +234,7 @@ class TransportParserSpec extends UnitSpec with EitherValues {
       </ns3:Declaration>
     </meta>
 
-  private def meansOfTransportCrossingTheBorderNationality(inputValue: Option[String] = None): Elem =
+  private def transportCrossingTheBorderNationality(inputValue: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
         { inputValue.map { value =>

@@ -40,6 +40,7 @@ class TransportParser @Inject()(containersParser: ContainersParser) extends Decl
         meansOfTransportOnDepartureType = (departureTransportMeans \ IdentificationTypeCode).toStringOption,
         meansOfTransportOnDepartureIDNumber = (departureTransportMeans \ ID).toStringOption,
         meansOfTransportCrossingTheBorderNationality = (borderTransportMeans \ RegistrationNationalityCode).toStringOption,
+        transportCrossingTheBorderNationality = parseTransportCrossingTheBorderNationality(borderTransportMeans),
         meansOfTransportCrossingTheBorderType = (borderTransportMeans \ IdentificationTypeCode).toStringOption,
         meansOfTransportCrossingTheBorderIDNumber = (borderTransportMeans \ ID).toStringOption
       )
@@ -64,6 +65,11 @@ class TransportParser @Inject()(containersParser: ContainersParser) extends Decl
 
   private def parseDepartureTransportMeans(inputXml: NodeSeq): NodeSeq =
     inputXml \ Declaration \ GoodsShipment \ Consignment \ DepartureTransportMeans
+
+  private def parseTransportCrossingTheBorderNationality(borderTransportMeans: NodeSeq): Option[TransportCountry] = {
+    val nationalityCode = (borderTransportMeans \ RegistrationNationalityCode).text
+    if (nationalityCode.nonEmpty) Some(TransportCountry(Some(nationalityCode))) else None
+  }
 
   private def parseTransportPayment(inputXml: NodeSeq): Option[TransportPayment] = {
     val paymentMethod = (inputXml \ Declaration \ Consignment \ Freight \ PaymentMethodCode).text

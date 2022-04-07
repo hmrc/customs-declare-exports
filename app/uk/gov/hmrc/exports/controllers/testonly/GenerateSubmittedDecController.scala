@@ -121,7 +121,8 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
     withItem(),
     withTotalNumberOfItems(),
     withNatureOfTransaction("1"),
-    withBorderTransport()
+    withBorderTransport(),
+    withTransportCountry(None)
   )
 
   private def randomLrn() = randomAlphanumericString(22)
