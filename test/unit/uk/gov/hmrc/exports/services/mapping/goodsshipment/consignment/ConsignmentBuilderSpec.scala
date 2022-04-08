@@ -49,7 +49,8 @@ class ConsignmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
               withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
               withDepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, meansOfTransportOnDepartureIDNumber),
               withType(declarationType),
-              withBorderTransport(Some("Portugal"), Some("40"), Some("1234567878ui")),
+              withBorderTransport(Some("40"), Some("1234567878ui")),
+              withTransportCountry(Some("Portugal")),
               withContainerData(Container("container", Seq(Seal("seal1"), Seal("seal2"))))
             )
 
@@ -59,10 +60,10 @@ class ConsignmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
           val consignment = goodsShipment.getConsignment
 
-          consignment.getGoodsLocation mustNot be(null)
-          consignment.getContainerCode mustNot be(null)
-          consignment.getDepartureTransportMeans mustNot be(null)
-          consignment.getTransportEquipment mustNot be(null)
+          assert(Option(consignment.getGoodsLocation).isDefined)
+          assert(Option(consignment.getContainerCode).isDefined)
+          assert(Option(consignment.getDepartureTransportMeans).isDefined)
+          assert(Option(consignment.getTransportEquipment).isDefined)
         }
       }
 

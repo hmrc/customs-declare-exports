@@ -66,9 +66,7 @@ object ExportsDeclaration {
       consignmentReferences = declarationRequest.consignmentReferences,
       linkDucrToMucr = declarationRequest.linkDucrToMucr,
       mucr = declarationRequest.mucr,
-      // Temporary. When working on CEDS-3767 method 'copyTransportCrossingTheBorderNationality' should
-      // be removed and this line should read again => transport = declarationRequest.transport
-      transport = copyTransportCrossingTheBorderNationality(declarationRequest.transport),
+      transport = declarationRequest.transport,
       parties = declarationRequest.parties,
       locations = declarationRequest.locations,
       items = declarationRequest.items,
@@ -77,11 +75,6 @@ object ExportsDeclaration {
       previousDocuments = declarationRequest.previousDocuments,
       natureOfTransaction = declarationRequest.natureOfTransaction
     )
-
-  def copyTransportCrossingTheBorderNationality(transport: Transport): Transport =
-    transport.copy(transportCrossingTheBorderNationality = transport.meansOfTransportCrossingTheBorderNationality.flatMap { countryName =>
-      Some(BorderNationality(Some(countryName)))
-    })
 
   object REST {
     implicit val writes: OWrites[ExportsDeclaration] = Json.writes[ExportsDeclaration]

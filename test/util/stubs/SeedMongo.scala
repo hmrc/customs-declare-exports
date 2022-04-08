@@ -36,6 +36,7 @@ object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
     withConsignmentReferences(),
     withDepartureTransport(ModeOfTransportCode.Maritime, "11", "SHIP1"),
     withBorderTransport(),
+    withTransportCountry(None),
     withContainerData(),
     withExporterDetails(Some("GB717572504502801")),
     withConsigneeDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "United States of America"))),

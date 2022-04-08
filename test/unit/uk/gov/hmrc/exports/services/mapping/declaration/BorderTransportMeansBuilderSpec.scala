@@ -35,7 +35,7 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
     "build then add" when {
 
       "no border transport or transport details" in {
-        val model = aDeclaration(withoutBorderTransport(), withoutDepartureTransport())
+        val model = aDeclaration(withoutBorderTransport, withoutDepartureTransport())
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -47,7 +47,7 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
         val declaration = new Declaration()
 
         val model = aDeclaration(
-          withoutBorderTransport(),
+          withoutBorderTransport,
           withDepartureTransport(meansOfTransportOnDepartureType = "type", meansOfTransportOnDepartureIDNumber = "id")
         )
         builder.buildThenAdd(model, declaration)
@@ -59,11 +59,8 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
 
       "no departure transport, only border transport" in {
         val model = aDeclaration(
-          withBorderTransport(
-            meansOfTransportCrossingTheBorderNationality = Some("United Kingdom"),
-            meansOfTransportCrossingTheBorderType = Some("type"),
-            meansOfTransportCrossingTheBorderIDNumber = Some("id")
-          ),
+          withBorderTransport(meansOfTransportCrossingTheBorderType = Some("type"), meansOfTransportCrossingTheBorderIDNumber = Some("id")),
+          withTransportCountry(Some("United Kingdom")),
           withoutDepartureTransport()
         )
         val declaration = new Declaration()
@@ -75,11 +72,11 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
         declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue must be("GB")
       }
 
-      "departure transport and only border transport nationality" in {
+      "departure transport and border transport nationality" in {
         val declaration = new Declaration()
 
         val model = aDeclaration(
-          withBorderTransport(meansOfTransportCrossingTheBorderNationality = Some("United Kingdom")),
+          withTransportCountry(Some("United Kingdom")),
           withDepartureTransport(meansOfTransportOnDepartureType = "type", meansOfTransportOnDepartureIDNumber = "id")
         )
         builder.buildThenAdd(model, declaration)
@@ -89,14 +86,17 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
         declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue must be("GB")
       }
 
+      "unknown border transport nationality" in {
+        val model = aDeclaration(withTransportCountry(None))
+        val declaration = new Declaration()
+
+        builder.buildThenAdd(model, declaration)
+
+        declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue must be("GB")
+      }
+
       "invalid border transport nationality" in {
-        val model = aDeclaration(
-          withBorderTransport(
-            meansOfTransportCrossingTheBorderNationality = Some("other"),
-            meansOfTransportCrossingTheBorderType = Some("type"),
-            meansOfTransportCrossingTheBorderIDNumber = Some("id")
-          )
-        )
+        val model = aDeclaration(withTransportCountry(Some("other")))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -105,7 +105,7 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
       }
 
       "departure transport ModeOfTransportCode only" in {
-        val model = aDeclaration(withoutBorderTransport(), withDepartureTransport(ModeOfTransportCode.Maritime))
+        val model = aDeclaration(withoutBorderTransport, withDepartureTransport(ModeOfTransportCode.Maritime))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -114,7 +114,7 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
       }
 
       "departure transport ModeOfTransportCode is Empty" in {
-        val model = aDeclaration(withoutBorderTransport(), withDepartureTransport(ModeOfTransportCode.Empty))
+        val model = aDeclaration(withoutBorderTransport, withDepartureTransport(ModeOfTransportCode.Empty))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -124,11 +124,8 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
 
       "fully populated" in {
         val model = aDeclaration(
-          withBorderTransport(
-            meansOfTransportCrossingTheBorderNationality = Some("United Kingdom"),
-            meansOfTransportCrossingTheBorderType = Some("type"),
-            meansOfTransportCrossingTheBorderIDNumber = Some("id")
-          ),
+          withBorderTransport(meansOfTransportCrossingTheBorderType = Some("type"), meansOfTransportCrossingTheBorderIDNumber = Some("id")),
+          withTransportCountry(Some("United Kingdom")),
           withDepartureTransport(borderModeOfTransportCode = ModeOfTransportCode.Road)
         )
         val declaration = new Declaration()

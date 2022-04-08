@@ -79,7 +79,8 @@ object GenerateDraftDecController extends ExportsDeclarationBuilder {
     withItems(request.body.itemCount),
     withTotalNumberOfItems(),
     withNatureOfTransaction("1"),
-    withBorderTransport(Some("Portugal"), Some("40"), Some("1234567878ui")),
+    withBorderTransport(Some("40"), Some("1234567878ui")),
+    withTransportCountry(Some("Portugal")),
     withReadyForSubmission(),
     withUpdatedDateTime()
   )
