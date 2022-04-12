@@ -11,9 +11,8 @@
 42A.17C.$1.R145,declaration.parties.declarationHolders.$1.authorisationTypeCode
 42A.15A.T006,declaration.transport.meansOfTransportCrossingTheBorderIDNumber
 42A.15A.T018,declaration.transport.meansOfTransportCrossingTheBorderType
-42A.15A.T014,declaration.transport.meansOfTransportCrossingTheBorderNationality
 42A.15A.T014,declaration.transport.transportCrossingTheBorderNationality.countryName
-42A.15A.T022,declaration.transport.borderModeOfTransportCode.code.value
+42A.15A.T022,declaration.borderTransport.modeCode
 42A.28A.18A.R012,declaration.parties.carrierDetails.details.eori
 42A.28A.18A.R011,declaration.parties.carrierDetails.details.address.fullName
 42A.28A.18A.04A.241,declaration.parties.carrierDetails.details.address.townOrCity
