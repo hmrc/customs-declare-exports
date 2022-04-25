@@ -40,22 +40,33 @@ class AdditionalDocumentsBuilder @Inject()() extends ModifyingBuilder[ExportItem
       case true => None
       case false =>
         Some(
-          AdditionalDocument(
-            documentTypeCode = Some("999L"),
-            documentIdentifier = None,
-            documentStatus = None,
-            documentStatusReason = Some("CDS WAIVER"),
-            issuingAuthorityName = None,
-            dateOfValidity = None,
-            documentWriteOff = None
+          Seq(
+            AdditionalDocument(
+              documentTypeCode = Some("999L"),
+              documentIdentifier = None,
+              documentStatus = None,
+              documentStatusReason = Some("CDS WAIVER"),
+              issuingAuthorityName = None,
+              dateOfValidity = None,
+              documentWriteOff = None
+            ),
+            AdditionalDocument(
+              documentTypeCode = Some("Y999"),
+              documentIdentifier = None,
+              documentStatus = None,
+              documentStatusReason = Some("EXPORT WAIVER"),
+              issuingAuthorityName = None,
+              dateOfValidity = None,
+              documentWriteOff = None
+            )
           )
         )
     }
 
     val docsWithWaiver = cdsWaiver.fold(additionalDocs) { waiver =>
       additionalDocs match {
-        case Some(docs @ _ :: _) => Some(docs :+ waiver)
-        case _                   => Some(Seq(waiver))
+        case Some(docs) => Some(docs ++ waiver)
+        case _          => Some(waiver)
       }
     }
 
