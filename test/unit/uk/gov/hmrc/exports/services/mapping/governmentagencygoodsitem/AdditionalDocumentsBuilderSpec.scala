@@ -85,10 +85,13 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
 
         additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
 
-        governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 2
+        governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 3
         governmentAgencyGoodsItem.getAdditionalDocument.get(1).getName.getValue mustBe "CDS WAIVER"
         governmentAgencyGoodsItem.getAdditionalDocument.get(1).getTypeCode.getValue mustBe "99L"
         governmentAgencyGoodsItem.getAdditionalDocument.get(1).getCategoryCode.getValue mustBe "9"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(2).getName.getValue mustBe "EXPORT WAIVER"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(2).getTypeCode.getValue mustBe "999"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(2).getCategoryCode.getValue mustBe "Y"
 
       }
       "docs do not exist" in {
@@ -100,10 +103,13 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
 
         additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
 
-        governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 1
+        governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 2
         governmentAgencyGoodsItem.getAdditionalDocument.get(0).getName.getValue mustBe "CDS WAIVER"
         governmentAgencyGoodsItem.getAdditionalDocument.get(0).getTypeCode.getValue mustBe "99L"
         governmentAgencyGoodsItem.getAdditionalDocument.get(0).getCategoryCode.getValue mustBe "9"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getName.getValue mustBe "EXPORT WAIVER"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getTypeCode.getValue mustBe "999"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getCategoryCode.getValue mustBe "Y"
       }
     }
 
