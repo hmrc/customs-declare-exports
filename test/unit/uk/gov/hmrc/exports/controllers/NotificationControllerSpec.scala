@@ -81,7 +81,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     "return 200" when {
       "submission found" in {
         when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
-        when(notificationService.findAllNotifications(any())).thenReturn(Future.successful(Seq(notification)))
+        when(notificationService.findAllNotificationsSubmissionRelated(any())).thenReturn(Future.successful(Seq(notification)))
 
         val result = routeGetFindAll
 
@@ -93,7 +93,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     "not return notifications" when {
       "those notifications have not had the details parsed from them" in {
         when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
-        when(notificationService.findAllNotifications(any())).thenReturn(Future.successful(Seq.empty))
+        when(notificationService.findAllNotificationsSubmissionRelated(any())).thenReturn(Future.successful(Seq.empty))
 
         val result = routeGetFindAll
 
@@ -130,7 +130,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     "return 200" when {
       "submission found" in {
         when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
-        when(notificationService.findLatestNotification(any())).thenReturn(Future.successful(Option(notification)))
+        when(notificationService.findLatestNotificationSubmissionRelated(any())).thenReturn(Future.successful(Option(notification)))
 
         val result = routeGetFindLatest
 
@@ -151,7 +151,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
       "no notifications have been received for that submission" in {
         when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
-        when(notificationService.findLatestNotification(any())).thenReturn(Future.successful(None))
+        when(notificationService.findLatestNotificationSubmissionRelated(any())).thenReturn(Future.successful(None))
 
         val result = routeGetFindLatest
 

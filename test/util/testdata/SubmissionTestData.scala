@@ -19,8 +19,8 @@ package testdata
 import testdata.ExportsTestData._
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest, Submission, SubmissionRequest}
 
-import java.time.{ZoneId, ZonedDateTime}
 import java.time.temporal.ChronoUnit.HOURS
+import java.time.{ZoneId, ZonedDateTime}
 import java.util.UUID
 
 object SubmissionTestData {
@@ -28,21 +28,22 @@ object SubmissionTestData {
   private val instant1971: ZonedDateTime = ZonedDateTime.of(1971, 1, 1, 1, 1, 0, 0, ZoneId.of("UTC"))
   private val instant1972 = ZonedDateTime.of(1972, 1, 1, 1, 1, 0, 0, ZoneId.of("UTC"))
 
-  lazy val action = Action(requestType = SubmissionRequest, id = actionId)
-  lazy val action_2 =
-    Action(requestType = SubmissionRequest, id = actionId_2, requestTimestamp = instant1971)
-  lazy val action_3 =
-    Action(requestType = SubmissionRequest, id = actionId_3, requestTimestamp = instant1972)
-  lazy val actionCancellation =
-    Action(requestType = CancellationRequest, id = actionId, requestTimestamp = action.requestTimestamp.plus(3, HOURS))
-  lazy val submission: Submission =
-    Submission(uuid = uuid, eori = eori, lrn = lrn, mrn = Some(mrn), ducr = ducr, actions = Seq(action))
-  lazy val submission_2: Submission =
-    Submission(uuid = uuid_2, eori = eori, lrn = lrn, mrn = Some(mrn_2), ducr = ducr, actions = Seq(action_2))
-  lazy val submission_3: Submission =
-    Submission(uuid = uuid_3, eori = eori, lrn = lrn, mrn = Some(mrn_2), ducr = ducr, actions = Seq(action_3))
-  lazy val cancelledSubmission: Submission =
-    Submission(uuid = uuid, eori = eori, lrn = lrn, mrn = Some(mrn), ducr = ducr, actions = Seq(action, actionCancellation))
+  lazy val action = Action(id = actionId, requestType = SubmissionRequest)
+
+  lazy val action_2 = Action(id = actionId_2, requestType = SubmissionRequest, requestTimestamp = instant1971)
+
+  lazy val action_3 = Action(id = actionId_3, requestType = SubmissionRequest, requestTimestamp = instant1972)
+
+  lazy val actionCancellation = Action(actionId, CancellationRequest, action.requestTimestamp.plus(3, HOURS))
+
+  lazy val submission: Submission = Submission(uuid, eori, lrn, Some(mrn), ducr, actions = Seq(action))
+
+  lazy val submission_2: Submission = Submission(uuid_2, eori, lrn, Some(mrn_2), ducr, actions = Seq(action_2))
+
+  lazy val submission_3: Submission = Submission(uuid_3, eori, lrn, Some(mrn_2), ducr, actions = Seq(action_3))
+
+  lazy val cancelledSubmission: Submission = Submission(uuid, eori, lrn, Some(mrn), ducr, actions = Seq(action, actionCancellation))
+
   val uuid: String = UUID.randomUUID().toString
   val uuid_2: String = UUID.randomUUID().toString
   val uuid_3: String = UUID.randomUUID().toString
