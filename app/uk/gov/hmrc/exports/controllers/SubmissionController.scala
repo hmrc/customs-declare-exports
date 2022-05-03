@@ -52,5 +52,4 @@ class SubmissionController @Inject()(
   def findAllBy(queryParameters: SubmissionQueryParameters): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     submissionService.findAllSubmissionsBy(request.eori.value, queryParameters).map(Ok(_))
   }
-
 }
