@@ -78,7 +78,7 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
       repo.findBy(eori, SubmissionQueryParameters()).futureValue must have length 2
     }
   }
-
+/*
   "Submission Repository on setMrnIfMissing" should {
 
     "return empty Option" when {
@@ -100,7 +100,7 @@ class SubmissionRepositorySpec extends IntegrationTestBaseSpec {
       }
     }
   }
-
+*/
   "Submission Repository on addAction" when {
 
     "there is no Submission with given MRN" should {

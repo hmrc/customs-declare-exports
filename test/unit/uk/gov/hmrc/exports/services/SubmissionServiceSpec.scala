@@ -58,7 +58,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
   "SubmissionService on cancel" should {
     val submission = Submission("id", "eori", "lrn", None, "ducr")
-    val submissionCancelled = Submission("id", "eori", "lrn", None, "ducr", Seq(Action("conv-id", CancellationRequest)))
+    val submissionCancelled = Submission("id", "eori", "lrn", None, "ducr", None, None, Seq(Action("conv-id", CancellationRequest)))
     val cancellation = SubmissionCancellation("ref-id", "mrn", "description", "reason")
 
     "submit and delegate to repository" when {
@@ -140,7 +140,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         actionGenerated.id mustBe "conv-id"
         actionGenerated.requestType mustBe SubmissionRequest
 
-        verify(submissionRepository, never).updateMrn(any[String], any[String])
+        verify(submissionRepository, never).updateAfterNotificationParsing(any())
         verify(sendEmailForDmsDocAction, never).execute(any[String])
       }
     }

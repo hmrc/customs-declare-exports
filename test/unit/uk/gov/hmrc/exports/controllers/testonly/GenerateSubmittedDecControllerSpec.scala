@@ -101,7 +101,7 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with GuiceOneAppPerSui
       newParsedNotification.details.mrn mustBe newDec.consignmentReferences.get.mrn.get
     }
 
-    val submission = Submission("declaration.id", "declaration.eori", "lrn", None, "ducr", Seq.empty)
+    val submission = Submission("declaration.id", "declaration.eori", "lrn", None, "ducr")
 
     "insert only one ACCEPT notification if first two digits of MRN are an odd number" in {
       given(declarationRepository.create(any())).willReturn(Future.successful(aDeclaration(withConsignmentReferences(mrn = Some("11GB1234567890")))))

@@ -16,14 +16,20 @@
 
 package uk.gov.hmrc.exports.models.declaration.submissions
 
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
+
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json.{Json, Reads, _}
-
-case class Action(id: String, requestType: RequestType, requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")))
+case class Action(
+  id: String,
+  requestType: RequestType,
+  requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")),
+  notifications: Option[Seq[NotificationSummary]] = None
+)
 
 object Action {
+
   implicit val readLocalDateTimeFromString: Reads[ZonedDateTime] = implicitly[Reads[LocalDateTime]]
     .map(ZonedDateTime.of(_, ZoneId.of("UTC")))
 
@@ -31,5 +37,7 @@ object Action {
   implicit val reads: Reads[Action] =
     ((__ \ "id").read[String] and
       (__ \ "requestType").read[RequestType] and
-      ((__ \ "requestTimestamp").read[ZonedDateTime] or (__ \ "requestTimestamp").read[ZonedDateTime](readLocalDateTimeFromString)))(Action.apply _)
+      ((__ \ "requestTimestamp").read[ZonedDateTime] or (__ \ "requestTimestamp").read[ZonedDateTime](readLocalDateTimeFromString)) and
+      (__ \ "notifications").readNullable[Seq[NotificationSummary]]
+    )(Action.apply _)
 }

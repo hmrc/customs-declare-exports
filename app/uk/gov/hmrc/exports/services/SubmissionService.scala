@@ -20,8 +20,8 @@ import play.api.Logger
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.{Monitors, Timers}
-import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.models.declaration.submissions._
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
 import uk.gov.hmrc.http.HeaderCarrier
@@ -64,11 +64,11 @@ class SubmissionService @Inject()(
     for {
       // Submit the declaration to the Dec API
       // Revert the declaration status back to DRAFT if it fails
-      conversationId: String <- metrics.timeAsyncCall(Timers.submissionSendToDecApiTimer)(submit(declaration, payload))
+      actionId: String <- metrics.timeAsyncCall(Timers.submissionSendToDecApiTimer)(submit(declaration, payload))
       _ = logProgress(declaration, "Submitted to the Declaration API Successfully")
 
       // Create the Submission with action
-      action = Action(id = conversationId, requestType = SubmissionRequest)
+      action = Action(id = actionId, requestType = SubmissionRequest)
       submission <- metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer)(
         submissionRepository.save(Submission(declaration, lrn, ducr, action))
       )
@@ -89,11 +89,13 @@ class SubmissionService @Inject()(
   def cancel(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationStatus] =
     submissionRepository.findSubmissionByMrnAndEori(cancellation.mrn, eori).flatMap {
       case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationAlreadyRequested)
-      case Some(submission)                                             => sendCancelationRequest(submission, cancellation)
+      case Some(submission)                                             => sendCancellationRequest(submission, cancellation)
       case _                                                            => Future.successful(MrnNotFound)
     }
 
-  private def sendCancelationRequest(submission: Submission, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier) = {
+  private def sendCancellationRequest(
+    submission: Submission, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier
+  ): Future[CancellationStatus] = {
     val metadata: MetaData = metaDataBuilder.buildRequest(
       cancellation.functionalReferenceId,
       cancellation.mrn,
@@ -103,16 +105,16 @@ class SubmissionService @Inject()(
     )
 
     val xml: String = wcoMapperService.toXml(metadata)
-    customsDeclarationsConnector.submitCancellation(submission.eori, xml).flatMap { conversationId =>
-      updateSubmissionInDB(cancellation.mrn, conversationId)
+    customsDeclarationsConnector.submitCancellation(submission.eori, xml).flatMap { actionId =>
+      updateSubmissionInDB(cancellation.mrn, actionId)
     }
   }
 
   def findAllSubmissionsBy(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] =
     submissionRepository.findBy(eori, queryParameters)
 
-  private def updateSubmissionInDB(mrn: String, conversationId: String): Future[CancellationStatus] = {
-    val newAction = Action(requestType = CancellationRequest, id = conversationId)
+  private def updateSubmissionInDB(mrn: String, actionId: String): Future[CancellationStatus] = {
+    val newAction = Action(requestType = CancellationRequest, id = actionId)
     submissionRepository.addAction(mrn, newAction).map {
       case Some(_) => CancellationRequestSent
       case None    => MrnNotFound

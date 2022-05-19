@@ -21,9 +21,9 @@ import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.retri
 
 class SubmissionStatusSpec extends UnitSpec {
 
-  "Reads for status" should {
-    "correctly retrieve a value for every scenario" in {
+  "SubmissionStatus.retrieve" should {
 
+    "retrieve the expected value for every scenario" in {
       retrieve("Pending") must be(SubmissionStatus.PENDING)
       retrieve("Cancellation Requested") must be(SubmissionStatus.REQUESTED_CANCELLATION)
       retrieve("01") must be(SubmissionStatus.ACCEPTED)
@@ -49,10 +49,8 @@ class SubmissionStatusSpec extends UnitSpec {
     }
 
     "ignore name codes when function code not 11" in {
-
       retrieve("06", Some("xx")) must be(SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED)
       retrieve("16", Some("yy")) must be(SubmissionStatus.GOODS_HAVE_EXITED_THE_COMMUNITY)
-
     }
   }
 }

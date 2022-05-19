@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import scala.concurrent.{ExecutionContext, Future}
-
-import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsString, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
@@ -28,6 +25,9 @@ import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
+
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ParsedNotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: ExecutionContext)
@@ -63,5 +63,11 @@ class ParsedNotificationRepository @Inject()(mc: ReactiveMongoComponent)(implici
     actionIds match {
       case Seq() => Future.successful(Seq.empty)
       case _     => find("$or" -> actionIds.map(id => Json.obj("actionId" -> JsString(id))))
+    }
+
+  def save(notification: ParsedNotification): Future[ParsedNotification] =
+    insert(notification).map { res =>
+      if (!res.ok) logger.error(s"Errors when persisting declaration notification: ${res.writeErrors.mkString("--")}")
+      notification
     }
 }

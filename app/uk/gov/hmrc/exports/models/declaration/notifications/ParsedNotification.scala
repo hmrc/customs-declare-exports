@@ -16,17 +16,20 @@
 
 package uk.gov.hmrc.exports.models.declaration.notifications
 
-import java.util.UUID
-
-import play.api.libs.json.{Json, _}
+import play.api.libs.json._
 import reactivemongo.bson.BSONObjectID
 
+import java.util.UUID
+
 case class ParsedNotification(
-  _id: BSONObjectID = BSONObjectID.generate(),
+  _id: BSONObjectID = BSONObjectID.generate,
   unparsedNotificationId: UUID,
   actionId: String,
   details: NotificationDetails
-)
+) extends Ordered[ParsedNotification] {
+  override def compare(that: ParsedNotification): Int = details.dateTimeIssued.compareTo(that.details.dateTimeIssued)
+}
+
 
 object ParsedNotification {
 

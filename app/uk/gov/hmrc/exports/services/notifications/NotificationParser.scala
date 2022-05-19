@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.notifications
 
 import play.api.Logger
-import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
+import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType, StringOption}
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, NotificationError}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 
@@ -39,10 +39,7 @@ class NotificationParser {
       val dateTimeIssued = ZonedDateTime.parse((singleResponseXml \ "IssueDateTime" \ "DateTimeString").text, formatter304)
       val functionCode = (singleResponseXml \ "FunctionCode").text
 
-      val nameCode =
-        if ((singleResponseXml \ "Status").nonEmpty)
-          Some((singleResponseXml \ "Status" \ "NameCode").text)
-        else None
+      val nameCode = StringOption((singleResponseXml \ "Status" \ "NameCode").text)
 
       val errors = buildErrors(singleResponseXml)
 

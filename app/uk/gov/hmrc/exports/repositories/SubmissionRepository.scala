@@ -48,10 +48,12 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
     Index(Seq("eori" -> IndexType.Ascending, "action.requestTimestamp" -> IndexType.Descending), name = Some("actionOrderedEori"))
   )
 
-  //looking up by MRN field that is not indexed (eori is though)! This is for the cancelation request processing!
-  def findSubmissionByMrnAndEori(mrn: String, eori: String): Future[Option[Submission]] = find("eori" -> eori, "mrn" -> mrn).map(_.headOption)
+  //looking up by MRN field that is not indexed (eori is though)! This is for the cancellation request processing!
+  def findSubmissionByMrnAndEori(mrn: String, eori: String): Future[Option[Submission]] =
+    find("eori" -> eori, "mrn" -> mrn).map(_.headOption)
 
-  def findByConversationId(conversationId: String): Future[Option[Submission]] = find("actions.id" -> conversationId).map(_.headOption)
+  def findByActionId(actionId: String): Future[Option[Submission]] =
+    find("actions.id" -> actionId).map(_.headOption)
 
   def findBy(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] = {
     val query = Json.toJson(queryParameters).as[JsObject] + (otherField = ("eori", JsString(eori)))
@@ -62,16 +64,11 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
       .collect(maxDocs = -1, FailOnError[Seq[Submission]]())
   }
 
-  def save(submission: Submission): Future[Submission] = insert(submission).map { res =>
-    if (!res.ok) logger.error(s"Errors when persisting declaration submission: ${res.writeErrors.mkString("--")}")
-    submission
-  }
-
-  def updateMrn(conversationId: String, newMrn: String): Future[Option[Submission]] = {
-    val query = Json.obj("actions.id" -> conversationId)
-    val update = Json.obj("$set" -> Json.obj("mrn" -> newMrn))
-    performUpdate(query, update)
-  }
+  def save(submission: Submission): Future[Submission] =
+    insert(submission).map { res =>
+      if (!res.ok) logger.error(s"Errors when persisting declaration submission: ${res.writeErrors.mkString("--")}")
+      submission
+    }
 
   def addAction(mrn: String, newAction: Action): Future[Option[Submission]] = {
     val query = Json.obj("mrn" -> mrn)
@@ -83,6 +80,17 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
     val query = Json.obj("uuid" -> submission.uuid)
     val update = Json.obj("$addToSet" -> Json.obj("actions" -> action))
     performUpdate(query, update).map(_.getOrElse(throw new IllegalStateException("Submission must exist before")))
+  }
+
+  def updateAfterNotificationParsing(submission: Submission): Future[Option[Submission]] = {
+    val query = Json.obj("uuid" -> submission.uuid)
+    val update = Json.obj("$set" -> Json.obj(
+      "mrn" -> submission.mrn,
+      "latestEnhancedStatus" -> submission.latestEnhancedStatus,
+      "enhancedStatusLastUpdated" -> submission.enhancedStatusLastUpdated,
+      "actions" -> submission.actions)
+    )
+    performUpdate(query, update)
   }
 
   private def performUpdate(query: JsObject, update: JsObject): Future[Option[Submission]] =

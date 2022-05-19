@@ -63,7 +63,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
     reset(submissionRepository, unparsedNotificationWorkItemRepository, notificationRepository, notificationReceiptActionsScheduler)
 
     when(notificationRepository.insert(any)(any)).thenReturn(Future.successful(dummyWriteResultSuccess))
-    when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(Some(submission)))
+    when(submissionRepository.updateAfterNotificationParsing(any[Submission])).thenReturn(Future.successful(Some(submission)))
     when(notificationReceiptActionsScheduler.scheduleActionsExecution()).thenReturn(Cancellable.alreadyCancelled)
   }
 
@@ -147,7 +147,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
   "NotificationService on findAllNotificationsSubmissionRelated" should {
 
     "retrieve by conversation IDs" in {
-      val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", Seq(Action("id1", SubmissionRequest)))
+      val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", None, None, Seq(Action("id1", SubmissionRequest)))
       val notifications = Seq(
         ParsedNotification(
           unparsedNotificationId = UUID.randomUUID(),
@@ -163,7 +163,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
     }
 
     "only retrieve notifications related to the submissions of declarations (must filter out actionCancellation)" in {
-      val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", Seq(actionCancellation, action))
+      val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", None, None, Seq(actionCancellation, action))
       // Not relevant to the test
       when(notificationRepository.findNotificationsByActionIds(any[Seq[String]])).thenReturn(Future.successful(Seq(notification)))
 
@@ -181,7 +181,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
         val notification = ParsedNotification(unparsedNotificationId = UUID.randomUUID(), actionId = "id1", details = details)
         when(notificationRepository.findLatestNotification(any[Seq[String]])).thenReturn(Future.successful(Some(notification)))
 
-        val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", Seq(Action("id1", SubmissionRequest)))
+        val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", None, None, Seq(Action("id1", SubmissionRequest)))
         notificationService.findLatestNotificationSubmissionRelated(submission).futureValue.head mustBe notification
 
         verify(notificationRepository).findLatestNotification(Seq("id1"))
@@ -192,7 +192,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       "the notification repository op is not successful" in {
         when(notificationRepository.findLatestNotification(any[Seq[String]])).thenReturn(Future.successful(None))
 
-        val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", Seq(Action("id1", SubmissionRequest)))
+        val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", None, None, Seq(Action("id1", SubmissionRequest)))
         notificationService.findLatestNotificationSubmissionRelated(submission).futureValue mustBe None
 
         verify(notificationRepository).findLatestNotification(Seq("id1"))
@@ -200,7 +200,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
     }
 
     "only retrieve notifications related to the submissions of declarations (must filter out actionCancellation)" in {
-      val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", Seq(actionCancellation, action))
+      val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", None, None, Seq(actionCancellation, action))
       // Not relevant to the test
       when(notificationRepository.findLatestNotification(any[Seq[String]])).thenReturn(Future.successful(None))
 

@@ -95,17 +95,17 @@ object NotificationTestData {
   val payload = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
 
   val notification = ParsedNotification(
-    unparsedNotificationId = UUID.randomUUID(),
+    unparsedNotificationId = UUID.randomUUID,
     actionId = actionId,
     details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = SubmissionStatus.UNKNOWN, errors = errors)
   )
   val notification_2 = ParsedNotification(
-    unparsedNotificationId = UUID.randomUUID(),
+    unparsedNotificationId = UUID.randomUUID,
     actionId = actionId,
     details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = SubmissionStatus.UNKNOWN, errors = errors)
   )
   val notification_3 = ParsedNotification(
-    unparsedNotificationId = UUID.randomUUID(),
+    unparsedNotificationId = UUID.randomUUID,
     actionId = actionId_2,
     details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = SubmissionStatus.UNKNOWN, errors = Seq.empty)
   )

@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.models.declaration.notifications
 
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
-
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.SubmissionStatus
+
+import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
 case class NotificationDetails(mrn: String, dateTimeIssued: ZonedDateTime, status: SubmissionStatus, errors: Seq[NotificationError])
 
