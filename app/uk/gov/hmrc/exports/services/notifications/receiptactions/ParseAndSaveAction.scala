@@ -37,19 +37,48 @@ class ParseAndSaveAction @Inject()(
     save(notificationFactory.buildNotifications(notification)).map(_ => ())
 
   def save(notifications: Seq[ParsedNotification]): Future[Seq[Submission]] =
-    Future.sequence(notifications.groupBy(_.actionId).map {
-      case (actionId, notificationsWithCommonActionId) =>
-        // Update the related submission document, if found
-        findSubmissionAndUpdate(actionId, notificationsWithCommonActionId).map { maybeSubmission =>
-            // If the submission was found and was successfully updated then persist the notification group
-            maybeSubmission.map(_ => notificationRepository.bulkInsert(notificationsWithCommonActionId))
-            maybeSubmission
-        }
-    }.toList).map(_.flatten)
+    Future
+      .sequence(
+        notifications
+          .groupBy(_.actionId)
+          .map {
+
+            case (actionId, notificationsWithSameActionId) =>
+              // Add the notification group to the action (with the given actionId) of the including Submission document, if any
+              findSubmissionAndUpdate(actionId, notificationsWithSameActionId)
+
+          }
+          .toList
+      )
+      .map(_.flatten)
+
+  /* Do not remove. It provides an example of a potential implementation in case we are notified that we could
+   receive from the parsing a list of notifications with different actionIds for the same Submission document.
+
+   This behaviour can be tested uncommenting the integration tests in ParseAndSaveActionISpec.scala
+
+  def save(notifications: Seq[ParsedNotification]): Future[Seq[Submission]] = {
+
+    def loop(list: List[(String, Seq[ParsedNotification])], maybeSubmissions: List[Option[Submission]]): Future[List[Option[Submission]]] =
+      list match {
+        case Nil => Future.successful(maybeSubmissions)
+        case head :: tail =>
+          val actionId = head._1
+          findSubmissionAndUpdate(actionId, head._2).flatMap(maybeSubmission => loop(tail, maybeSubmissions :+ maybeSubmission))
+      }
+
+    loop(notifications.groupBy(_.actionId).toList, Nil).map(_.flatten)
+  }
+   */
 
   private def findSubmissionAndUpdate(actionId: String, notifications: Seq[ParsedNotification]): Future[Option[Submission]] =
     submissionRepository.findByActionId(actionId).flatMap {
-      case Some(submission) => updateSubmission(actionId, notifications, submission)
+      case Some(submission) =>
+        updateSubmission(actionId, notifications, submission).map { maybeSubmission =>
+          // If the submission was found and was successfully updated then persist the notification group
+          maybeSubmission.map(_ => notificationRepository.bulkInsert(notifications))
+          maybeSubmission
+        }
       case _ =>
         logger.error(s"No submission record was found for (parsed) notifications with actionId($actionId)")
         Future.successful(None)
@@ -71,12 +100,14 @@ class ParseAndSaveAction @Inject()(
     // if they are more recent or not of the (maybe) existing notificationSummaries of the action.
     val actionWithAllNotificationSummaries = action.copy(notifications = Some(notificationSummaries.sorted.reverse))
 
-    submissionRepository.updateAfterNotificationParsing(submission.copy(
-      uuid = submission.uuid,
-      mrn = Some(notifications.head.details.mrn),
-      latestEnhancedStatus = Some(notificationSummaries.head.enhancedStatus),
-      enhancedStatusLastUpdated = Some(notificationSummaries.head.dateTimeIssued),
-      actions = submission.actions.updated(index, actionWithAllNotificationSummaries)
-    ))
+    submissionRepository.updateAfterNotificationParsing(
+      submission.copy(
+        uuid = submission.uuid,
+        mrn = Some(notifications.head.details.mrn),
+        latestEnhancedStatus = Some(notificationSummaries.head.enhancedStatus),
+        enhancedStatusLastUpdated = Some(notificationSummaries.head.dateTimeIssued),
+        actions = submission.actions.updated(index, actionWithAllNotificationSummaries)
+      )
+    )
   }
 }

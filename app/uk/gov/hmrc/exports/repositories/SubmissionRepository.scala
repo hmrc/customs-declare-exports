@@ -84,11 +84,13 @@ class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: Ex
 
   def updateAfterNotificationParsing(submission: Submission): Future[Option[Submission]] = {
     val query = Json.obj("uuid" -> submission.uuid)
-    val update = Json.obj("$set" -> Json.obj(
-      "mrn" -> submission.mrn,
-      "latestEnhancedStatus" -> submission.latestEnhancedStatus,
-      "enhancedStatusLastUpdated" -> submission.enhancedStatusLastUpdated,
-      "actions" -> submission.actions)
+    val update = Json.obj(
+      "$set" -> Json.obj(
+        "mrn" -> submission.mrn,
+        "latestEnhancedStatus" -> submission.latestEnhancedStatus,
+        "enhancedStatusLastUpdated" -> submission.enhancedStatusLastUpdated,
+        "actions" -> submission.actions
+      )
     )
     performUpdate(query, update)
   }

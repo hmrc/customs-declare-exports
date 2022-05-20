@@ -93,7 +93,9 @@ class EnhancedStatusSpec extends UnitSpec {
   }
 
   private def enhancedStatus(
-    notification: ParsedNotification, actions: Seq[Action] = List.empty, notificationSummaries: Seq[NotificationSummary] = List.empty
+    notification: ParsedNotification,
+    actions: Seq[Action] = List.empty,
+    notificationSummaries: Seq[NotificationSummary] = List.empty
   ): EnhancedStatus =
     EnhancedStatus(notification, actions, notificationSummaries)
 

@@ -38,6 +38,5 @@ object Action {
     ((__ \ "id").read[String] and
       (__ \ "requestType").read[RequestType] and
       ((__ \ "requestTimestamp").read[ZonedDateTime] or (__ \ "requestTimestamp").read[ZonedDateTime](readLocalDateTimeFromString)) and
-      (__ \ "notifications").readNullable[Seq[NotificationSummary]]
-    )(Action.apply _)
+      (__ \ "notifications").readNullable[Seq[NotificationSummary]])(Action.apply _)
 }

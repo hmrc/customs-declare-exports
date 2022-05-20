@@ -23,11 +23,8 @@ import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.Enhance
 import java.time.ZonedDateTime
 import java.util.UUID
 
-case class NotificationSummary(
-  notificationId: UUID,
-  dateTimeIssued: ZonedDateTime,
-  enhancedStatus: EnhancedStatus
-) extends Ordered[NotificationSummary] {
+case class NotificationSummary(notificationId: UUID, dateTimeIssued: ZonedDateTime, enhancedStatus: EnhancedStatus)
+    extends Ordered[NotificationSummary] {
   override def compare(that: NotificationSummary): Int = dateTimeIssued.compareTo(that.dateTimeIssued)
 }
 
@@ -35,11 +32,7 @@ object NotificationSummary {
 
   implicit val formats = Json.format[NotificationSummary]
 
-  def apply(
-    notification: ParsedNotification,
-    actions: Seq[Action],
-    notificationSummaries: Seq[NotificationSummary]
-  ): NotificationSummary =
+  def apply(notification: ParsedNotification, actions: Seq[Action], notificationSummaries: Seq[NotificationSummary]): NotificationSummary =
     new NotificationSummary(
       notificationId = notification.unparsedNotificationId,
       dateTimeIssued = notification.details.dateTimeIssued,

@@ -42,7 +42,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
   private val submissionRepository = mock[SubmissionRepository]
   private val notificationRepository = mock[ParsedNotificationRepository]
 
-  private val parseAndSaveAction = new ParseAndSaveAction(submissionRepository, notificationRepository,  mock[NotificationFactory])
+  private val parseAndSaveAction = new ParseAndSaveAction(submissionRepository, notificationRepository, mock[NotificationFactory])
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -162,7 +162,9 @@ class ParseAndSaveActionSpec extends UnitSpec {
   }
 
   private def testParseAndSaveAction(
-    notifications: Seq[ParsedNotification], enhancedStatus: EnhancedStatus, expectedNotificationSummaries: Int
+    notifications: Seq[ParsedNotification],
+    enhancedStatus: EnhancedStatus,
+    expectedNotificationSummaries: Int
   ): Submission = {
     val actualSubmission = parseAndSaveAction.save(notifications).futureValue.head
 

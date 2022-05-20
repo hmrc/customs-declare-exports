@@ -64,10 +64,4 @@ class ParsedNotificationRepository @Inject()(mc: ReactiveMongoComponent)(implici
       case Seq() => Future.successful(Seq.empty)
       case _     => find("$or" -> actionIds.map(id => Json.obj("actionId" -> JsString(id))))
     }
-
-  def save(notification: ParsedNotification): Future[ParsedNotification] =
-    insert(notification).map { res =>
-      if (!res.ok) logger.error(s"Errors when persisting declaration notification: ${res.writeErrors.mkString("--")}")
-      notification
-    }
 }

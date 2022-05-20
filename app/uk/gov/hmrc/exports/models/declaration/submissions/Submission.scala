@@ -24,7 +24,7 @@ import java.time.ZonedDateTime
 import java.util.UUID
 
 case class Submission(
-  uuid: String = UUID.randomUUID().toString,
+  uuid: String = UUID.randomUUID.toString,
   eori: String,
   lrn: String,
   mrn: Option[String] = None,

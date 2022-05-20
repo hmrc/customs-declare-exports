@@ -23,7 +23,7 @@ class SubmissionStatusSpec extends UnitSpec {
 
   "SubmissionStatus.retrieve" should {
 
-    "retrieve the expected value for every scenario" in {
+    "return the SubmissionStatus enum corresponding to the provided input parameter" in {
       retrieve("Pending") must be(SubmissionStatus.PENDING)
       retrieve("Cancellation Requested") must be(SubmissionStatus.REQUESTED_CANCELLATION)
       retrieve("01") must be(SubmissionStatus.ACCEPTED)

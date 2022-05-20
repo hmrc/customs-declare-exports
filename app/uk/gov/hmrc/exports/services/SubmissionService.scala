@@ -93,8 +93,8 @@ class SubmissionService @Inject()(
       case _                                                            => Future.successful(MrnNotFound)
     }
 
-  private def sendCancellationRequest(
-    submission: Submission, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier
+  private def sendCancellationRequest(submission: Submission, cancellation: SubmissionCancellation)(
+    implicit hc: HeaderCarrier
   ): Future[CancellationStatus] = {
     val metadata: MetaData = metaDataBuilder.buildRequest(
       cancellation.functionalReferenceId,
