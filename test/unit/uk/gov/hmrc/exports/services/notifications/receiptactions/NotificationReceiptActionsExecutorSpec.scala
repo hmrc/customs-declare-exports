@@ -51,7 +51,7 @@ class NotificationReceiptActionsExecutorSpec extends UnitSpec {
         when(parseAndSaveAction.execute(any[UnparsedNotification])).thenReturn(Future.successful((): Unit))
         when(sendEmailForDmsDocAction.execute(any[String])).thenReturn(Future.successful((): Unit))
 
-        notificationReceiptActionsExecutor.executeActions(notificationUnparsed)
+        notificationReceiptActionsExecutor.executeActions(notificationUnparsed).futureValue
 
         val inOrder = Mockito.inOrder(parseAndSaveAction, sendEmailForDmsDocAction)
         inOrder.verify(parseAndSaveAction).execute(eqTo(notificationUnparsed))
@@ -71,5 +71,4 @@ class NotificationReceiptActionsExecutorSpec extends UnitSpec {
       }
     }
   }
-
 }

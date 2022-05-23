@@ -33,8 +33,13 @@ object EnhancedStatus extends Enumeration {
   private val mappingForACCEPTED = (notificationSummaries: Seq[NotificationSummary]) =>
     if (notificationSummaries.exists(_.enhancedStatus == RECEIVED)) GOODS_ARRIVED_MESSAGE else GOODS_ARRIVED
 
-  private val mappingForCANCELLED = (actions: Seq[Action]) =>
-    if (actions.exists(_.requestType == CancellationRequest)) WITHDRAWN else EXPIRED_NO_DEPARTURE
+  private val mappingForCANCELLED = (actions: Seq[Action]) => {
+    def isCancellationWithCustomsPositionGranted(action: Action): Boolean =
+      action.requestType == CancellationRequest &&
+        action.notifications.exists(_.exists(_.enhancedStatus == CUSTOMS_POSITION_GRANTED))
+
+    if (actions.exists(isCancellationWithCustomsPositionGranted)) WITHDRAWN else EXPIRED_NO_DEPARTURE
+  }
 
   val CDS12046 = "CDS12046"
 
