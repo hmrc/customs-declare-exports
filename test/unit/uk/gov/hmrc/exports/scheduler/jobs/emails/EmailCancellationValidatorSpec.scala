@@ -42,7 +42,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
     super.beforeEach()
 
     reset(notificationRepository)
-    when(notificationRepository.findNotificationsByActionId(any[String])).thenReturn(Future.successful(Seq.empty))
+    when(notificationRepository.findAll(any[String], any[String])).thenReturn(Future.successful(Seq.empty))
   }
 
   def createNotification(dateTimeIssued: ZonedDateTime, status: SubmissionStatus) = ParsedNotification(
@@ -63,7 +63,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
     "return false" when {
 
       "there is no newer Notification" in {
-        when(notificationRepository.findNotificationsByActionId(any[String])).thenReturn(Future.successful(Seq(dmsDocNotification)))
+        when(notificationRepository.findAll(any[String], any[String])).thenReturn(Future.successful(Seq(dmsDocNotification)))
 
         emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe false
       }
@@ -71,7 +71,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
       statusesNotStoppingEmailSending.foreach { notStoppingStatus =>
         s"there is newer Notification with status $notStoppingStatus" in {
           val newerNotification = createNotification(firstDate.plusHours(1), notStoppingStatus)
-          when(notificationRepository.findNotificationsByActionId(any[String]))
+          when(notificationRepository.findAll(any[String], any[String]))
             .thenReturn(Future.successful(Seq(dmsDocNotification, newerNotification)))
 
           emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe false
@@ -81,7 +81,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
       statusesStoppingEmailSending.foreach { status =>
         s"there is older Notification with status $status" in {
           val olderNotification = createNotification(firstDate.minusHours(1), status)
-          when(notificationRepository.findNotificationsByActionId(any[String]))
+          when(notificationRepository.findAll(any[String], any[String]))
             .thenReturn(Future.successful(Seq(dmsDocNotification, olderNotification)))
 
           emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe false
@@ -90,7 +90,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
         s"there are older Notifications with statuses ADDITIONAL_DOCUMENTS_REQUIRED and then $status" in {
           val olderDmsDocNotification = createNotification(firstDate.minusHours(2), ADDITIONAL_DOCUMENTS_REQUIRED)
           val olderNotification = createNotification(firstDate.minusHours(1), status)
-          when(notificationRepository.findNotificationsByActionId(any[String]))
+          when(notificationRepository.findAll(any[String], any[String]))
             .thenReturn(Future.successful(Seq(dmsDocNotification, olderDmsDocNotification, olderNotification)))
 
           emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe false
@@ -98,7 +98,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
       }
 
       "there are newer Notifications but their notificationIds do not match" in {
-        when(notificationRepository.findNotificationsByActionId(any[String]))
+        when(notificationRepository.findAll(any[String], any[String]))
           .thenReturn(Future.successful(Seq(dmsDocNotification.copy(actionId = actionId_2))))
 
         emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe false
@@ -110,7 +110,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
       statusesStoppingEmailSending.foreach { status =>
         s"there is newer Notification with status $status" in {
           val newerNotification = createNotification(firstDate.plusHours(1), status)
-          when(notificationRepository.findNotificationsByActionId(any[String]))
+          when(notificationRepository.findAll(any[String], any[String]))
             .thenReturn(Future.successful(Seq(dmsDocNotification, newerNotification)))
 
           emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe true
@@ -119,7 +119,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
         s"there are newer Notifications with statuses $status and ADDITIONAL_DOCUMENTS_REQUIRED after" in {
           val newerNotification = createNotification(firstDate.plusHours(1), status)
           val newerDmsDocNotification = createNotification(firstDate.plusHours(2), ADDITIONAL_DOCUMENTS_REQUIRED)
-          when(notificationRepository.findNotificationsByActionId(any[String]))
+          when(notificationRepository.findAll(any[String], any[String]))
             .thenReturn(Future.successful(Seq(dmsDocNotification, newerNotification, newerDmsDocNotification)))
 
           emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe true
@@ -128,7 +128,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
         s"there are newer Notifications with statuses ADDITIONAL_DOCUMENTS_REQUIRED and $status after" in {
           val newerDmsDocNotification = createNotification(firstDate.plusHours(1), ADDITIONAL_DOCUMENTS_REQUIRED)
           val newerNotification = createNotification(firstDate.plusHours(2), status)
-          when(notificationRepository.findNotificationsByActionId(any[String]))
+          when(notificationRepository.findAll(any[String], any[String]))
             .thenReturn(Future.successful(Seq(dmsDocNotification, newerNotification, newerDmsDocNotification)))
 
           emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe true

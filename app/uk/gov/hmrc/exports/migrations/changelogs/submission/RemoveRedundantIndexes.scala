@@ -77,7 +77,7 @@ class RemoveRedundantIndexes extends MigrationDefinition {
     logger.info(s"Applying '${migrationInformation.id}' db migration... Done.")
   }
 
-  private def dropIndexesIfTheyExist(collection: MongoCollection[Document], indexNamesToDrop: Seq[String]) =
+  private def dropIndexesIfTheyExist(collection: MongoCollection[Document], indexNamesToDrop: Seq[String]): Unit =
     collection
       .listIndexes()
       .iterator()

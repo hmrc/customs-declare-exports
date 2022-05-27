@@ -29,7 +29,6 @@ import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
@@ -41,14 +40,13 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
   private val cc = stubControllerComponents()
   private val authenticator = new Authenticator(mockAuthConnector, cc)
   private val submissionService: SubmissionService = mock[SubmissionService]
-  private val declarationRepository: DeclarationRepository = mock[DeclarationRepository]
 
-  private val controller = new SubmissionController(authenticator, submissionService, cc, declarationRepository)
+  private val controller = new SubmissionController(authenticator, submissionService, cc)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(mockAuthConnector, submissionService, declarationRepository)
+    reset(mockAuthConnector, submissionService)
     withAuthorizedUser()
   }
 
@@ -58,22 +56,19 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
 
     "request is unauthorised" should {
       "return 401 (Unauthorised)" in {
-
         withUnauthorizedUser(InsufficientEnrolments())
 
         val result = controller.create("id")(fakePostRequest)
 
         status(result) mustBe UNAUTHORIZED
-        verifyNoInteractions(declarationRepository)
         verifyNoInteractions(submissionService)
       }
     }
 
     "request is correct" should {
       "return 201 (Created)" in {
-
         val declaration = aDeclaration(withId("id"), withStatus(DeclarationStatus.DRAFT))
-        when(declarationRepository.markCompleted(anyString(), any())).thenReturn(Future.successful(Some(declaration)))
+        when(submissionService.markCompleted(anyString(), any())).thenReturn(Future.successful(Some(declaration)))
         when(submissionService.submit(any())(any())).thenReturn(Future.successful(submission))
 
         val result = controller.create("id")(fakePostRequest)
@@ -85,9 +80,8 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
 
     "DeclarationService returns completed Declaration" should {
       "return 409 (Conflict)" in {
-
         val declaration = aDeclaration(withId("id"), withStatus(DeclarationStatus.COMPLETE))
-        when(declarationRepository.markCompleted(anyString(), any())).thenReturn(Future.successful(Some(declaration)))
+        when(submissionService.markCompleted(anyString(), any())).thenReturn(Future.successful(Some(declaration)))
         when(submissionService.submit(any())(any())).thenReturn(Future.successful(submission))
 
         val result = controller.create("id")(fakePostRequest)
@@ -99,8 +93,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
 
     "DeclarationService returns no Declaration for given UUID" should {
       "return 404 (NotFound)" in {
-
-        when(declarationRepository.markCompleted(anyString(), any())).thenReturn(Future.successful(None))
+        when(submissionService.markCompleted(anyString(), any())).thenReturn(Future.successful(None))
 
         val result = controller.create("id")(fakePostRequest)
 
@@ -116,7 +109,6 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
 
     "return 401 (Unauthorised)" when {
       "request is unauthorised" in {
-
         withUnauthorizedUser(InsufficientEnrolments())
 
         val result = controller.findAllBy(SubmissionQueryParameters())(fakeGetRequest)
@@ -129,7 +121,6 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
     "return 200 (Ok) with the value returned by SubmissionService" when {
 
       "SubmissionService returns empty Sequence" in {
-
         when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq.empty))
 
         val result = controller.findAllBy(SubmissionQueryParameters())(fakeGetRequest)
@@ -139,7 +130,6 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
       }
 
       "SubmissionService returns non-empty Sequence" in {
-
         when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission, submission_2)))
 
         val result = controller.findAllBy(SubmissionQueryParameters())(fakeGetRequest)
@@ -150,7 +140,6 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
     }
 
     "call SubmissionService, passing SubmissionQueryParameters provided" in {
-
       when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq.empty))
       val queryParams = SubmissionQueryParameters(uuid = Some("testUuid"), ducr = Some("testDucr"), lrn = Some("testLrn"))
 

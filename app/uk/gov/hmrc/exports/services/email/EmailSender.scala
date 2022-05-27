@@ -51,7 +51,7 @@ class EmailSender @Inject()(
     }
 
   private def obtainEori(conversationId: String)(implicit ec: ExecutionContext): Future[Option[String]] =
-    submissionRepository.findByConversationId(conversationId).map(_.map(_.eori))
+    submissionRepository.findOne("actions.id", conversationId).map(_.map(_.eori))
 
   private def obtainEmailAddress(eori: String)(implicit ec: ExecutionContext): Future[Option[Email]] =
     customsDataStoreConnector.getEmailAddress(eori)

@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.exports.migrations.changelogs.notification
 
-import java.util
-
 import com.mongodb.client.MongoDatabase
 import org.bson.Document
 import org.mongodb.scala.bson.conversions.Bson
@@ -27,6 +25,7 @@ import org.mongodb.scala.model.Updates.{combine, set, unset}
 import play.api.Logger
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 
+import java.util
 import scala.collection.JavaConverters._
 
 class MakeParsedDetailsOptional extends MigrationDefinition {

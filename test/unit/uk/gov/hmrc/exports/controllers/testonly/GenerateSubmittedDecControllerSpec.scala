@@ -20,7 +20,6 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.BDDMockito.`given`
 import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.bind
@@ -29,7 +28,7 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsJson, _}
-import reactivemongo.api.commands.LastError
+import testdata.notifications.NotificationTestData.notification
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
@@ -54,12 +53,6 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with GuiceOneAppPerSui
     )
     .build()
 
-  implicit def toAnswerWithArgs[T](f: InvocationOnMock => T) = new Answer[T] {
-    override def answer(i: InvocationOnMock): T = f(i)
-  }
-
-  private val writeResult = LastError(true, None, None, None, 0, None, false, None, None, false, None, None)
-
   override def beforeEach(): Unit = {
     super.beforeEach()
 
@@ -77,12 +70,14 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with GuiceOneAppPerSui
       })
 
       val captorSubmission: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
-      when(submissionRepository.save(captorSubmission.capture())).thenAnswer({ invocation: InvocationOnMock =>
+      when(submissionRepository.create(captorSubmission.capture())).thenAnswer({ invocation: InvocationOnMock =>
         Future.successful(invocation.getArguments.head.asInstanceOf[Submission])
       })
 
       val captorParsedNotification: ArgumentCaptor[ParsedNotification] = ArgumentCaptor.forClass(classOf[ParsedNotification])
-      when(parsedNotificationRepository.insert(captorParsedNotification.capture())(any())).thenReturn(Future.successful(writeResult))
+      when(parsedNotificationRepository.create(captorParsedNotification.capture())).thenAnswer({ invocation: InvocationOnMock =>
+        Future.successful(invocation.getArguments.head.asInstanceOf[ParsedNotification])
+      })
 
       val request = Json.obj("eori" -> eoriSpecified)
       val result: Future[Result] = route(app, post.withJsonBody(request)).get
@@ -105,29 +100,28 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with GuiceOneAppPerSui
 
     "insert only one ACCEPT notification if first two digits of MRN are an odd number" in {
       given(declarationRepository.create(any())).willReturn(Future.successful(aDeclaration(withConsignmentReferences(mrn = Some("11GB1234567890")))))
-      given(submissionRepository.save(any())).willReturn(Future.successful(submission))
-      given(parsedNotificationRepository.insert(any())(any())).willReturn(Future.successful(writeResult))
+      given(submissionRepository.create(any())).willReturn(Future.successful(submission))
+      given(parsedNotificationRepository.create(any())).willReturn(Future.successful(notification))
 
       val request = Json.obj("eori" -> eoriSpecified)
       val result: Future[Result] = route(app, post.withJsonBody(request)).get
 
       status(result) must be(OK)
 
-      verify(parsedNotificationRepository, times(1)).insert(any())(any())
+      verify(parsedNotificationRepository, times(1)).create(any())
     }
 
     "insert an additional DMSDOC notification if first two digits of MRN are an even number" in {
-
       given(declarationRepository.create(any())).willReturn(Future.successful(aDeclaration(withConsignmentReferences(mrn = Some("10GB1234567890")))))
-      given(submissionRepository.save(any())).willReturn(Future.successful(submission))
-      given(parsedNotificationRepository.insert(any())(any())).willReturn(Future.successful(writeResult))
+      given(submissionRepository.create(any())).willReturn(Future.successful(submission))
+      given(parsedNotificationRepository.create(any())).willReturn(Future.successful(notification))
 
       val request = Json.obj("eori" -> eoriSpecified)
       val result: Future[Result] = route(app, post.withJsonBody(request)).get
 
       status(result) must be(OK)
 
-      verify(parsedNotificationRepository, times(2)).insert(any())(any())
+      verify(parsedNotificationRepository, times(2)).create(any())
     }
   }
 }

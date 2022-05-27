@@ -23,8 +23,9 @@ import play.api.Logger
 
 import scala.collection.JavaConverters.asScalaIterator
 
-abstract class MongoRepository private[migrations] (val mongoDatabase: MongoDatabase, val collectionName: String, val uniqueFields: Array[String]) {
-
+abstract class MongoRepository private[migrations] (
+  val mongoDatabase: MongoDatabase, val collectionName: String, val uniqueFields: Array[String]
+) {
   private val logger = Logger(this.getClass)
   private var ensuredCollectionIndex = false
 
@@ -37,15 +38,15 @@ abstract class MongoRepository private[migrations] (val mongoDatabase: MongoData
     if (!this.ensuredCollectionIndex) {
       indexes.size match {
         case 0 =>
-          createRequiredUniqueIndex()
+          createRequiredUniqueIndex
           logger.debug(s"Index in collection ${getCollectionName} was created")
+
         case _ =>
           indexes.filter(!isIndexUnique(_)).foreach(dropIndex)
 
-          if (indexes.exists(isIndexUnique)) {
-            logger.debug(s"Index in collection ${getCollectionName} already exists")
-          } else {
-            createRequiredUniqueIndex()
+          if (indexes.exists(isIndexUnique)) logger.debug(s"Index in collection ${getCollectionName} already exists")
+          else {
+            createRequiredUniqueIndex
             logger.debug(s"Index in collection ${getCollectionName} was recreated")
           }
       }

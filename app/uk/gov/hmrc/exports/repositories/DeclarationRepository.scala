@@ -16,107 +16,92 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import play.api.libs.json.{JsObject, Json}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.Cursor.FailOnError
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.api.{QueryOpts, ReadConcern, ReadPreference}
-import reactivemongo.bson.BSONObjectID
-import reactivemongo.play.json.ImplicitBSONHandlers
-import reactivemongo.play.json.collection.JSONCollection
+import com.mongodb.client.model.Indexes.{ascending, compoundIndex, descending}
+import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.model.Updates.set
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import play.api.libs.json.Json
+import repositories.RepositoryOps
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timers
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.time._
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import scala.reflect.ClassTag
 
-class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: AppConfig, metrics: ExportsMetrics)(implicit ec: ExecutionContext)
-    extends ReactiveRepository[ExportsDeclaration, BSONObjectID](
-      "declarations",
-      mc.mongoConnector.db,
-      ExportsDeclaration.Mongo.format,
-      objectIdFormats
-    ) {
+class DeclarationRepository @Inject()(
+  mongoComponent: MongoComponent, appConfig: AppConfig, metrics: ExportsMetrics)(implicit ec: ExecutionContext
+)
+  extends PlayMongoRepository[ExportsDeclaration](
+    mongoComponent = mongoComponent,
+    collectionName = "declarations",
+    domainFormat = ExportsDeclaration.format,
+    indexes = DeclarationRepository.indexes
+  ) with RepositoryOps[ExportsDeclaration] {
 
-  override lazy val collection: JSONCollection =
-    mongo().collection[JSONCollection](collectionName, failoverStrategy = RepositorySettings.failoverStrategy)
+  override def classTag: ClassTag[ExportsDeclaration] = implicitly[ClassTag[ExportsDeclaration]]
+  override val executionContext = ec
 
-  override def indexes: Seq[Index] = Seq(
-    Index(Seq("eori" -> IndexType.Ascending, "id" -> IndexType.Ascending), Some("eoriAndIdIdx"), unique = true),
-    Index(
-      Seq("eori" -> IndexType.Ascending, "updateDateTime" -> IndexType.Ascending, "status" -> IndexType.Ascending),
-      Some("eoriAndUpdateTimeAndStatusIdx")
-    ),
-    Index(
-      Seq("eori" -> IndexType.Ascending, "createDateTime" -> IndexType.Ascending, "status" -> IndexType.Ascending),
-      Some("eoriAndCreateTimeAndStatusIdx")
-    ),
-    Index(Seq("updatedDateTime" -> IndexType.Descending, "status" -> IndexType.Ascending), Some("statusAndUpdateIdx"))
-  )
+  def deleteExpiredDraft(expiryDate: Instant): Future[Long] =
+    removeEvery(Json.obj(
+      "status" -> DeclarationStatus.DRAFT,
+      "updatedDateTime" -> Json.obj("$lte" -> expiryDate)
+    ))
 
-  def find(id: String, eori: Eori): Future[Option[ExportsDeclaration]] = metrics.timeAsyncCall(Timers.declarationFindSingleTimer) {
-    super.find("id" -> id, "eori" -> eori.value).map(_.headOption)
-  }
-
-  def find(search: DeclarationSearch, pagination: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] = {
-    val query = Json.toJson(search).as[JsObject]
+  def find(search: DeclarationSearch, page: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] = {
+    val filter = BsonDocument(Json.toJson(search).toString)
 
     metrics.timeAsyncCall(Timers.declarationFindAllTimer) {
       for {
         results <- collection
-          .find(query, projection = None)(ImplicitBSONHandlers.JsObjectDocumentWriter, ImplicitBSONHandlers.JsObjectDocumentWriter)
-          .sort(Json.obj(sort.by.toString -> sort.direction.id))
-          .options(QueryOpts(skipN = (pagination.index - 1) * pagination.size, batchSizeN = pagination.size))
-          .cursor[ExportsDeclaration](ReadPreference.primaryPreferred)
-          .collect(maxDocs = pagination.size, FailOnError[List[ExportsDeclaration]]())
-          .map(_.toSeq)
-        total <- collection.count(Some(query), limit = Some(0), skip = 0, hint = None, readConcern = ReadConcern.Local)
+          .find(filter)
+          .sort(BsonDocument(Json.obj(sort.by.toString -> sort.direction.id).toString))
+          .skip((page.index - 1) * page.size)
+          .batchSize(page.size)
+          .limit(page.size)
+          .toFuture
+        total <- collection.countDocuments(filter).toFuture
       } yield {
-        Paginated(currentPageElements = results, page = pagination, total = total)
+        Paginated(currentPageElements = results, page = page, total = total)
       }
     }
   }
 
-  def create(declaration: ExportsDeclaration): Future[ExportsDeclaration] =
-    super.insert(declaration).map(_ => declaration)
+  def findOne(id: String, eori: Eori): Future[Option[ExportsDeclaration]] =
+    metrics.timeAsyncCall(Timers.declarationFindSingleTimer) {
+      findOne(Json.obj("id" -> id, "eori" -> eori))
+    }
 
-  def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] = metrics.timeAsyncCall(Timers.declarationUpdateTimer) {
-    super
-      .findAndUpdate(
-        Json.obj("id" -> declaration.id, "eori" -> declaration.eori),
-        Json.toJson(declaration).as[JsObject],
-        fetchNewObject = true,
-        upsert = false
+  def markStatusAsComplete(id: String, eori: Eori): Future[Option[ExportsDeclaration]] =
+    collection
+      .findOneAndUpdate(
+        filter = BsonDocument(Json.obj("id" -> id, "eori" -> eori.value).toString),
+        update = set("status", DeclarationStatus.COMPLETE),
       )
-      .map(_.value.map(_.as[ExportsDeclaration]))
-  }
+      .toFutureOption
 
-  def markCompleted(id: String, eori: Eori): Future[Option[ExportsDeclaration]] =
-    super
-      .findAndUpdate(
-        Json.obj("id" -> id, "eori" -> eori.value),
-        Json.obj("$set" -> Json.obj("status" -> DeclarationStatus.COMPLETE)),
-        fetchNewObject = false,
-        upsert = false
-      )
-      .map(_.value.map(_.as[ExportsDeclaration]))
+  def revertStatusToDraft(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
+    findOneAndUpdate(
+      Json.obj("id" -> declaration.id, "eori" -> declaration.eori),
+      Json.obj("status" -> DeclarationStatus.DRAFT)
+    )
+}
 
-  def delete(declaration: ExportsDeclaration): Future[Unit] =
-    super
-      .remove("id" -> declaration.id, "eori" -> declaration.eori)
-      .map(_ => Unit)
+object DeclarationRepository {
 
-  def deleteExpiredDraft(expiryDate: Instant): Future[Int] = {
-    import ExportsDeclaration.Mongo.formatInstant
-    super
-      .remove("status" -> DeclarationStatus.DRAFT, "updatedDateTime" -> Json.obj("$lte" -> expiryDate))
-      .map(res => res.n)
-  }
-
+  val indexes: Seq[IndexModel] = List(
+    IndexModel(ascending("eori", "id"), IndexOptions().name("eoriAndIdIdx").unique(true)),
+    IndexModel(ascending("eori", "updateDateTime", "status"), IndexOptions().name("eoriAndUpdateTimeAndStatusIdx")),
+    IndexModel(ascending("eori", "createDateTime", "status"), IndexOptions().name("eoriAndCreateTimeAndStatusIdx")),
+    IndexModel(
+      compoundIndex(descending("updateDateTime"), ascending("status")),
+      IndexOptions().name("statusAndUpdateIdx")
+    )
+  )
 }

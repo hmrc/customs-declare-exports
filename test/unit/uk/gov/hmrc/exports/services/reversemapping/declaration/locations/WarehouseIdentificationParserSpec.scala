@@ -40,7 +40,7 @@ class WarehouseIdentificationParserSpec extends UnitSpec with EitherValues {
         val result = parser.parse(missingWarehouseElement)
 
         result.isRight mustBe true
-        result.value mustBe None
+        result.right.value mustBe None
       }
 
       "the 'GoodsShipment / Warehouse' element is present but it is empty" in {
@@ -48,7 +48,7 @@ class WarehouseIdentificationParserSpec extends UnitSpec with EitherValues {
         val result = parser.parse(inputXml())
 
         result.isRight mustBe true
-        result.value mustBe None
+        result.right.value mustBe None
       }
     }
 
@@ -61,7 +61,7 @@ class WarehouseIdentificationParserSpec extends UnitSpec with EitherValues {
         val result = parser.parse(inputXml(typeCode = Some(typeCode), warehouseId = Some(warehouseId)))
 
         result.isRight mustBe true
-        result.value mustBe Some(WarehouseIdentification(Some(typeCode + warehouseId)))
+        result.right.value mustBe Some(WarehouseIdentification(Some(typeCode + warehouseId)))
       }
     }
 
@@ -74,7 +74,7 @@ class WarehouseIdentificationParserSpec extends UnitSpec with EitherValues {
 
         val expectedIdentificationNumber = "?" + warehouseId
         result.isRight mustBe true
-        result.value mustBe Some(WarehouseIdentification(Some(expectedIdentificationNumber)))
+        result.right.value mustBe Some(WarehouseIdentification(Some(expectedIdentificationNumber)))
       }
 
       "the 'GoodsShipment / Warehouse / ID' element is not present" in {
@@ -84,7 +84,7 @@ class WarehouseIdentificationParserSpec extends UnitSpec with EitherValues {
 
         val expectedIdentificationNumber = typeCode + "?"
         result.isRight mustBe true
-        result.value mustBe Some(WarehouseIdentification(Some(expectedIdentificationNumber)))
+        result.right.value mustBe Some(WarehouseIdentification(Some(expectedIdentificationNumber)))
       }
     }
   }

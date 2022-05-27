@@ -22,7 +22,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 
 case class Submission(
-  uuid: String = UUID.randomUUID().toString,
+  uuid: String = UUID.randomUUID.toString,
   eori: String,
   lrn: String,
   mrn: Option[String] = None,
@@ -32,8 +32,8 @@ case class Submission(
 
 object Submission {
 
+  implicit val format = Json.format[Submission]
+
   def apply(declaration: ExportsDeclaration, lrn: String, ducr: String, action: Action): Submission =
     new Submission(declaration.id, declaration.eori, lrn, None, ducr, Seq(action))
-
-  implicit val formats = Json.format[Submission]
 }

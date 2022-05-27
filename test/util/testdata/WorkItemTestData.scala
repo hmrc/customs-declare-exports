@@ -16,24 +16,28 @@
 
 package testdata
 
-import org.joda.time.DateTime
-import org.joda.time.DateTime.now
-import reactivemongo.bson.BSONObjectID
+import org.bson.types.ObjectId
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
-import uk.gov.hmrc.workitem.{ProcessingStatus, WorkItem}
+import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem}
+
+import java.time.Instant
 
 object WorkItemTestData {
 
   def buildTestSendEmailDetails: SendEmailDetails =
-    SendEmailDetails(notificationId = BSONObjectID.generate, mrn = ExportsTestData.mrn, actionId = "actionId")
+    SendEmailDetails(notificationId = ObjectId.get, mrn = ExportsTestData.mrn, actionId = "actionId")
 
-  def buildTestSendEmailWorkItem(status: ProcessingStatus, updatedAt: DateTime = now, availableAt: DateTime = now): WorkItem[SendEmailDetails] =
+  def buildTestSendEmailWorkItem(
+    status: ProcessingStatus, updatedAt: Instant = Instant.now, availableAt: Instant = Instant.now
+  ): WorkItem[SendEmailDetails] =
     buildTestWorkItem(status, updatedAt, availableAt, item = buildTestSendEmailDetails)
 
-  def buildTestWorkItem[T](status: ProcessingStatus, updatedAt: DateTime = now, availableAt: DateTime = now, item: T): WorkItem[T] =
+  def buildTestWorkItem[T](
+    status: ProcessingStatus, updatedAt: Instant = Instant.now, availableAt: Instant = Instant.now, item: T
+  ): WorkItem[T] =
     WorkItem[T](
-      id = BSONObjectID.generate,
-      receivedAt = now,
+      id = ObjectId.get,
+      receivedAt = Instant.now,
       updatedAt = updatedAt,
       availableAt = availableAt,
       status = status,

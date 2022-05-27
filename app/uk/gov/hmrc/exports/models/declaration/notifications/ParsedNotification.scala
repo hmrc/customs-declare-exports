@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.exports.models.declaration.notifications
 
+import org.bson.types.ObjectId
+import play.api.libs.json._
+import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
+
 import java.util.UUID
 
-import play.api.libs.json.{Json, _}
-import reactivemongo.bson.BSONObjectID
-
 case class ParsedNotification(
-  _id: BSONObjectID = BSONObjectID.generate(),
+  _id: ObjectId = ObjectId.get,
   unparsedNotificationId: UUID,
   actionId: String,
   details: NotificationDetails
@@ -30,10 +31,9 @@ case class ParsedNotification(
 
 object ParsedNotification {
 
-  object DbFormat {
-    implicit val idFormat = reactivemongo.play.json.BSONFormats.BSONObjectIDFormat
-    implicit val format: Format[ParsedNotification] = Json.format[ParsedNotification]
-  }
+  implicit val objectIdFormats: Format[ObjectId] = MongoFormats.objectIdFormat
+
+  val format: Format[ParsedNotification] = Json.format[ParsedNotification]
 
   object FrontendFormat {
     implicit val writes: Writes[ParsedNotification] =

@@ -16,12 +16,6 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import java.util.UUID
-
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
-
-import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc._
@@ -29,9 +23,13 @@ import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
 import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Page}
 import uk.gov.hmrc.exports.services.DeclarationService
+
+import java.util.UUID
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @Singleton
 class DeclarationController @Inject()(
@@ -75,7 +73,10 @@ class DeclarationController @Inject()(
 
   def findAll(status: Option[String], pagination: Page, sort: DeclarationSort): Action[AnyContent] =
     authenticator.authorisedAction(parse.default) { implicit request =>
-      val search = DeclarationSearch(eori = request.eori, status = status.map(v => Try(DeclarationStatus.withName(v))).filter(_.isSuccess).map(_.get))
+      val search = DeclarationSearch(
+        eori = request.eori,
+        status = status.map(str => Try(DeclarationStatus.withName(str))).filter(_.isSuccess).map(_.get)
+      )
       declarationService.find(search, pagination, sort).map(results => Ok(results))
     }
 

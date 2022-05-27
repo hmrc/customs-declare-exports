@@ -18,49 +18,21 @@ package uk.gov.hmrc.exports.migrations.changelogs.notification
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.mongodb.client.{MongoCollection, MongoDatabase}
-import com.mongodb.{MongoClient, MongoClientURI}
 import org.bson.Document
 import org.mongodb.scala.model.{IndexOptions, Indexes}
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
-import stubs.TestMongoDB
-import stubs.TestMongoDB.mongoConfiguration
-import uk.gov.hmrc.exports.base.IntegrationTestBaseSpec
+import uk.gov.hmrc.exports.base.IntegrationTestMigrationToolSpec
 import uk.gov.hmrc.exports.migrations.changelogs.notification.MakeParsedDetailsOptionalSpec._
 
-class MakeParsedDetailsOptionalSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSuite {
-
-  override def fakeApplication(): Application =
-    new GuiceApplicationBuilder()
-      .disable[com.kenshoo.play.metrics.PlayModule]
-      .configure(mongoConfiguration)
-      .build()
-
-  private val MongoURI = mongoConfiguration.get[String]("mongodb.uri")
-  private val DatabaseName = TestMongoDB.DatabaseName
-  private val CollectionName = "notifications"
-
-  private implicit val mongoDatabase: MongoDatabase = {
-    val uri = new MongoClientURI(MongoURI.replaceAllLiterally("sslEnabled", "ssl"))
-    val client = new MongoClient(uri)
-
-    client.getDatabase(DatabaseName)
-  }
+class MakeParsedDetailsOptionalSpec extends IntegrationTestMigrationToolSpec {
 
   private val changeLog = new MakeParsedDetailsOptional()
 
+  def getNotificationsCollection: MongoCollection[Document] = getCollection("notifications")
+
   override def beforeEach(): Unit = {
     super.beforeEach()
-    mongoDatabase.getCollection(CollectionName).drop()
+    removeAll(getNotificationsCollection)
   }
-
-  override def afterEach(): Unit = {
-    mongoDatabase.getCollection(CollectionName).drop()
-    super.afterEach()
-  }
-
-  private def getNotificationsCollection(): MongoCollection[Document] = mongoDatabase.getCollection(CollectionName)
 
   "MakeParsedDetailsOptional migration definition" should {
 
@@ -77,7 +49,7 @@ class MakeParsedDetailsOptionalSpec extends IntegrationTestBaseSpec with GuiceOn
     }
 
     "drop the two decommissioned indexes" in {
-      val collection = getNotificationsCollection()
+      val collection = getNotificationsCollection
       collection.createIndex(Indexes.ascending("dateTimeIssued"), IndexOptions().name("dateTimeIssuedIdx"))
       collection.createIndex(Indexes.ascending("mrn"), IndexOptions().name("mrnIdx"))
 
@@ -91,11 +63,12 @@ class MakeParsedDetailsOptionalSpec extends IntegrationTestBaseSpec with GuiceOn
   }
 
   private def runTest(inputDataJson: String, expectedDataJson: String)(test: MongoDatabase => Unit)(implicit mongoDatabase: MongoDatabase): Unit = {
-    getNotificationsCollection().insertOne(Document.parse(inputDataJson))
+    val collection = getNotificationsCollection
+    collection.insertOne(Document.parse(inputDataJson))
 
     test(mongoDatabase)
 
-    val result: Document = getNotificationsCollection().find().first()
+    val result: Document = collection.find.first
     val expectedResult: String = expectedDataJson
 
     compareJson(result.toJson, expectedResult)

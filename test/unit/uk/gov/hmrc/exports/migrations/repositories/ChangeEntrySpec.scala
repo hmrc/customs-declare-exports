@@ -16,26 +16,30 @@
 
 package uk.gov.hmrc.exports.migrations.repositories
 
-import java.util.Date
-
-import scala.collection.JavaConverters.mapAsJavaMap
-
 import org.bson.Document
 import uk.gov.hmrc.exports.base.UnitSpec
+
+import java.time.Instant
+import scala.collection.JavaConverters.mapAsJavaMap
 
 class ChangeEntrySpec extends UnitSpec {
 
   "ChangeEntry on buildFullDBObject" should {
-
     "convert to correct Document" in {
+      val date = Instant.now
+      val expectedOutput = new Document(mapAsJavaMap(Map(
+        "changeId" -> "changeIdValue",
+        "author" -> "authorValue",
+        "timestamp" -> date,
+        "changeLogClass" -> "changeLogClassValue"
+      )))
 
-      val date = new Date()
-      val changeEntry = ChangeEntry(changeId = "changeIdValue", author = "authorValue", timestamp = date, changeLogClass = "changeLogClassValue")
-      val expectedOutput =
-        new Document(
-          mapAsJavaMap(Map("changeId" -> "changeIdValue", "author" -> "authorValue", "timestamp" -> date, "changeLogClass" -> "changeLogClassValue"))
-        )
-
+      val changeEntry = ChangeEntry(
+        changeId = "changeIdValue",
+        author = "authorValue",
+        timestamp = date,
+        changeLogClass = "changeLogClassValue"
+      )
       changeEntry.buildFullDBObject mustBe expectedOutput
     }
   }

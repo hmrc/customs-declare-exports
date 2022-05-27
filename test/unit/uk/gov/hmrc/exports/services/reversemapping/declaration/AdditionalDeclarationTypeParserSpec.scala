@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
-import scala.xml.{Elem, NodeSeq}
-
 import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
+
+import scala.xml.{Elem, NodeSeq}
 
 class AdditionalDeclarationTypeParserSpec extends UnitSpec with EitherValues {
 
@@ -35,12 +35,12 @@ class AdditionalDeclarationTypeParserSpec extends UnitSpec with EitherValues {
 
       "the '/ TypeCode' element is not present" in {
         val input = inputXml(None)
-        parser.parse(input).value mustBe None
+        parser.parse(input).right.value mustBe None
       }
 
       "the '/ TypeCode' element contains only 2 characters" in {
         val input = inputXml(Some("EX"))
-        parser.parse(input).value mustBe None
+        parser.parse(input).right.value mustBe None
       }
     }
 
@@ -49,7 +49,7 @@ class AdditionalDeclarationTypeParserSpec extends UnitSpec with EitherValues {
       AdditionalDeclarationType.values.foreach { additionalDeclarationTypeCode =>
         s"the 3rd character of the '/ TypeCode' element is ${additionalDeclarationTypeCode.toString}" in {
           val input = inputXml(Some("EX" + additionalDeclarationTypeCode.toString))
-          parser.parse(input).value.get mustBe additionalDeclarationTypeCode
+          parser.parse(input).right.value.get mustBe additionalDeclarationTypeCode
         }
       }
     }

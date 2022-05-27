@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
-import org.joda.time.DateTime
 import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.emails.SendEmailResult._
@@ -24,11 +23,12 @@ import uk.gov.hmrc.exports.models.emails.{SendEmailDetails, SendEmailResult}
 import uk.gov.hmrc.exports.repositories.SendEmailWorkItemRepository
 import uk.gov.hmrc.exports.scheduler.jobs.ScheduledJob
 import uk.gov.hmrc.exports.services.email.EmailSender
-import uk.gov.hmrc.workitem.{Cancelled, Failed, Succeeded, WorkItem}
+import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Cancelled, Failed, Succeeded}
+import uk.gov.hmrc.mongo.workitem.WorkItem
 
-import java.time.LocalTime
+import java.time.{Duration, Instant, LocalTime}
 import javax.inject.{Inject, Named, Singleton}
-import scala.concurrent.duration._
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
 
@@ -62,18 +62,17 @@ class SendEmailsJob @Inject()(
 
   override def execute(): Future[Unit] = {
     logger.info("Starting SendEmailsJob execution...")
-    implicit val now: DateTime = DateTime.now()
-
-    process().map { _ =>
+    process(Instant.now).map { _ =>
       logger.info("Finishing SendEmailsJob execution")
     }
   }
 
-  private def process()(implicit now: DateTime): Future[Unit] = {
-    val failedBefore = appConfig.consideredFailedBeforeWorkItem
+  private def process(now: Instant): Future[Unit] = {
+    val failedBefore = Duration.ofMillis(appConfig.consideredFailedBeforeWorkItem.toMillis)
 
-    sendEmailWorkItemRepository.pullOutstanding(failedBefore = now.minus(failedBefore.toMillis), availableBefore = now).flatMap {
+    sendEmailWorkItemRepository.pullOutstanding(failedBefore = now.minus(failedBefore), availableBefore = now).flatMap {
       case None => Future.successful(())
+
       case Some(workItem) =>
         emailCancellationValidator
           .isEmailSendingCancelled(workItem.item)
@@ -85,7 +84,7 @@ class SendEmailsJob @Inject()(
           }
           .map {
             case InternalEmailServiceError(_) => ()
-            case _                            => process()
+            case _                            => process(now)
           }
     }
   }
@@ -95,12 +94,15 @@ class SendEmailsJob @Inject()(
       case Success(EmailAccepted) =>
         logger.info(s"Email sent for MRN: ${workItem.item.mrn}")
         sendEmailWorkItemRepository.complete(workItem.id, Succeeded)
+
       case Success(MissingData) =>
         logger.warn(s"Could not send email because some data is missing")
         failSingle(workItem)
+
       case Success(BadEmailRequest(msg)) =>
         logger.warn(s"Email service returned Bad Request response: [$msg]")
         failSingle(workItem)
+
       case Success(InternalEmailServiceError(msg)) =>
         logger.warn(s"Email service returned Internal Service Error response: [$msg]")
         logger.warn(s"Will try again in ${interval.toMinutes} minutes")

@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
-import scala.xml.{Elem, NodeSeq}
-
 import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.MUCR
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
+
+import scala.xml.{Elem, NodeSeq}
 
 class MucrParserSpec extends UnitSpec with EitherValues {
 
@@ -35,19 +35,19 @@ class MucrParserSpec extends UnitSpec with EitherValues {
 
       "PreviousDocument element is NOT present" in {
         val input = inputXml()
-        parser.parse(input).value mustBe None
+        parser.parse(input).right.value mustBe None
       }
 
       "PreviousDocument contains 'DCR' TypeCode" in {
         val input = inputXml(Some(PreviousDocument(id = "id", typeCode = "DCR")))
-        parser.parse(input).value mustBe None
+        parser.parse(input).right.value mustBe None
       }
     }
 
     "return correct MUCR" when {
       "PreviousDocument contains ID and 'MCR' TypeCode" in {
         val input = inputXml(Some(PreviousDocument(id = "mucr")))
-        parser.parse(input).value mustBe Some(MUCR("mucr"))
+        parser.parse(input).right.value mustBe Some(MUCR("mucr"))
       }
     }
   }

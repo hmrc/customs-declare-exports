@@ -17,9 +17,11 @@
 package uk.gov.hmrc.exports.services
 
 import play.api.Logger
+import play.api.libs.json.Json
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.{Monitors, Timers}
+import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
@@ -44,6 +46,9 @@ class SubmissionService @Inject()(
 
   private def logProgress(declaration: ExportsDeclaration, message: String): Unit =
     logger.info(s"Declaration [${declaration.id}]: $message")
+
+  def markCompleted(id: String, eori: Eori): Future[Option[ExportsDeclaration]] =
+    declarationRepository.markStatusAsComplete(id, eori)
 
   def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] = metrics.timeAsyncCall(Monitors.submissionMonitor) {
     logProgress(declaration, "Beginning Submission")
@@ -70,7 +75,7 @@ class SubmissionService @Inject()(
       // Create the Submission with action
       action = Action(id = conversationId, requestType = SubmissionRequest)
       submission <- metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer)(
-        submissionRepository.save(Submission(declaration, lrn, ducr, action))
+        submissionRepository.create(Submission(declaration, lrn, ducr, action))
       )
       _ = logProgress(declaration, "New submission creation completed")
     } yield submission
@@ -80,14 +85,14 @@ class SubmissionService @Inject()(
     customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).recoverWith {
       case throwable: Throwable =>
         logProgress(declaration, "Submission failed")
-        declarationRepository.update(declaration.copy(status = DeclarationStatus.DRAFT)) flatMap { _ =>
+        declarationRepository.revertStatusToDraft(declaration) flatMap { _ =>
           logProgress(declaration, "Reverted declaration to DRAFT")
           Future.failed[String](throwable)
         }
     }
 
   def cancel(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationStatus] =
-    submissionRepository.findSubmissionByMrnAndEori(cancellation.mrn, eori).flatMap {
+    submissionRepository.findOne(Json.obj("eori" -> eori, "mrn" -> cancellation.mrn)).flatMap {
       case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationAlreadyRequested)
       case Some(submission)                                             => sendCancelationRequest(submission, cancellation)
       case _                                                            => Future.successful(MrnNotFound)
@@ -109,7 +114,7 @@ class SubmissionService @Inject()(
   }
 
   def findAllSubmissionsBy(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] =
-    submissionRepository.findBy(eori, queryParameters)
+    submissionRepository.findAll(eori, queryParameters)
 
   private def updateSubmissionInDB(mrn: String, conversationId: String): Future[CancellationStatus] = {
     val newAction = Action(requestType = CancellationRequest, id = conversationId)

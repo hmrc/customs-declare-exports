@@ -30,10 +30,14 @@ class SendEmailForDmsDocAction @Inject()(
 )(implicit ec: ExecutionContext) {
 
   def execute(actionId: String): Future[Unit] =
-    notificationRepository.findNotificationsByActionId(actionId).map { notifications =>
+    notificationRepository.findAll("actionId", actionId).map { notifications =>
       notifications.map { notification =>
         if (notification.details.status == SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED) {
-          val sendEmailDetails = SendEmailDetails(notificationId = notification._id, actionId = notification.actionId, mrn = notification.details.mrn)
+          val sendEmailDetails = SendEmailDetails(
+            notificationId = notification._id,
+            actionId = notification.actionId,
+            mrn = notification.details.mrn
+          )
           sendEmailWorkItemRepository.pushNew(sendEmailDetails)
 
         } else

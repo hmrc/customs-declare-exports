@@ -72,6 +72,7 @@ class AppConfig @Inject()(val configuration: Configuration, val environment: Env
 
   lazy val consideredFailedBeforeWorkItem: FiniteDuration =
     servicesConfig.getDuration("workItem.sendEmail.consideredFailedBefore").asInstanceOf[FiniteDuration]
+
   lazy val sendEmailPagerDutyAlertTriggerDelay: FiniteDuration =
     servicesConfig.getDuration("workItem.sendEmail.pagerDutyAlertTriggerDelay").asInstanceOf[FiniteDuration]
 

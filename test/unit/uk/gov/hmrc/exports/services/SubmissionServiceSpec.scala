@@ -18,9 +18,10 @@ package uk.gov.hmrc.exports.services
 
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
+import play.api.libs.json.JsValue
 import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
@@ -65,9 +66,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       "submission exists" in {
         when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
         when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(customsDeclarationsConnector.submitCancellation(any(), any())(any()))
-          .thenReturn(Future.successful("conv-id"))
-        when(submissionRepository.findSubmissionByMrnAndEori(any(), any())).thenReturn(Future.successful(Some(submission)))
+        when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
+        when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
         when(submissionRepository.addAction(any[String](), any())).thenReturn(Future.successful(Some(submission)))
 
         submissionService.cancel("eori", cancellation).futureValue mustBe CancellationRequestSent
@@ -76,9 +76,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       "submission is missing" in {
         when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
         when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(customsDeclarationsConnector.submitCancellation(any(), any())(any()))
-          .thenReturn(Future.successful("conv-id"))
-        when(submissionRepository.findSubmissionByMrnAndEori(any(), any())).thenReturn(Future.successful(None))
+        when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
+        when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(None))
 
         submissionService.cancel("eori", cancellation).futureValue mustBe MrnNotFound
       }
@@ -86,10 +85,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       "submission exists and previously cancelled" in {
         when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
         when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(customsDeclarationsConnector.submitCancellation(any(), any())(any()))
-          .thenReturn(Future.successful("conv-id"))
-        when(submissionRepository.findSubmissionByMrnAndEori(any(), any()))
-          .thenReturn(Future.successful(Some(submissionCancelled)))
+        when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
+        when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submissionCancelled)))
 
         submissionService.cancel("eori", cancellation).futureValue mustBe CancellationAlreadyRequested
       }
@@ -97,15 +94,10 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
   }
 
   "SubmissionService on submit" should {
-    def theDeclarationUpdated(index: Int = 0): ExportsDeclaration = {
-      val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
-      verify(declarationRepository, atLeastOnce).update(captor.capture())
-      captor.getAllValues.get(index)
-    }
 
     def theSubmissionCreated(): Submission = {
       val captor: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
-      verify(submissionRepository).save(captor.capture())
+      verify(submissionRepository).create(captor.capture())
       captor.getValue
     }
 
@@ -124,10 +116,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
         when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
         when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(submissionRepository.save(any())).thenReturn(Future.successful(submission))
-        when(customsDeclarationsConnector.submitDeclaration(any(), any())(any()))
-          .thenReturn(Future.successful("conv-id"))
-        when(submissionRepository.addAction(any[Submission](), any())).thenReturn(Future.successful(submission))
+        when(submissionRepository.create(any())).thenReturn(Future.successful(submission))
+        when(customsDeclarationsConnector.submitDeclaration(any(), any())(any())).thenReturn(Future.successful("conv-id"))
 
         // When
         submissionService.submit(declaration).futureValue mustBe submission
@@ -152,8 +142,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
         when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
         when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(declarationRepository.update(any())).thenReturn(Future.successful(Some(mock[ExportsDeclaration])))
-        when(submissionRepository.save(any())).thenReturn(Future.successful(mock[Submission]))
+        when(declarationRepository.revertStatusToDraft(any())).thenReturn(Future.successful(Some(mock[ExportsDeclaration])))
+        when(submissionRepository.create(any())).thenReturn(Future.successful(mock[Submission]))
         when(customsDeclarationsConnector.submitDeclaration(any(), any())(any()))
           .thenReturn(Future.failed(new RuntimeException("Some error")))
 
@@ -165,9 +155,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         }
 
         // Then
-        verify(submissionRepository, never).save(any[Submission])
-
-        theDeclarationUpdated().status mustEqual DeclarationStatus.DRAFT
+        verify(submissionRepository, never).create(any[Submission])
       }
     }
 

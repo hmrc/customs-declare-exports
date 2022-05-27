@@ -16,25 +16,24 @@
 
 package uk.gov.hmrc.exports.migrations.changelogs.notification
 
+import com.mongodb.client.result.{DeleteResult, UpdateResult}
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
-import org.joda.time.DateTime
+import org.bson.types.ObjectId
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, exists, not, eq => feq}
 import org.mongodb.scala.model.Updates.{combine, set, unset}
 import play.api.Logging
-import play.api.libs.json.{Format, Json}
-import reactivemongo.bson.BSONObjectID
+import play.api.libs.json.Json
 import uk.gov.hmrc.exports.migrations.changelogs.notification.SplitTheNotificationsCollection._
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
-import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification.DbFormat.format
-import uk.gov.hmrc.exports.repositories.WorkItemFormat
-import uk.gov.hmrc.workitem.{ProcessingStatus, Succeeded, ToDo, WorkItem}
+import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Succeeded, ToDo}
+import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem, WorkItemFields}
+
+import java.time.Instant
 import javax.inject.Singleton
 import scala.collection.JavaConverters._
-
-import com.mongodb.client.result.{DeleteResult, UpdateResult}
 
 /**
   * Migration definition for splitting existing 'notifications' collection into 2 collections. The first one stores XML
@@ -57,8 +56,11 @@ class SplitTheNotificationsCollection extends MigrationDefinition with Logging {
   private val NotificationsCollectionName = "notifications"
   private val UnparsedNotificationsCollectionName = "unparsedNotifications"
 
-  private def getNotificationsCollection(implicit db: MongoDatabase) = db.getCollection(NotificationsCollectionName)
-  private def getUnparsedNotificationsCollection(implicit db: MongoDatabase) = db.getCollection(UnparsedNotificationsCollectionName)
+  private def getNotificationsCollection(implicit db: MongoDatabase): MongoCollection[Document] =
+    db.getCollection(NotificationsCollectionName)
+
+  private def getUnparsedNotificationsCollection(implicit db: MongoDatabase): MongoCollection[Document] =
+    db.getCollection(UnparsedNotificationsCollectionName)
 
   private val IndexId = "_id"
   private val Details = "details"
@@ -66,7 +68,7 @@ class SplitTheNotificationsCollection extends MigrationDefinition with Logging {
   private val UnparsedNotificationId = "unparsedNotificationId"
   private val ActionId = "actionId"
 
-  implicit private val workItemFormat: Format[WorkItem[UnparsedNotification]] = WorkItemFormat.workItemMongoFormat[UnparsedNotification]()
+  implicit private val workItemFormat = WorkItem.formatForFields[UnparsedNotification](WorkItemFields.default)
 
   private val NotificationIsAlreadyMigrated = true
   private val NotificationIsNotMigrated = false
@@ -137,7 +139,7 @@ class SplitTheNotificationsCollection extends MigrationDefinition with Logging {
   private def insertIntoUnparsedNotificationCollection(newUnparsedNotification: UnparsedNotification, status: ProcessingStatus)(
     implicit db: MongoDatabase
   ): Unit = {
-    val workItem = newWorkItem(DateTime.now(), status, newUnparsedNotification)
+    val workItem = newWorkItem(Instant.now, status, newUnparsedNotification)
     val workItemDocument = Document.parse(Json.toJson(workItem).toString)
 
     getUnparsedNotificationsCollection.insertOne(workItemDocument)
@@ -171,8 +173,8 @@ class SplitTheNotificationsCollection extends MigrationDefinition with Logging {
     }
   }
 
-  private def newWorkItem(now: DateTime, initialState: ProcessingStatus, item: UnparsedNotification): WorkItem[UnparsedNotification] =
-    WorkItem(id = BSONObjectID.generate, receivedAt = now, updatedAt = now, availableAt = now, status = initialState, failureCount = 0, item = item)
+  private def newWorkItem(now: Instant, initialState: ProcessingStatus, item: UnparsedNotification): WorkItem[UnparsedNotification] =
+    WorkItem(id = ObjectId.get, receivedAt = now, updatedAt = now, availableAt = now, status = initialState, failureCount = 0, item = item)
 
 }
 
@@ -201,7 +203,7 @@ object SplitTheNotificationsCollection {
 
     override def iterator: Iterator[Int] = underlying.iterator
 
-// scalastyle:off
+    // scalastyle:off
     override def +(elem: Int): Set[Int] = underlying + elem
 
     override def -(elem: Int): Set[Int] = underlying - elem

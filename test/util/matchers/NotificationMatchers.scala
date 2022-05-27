@@ -16,8 +16,8 @@
 
 package matchers
 
+import org.bson.types.ObjectId
 import org.scalatest.matchers.{MatchResult, Matcher}
-import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 
 object NotificationMatchers {
@@ -32,7 +32,7 @@ object NotificationMatchers {
 
     override def apply(left: ParsedNotification): MatchResult = {
       def compare: Boolean = {
-        val id = BSONObjectID.generate()
+        val id = ObjectId.get
         val leftNoId = left.copy(_id = id)
         val rightNoId = notification.copy(_id = id)
 

@@ -41,7 +41,7 @@ class CountryParserSpec extends UnitSpec with EitherValues {
         val result = parser.parse(NodeSeq.Empty)
 
         result.isRight mustBe true
-        result.value mustBe None
+        result.right.value mustBe None
       }
 
       "the element is empty" in {
@@ -49,7 +49,7 @@ class CountryParserSpec extends UnitSpec with EitherValues {
         val result = parser.parse(countryCodeElement(""))
 
         result.isRight mustBe true
-        result.value mustBe None
+        result.right.value mustBe None
       }
     }
 
@@ -60,8 +60,8 @@ class CountryParserSpec extends UnitSpec with EitherValues {
         val result = parser.parse(countryCodeElement("GB"))
 
         result.isRight mustBe true
-        result.value mustBe defined
-        result.value.get mustBe Country(Some("GB"))
+        result.right.value mustBe defined
+        result.right.value.get mustBe Country(Some("GB"))
       }
     }
   }

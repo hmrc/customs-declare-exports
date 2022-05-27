@@ -45,15 +45,16 @@ class ParseAndSaveAction @Inject()(
   private def save(notifications: Seq[ParsedNotification]): Future[Unit] = {
     val firstNotification = notifications.head
 
-    //first - update the related submission records (an idempotent operation)
-    findRelatedSubmissionAndUpdateIfRequired(firstNotification.actionId, firstNotification.details.mrn).flatMap { _ => //second - if submission record found then persist all notifications
+    // Update the related submission records (an idempotent operation)
+    findRelatedSubmissionAndUpdateIfRequired(firstNotification.actionId, firstNotification.details.mrn).flatMap { _ =>
+       // If submission record found then persist all notifications
       notificationRepository.bulkInsert(notifications)
     }.map(_ => ())
   }
 
   private def findRelatedSubmissionAndUpdateIfRequired(actionId: String, mrn: String): Future[Option[Submission]] =
     submissionRepository
-      .findByConversationId(actionId)
+      .findOne("actions.id", actionId)
       .flatMap { maybeSubmission =>
         maybeSubmission match {
           case Some(Submission(_, _, _, None, _, _)) =>

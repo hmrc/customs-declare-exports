@@ -17,8 +17,8 @@
 package uk.gov.hmrc.exports.migrations
 
 import com.google.inject.Singleton
-import com.mongodb.{MongoClient, MongoClientURI}
-import play.api.Logger
+import com.mongodb.client.{MongoClient, MongoClients}
+import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.migrations.changelogs.cache.{MakeTransportPaymentMethodNotOptional, RenameToAdditionalDocuments}
 import uk.gov.hmrc.exports.migrations.changelogs.notification.{MakeParsedDetailsOptional, SplitTheNotificationsCollection}
@@ -29,34 +29,43 @@ import javax.inject.Inject
 import scala.concurrent.Future
 
 @Singleton
-class MigrationRoutine @Inject()(appConfig: AppConfig)(implicit mec: RoutinesExecutionContext) extends Routine {
+class MigrationRoutine @Inject()(appConfig: AppConfig)(implicit mec: RoutinesExecutionContext) extends Routine with Logging {
 
-  private val logger = Logger(this.getClass)
-
-  private val uri = new MongoClientURI(appConfig.mongodbUri.replaceAllLiterally("sslEnabled", "ssl"))
-  private val client = new MongoClient(uri)
-  private val db = client.getDatabase(uri.getDatabase)
+  private val (client, mongoDatabase) = createMongoClient
+  private val db = client.getDatabase(mongoDatabase)
 
   def execute(): Future[Unit] = Future {
     logger.info("Starting migration with ExportsMigrationTool")
-    migrateWithExportsMigrationTool()
+    migrateWithExportsMigrationTool
   }
 
+  private def createMongoClient: (MongoClient, String) = {
+    val (mongoUri, _) = {
+      val sslParamPos = appConfig.mongodbUri.lastIndexOf('?'.toInt)
+      if (sslParamPos > 0) appConfig.mongodbUri.splitAt(sslParamPos) else (appConfig.mongodbUri, "")
+    }
+    val (_, mongoDatabase) = mongoUri.splitAt(mongoUri.lastIndexOf('/'.toInt))
+    (MongoClients.create(appConfig.mongodbUri), mongoDatabase.drop(1))
+  }
+
+  val lockMaxTries = 10
+  val lockMaxWaitMillis = minutesToMillis(5)
+  val lockAcquiredForMillis = minutesToMillis(3)
+
   private def migrateWithExportsMigrationTool(): Unit = {
-    val lockManagerConfig = LockManagerConfig(lockMaxTries = 10, lockMaxWaitMillis = minutesToMillis(5), lockAcquiredForMillis = minutesToMillis(3))
+    val lockManagerConfig = LockManagerConfig(lockMaxTries, lockMaxWaitMillis, lockAcquiredForMillis)
+
     val migrationsRegistry = MigrationsRegistry()
       .register(new MakeParsedDetailsOptional())
       .register(new SplitTheNotificationsCollection())
       .register(new RenameToAdditionalDocuments())
       .register(new MakeTransportPaymentMethodNotOptional())
       .register(new RemoveRedundantIndexes())
-    val migrationTool = ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig)
 
-    migrationTool.execute()
+    ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute
 
     client.close()
   }
 
   private def minutesToMillis(minutes: Int): Long = minutes * 60L * 1000L
-
 }

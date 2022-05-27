@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.exports.models.declaration.notifications
 
+import org.bson.types.ObjectId
 import play.api.libs.json.Json
-import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 
-import java.time.{ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
+import java.time.{ZoneId, ZonedDateTime}
 import java.util.UUID
 
 class ParsedNotificationSpec extends UnitSpec {
@@ -30,7 +30,7 @@ class ParsedNotificationSpec extends UnitSpec {
   private val formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
 
   "ParsedNotification" must {
-    val id = BSONObjectID.generate
+    val id = ObjectId.get
     val unparsedNotificationId = UUID.randomUUID()
     val actionId = "123"
     val dateTime = ZonedDateTime.now(ZoneId.of("UCT"))
@@ -46,14 +46,14 @@ class ParsedNotificationSpec extends UnitSpec {
     "have json writes that produce object which could be parsed by the front end service" in {
       val json = Json.toJson(notification)(ParsedNotification.FrontendFormat.writes)
 
-      json.toString() mustBe ParsedNotificationSpec.serialisedWithFrontendFormat(actionId, mrn, dateTime.format(formatter))
+      json.toString mustBe ParsedNotificationSpec.serialisedWithFrontendFormat(actionId, mrn, dateTime.format(formatter))
     }
 
     "have json writes that produce object which could be parsed by the database" in {
-      val json = Json.toJson(notification)(ParsedNotification.DbFormat.format)
+      val json = Json.toJson(notification)(ParsedNotification.format)
 
-      json.toString() mustBe ParsedNotificationSpec.serialisedWithDbFormat(
-        id.stringify,
+      json.toString mustBe ParsedNotificationSpec.serialisedWithDbFormat(
+        id.toString,
         unparsedNotificationId.toString,
         actionId,
         mrn,

@@ -20,7 +20,6 @@ import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionQueryParameters
-import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.services.SubmissionService
 
 import javax.inject.{Inject, Singleton}
@@ -30,13 +29,12 @@ import scala.concurrent.{ExecutionContext, Future}
 class SubmissionController @Inject()(
   authenticator: Authenticator,
   submissionService: SubmissionService,
-  cc: ControllerComponents,
-  declarationRepository: DeclarationRepository
+  cc: ControllerComponents
 )(implicit executionContext: ExecutionContext)
     extends RESTController(cc) with JSONResponses {
 
   def create(declarationId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    declarationRepository.markCompleted(declarationId, request.eori).flatMap {
+    submissionService.markCompleted(declarationId, request.eori).flatMap {
 
       case Some(declarationBeforeUpdate) =>
         if (declarationBeforeUpdate.isCompleted) {

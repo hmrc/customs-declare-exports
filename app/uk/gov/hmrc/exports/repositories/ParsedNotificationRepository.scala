@@ -16,52 +16,49 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import scala.concurrent.{ExecutionContext, Future}
+import com.mongodb.client.model.Indexes.ascending
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import play.api.libs.json.{JsString, Json}
+import repositories.RepositoryOps
+import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsString, Json}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.BSONObjectID
-import reactivemongo.play.json.collection.Helpers.idWrites
-import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
+import scala.concurrent.{ExecutionContext, Future}
+import scala.reflect.ClassTag
 
 @Singleton
-class ParsedNotificationRepository @Inject()(mc: ReactiveMongoComponent)(implicit ec: ExecutionContext)
-    extends ReactiveRepository[ParsedNotification, BSONObjectID](
-      "notifications",
-      mc.mongoConnector.db,
-      ParsedNotification.DbFormat.format,
-      objectIdFormats
-    ) {
+class ParsedNotificationRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
+  extends PlayMongoRepository[ParsedNotification](
+    mongoComponent = mongoComponent,
+    collectionName = "notifications",
+    domainFormat = ParsedNotification.format,
+    indexes = ParsedNotificationRepository.indexes
+  ) with RepositoryOps[ParsedNotification] {
 
-  override lazy val collection: JSONCollection =
-    mongo().collection[JSONCollection](collectionName, failoverStrategy = RepositorySettings.failoverStrategy)
-
-  override def indexes: Seq[Index] = Seq(
-    Index(
-      Seq("actionId" -> IndexType.Ascending, "details.dateTimeIssued" -> IndexType.Ascending),
-      name = Some("detailsDateTimeIssuedOrderedActionId")
-    )
-  )
+  override def classTag: ClassTag[ParsedNotification] = implicitly[ClassTag[ParsedNotification]]
+  override val executionContext = ec
 
   def findLatestNotification(actionIds: Seq[String]): Future[Option[ParsedNotification]] =
     if (actionIds.isEmpty) Future.successful(None)
     else {
-      val query = Json.obj("$or" -> actionIds.map(id => Json.obj("actionId" -> JsString(id))))
+      val filter = Json.obj("$or" -> actionIds.map(id => Json.obj("actionId" -> id)))
       val sort = Json.obj("details.dateTimeIssued" -> -1)
-      collection.find(query, None).sort(sort).one[ParsedNotification]
+      findFirst(filter, sort)
     }
 
-  def findNotificationsByActionId(actionId: String): Future[Seq[ParsedNotification]] =
-    find("actionId" -> JsString(actionId))
+  def findNotifications(actionIds: Seq[String]): Future[Seq[ParsedNotification]] =
+    if (actionIds.isEmpty) Future.successful(List.empty)
+    else findAll(Json.obj("$or" -> actionIds.map(id => Json.obj("actionId" -> JsString(id)))))
+}
 
-  def findNotificationsByActionIds(actionIds: Seq[String]): Future[Seq[ParsedNotification]] =
-    actionIds match {
-      case Seq() => Future.successful(Seq.empty)
-      case _     => find("$or" -> actionIds.map(id => Json.obj("actionId" -> JsString(id))))
-    }
+object ParsedNotificationRepository {
+
+  val indexes: Seq[IndexModel] = List(
+    IndexModel(
+      ascending("actionId", "details.dateTimeIssued"),
+      IndexOptions().name("detailsDateTimeIssuedOrderedActionId")
+    )
+  )
 }

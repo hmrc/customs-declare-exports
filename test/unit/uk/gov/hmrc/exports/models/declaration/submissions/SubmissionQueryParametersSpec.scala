@@ -30,7 +30,6 @@ class SubmissionQueryParametersSpec extends UnitSpec with EitherValues {
       "return empty SubmissionQueryParameters" when {
 
         "provided with empty params" in {
-
           val params = Map.empty[String, Seq[String]]
           val expectedSubmissionQueryParameters = SubmissionQueryParameters()
 
@@ -38,11 +37,10 @@ class SubmissionQueryParametersSpec extends UnitSpec with EitherValues {
 
           result mustBe defined
           result.get.isRight mustBe true
-          result.get.value mustBe expectedSubmissionQueryParameters
+          result.get.right.value mustBe expectedSubmissionQueryParameters
         }
 
         "provided with params containing NO known keys" in {
-
           val params = Map("param1" -> Seq("value1", "value2"), "param2" -> Seq("value3", "value4"))
           val expectedSubmissionQueryParameters = SubmissionQueryParameters()
 
@@ -50,14 +48,13 @@ class SubmissionQueryParametersSpec extends UnitSpec with EitherValues {
 
           result mustBe defined
           result.get.isRight mustBe true
-          result.get.value mustBe expectedSubmissionQueryParameters
+          result.get.right.value mustBe expectedSubmissionQueryParameters
         }
       }
 
       "return non-empty SubmissionQueryParameters" when {
 
         "provided with params containing known keys" in {
-
           val params = Map("id" -> Seq("testUuid"), "ducr" -> Seq("testDucr"), "lrn" -> Seq("testLrn"))
           val expectedSubmissionQueryParameters = SubmissionQueryParameters(uuid = Some("testUuid"), ducr = Some("testDucr"), lrn = Some("testLrn"))
 
@@ -65,7 +62,7 @@ class SubmissionQueryParametersSpec extends UnitSpec with EitherValues {
 
           result mustBe defined
           result.get.isRight mustBe true
-          result.get.value mustBe expectedSubmissionQueryParameters
+          result.get.right.value mustBe expectedSubmissionQueryParameters
         }
       }
     }
@@ -74,7 +71,6 @@ class SubmissionQueryParametersSpec extends UnitSpec with EitherValues {
 
       "return empty String" when {
         "SubmissionQueryParameters is empty" in {
-
           val submissionQueryParameters = SubmissionQueryParameters()
           val expectedResult = ""
 
@@ -87,7 +83,6 @@ class SubmissionQueryParametersSpec extends UnitSpec with EitherValues {
       "return single query parameter" when {
 
         "SubmissionQueryParameters has uuid field only" in {
-
           val submissionQueryParameters = SubmissionQueryParameters(uuid = Some("testUuid"))
           val expectedResult = "id=testUuid"
 
@@ -97,7 +92,6 @@ class SubmissionQueryParametersSpec extends UnitSpec with EitherValues {
         }
 
         "SubmissionQueryParameters has ducr field only" in {
-
           val submissionQueryParameters = SubmissionQueryParameters(ducr = Some("testDucr"))
           val expectedResult = "ducr=testDucr"
 
@@ -107,7 +101,6 @@ class SubmissionQueryParametersSpec extends UnitSpec with EitherValues {
         }
 
         "SubmissionQueryParameters has lrn field only" in {
-
           val submissionQueryParameters = SubmissionQueryParameters(lrn = Some("testLrn"))
           val expectedResult = "lrn=testLrn"
 
@@ -118,7 +111,6 @@ class SubmissionQueryParametersSpec extends UnitSpec with EitherValues {
       }
 
       "return all defined parameters separated by '&'" in {
-
         val submissionQueryParameters = SubmissionQueryParameters(uuid = Some("testUuid"), ducr = Some("testDucr"), lrn = Some("testLrn"))
         val expectedResult = "id=testUuid&ducr=testDucr&lrn=testLrn"
 
@@ -128,5 +120,4 @@ class SubmissionQueryParametersSpec extends UnitSpec with EitherValues {
       }
     }
   }
-
 }

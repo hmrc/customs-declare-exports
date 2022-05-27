@@ -88,7 +88,6 @@ class LocationsParserSpec extends UnitSpec with EitherValues with GivenWhenThen 
     }
 
     "call CountryParser" in {
-
       parser.parse(xml)
 
       val captor: ArgumentCaptor[NodeSeq] = ArgumentCaptor.forClass(classOf[NodeSeq])
@@ -103,17 +102,15 @@ class LocationsParserSpec extends UnitSpec with EitherValues with GivenWhenThen 
 
     "return a Locations instance" when {
       "all sub-parsers return Right" in {
-
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.value mustBe Locations(hasRoutingCountries = Some(false))
+        result.right.value mustBe Locations(hasRoutingCountries = Some(false))
       }
     }
 
     "return an XmlParserError" when {
       "any sub-parser returns Left" in {
-
         when(officeOfExitParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Left("Test Error"))
 
         val result = parser.parse(xml)
@@ -125,58 +122,53 @@ class LocationsParserSpec extends UnitSpec with EitherValues with GivenWhenThen 
     "return Right with Locations" when {
 
       "has originationCountry set to value returned by CountryParser" in {
-
         val originationCountry = Country(Some("GB"))
         when(countryParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(originationCountry)))
 
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.value.originationCountry mustBe defined
-        result.value.originationCountry.get mustBe originationCountry
+        result.right.value.originationCountry mustBe defined
+        result.right.value.originationCountry.get mustBe originationCountry
       }
 
       "has destinationCountry set to value returned by CountryParser" in {
-
         val destinationCountry = Country(Some("GB"))
         when(countryParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(destinationCountry)))
 
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.value.destinationCountry mustBe defined
-        result.value.destinationCountry.get mustBe destinationCountry
+        result.right.value.destinationCountry mustBe defined
+        result.right.value.destinationCountry.get mustBe destinationCountry
       }
 
       "has hasRoutingCountries set to false" when {
         "routingCountries returned by CountryParser are empty" in {
-
           when(countryParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
 
           val result = parser.parse(xml)
 
           result.isRight mustBe true
-          result.value.hasRoutingCountries mustBe defined
-          result.value.hasRoutingCountries.get mustBe false
+          result.right.value.hasRoutingCountries mustBe defined
+          result.right.value.hasRoutingCountries.get mustBe false
         }
       }
 
       "has hasRoutingCountries set to true" when {
         "routingCountries returned by CountryParser are NOT empty" in {
-
           when(countryParser.parse(any[NodeSeq])(any[MappingContext]))
             .thenReturn(Right(None), Right(None), Right(Some(Country(Some("GB")))), Right(Some(Country(Some("FR")))))
 
           val result = parser.parse(xml)
 
           result.isRight mustBe true
-          result.value.hasRoutingCountries mustBe defined
-          result.value.hasRoutingCountries.get mustBe true
+          result.right.value.hasRoutingCountries mustBe defined
+          result.right.value.hasRoutingCountries.get mustBe true
         }
       }
 
       "has routingCountries set to value returned by RoutingCountriesParser" in {
-
         val routingCountries = Seq(Country(Some("GB")), Country(Some("FR")))
         when(countryParser.parse(any[NodeSeq])(any[MappingContext]))
           .thenReturn(Right(None), Right(None), Right(Some(Country(Some("GB")))), Right(Some(Country(Some("FR")))))
@@ -184,12 +176,11 @@ class LocationsParserSpec extends UnitSpec with EitherValues with GivenWhenThen 
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.value.routingCountries mustNot be(empty)
-        result.value.routingCountries mustBe routingCountries
+        result.right.value.routingCountries mustNot be(empty)
+        result.right.value.routingCountries mustBe routingCountries
       }
 
       "has goodsLocation set to value returned by GoodsLocationParser" in {
-
         val goodsLocation =
           GoodsLocation(country = "GB", typeOfLocation = "ToL", qualifierOfIdentification = "QoI", identificationOfLocation = Some("IdOfLocation"))
         when(goodsLocationParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(goodsLocation)))
@@ -197,56 +188,52 @@ class LocationsParserSpec extends UnitSpec with EitherValues with GivenWhenThen 
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.value.goodsLocation mustBe defined
-        result.value.goodsLocation.get mustBe goodsLocation
+        result.right.value.goodsLocation mustBe defined
+        result.right.value.goodsLocation.get mustBe goodsLocation
       }
 
       "has officeOfExit set to value returned by OfficeOfExitParser" in {
-
         val officeOfExit = OfficeOfExit(Some("GB000434"))
         when(officeOfExitParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(officeOfExit)))
 
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.value.officeOfExit mustBe defined
-        result.value.officeOfExit.get mustBe officeOfExit
+        result.right.value.officeOfExit mustBe defined
+        result.right.value.officeOfExit.get mustBe officeOfExit
       }
 
       "has supervisingCustomsOffice set to value returned by SupervisingCustomsOfficeParser" in {
-
         val supervisingCustomsOffice = SupervisingCustomsOffice(Some("GBAVO001"))
         when(supervisingCustomsOfficeParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(supervisingCustomsOffice)))
 
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.value.supervisingCustomsOffice mustBe defined
-        result.value.supervisingCustomsOffice.get mustBe supervisingCustomsOffice
+        result.right.value.supervisingCustomsOffice mustBe defined
+        result.right.value.supervisingCustomsOffice.get mustBe supervisingCustomsOffice
       }
 
       "has warehouseIdentification set to value returned by WarehouseIdentificationParser" in {
-
         val warehouseIdentification = WarehouseIdentification(Some("R1234567GB"))
         when(warehouseIdentificationParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(warehouseIdentification)))
 
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.value.warehouseIdentification mustBe defined
-        result.value.warehouseIdentification.get mustBe warehouseIdentification
+        result.right.value.warehouseIdentification mustBe defined
+        result.right.value.warehouseIdentification.get mustBe warehouseIdentification
       }
 
       "has inlandModeOfTransportCode set to value returned by InlandModeOfTransportCodeParser" in {
-
         val inlandModeOfTransportCode = InlandModeOfTransportCode(Some(ModeOfTransportCode.Maritime))
         when(inlandModeOfTransportCodeParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(inlandModeOfTransportCode)))
 
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.value.inlandModeOfTransportCode mustBe defined
-        result.value.inlandModeOfTransportCode.get mustBe inlandModeOfTransportCode
+        result.right.value.inlandModeOfTransportCode mustBe defined
+        result.right.value.inlandModeOfTransportCode.get mustBe inlandModeOfTransportCode
       }
     }
   }
@@ -265,7 +252,7 @@ class LocationsParserSpec extends UnitSpec with EitherValues with GivenWhenThen 
           val result = parser.parse(xml)
 
           result.isRight mustBe true
-          result.value.inlandOrBorder.value mustBe Inland
+          result.right.value.inlandOrBorder.value mustBe Inland
         }
       }
 
@@ -277,7 +264,7 @@ class LocationsParserSpec extends UnitSpec with EitherValues with GivenWhenThen 
           val result = parser.parse(xml)
 
           result.isRight mustBe true
-          result.value.inlandOrBorder.value mustBe Border
+          result.right.value.inlandOrBorder.value mustBe Border
         }
       }
 
@@ -287,7 +274,7 @@ class LocationsParserSpec extends UnitSpec with EitherValues with GivenWhenThen 
           val result = parser.parse(xml)
 
           result.isRight mustBe true
-          result.value.inlandOrBorder mustBe None
+          result.right.value.inlandOrBorder mustBe None
         }
       }
     }

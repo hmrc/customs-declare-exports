@@ -28,5 +28,4 @@ class ChangeEntryRepository(collectionName: String, mongoDatabase: MongoDatabase
   private[migrations] def findAll(): List[Document] = asScalaIterator(collection.find().iterator()).toList
 
   private[migrations] def save(changeEntry: ChangeEntry): Unit = collection.insertOne(changeEntry.buildFullDBObject)
-
 }

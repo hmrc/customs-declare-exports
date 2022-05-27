@@ -19,10 +19,8 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.ContainersParser.NO_SEALS
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
-
-import scala.xml.Elem
+import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.ContainersParser.NO_SEALS
 
 import scala.xml.Elem
 
@@ -38,7 +36,7 @@ class ContainersParserSpec extends UnitSpec with EitherValues {
         val result = parser.parse(generateValidXml())
 
         result.isRight mustBe true
-        result.value.size mustBe 0
+        result.right.value.size mustBe 0
       }
     }
 
@@ -52,9 +50,9 @@ class ContainersParserSpec extends UnitSpec with EitherValues {
           val result = parser.parse(generateValidXml(Map(containerId -> Seq.empty[String])))
 
           result.isRight mustBe true
-          result.value.size mustBe 1
+          result.right.value.size mustBe 1
 
-          val container = result.value.head
+          val container = result.right.value.head
 
           container.id mustBe containerId
           container.seals.size mustBe 0
@@ -64,9 +62,9 @@ class ContainersParserSpec extends UnitSpec with EitherValues {
           val result = parser.parse(generateValidXml(Map(containerId -> Seq(sealId))))
 
           result.isRight mustBe true
-          result.value.size mustBe 1
+          result.right.value.size mustBe 1
 
-          val container = result.value.head
+          val container = result.right.value.head
 
           container.id mustBe containerId
           container.seals.size mustBe 1
@@ -77,9 +75,9 @@ class ContainersParserSpec extends UnitSpec with EitherValues {
           val result = parser.parse(generateValidXml(Map(containerId -> Seq(NO_SEALS))))
 
           result.isRight mustBe true
-          result.value.size mustBe 1
+          result.right.value.size mustBe 1
 
-          val container = result.value.head
+          val container = result.right.value.head
 
           container.id mustBe containerId
           container.seals.size mustBe 0
@@ -89,9 +87,9 @@ class ContainersParserSpec extends UnitSpec with EitherValues {
           val result = parser.parse(generateValidXml(Map(containerId -> Seq(sealId, secondSealId, NO_SEALS))))
 
           result.isRight mustBe true
-          result.value.size mustBe 1
+          result.right.value.size mustBe 1
 
-          val container = result.value.head
+          val container = result.right.value.head
 
           container.id mustBe containerId
           container.seals.size mustBe 2
@@ -101,9 +99,9 @@ class ContainersParserSpec extends UnitSpec with EitherValues {
           val result = parser.parse(generateValidXml(Map(containerId -> Seq(sealId, secondSealId))))
 
           result.isRight mustBe true
-          result.value.size mustBe 1
+          result.right.value.size mustBe 1
 
-          val container = result.value.head
+          val container = result.right.value.head
 
           container.id mustBe containerId
           container.seals.size mustBe 2
@@ -117,15 +115,15 @@ class ContainersParserSpec extends UnitSpec with EitherValues {
         val result = parser.parse(generateValidXml(Map(containerId -> Seq(sealId), secondContainerId -> Seq(secondSealId))))
 
         result.isRight mustBe true
-        result.value.size mustBe 2
+        result.right.value.size mustBe 2
 
-        val container1 = result.value.head
+        val container1 = result.right.value.head
 
         container1.id mustBe containerId
         container1.seals.size mustBe 1
         container1.seals.head.id mustBe sealId
 
-        val container2 = result.value.last
+        val container2 = result.right.value.last
 
         container2.id mustBe secondContainerId
         container2.seals.size mustBe 1

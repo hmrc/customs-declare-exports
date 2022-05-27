@@ -16,10 +16,6 @@
 
 package uk.gov.hmrc.exports.migrations.changelogs.cache
 
-import java.util
-
-import scala.collection.JavaConverters._
-
 import com.mongodb.client.MongoDatabase
 import org.bson.Document
 import org.mongodb.scala.model.Filters.{and, exists, not, size, eq => feq}
@@ -27,6 +23,9 @@ import org.mongodb.scala.model.UpdateOneModel
 import org.mongodb.scala.model.Updates.set
 import play.api.Logger
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
+
+import java.util
+import scala.collection.JavaConverters._
 
 class RenameToAdditionalDocuments extends MigrationDefinition {
 

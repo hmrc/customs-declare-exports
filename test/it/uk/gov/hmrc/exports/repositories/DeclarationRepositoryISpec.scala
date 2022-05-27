@@ -16,35 +16,22 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import play.api.inject.guice.GuiceApplicationBuilder
-import reactivemongo.api.ReadConcern
-import stubs.TestMongoDB.mongoConfiguration
-import uk.gov.hmrc.exports.base.IntegrationTestBaseSpec
+import play.api.libs.json.Json
+import uk.gov.hmrc.exports.base.IntegrationTestMongoSpec
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo.format
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
 import java.time.{LocalDate, ZoneOffset}
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDeclarationBuilder {
+class DeclarationRepositoryISpec extends IntegrationTestMongoSpec {
 
-  private val repository = GuiceApplicationBuilder().configure(mongoConfiguration).injector.instanceOf[DeclarationRepository]
+  private val repository = getRepository[DeclarationRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    repository.removeAll().futureValue
+    repository.removeAll.futureValue
   }
-
-  private def collectionSize: Int =
-    repository.collection
-      .count(selector = None, limit = Some(0), skip = 0, hint = None, readConcern = ReadConcern.Local)
-      .futureValue
-      .toInt
-
-  private def givenADeclarationExists(declarations: ExportsDeclaration*): Unit =
-    repository.collection.insert(ordered = true).many(declarations).futureValue
 
   "Create" should {
     "persist the declaration" in {
@@ -57,11 +44,16 @@ class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDecl
 
   "Update" should {
 
+    def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
+      repository.findOneAndReplace(
+        Json.obj("id" -> declaration.id, "eori" -> declaration.eori), declaration, false
+      )
+
     "update the declaration" in {
       val declaration = aDeclaration(withType(DeclarationType.STANDARD), withId("id"), withEori("eori"))
       givenADeclarationExists(declaration)
 
-      repository.update(declaration).futureValue mustBe Some(declaration)
+      update(declaration).futureValue mustBe Some(declaration)
 
       collectionSize mustBe 1
     }
@@ -69,7 +61,7 @@ class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDecl
     "do nothing for missing declaration" in {
       val declaration = aDeclaration(withId("id"), withEori("eori"))
 
-      repository.update(declaration).futureValue mustBe None
+      update(declaration).futureValue mustBe None
 
       collectionSize mustBe 0
     }
@@ -80,11 +72,11 @@ class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDecl
   "Find by ID & EORI" should {
 
     "return the persisted declaration" when {
-      "one exists with eori and ID" in {
+      "one exists with eori and id" in {
         val declaration = aDeclaration(withId("id"), withEori("eori"))
         givenADeclarationExists(declaration)
 
-        repository.find("id", eori).futureValue mustBe Some(declaration)
+        repository.findOne("id", eori).futureValue mustBe Some(declaration)
       }
     }
 
@@ -94,7 +86,7 @@ class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDecl
         val declaration2 = aDeclaration(withId("id"), withEori("some-other-eori"))
         givenADeclarationExists(declaration1, declaration2)
 
-        repository.find("id", eori).futureValue mustBe None
+        repository.findOne("id", eori).futureValue mustBe None
       }
     }
   }
@@ -188,17 +180,17 @@ class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDecl
         val declaration = aDeclaration(withType(DeclarationType.STANDARD), withStatus(DeclarationStatus.DRAFT), withId("id"), withEori("eori"))
         givenADeclarationExists(declaration)
 
-        repository.markCompleted("id", Eori("eori")).futureValue mustBe Some(declaration)
+        repository.markStatusAsComplete("id", Eori("eori")).futureValue mustBe Some(declaration)
       }
 
       "change its status to COMPLETE" in {
         val declaration = aDeclaration(withType(DeclarationType.STANDARD), withStatus(DeclarationStatus.DRAFT), withId("id"), withEori("eori"))
         givenADeclarationExists(declaration)
 
-        repository.markCompleted("id", Eori("eori")).futureValue
+        repository.markStatusAsComplete("id", Eori("eori")).futureValue
 
         val expectedDeclarationAfterUpdate = declaration.copy(status = DeclarationStatus.COMPLETE)
-        repository.find("id", Eori("eori")).futureValue mustBe Some(expectedDeclarationAfterUpdate)
+        repository.findOne("id", Eori("eori")).futureValue mustBe Some(expectedDeclarationAfterUpdate)
       }
     }
 
@@ -208,7 +200,7 @@ class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDecl
         val declaration = aDeclaration(withType(DeclarationType.STANDARD), withStatus(DeclarationStatus.COMPLETE), withId("id"), withEori("eori"))
         givenADeclarationExists(declaration)
 
-        repository.markCompleted("id", Eori("eori")).futureValue mustBe Some(declaration)
+        repository.markStatusAsComplete("id", Eori("eori")).futureValue mustBe Some(declaration)
       }
     }
 
@@ -216,25 +208,28 @@ class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDecl
 
       "return empty Option" in {
 
-        repository.markCompleted("id", Eori("eori")).futureValue mustBe empty
+        repository.markStatusAsComplete("id", Eori("eori")).futureValue mustBe empty
       }
 
       "not upsert a declaration" in {
 
-        repository.markCompleted("id", Eori("eori")).futureValue mustBe empty
+        repository.markStatusAsComplete("id", Eori("eori")).futureValue mustBe empty
 
-        repository.find("id", Eori("eori")).futureValue mustBe empty
+        repository.findOne("id", Eori("eori")).futureValue mustBe empty
       }
     }
   }
 
   "Delete" should {
 
+    def delete(declaration: ExportsDeclaration): Future[Boolean] =
+      repository.removeOne(Json.obj("id" -> declaration.id, "eori" -> declaration.eori))
+
     "remove the declaration" in {
       val declaration = aDeclaration(withId("id"), withEori("eori"))
       givenADeclarationExists(declaration)
 
-      repository.delete(declaration).futureValue
+      delete(declaration).futureValue mustBe true
 
       collectionSize mustBe 0
     }
@@ -246,7 +241,7 @@ class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDecl
         val declaration3 = aDeclaration(withId("id1"), withEori("eori2"))
         givenADeclarationExists(declaration2, declaration3)
 
-        repository.delete(declaration1).futureValue
+        delete(declaration1).futureValue mustBe true
 
         collectionSize mustBe 2
       }
@@ -285,4 +280,8 @@ class DeclarationRepositoryTest extends IntegrationTestBaseSpec with ExportsDecl
         .futureValue mustBe Paginated(Seq(completedDeclaration, draftDeclarationOngoing), page, 2)
     }
   }
+
+  private def collectionSize: Int = repository.collection.countDocuments.toFuture.futureValue.toInt
+
+  private def givenADeclarationExists(declarations: ExportsDeclaration*): Unit = repository.bulkInsert(declarations).futureValue
 }
