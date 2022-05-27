@@ -171,6 +171,7 @@ case class ExportItem(
   cusCode: Option[CUSCode] = None,
   taricCodes: Option[List[TaricCode]] = None,
   nactCodes: Option[List[NactCode]] = None,
+  nactExemptionCode: Option[NactCode] = None,
   packageInformation: Option[List[PackageInformation]] = None,
   commodityMeasure: Option[CommodityMeasure] = None,
   additionalInformation: Option[AdditionalInformations] = None,
