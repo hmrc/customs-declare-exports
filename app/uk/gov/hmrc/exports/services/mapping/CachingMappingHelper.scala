@@ -23,18 +23,17 @@ import uk.gov.hmrc.wco.dec._
 class CachingMappingHelper {
   val defaultMeasureCode = "KGM"
 
-  val commodityCodeMaxLength = 8
-
   import CachingMappingHelper._
 
   def commodityFromExportItem(exportItem: ExportItem): Option[Commodity] =
     Some(
       Commodity(
         description = exportItem.commodityDetails.flatMap(_.descriptionOfGoods.map(stripCarriageReturns)),
-        classifications = getClassifications(
+        classifications = classificationMapper(
           exportItem.commodityDetails.flatMap(_.combinedNomenclatureCode),
           exportItem.cusCode.flatMap(_.cusCode),
           exportItem.nactCodes.map(_.map(_.nactCode)).getOrElse(List.empty),
+          exportItem.nactExemptionCode.map(_.nactCode),
           exportItem.taricCodes.map(_.map(_.taricCode)).getOrElse(List.empty)
         ),
         dangerousGoods = exportItem.dangerousGoodsCode
@@ -47,19 +46,6 @@ class CachingMappingHelper {
   private def isCommodityNonEmpty(commodity: Commodity): Boolean =
     commodity.classifications.nonEmpty || commodity.dangerousGoods.nonEmpty || commodity.description.nonEmpty
 
-  private def getClassifications(
-    commodityCode: Option[String],
-    cusCode: Option[String],
-    nationalAdditionalCodes: Seq[String],
-    taricCodes: Seq[String]
-  ): Seq[Classification] =
-    (
-      commodityCode.map(code => classification(code.take(commodityCodeMaxLength), CombinedNomenclatureCode.value)) ++
-        cusCode.map(code => classification(code, CUSCode.value)) ++
-        nationalAdditionalCodes.map(code => classification(code, NationalAdditionalCode.value)) ++
-        taricCodes.map(code => classification(code, TARICAdditionalCode.value))
-    ).toSeq
-
   def mapGoodsMeasure(data: CommodityMeasure): Option[Commodity] = data match {
     case CommodityMeasure(None, _, None, None) => None
     case CommodityMeasure(supplementaryUnits, _, netMass, grossMass) =>
@@ -67,9 +53,6 @@ class CachingMappingHelper {
         Commodity(goodsMeasure = Some(GoodsMeasure(grossMass.map(createMeasure), netMass.map(createMeasure), supplementaryUnits.map(createMeasure))))
       )
   }
-
-  private def classification(code: String, identificationTypeCode: String): Classification =
-    Classification(Some(code), identificationTypeCode = Some(identificationTypeCode))
 
   private def createMeasure(unitValue: String) =
     try {
@@ -80,6 +63,46 @@ class CachingMappingHelper {
 }
 
 object CachingMappingHelper {
+
+  val classificationMapper: (Option[String], Option[String], Seq[String], Option[String], Seq[String]) => Seq[Classification] = (
+    commodityCode: Option[String],
+    cusCode: Option[String],
+    nationalAdditionalCodes: Seq[String],
+    nationalExemptionCode: Option[String],
+    taricCodes: Seq[String]
+  ) => {
+
+    val commodityCodeMaxLength = 8
+
+    def commodityCodeToClassificaton: Option[Classification] =
+      commodityCode.map(code => toClassification(code.take(commodityCodeMaxLength), CombinedNomenclatureCode.value))
+
+    def cusCodeToClassification: Option[Classification] = cusCode.map(code => toClassification(code, CUSCode.value))
+
+    def nationalAdditionalCodesToClassification: Seq[Classification] =
+      nationalAdditionalCodes.map(code => toClassification(code, NationalAdditionalCode.value))
+
+    def nationalExemptionCodeToClassification: Option[Classification] =
+      nationalExemptionCode.flatMap(
+        code =>
+          if (nationalAdditionalCodes.contains(code)) None
+          else Some(toClassification(code, NationalAdditionalCode.value))
+      )
+
+    def taricCodesToClassification: Seq[Classification] = taricCodes.map(code => toClassification(code, TARICAdditionalCode.value))
+
+    def toClassification(code: String, identificationTypeCode: String): Classification =
+      Classification(Some(code), identificationTypeCode = Some(identificationTypeCode))
+
+    (
+      commodityCodeToClassificaton ++
+        cusCodeToClassification ++
+        nationalAdditionalCodesToClassification ++
+        nationalExemptionCodeToClassification ++
+        taricCodesToClassification
+    ).toSeq
+
+  }
 
   def stripCarriageReturns(value: String): String = value.replaceAll("(\\r\\n)|\\r|\\n", " ")
 }

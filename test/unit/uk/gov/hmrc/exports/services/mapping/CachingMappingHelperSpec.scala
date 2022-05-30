@@ -22,31 +22,35 @@ import uk.gov.hmrc.exports.models.declaration._
 class CachingMappingHelperSpec extends UnitSpec {
 
   "CachingMappingHelper" should {
-    "mapGoodsMeasure correctly When tariffQuantity grossMassMeasure netWeightMeasure provided" in {
 
-      val commodityMeasure = CommodityMeasure(Some("10"), Some(false), Some("100.00"), Some("100.00"))
-      val goodsMeasure = new CachingMappingHelper().mapGoodsMeasure(commodityMeasure).flatMap(_.goodsMeasure).get
+    "mapGoodsMeasure" when {
+      "tariffQuantity grossMassMeasure netWeightMeasure provided" in {
 
-      goodsMeasure.tariffQuantity.get.value.get mustBe 10
-      goodsMeasure.grossMassMeasure.get.value.get mustBe 100.00
-      goodsMeasure.netWeightMeasure.get.value.get mustBe 100.00
-    }
+        val commodityMeasure = CommodityMeasure(Some("10"), Some(false), Some("100.00"), Some("100.00"))
+        val goodsMeasure = new CachingMappingHelper().mapGoodsMeasure(commodityMeasure).flatMap(_.goodsMeasure).get
 
-    "mapGoodsMeasure correctly When grossMassMeasure netWeightMeasure provided but no tariffQuantity" in {
+        goodsMeasure.tariffQuantity.get.value.get mustBe 10
+        goodsMeasure.grossMassMeasure.get.value.get mustBe 100.00
+        goodsMeasure.netWeightMeasure.get.value.get mustBe 100.00
+      }
 
-      val commodityMeasure = CommodityMeasure(None, Some(true), Some("100.00"), Some("100.00"))
+      "grossMassMeasure netWeightMeasure provided but no tariffQuantity" in {
 
-      val goodsMeasure = new CachingMappingHelper().mapGoodsMeasure(commodityMeasure).flatMap(_.goodsMeasure).get
-      goodsMeasure.tariffQuantity mustBe None
-      goodsMeasure.grossMassMeasure.get.value.get mustBe 100.00
-      goodsMeasure.netWeightMeasure.get.value.get mustBe 100.00
-    }
+        val commodityMeasure = CommodityMeasure(None, Some(true), Some("100.00"), Some("100.00"))
 
-    "mapGoodsMeasure correctly When no fields are provided" in {
+        val goodsMeasure = new CachingMappingHelper().mapGoodsMeasure(commodityMeasure).flatMap(_.goodsMeasure).get
+        goodsMeasure.tariffQuantity mustBe None
+        goodsMeasure.grossMassMeasure.get.value.get mustBe 100.00
+        goodsMeasure.netWeightMeasure.get.value.get mustBe 100.00
+      }
 
-      val commodityMeasure = CommodityMeasure(None, None, None, None)
+      "no fields are provided" in {
 
-      new CachingMappingHelper().mapGoodsMeasure(commodityMeasure) mustBe None
+        val commodityMeasure = CommodityMeasure(None, None, None, None)
+
+        new CachingMappingHelper().mapGoodsMeasure(commodityMeasure) mustBe None
+      }
+
     }
 
     "mapCommodity" when {
@@ -103,30 +107,87 @@ class CachingMappingHelperSpec extends UnitSpec {
         commodity.classifications mustBe Seq.empty
       }
 
-      "No commodity code or description provided" in {
-        val exportItem = ExportItem("id", commodityDetails = None)
+      "No commodity code or description provided" when {
+        "cusCode and dangerousGoods provided" in {
+          val exportItem = ExportItem("id", commodityDetails = None)
 
-        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem)
+          val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem)
 
-        commodity mustBe None
+          commodity mustBe None
+        }
+
+        "cusCode and dangerousGoods not provided" in {
+          val exportItem = ExportItem(
+            "id",
+            commodityDetails = None,
+            cusCode = Some(CUSCode(Some("cusCode"))),
+            dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("dangerousCode")))
+          )
+
+          val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
+
+          commodity.description mustBe None
+          commodity.dangerousGoods.size mustBe 1
+          commodity.dangerousGoods.head.undgid mustBe Some("dangerousCode")
+
+          commodity.classifications.size mustBe 1
+          commodity.classifications.head.id mustBe Some("cusCode")
+        }
       }
 
-      "No commodity code or description provided, but cusCode and dangerousGoods provided" in {
-        val exportItem = ExportItem(
-          "id",
-          commodityDetails = None,
-          cusCode = Some(CUSCode(Some("cusCode"))),
-          dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("dangerousCode")))
-        )
+      "classification contains natExemptionCode" when {
 
-        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
+        "natCode contains other codes" in {
+          val exportItem = ExportItem(
+            "id",
+            statisticalValue = Some(StatisticalValue("10")),
+            commodityDetails = Some(CommodityDetails(Some("1234567890"), Some("description"))),
+            dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("unDangerousGoodsCode"))),
+            cusCode = Some(CUSCode(Some("cusCode"))),
+            taricCodes = Some(List(TaricCode("taricAdditionalCodes"))),
+            nactCodes = Some(List(NactCode("nationalAdditionalCodes"))),
+            nactExemptionCode = Some(NactCode("nationalExemptionCode"))
+          )
 
-        commodity.description mustBe None
-        commodity.dangerousGoods.size mustBe 1
-        commodity.dangerousGoods.head.undgid mustBe Some("dangerousCode")
+          val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
 
-        commodity.classifications.size mustBe 1
-        commodity.classifications.head.id mustBe Some("cusCode")
+          commodity.description mustBe Some("description")
+          commodity.dangerousGoods.size mustBe 1
+          commodity.dangerousGoods.head.undgid mustBe Some("unDangerousGoodsCode")
+          commodity.classifications.map(c => c.id) mustBe Seq(
+            Some("12345678"),
+            Some("cusCode"),
+            Some("nationalAdditionalCodes"),
+            Some("nationalExemptionCode"),
+            Some("taricAdditionalCodes")
+          )
+        }
+
+        "duplicated in natCode" in {
+          val exportItem = ExportItem(
+            "id",
+            statisticalValue = Some(StatisticalValue("10")),
+            commodityDetails = Some(CommodityDetails(Some("1234567890"), Some("description"))),
+            dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("unDangerousGoodsCode"))),
+            cusCode = Some(CUSCode(Some("cusCode"))),
+            taricCodes = Some(List(TaricCode("taricAdditionalCodes"))),
+            nactCodes = Some(List(NactCode("nationalAdditionalCodes"), NactCode("nationalExemptionCode"))),
+            nactExemptionCode = Some(NactCode("nationalExemptionCode"))
+          )
+
+          val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
+
+          commodity.description mustBe Some("description")
+          commodity.dangerousGoods.size mustBe 1
+          commodity.dangerousGoods.head.undgid mustBe Some("unDangerousGoodsCode")
+          commodity.classifications.map(c => c.id) mustBe Seq(
+            Some("12345678"),
+            Some("cusCode"),
+            Some("nationalAdditionalCodes"),
+            Some("nationalExemptionCode"),
+            Some("taricAdditionalCodes")
+          )
+        }
       }
 
     }
