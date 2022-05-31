@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -105,15 +105,31 @@ class DeclarationRepositoryISpec extends IntegrationTestMongoSpec {
       }
 
       "there is multiple pages of results" in {
-        val declaration1 = aDeclaration(withEori("eori"))
-        val declaration2 = aDeclaration(withEori("eori"))
-        val declaration3 = aDeclaration(withEori("eori"))
-        givenADeclarationExists(declaration1, declaration2, declaration3)
+        val declaration1 = aDeclaration(withEori(eori.value))
+        val declaration2 = aDeclaration(withEori(eori.value))
+        val declaration3 = aDeclaration(withEori(eori.value))
+        val declaration4 = aDeclaration(withEori(eori.value))
+        val declaration5 = aDeclaration(withEori(eori.value))
+        givenADeclarationExists(declaration1, declaration2, declaration3, declaration4, declaration5)
+
+        val expectedTotal = 5
 
         val page1 = Page(index = 1, size = 2)
-        repository.find(DeclarationSearch(eori), page1, DeclarationSort()).futureValue mustBe Paginated(Seq(declaration1, declaration2), page1, 3)
+        repository.find(DeclarationSearch(eori), page1, DeclarationSort()).futureValue mustBe Paginated(
+          Seq(declaration1, declaration2),
+          page1,
+          expectedTotal
+        )
+
         val page2 = Page(index = 2, size = 2)
-        repository.find(DeclarationSearch(eori), page2, DeclarationSort()).futureValue mustBe Paginated(Seq(declaration3), page2, 3)
+        repository.find(DeclarationSearch(eori), page2, DeclarationSort()).futureValue mustBe Paginated(
+          Seq(declaration3, declaration4),
+          page2,
+          expectedTotal
+        )
+
+        val page3 = Page(index = 3, size = 2)
+        repository.find(DeclarationSearch(eori), page3, DeclarationSort()).futureValue mustBe Paginated(Seq(declaration5), page3, expectedTotal)
       }
     }
 

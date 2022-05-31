@@ -21,6 +21,7 @@ import com.mongodb.client.{MongoClient, MongoClients}
 import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.migrations.changelogs.cache.{MakeTransportPaymentMethodNotOptional, RenameToAdditionalDocuments}
+import uk.gov.hmrc.exports.migrations.changelogs.emaildetails.RenameSendEmailDetailsToItem
 import uk.gov.hmrc.exports.migrations.changelogs.notification.{MakeParsedDetailsOptional, SplitTheNotificationsCollection}
 import uk.gov.hmrc.exports.migrations.changelogs.submission.RemoveRedundantIndexes
 import uk.gov.hmrc.exports.routines.{Routine, RoutinesExecutionContext}
@@ -61,6 +62,7 @@ class MigrationRoutine @Inject()(appConfig: AppConfig)(implicit mec: RoutinesExe
       .register(new RenameToAdditionalDocuments())
       .register(new MakeTransportPaymentMethodNotOptional())
       .register(new RemoveRedundantIndexes())
+      .register(new RenameSendEmailDetailsToItem())
 
     ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute
 
