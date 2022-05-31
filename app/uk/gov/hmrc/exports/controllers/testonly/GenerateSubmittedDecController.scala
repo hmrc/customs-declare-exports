@@ -51,7 +51,7 @@ class GenerateSubmittedDecController @Inject()(
         declaration <- declarationRepository.create(createDeclaration())
         notification <- saveNotification(createNotification(declaration))
         maybeDmsDocNotification <- optionallySaveDmsDocNotification(declaration, notification)
-        _ <- submissionRepository.insertOne(createSubmission(declaration, notification))
+        _ <- submissionRepository.create(createSubmission(declaration, notification))
       } yield {
         val status = if (notification != maybeDmsDocNotification) "CREATED WITH DMSDOC" else "CREATED"
         val conRef = declaration.consignmentReferences

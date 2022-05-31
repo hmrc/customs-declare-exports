@@ -23,9 +23,7 @@ import play.api.Logger
 
 import scala.collection.JavaConverters.asScalaIterator
 
-abstract class MongoRepository private[migrations] (
-  val mongoDatabase: MongoDatabase, val collectionName: String, val uniqueFields: Array[String]
-) {
+abstract class MongoRepository private[migrations] (val mongoDatabase: MongoDatabase, val collectionName: String, val uniqueFields: Array[String]) {
   private val logger = Logger(this.getClass)
   private var ensuredCollectionIndex = false
 

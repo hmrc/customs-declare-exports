@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import com.mongodb.client.model.Indexes.ascending
 import org.bson.types.ObjectId
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.model.Indexes.ascending
 import play.api.Configuration
 import play.api.libs.json._
 import repositories.RepositoryOps
@@ -26,33 +26,29 @@ import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.mongo.{MongoComponent, MongoUtils}
 import uk.gov.hmrc.mongo.workitem.{WorkItem, WorkItemFields, WorkItemRepository}
 
-import javax.inject.{Inject, Singleton}
 import java.time.{Duration, Instant}
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 @Singleton
 class SendEmailWorkItemRepository @Inject()(config: Configuration, mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
-  extends WorkItemRepository[SendEmailDetails](
-    collectionName = "sendEmailWorkItems",
-    mongoComponent = mongoComponent,
-    itemFormat = SendEmailDetails.format,
-    workItemFields = WorkItemFields.default
-  ) with RepositoryOps[WorkItem[SendEmailDetails]] {
+    extends WorkItemRepository[SendEmailDetails](
+      collectionName = "sendEmailWorkItems",
+      mongoComponent = mongoComponent,
+      itemFormat = SendEmailDetails.format,
+      workItemFields = WorkItemFields.default
+    ) with RepositoryOps[WorkItem[SendEmailDetails]] {
 
   override def classTag: ClassTag[WorkItem[SendEmailDetails]] = implicitly[ClassTag[WorkItem[SendEmailDetails]]]
   override val executionContext = ec
 
-  val workItemIndexes: Seq[IndexModel] =
-    indexes ++ List(
-      IndexModel(
-        ascending("sendEmailDetails.notificationId"),
-        IndexOptions().name("sendEmailDetailsNotificationIdIdx").unique(true)
-      )
+  override def ensureIndexes: Future[Seq[String]] = {
+    val workItemIndexes: Seq[IndexModel] = indexes ++ List(
+      IndexModel(ascending("item.notificationId"), IndexOptions().name("sendEmailDetailsNotificationIdIdx").unique(true))
     )
-
-  override def ensureIndexes: Future[Seq[String]] =
     MongoUtils.ensureIndexes(collection, workItemIndexes, replaceIndexes = true)
+  }
 
   override lazy val inProgressRetryAfter: Duration =
     Duration.ofMillis(config.getMillis("workItem.sendEmail.retryAfterMillis"))
@@ -60,7 +56,7 @@ class SendEmailWorkItemRepository @Inject()(config: Configuration, mongoComponen
   override def now: Instant = Instant.now
 
   def markAlertTriggered(id: ObjectId): Future[Boolean] = {
-    val fields = Json.obj("sendEmailDetails.alertTriggered" -> true)
+    val fields = Json.obj("item.alertTriggered" -> true)
     findOneAndUpdate(workItemFields.id, id, Json.obj("$set" -> fields)).map(_.exists(_.item.alertTriggered))
   }
 }

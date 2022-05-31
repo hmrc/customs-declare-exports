@@ -22,12 +22,7 @@ import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
 
 import java.util.UUID
 
-case class ParsedNotification(
-  _id: ObjectId = ObjectId.get,
-  unparsedNotificationId: UUID,
-  actionId: String,
-  details: NotificationDetails
-)
+case class ParsedNotification(_id: ObjectId = ObjectId.get, unparsedNotificationId: UUID, actionId: String, details: NotificationDetails)
 
 object ParsedNotification {
 

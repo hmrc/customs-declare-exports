@@ -142,11 +142,7 @@ trait RepositoryOps[T] extends Logging {
 
   def findOneAndUpdate(filter: Bson, update: Bson): Future[Option[T]] =
     collection
-      .findOneAndUpdate(
-        filter = filter,
-        update = update,
-        options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
-      )
+      .findOneAndUpdate(filter = filter, update = update, options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
       .toFutureOption
 
   def indexList: Future[Seq[Document]] = collection.listIndexes.toFuture

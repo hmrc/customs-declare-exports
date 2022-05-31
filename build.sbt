@@ -14,7 +14,7 @@ lazy val microservice = Project(appName, file("."))
   .enablePlugins(PlayScala, SbtAutoBuildPlugin, SbtDistributablesPlugin)
   .settings(
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
-    evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
+    update / evictionWarningOptions := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
     majorVersion := 0,
     scalaVersion := "2.12.12"
   )
@@ -23,22 +23,22 @@ lazy val microservice = Project(appName, file("."))
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(commonSettings, scoverageSettings)
   .settings(
-    unmanagedSourceDirectories in Test := Seq((baseDirectory in Test).value / "test/unit", (baseDirectory in Test).value / "test/util"),
-    unmanagedResourceDirectories in Test := Seq(baseDirectory.value / "test" / "resources"),
-    javaOptions in Test ++= Seq("-Dconfig.resource=test.application.conf"),
+    Test / unmanagedSourceDirectories := Seq((Test / baseDirectory).value / "test/unit", (Test / baseDirectory).value / "test/util"),
+    Test / unmanagedResourceDirectories := Seq(baseDirectory.value / "test" / "resources"),
+    Test / javaOptions ++= Seq("-Dconfig.resource=test.application.conf"),
     addTestReportOption(Test, "test-reports"),
-    Keys.fork in Test := true
+    Test / Keys.fork := true
   )
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(
-    Keys.fork in IntegrationTest := false,
-    unmanagedSourceDirectories in IntegrationTest := Seq(
-      (baseDirectory in IntegrationTest).value / "test/it",
-      (baseDirectory in Test).value / "test/util"
+    IntegrationTest / Keys.fork := false,
+    IntegrationTest / unmanagedSourceDirectories := Seq(
+      (IntegrationTest / baseDirectory).value / "test/it",
+      (Test / baseDirectory).value / "test/util"
     ),
     addTestReportOption(IntegrationTest, "int-test-reports"),
-    testGrouping in IntegrationTest := ForkedJvmPerTestSettings.oneForkedJvmPerTest((definedTests in IntegrationTest).value),
-    parallelExecution in IntegrationTest := false
+    IntegrationTest / testGrouping := ForkedJvmPerTestSettings.oneForkedJvmPerTest((IntegrationTest / definedTests).value),
+    IntegrationTest / parallelExecution := false
   )
   .settings(silencerSettings)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
@@ -52,10 +52,10 @@ lazy val scoverageSettings: Seq[Setting[_]] = Seq(
     "metrics\\..*",
     ".*(BuildInfo|Routes|Options).*"
   ).mkString(";"),
-  coverageMinimum := 85,
+  coverageMinimumStmtTotal := 85,
   coverageFailOnMinimum := true,
   coverageHighlighting := true,
-  parallelExecution in Test := false
+  Test / parallelExecution := false
 )
 
 lazy val commonSettings: Seq[Setting[_]] = publishingSettings ++ defaultSettings() ++ gitStampSettings

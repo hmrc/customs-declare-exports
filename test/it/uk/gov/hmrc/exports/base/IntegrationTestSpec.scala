@@ -24,7 +24,7 @@ import stubs.ExternalServicesConfig.{Host, Port}
 import stubs.MockGenericDownstreamService
 import testdata.ExportsTestData
 import uk.gov.hmrc.exports.util.TestModule
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 
 trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSuite with Injecting with MockGenericDownstreamService {
 
@@ -51,7 +51,7 @@ trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSui
       )
       .build()
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier(authorization = Some(Authorization("Bearer some-token")))
 
   override protected def beforeAll(): Unit = {
     super.beforeAll

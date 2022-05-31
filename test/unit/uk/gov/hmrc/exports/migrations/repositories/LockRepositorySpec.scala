@@ -17,12 +17,10 @@
 package uk.gov.hmrc.exports.migrations.repositories
 
 import com.mongodb._
-import com.mongodb.client.model.Filters.{and, eq => feq}
+import com.mongodb.client.model.Filters.{eq => feq}
 import com.mongodb.client.model.UpdateOptions
 import com.mongodb.client.result.{DeleteResult, UpdateResult}
 import com.mongodb.client.{FindIterable, MongoCollection, MongoDatabase}
-import org.bson.codecs.configuration.CodecRegistries
-import org.bson.codecs.{DateCodec, DocumentCodec, StringCodec}
 import org.bson.conversions.Bson
 import org.bson.{BsonDateTime, BsonDocument, Document}
 import org.mockito.ArgumentCaptor
@@ -59,15 +57,12 @@ class LockRepositorySpec extends UnitSpec {
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-
     reset(findIterable, mongoCollection, mongoDatabase)
-
     defineMocksBehaviourDefault()
   }
 
   override def afterEach(): Unit = {
     reset(findIterable, mongoCollection, mongoDatabase)
-
     super.afterEach()
   }
 
@@ -103,9 +98,6 @@ class LockRepositorySpec extends UnitSpec {
     verify(mongoCollection).updateMany(any[Bson], any[Bson], captor.capture())
     captor.getValue
   }
-
-  private def bsonToDocument(bson: Bson): BsonDocument =
-    bson.toBsonDocument(classOf[Document], CodecRegistries.fromCodecs(new DocumentCodec(), new StringCodec(), new DateCodec()))
 
   "LockRepository on findByKey" should {
 
@@ -153,11 +145,9 @@ class LockRepositorySpec extends UnitSpec {
     "provide MongoCollection with correct query filter" in {
       repo.removeByKeyAndOwner(lockKey, owner)
 
-      val expectedFilter = bsonToDocument(and(feq(KeyField, lockKey), feq(OwnerField, owner)))
-      val bson = bsonToDocument(getDeleteManyFilterQuery)
-
-      bson.getString(KeyField) mustBe expectedFilter.getString(KeyField)
-      bson.getString(OwnerField) mustBe expectedFilter.getString(OwnerField)
+      val bsonAnd = getDeleteManyFilterQuery.toBsonDocument.getArray("$and")
+      bsonAnd.get(0).asDocument.getString(KeyField) mustBe feq(KeyField, lockKey).toBsonDocument.getString(KeyField)
+      bsonAnd.get(1).asDocument.getString(OwnerField) mustBe feq(OwnerField, owner).toBsonDocument.getString(OwnerField)
     }
   }
 
@@ -178,11 +168,13 @@ class LockRepositorySpec extends UnitSpec {
 
       repo.insertUpdate(lockEntry)
 
-      val bson = bsonToDocument(getUpdateManyFilterQuery)
-      bson.getString(KeyField).getValue mustBe lockEntry.key
-      bson.getString(StatusField).getValue mustBe lockEntry.status
-      bson.getArray("$or").get(0).asDocument().getDocument(ExpiresAtField).getDateTime("$lt") mustBe a[BsonDateTime]
-      bson.getArray("$or").get(1).asDocument().getString(OwnerField).getValue mustBe lockEntry.owner
+      val bsonAnd = getUpdateManyFilterQuery.toBsonDocument.getArray("$and")
+      bsonAnd.get(0).asDocument.getString(KeyField).getValue mustBe lockEntry.key
+      bsonAnd.get(1).asDocument.getString(StatusField).getValue mustBe lockEntry.status
+
+      val bsonOr = bsonAnd.get(2).asDocument.getArray("$or")
+      bsonOr.get(0).asDocument.getDocument(ExpiresAtField).getDateTime("$lt") mustBe a[BsonDateTime]
+      bsonOr.get(1).asDocument.getString(OwnerField).getValue mustBe lockEntry.owner
     }
 
     "provide MongoCollection with correct update query" in {
@@ -191,7 +183,7 @@ class LockRepositorySpec extends UnitSpec {
 
       repo.insertUpdate(lockEntry)
 
-      val actualLockEntry = bsonToDocument(getUpdateManyUpdateQuery).getDocument("$set")
+      val actualLockEntry = getUpdateManyUpdateQuery.toBsonDocument.getDocument("$set")
       actualLockEntry.getString(KeyField).getValue mustBe lockEntry.key
       actualLockEntry.getString(StatusField).getValue mustBe lockEntry.status
       actualLockEntry.getString(OwnerField).getValue mustBe lockEntry.owner
@@ -279,10 +271,12 @@ class LockRepositorySpec extends UnitSpec {
 
       repo.updateIfSameOwner(lockEntry)
 
-      val bson = bsonToDocument(getUpdateManyFilterQuery)
-      bson.getString(KeyField).getValue mustBe lockEntry.key
-      bson.getString(StatusField).getValue mustBe lockEntry.status
-      bson.getArray("$or").get(0).asDocument().getString(OwnerField).getValue mustBe lockEntry.owner
+      val bsonAnd = getUpdateManyFilterQuery.toBsonDocument.getArray("$and")
+      bsonAnd.get(0).asDocument.getString(KeyField).getValue mustBe lockEntry.key
+      bsonAnd.get(1).asDocument.getString(StatusField).getValue mustBe lockEntry.status
+
+      val bsonOr = bsonAnd.get(2).asDocument.getArray("$or")
+      bsonOr.get(0).asDocument.getString(OwnerField).getValue mustBe lockEntry.owner
     }
 
     "provide MongoCollection with correct update query" in {
@@ -291,7 +285,7 @@ class LockRepositorySpec extends UnitSpec {
 
       repo.updateIfSameOwner(lockEntry)
 
-      val actualLockEntry = bsonToDocument(getUpdateManyUpdateQuery).getDocument("$set")
+      val actualLockEntry = getUpdateManyUpdateQuery.toBsonDocument.getDocument("$set")
       actualLockEntry.getString(KeyField).getValue mustBe lockEntry.key
       actualLockEntry.getString(StatusField).getValue mustBe lockEntry.status
       actualLockEntry.getString(OwnerField).getValue mustBe lockEntry.owner

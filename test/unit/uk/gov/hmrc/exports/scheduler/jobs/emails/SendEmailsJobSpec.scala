@@ -53,7 +53,7 @@ class SendEmailsJobSpec extends UnitSpec {
     reset(appConfig, sendEmailWorkItemRepository, emailCancellationValidator, emailSender, pagerDutyAlertManager)
     when(appConfig.sendEmailsJobInterval).thenReturn(5.minutes)
     when(appConfig.consideredFailedBeforeWorkItem).thenReturn(4.minutes)
-    when(pagerDutyAlertManager.managePagerDutyAlert(any[ObjectId])(any[ExecutionContext])).thenReturn(Future.successful(false))
+    when(pagerDutyAlertManager.managePagerDutyAlert(any[ObjectId])).thenReturn(Future.successful(false))
   }
 
   private val testWorkItem: WorkItem[SendEmailDetails] = buildTestSendEmailWorkItem(status = InProgress)

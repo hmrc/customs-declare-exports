@@ -16,37 +16,33 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import com.mongodb.client.model.Indexes.ascending
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.model.Indexes.ascending
 import play.api.Configuration
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import uk.gov.hmrc.mongo.{MongoComponent, MongoUtils}
-import uk.gov.hmrc.mongo.workitem.{WorkItem, WorkItemFields, WorkItemRepository}
+import uk.gov.hmrc.mongo.workitem.{WorkItemFields, WorkItemRepository}
 
 import java.time.{Duration, Instant}
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 class UnparsedNotificationWorkItemRepository @Inject()(config: Configuration, mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
-  extends WorkItemRepository[UnparsedNotification](
-    collectionName = "unparsedNotifications",
-    mongoComponent = mongoComponent,
-    itemFormat = UnparsedNotification.format,
-    workItemFields = WorkItemFields.default
-  ) {
+    extends WorkItemRepository[UnparsedNotification](
+      collectionName = "unparsedNotifications",
+      mongoComponent = mongoComponent,
+      itemFormat = UnparsedNotification.format,
+      workItemFields = WorkItemFields.default
+    ) {
 
-  val workItemIndexes: Seq[IndexModel] =
-    indexes ++ List(
-      IndexModel(ascending("item.id"), IndexOptions().name("itemIdIdx").unique(true))
-    )
-
-  override def ensureIndexes: Future[Seq[String]] =
+  override def ensureIndexes: Future[Seq[String]] = {
+    val workItemIndexes: Seq[IndexModel] = indexes ++ List(IndexModel(ascending("item.id"), IndexOptions().name("itemIdIdx").unique(true)))
     MongoUtils.ensureIndexes(collection, workItemIndexes, replaceIndexes = true)
+  }
 
   override lazy val inProgressRetryAfter: Duration =
     Duration.ofMillis(config.getMillis("workItem.unparsedNotification.retryAfterMillis"))
 
   override def now: Instant = Instant.now
-
-  def pushNew(item: UnparsedNotification): Future[WorkItem[UnparsedNotification]] = pushNew(item)
 }

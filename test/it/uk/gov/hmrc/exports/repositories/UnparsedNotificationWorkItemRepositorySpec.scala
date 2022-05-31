@@ -28,10 +28,7 @@ class UnparsedNotificationWorkItemRepositorySpec extends IntegrationTestMongoSpe
       repository.pushNew(testUnparsedNotification).futureValue
 
       eventually(timeout(2 seconds), interval(100 millis)) {
-        val result = repository.pullOutstanding(
-          failedBefore = Instant.now.minusSeconds(2 * 60),
-          availableBefore = Instant.now
-        ).futureValue
+        val result = repository.pullOutstanding(failedBefore = Instant.now.minusSeconds(2 * 60), availableBefore = Instant.now).futureValue
 
         result mustBe defined
         result.get.item mustBe testUnparsedNotification
@@ -40,7 +37,7 @@ class UnparsedNotificationWorkItemRepositorySpec extends IntegrationTestMongoSpe
 
     "return Exception" when {
       "trying to insert WorkItem with duplicated 'id' field" in {
-        val id = UUID.randomUUID()
+        val id = UUID.randomUUID
         val testUnparsedNotification = UnparsedNotification(id = id, actionId = actionId, payload = "payload")
         val testUnparsedNotification_2 = UnparsedNotification(id = id, actionId = actionId_2, payload = "payload_2")
 
@@ -49,9 +46,7 @@ class UnparsedNotificationWorkItemRepositorySpec extends IntegrationTestMongoSpe
         val exc = repository.pushNew(testUnparsedNotification_2).failed.futureValue
 
         //exc mustBe an[DatabaseException]
-        exc.getMessage must include(
-          s"E11000 duplicate key error collection: ${databaseName}.unparsedNotifications index: itemIdIdx dup key"
-        )
+        exc.getMessage must include(s"E11000 duplicate key error collection: ${databaseName}.unparsedNotifications index: itemIdIdx dup key")
       }
     }
   }

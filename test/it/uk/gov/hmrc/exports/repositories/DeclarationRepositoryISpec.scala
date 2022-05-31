@@ -45,9 +45,7 @@ class DeclarationRepositoryISpec extends IntegrationTestMongoSpec {
   "Update" should {
 
     def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
-      repository.findOneAndReplace(
-        Json.obj("id" -> declaration.id, "eori" -> declaration.eori), declaration, false
-      )
+      repository.findOneAndReplace(Json.obj("id" -> declaration.id, "eori" -> declaration.eori), declaration, false)
 
     "update the declaration" in {
       val declaration = aDeclaration(withType(DeclarationType.STANDARD), withId("id"), withEori("eori"))
@@ -241,7 +239,7 @@ class DeclarationRepositoryISpec extends IntegrationTestMongoSpec {
         val declaration3 = aDeclaration(withId("id1"), withEori("eori2"))
         givenADeclarationExists(declaration2, declaration3)
 
-        delete(declaration1).futureValue mustBe true
+        delete(declaration1).futureValue mustBe false
 
         collectionSize mustBe 2
       }

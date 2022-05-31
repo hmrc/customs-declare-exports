@@ -27,19 +27,11 @@ class ChangeEntrySpec extends UnitSpec {
   "ChangeEntry on buildFullDBObject" should {
     "convert to correct Document" in {
       val date = Instant.now
-      val expectedOutput = new Document(mapAsJavaMap(Map(
-        "changeId" -> "changeIdValue",
-        "author" -> "authorValue",
-        "timestamp" -> date,
-        "changeLogClass" -> "changeLogClassValue"
-      )))
-
-      val changeEntry = ChangeEntry(
-        changeId = "changeIdValue",
-        author = "authorValue",
-        timestamp = date,
-        changeLogClass = "changeLogClassValue"
+      val expectedOutput = new Document(
+        mapAsJavaMap(Map("changeId" -> "changeIdValue", "author" -> "authorValue", "timestamp" -> date, "changeLogClass" -> "changeLogClassValue"))
       )
+
+      val changeEntry = ChangeEntry(changeId = "changeIdValue", author = "authorValue", timestamp = date, changeLogClass = "changeLogClassValue")
       changeEntry.buildFullDBObject mustBe expectedOutput
     }
   }

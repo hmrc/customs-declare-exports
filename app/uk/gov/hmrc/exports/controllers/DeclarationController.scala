@@ -73,10 +73,8 @@ class DeclarationController @Inject()(
 
   def findAll(status: Option[String], pagination: Page, sort: DeclarationSort): Action[AnyContent] =
     authenticator.authorisedAction(parse.default) { implicit request =>
-      val search = DeclarationSearch(
-        eori = request.eori,
-        status = status.map(str => Try(DeclarationStatus.withName(str))).filter(_.isSuccess).map(_.get)
-      )
+      val search =
+        DeclarationSearch(eori = request.eori, status = status.map(str => Try(DeclarationStatus.withName(str))).filter(_.isSuccess).map(_.get))
       declarationService.find(search, pagination, sort).map(results => Ok(results))
     }
 

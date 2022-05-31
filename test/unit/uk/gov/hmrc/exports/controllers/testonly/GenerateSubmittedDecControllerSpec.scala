@@ -55,7 +55,6 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with GuiceOneAppPerSui
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-
     reset(parsedNotificationRepository, submissionRepository, declarationRepository)
   }
 

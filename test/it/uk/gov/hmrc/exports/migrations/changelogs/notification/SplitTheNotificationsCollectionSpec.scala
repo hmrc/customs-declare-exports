@@ -214,8 +214,8 @@ class SplitTheNotificationsCollectionSpec extends IntegrationTestMigrationToolSp
           parsedNotification_3.put("actionId", "b1c09f1b-7c94-4e90-b754-7c5c71c44e11")
           val allParsedNotificationsBeforeChanges = Seq(parsedNotification_1, parsedNotification_2, parsedNotification_3)
 
-        val notificationsRepo = getNotificationsRepo
-        val unparsedNotificationsRepo = getUnparsedNotificationsRepo
+          val notificationsRepo = getNotificationsRepo
+          val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
           allParsedNotificationsBeforeChanges.foreach(notificationsRepo.insertOne(_))
 
@@ -255,8 +255,8 @@ class SplitTheNotificationsCollectionSpec extends IntegrationTestMigrationToolSp
           val parsedNotification_3 = Document.parse(TestData_3.parsedNotificationBeforeChanges)
           val allParsedNotificationsBeforeChanges = Seq(parsedNotification_1, parsedNotification_2, parsedNotification_3)
 
-        val notificationsRepo = getNotificationsRepo
-        val unparsedNotificationsRepo = getUnparsedNotificationsRepo
+          val notificationsRepo = getNotificationsRepo
+          val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
           allParsedNotificationsBeforeChanges.foreach(notificationsRepo.insertOne(_))
 

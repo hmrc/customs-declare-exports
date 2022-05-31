@@ -92,6 +92,8 @@ class AppConfig @Inject()(val configuration: Configuration, val environment: Env
   lazy val emailServiceBaseUrl: String = servicesConfig.baseUrl("hmrc-email")
 
   lazy val sendEmailPath: String = configuration.get[String]("microservice.services.hmrc-email.send-email-path")
+
+  lazy val replaceIndexesOfDeclarationRepository: Boolean = configuration.get[Boolean]("declarations.repository.replace.indexes")
 }
 
 object AppConfig {

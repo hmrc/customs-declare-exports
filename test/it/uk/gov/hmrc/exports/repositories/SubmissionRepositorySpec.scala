@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.exports.repositories
 
+import org.scalatest.EitherValues
 import play.api.libs.json.Json
+import repositories.DuplicateKey
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
 import uk.gov.hmrc.exports.base.IntegrationTestMongoSpec
@@ -24,7 +26,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions._
 
 import scala.concurrent.Future
 
-class SubmissionRepositorySpec extends IntegrationTestMongoSpec {
+class SubmissionRepositorySpec extends IntegrationTestMongoSpec with EitherValues {
 
   private val repository = getRepository[SubmissionRepository]
 
@@ -39,27 +41,28 @@ class SubmissionRepositorySpec extends IntegrationTestMongoSpec {
       "return true" in {
         repository.insertOne(submission).futureValue.isRight mustBe true
 
-        val submissionInDB = repository.findAll(eori, SubmissionQueryParameters(Some(uuid))).futureValue
+        val submissionInDB = repository.findAll(eori, SubmissionQueryParameters(Some(submission.uuid))).futureValue
         submissionInDB.headOption must be(defined)
       }
     }
 
     "trying to save Submission with the same actionId twice" should {
-      "throw DatabaseException" in {
+
+      "return a 'DuplicateKey' error" in {
         repository.insertOne(submission).futureValue.isRight mustBe true
         val secondSubmission = submission_2.copy(actions = submission.actions)
 
-        val exc = repository.insertOne(secondSubmission).failed.futureValue
+        val result = repository.insertOne(secondSubmission).futureValue
 
-        //exc mustBe an[DatabaseException]
-        exc.getMessage must include(s"E11000 duplicate key error collection: ${databaseName}.submissions index: actionIdIdx dup key")
+        result.isLeft mustBe true
+        result.left.value.isInstanceOf[DuplicateKey] mustBe true
       }
 
       "result in having only the first Submission persisted" in {
         repository.insertOne(submission).futureValue.isRight mustBe true
         val secondSubmission = submission_2.copy(actions = submission.actions)
 
-        repository.insertOne(secondSubmission).failed.futureValue
+        repository.insertOne(secondSubmission).futureValue
 
         val submissionsInDB = repository.findAll(eori, SubmissionQueryParameters()).futureValue
         submissionsInDB.length must be(1)

@@ -47,7 +47,7 @@ class ParseAndSaveAction @Inject()(
 
     // Update the related submission records (an idempotent operation)
     findRelatedSubmissionAndUpdateIfRequired(firstNotification.actionId, firstNotification.details.mrn).flatMap { _ =>
-       // If submission record found then persist all notifications
+      // If submission record found then persist all notifications
       notificationRepository.bulkInsert(notifications)
     }.map(_ => ())
   }

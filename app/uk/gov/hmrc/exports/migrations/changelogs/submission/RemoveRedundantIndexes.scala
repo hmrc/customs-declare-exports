@@ -21,21 +21,20 @@ import org.bson.Document
 import org.mongodb.scala.model.Filters.{and, exists, not, eq => feq}
 import org.mongodb.scala.model.UpdateOneModel
 import org.mongodb.scala.model.Updates.set
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 
 import scala.collection.JavaConverters._
 
-class RemoveRedundantIndexes extends MigrationDefinition {
-
-  private val logger = Logger(this.getClass)
+class RemoveRedundantIndexes extends MigrationDefinition with Logging {
 
   val submissionsCollectionName = "submissions"
   val notificationCollectionName = "notifications"
   val sendEmailWorkItemsCollectionName = "sendEmailWorkItems"
 
-  val SEND_EMAIL_DETAILS = "sendEmailDetails"
   val ACTION_ID = "actionId"
+
+  private val item = "item"
 
   override val migrationInformation: MigrationInformation =
     MigrationInformation(id = "CEDS-3784 Drop unused indexes or those we are modifying", order = 10, author = "Tim Wilkins", runAlways = true)
@@ -51,18 +50,18 @@ class RemoveRedundantIndexes extends MigrationDefinition {
 
     asScalaIterator(
       db.getCollection(sendEmailWorkItemsCollectionName)
-        .find(and(exists(SEND_EMAIL_DETAILS), not(exists(s"${SEND_EMAIL_DETAILS}.${ACTION_ID}"))))
+        .find(and(exists(item), not(exists(s"${item}.${ACTION_ID}"))))
         .batchSize(queryBatchSize)
         .iterator
     ).map { document =>
-      val sendEmailDetails = document.get(SEND_EMAIL_DETAILS, classOf[Document])
+      val sendEmailDetails = document.get(item, classOf[Document])
 
       sendEmailDetails.put(ACTION_ID, "?unknown?") //
       logger.debug(s"SendEmailDetails updated: $sendEmailDetails")
 
       val documentId = document.get("_id").asInstanceOf[org.bson.types.ObjectId]
       val filter = feq("_id", documentId)
-      val update = set(SEND_EMAIL_DETAILS, sendEmailDetails)
+      val update = set(item, sendEmailDetails)
       logger.debug(s"[filter: $filter] [update: $update]")
 
       new UpdateOneModel[Document](filter, update)

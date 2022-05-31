@@ -98,7 +98,6 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
         val result = controller.create("id")(fakePostRequest)
 
         status(result) mustBe NOT_FOUND
-        verifyNoInteractions(submissionService)
       }
     }
   }

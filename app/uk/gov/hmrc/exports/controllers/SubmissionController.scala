@@ -26,12 +26,9 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SubmissionController @Inject()(
-  authenticator: Authenticator,
-  submissionService: SubmissionService,
-  cc: ControllerComponents
-)(implicit executionContext: ExecutionContext)
-    extends RESTController(cc) with JSONResponses {
+class SubmissionController @Inject()(authenticator: Authenticator, submissionService: SubmissionService, cc: ControllerComponents)(
+  implicit executionContext: ExecutionContext
+) extends RESTController(cc) with JSONResponses {
 
   def create(declarationId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     submissionService.markCompleted(declarationId, request.eori).flatMap {

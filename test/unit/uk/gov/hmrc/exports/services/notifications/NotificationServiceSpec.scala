@@ -34,7 +34,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, UnparsedNotificationWorkItemRepository}
 import uk.gov.hmrc.exports.services.notifications.receiptactions.NotificationReceiptActionsScheduler
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.ToDo
-import uk.gov.hmrc.mongo.workitem.WorkItem
+import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem}
 
 import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.util.UUID
@@ -225,19 +225,22 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       )
 
       "call UnparsedNotificationWorkItemRepository" in {
-        when(unparsedNotificationWorkItemRepository.pushNew(any[UnparsedNotification])).thenReturn(Future.successful(testWorkItem))
+        when(unparsedNotificationWorkItemRepository.pushNew(any[UnparsedNotification], any[Instant], any[UnparsedNotification => ProcessingStatus]))
+          .thenReturn(Future.successful(testWorkItem))
 
         notificationService.handleNewNotification(actionId, inputXml).futureValue
 
         val captor: ArgumentCaptor[UnparsedNotification] = ArgumentCaptor.forClass(classOf[UnparsedNotification])
-        verify(unparsedNotificationWorkItemRepository).pushNew(captor.capture())
+        verify(unparsedNotificationWorkItemRepository)
+          .pushNew(captor.capture(), any[Instant], any[UnparsedNotification => ProcessingStatus])
 
         captor.getValue.actionId mustBe actionId
         captor.getValue.payload mustBe inputXml.toString
       }
 
       "call NotificationReceiptActionsScheduler" in {
-        when(unparsedNotificationWorkItemRepository.pushNew(any[UnparsedNotification])).thenReturn(Future.successful(testWorkItem))
+        when(unparsedNotificationWorkItemRepository.pushNew(any[UnparsedNotification], any[Instant], any[UnparsedNotification => ProcessingStatus]))
+          .thenReturn(Future.successful(testWorkItem))
 
         notificationService.handleNewNotification(actionId, inputXml).futureValue
 

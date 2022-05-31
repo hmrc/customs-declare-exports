@@ -31,28 +31,25 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.time._
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
-class DeclarationRepository @Inject()(
-  mongoComponent: MongoComponent, appConfig: AppConfig, metrics: ExportsMetrics)(implicit ec: ExecutionContext
-)
-  extends PlayMongoRepository[ExportsDeclaration](
-    mongoComponent = mongoComponent,
-    collectionName = "declarations",
-    domainFormat = ExportsDeclaration.format,
-    indexes = DeclarationRepository.indexes
-  ) with RepositoryOps[ExportsDeclaration] {
+@Singleton
+class DeclarationRepository @Inject()(appConfig: AppConfig, mongoComponent: MongoComponent, metrics: ExportsMetrics)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[ExportsDeclaration](
+      mongoComponent = mongoComponent,
+      collectionName = "declarations",
+      domainFormat = ExportsDeclaration.format,
+      indexes = DeclarationRepository.indexes,
+      replaceIndexes = appConfig.replaceIndexesOfDeclarationRepository
+    ) with RepositoryOps[ExportsDeclaration] {
 
   override def classTag: ClassTag[ExportsDeclaration] = implicitly[ClassTag[ExportsDeclaration]]
   override val executionContext = ec
 
   def deleteExpiredDraft(expiryDate: Instant): Future[Long] =
-    removeEvery(Json.obj(
-      "status" -> DeclarationStatus.DRAFT,
-      "updatedDateTime" -> Json.obj("$lte" -> expiryDate)
-    ))
+    removeEvery(Json.obj("status" -> DeclarationStatus.DRAFT.toString, "updatedDateTime" -> Json.obj("$lte" -> expiryDate)))
 
   def find(search: DeclarationSearch, page: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] = {
     val filter = BsonDocument(Json.toJson(search).toString)
@@ -82,26 +79,20 @@ class DeclarationRepository @Inject()(
     collection
       .findOneAndUpdate(
         filter = BsonDocument(Json.obj("id" -> id, "eori" -> eori.value).toString),
-        update = set("status", DeclarationStatus.COMPLETE),
+        update = set("status", DeclarationStatus.COMPLETE.toString)
       )
       .toFutureOption
 
   def revertStatusToDraft(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
-    findOneAndUpdate(
-      Json.obj("id" -> declaration.id, "eori" -> declaration.eori),
-      Json.obj("status" -> DeclarationStatus.DRAFT)
-    )
+    findOneAndUpdate(Json.obj("id" -> declaration.id, "eori" -> declaration.eori), Json.obj("status" -> DeclarationStatus.DRAFT.toString))
 }
 
 object DeclarationRepository {
 
   val indexes: Seq[IndexModel] = List(
     IndexModel(ascending("eori", "id"), IndexOptions().name("eoriAndIdIdx").unique(true)),
-    IndexModel(ascending("eori", "updateDateTime", "status"), IndexOptions().name("eoriAndUpdateTimeAndStatusIdx")),
-    IndexModel(ascending("eori", "createDateTime", "status"), IndexOptions().name("eoriAndCreateTimeAndStatusIdx")),
-    IndexModel(
-      compoundIndex(descending("updateDateTime"), ascending("status")),
-      IndexOptions().name("statusAndUpdateIdx")
-    )
+    IndexModel(ascending("eori", "updatedDateTime", "status"), IndexOptions().name("eoriAndUpdateTimeAndStatusIdx")),
+    IndexModel(ascending("eori", "createdDateTime", "status"), IndexOptions().name("eoriAndCreateTimeAndStatusIdx")),
+    IndexModel(compoundIndex(descending("updatedDateTime"), ascending("status")), IndexOptions().name("statusAndUpdateIdx"))
   )
 }

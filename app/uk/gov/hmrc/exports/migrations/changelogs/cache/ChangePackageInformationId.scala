@@ -70,8 +70,8 @@ class ChangePackageInformationId extends MigrationDefinition {
         logger.info(s"Updated batch no. $idx")
     }
 
-        logger.info(s"Applying '${migrationInformation.id}' db migration... Done.")
-      }
+    logger.info(s"Applying '${migrationInformation.id}' db migration... Done.")
+  }
 
   private def updateItem(itemDocument: Document): Document = {
     val packageInformationElems = itemDocument.get("packageInformation", classOf[util.List[Document]])

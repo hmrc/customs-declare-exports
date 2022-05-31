@@ -28,13 +28,13 @@ object WorkItemTestData {
     SendEmailDetails(notificationId = ObjectId.get, mrn = ExportsTestData.mrn, actionId = "actionId")
 
   def buildTestSendEmailWorkItem(
-    status: ProcessingStatus, updatedAt: Instant = Instant.now, availableAt: Instant = Instant.now
+    status: ProcessingStatus,
+    updatedAt: Instant = Instant.now,
+    availableAt: Instant = Instant.now
   ): WorkItem[SendEmailDetails] =
     buildTestWorkItem(status, updatedAt, availableAt, item = buildTestSendEmailDetails)
 
-  def buildTestWorkItem[T](
-    status: ProcessingStatus, updatedAt: Instant = Instant.now, availableAt: Instant = Instant.now, item: T
-  ): WorkItem[T] =
+  def buildTestWorkItem[T](status: ProcessingStatus, updatedAt: Instant = Instant.now, availableAt: Instant = Instant.now, item: T): WorkItem[T] =
     WorkItem[T](
       id = ObjectId.get,
       receivedAt = Instant.now,

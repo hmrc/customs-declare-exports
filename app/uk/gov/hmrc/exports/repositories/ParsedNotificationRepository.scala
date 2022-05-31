@@ -30,12 +30,12 @@ import scala.reflect.ClassTag
 
 @Singleton
 class ParsedNotificationRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
-  extends PlayMongoRepository[ParsedNotification](
-    mongoComponent = mongoComponent,
-    collectionName = "notifications",
-    domainFormat = ParsedNotification.format,
-    indexes = ParsedNotificationRepository.indexes
-  ) with RepositoryOps[ParsedNotification] {
+    extends PlayMongoRepository[ParsedNotification](
+      mongoComponent = mongoComponent,
+      collectionName = "notifications",
+      domainFormat = ParsedNotification.format,
+      indexes = ParsedNotificationRepository.indexes
+    ) with RepositoryOps[ParsedNotification] {
 
   override def classTag: ClassTag[ParsedNotification] = implicitly[ClassTag[ParsedNotification]]
   override val executionContext = ec
@@ -56,9 +56,6 @@ class ParsedNotificationRepository @Inject()(mongoComponent: MongoComponent)(imp
 object ParsedNotificationRepository {
 
   val indexes: Seq[IndexModel] = List(
-    IndexModel(
-      ascending("actionId", "details.dateTimeIssued"),
-      IndexOptions().name("detailsDateTimeIssuedOrderedActionId")
-    )
+    IndexModel(ascending("actionId", "details.dateTimeIssued"), IndexOptions().name("detailsDateTimeIssuedOrderedActionId"))
   )
 }

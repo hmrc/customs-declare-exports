@@ -34,7 +34,7 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestMongoSpec {
     repository.removeAll.futureValue
   }
 
-  val now = Instant.now
+  def now: Instant = Instant.now
   val seconds = 2 * 60
 
   "SendEmailWorkItemRepository on pushNew" should {

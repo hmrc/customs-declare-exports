@@ -36,26 +36,25 @@ class ExportsMigrationTool(
 
   def execute(): Unit =
     if (!isEnabled) logger.info("ExportsMigrationTool is disabled. Exiting.")
-    else try {
-      lockManager.acquireLockDefault()
-      executeMigration()
-    }
-    catch {
-      case lockEx: LockManagerException =>
-        if (throwExceptionIfCannotObtainLock) {
-          logger.error(lockEx.getMessage)
-          throw new ExportsMigrationException(lockEx.getMessage)
-        }
-        logger.warn(lockEx.getMessage)
-        logger.warn("ExportsMigrationTool did not acquire process lock. EXITING WITHOUT RUNNING DATA MIGRATION")
+    else
+      try {
+        lockManager.acquireLockDefault()
+        executeMigration()
+      } catch {
+        case lockEx: LockManagerException =>
+          if (throwExceptionIfCannotObtainLock) {
+            logger.error(lockEx.getMessage)
+            throw new ExportsMigrationException(lockEx.getMessage)
+          }
+          logger.warn(lockEx.getMessage)
+          logger.warn("ExportsMigrationTool did not acquire process lock. EXITING WITHOUT RUNNING DATA MIGRATION")
 
-      case exc: Throwable =>
-        logger.error("ExportsMigrationTool - error on executing migration", exc)
-    }
-    finally {
-      lockManager.releaseLockDefault() //we do it anyway, it's idempotent
-      logger.info("ExportsMigrationTool has finished his job.")
-    }
+        case exc: Throwable =>
+          logger.error("ExportsMigrationTool - error on executing migration", exc)
+      } finally {
+        lockManager.releaseLockDefault() //we do it anyway, it's idempotent
+        logger.info("ExportsMigrationTool has finished his job.")
+      }
 
   def isEnabled: Boolean = enabled
 

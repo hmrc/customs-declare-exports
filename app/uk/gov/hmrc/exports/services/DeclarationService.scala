@@ -30,9 +30,7 @@ class DeclarationService @Inject()(declarationRepository: DeclarationRepository)
     declarationRepository.create(declaration)
 
   def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
-    declarationRepository.findOneAndReplace(
-      Json.obj("id" -> declaration.id, "eori" -> declaration.eori), declaration, false
-    )
+    declarationRepository.findOneAndReplace(Json.obj("id" -> declaration.id, "eori" -> declaration.eori), declaration, false)
 
   def find(search: DeclarationSearch, pagination: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] =
     declarationRepository.find(search, pagination, sort)

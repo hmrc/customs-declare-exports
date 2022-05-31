@@ -31,16 +31,16 @@ class PagerDutyAlertManager @Inject()(
   appConfig: AppConfig,
   sendEmailWorkItemRepository: SendEmailWorkItemRepository,
   pagerDutyAlertValidator: PagerDutyAlertValidator
-) extends Logging {
+)(implicit ec: ExecutionContext)
+    extends Logging {
 
-  def managePagerDutyAlert(id: ObjectId)(implicit ec: ExecutionContext): Future[Boolean] =
+  def managePagerDutyAlert(id: ObjectId): Future[Boolean] =
     sendEmailWorkItemRepository.findById(id).flatMap {
-      case Some(workItemUpdated) =>
-        if (pagerDutyAlertValidator.isPagerDutyAlertRequiredFor(workItemUpdated)) {
-          triggerPagerDutyAlert(workItemUpdated)
-          sendEmailWorkItemRepository.markAlertTriggered(workItemUpdated.id)
-        }
-        else Future.successful(false)
+      case Some(workItem) =>
+        if (pagerDutyAlertValidator.isPagerDutyAlertRequiredFor(workItem)) {
+          triggerPagerDutyAlert(workItem)
+          sendEmailWorkItemRepository.markAlertTriggered(workItem.id)
+        } else Future.successful(false)
 
       case None =>
         logger.warn(s"Cannot find WorkItem with SendEmailDetails for id: [$id]")

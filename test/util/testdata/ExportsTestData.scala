@@ -16,15 +16,13 @@
 
 package testdata
 
-import org.joda.time.format.DateTimeFormat
-import org.joda.time.{DateTime, DateTimeZone}
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.{ContentTypes, HeaderNames}
 import testdata.TestDataHelper.randomAlphanumericString
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames._
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.emails.Email
-import uk.gov.hmrc.wco.dec.{DateTimeString, MetaData, ResponseDateTimeElement, Declaration => WcoDeclaration}
+import uk.gov.hmrc.wco.dec.{MetaData, Declaration => WcoDeclaration}
 
 object ExportsTestData {
 
@@ -54,14 +52,9 @@ object ExportsTestData {
   val VALID_CONVERSATIONID_HEADER: (String, String) = XConversationIdName -> actionId
   val VALID_DUCR_HEADER: (String, String) = XDucrHeaderName -> declarantDucrValue
   val VALID_MRN_HEADER: (String, String) = XMrnHeaderName -> declarantMrnValue
-  val now: DateTime = DateTime.now.withZone(DateTimeZone.UTC)
   val eidrDateStamp = "20001231"
 
   val verifiedEmailAddress = Email("some@email.com", true)
-
-  val dtfOut = DateTimeFormat.forPattern("yyyyMMddHHmmss")
-  def dateTimeElement(dateTimeVal: DateTime) =
-    Some(ResponseDateTimeElement(DateTimeString("102", dateTimeVal.toString("yyyyMMdd"))))
 
   val ValidHeaders: Map[String, String] = Map(
     contentTypeHeader,

@@ -84,6 +84,7 @@ class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRep
     } catch {
       case ex: MongoWriteException if ex.getError.getCategory == ErrorCategory.DUPLICATE_KEY =>
         throw new LockPersistenceException("Lock is held")
+
       case _: DuplicateKeyException =>
         throw new LockPersistenceException("Lock is held")
     }
@@ -98,5 +99,4 @@ class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRep
     }
     and(feq(KeyField, lockKey), feq(StatusField, LockStatus.LockHeld.name), orCond)
   }
-
 }

@@ -23,12 +23,14 @@ import uk.gov.hmrc.exports.base.{AuthTestSupport, IntegrationTestSpec}
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.CustomsDataStoreConnector
 import uk.gov.hmrc.exports.controllers.routes
+import uk.gov.hmrc.http.HeaderNames
 
 class VerifiedEmailByEoriFlowSpec extends IntegrationTestSpec with AuthTestSupport {
 
   implicit val appConfig: AppConfig = inject[AppConfig]
   val customsDataStoreUrl = CustomsDataStoreConnector.verifiedEmailPath(ExportsTestData.eori)
   val fakeRequest = FakeRequest(Helpers.GET, routes.EmailByEoriController.getEmailIfVerified(ExportsTestData.eori).url)
+    .withHeaders(HeaderNames.authorisation -> "Bearer some-token")
 
   val enrolments = Some("""{"allEnrolments":[{"key":"HMRC-CUS-ORG","identifiers":[{"key":"EORINumber","value":"GB12345"}],"state":"Activated"}]}""")
 

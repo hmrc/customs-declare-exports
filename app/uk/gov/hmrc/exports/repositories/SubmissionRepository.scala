@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.repositories
 import com.mongodb.client.model.Indexes.{ascending, compoundIndex, descending}
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
-import play.api.libs.json.{JsBoolean, JsObject, Json}
+import play.api.libs.json.{JsBoolean, JsObject, JsString, Json}
 import repositories.RepositoryOps
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionQueryParameters}
 import uk.gov.hmrc.mongo.MongoComponent
@@ -31,12 +31,12 @@ import scala.reflect.ClassTag
 
 @Singleton
 class SubmissionRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
-  extends PlayMongoRepository[Submission](
-    mongoComponent = mongoComponent,
-    collectionName = "submissions",
-    domainFormat = Submission.format,
-    indexes = SubmissionRepository.indexes
-  ) with RepositoryOps[Submission] {
+    extends PlayMongoRepository[Submission](
+      mongoComponent = mongoComponent,
+      collectionName = "submissions",
+      domainFormat = Submission.format,
+      indexes = SubmissionRepository.indexes
+    ) with RepositoryOps[Submission] {
 
   override def classTag: ClassTag[Submission] = implicitly[ClassTag[Submission]]
   override val executionContext = ec
@@ -48,7 +48,7 @@ class SubmissionRepository @Inject()(mongoComponent: MongoComponent)(implicit ec
   }
 
   def findAll(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] = {
-    val filter = Json.toJson(queryParameters).as[JsObject] + "eori" -> eori
+    val filter = Json.toJson(queryParameters).as[JsObject] + ("eori" -> JsString(eori))
     collection
       .find(BsonDocument(filter.toString))
       .sort(BsonDocument(Json.obj("actions.requestTimestamp" -> -1).toString))
@@ -74,9 +74,6 @@ object SubmissionRepository {
         .partialFilterExpression(BsonDocument(filter.toString))
         .unique(true)
     ),
-    IndexModel(
-      compoundIndex(ascending("eori"), descending("action.requestTimestamp")),
-      IndexOptions().name("actionOrderedEori")
-    )
+    IndexModel(compoundIndex(ascending("eori"), descending("action.requestTimestamp")), IndexOptions().name("actionOrderedEori"))
   )
 }

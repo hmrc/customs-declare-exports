@@ -25,7 +25,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SendEmailWorkItemRepository}
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.ToDo
-import uk.gov.hmrc.mongo.workitem.WorkItem
+import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem}
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -40,7 +40,6 @@ class SendEmailForDmsDocActionSpec extends UnitSpec {
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-
     reset(notificationRepository, sendEmailWorkItemRepository)
   }
 
@@ -69,6 +68,7 @@ class SendEmailForDmsDocActionSpec extends UnitSpec {
 
       val testSendEmailDetails =
         SendEmailDetails(notificationId = testNotification._id, mrn = testNotification.details.mrn, actionId = testNotification.actionId)
+
       val testWorkItem = WorkItem(
         id = ObjectId.get,
         receivedAt = Instant.now,
@@ -83,18 +83,20 @@ class SendEmailForDmsDocActionSpec extends UnitSpec {
 
         "return successful Future" in {
           when(notificationRepository.findAll(any[String], any[String])).thenReturn(Future.successful(Seq(testNotification)))
-          when(sendEmailWorkItemRepository.pushNew(any[SendEmailDetails])).thenReturn(Future.successful(testWorkItem))
+          when(sendEmailWorkItemRepository.pushNew(any[SendEmailDetails], any[Instant], any[SendEmailDetails => ProcessingStatus]))
+            .thenReturn(Future.successful(testWorkItem))
 
           sendEmailForDmsDocAction.execute(testActionId).futureValue mustBe unit
         }
 
         "call EmailSender" in {
           when(notificationRepository.findAll(any[String], any[String])).thenReturn(Future.successful(Seq(testNotification)))
-          when(sendEmailWorkItemRepository.pushNew(any[SendEmailDetails])).thenReturn(Future.successful(testWorkItem))
+          when(sendEmailWorkItemRepository.pushNew(any[SendEmailDetails], any[Instant], any[SendEmailDetails => ProcessingStatus]))
+            .thenReturn(Future.successful(testWorkItem))
 
           sendEmailForDmsDocAction.execute(testActionId).futureValue
 
-          verify(sendEmailWorkItemRepository).pushNew(eqTo(testSendEmailDetails))
+          verify(sendEmailWorkItemRepository).pushNew(eqTo(testSendEmailDetails), any[Instant], any[SendEmailDetails => ProcessingStatus])
         }
       }
 
@@ -102,7 +104,8 @@ class SendEmailForDmsDocActionSpec extends UnitSpec {
         "propagate this exception" in {
           when(notificationRepository.findAll(any[String], any[String])).thenReturn(Future.successful(Seq(testNotification)))
           val exceptionMsg = "Test exception message"
-          when(sendEmailWorkItemRepository.pushNew(any[SendEmailDetails])).thenThrow(new RuntimeException(exceptionMsg))
+          when(sendEmailWorkItemRepository.pushNew(any[SendEmailDetails], any[Instant], any[SendEmailDetails => ProcessingStatus]))
+            .thenThrow(new RuntimeException(exceptionMsg))
 
           sendEmailForDmsDocAction.execute(testActionId).failed.futureValue must have message exceptionMsg
         }
