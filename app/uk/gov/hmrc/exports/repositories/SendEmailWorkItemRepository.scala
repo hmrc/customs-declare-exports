@@ -16,60 +16,47 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import javax.inject.{Inject, Singleton}
-import org.joda.time.DateTime
+import org.bson.types.ObjectId
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.model.Indexes.ascending
 import play.api.Configuration
 import play.api.libs.json._
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.BSONObjectID
-import reactivemongo.play.json.collection.JSONCollection
+import repositories.RepositoryOps
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
-import uk.gov.hmrc.workitem.{WorkItem, WorkItemFieldNames, WorkItemRepository}
+import uk.gov.hmrc.mongo.{MongoComponent, MongoUtils}
+import uk.gov.hmrc.mongo.workitem.{WorkItem, WorkItemFields, WorkItemRepository}
 
+import java.time.{Duration, Instant}
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.reflect.ClassTag
 
 @Singleton
-class SendEmailWorkItemRepository @Inject()(configuration: Configuration, reactiveMongoComponent: ReactiveMongoComponent)
-    extends WorkItemRepository[SendEmailDetails, BSONObjectID](
+class SendEmailWorkItemRepository @Inject()(config: Configuration, mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
+    extends WorkItemRepository[SendEmailDetails](
       collectionName = "sendEmailWorkItems",
-      mongo = reactiveMongoComponent.mongoConnector.db,
-      itemFormat = SendEmailWorkItemRepository.workItemFormat,
-      config = configuration.underlying
-    ) {
+      mongoComponent = mongoComponent,
+      itemFormat = SendEmailDetails.format,
+      workItemFields = WorkItemFields.default
+    ) with RepositoryOps[WorkItem[SendEmailDetails]] {
 
-  override lazy val collection: JSONCollection =
-    mongo().collection[JSONCollection](collectionName, failoverStrategy = RepositorySettings.failoverStrategy)
+  override def classTag: ClassTag[WorkItem[SendEmailDetails]] = implicitly[ClassTag[WorkItem[SendEmailDetails]]]
+  override val executionContext = ec
 
-  override def indexes: Seq[Index] = super.indexes ++ Seq(
-    Index(key = Seq("sendEmailDetails.notificationId" -> IndexType.Ascending), name = Some("sendEmailDetailsNotificationIdIdx"), unique = true)
-  )
-
-  override def now: DateTime = DateTime.now
-
-  override def workItemFields: WorkItemFieldNames = WorkItemFormat.defaultWorkItemFields
-
-  override def inProgressRetryAfterProperty: String = "workItem.sendEmail.retryAfterMillis"
-
-  def pushNew(item: SendEmailDetails)(implicit ec: ExecutionContext): Future[WorkItem[SendEmailDetails]] = pushNew(item, now)
-
-  def markAlertTriggered(id: BSONObjectID)(implicit ec: ExecutionContext): Future[Option[WorkItem[SendEmailDetails]]] = {
-    val fields = Json.obj("sendEmailDetails.alertTriggered" -> true)
-
-    findAndUpdate(
-      query = Json.obj(workItemFields.id -> ReactiveMongoFormats.objectIdWrite.writes(id)),
-      update = Json.obj("$set" -> fields),
-      fetchNewObject = true
-    ).map { updateResult =>
-      updateResult.lastError.foreach(_.err.foreach(errorMsg => logger.warn(s"Problem during $collectionName collection update: $errorMsg")))
-
-      updateResult.result[WorkItem[SendEmailDetails]]
-    }
+  override def ensureIndexes: Future[Seq[String]] = {
+    val workItemIndexes: Seq[IndexModel] = indexes ++ List(
+      IndexModel(ascending("item.notificationId"), IndexOptions().name("sendEmailDetailsNotificationIdIdx").unique(true))
+    )
+    MongoUtils.ensureIndexes(collection, workItemIndexes, replaceIndexes = true)
   }
-}
 
-object SendEmailWorkItemRepository {
-  private val workItemFormat = WorkItemFormat.workItemMongoFormat[SendEmailDetails]("sendEmailDetails")
+  override lazy val inProgressRetryAfter: Duration =
+    Duration.ofMillis(config.getMillis("workItem.sendEmail.retryAfterMillis"))
+
+  override def now: Instant = Instant.now
+
+  def markAlertTriggered(id: ObjectId): Future[Boolean] = {
+    val fields = Json.obj("item.alertTriggered" -> true)
+    findOneAndUpdate(workItemFields.id, id, Json.obj("$set" -> fields)).map(_.exists(_.item.alertTriggered))
+  }
 }

@@ -16,14 +16,16 @@
 
 package uk.gov.hmrc.exports.services
 
-import scala.concurrent.Future
 import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
+import play.api.libs.json.JsValue
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
+
+import scala.concurrent.Future
 
 class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
 
@@ -44,26 +46,25 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "Update" should {
     "delegate to the repository" in {
-      val declaration = aDeclaration()
       val persistedDeclaration = mock[ExportsDeclaration]
-      given(declarationRepository.update(any())).willReturn(Future.successful(Some(persistedDeclaration)))
+      given(declarationRepository.findOneAndReplace(any[JsValue], any[ExportsDeclaration], any[Boolean]))
+        .willReturn(Future.successful(Some(persistedDeclaration)))
 
-      service.update(declaration).futureValue mustBe Some(persistedDeclaration)
+      service.update(aDeclaration()).futureValue mustBe Some(persistedDeclaration)
     }
   }
 
   "Delete" should {
     "delegate to the repository" in {
-      val declaration = mock[ExportsDeclaration]
-      given(declarationRepository.delete(any[ExportsDeclaration])).willReturn(Future.successful((): Unit))
+      given(declarationRepository.removeOne(any[JsValue])).willReturn(Future.successful(true))
 
-      service.deleteOne(declaration).futureValue
+      service.deleteOne(mock[ExportsDeclaration]).futureValue
 
-      verify(declarationRepository).delete(declaration)
+      verify(declarationRepository).removeOne(any[JsValue])
     }
   }
 
-  "Find by EORI" should {
+  "Find" should {
     "delegate to the repository" in {
       val declaration = mock[ExportsDeclaration]
       val search = mock[DeclarationSearch]
@@ -78,7 +79,7 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
   "Find by ID & EORI" should {
     "delegate to the repository" in {
       val declaration = mock[ExportsDeclaration]
-      given(declarationRepository.find("id", Eori("eori"))).willReturn(Future.successful(Some(declaration)))
+      given(declarationRepository.findOne("id", Eori("eori"))).willReturn(Future.successful(Some(declaration)))
 
       service.findOne("id", Eori("eori")).futureValue mustBe Some(declaration)
     }

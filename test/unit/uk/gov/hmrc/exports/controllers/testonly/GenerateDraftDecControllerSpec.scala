@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.exports.controllers.testonly
 
-import org.mockito.invocation.InvocationOnMock
 import org.mockito.ArgumentCaptor
+import org.mockito.invocation.InvocationOnMock
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.Application
 import play.api.libs.json.Json
-import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsJson, _}
 import uk.gov.hmrc.exports.base.UnitSpec
@@ -59,8 +58,8 @@ class GenerateDraftDecControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
           Future.successful(invocation.getArguments.head.asInstanceOf[ExportsDeclaration])
         })
 
-        val result: Future[Result] =
-          route(app, post.withJsonBody(Json.obj("eori" -> eoriSpecified, "itemCount" -> itemCount, "lrn" -> s"SOMELRN$itemCount"))).get
+        val request = Json.obj("eori" -> eoriSpecified, "itemCount" -> itemCount, "lrn" -> s"SOMELRN$itemCount")
+        val result = route(app, post.withJsonBody(request)).get
 
         status(result) must be(OK)
 

@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.exports.migrations.repositories
 
-import java.util.Date
-
 import uk.gov.hmrc.exports.migrations.LockManager.LockRefreshMarginMillis
 import uk.gov.hmrc.exports.migrations.TimeUtils
 
-class LockRefreshChecker(private val timeUtils: TimeUtils) {
-  def needsRefreshLock(lockExpiresAt: Date): Boolean =
-    lockExpiresAt == null ||
-      timeUtils.currentTime.compareTo(new Date(lockExpiresAt.getTime - timeUtils.minutesToMillis(LockRefreshMarginMillis))) >= 0
+import java.time.Instant
 
+class LockRefreshChecker(private val timeUtils: TimeUtils) {
+
+  def needsRefreshLock(lockExpiresAt: Instant): Boolean =
+    timeUtils.currentTime.compareTo(lockExpiresAt.minusMillis(timeUtils.minutesToMillis(LockRefreshMarginMillis))) >= 0
 }

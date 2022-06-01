@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 
-import org.joda.time.DateTime
 import play.api.Logging
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import uk.gov.hmrc.exports.repositories.UnparsedNotificationWorkItemRepository
-import uk.gov.hmrc.workitem.{Failed, Succeeded, WorkItem}
+import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Failed, Succeeded}
+import uk.gov.hmrc.mongo.workitem.WorkItem
 
+import java.time.{Instant, LocalDateTime, ZoneId}
 import javax.inject.{Inject, Named, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -32,14 +33,16 @@ class NotificationReceiptActionsRunner @Inject()(
 )(implicit @Named("backgroundTasksExecutionContext") ec: ExecutionContext)
     extends Logging {
 
+  val year = 2010
+
   def runNow(parseFailed: Boolean = false): Future[Unit] = {
-    val now: DateTime = DateTime.now()
-    val defaultFailedBefore = DateTime.parse("2010-01-01T01:00")
-    val failedBefore = if (parseFailed) now else defaultFailedBefore
+    val now = Instant.now
+    val defaultFailedBefore = LocalDateTime.of(year, 1, 1, 1, 0, 0)
+    val failedBefore = if (parseFailed) now else defaultFailedBefore.atZone(ZoneId.of("UTC")).toInstant
 
     def process(): Future[Unit] =
       unparsedNotificationWorkItemRepository.pullOutstanding(failedBefore = failedBefore, availableBefore = now).flatMap {
-        case None                               => Future.successful(())
+        case None                               => Future.unit
         case Some(unparsedNotificationWorkItem) => executeNotificationReceiptActions(unparsedNotificationWorkItem).flatMap(_ => process())
       }
 

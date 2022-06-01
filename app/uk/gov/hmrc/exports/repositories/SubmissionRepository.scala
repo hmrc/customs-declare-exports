@@ -16,80 +16,64 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import play.api.libs.json.{JsObject, JsString, Json}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.Cursor.FailOnError
-import reactivemongo.api.ReadPreference
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.{BSONBoolean, BSONDocument, BSONObjectID}
-import reactivemongo.play.json.ImplicitBSONHandlers
-import reactivemongo.play.json.collection.JSONCollection
+import com.mongodb.client.model.Indexes.{ascending, compoundIndex, descending}
+import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import play.api.libs.json.{JsBoolean, JsObject, JsString, Json}
+import repositories.RepositoryOps
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionQueryParameters}
-import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.reflect.ClassTag
 
 @Singleton
-class SubmissionRepository @Inject()(implicit mc: ReactiveMongoComponent, ec: ExecutionContext)
-    extends ReactiveRepository[Submission, BSONObjectID]("submissions", mc.mongoConnector.db, Submission.formats, objectIdFormats) {
+class SubmissionRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[Submission](
+      mongoComponent = mongoComponent,
+      collectionName = "submissions",
+      domainFormat = Submission.format,
+      indexes = SubmissionRepository.indexes
+    ) with RepositoryOps[Submission] {
 
-  override lazy val collection: JSONCollection =
-    mongo().collection[JSONCollection](collectionName, failoverStrategy = RepositorySettings.failoverStrategy)
-
-  override def indexes: Seq[Index] = Seq(
-    Index(
-      Seq("actions.id" -> IndexType.Ascending),
-      unique = true,
-      name = Some("actionIdIdx"),
-      partialFilter = Some(BSONDocument(Seq("actions.id" -> BSONDocument("$exists" -> BSONBoolean(true)))))
-    ),
-    Index(Seq("eori" -> IndexType.Ascending, "action.requestTimestamp" -> IndexType.Descending), name = Some("actionOrderedEori"))
-  )
-
-  //looking up by MRN field that is not indexed (eori is though)! This is for the cancelation request processing!
-  def findSubmissionByMrnAndEori(mrn: String, eori: String): Future[Option[Submission]] = find("eori" -> eori, "mrn" -> mrn).map(_.headOption)
-
-  def findByConversationId(conversationId: String): Future[Option[Submission]] = find("actions.id" -> conversationId).map(_.headOption)
-
-  def findBy(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] = {
-    val query = Json.toJson(queryParameters).as[JsObject] + (otherField = ("eori", JsString(eori)))
-    collection
-      .find(query, projection = None)(ImplicitBSONHandlers.JsObjectDocumentWriter, ImplicitBSONHandlers.JsObjectDocumentWriter)
-      .sort(Json.obj("actions.requestTimestamp" -> -1))
-      .cursor[Submission](ReadPreference.primaryPreferred)
-      .collect(maxDocs = -1, FailOnError[Seq[Submission]]())
-  }
-
-  def save(submission: Submission): Future[Submission] = insert(submission).map { res =>
-    if (!res.ok) logger.error(s"Errors when persisting declaration submission: ${res.writeErrors.mkString("--")}")
-    submission
-  }
-
-  def updateMrn(conversationId: String, newMrn: String): Future[Option[Submission]] = {
-    val query = Json.obj("actions.id" -> conversationId)
-    val update = Json.obj("$set" -> Json.obj("mrn" -> newMrn))
-    performUpdate(query, update)
-  }
+  override def classTag: ClassTag[Submission] = implicitly[ClassTag[Submission]]
+  override val executionContext = ec
 
   def addAction(mrn: String, newAction: Action): Future[Option[Submission]] = {
-    val query = Json.obj("mrn" -> mrn)
+    val filter = Json.obj("mrn" -> mrn)
     val update = Json.obj("$addToSet" -> Json.obj("actions" -> newAction))
-    performUpdate(query, update)
+    findOneAndUpdate(filter, update)
   }
 
-  def addAction(submission: Submission, action: Action): Future[Submission] = {
-    val query = Json.obj("uuid" -> submission.uuid)
-    val update = Json.obj("$addToSet" -> Json.obj("actions" -> action))
-    performUpdate(query, update).map(_.getOrElse(throw new IllegalStateException("Submission must exist before")))
+  def findAll(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] = {
+    val filter = Json.toJson(queryParameters).as[JsObject] + ("eori" -> JsString(eori))
+    collection
+      .find(BsonDocument(filter.toString))
+      .sort(BsonDocument(Json.obj("actions.requestTimestamp" -> -1).toString))
+      .toFuture
   }
 
-  private def performUpdate(query: JsObject, update: JsObject): Future[Option[Submission]] =
-    findAndUpdate(query, update, fetchNewObject = true).map { updateResult =>
-      if (updateResult.value.isEmpty) {
-        updateResult.lastError.foreach(_.err.foreach(errorMsg => logger.error(s"Problem during database update: $errorMsg")))
-      }
-      updateResult.result[Submission]
-    }
+  def updateMrn(actionId: String, mrn: String): Future[Option[Submission]] = {
+    val filter = Json.obj("actions.id" -> actionId)
+    val update = Json.obj("$set" -> Json.obj("mrn" -> mrn))
+    findOneAndUpdate(filter, update)
+  }
+}
+
+object SubmissionRepository {
+
+  val filter = Json.obj("actions.id" -> Json.obj("$exists" -> JsBoolean(true)))
+
+  val indexes: Seq[IndexModel] = List(
+    IndexModel(
+      ascending("actions.id"),
+      IndexOptions()
+        .name("actionIdIdx")
+        .partialFilterExpression(BsonDocument(filter.toString))
+        .unique(true)
+    ),
+    IndexModel(compoundIndex(ascending("eori"), descending("action.requestTimestamp")), IndexOptions().name("actionOrderedEori"))
+  )
 }

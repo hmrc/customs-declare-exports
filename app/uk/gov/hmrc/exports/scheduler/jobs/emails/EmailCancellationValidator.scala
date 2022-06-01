@@ -17,12 +17,11 @@
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
 import play.api.Logging
-
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.{CANCELLED, CLEARED, REJECTED}
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.exports.repositories.ParsedNotificationRepository
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -31,7 +30,7 @@ private[emails] class EmailCancellationValidator @Inject()(notificationRepositor
   private val statusesCancellingEmailSending = Set(REJECTED, CLEARED, CANCELLED)
 
   def isEmailSendingCancelled(sendEmailDetails: SendEmailDetails)(implicit ec: ExecutionContext): Future[Boolean] =
-    notificationRepository.findNotificationsByActionId(sendEmailDetails.actionId).map { notifications =>
+    notificationRepository.findAll("actionId", sendEmailDetails.actionId).map { notifications =>
       notifications
         .find(_._id == sendEmailDetails.notificationId)
         .map { currentDmsDocNotification =>

@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.exports.migrations
 
-import java.util.Date
-
 import com.mongodb.client.MongoDatabase
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
@@ -26,6 +24,8 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.migrations.exceptions.{ExportsMigrationException, LockManagerException}
 import uk.gov.hmrc.exports.migrations.repositories.{ChangeEntry, ChangeEntryRepository}
+
+import java.time.Instant
 
 class ExportsMigrationToolSpec extends UnitSpec {
 
@@ -53,13 +53,11 @@ class ExportsMigrationToolSpec extends UnitSpec {
   "ExportsMigrationTool on execute" should {
 
     "call LockManager acquireLockDefault method" in {
-
       exportsMigrationTool().execute()
       verify(lockManager).acquireLockDefault()
     }
 
     "call LockManager releaseLockDefault method" in {
-
       exportsMigrationTool().execute()
       verify(lockManager).releaseLockDefault()
     }
@@ -70,13 +68,11 @@ class ExportsMigrationToolSpec extends UnitSpec {
     "MigrationsRegistry is empty" should {
 
       "not call LockManager ensureLockDefault" in {
-
         exportsMigrationTool().execute()
         verify(lockManager, never).ensureLockDefault()
       }
 
       "not call ChangeEntryRepository" in {
-
         exportsMigrationTool().execute()
         verifyNoInteractions(changeEntryRepository)
       }
@@ -91,7 +87,6 @@ class ExportsMigrationToolSpec extends UnitSpec {
       }
 
       "call ChangeEntryRepository findAll method" in {
-
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition))
         when(changeEntryRepository.findAll()).thenReturn(List.empty)
 
@@ -101,7 +96,6 @@ class ExportsMigrationToolSpec extends UnitSpec {
       }
 
       "call LockManager ensureLockDefault" in {
-
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition))
         when(changeEntryRepository.findAll()).thenReturn(List.empty)
 
@@ -111,7 +105,6 @@ class ExportsMigrationToolSpec extends UnitSpec {
       }
 
       "call ChangeEntryRepository save method" in {
-
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition))
         when(changeEntryRepository.findAll()).thenReturn(List.empty)
 
@@ -122,7 +115,6 @@ class ExportsMigrationToolSpec extends UnitSpec {
     }
 
     "MigrationsRegistry contains old migration definition with runAlways flag" should {
-
       val testMigrationInformation = MigrationInformation(id = "TestId", order = 1, author = "TestAuthor", runAlways = true)
       val migrationDefinition = new MigrationDefinition {
         override val migrationInformation: MigrationInformation = testMigrationInformation
@@ -131,12 +123,11 @@ class ExportsMigrationToolSpec extends UnitSpec {
       val currentChangeEntry = ChangeEntry(
         changeId = testMigrationInformation.id,
         author = testMigrationInformation.author,
-        timestamp = new Date(),
+        timestamp = Instant.now,
         changeLogClass = "testChangeLogClass"
       )
 
       "call ChangeEntryRepository findAll method" in {
-
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition))
         when(changeEntryRepository.findAll()).thenReturn(List(currentChangeEntry.buildFullDBObject))
 
@@ -146,7 +137,6 @@ class ExportsMigrationToolSpec extends UnitSpec {
       }
 
       "call LockManager ensureLockDefault" in {
-
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition))
         when(changeEntryRepository.findAll()).thenReturn(List(currentChangeEntry.buildFullDBObject))
 
@@ -156,7 +146,6 @@ class ExportsMigrationToolSpec extends UnitSpec {
       }
 
       "not call ChangeEntryRepository save method" in {
-
         when(migrationsRegistry.migrations).thenReturn(Seq(migrationDefinition))
         when(changeEntryRepository.findAll()).thenReturn(List(currentChangeEntry.buildFullDBObject))
 
@@ -169,7 +158,6 @@ class ExportsMigrationToolSpec extends UnitSpec {
     "MigrationsRegistry contains multiple new migration definitions" should {
 
       "execute them in order" in {
-
         def testMigrationInformation(order: Int) = MigrationInformation(id = "TestId", order = order, author = "TestAuthor")
         val migrationDefinition_1 = mock[MigrationDefinition]
         val migrationDefinition_2 = mock[MigrationDefinition]
@@ -195,7 +183,6 @@ class ExportsMigrationToolSpec extends UnitSpec {
       "throwExceptionIfCannotObtainLock == true" should {
 
         "throw ExportsMigrationException" in {
-
           val exceptionMessage = "Test Exception Message"
           when(lockManager.acquireLockDefault()).thenThrow(new LockManagerException(exceptionMessage))
 
@@ -205,7 +192,6 @@ class ExportsMigrationToolSpec extends UnitSpec {
         }
 
         "call LockManager releaseLockDefault method" in {
-
           val exceptionMessage = "Test Exception Message"
           when(lockManager.acquireLockDefault()).thenThrow(new LockManagerException(exceptionMessage))
 
@@ -220,7 +206,6 @@ class ExportsMigrationToolSpec extends UnitSpec {
       "throwExceptionIfCannotObtainLock == false" should {
 
         "not throw ExportsMigrationException" in {
-
           val exceptionMessage = "Test Exception Message"
           when(lockManager.acquireLockDefault()).thenThrow(new LockManagerException(exceptionMessage))
 
@@ -228,7 +213,6 @@ class ExportsMigrationToolSpec extends UnitSpec {
         }
 
         "call LockManager releaseLockDefault method" in {
-
           val exceptionMessage = "Test Exception Message"
           when(lockManager.acquireLockDefault()).thenThrow(new LockManagerException(exceptionMessage))
 
@@ -239,5 +223,4 @@ class ExportsMigrationToolSpec extends UnitSpec {
       }
     }
   }
-
 }

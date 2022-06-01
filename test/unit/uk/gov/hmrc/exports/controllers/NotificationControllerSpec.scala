@@ -17,7 +17,6 @@
 package uk.gov.hmrc.exports.controllers
 
 import com.codahale.metrics.SharedMetricRegistries
-import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -35,14 +34,16 @@ import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
 import uk.gov.hmrc.exports.base.UnitTestMockBuilder.buildNotificationServiceMock
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
+import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification.FrontendFormat
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.NotificationService
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
+
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import scala.concurrent.Future
 import scala.util.Random
 import scala.xml.{Elem, NodeSeq}
-
-import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification.FrontendFormat
 
 class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestSupport {
 
@@ -281,7 +282,6 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
 object NotificationControllerSpec {
 
-  val now: DateTime = DateTime.now.withZone(DateTimeZone.UTC)
   val conversationId: String = "b1c09f1b-7c94-4e90-b754-7c5c71c44e11"
   val mrn: String = "MRN87878797"
   val eori: String = "GB167676"
@@ -291,14 +291,16 @@ object NotificationControllerSpec {
 
   private lazy val randomResponseFunctionCode: String = responseFunctionCodes(Random.nextInt(responseFunctionCodes.length))
 
-  private def dateTimeElement(dateTimeVal: DateTime): Option[ResponseDateTimeElement] =
-    Some(ResponseDateTimeElement(DateTimeString("102", dateTimeVal.toString("yyyyMMdd"))))
+  private val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+
+  private def dateTimeElement(date: LocalDate): Option[ResponseDateTimeElement] =
+    Some(ResponseDateTimeElement(DateTimeString("102", date.format(formatter))))
 
   val response: Seq[Response] = Seq(
     Response(
       functionCode = randomResponseFunctionCode,
       functionalReferenceId = Some("123"),
-      issueDateTime = dateTimeElement(DateTime.parse("2019-02-05T10:11:12.123"))
+      issueDateTime = dateTimeElement(LocalDate.parse("2019-02-05"))
     )
   )
 }

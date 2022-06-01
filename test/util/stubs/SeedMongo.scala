@@ -16,19 +16,17 @@
 
 package stubs
 
-import reactivemongo.api.{MongoConnection, MongoDriver}
-import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, _}
+import org.mongodb.scala.model.InsertOneModel
+import org.mongodb.scala.{MongoClient, MongoCollection}
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.{COMPLETE, DRAFT}
+import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, ExportsItemBuilder}
 
 import java.util.UUID
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
-
-  import ExportsDeclaration.Mongo._
-
-  import scala.concurrent.ExecutionContext.Implicits._
 
   val declaration = aDeclaration(
     withDispatchLocation(),
@@ -70,43 +68,31 @@ object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
     withNatureOfTransaction("1")
   )
 
-  val random = new scala.util.Random()
+  val random = new scala.util.Random
 
   val target = 20000
   val batchSize = 1000
 
   def generateEori: String = "GB" + random.nextInt(Int.MaxValue).toString
 
-  import reactivemongo.play.json.collection.JSONCollection
+  def randomStatus: DeclarationStatus.Value = if (random.nextDouble() > 0.1) COMPLETE else DRAFT
 
-  def randomStatus: DeclarationStatus.Value =
-    if (random.nextDouble() > 0.1) {
-      DeclarationStatus.COMPLETE
-    } else {
-      DeclarationStatus.DRAFT
+  def job(collection: MongoCollection[ExportsDeclaration]): Unit =
+    (1 to Math.ceil(target / batchSize).toInt).foreach { batchNumber =>
+      val declarations = (1 to batchSize).map { _ =>
+        InsertOneModel(declaration.copy(id = UUID.randomUUID.toString, eori = generateEori, status = randomStatus))
+      }.toList
+      Await.ready(collection.bulkWrite(declarations).toFuture, Duration.Inf)
+      print(s"Inserted ${batchSize * batchNumber} out of ${target} declarations\n")
     }
 
-  def job(connection: MongoConnection): Future[Unit] =
-    connection
-      .database("customs-declare-exports")
-      .map(db => db.collection[JSONCollection]("declarations"))
-      .map { collection =>
-        val batchesAmount = Math.ceil(target / batchSize).toInt
-        (1 to batchesAmount).foreach { batchNumber =>
-          val declarations = (1 to batchSize).map { _ =>
-            declaration.copy(id = UUID.randomUUID.toString, eori = generateEori, status = randomStatus)
-          }
-          Await.ready(collection.insert.many(declarations), Duration.Inf)
-          println(s"Inserted ${batchSize * batchNumber} out of ${target} declarations")
-        }
-      }
-
   def main(args: Array[String]): Unit = {
-    val driver = MongoDriver()
-    val parsedUri = MongoConnection.parseURI("mongodb://localhost:27017/customs-declare-exports").get
-    val connection = driver.connection(parsedUri, true).get
+    val mongoClient = MongoClient()
+    val collection = mongoClient
+      .getDatabase("customs-declare-exports")
+      .getCollection[ExportsDeclaration]("declarations")
 
-    Await.ready(job(connection), Duration.Inf)
-    driver.close()
+    job(collection)
+    mongoClient.close
   }
 }

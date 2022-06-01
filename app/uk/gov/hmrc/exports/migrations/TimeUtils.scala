@@ -16,20 +16,15 @@
 
 package uk.gov.hmrc.exports.migrations
 
-import java.util.Date
+import java.time.Instant
 
 class TimeUtils {
 
-  private[migrations] def currentTimePlusMillis(millis: Long): Date =
-    new Date(System.currentTimeMillis + millis)
+  private[migrations] def currentTimePlusMillis(millis: Long): Instant = Instant.now.plusMillis(millis)
 
-  private[migrations] def currentTime: Date =
-    new Date(System.currentTimeMillis)
+  private[migrations] def currentTime: Instant = Instant.now
 
-  private[migrations] def minutesToMillis(minutes: Long): Long =
-    minutes * 60 * 1000
+  private[migrations] def minutesToMillis(minutes: Long): Long = minutes * 60 * 1000
 
-  private[migrations] def millisToMinutes(millis: Long): Long =
-    millis / (60 * 1000)
-
+  private[migrations] def millisToMinutes(millis: Long): Long = millis / (60 * 1000)
 }

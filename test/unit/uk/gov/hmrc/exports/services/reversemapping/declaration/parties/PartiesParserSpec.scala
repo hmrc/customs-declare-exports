@@ -20,10 +20,10 @@ import org.mockito.ArgumentMatchersSugar.any
 import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
-import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoStringAnswers
 import uk.gov.hmrc.exports.models.DeclarationType.CLEARANCE
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoStringAnswers
+import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserError
 import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, ExportsItemBuilder}
@@ -68,15 +68,15 @@ class PartiesParserSpec extends UnitSpec with EitherValues with ExportsDeclarati
         val result = partiesParser.parse(xml)
 
         result.isRight mustBe true
-        result.value mustBe an[Parties]
+        result.right.value mustBe an[Parties]
 
-        result.value.exporterDetails.isDefined mustBe true
-        result.value.consigneeDetails.isDefined mustBe true
-        result.value.consignorDetails.isDefined mustBe true
-        result.value.carrierDetails.isDefined mustBe true
-        result.value.declarantDetails.isDefined mustBe true
-        result.value.representativeDetails.isDefined mustBe true
-        result.value.declarationHoldersData.isDefined mustBe true
+        result.right.value.exporterDetails.isDefined mustBe true
+        result.right.value.consigneeDetails.isDefined mustBe true
+        result.right.value.consignorDetails.isDefined mustBe true
+        result.right.value.carrierDetails.isDefined mustBe true
+        result.right.value.declarantDetails.isDefined mustBe true
+        result.right.value.representativeDetails.isDefined mustBe true
+        result.right.value.declarationHoldersData.isDefined mustBe true
       }
     }
 
@@ -96,7 +96,7 @@ class PartiesParserSpec extends UnitSpec with EitherValues with ExportsDeclarati
       "set the declarantDetails value to the eori supplied in the MappingContext" in {
         val result = partiesParser.parse(xml)
 
-        val maybeDeclarantEori = result.value.declarantDetails
+        val maybeDeclarantEori = result.right.value.declarantDetails
           .flatMap(_.details.eori)
 
         maybeDeclarantEori mustBe Some(context.eori)
@@ -108,9 +108,9 @@ class PartiesParserSpec extends UnitSpec with EitherValues with ExportsDeclarati
         val result = partiesParser.parse(xml)
 
         result.isRight mustBe true
-        result.value mustBe an[Parties]
-        result.value.declarantIsExporter.isDefined mustBe true
-        result.value.declarantIsExporter.get.isExporter mustBe true
+        result.right.value mustBe an[Parties]
+        result.right.value.declarantIsExporter.isDefined mustBe true
+        result.right.value.declarantIsExporter.get.isExporter mustBe true
       }
 
       "do not set the declarantIsExporter value if the ID supplied in the Exporter element doesn't match the MappingContext's eori value" in {
@@ -119,8 +119,8 @@ class PartiesParserSpec extends UnitSpec with EitherValues with ExportsDeclarati
         val result = partiesParser.parse(xml)
 
         result.isRight mustBe true
-        result.value mustBe an[Parties]
-        result.value.declarantIsExporter.isDefined mustBe false
+        result.right.value mustBe an[Parties]
+        result.right.value.declarantIsExporter.isDefined mustBe false
       }
 
       "remove any ID value if supplied in the Consignee element that should not be there" in {
@@ -129,9 +129,9 @@ class PartiesParserSpec extends UnitSpec with EitherValues with ExportsDeclarati
         val result = partiesParser.parse(xml)
 
         result.isRight mustBe true
-        result.value mustBe an[Parties]
-        result.value.consigneeDetails.isDefined mustBe true
-        result.value.consigneeDetails.get.details.eori.isDefined mustBe false
+        result.right.value mustBe an[Parties]
+        result.right.value.consigneeDetails.isDefined mustBe true
+        result.right.value.consigneeDetails.get.details.eori.isDefined mustBe false
       }
 
       "set the representativeDetails eori value to" when {
@@ -141,9 +141,9 @@ class PartiesParserSpec extends UnitSpec with EitherValues with ExportsDeclarati
           val result = partiesParser.parse(xml)
 
           result.isRight mustBe true
-          result.value mustBe an[Parties]
+          result.right.value mustBe an[Parties]
 
-          val representativeDetailsEori = result.value.representativeDetails
+          val representativeDetailsEori = result.right.value.representativeDetails
             .flatMap(_.details)
             .flatMap(_.eori)
 
@@ -157,9 +157,9 @@ class PartiesParserSpec extends UnitSpec with EitherValues with ExportsDeclarati
           val result = partiesParser.parse(xml)
 
           result.isRight mustBe true
-          result.value mustBe an[Parties]
+          result.right.value mustBe an[Parties]
 
-          val representativeDetailsEori = result.value.representativeDetails
+          val representativeDetailsEori = result.right.value.representativeDetails
             .flatMap(_.details)
             .flatMap(_.eori)
 
@@ -175,9 +175,9 @@ class PartiesParserSpec extends UnitSpec with EitherValues with ExportsDeclarati
         val result = partiesParser.parse(xml)
 
         result.isRight mustBe true
-        result.value mustBe an[Parties]
+        result.right.value mustBe an[Parties]
 
-        val declarationHoldersDataIsRequired = result.value.declarationHoldersData
+        val declarationHoldersDataIsRequired = result.right.value.declarationHoldersData
           .flatMap(_.isRequired)
 
         declarationHoldersDataIsRequired.isDefined mustBe true

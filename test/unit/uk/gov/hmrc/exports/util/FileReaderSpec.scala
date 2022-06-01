@@ -31,5 +31,4 @@ class FileReaderSpec extends UnitSpec {
       reader.readLines("header-file.csv", skipHeaderLine = true).head mustBe "data"
     }
   }
-
 }

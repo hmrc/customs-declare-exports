@@ -37,28 +37,28 @@ class DeclarationAdditionalActorParserSpec extends UnitSpec with EitherValues {
         val result = parser.parse(NodeSeq.Empty)
 
         result.isRight mustBe true
-        result.value.size mustBe 0
+        result.right.value.size mustBe 0
       }
 
       "contains an unpopulated ID element and no RoleCode element" in {
         val result = parser.parse(wrapped(suppliedEmptyIdElementsXml))
 
         result.isRight mustBe true
-        result.value.size mustBe 0
+        result.right.value.size mustBe 0
       }
 
       "contains an unpopulated RoleCode element and no ID element" in {
         val result = parser.parse(wrapped(suppliedEmptyRoleCodeElementXml))
 
         result.isRight mustBe true
-        result.value.size mustBe 0
+        result.right.value.size mustBe 0
       }
 
       "contains an unpopulated RoleCode element and an unpopulated ID element" in {
         val result = parser.parse(wrapped(suppliedEmptyRoleCodeAndIdElementsXml))
 
         result.isRight mustBe true
-        result.value.size mustBe 0
+        result.right.value.size mustBe 0
       }
     }
 
@@ -68,37 +68,37 @@ class DeclarationAdditionalActorParserSpec extends UnitSpec with EitherValues {
           val result = parser.parse(wrapped(suppliedIDElementsXml))
 
           result.isRight mustBe true
-          result.value.size mustBe 1
+          result.right.value.size mustBe 1
 
-          result.value.head.eori.isDefined mustBe true
-          result.value.head.eori.get mustBe eori
+          result.right.value.head.eori.isDefined mustBe true
+          result.right.value.head.eori.get mustBe eori
 
-          result.value.head.partyType.isDefined mustBe false
+          result.right.value.head.partyType.isDefined mustBe false
         }
 
         "contains a populated RoleCode element but no ID element" in {
           val result = parser.parse(wrapped(suppliedRoleCodeElementsXml))
 
           result.isRight mustBe true
-          result.value.size mustBe 1
+          result.right.value.size mustBe 1
 
-          result.value.head.partyType.isDefined mustBe true
-          result.value.head.partyType.get mustBe roleCode1
+          result.right.value.head.partyType.isDefined mustBe true
+          result.right.value.head.partyType.get mustBe roleCode1
 
-          result.value.head.eori.isDefined mustBe false
+          result.right.value.head.eori.isDefined mustBe false
         }
 
         "contains an ID element and a RoleCode element" in {
           val result = parser.parse(wrapped(suppliedRoleCodeAndIdElementsXml()))
 
           result.isRight mustBe true
-          result.value.size mustBe 1
+          result.right.value.size mustBe 1
 
-          result.value.head.eori.isDefined mustBe true
-          result.value.head.eori.get mustBe eori
+          result.right.value.head.eori.isDefined mustBe true
+          result.right.value.head.eori.get mustBe eori
 
-          result.value.head.partyType.isDefined mustBe true
-          result.value.head.partyType.get mustBe roleCode1
+          result.right.value.head.partyType.isDefined mustBe true
+          result.right.value.head.partyType.get mustBe roleCode1
         }
       }
 
@@ -109,17 +109,17 @@ class DeclarationAdditionalActorParserSpec extends UnitSpec with EitherValues {
           val result = parser.parse(xmlToParse)
 
           result.isRight mustBe true
-          result.value.size mustBe 2
+          result.right.value.size mustBe 2
 
-          result.value.head.eori.isDefined mustBe true
-          result.value.head.eori.get mustBe eori
-          result.value.head.partyType.isDefined mustBe true
-          result.value.head.partyType.get mustBe roleCode1
+          result.right.value.head.eori.isDefined mustBe true
+          result.right.value.head.eori.get mustBe eori
+          result.right.value.head.partyType.isDefined mustBe true
+          result.right.value.head.partyType.get mustBe roleCode1
 
-          result.value.last.eori.isDefined mustBe true
-          result.value.last.eori.get mustBe altEori
-          result.value.last.partyType.isDefined mustBe true
-          result.value.last.partyType.get mustBe roleCode2
+          result.right.value.last.eori.isDefined mustBe true
+          result.right.value.last.eori.get mustBe altEori
+          result.right.value.last.partyType.isDefined mustBe true
+          result.right.value.last.partyType.get mustBe roleCode2
         }
       }
     }

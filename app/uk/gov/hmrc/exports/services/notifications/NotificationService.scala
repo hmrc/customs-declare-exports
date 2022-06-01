@@ -33,14 +33,14 @@ class NotificationService @Inject()(
 )(implicit executionContext: ExecutionContext) {
 
   def findAllNotificationsSubmissionRelated(submission: Submission): Future[Seq[ParsedNotification]] =
-    notificationRepository.findNotificationsByActionIds(actionIdsSubmissionRelated(submission))
+    notificationRepository.findNotifications(actionIdsSubmissionRelated(submission))
 
   def findAllNotificationsForUser(eori: String): Future[Seq[ParsedNotification]] =
-    submissionRepository.findBy(eori, SubmissionQueryParameters()).flatMap {
+    submissionRepository.findAll(eori, SubmissionQueryParameters()).flatMap {
       case Seq() => Future.successful(Seq.empty)
       case submissions =>
         val conversationIds = submissions.flatMap(_.actions.map(_.id))
-        notificationRepository.findNotificationsByActionIds(conversationIds)
+        notificationRepository.findNotifications(conversationIds)
     }
 
   def findLatestNotificationSubmissionRelated(submission: Submission): Future[Option[ParsedNotification]] =

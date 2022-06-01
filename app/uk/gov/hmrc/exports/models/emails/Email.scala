@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.exports.models.emails
 
-import org.joda.time.DateTime
-
 import play.api.libs.json.Json
+
+import java.time.Instant
 
 case class UndeliverableInformationEvent(
   id: String,
@@ -34,13 +34,9 @@ object UndeliverableInformationEvent {
   implicit val format = Json.format[UndeliverableInformationEvent]
 }
 
-case class UndeliverableInformation(subject: String, eventId: String, groupId: String, timestamp: DateTime, event: UndeliverableInformationEvent)
+case class UndeliverableInformation(subject: String, eventId: String, groupId: String, timestamp: Instant, event: UndeliverableInformationEvent)
 
 object UndeliverableInformation {
-  // Required for org.joda.time.DateTime
-  import play.api.libs.json.JodaReads._
-  import play.api.libs.json.JodaWrites._
-
   implicit val format = Json.format[UndeliverableInformation]
 }
 

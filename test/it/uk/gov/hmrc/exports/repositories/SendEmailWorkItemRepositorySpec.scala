@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,58 +16,53 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import org.joda.time.DateTime.now
-import play.api.inject.guice.GuiceApplicationBuilder
-import reactivemongo.bson.BSONObjectID
-import reactivemongo.core.errors.DatabaseException
-import stubs.TestMongoDB
-import stubs.TestMongoDB.mongoConfiguration
+import com.mongodb.MongoWriteException
+import org.bson.types.ObjectId
 import testdata.ExportsTestData
 import testdata.WorkItemTestData._
-import uk.gov.hmrc.exports.base.IntegrationTestBaseSpec
+import uk.gov.hmrc.exports.base.IntegrationTestMongoSpec
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
-import uk.gov.hmrc.workitem._
+import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Failed, InProgress, Succeeded, ToDo}
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import java.time.Instant
 
-class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
+class SendEmailWorkItemRepositorySpec extends IntegrationTestMongoSpec {
 
-  private val repo = GuiceApplicationBuilder().configure(mongoConfiguration).injector.instanceOf[SendEmailWorkItemRepository]
+  private val repository = getRepository[SendEmailWorkItemRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    repo.removeAll().futureValue
+    repository.removeAll.futureValue
   }
+
+  def now: Instant = Instant.now
+  val seconds = 2 * 60
 
   "SendEmailWorkItemRepository on pushNew" should {
 
     "create a new WorkItem that is ready to be pulled immediately" in {
-
       val testSendEmailDetails = buildTestSendEmailDetails
 
-      repo.pushNew(testSendEmailDetails).futureValue
+      repository.pushNew(testSendEmailDetails).futureValue
 
-      val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
+      val result = repository.pullOutstanding(failedBefore = now.minusSeconds(seconds), availableBefore = now).futureValue
 
       result mustBe defined
       result.get.item mustBe testSendEmailDetails
     }
 
     "return Exception" when {
-
       "trying to insert WorkItem with duplicated 'notificationId' field" in {
-
-        val id = BSONObjectID.generate
+        val id = ObjectId.get
         val testSendEmailWorkItem_1 = SendEmailDetails(notificationId = id, mrn = ExportsTestData.mrn, actionId = "actionId")
         val testSendEmailWorkItem_2 = SendEmailDetails(notificationId = id, mrn = ExportsTestData.mrn_2, actionId = "actionId")
 
-        repo.pushNew(testSendEmailWorkItem_1).futureValue
+        repository.pushNew(testSendEmailWorkItem_1).futureValue
 
-        val exc = repo.pushNew(testSendEmailWorkItem_2).failed.futureValue
-
-        exc mustBe an[DatabaseException]
-        exc.getMessage must include(
-          s"E11000 duplicate key error collection: ${TestMongoDB.DatabaseName}.sendEmailWorkItems index: sendEmailDetailsNotificationIdIdx dup key"
+        val exception = repository.pushNew(testSendEmailWorkItem_2).failed.futureValue
+        exception mustBe an[MongoWriteException]
+        exception.getMessage must include(
+          s"E11000 duplicate key error collection: ${databaseName}.sendEmailWorkItems index: sendEmailDetailsNotificationIdIdx dup key"
         )
       }
     }
@@ -78,29 +73,25 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
     "return empty Option" when {
 
       "there are no WorkItems in Mongo" in {
-
-        val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
+        val result = repository.pullOutstanding(failedBefore = now.minusSeconds(seconds), availableBefore = now).futureValue
 
         result mustBe None
       }
 
       "there is only WorkItem with 'Succeeded' status" in {
-
         val workItem = buildTestSendEmailWorkItem(Succeeded)
-        repo.insert(workItem).futureValue.ok mustBe true
+        repository.insertOne(workItem).futureValue.isRight mustBe true
 
-        val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
-
+        val result = repository.pullOutstanding(failedBefore = now.minusSeconds(seconds), availableBefore = now).futureValue
         result mustBe None
       }
 
       "there is WorkItem with 'Failed' status" which {
         "was updated after 'failedBefore' parameter" in {
+          val workItem = buildTestSendEmailWorkItem(Failed, updatedAt = now.minusSeconds(60))
+          repository.insertOne(workItem).futureValue.isRight mustBe true
 
-          val workItem = buildTestSendEmailWorkItem(Failed, updatedAt = now.minusMinutes(1))
-          repo.insert(workItem).futureValue.ok mustBe true
-
-          val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
+          val result = repository.pullOutstanding(failedBefore = now.minusSeconds(seconds), availableBefore = now).futureValue
 
           result mustBe None
         }
@@ -110,11 +101,10 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
     "return single WorkItem" when {
 
       "there is WorkItem with 'ToDo' status" in {
-
         val workItem = buildTestSendEmailWorkItem(ToDo)
-        repo.insert(workItem).futureValue.ok mustBe true
+        repository.insertOne(workItem).futureValue.isRight mustBe true
 
-        val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
+        val result = repository.pullOutstanding(failedBefore = now.minusSeconds(seconds), availableBefore = now).futureValue
 
         result mustBe defined
         result.get.status mustBe InProgress
@@ -123,11 +113,10 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
 
       "there is WorkItem with 'Failed' status" which {
         "was updated before 'failedBefore' parameter" in {
+          val workItem = buildTestSendEmailWorkItem(Failed, updatedAt = now.minusSeconds(3 * 60))
+          repository.insertOne(workItem).futureValue.isRight mustBe true
 
-          val workItem = buildTestSendEmailWorkItem(Failed, updatedAt = now.minusMinutes(3))
-          repo.insert(workItem).futureValue.ok mustBe true
-
-          val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
+          val result = repository.pullOutstanding(failedBefore = now.minusSeconds(seconds), availableBefore = now).futureValue
 
           result mustBe defined
           result.get.status mustBe InProgress
@@ -139,12 +128,11 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
     "return WorkItem only once for consecutive calls" when {
 
       "there is WorkItem with 'ToDo' status" in {
-
         val workItem = buildTestSendEmailWorkItem(ToDo)
-        repo.insert(workItem).futureValue.ok mustBe true
+        repository.insertOne(workItem).futureValue.isRight mustBe true
 
-        val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
-        val result_2 = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
+        val result = repository.pullOutstanding(failedBefore = now.minusSeconds(seconds), availableBefore = now).futureValue
+        val result_2 = repository.pullOutstanding(failedBefore = now.minusSeconds(seconds), availableBefore = now).futureValue
 
         result mustBe defined
         result.get.status mustBe InProgress
@@ -154,12 +142,11 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
 
       "there is WorkItem with 'Failed' status" which {
         "was updated before 'failedBefore' parameter" in {
+          val workItem = buildTestSendEmailWorkItem(Failed, updatedAt = now.minusSeconds(3 * 60))
+          repository.insertOne(workItem).futureValue.isRight mustBe true
 
-          val workItem = buildTestSendEmailWorkItem(Failed, updatedAt = now.minusMinutes(3))
-          repo.insert(workItem).futureValue.ok mustBe true
-
-          val result = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
-          val result_2 = repo.pullOutstanding(failedBefore = now.minusMinutes(2), availableBefore = now).futureValue
+          val result = repository.pullOutstanding(failedBefore = now.minusSeconds(seconds), availableBefore = now).futureValue
+          val result_2 = repository.pullOutstanding(failedBefore = now.minusSeconds(seconds), availableBefore = now).futureValue
 
           result mustBe defined
           result.get.status mustBe InProgress
@@ -173,29 +160,20 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestBaseSpec {
   "SendEmailWorkItemRepository on updateAlertTriggered" when {
 
     "provided with existing ID parameter" should {
-
       "update the document's alertTriggered field" in {
-
         val workItem = buildTestSendEmailWorkItem(Failed)
-        repo.insert(workItem).futureValue.ok mustBe true
+        repository.insertOne(workItem).futureValue.isRight mustBe true
 
-        val result = repo.markAlertTriggered(workItem.id).futureValue
-
-        result mustBe defined
-        result.get.item.alertTriggered mustBe true
+        repository.markAlertTriggered(workItem.id).futureValue mustBe true
       }
     }
 
     "provided with non-existing ID parameter" should {
-
       "not upsert any document" in {
-
         val workItem = buildTestSendEmailWorkItem(Failed)
-        repo.insert(workItem).futureValue.ok mustBe true
+        repository.insertOne(workItem).futureValue.isRight mustBe true
 
-        val result = repo.markAlertTriggered(BSONObjectID.generate()).futureValue
-
-        result mustNot be(defined)
+        repository.markAlertTriggered(ObjectId.get).futureValue mustBe false
       }
     }
   }

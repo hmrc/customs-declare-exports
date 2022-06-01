@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.exports.migrations
 
-import java.util.{Date, UUID}
-
 import play.api.Logger
 import uk.gov.hmrc.exports.migrations.LockManager._
 import uk.gov.hmrc.exports.migrations.exceptions.{LockManagerException, LockPersistenceException}
 import uk.gov.hmrc.exports.migrations.repositories.{LockEntry, LockRefreshChecker, LockRepository, LockStatus}
+
+import java.time.Instant
+import java.util.UUID
 
 object LockManager {
   val DefaultKey: String = "DEFAULT_LOCK"
@@ -40,7 +41,7 @@ class LockManager(
   private val logger = Logger(this.getClass)
   private val lockOwner = UUID.randomUUID.toString
 
-  private var lockExpiresAt: Date = _
+  private var lockExpiresAt: Instant = _
   private var tries = 0
 
   def acquireLockDefault(): Unit = acquireLock(DefaultKey)
@@ -85,12 +86,12 @@ class LockManager(
     })
   }
 
-  private def updateStatus(lockExpiresAt: Date): Unit = {
+  private def updateStatus(lockExpiresAt: Instant): Unit = {
     this.lockExpiresAt = lockExpiresAt
     this.tries = 0
   }
 
-  private lazy val maxDate = new Date(Long.MaxValue)
+  private lazy val maxDate = Instant.ofEpochMilli(Long.MaxValue)
 
   private def handleLockException(acquiringLock: Boolean): Unit = {
     this.tries += 1
@@ -108,8 +109,8 @@ class LockManager(
     }
   }
 
-  private def waitForLock(expiresAtMillis: Date): Unit = {
-    val diffMillis = expiresAtMillis.getTime - timeUtils.currentTime.getTime
+  private def waitForLock(expiresAtMillis: Instant): Unit = {
+    val diffMillis = expiresAtMillis.minusMillis(timeUtils.currentTime.toEpochMilli).toEpochMilli
     val sleepingMillis = (if (diffMillis > 0) diffMillis else 0) + config.minimumSleepThreadMillis
     try {
       if (sleepingMillis > config.lockMaxWaitMillis)

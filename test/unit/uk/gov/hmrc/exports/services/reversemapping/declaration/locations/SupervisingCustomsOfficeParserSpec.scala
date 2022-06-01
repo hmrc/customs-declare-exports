@@ -36,31 +36,27 @@ class SupervisingCustomsOfficeParserSpec extends UnitSpec with EitherValues {
     "return None" when {
 
       "the 'SupervisingOffice / ID' element is NOT present" in {
-
         val result = parser.parse(inputXml())
 
         result.isRight mustBe true
-        result.value mustBe None
+        result.right.value mustBe None
       }
 
       "the 'SupervisingOffice' element is present but it is empty" in {
-
         val result = parser.parse(emptySupervisingOfficeElement)
 
         result.isRight mustBe true
-        result.value mustBe None
+        result.right.value mustBe None
       }
     }
 
     "return the expected SupervisingCustomsOffice" when {
-      "the 'SupervisingOffice / ID' element is present" in {
-
+      "the 'SupervisingOffice / ID' elment is present" in {
         val supervisingOffice = "GBAVO001"
-
         val result = parser.parse(inputXml(Some(supervisingOffice)))
 
         result.isRight mustBe true
-        result.value mustBe Some(SupervisingCustomsOffice(Some(supervisingOffice)))
+        result.right.value mustBe Some(SupervisingCustomsOffice(Some(supervisingOffice)))
       }
     }
   }

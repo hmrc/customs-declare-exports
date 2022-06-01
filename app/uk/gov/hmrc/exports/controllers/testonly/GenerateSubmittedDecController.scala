@@ -51,7 +51,7 @@ class GenerateSubmittedDecController @Inject()(
         declaration <- declarationRepository.create(createDeclaration())
         notification <- saveNotification(createNotification(declaration))
         maybeDmsDocNotification <- optionallySaveDmsDocNotification(declaration, notification)
-        _ <- submissionRepository.save(createSubmission(declaration, notification))
+        _ <- submissionRepository.create(createSubmission(declaration, notification))
       } yield {
         val status = if (notification != maybeDmsDocNotification) "CREATED WITH DMSDOC" else "CREATED"
         val conRef = declaration.consignmentReferences
@@ -66,7 +66,7 @@ class GenerateSubmittedDecController @Inject()(
       Future.successful(notification)
 
   private def saveNotification(notification: ParsedNotification): Future[ParsedNotification] =
-    parsedNotificationRepository.insert(notification).map(_ => notification)
+    parsedNotificationRepository.create(notification).map(_ => notification)
 }
 
 object GenerateSubmittedDecController extends ExportsDeclarationBuilder {

@@ -18,10 +18,10 @@ package uk.gov.hmrc.exports.base
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar
-import reactivemongo.api.commands.WriteResult
 import testdata.RepositoryTestData.dummyWriteResultFailure
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
+import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.notifications.NotificationService
@@ -32,10 +32,8 @@ object UnitTestMockBuilder extends MockitoSugar {
 
   def buildCustomsDeclarationsConnectorMock: CustomsDeclarationsConnector = {
     val customsDeclarationsConnectorMock: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
-    when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any()))
-      .thenReturn(Future.successful("conversation-id"))
-    when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any()))
-      .thenReturn(Future.successful("conversation-id"))
+    when(customsDeclarationsConnectorMock.submitDeclaration(any(), any())(any())).thenReturn(Future.successful("conversation-id"))
+    when(customsDeclarationsConnectorMock.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conversation-id"))
     customsDeclarationsConnectorMock
   }
 
@@ -48,18 +46,17 @@ object UnitTestMockBuilder extends MockitoSugar {
   def buildSubmissionRepositoryMock: SubmissionRepository = {
     val submissionRepositoryMock: SubmissionRepository = mock[SubmissionRepository]
     when(submissionRepositoryMock.addAction(any[String](), any())).thenReturn(Future.successful(None))
-    when(submissionRepositoryMock.addAction(any[Submission](), any())).thenReturn(Future.successful(mock[Submission]))
-    when(submissionRepositoryMock.findBy(any(), any())).thenReturn(Future.successful(Seq.empty))
-    when(submissionRepositoryMock.save(any())).thenReturn(Future.successful(mock[Submission]))
+    when(submissionRepositoryMock.findAll(any(), any())).thenReturn(Future.successful(Seq.empty))
+    when(submissionRepositoryMock.create(any[Submission])).thenReturn(Future.successful(mock[Submission]))
     when(submissionRepositoryMock.updateMrn(any(), any())).thenReturn(Future.successful(None))
     submissionRepositoryMock
   }
 
   def buildNotificationRepositoryMock: ParsedNotificationRepository = {
     val notificationRepositoryMock: ParsedNotificationRepository = mock[ParsedNotificationRepository]
-    when(notificationRepositoryMock.findNotificationsByActionId(any())).thenReturn(Future.successful(Seq.empty))
-    when(notificationRepositoryMock.findNotificationsByActionIds(any())).thenReturn(Future.successful(Seq.empty))
-    when(notificationRepositoryMock.insert(any())(any())).thenReturn(Future.failed[WriteResult](dummyWriteResultFailure()))
+    when(notificationRepositoryMock.findAll(any[String], any[String])).thenReturn(Future.successful(Seq.empty))
+    when(notificationRepositoryMock.findNotifications(any())).thenReturn(Future.successful(Seq.empty))
+    when(notificationRepositoryMock.create(any[ParsedNotification])).thenReturn(Future.failed[ParsedNotification](dummyWriteResultFailure()))
     notificationRepositoryMock
   }
 

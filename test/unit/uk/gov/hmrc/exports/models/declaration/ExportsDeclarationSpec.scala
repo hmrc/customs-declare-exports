@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.exports.models.declaration
 
-import java.time.Instant
-
 import org.mockito.MockitoSugar.mock
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
+
+import java.time.Instant
 
 class ExportsDeclarationSpec extends UnitSpec {
 
@@ -48,7 +48,7 @@ class ExportsDeclarationSpec extends UnitSpec {
 
       val declaration = ExportsDeclaration("1", Eori("GB12345678"), exportsDeclarationRequest)
 
-      val json = Json.toJson(declaration)(ExportsDeclaration.REST.writes)
+      val json = Json.toJson(declaration)
 
       json
         .validate(ExportsDeclarationRequest.format)

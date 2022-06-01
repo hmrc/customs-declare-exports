@@ -34,19 +34,20 @@ class RoutineRunner @Inject()(
   appConfig: AppConfig
 )(implicit ec: RoutinesExecutionContext) {
 
-  val migrationTask: Cancellable = actorSystem.scheduler.scheduleOnce(0.seconds) {
+  val scheduler = actorSystem.scheduler
+
+  val migrationTask: Cancellable = scheduler.scheduleOnce(0.seconds) {
     for {
       _ <- migrationRunner.execute()
       _ <- reattemptParsing.execute()
     } yield (())
   }
-
   applicationLifecycle.addStopHook(() => Future.successful(migrationTask.cancel()))
 
   val randomInitalDelay: FiniteDuration = Random.nextInt(30).seconds
-  val periodicTask: Cancellable = actorSystem.scheduler.scheduleWithFixedDelay(randomInitalDelay, appConfig.notificationReattemptInterval) { () =>
+
+  val periodicTask: Cancellable = scheduler.scheduleWithFixedDelay(randomInitalDelay, appConfig.notificationReattemptInterval) { () =>
     reattemptParsing.execute()
   }
-
   applicationLifecycle.addStopHook(() => Future.successful(periodicTask.cancel()))
 }

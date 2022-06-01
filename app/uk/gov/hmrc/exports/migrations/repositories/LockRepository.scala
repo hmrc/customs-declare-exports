@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.exports.migrations.repositories
 
-import java.util.Date
-
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Filters.{and, lt, or, eq => feq}
 import com.mongodb.client.model.UpdateOptions
@@ -28,6 +26,7 @@ import org.bson.conversions.Bson
 import uk.gov.hmrc.exports.migrations.exceptions.LockPersistenceException
 import uk.gov.hmrc.exports.migrations.repositories.LockEntry.{ExpiresAtField, KeyField, OwnerField, StatusField}
 
+import java.time.Instant
 import scala.collection.JavaConverters.asScalaIterator
 
 class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRepository(db, collectionName, Array(KeyField)) {
@@ -85,12 +84,13 @@ class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRep
     } catch {
       case ex: MongoWriteException if ex.getError.getCategory == ErrorCategory.DUPLICATE_KEY =>
         throw new LockPersistenceException("Lock is held")
+
       case _: DuplicateKeyException =>
         throw new LockPersistenceException("Lock is held")
     }
 
   private def getAcquireLockQuery(lockKey: String, owner: String, onlyIfSameOwner: Boolean): Bson = {
-    val expiresAtCond: Bson = lt(ExpiresAtField, new Date)
+    val expiresAtCond: Bson = lt(ExpiresAtField, Instant.now)
     val ownerCond: Bson = feq(OwnerField, owner)
     val orCond: Bson = if (onlyIfSameOwner) {
       or(ownerCond)
@@ -99,5 +99,4 @@ class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRep
     }
     and(feq(KeyField, lockKey), feq(StatusField, LockStatus.LockHeld.name), orCond)
   }
-
 }

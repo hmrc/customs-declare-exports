@@ -17,27 +17,26 @@
 package uk.gov.hmrc.exports.services.notifications
 
 import akka.actor.Cancellable
-import org.joda.time.DateTime
-import org.mockito.{ArgumentCaptor, InOrder, Mockito}
+import org.bson.types.ObjectId
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.Mockito._
+import org.mockito.{ArgumentCaptor, InOrder, Mockito}
 import org.scalatest.concurrent.IntegrationPatience
-import reactivemongo.bson.BSONObjectID
 import testdata.ExportsTestData._
-import testdata.RepositoryTestData._
 import testdata.SubmissionTestData._
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
 import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification, UnparsedNotification}
-import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.ACCEPTED
+import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, UnparsedNotificationWorkItemRepository}
 import uk.gov.hmrc.exports.services.notifications.receiptactions.NotificationReceiptActionsScheduler
-import uk.gov.hmrc.workitem.{ToDo, WorkItem}
+import uk.gov.hmrc.mongo.workitem.ProcessingStatus.ToDo
+import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem}
 
-import java.time.{ZoneId, ZonedDateTime}
+import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -62,7 +61,6 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
 
     reset(submissionRepository, unparsedNotificationWorkItemRepository, notificationRepository, notificationReceiptActionsScheduler)
 
-    when(notificationRepository.insert(any)(any)).thenReturn(Future.successful(dummyWriteResultSuccess))
     when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(Some(submission)))
     when(notificationReceiptActionsScheduler.scheduleActionsExecution()).thenReturn(Cancellable.alreadyCancelled)
   }
@@ -75,9 +73,9 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
   "NotificationService on findAllNotificationsForUser" when {
 
     trait GetAllNotificationsForUserHappyPathTest {
-      when(submissionRepository.findBy(any, any)).thenReturn(Future.successful(Seq(submission, submission_2)))
+      when(submissionRepository.findAll(any, any)).thenReturn(Future.successful(Seq(submission, submission_2)))
       val notificationsToBeReturned = Seq(notification, notification_2, notification_3)
-      when(notificationRepository.findNotificationsByActionIds(any)).thenReturn(Future.successful(notificationsToBeReturned))
+      when(notificationRepository.findNotifications(any)).thenReturn(Future.successful(notificationsToBeReturned))
     }
 
     "everything works correctly" should {
@@ -93,21 +91,21 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
         notificationService.findAllNotificationsForUser(eori).futureValue
 
         val inOrder: InOrder = Mockito.inOrder(submissionRepository, notificationRepository)
-        inOrder.verify(submissionRepository).findBy(any, any)
-        inOrder.verify(notificationRepository).findNotificationsByActionIds(any)
+        inOrder.verify(submissionRepository).findAll(any, any)
+        inOrder.verify(notificationRepository).findNotifications(any)
       }
 
       "call SubmissionRepository, passing EORI provided" in new GetAllNotificationsForUserHappyPathTest {
         notificationService.findAllNotificationsForUser(eori).futureValue
 
-        verify(submissionRepository).findBy(eqTo(eori), eqTo(SubmissionQueryParameters()))
+        verify(submissionRepository).findAll(eqTo(eori), eqTo(SubmissionQueryParameters()))
       }
 
       "call NotificationRepository, passing all conversation IDs" in new GetAllNotificationsForUserHappyPathTest {
         notificationService.findAllNotificationsForUser(eori).futureValue
 
         val conversationIdCaptor: ArgumentCaptor[Seq[String]] = ArgumentCaptor.forClass(classOf[Seq[String]])
-        verify(notificationRepository).findNotificationsByActionIds(conversationIdCaptor.capture())
+        verify(notificationRepository).findNotifications(conversationIdCaptor.capture())
         val actualConversationIds: Seq[String] = conversationIdCaptor.getValue
         actualConversationIds.length must equal(2)
         actualConversationIds must contain(notification.actionId)
@@ -119,13 +117,13 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
     "SubmissionRepository on findAllSubmissionsForEori returns empty list" should {
 
       "return empty list" in {
-        when(submissionRepository.findBy(any, any)).thenReturn(Future.successful(Seq.empty))
+        when(submissionRepository.findAll(any, any)).thenReturn(Future.successful(Seq.empty))
 
         notificationService.findAllNotificationsForUser(eori).futureValue must equal(Seq.empty)
       }
 
       "not call NotificationRepository" in {
-        when(submissionRepository.findBy(any, any)).thenReturn(Future.successful(Seq.empty))
+        when(submissionRepository.findAll(any, any)).thenReturn(Future.successful(Seq.empty))
 
         notificationService.findAllNotificationsForUser(eori).futureValue
 
@@ -136,8 +134,8 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
     "NotificationRepository on findNotificationsByConversationIds returns empty list" should {
 
       "return empty list" in {
-        when(submissionRepository.findBy(any, any)).thenReturn(Future.successful(Seq(submission, submission_2)))
-        when(notificationRepository.findNotificationsByActionIds(any)).thenReturn(Future.successful(Seq.empty))
+        when(submissionRepository.findAll(any, any)).thenReturn(Future.successful(Seq(submission, submission_2)))
+        when(notificationRepository.findNotifications(any)).thenReturn(Future.successful(Seq.empty))
 
         notificationService.findAllNotificationsForUser(eori).futureValue must equal(Seq.empty)
       }
@@ -155,21 +153,21 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
           details = NotificationDetails("mrn", ZonedDateTime.now(ZoneId.of("UTC")), ACCEPTED, Seq.empty)
         )
       )
-      when(notificationRepository.findNotificationsByActionIds(any[Seq[String]])).thenReturn(Future.successful(notifications))
+      when(notificationRepository.findNotifications(any[Seq[String]])).thenReturn(Future.successful(notifications))
 
       notificationService.findAllNotificationsSubmissionRelated(submission).futureValue mustBe notifications
 
-      verify(notificationRepository).findNotificationsByActionIds(Seq("id1"))
+      verify(notificationRepository).findNotifications(Seq("id1"))
     }
 
     "only retrieve notifications related to the submissions of declarations (must filter out actionCancellation)" in {
       val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", Seq(actionCancellation, action))
       // Not relevant to the test
-      when(notificationRepository.findNotificationsByActionIds(any[Seq[String]])).thenReturn(Future.successful(Seq(notification)))
+      when(notificationRepository.findNotifications(any[Seq[String]])).thenReturn(Future.successful(Seq(notification)))
 
       notificationService.findAllNotificationsSubmissionRelated(submission).futureValue
 
-      verify(notificationRepository).findNotificationsByActionIds(Seq(actionId))
+      verify(notificationRepository).findNotifications(Seq(actionId))
     }
   }
 
@@ -217,29 +215,32 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       val inputXml = exampleReceivedNotification(mrn).asXml
       val testNotificationUnparsed = UnparsedNotification(actionId = actionId, payload = inputXml.toString)
       val testWorkItem = WorkItem(
-        id = BSONObjectID.generate,
-        receivedAt = DateTime.now,
-        updatedAt = DateTime.now,
-        availableAt = DateTime.now,
+        id = ObjectId.get,
+        receivedAt = Instant.now,
+        updatedAt = Instant.now,
+        availableAt = Instant.now,
         status = ToDo,
         failureCount = 0,
         item = testNotificationUnparsed
       )
 
       "call UnparsedNotificationWorkItemRepository" in {
-        when(unparsedNotificationWorkItemRepository.pushNew(any[UnparsedNotification])(any)).thenReturn(Future.successful(testWorkItem))
+        when(unparsedNotificationWorkItemRepository.pushNew(any[UnparsedNotification], any[Instant], any[UnparsedNotification => ProcessingStatus]))
+          .thenReturn(Future.successful(testWorkItem))
 
         notificationService.handleNewNotification(actionId, inputXml).futureValue
 
         val captor: ArgumentCaptor[UnparsedNotification] = ArgumentCaptor.forClass(classOf[UnparsedNotification])
-        verify(unparsedNotificationWorkItemRepository).pushNew(captor.capture())(any)
+        verify(unparsedNotificationWorkItemRepository)
+          .pushNew(captor.capture(), any[Instant], any[UnparsedNotification => ProcessingStatus])
 
         captor.getValue.actionId mustBe actionId
         captor.getValue.payload mustBe inputXml.toString
       }
 
       "call NotificationReceiptActionsScheduler" in {
-        when(unparsedNotificationWorkItemRepository.pushNew(any[UnparsedNotification])(any)).thenReturn(Future.successful(testWorkItem))
+        when(unparsedNotificationWorkItemRepository.pushNew(any[UnparsedNotification], any[Instant], any[UnparsedNotification => ProcessingStatus]))
+          .thenReturn(Future.successful(testWorkItem))
 
         notificationService.handleNewNotification(actionId, inputXml).futureValue
 

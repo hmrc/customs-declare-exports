@@ -16,42 +16,33 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import org.joda.time.DateTime
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.model.Indexes.ascending
 import play.api.Configuration
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.BSONObjectID
-import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
-import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification.DbFormat.format
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
-import uk.gov.hmrc.workitem.{WorkItem, WorkItemFieldNames, WorkItemRepository}
+import uk.gov.hmrc.mongo.{MongoComponent, MongoUtils}
+import uk.gov.hmrc.mongo.workitem.{WorkItemFields, WorkItemRepository}
 
-import javax.inject.Inject
+import java.time.{Duration, Instant}
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-class UnparsedNotificationWorkItemRepository @Inject()(configuration: Configuration, reactiveMongoComponent: ReactiveMongoComponent)
-    extends WorkItemRepository[UnparsedNotification, BSONObjectID](
+@Singleton
+class UnparsedNotificationWorkItemRepository @Inject()(config: Configuration, mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
+    extends WorkItemRepository[UnparsedNotification](
       collectionName = "unparsedNotifications",
-      mongo = reactiveMongoComponent.mongoConnector.db,
-      itemFormat = UnparsedNotificationWorkItemRepository.workItemFormat,
-      config = configuration.underlying
+      mongoComponent = mongoComponent,
+      itemFormat = UnparsedNotification.format,
+      workItemFields = WorkItemFields.default
     ) {
 
-  override lazy val collection: JSONCollection =
-    mongo().collection[JSONCollection](collectionName, failoverStrategy = RepositorySettings.failoverStrategy)
+  override def ensureIndexes: Future[Seq[String]] = {
+    val workItemIndexes: Seq[IndexModel] = indexes ++ List(IndexModel(ascending("item.id"), IndexOptions().name("itemIdIdx").unique(true)))
+    MongoUtils.ensureIndexes(collection, workItemIndexes, replaceIndexes = true)
+  }
 
-  override def indexes: Seq[Index] = super.indexes ++ Seq(Index(key = Seq("item.id" -> IndexType.Ascending), name = Some("itemIdIdx"), unique = true))
+  override lazy val inProgressRetryAfter: Duration =
+    Duration.ofMillis(config.getMillis("workItem.unparsedNotification.retryAfterMillis"))
 
-  override def now: DateTime = DateTime.now
-
-  override def workItemFields: WorkItemFieldNames = WorkItemFormat.defaultWorkItemFields
-
-  override def inProgressRetryAfterProperty: String = "workItem.unparsedNotification.retryAfterMillis"
-
-  def pushNew(item: UnparsedNotification)(implicit ec: ExecutionContext): Future[WorkItem[UnparsedNotification]] = pushNew(item, now)
-}
-
-object UnparsedNotificationWorkItemRepository {
-  private val workItemFormat = WorkItemFormat.workItemMongoFormat[UnparsedNotification]()
+  override def now: Instant = Instant.now
 }

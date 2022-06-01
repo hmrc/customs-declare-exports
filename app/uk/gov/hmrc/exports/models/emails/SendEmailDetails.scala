@@ -16,13 +16,15 @@
 
 package uk.gov.hmrc.exports.models.emails
 
+import org.bson.types.ObjectId
 import play.api.libs.json._
-import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
+import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
 
-case class SendEmailDetails(notificationId: BSONObjectID, mrn: String, actionId: String, alertTriggered: Boolean = false)
+case class SendEmailDetails(notificationId: ObjectId, mrn: String, actionId: String, alertTriggered: Boolean = false)
 
 object SendEmailDetails {
-  implicit val idFormat = ReactiveMongoFormats.objectIdFormats
-  implicit val sendEmailWorkItemFormats: OFormat[SendEmailDetails] = Json.format[SendEmailDetails]
+
+  implicit val objectIdFormats: Format[ObjectId] = MongoFormats.objectIdFormat
+
+  implicit val format: OFormat[SendEmailDetails] = Json.format[SendEmailDetails]
 }

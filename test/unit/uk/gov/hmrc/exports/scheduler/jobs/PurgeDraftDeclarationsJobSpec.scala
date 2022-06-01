@@ -70,7 +70,7 @@ class PurgeDraftDeclarationsJobSpec extends UnitSpec {
       val expiryDate = Instant.now(appConfig.clock).minusSeconds(expireAfter.toSeconds)
 
       given(appConfig.draftTimeToLive).willReturn(expireAfter)
-      given(declarationRepository.deleteExpiredDraft(expiryDate)).willReturn(Future.successful(0))
+      given(declarationRepository.deleteExpiredDraft(expiryDate)).willReturn(Future.successful(0L))
 
       await(newJob.execute())
 

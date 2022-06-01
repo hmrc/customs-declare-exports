@@ -83,9 +83,6 @@ class ChangePackageInformationId extends MigrationDefinition {
     new Document(itemDocument)
   }
 
-  private def getDeclarationsCollection(db: MongoDatabase): MongoCollection[Document] = {
-    val collectionName = "declarations"
-    db.getCollection(collectionName)
-  }
-
+  private def getDeclarationsCollection(db: MongoDatabase): MongoCollection[Document] =
+    db.getCollection("declarations")
 }

@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.items
 
-import scala.xml.{Elem, NodeSeq}
-
 import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.PackageInformation
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
+
+import scala.xml.{Elem, NodeSeq}
 
 class PackageInformationParserSpec extends UnitSpec with EitherValues {
 
@@ -34,14 +34,14 @@ class PackageInformationParserSpec extends UnitSpec with EitherValues {
     "return Right with an empty List" when {
       "no '/ GovernmentAgencyGoodsItem / Packaging' elements are present" in {
         val xml = inputXml()
-        packageInformationParser.parse(xml).value mustBe Seq.empty
+        packageInformationParser.parse(xml).right.value mustBe Seq.empty
       }
     }
 
     "return Right with a List of 'None' values" when {
       "only empty '/ GovernmentAgencyGoodsItem / Packaging' elements are present" in {
         val xml = inputXml(List(Packaging(), Packaging()))
-        packageInformationParser.parse(xml).value mustBe List(None, None)
+        packageInformationParser.parse(xml).right.value mustBe List(None, None)
       }
     }
 
@@ -50,7 +50,7 @@ class PackageInformationParserSpec extends UnitSpec with EitherValues {
       "a single '/ GovernmentAgencyGoodsItem / Packaging' element is fully present" in {
         val xml = inputXml(List(Packaging(Some("TypeCode"), Some("3"), Some("MarksNumbersID"))))
 
-        packageInformationParser.parse(xml).value.head.get must matchPattern {
+        packageInformationParser.parse(xml).right.value.head.get must matchPattern {
           case PackageInformation(_, Some("TypeCode"), Some(3), Some("MarksNumbersID")) =>
         }
       }
@@ -60,7 +60,7 @@ class PackageInformationParserSpec extends UnitSpec with EitherValues {
           List(Packaging(Some("TypeCode1"), Some("1"), Some("MarksNumbersID1")), Packaging(Some("TypeCode2"), Some("2"), Some("MarksNumbersID2")))
         )
 
-        val listOfPackageInformation = packageInformationParser.parse(xml).value
+        val listOfPackageInformation = packageInformationParser.parse(xml).right.value
 
         listOfPackageInformation.size mustBe 2
         listOfPackageInformation.head.get must matchPattern {
@@ -76,7 +76,7 @@ class PackageInformationParserSpec extends UnitSpec with EitherValues {
         "only includes a '/ TypeCode' element" in {
           val xml = inputXml(List(Packaging(typeCode = Some("TypeCode"))))
 
-          packageInformationParser.parse(xml).value.head.get must matchPattern {
+          packageInformationParser.parse(xml).right.value.head.get must matchPattern {
             case PackageInformation(_, Some("TypeCode"), None, None) =>
           }
         }
@@ -84,7 +84,7 @@ class PackageInformationParserSpec extends UnitSpec with EitherValues {
         "only includes a '/ QuantityQuantity' element" in {
           val xml = inputXml(List(Packaging(quantityQuantity = Some("3"))))
 
-          packageInformationParser.parse(xml).value.head.get must matchPattern {
+          packageInformationParser.parse(xml).right.value.head.get must matchPattern {
             case PackageInformation(_, None, Some(3), None) =>
           }
         }
@@ -92,7 +92,7 @@ class PackageInformationParserSpec extends UnitSpec with EitherValues {
         "only includes a '/ MarksNumbersID' element" in {
           val xml = inputXml(List(Packaging(marksNumbersID = Some("MarksNumbersID"))))
 
-          packageInformationParser.parse(xml).value.head.get must matchPattern {
+          packageInformationParser.parse(xml).right.value.head.get must matchPattern {
             case PackageInformation(_, None, None, Some("MarksNumbersID")) =>
           }
         }
@@ -100,7 +100,7 @@ class PackageInformationParserSpec extends UnitSpec with EitherValues {
         "only includes '/ TypeCode' and '/ QuantityQuantity' elements" in {
           val xml = inputXml(List(Packaging(typeCode = Some("TypeCode"), quantityQuantity = Some("3"))))
 
-          packageInformationParser.parse(xml).value.head.get must matchPattern {
+          packageInformationParser.parse(xml).right.value.head.get must matchPattern {
             case PackageInformation(_, Some("TypeCode"), Some(3), None) =>
           }
         }
@@ -108,7 +108,7 @@ class PackageInformationParserSpec extends UnitSpec with EitherValues {
         "only includes '/ TypeCode' and '/ MarksNumbersID' elements" in {
           val xml = inputXml(List(Packaging(typeCode = Some("TypeCode"), marksNumbersID = Some("MarksNumbersID"))))
 
-          packageInformationParser.parse(xml).value.head.get must matchPattern {
+          packageInformationParser.parse(xml).right.value.head.get must matchPattern {
             case PackageInformation(_, Some("TypeCode"), None, Some("MarksNumbersID")) =>
           }
         }
@@ -116,7 +116,7 @@ class PackageInformationParserSpec extends UnitSpec with EitherValues {
         "only includes '/ QuantityQuantity' and '/ MarksNumbersID' elements" in {
           val xml = inputXml(List(Packaging(quantityQuantity = Some("3"), marksNumbersID = Some("MarksNumbersID"))))
 
-          packageInformationParser.parse(xml).value.head.get must matchPattern {
+          packageInformationParser.parse(xml).right.value.head.get must matchPattern {
             case PackageInformation(_, None, Some(3), Some("MarksNumbersID")) =>
           }
         }

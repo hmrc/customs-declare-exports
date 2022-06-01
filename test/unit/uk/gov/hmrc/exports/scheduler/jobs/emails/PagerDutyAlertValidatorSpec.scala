@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
-import org.joda.time.DateTime.now
-import reactivemongo.bson.BSONObjectID
+import org.bson.types.ObjectId
 import testdata.ExportsTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.exports.scheduler.jobs.emails.PagerDutyAlertValidatorSpec.TestDefinition
-import uk.gov.hmrc.workitem.{Failed, ProcessingStatus, ToDo, WorkItem}
+import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem}
+import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Failed, ToDo}
 
+import java.time.Instant
 import scala.concurrent.duration._
 
 class PagerDutyAlertValidatorSpec extends UnitSpec {
@@ -65,17 +66,17 @@ class PagerDutyAlertValidatorSpec extends UnitSpec {
         s" and receivedAt field is ${testDefinition.workItemAge} in the past" should {
         s"return ${testDefinition.expectedResult}" in {
 
-          val receivedAtValue = now.minus(testDefinition.workItemAge.toMillis)
+          val receivedAtValue = Instant.now.minusMillis(testDefinition.workItemAge.toMillis)
 
           val testWorkItem = WorkItem[SendEmailDetails](
-            id = BSONObjectID.generate,
+            id = ObjectId.get,
             receivedAt = receivedAtValue,
-            updatedAt = now,
-            availableAt = now,
+            updatedAt = Instant.now,
+            availableAt = Instant.now,
             status = testDefinition.workItemStatus,
             failureCount = 0,
             item = SendEmailDetails(
-              notificationId = BSONObjectID.generate,
+              notificationId = ObjectId.get,
               mrn = ExportsTestData.mrn,
               actionId = "actionId",
               alertTriggered = testDefinition.alertTriggered

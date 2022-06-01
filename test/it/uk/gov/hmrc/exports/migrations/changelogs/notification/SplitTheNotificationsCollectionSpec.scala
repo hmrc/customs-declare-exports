@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,85 +17,60 @@
 package uk.gov.hmrc.exports.migrations.changelogs.notification
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.mongodb.client.{MongoCollection, MongoDatabase}
-import com.mongodb.{MongoClient, MongoClientURI}
+import com.mongodb.client.MongoCollection
 import org.bson.Document
 import org.bson.types.ObjectId
 import org.mongodb.scala.model.{IndexOptions, Indexes}
-import org.scalatest.matchers.must.Matchers
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
-import stubs.TestMongoDB
-import stubs.TestMongoDB.mongoConfiguration
-import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.base.IntegrationTestMigrationToolSpec
 import uk.gov.hmrc.exports.migrations.changelogs.notification.SplitTheNotificationsCollectionSpec._
 
-import scala.collection.JavaConverters._
+import scala.collection.JavaConverters.iterableAsScalaIterableConverter
 
-class SplitTheNotificationsCollectionSpec extends UnitSpec with GuiceOneAppPerSuite with Matchers {
-
-  override def fakeApplication(): Application =
-    new GuiceApplicationBuilder()
-      .disable[com.kenshoo.play.metrics.PlayModule]
-      .configure(mongoConfiguration)
-      .build()
-
-  private val MongoURI = mongoConfiguration.get[String]("mongodb.uri")
-  private val DatabaseName = TestMongoDB.DatabaseName
-  private val NotificationsCollectionName = "notifications"
-  private val UnparsedNotificationsCollectionName = "unparsedNotifications"
-
-  private implicit val mongoDatabase: MongoDatabase = {
-    val uri = new MongoClientURI(MongoURI.replaceAllLiterally("sslEnabled", "ssl"))
-    val client = new MongoClient(uri)
-
-    client.getDatabase(DatabaseName)
-  }
+class SplitTheNotificationsCollectionSpec extends IntegrationTestMigrationToolSpec {
 
   private val changeLog = new SplitTheNotificationsCollection()
 
+  def getNotificationsRepo: MongoCollection[Document] = getCollection("notifications")
+  def getUnparsedNotificationsRepo: MongoCollection[Document] = getCollection("unparsedNotifications")
+
   override def beforeEach(): Unit = {
     super.beforeEach()
-    mongoDatabase.getCollection(NotificationsCollectionName).drop()
-    mongoDatabase.getCollection(UnparsedNotificationsCollectionName).drop()
+    removeAll(getNotificationsRepo)
+    removeAll(getUnparsedNotificationsRepo)
   }
-
-  override def afterEach(): Unit = {
-    mongoDatabase.getCollection(NotificationsCollectionName).drop()
-    mongoDatabase.getCollection(UnparsedNotificationsCollectionName).drop()
-    super.afterEach()
-  }
-
-  private def getNotificationsCollection: MongoCollection[Document] = mongoDatabase.getCollection(NotificationsCollectionName)
-  private def getUnparsedNotificationsCollection: MongoCollection[Document] = mongoDatabase.getCollection(UnparsedNotificationsCollectionName)
 
   "SplitNotificationsCollection migration definition" should {
 
     "drop 'detailsDocMissingIdx' index" in {
-      val notificationsCollection = getNotificationsCollection
-      notificationsCollection.createIndex(Indexes.ascending("details"), IndexOptions().name("detailsDocMissingIdx"))
+      val collection = getNotificationsRepo
+      collection.createIndex(Indexes.ascending("details"), IndexOptions().name("detailsDocMissingIdx"))
 
-      changeLog.migrationFunction(mongoDatabase)
+      changeLog.migrationFunction(database)
 
-      notificationsCollection.listIndexes().asScala.toSeq.map(_.getString("name")).contains("detailsDocMissingIdx") mustBe false
+      collection.listIndexes.asScala.toList.map(_.getString("name")).contains("detailsDocMissingIdx") mustBe false
     }
 
     "not make any changes" when {
 
       "there is single ParsedNotification and corresponding UnparsedNotification" in {
-        getNotificationsCollection.insertOne(Document.parse(TestData_1.parsedNotificationAfterChanges))
-        getUnparsedNotificationsCollection.insertOne(Document.parse(TestData_1.unparsedNotification))
+        val notificationsRepo = getNotificationsRepo
+        val unparsedNotificationsRepo = getUnparsedNotificationsRepo
+        notificationsRepo.insertOne(Document.parse(TestData_1.parsedNotificationAfterChanges))
+        unparsedNotificationsRepo.insertOne(Document.parse(TestData_1.unparsedNotification))
 
-        changeLog.migrationFunction(mongoDatabase)
+        changeLog.migrationFunction(database)
 
-        val parsedNotificationAfter = getNotificationsCollection.find().first()
-        val unparsedNotificationAfter = getUnparsedNotificationsCollection.find().first()
+        val parsedNotificationAfter = notificationsRepo.find().first()
+        val unparsedNotificationAfter = unparsedNotificationsRepo.find().first()
 
         compareJson(parsedNotificationAfter.toJson, TestData_1.parsedNotificationAfterChanges)
         compareJson(unparsedNotificationAfter.toJson, TestData_1.unparsedNotification)
-        unparsedNotificationAfter.get("item", classOf[Document]).getString("id") mustBe parsedNotificationAfter.getString("unparsedNotificationId")
-        unparsedNotificationAfter.get("item", classOf[Document]).getString("actionId") mustBe parsedNotificationAfter.getString("actionId")
+
+        val id = unparsedNotificationAfter.get("item", classOf[Document]).getString("id")
+        id mustBe parsedNotificationAfter.getString("unparsedNotificationId")
+
+        val actionId = unparsedNotificationAfter.get("item", classOf[Document]).getString("actionId")
+        actionId mustBe parsedNotificationAfter.getString("actionId")
       }
 
       "there are multiple ParsedNotifications and complete set of corresponding UnparsedNotifications" in {
@@ -110,16 +85,19 @@ class SplitTheNotificationsCollectionSpec extends UnitSpec with GuiceOneAppPerSu
         val allUnparsedNotifications = Seq(unparsedNotification_1, unparsedNotification_2, unparsedNotification_3)
         val allNotificationsBeforeChanges = allParsedNotifications zip allUnparsedNotifications
 
+        val notificationsRepo = getNotificationsRepo
+        val unparsedNotificationsRepo = getUnparsedNotificationsRepo
+
         allNotificationsBeforeChanges.foreach {
           case (parsed, unparsed) =>
-            getNotificationsCollection.insertOne(parsed)
-            getUnparsedNotificationsCollection.insertOne(unparsed)
+            notificationsRepo.insertOne(parsed)
+            unparsedNotificationsRepo.insertOne(unparsed)
         }
 
-        changeLog.migrationFunction(mongoDatabase)
+        changeLog.migrationFunction(database)
 
-        val parsedNotificationsAfter = getNotificationsCollection.find().asScala.toSeq
-        val unparsedNotificationsAfter = getUnparsedNotificationsCollection.find().asScala.toSeq
+        val parsedNotificationsAfter = notificationsRepo.find().asScala.toSeq
+        val unparsedNotificationsAfter = unparsedNotificationsRepo.find().asScala.toSeq
         parsedNotificationsAfter.length mustBe 3
         unparsedNotificationsAfter.length mustBe 3
 
@@ -148,12 +126,15 @@ class SplitTheNotificationsCollectionSpec extends UnitSpec with GuiceOneAppPerSu
         val parsedNotification_1 = Document.parse(TestData_1.parsedNotificationBeforeChanges)
         val allParsedNotificationsBeforeChanges = Seq(parsedNotification_1)
 
-        getNotificationsCollection.insertOne(parsedNotification_1)
+        val notificationsRepo = getNotificationsRepo
+        val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
-        changeLog.migrationFunction(mongoDatabase)
+        notificationsRepo.insertOne(parsedNotification_1)
 
-        val parsedNotificationsAfter = getNotificationsCollection.find().asScala.toSeq
-        val unparsedNotificationsAfter = getUnparsedNotificationsCollection.find().asScala.toSeq
+        changeLog.migrationFunction(database)
+
+        val parsedNotificationsAfter = notificationsRepo.find().asScala.toSeq
+        val unparsedNotificationsAfter = unparsedNotificationsRepo.find().asScala.toSeq
         parsedNotificationsAfter.length mustBe 1
         unparsedNotificationsAfter.length mustBe 1
 
@@ -187,12 +168,15 @@ class SplitTheNotificationsCollectionSpec extends UnitSpec with GuiceOneAppPerSu
         val parsedNotification_3 = Document.parse(testData.parsedNotificationBeforeChanges("5fc0d62750c11c0797a24573"))
         val allParsedNotificationsBeforeChanges = Seq(parsedNotification_1, parsedNotification_2, parsedNotification_3)
 
-        allParsedNotificationsBeforeChanges.foreach(getNotificationsCollection.insertOne(_))
+        val notificationsRepo = getNotificationsRepo
+        val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
-        changeLog.migrationFunction(mongoDatabase)
+        allParsedNotificationsBeforeChanges.foreach(notificationsRepo.insertOne(_))
 
-        val parsedNotificationsAfter = getNotificationsCollection.find().asScala.toSeq
-        val unparsedNotificationsAfter = getUnparsedNotificationsCollection.find().asScala.toSeq
+        changeLog.migrationFunction(database)
+
+        val parsedNotificationsAfter = notificationsRepo.find().asScala.toSeq
+        val unparsedNotificationsAfter = unparsedNotificationsRepo.find().asScala.toSeq
         parsedNotificationsAfter.length mustBe 3
         unparsedNotificationsAfter.length mustBe 1
 
@@ -230,12 +214,15 @@ class SplitTheNotificationsCollectionSpec extends UnitSpec with GuiceOneAppPerSu
           parsedNotification_3.put("actionId", "b1c09f1b-7c94-4e90-b754-7c5c71c44e11")
           val allParsedNotificationsBeforeChanges = Seq(parsedNotification_1, parsedNotification_2, parsedNotification_3)
 
-          allParsedNotificationsBeforeChanges.foreach(getNotificationsCollection.insertOne(_))
+          val notificationsRepo = getNotificationsRepo
+          val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
-          changeLog.migrationFunction(mongoDatabase)
+          allParsedNotificationsBeforeChanges.foreach(notificationsRepo.insertOne(_))
 
-          val parsedNotificationsAfter = getNotificationsCollection.find().asScala.toSeq
-          val unparsedNotificationsAfter = getUnparsedNotificationsCollection.find().asScala.toSeq
+          changeLog.migrationFunction(database)
+
+          val parsedNotificationsAfter = notificationsRepo.find().asScala.toSeq
+          val unparsedNotificationsAfter = unparsedNotificationsRepo.find().asScala.toSeq
           parsedNotificationsAfter.length mustBe 3
           unparsedNotificationsAfter.length mustBe 3
 
@@ -268,12 +255,15 @@ class SplitTheNotificationsCollectionSpec extends UnitSpec with GuiceOneAppPerSu
           val parsedNotification_3 = Document.parse(TestData_3.parsedNotificationBeforeChanges)
           val allParsedNotificationsBeforeChanges = Seq(parsedNotification_1, parsedNotification_2, parsedNotification_3)
 
-          allParsedNotificationsBeforeChanges.foreach(getNotificationsCollection.insertOne(_))
+          val notificationsRepo = getNotificationsRepo
+          val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
-          changeLog.migrationFunction(mongoDatabase)
+          allParsedNotificationsBeforeChanges.foreach(notificationsRepo.insertOne(_))
 
-          val parsedNotificationsAfter = getNotificationsCollection.find().asScala.toSeq
-          val unparsedNotificationsAfter = getUnparsedNotificationsCollection.find().asScala.toSeq
+          changeLog.migrationFunction(database)
+
+          val parsedNotificationsAfter = notificationsRepo.find().asScala.toSeq
+          val unparsedNotificationsAfter = unparsedNotificationsRepo.find().asScala.toSeq
           parsedNotificationsAfter.length mustBe 3
           unparsedNotificationsAfter.length mustBe 3
 
@@ -308,13 +298,16 @@ class SplitTheNotificationsCollectionSpec extends UnitSpec with GuiceOneAppPerSu
         val allParsedNotificationsBeforeChanges = Seq(parsedNotification_1, parsedNotification_2, parsedNotification_3)
         val unparsedNotification_1 = Document.parse(TestData_1.unparsedNotification)
 
-        allParsedNotificationsBeforeChanges.foreach(getNotificationsCollection.insertOne(_))
-        getUnparsedNotificationsCollection.insertOne(unparsedNotification_1)
+        val notificationsRepo = getNotificationsRepo
+        val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
-        changeLog.migrationFunction(mongoDatabase)
+        allParsedNotificationsBeforeChanges.foreach(notificationsRepo.insertOne(_))
+        unparsedNotificationsRepo.insertOne(unparsedNotification_1)
 
-        val parsedNotificationsAfter = getNotificationsCollection.find().asScala.toSeq
-        val unparsedNotificationsAfter = getUnparsedNotificationsCollection.find().asScala.toSeq
+        changeLog.migrationFunction(database)
+
+        val parsedNotificationsAfter = notificationsRepo.find().asScala.toSeq
+        val unparsedNotificationsAfter = unparsedNotificationsRepo.find().asScala.toSeq
         parsedNotificationsAfter.length mustBe 3
         unparsedNotificationsAfter.length mustBe 3
 
@@ -348,11 +341,14 @@ class SplitTheNotificationsCollectionSpec extends UnitSpec with GuiceOneAppPerSu
         val unparsableNotification = Document.parse(TestData_1.parsedNotificationBeforeChanges)
         unparsableNotification.remove("details")
 
-        getNotificationsCollection.insertOne(unparsableNotification)
-        changeLog.migrationFunction(mongoDatabase)
+        val notificationsRepo = getNotificationsRepo
+        val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
-        val parsedNotificationsAfter = getNotificationsCollection.find().asScala.toSeq
-        val unparsedNotificationsAfter = getUnparsedNotificationsCollection.find().asScala.toSeq
+        notificationsRepo.insertOne(unparsableNotification)
+        changeLog.migrationFunction(database)
+
+        val parsedNotificationsAfter = notificationsRepo.find().asScala.toSeq
+        val unparsedNotificationsAfter = unparsedNotificationsRepo.find().asScala.toSeq
         parsedNotificationsAfter.length mustBe 0
         unparsedNotificationsAfter.length mustBe 1
 
@@ -371,12 +367,15 @@ class SplitTheNotificationsCollectionSpec extends UnitSpec with GuiceOneAppPerSu
         unparsableNotification.remove("details")
         val unparsedNotification = Document.parse(TestData_1.unparsedNotification)
 
-        getNotificationsCollection.insertOne(unparsableNotification)
-        getUnparsedNotificationsCollection.insertOne(unparsedNotification)
-        changeLog.migrationFunction(mongoDatabase)
+        val notificationsRepo = getNotificationsRepo
+        val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
-        val parsedNotificationsAfter = getNotificationsCollection.find().asScala.toSeq
-        val unparsedNotificationsAfter = getUnparsedNotificationsCollection.find().asScala.toSeq
+        notificationsRepo.insertOne(unparsableNotification)
+        unparsedNotificationsRepo.insertOne(unparsedNotification)
+        changeLog.migrationFunction(database)
+
+        val parsedNotificationsAfter = notificationsRepo.find().asScala.toSeq
+        val unparsedNotificationsAfter = unparsedNotificationsRepo.find().asScala.toSeq
         parsedNotificationsAfter.length mustBe 0
         unparsedNotificationsAfter.length mustBe 1
 

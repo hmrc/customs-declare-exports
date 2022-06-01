@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.migrations.repositories
 
-import java.util.Date
-
 import org.bson.Document
 import uk.gov.hmrc.exports.migrations.changelogs.MigrationDefinition
 import uk.gov.hmrc.exports.migrations.repositories.ChangeEntry._
+
+import java.time.Instant
 
 object ChangeEntry {
   private[migrations] val KeyChangeId: String = "changeId"
@@ -31,12 +31,12 @@ object ChangeEntry {
   def apply(migrationDefinition: MigrationDefinition): ChangeEntry = ChangeEntry(
     changeId = migrationDefinition.migrationInformation.id,
     author = migrationDefinition.migrationInformation.author,
-    timestamp = new Date(),
+    timestamp = Instant.now,
     changeLogClass = migrationDefinition.getClass.getSimpleName
   )
 }
 
-case class ChangeEntry(changeId: String, author: String, timestamp: Date, changeLogClass: String) {
+case class ChangeEntry(changeId: String, author: String, timestamp: Instant, changeLogClass: String) {
 
   private[migrations] def buildFullDBObject: Document = {
     val entry: Document = new Document

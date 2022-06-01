@@ -23,25 +23,6 @@ import uk.gov.hmrc.exports.migrations.exceptions.{ExportsMigrationException, Loc
 import uk.gov.hmrc.exports.migrations.repositories.ChangeEntry.{KeyAuthor, KeyChangeId}
 import uk.gov.hmrc.exports.migrations.repositories.{ChangeEntry, ChangeEntryRepository, LockRefreshChecker, LockRepository}
 
-object ExportsMigrationTool {
-
-  private val lockCollectionName = "exportsMigrationLock"
-  private val changeEntryCollectionName = "exportsMigrationChangeLog"
-
-  def apply(mongoDatabase: MongoDatabase, migrationsRegistry: MigrationsRegistry, lockManagerConfig: LockManagerConfig): ExportsMigrationTool = {
-    val lockRepository = new LockRepository(lockCollectionName, mongoDatabase)
-    val timeUtils = new TimeUtils
-    val lockRefreshChecker = new LockRefreshChecker(timeUtils)
-    val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, lockManagerConfig)
-    val changeEntryRepository = new ChangeEntryRepository(changeEntryCollectionName, mongoDatabase)
-
-    lockRepository.ensureIndex()
-    changeEntryRepository.ensureIndex()
-
-    new ExportsMigrationTool(lockManager, migrationsRegistry, changeEntryRepository, mongoDatabase)
-  }
-}
-
 class ExportsMigrationTool(
   val lockManager: LockManager,
   val migrationsRegistry: MigrationsRegistry,
@@ -49,15 +30,13 @@ class ExportsMigrationTool(
   val database: MongoDatabase,
   val throwExceptionIfCannotObtainLock: Boolean = false
 ) {
-
   private val logger = Logger(this.getClass)
 
   private var enabled: Boolean = true
 
   def execute(): Unit =
-    if (!isEnabled) {
-      logger.info("ExportsMigrationTool is disabled. Exiting.")
-    } else
+    if (!isEnabled) logger.info("ExportsMigrationTool is disabled. Exiting.")
+    else
       try {
         lockManager.acquireLockDefault()
         executeMigration()
@@ -74,17 +53,15 @@ class ExportsMigrationTool(
           logger.error("ExportsMigrationTool - error on executing migration", exc)
       } finally {
         lockManager.releaseLockDefault() //we do it anyway, it's idempotent
-
         logger.info("ExportsMigrationTool has finished his job.")
       }
 
   def isEnabled: Boolean = enabled
-  private[migrations] def setEnabled(enabled: Boolean): Unit =
-    this.enabled = enabled
+
+  private[migrations] def setEnabled(enabled: Boolean): Unit = this.enabled = enabled
 
   private def executeMigration(): Unit = {
     logger.info(s"ExportsMigrationTool starting the data migration sequence.. ${migrationsRegistry.migrations.size}")
-
     migrationsRegistry.migrations.sorted.foreach(executeIfNewOrRunAlways)
   }
 
@@ -107,7 +84,8 @@ class ExportsMigrationTool(
         logger.info(s"${changeEntry} pass over")
       }
     } catch {
-      case exc: ExportsMigrationException => logger.error(s"Error while executing '${migrDefinition.migrationInformation}' ${exc.getMessage}")
+      case exc: ExportsMigrationException =>
+        logger.error(s"Error while executing '${migrDefinition.migrationInformation}' ${exc.getMessage}")
     }
   }
 
@@ -118,4 +96,23 @@ class ExportsMigrationTool(
   }
 
   private def isRunAlways(migrationDefinition: MigrationDefinition): Boolean = migrationDefinition.migrationInformation.runAlways
+}
+
+object ExportsMigrationTool {
+
+  private val lockCollectionName = "exportsMigrationLock"
+  private val changeEntryCollectionName = "exportsMigrationChangeLog"
+
+  def apply(mongoDatabase: MongoDatabase, migrationsRegistry: MigrationsRegistry, lockManagerConfig: LockManagerConfig): ExportsMigrationTool = {
+    val lockRepository = new LockRepository(lockCollectionName, mongoDatabase)
+    val timeUtils = new TimeUtils
+    val lockRefreshChecker = new LockRefreshChecker(timeUtils)
+    val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, lockManagerConfig)
+    val changeEntryRepository = new ChangeEntryRepository(changeEntryCollectionName, mongoDatabase)
+
+    lockRepository.ensureIndex()
+    changeEntryRepository.ensureIndex()
+
+    new ExportsMigrationTool(lockManager, migrationsRegistry, changeEntryRepository, mongoDatabase)
+  }
 }

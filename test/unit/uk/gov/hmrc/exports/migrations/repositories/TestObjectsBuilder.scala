@@ -34,6 +34,7 @@ object TestObjectsBuilder {
   def buildMongoCursor(elements: Seq[Document]): MongoCursor[Document] = new MongoCursor[Document] {
     private val iterator = elements.iterator
 
+    override def available(): Int = ???
     override def close(): Unit = ???
     override def hasNext: Boolean = iterator.hasNext
     override def next(): Document = iterator.next

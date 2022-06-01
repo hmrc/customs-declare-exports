@@ -91,7 +91,7 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
         val result = exportsDeclarationXmlParser.fromXml(mappingContext, xml)
 
         result.isRight mustBe true
-        result.value mustBe an[ExportsDeclaration]
+        result.right.value mustBe an[ExportsDeclaration]
       }
     }
 
@@ -104,8 +104,8 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
         val result = exportsDeclarationXmlParser.fromXml(mappingContext, xml)
 
         result.isRight mustBe true
-        result.value mustBe an[ExportsDeclaration]
-        result.value.linkDucrToMucr mustBe None
+        result.right.value mustBe an[ExportsDeclaration]
+        result.right.value.linkDucrToMucr mustBe None
       }
     }
 
@@ -118,8 +118,8 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
         val result = exportsDeclarationXmlParser.fromXml(mappingContext, xml)
 
         result.isRight mustBe true
-        result.value mustBe an[ExportsDeclaration]
-        result.value.linkDucrToMucr.get mustBe YesNoAnswer.yes
+        result.right.value mustBe an[ExportsDeclaration]
+        result.right.value.linkDucrToMucr.get mustBe YesNoAnswer.yes
       }
     }
 

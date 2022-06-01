@@ -37,21 +37,21 @@ class DeclarationHolderParserSpec extends UnitSpec with EitherValues {
         val result = parser.parse(NodeSeq.Empty)
 
         result.isRight mustBe true
-        result.value.size mustBe 0
+        result.right.value.size mustBe 0
       }
 
       "AuthorisationHolder elements are present that contain no child elements" in {
         val result = parser.parse(emptyAuthHolderElement)
 
         result.isRight mustBe true
-        result.value.size mustBe 0
+        result.right.value.size mustBe 0
       }
 
       "AuthorisationHolder elements are present that contain child elements with empty values" in {
         val result = parser.parse(suppliedCategoryCodeAndIdElementsXml("", ""))
 
         result.isRight mustBe true
-        result.value.size mustBe 0
+        result.right.value.size mustBe 0
       }
     }
 
@@ -60,44 +60,44 @@ class DeclarationHolderParserSpec extends UnitSpec with EitherValues {
         val result = parser.parse(suppliedCategoryCodeAndIdElementsXml())
 
         result.isRight mustBe true
-        result.value.size mustBe 1
+        result.right.value.size mustBe 1
 
-        result.value.head.authorisationTypeCode.isDefined mustBe true
-        result.value.head.authorisationTypeCode.get mustBe catCode1
+        result.right.value.head.authorisationTypeCode.isDefined mustBe true
+        result.right.value.head.authorisationTypeCode.get mustBe catCode1
 
-        result.value.head.eori.isDefined mustBe true
-        result.value.head.eori.get mustBe eori
+        result.right.value.head.eori.isDefined mustBe true
+        result.right.value.head.eori.get mustBe eori
 
-        result.value.head.eoriSource.isDefined mustBe true
-        result.value.head.eoriSource.get mustBe EoriSource.OtherEori
+        result.right.value.head.eoriSource.isDefined mustBe true
+        result.right.value.head.eoriSource.get mustBe EoriSource.OtherEori
       }
 
       "one partially populated (only TypeCode) AuthorisationHolder element is present" in {
         val result = parser.parse(suppliedCategoryCodeAndIdElementsXml(eori = ""))
 
         result.isRight mustBe true
-        result.value.size mustBe 1
+        result.right.value.size mustBe 1
 
-        result.value.head.authorisationTypeCode.isDefined mustBe true
-        result.value.head.authorisationTypeCode.get mustBe catCode1
+        result.right.value.head.authorisationTypeCode.isDefined mustBe true
+        result.right.value.head.authorisationTypeCode.get mustBe catCode1
 
-        result.value.head.eori.isDefined mustBe false
-        result.value.head.eoriSource.isDefined mustBe false
+        result.right.value.head.eori.isDefined mustBe false
+        result.right.value.head.eoriSource.isDefined mustBe false
       }
 
       "one partially populated (only Eori) AuthorisationHolder element is present" in {
         val result = parser.parse(suppliedCategoryCodeAndIdElementsXml(catCode = ""))
 
         result.isRight mustBe true
-        result.value.size mustBe 1
+        result.right.value.size mustBe 1
 
-        result.value.head.authorisationTypeCode.isDefined mustBe false
+        result.right.value.head.authorisationTypeCode.isDefined mustBe false
 
-        result.value.head.eori.isDefined mustBe true
-        result.value.head.eori.get mustBe eori
+        result.right.value.head.eori.isDefined mustBe true
+        result.right.value.head.eori.get mustBe eori
 
-        result.value.head.eoriSource.isDefined mustBe true
-        result.value.head.eoriSource.get mustBe EoriSource.OtherEori
+        result.right.value.head.eoriSource.isDefined mustBe true
+        result.right.value.head.eoriSource.get mustBe EoriSource.OtherEori
       }
 
       "multiple AuthorisationHolder elements are present" in {
@@ -108,7 +108,7 @@ class DeclarationHolderParserSpec extends UnitSpec with EitherValues {
         val result = parser.parse(xmlToParse)
 
         result.isRight mustBe true
-        result.value.size mustBe 3
+        result.right.value.size mustBe 3
       }
     }
   }

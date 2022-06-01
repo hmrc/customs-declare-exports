@@ -16,10 +16,13 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
-import javax.inject.Inject
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
-import uk.gov.hmrc.workitem.{Failed, WorkItem}
+import uk.gov.hmrc.mongo.workitem.ProcessingStatus.Failed
+import uk.gov.hmrc.mongo.workitem.WorkItem
+
+import java.time.{Duration, Instant}
+import javax.inject.Inject
 
 class PagerDutyAlertValidator @Inject()(appConfig: AppConfig) {
 
@@ -27,10 +30,9 @@ class PagerDutyAlertValidator @Inject()(appConfig: AppConfig) {
     val isStatusFailed = workItem.status == Failed
     val isAlertNotTriggered = !workItem.item.alertTriggered
 
-    val workItemMaturity = appConfig.sendEmailPagerDutyAlertTriggerDelay
-    val isWorkItemOld = workItem.receivedAt.plus(workItemMaturity.toMillis).isBeforeNow
+    val workItemMaturity = Duration.ofMillis(appConfig.sendEmailPagerDutyAlertTriggerDelay.toMillis)
+    val isWorkItemOld = workItem.receivedAt.plus(workItemMaturity).isBefore(Instant.now)
 
     isStatusFailed && isAlertNotTriggered && isWorkItemOld
   }
-
 }

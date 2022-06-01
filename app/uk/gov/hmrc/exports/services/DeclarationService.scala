@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.exports.services
 
-import javax.inject.Inject
+import play.api.libs.json.Json
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 
+import javax.inject.Inject
 import scala.concurrent.Future
 
 class DeclarationService @Inject()(declarationRepository: DeclarationRepository) {
@@ -29,14 +30,14 @@ class DeclarationService @Inject()(declarationRepository: DeclarationRepository)
     declarationRepository.create(declaration)
 
   def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
-    declarationRepository.update(declaration)
+    declarationRepository.findOneAndReplace(Json.obj("id" -> declaration.id, "eori" -> declaration.eori), declaration, false)
 
   def find(search: DeclarationSearch, pagination: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] =
     declarationRepository.find(search, pagination, sort)
 
   def findOne(id: String, eori: Eori): Future[Option[ExportsDeclaration]] =
-    declarationRepository.find(id, eori)
+    declarationRepository.findOne(id, eori)
 
-  def deleteOne(declaration: ExportsDeclaration): Future[Unit] = declarationRepository.delete(declaration)
-
+  def deleteOne(declaration: ExportsDeclaration): Future[Boolean] =
+    declarationRepository.removeOne(Json.obj("id" -> declaration.id, "eori" -> declaration.eori))
 }

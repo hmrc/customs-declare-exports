@@ -16,26 +16,22 @@
 
 package uk.gov.hmrc.exports.migrations.repositories
 
-import java.util.Date
-
-import scala.collection.JavaConverters.mapAsJavaMap
-
 import org.bson.Document
 import uk.gov.hmrc.exports.base.UnitSpec
+
+import java.time.Instant
+import scala.collection.JavaConverters.mapAsJavaMap
 
 class LockEntrySpec extends UnitSpec {
 
   "LockEntry on buildFullDBObject" should {
-
     "convert to correct Document" in {
-
-      val date = new Date()
-      val lockEntry = LockEntry(key = "keyValue", status = "statusValue", owner = "ownerValue", expiresAt = date)
+      val date = Instant.now
       val expectedOutput =
         new Document(mapAsJavaMap(Map("key" -> "keyValue", "status" -> "statusValue", "owner" -> "ownerValue", "expiresAt" -> date)))
 
+      val lockEntry = LockEntry(key = "keyValue", status = "statusValue", owner = "ownerValue", expiresAt = date)
       lockEntry.buildFullDBObject mustBe expectedOutput
     }
   }
-
 }

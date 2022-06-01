@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.migrations.repositories
 
-import java.util.Date
-
 import org.bson.Document
 import uk.gov.hmrc.exports.migrations.repositories.LockEntry._
+
+import java.time.Instant
 
 object LockEntry {
   private[migrations] val KeyField: String = "key"
@@ -31,17 +31,18 @@ object LockEntry {
     document.getString(LockEntry.KeyField),
     document.getString(LockEntry.StatusField),
     document.getString(LockEntry.OwnerField),
-    document.getDate(LockEntry.ExpiresAtField)
+    document.get(LockEntry.ExpiresAtField, classOf[Instant])
   )
 }
 
-case class LockEntry(key: String, status: String, owner: String, expiresAt: Date) {
+case class LockEntry(key: String, status: String, owner: String, expiresAt: Instant) {
 
-  private[migrations] def buildFullDBObject: Document = {
-    val entry: Document = new Document
-    entry.append(KeyField, this.key).append(StatusField, this.status).append(OwnerField, this.owner).append(ExpiresAtField, this.expiresAt)
-  }
+  private[migrations] def buildFullDBObject: Document =
+    new Document()
+      .append(KeyField, this.key)
+      .append(StatusField, this.status)
+      .append(OwnerField, this.owner)
+      .append(ExpiresAtField, this.expiresAt)
 
   private[migrations] def isOwner(owner: String): Boolean = this.owner == owner
-
 }

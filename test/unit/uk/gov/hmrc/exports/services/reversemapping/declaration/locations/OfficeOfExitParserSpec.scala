@@ -36,31 +36,26 @@ class OfficeOfExitParserSpec extends UnitSpec with EitherValues {
     "return None" when {
 
       "the 'ExitOffice / ID' element is NOT present" in {
-
         val result = parser.parse(inputXml())
 
         result.isRight mustBe true
-        result.value mustBe None
+        result.right.value mustBe None
       }
 
       "the 'ExitOffice' element is present but it is empty" in {
-
         val result = parser.parse(emptyExitOfficeElement)
-
         result.isRight mustBe true
-        result.value mustBe None
+        result.right.value mustBe None
       }
     }
 
     "return the expected OfficeOfExit" when {
       "the 'ExitOffice / ID' element is present" in {
-
         val exitOfficeId = "GB000434"
-
         val result = parser.parse(inputXml(Some(exitOfficeId)))
 
         result.isRight mustBe true
-        result.value mustBe Some(OfficeOfExit(Some(exitOfficeId)))
+        result.right.value mustBe Some(OfficeOfExit(Some(exitOfficeId)))
       }
     }
   }

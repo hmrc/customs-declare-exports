@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,46 +17,20 @@
 package uk.gov.hmrc.exports.migrations.changelogs.cache
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.mongodb.{MongoClient, MongoClientURI}
-import com.mongodb.client.MongoDatabase
+import com.mongodb.client.MongoCollection
 import org.bson.Document
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
-import stubs.TestMongoDB
-import stubs.TestMongoDB.mongoConfiguration
-import uk.gov.hmrc.exports.base.IntegrationTestBaseSpec
+import uk.gov.hmrc.exports.base.IntegrationTestMigrationToolSpec
 import uk.gov.hmrc.exports.migrations.changelogs.cache.MakeTransportPaymentMethodNotOptionalSpec._
 
-class MakeTransportPaymentMethodNotOptionalSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSuite {
-
-  override def fakeApplication(): Application =
-    new GuiceApplicationBuilder()
-      .disable[com.kenshoo.play.metrics.PlayModule]
-      .configure(mongoConfiguration)
-      .build()
-
-  private val MongoURI = mongoConfiguration.get[String]("mongodb.uri")
-  private val DatabaseName = TestMongoDB.DatabaseName
-  private val CollectionName = "declarations"
-
-  private val mongoDatabase: MongoDatabase = {
-    val uri = new MongoClientURI(MongoURI.replaceAllLiterally("sslEnabled", "ssl"))
-    val client = new MongoClient(uri)
-
-    client.getDatabase(DatabaseName)
-  }
+class MakeTransportPaymentMethodNotOptionalSpec extends IntegrationTestMigrationToolSpec {
 
   private val changeLog = new MakeTransportPaymentMethodNotOptional()
 
+  def getDeclarationsCollection: MongoCollection[Document] = getCollection("declarations")
+
   override def beforeEach(): Unit = {
     super.beforeEach()
-    mongoDatabase.getCollection(CollectionName).drop()
-  }
-
-  override def afterEach(): Unit = {
-    mongoDatabase.getCollection(CollectionName).drop()
-    super.afterEach()
+    removeAll(getDeclarationsCollection)
   }
 
   "MakeTransportPayemntFieldNotOptional migration definition" should {
@@ -75,12 +49,12 @@ class MakeTransportPaymentMethodNotOptionalSpec extends IntegrationTestBaseSpec 
   }
 
   private def runTest(inputDataJson: String, expectedDataJson: String): Unit = {
-    val collection = mongoDatabase.getCollection(CollectionName)
+    val collection = getDeclarationsCollection
     collection.insertOne(Document.parse(inputDataJson))
 
-    changeLog.migrationFunction(mongoDatabase)
+    changeLog.migrationFunction(database)
 
-    val result: Document = collection.find().first()
+    val result: Document = collection.find.first
     val expectedResult: String = expectedDataJson
 
     compareJson(result.toJson, expectedResult)
