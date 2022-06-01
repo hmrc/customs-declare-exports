@@ -1,5 +1,6 @@
 package uk.gov.hmrc.exports.repositories
 
+import com.mongodb.MongoWriteException
 import org.mongodb.scala.bson.BsonDocument
 import org.scalatest.concurrent.Eventually
 import testdata.ExportsTestData.{actionId, actionId_2}
@@ -43,10 +44,9 @@ class UnparsedNotificationWorkItemRepositorySpec extends IntegrationTestMongoSpe
 
         repository.pushNew(testUnparsedNotification).futureValue
 
-        val exc = repository.pushNew(testUnparsedNotification_2).failed.futureValue
-
-        //exc mustBe an[DatabaseException]
-        exc.getMessage must include(s"E11000 duplicate key error collection: ${databaseName}.unparsedNotifications index: itemIdIdx dup key")
+        val exception = repository.pushNew(testUnparsedNotification_2).failed.futureValue
+        exception mustBe an[MongoWriteException]
+        exception.getMessage must include(s"E11000 duplicate key error collection: ${databaseName}.unparsedNotifications index: itemIdIdx dup key")
       }
     }
   }

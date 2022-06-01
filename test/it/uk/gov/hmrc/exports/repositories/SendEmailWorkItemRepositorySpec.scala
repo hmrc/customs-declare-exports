@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.exports.repositories
 
+import com.mongodb.MongoWriteException
 import org.bson.types.ObjectId
 import testdata.ExportsTestData
 import testdata.WorkItemTestData._
@@ -58,10 +59,9 @@ class SendEmailWorkItemRepositorySpec extends IntegrationTestMongoSpec {
 
         repository.pushNew(testSendEmailWorkItem_1).futureValue
 
-        val exc = repository.pushNew(testSendEmailWorkItem_2).failed.futureValue
-
-        //exc mustBe an[DatabaseException]
-        exc.getMessage must include(
+        val exception = repository.pushNew(testSendEmailWorkItem_2).failed.futureValue
+        exception mustBe an[MongoWriteException]
+        exception.getMessage must include(
           s"E11000 duplicate key error collection: ${databaseName}.sendEmailWorkItems index: sendEmailDetailsNotificationIdIdx dup key"
         )
       }
