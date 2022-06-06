@@ -24,21 +24,34 @@ import uk.gov.hmrc.exports.migrations.changelogs.cache.{MakeTransportPaymentMeth
 import uk.gov.hmrc.exports.migrations.changelogs.emaildetails.RenameSendEmailDetailsToItem
 import uk.gov.hmrc.exports.migrations.changelogs.notification.{MakeParsedDetailsOptional, SplitTheNotificationsCollection}
 import uk.gov.hmrc.exports.migrations.changelogs.submission.RemoveRedundantIndexes
-import uk.gov.hmrc.exports.routines.{Routine, RoutinesExecutionContext}
 
 import javax.inject.Inject
-import scala.concurrent.Future
 
 @Singleton
-class MigrationRoutine @Inject()(appConfig: AppConfig)(implicit mec: RoutinesExecutionContext) extends Routine with Logging {
+class MigrationRoutine @Inject()(appConfig: AppConfig) extends Logging {
+
+  logger.info("Starting migration with ExportsMigrationTool")
 
   private val (client, mongoDatabase) = createMongoClient
   private val db = client.getDatabase(mongoDatabase)
 
-  def execute(): Future[Unit] = Future {
-    logger.info("Starting migration with ExportsMigrationTool")
-    migrateWithExportsMigrationTool
-  }
+  private val lockMaxTries = 10
+  private val lockMaxWaitMillis = minutesToMillis(5)
+  private val lockAcquiredForMillis = minutesToMillis(3)
+
+  private val lockManagerConfig = LockManagerConfig(lockMaxTries, lockMaxWaitMillis, lockAcquiredForMillis)
+
+  private val migrationsRegistry = MigrationsRegistry()
+    .register(new MakeParsedDetailsOptional())
+    .register(new SplitTheNotificationsCollection())
+    .register(new RenameToAdditionalDocuments())
+    .register(new MakeTransportPaymentMethodNotOptional())
+    .register(new RemoveRedundantIndexes())
+    .register(new RenameSendEmailDetailsToItem())
+
+  ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute
+
+  client.close()
 
   private def createMongoClient: (MongoClient, String) = {
     val (mongoUri, _) = {
@@ -47,26 +60,6 @@ class MigrationRoutine @Inject()(appConfig: AppConfig)(implicit mec: RoutinesExe
     }
     val (_, mongoDatabase) = mongoUri.splitAt(mongoUri.lastIndexOf('/'.toInt))
     (MongoClients.create(appConfig.mongodbUri), mongoDatabase.drop(1))
-  }
-
-  val lockMaxTries = 10
-  val lockMaxWaitMillis = minutesToMillis(5)
-  val lockAcquiredForMillis = minutesToMillis(3)
-
-  private def migrateWithExportsMigrationTool(): Unit = {
-    val lockManagerConfig = LockManagerConfig(lockMaxTries, lockMaxWaitMillis, lockAcquiredForMillis)
-
-    val migrationsRegistry = MigrationsRegistry()
-      .register(new MakeParsedDetailsOptional())
-      .register(new SplitTheNotificationsCollection())
-      .register(new RenameToAdditionalDocuments())
-      .register(new MakeTransportPaymentMethodNotOptional())
-      .register(new RemoveRedundantIndexes())
-      .register(new RenameSendEmailDetailsToItem())
-
-    ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute
-
-    client.close()
   }
 
   private def minutesToMillis(minutes: Int): Long = minutes * 60L * 1000L

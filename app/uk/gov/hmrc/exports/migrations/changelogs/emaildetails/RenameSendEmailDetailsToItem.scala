@@ -31,8 +31,8 @@ class RenameSendEmailDetailsToItem extends MigrationDefinition {
 
   override val migrationInformation: MigrationInformation =
     MigrationInformation(
-      id = "CEDS-3825 Rename WorkItem[SendEmailDetails].sendEmailDetails to WorkItem[SendEmailDetails].item",
-      order = 11,
+      id = "CEDS-3825 Rename sendEmailWorkItems.sendEmailDetails to sendEmailWorkItems.item",
+      order = 12,
       author = "Lucio Biondi",
       runAlways = true
     )
