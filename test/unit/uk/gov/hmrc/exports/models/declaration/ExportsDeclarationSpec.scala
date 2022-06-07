@@ -48,7 +48,7 @@ class ExportsDeclarationSpec extends UnitSpec {
 
       val declaration = ExportsDeclaration("1", Eori("GB12345678"), exportsDeclarationRequest)
 
-      val json = Json.toJson(declaration)
+      val json = Json.toJson(declaration)(ExportsDeclaration.REST.writes)
 
       json
         .validate(ExportsDeclarationRequest.format)

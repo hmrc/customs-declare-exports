@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.exports.controllers.request
 
-import java.time.Instant
-
 import play.api.libs.json._
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration._
+
+import java.time.Instant
 
 case class ExportsDeclarationRequest(
   createdDateTime: Instant,
@@ -44,6 +44,7 @@ case class ExportsDeclarationRequest(
 )
 
 object ExportsDeclarationRequest {
+
   // writes are used only for logging
   implicit val format: OFormat[ExportsDeclarationRequest] = Json.format[ExportsDeclarationRequest]
 }
