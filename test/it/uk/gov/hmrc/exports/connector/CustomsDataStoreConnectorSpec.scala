@@ -51,23 +51,23 @@ class CustomsDataStoreConnectorSpec extends IntegrationTestSpec {
 
       "return a valid Email instance" in {
         val testUndeliverableEmailJson = """{
-                                              |    "address": "some@email.com",
-                                              |    "timestamp": "2020-03-20T01:02:03Z",
-                                              |    "undeliverable": {
-                                              |          "subject": "subject-example",
-                                              |          "eventId": "example-id",
-                                              |          "groupId": "example-group-id",
-                                              |          "timestamp": "2021-05-14T10:59:45.811+01:00",
-                                              |          "event": {
-                                              |                     "id": "example-id",
-                                              |                    "event": "someEvent",
-                                              |                    "emailAddress": "some@email.com",
-                                              |                    "detected": "2021-05-14T10:59:45.811+01:00",
-                                              |                    "code": 12,
-                                              |                    "reason": "Inbox full",
-                                              |                    "enrolment": "HMRC-CUS-ORG~EORINumber~testEori"
-                                              |        }
-                                              |     }
+                                              |  "address": "some@email.com",
+                                              |  "timestamp": "2020-03-20T01:02:03Z",
+                                              |  "undeliverable": {
+                                              |      "subject": "subject-example",
+                                              |      "eventId": "example-id",
+                                              |      "groupId": "example-group-id",
+                                              |      "timestamp": "2021-05-14T10:59:45.811+01:00",
+                                              |      "event": {
+                                              |          "id": "example-id",
+                                              |          "event": "someEvent",
+                                              |          "emailAddress": "some@email.com",
+                                              |          "detected": "2021-05-14T10:59:45.811+01:00",
+                                              |          "code": 12,
+                                              |          "reason": "Inbox full",
+                                              |          "enrolment": "HMRC-CUS-ORG~EORINumber~testEori"
+                                              |      }
+                                              |  }
                                               |}""".stripMargin
 
         val testUndeliverableEmailAddress = Email("some@email.com", deliverable = false)

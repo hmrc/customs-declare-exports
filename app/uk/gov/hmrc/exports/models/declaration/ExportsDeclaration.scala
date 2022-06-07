@@ -16,14 +16,15 @@
 
 package uk.gov.hmrc.exports.models.declaration
 
-import java.time.Instant
-
 import play.api.libs.json._
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
+
+import java.time.Instant
 
 case class ExportsDeclaration(
   id: String,
@@ -52,7 +53,14 @@ case class ExportsDeclaration(
 
 object ExportsDeclaration {
 
-  implicit val format: OFormat[ExportsDeclaration] = Json.format[ExportsDeclaration]
+  object REST {
+    implicit val writes: OWrites[ExportsDeclaration] = Json.writes[ExportsDeclaration]
+  }
+
+  object Mongo {
+    implicit val formatInstant: Format[Instant] = MongoJavatimeFormats.instantFormat
+    implicit val format: OFormat[ExportsDeclaration] = Json.format[ExportsDeclaration]
+  }
 
   def apply(id: String, eori: Eori, declarationRequest: ExportsDeclarationRequest): ExportsDeclaration =
     ExportsDeclaration(

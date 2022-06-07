@@ -40,7 +40,7 @@ class DeclarationRepository @Inject()(appConfig: AppConfig, mongoComponent: Mong
     extends PlayMongoRepository[ExportsDeclaration](
       mongoComponent = mongoComponent,
       collectionName = "declarations",
-      domainFormat = ExportsDeclaration.format,
+      domainFormat = ExportsDeclaration.Mongo.format,
       indexes = DeclarationRepository.indexes,
       replaceIndexes = appConfig.replaceIndexesOfDeclarationRepository
     ) with RepositoryOps[ExportsDeclaration] {
@@ -48,8 +48,10 @@ class DeclarationRepository @Inject()(appConfig: AppConfig, mongoComponent: Mong
   override def classTag: ClassTag[ExportsDeclaration] = implicitly[ClassTag[ExportsDeclaration]]
   override val executionContext = ec
 
-  def deleteExpiredDraft(expiryDate: Instant): Future[Long] =
+  def deleteExpiredDraft(expiryDate: Instant): Future[Long] = {
+    import ExportsDeclaration.Mongo.formatInstant
     removeEvery(Json.obj("status" -> DeclarationStatus.DRAFT.toString, "updatedDateTime" -> Json.obj("$lte" -> expiryDate)))
+  }
 
   def find(search: DeclarationSearch, page: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] = {
     val filter = BsonDocument(Json.toJson(search).toString)

@@ -54,23 +54,23 @@ class VerifiedEmailByEoriFlowSpec extends IntegrationTestSpec with AuthTestSuppo
 
     "return 200(OK) status if the email address for the given EORI is undeliverable" in {
       val expectedEmailJson = """{
-                                   |    "address": "some@email.com",
-                                   |    "timestamp": "2020-03-20T01:02:03Z",
-                                   |    "undeliverable": {
-                                   |          "subject": "subject-example",
-                                   |          "eventId": "example-id",
-                                   |          "groupId": "example-group-id",
-                                   |          "timestamp": "2021-05-14T10:59:45.811+01:00",
-                                   |          "event": {
-                                   |                     "id": "example-id",
-                                   |                    "event": "someEvent",
-                                   |                    "emailAddress": "some@email.com",
-                                   |                    "detected": "2021-05-14T10:59:45.811+01:00",
-                                   |                    "code": 12,
-                                   |                    "reason": "Inbox full",
-                                   |                    "enrolment": "HMRC-CUS-ORG~EORINumber~testEori"
-                                   |        }
-                                   |     }
+                                   |  "address": "some@email.com",
+                                   |  "timestamp": "2020-03-20T01:02:03Z",
+                                   |  "undeliverable": {
+                                   |      "subject": "subject-example",
+                                   |      "eventId": "example-id",
+                                   |      "groupId": "example-group-id",
+                                   |      "timestamp": "2021-05-14T10:59:45.811+01:00",
+                                   |      "event": {
+                                   |          "id": "example-id",
+                                   |          "event": "someEvent",
+                                   |          "emailAddress": "some@email.com",
+                                   |          "detected": "2021-05-14T10:59:45.811+01:00",
+                                   |          "code": 12,
+                                   |          "reason": "Inbox full",
+                                   |          "enrolment": "HMRC-CUS-ORG~EORINumber~testEori"
+                                   |      }
+                                   |  }
                                    |}""".stripMargin
 
       val expectedEmailAddress = """{"address":"some@email.com","deliverable":false}"""
