@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.locations
 
-import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.Country
@@ -24,7 +23,7 @@ import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 import scala.xml.NodeSeq
 
-class CountryParserSpec extends UnitSpec with EitherValues {
+class CountryParserSpec extends UnitSpec {
 
   private val parser = new CountryParser()
   private implicit val context = MappingContext(eori)

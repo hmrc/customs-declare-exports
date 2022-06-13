@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.locations
 
-import org.scalatest.EitherValues
 import testdata.ExportsTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.GoodsLocation
@@ -25,7 +24,7 @@ import uk.gov.hmrc.exports.services.reversemapping.declaration.locations.GoodsLo
 
 import scala.xml.{Elem, NodeSeq}
 
-class GoodsLocationParserSpec extends UnitSpec with EitherValues {
+class GoodsLocationParserSpec extends UnitSpec {
 
   private val parser = new GoodsLocationParser
 

@@ -23,6 +23,9 @@ import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
 import java.util.UUID
 
 case class ParsedNotification(_id: ObjectId = ObjectId.get, unparsedNotificationId: UUID, actionId: String, details: NotificationDetails)
+    extends Ordered[ParsedNotification] {
+  override def compare(that: ParsedNotification): Int = details.dateTimeIssued.compareTo(that.details.dateTimeIssued)
+}
 
 object ParsedNotification {
 
@@ -30,7 +33,7 @@ object ParsedNotification {
 
   val format: Format[ParsedNotification] = Json.format[ParsedNotification]
 
-  object FrontendFormat {
+  object REST {
     implicit val writes: Writes[ParsedNotification] =
       (notification: ParsedNotification) =>
         Json.obj(

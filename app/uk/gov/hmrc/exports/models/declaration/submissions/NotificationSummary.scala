@@ -17,27 +17,25 @@
 package uk.gov.hmrc.exports.models.declaration.submissions
 
 import play.api.libs.json.Json
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
 
 import java.time.ZonedDateTime
 import java.util.UUID
 
-case class Submission(
-  uuid: String = UUID.randomUUID.toString,
-  eori: String,
-  lrn: String,
-  mrn: Option[String] = None,
-  ducr: String,
-  latestEnhancedStatus: Option[EnhancedStatus] = None,
-  enhancedStatusLastUpdated: Option[ZonedDateTime] = None,
-  actions: Seq[Action] = Seq.empty
-)
+case class NotificationSummary(notificationId: UUID, dateTimeIssued: ZonedDateTime, enhancedStatus: EnhancedStatus)
+    extends Ordered[NotificationSummary] {
+  override def compare(that: NotificationSummary): Int = dateTimeIssued.compareTo(that.dateTimeIssued)
+}
 
-object Submission {
+object NotificationSummary {
 
-  implicit val format = Json.format[Submission]
+  implicit val formats = Json.format[NotificationSummary]
 
-  def apply(declaration: ExportsDeclaration, lrn: String, ducr: String, action: Action): Submission =
-    new Submission(declaration.id, declaration.eori, lrn, None, ducr, actions = List(action))
+  def apply(notification: ParsedNotification, actions: Seq[Action], notificationSummaries: Seq[NotificationSummary]): NotificationSummary =
+    new NotificationSummary(
+      notificationId = notification.unparsedNotificationId,
+      dateTimeIssued = notification.details.dateTimeIssued,
+      enhancedStatus = EnhancedStatus(notification, actions, notificationSummaries)
+    )
 }

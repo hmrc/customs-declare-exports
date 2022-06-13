@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.migrations
 
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.exports.migrations.LockManager._
 import uk.gov.hmrc.exports.migrations.exceptions.{LockManagerException, LockPersistenceException}
 import uk.gov.hmrc.exports.migrations.repositories.{LockEntry, LockRefreshChecker, LockRepository, LockStatus}
@@ -31,14 +31,9 @@ object LockManager {
   val MinimumSleepThreadMillisDefault: Long = 500L
 }
 
-class LockManager(
-  val repository: LockRepository,
-  val lockRefreshChecker: LockRefreshChecker,
-  val timeUtils: TimeUtils,
-  val config: LockManagerConfig
-) {
+class LockManager(val repository: LockRepository, val lockRefreshChecker: LockRefreshChecker, val timeUtils: TimeUtils, val config: LockManagerConfig)
+    extends Logging {
 
-  private val logger = Logger(this.getClass)
   private val lockOwner = UUID.randomUUID.toString
 
   private var lockExpiresAt: Instant = _

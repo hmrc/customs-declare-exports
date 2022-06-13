@@ -21,9 +21,9 @@ import testdata.ExportsTestData._
 import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.IntegrationTestMongoSpec
 
-class ParsedNotificationRepositorySpec extends IntegrationTestMongoSpec {
+class ParsedNotificationRepositoryISpec extends IntegrationTestMongoSpec {
 
-  private val repository = getRepository[ParsedNotificationRepository]
+  private val repository = instanceOf[ParsedNotificationRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()

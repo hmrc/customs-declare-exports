@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.scheduler
 
 import akka.actor.{ActorSystem, Cancellable}
-import play.api.Logger
+import play.api.Logging
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.scheduler.jobs.ScheduledJob
@@ -36,9 +36,8 @@ class Scheduler @Inject()(
   appConfig: AppConfig,
   schedulerDateUtil: SchedulerDateUtil,
   scheduledJobs: ScheduledJobs
-)(implicit ec: ExecutionContext) {
-
-  private val logger = Logger(this.getClass)
+)(implicit ec: ExecutionContext)
+    extends Logging {
 
   val runningJobs: Iterable[Cancellable] = scheduledJobs.jobs.map { job =>
     logger.info(
@@ -67,10 +66,7 @@ class Scheduler @Inject()(
   private def durationUntil(datetime: Instant): FiniteDuration = {
     val now = Instant.now(appConfig.clock)
 
-    if (datetime.isBefore(now))
-//    throw new IllegalArgumentException(s"Expected a future or present datetime (now is $now) but was [$datetime]")
-      FiniteDuration(now.until(now.plusSeconds(1), ChronoUnit.SECONDS), TimeUnit.SECONDS)
+    if (datetime.isBefore(now)) FiniteDuration(now.until(now.plusSeconds(1), ChronoUnit.SECONDS), TimeUnit.SECONDS)
     else FiniteDuration(now.until(datetime, ChronoUnit.SECONDS), TimeUnit.SECONDS)
-
   }
 }

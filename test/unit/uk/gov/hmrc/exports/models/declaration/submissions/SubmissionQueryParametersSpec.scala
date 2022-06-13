@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.exports.models.declaration.submissions
 
-import org.scalatest.EitherValues
 import uk.gov.hmrc.exports.base.UnitSpec
 
-class SubmissionQueryParametersSpec extends UnitSpec with EitherValues {
+class SubmissionQueryParametersSpec extends UnitSpec {
 
   private val queryStringBindable = SubmissionQueryParameters.queryStringBindable
 

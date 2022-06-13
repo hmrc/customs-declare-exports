@@ -17,7 +17,6 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration.items
 
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
-import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoStringAnswers
@@ -26,7 +25,7 @@ import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 import scala.xml.{Elem, NodeSeq}
 
-class SingleItemParserSpec extends UnitSpec with EitherValues {
+class SingleItemParserSpec extends UnitSpec {
 
   private val packageInformationParser = mock[PackageInformationParser]
   private val procedureCodesParser = mock[ProcedureCodesParser]

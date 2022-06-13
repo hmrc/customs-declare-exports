@@ -34,7 +34,7 @@ import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
 import uk.gov.hmrc.exports.base.UnitTestMockBuilder.buildNotificationServiceMock
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification.FrontendFormat
+import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification.REST
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.NotificationService
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
@@ -87,7 +87,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
         val result = routeGetFindAll
 
         status(result) must be(OK)
-        contentAsJson(result) must be(Json.toJson(Seq(notification))(FrontendFormat.notificationsWrites))
+        contentAsJson(result) must be(Json.toJson(Seq(notification))(REST.notificationsWrites))
       }
     }
 
@@ -99,7 +99,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
         val result = routeGetFindAll
 
         status(result) must be(OK)
-        contentAsJson(result) must be(Json.toJson(Seq.empty[ParsedNotification])(FrontendFormat.notificationsWrites))
+        contentAsJson(result) must be(Json.toJson(Seq.empty[ParsedNotification])(REST.notificationsWrites))
       }
     }
 
@@ -136,7 +136,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
         val result = routeGetFindLatest
 
         status(result) must be(OK)
-        contentAsJson(result) must be(Json.toJson(notification)(FrontendFormat.writes))
+        contentAsJson(result) must be(Json.toJson(notification)(REST.writes))
       }
     }
 
@@ -192,7 +192,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
         val result = routeGetAllNotificationsForUser()
 
-        contentAsJson(result) must equal(Json.toJson(notificationsFromService)(FrontendFormat.notificationsWrites))
+        contentAsJson(result) must equal(Json.toJson(notificationsFromService)(REST.notificationsWrites))
       }
 
       "return only those Notifications returned by Notification Service that have been parsed" in {
@@ -201,7 +201,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
         val result = routeGetAllNotificationsForUser()
 
-        contentAsJson(result) must equal(Json.toJson(Seq(notification, notification_2, notification_3))(FrontendFormat.notificationsWrites))
+        contentAsJson(result) must equal(Json.toJson(Seq(notification, notification_2, notification_3))(REST.notificationsWrites))
       }
 
       "call Notification Service once" in {

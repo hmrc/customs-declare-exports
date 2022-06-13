@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.Configuration
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
-import uk.gov.hmrc.mongo.{MongoComponent, MongoUtils}
 import uk.gov.hmrc.mongo.workitem.{WorkItemFields, WorkItemRepository}
+import uk.gov.hmrc.mongo.{MongoComponent, MongoUtils}
 
 import java.time.{Duration, Instant}
 import javax.inject.{Inject, Singleton}

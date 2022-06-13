@@ -18,7 +18,6 @@ package uk.gov.hmrc.exports.base
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar
-import testdata.RepositoryTestData.dummyWriteResultFailure
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
@@ -27,6 +26,7 @@ import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, Submissio
 import uk.gov.hmrc.exports.services.notifications.NotificationService
 
 import scala.concurrent.Future
+import scala.util.control.NoStackTrace
 
 object UnitTestMockBuilder extends MockitoSugar {
 
@@ -48,15 +48,18 @@ object UnitTestMockBuilder extends MockitoSugar {
     when(submissionRepositoryMock.addAction(any[String](), any())).thenReturn(Future.successful(None))
     when(submissionRepositoryMock.findAll(any(), any())).thenReturn(Future.successful(Seq.empty))
     when(submissionRepositoryMock.create(any[Submission])).thenReturn(Future.successful(mock[Submission]))
-    when(submissionRepositoryMock.updateMrn(any(), any())).thenReturn(Future.successful(None))
     submissionRepositoryMock
   }
 
   def buildNotificationRepositoryMock: ParsedNotificationRepository = {
     val notificationRepositoryMock: ParsedNotificationRepository = mock[ParsedNotificationRepository]
+
     when(notificationRepositoryMock.findAll(any[String], any[String])).thenReturn(Future.successful(Seq.empty))
     when(notificationRepositoryMock.findNotifications(any())).thenReturn(Future.successful(Seq.empty))
-    when(notificationRepositoryMock.create(any[ParsedNotification])).thenReturn(Future.failed[ParsedNotification](dummyWriteResultFailure()))
+
+    val failure = Future.failed[ParsedNotification](new RuntimeException("Test Exception message") with NoStackTrace)
+    when(notificationRepositoryMock.create(any[ParsedNotification])).thenReturn(failure)
+
     notificationRepositoryMock
   }
 

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
@@ -38,8 +38,7 @@ class DeclarationController @Inject()(
   authenticator: Authenticator,
   override val controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
-    extends RESTController(controllerComponents) {
-  private val logger = Logger(this.getClass)
+    extends RESTController(controllerComponents) with Logging {
 
   def create(): Action[ExportsDeclarationRequest] =
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>

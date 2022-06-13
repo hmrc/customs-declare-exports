@@ -16,15 +16,14 @@
 
 package uk.gov.hmrc.exports.controllers.util
 
-import javax.inject.Singleton
-import play.api.Logger
+import play.api.Logging
 import play.api.http.HeaderNames
 import uk.gov.hmrc.exports.models._
 
-@Singleton
-class HeaderValidator {
+import javax.inject.Singleton
 
-  private val logger = Logger(this.getClass)
+@Singleton
+class HeaderValidator extends Logging {
 
   def extractLrnHeader(headers: Map[String, String]): Option[String] =
     extractHeader(CustomsHeaderNames.XLrnHeaderName, headers)

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.migrations
 
 import com.mongodb.client.MongoDatabase
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.exports.migrations.changelogs.MigrationDefinition
 import uk.gov.hmrc.exports.migrations.exceptions.{ExportsMigrationException, LockManagerException}
 import uk.gov.hmrc.exports.migrations.repositories.ChangeEntry.{KeyAuthor, KeyChangeId}
@@ -29,8 +29,7 @@ class ExportsMigrationTool(
   val changeEntryRepository: ChangeEntryRepository,
   val database: MongoDatabase,
   val throwExceptionIfCannotObtainLock: Boolean = false
-) {
-  private val logger = Logger(this.getClass)
+) extends Logging {
 
   private var enabled: Boolean = true
 

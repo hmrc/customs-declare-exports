@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.exports.connectors.ead
 
-import javax.inject.{Inject, Singleton}
-import play.api.Logger
+import play.api.Logging
 import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
 import play.mvc.Http.Status.OK
@@ -26,13 +25,13 @@ import uk.gov.hmrc.exports.models.ead.parsers.MrnStatusParser
 import uk.gov.hmrc.exports.models.ead.{MrnStatus, XmlTags}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, InternalServerException}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CustomsDeclarationsInformationConnector @Inject()(mrnStatusParser: MrnStatusParser, appConfig: AppConfig, httpClient: HttpClient)(
   implicit ec: ExecutionContext
-) {
-  private val logger = Logger(this.getClass)
+) extends Logging {
 
   def fetchMrnStatus(mrn: String)(implicit hc: HeaderCarrier): Future[Option[MrnStatus]] =
     httpClient

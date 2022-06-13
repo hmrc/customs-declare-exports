@@ -16,19 +16,15 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import org.scalatest.EitherValues
-import play.api.libs.json.Json
 import repositories.DuplicateKey
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
 import uk.gov.hmrc.exports.base.IntegrationTestMongoSpec
 import uk.gov.hmrc.exports.models.declaration.submissions._
 
-import scala.concurrent.Future
+class SubmissionRepositoryISpec extends IntegrationTestMongoSpec {
 
-class SubmissionRepositorySpec extends IntegrationTestMongoSpec with EitherValues {
-
-  private val repository = getRepository[SubmissionRepository]
+  private val repository = instanceOf[SubmissionRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -47,7 +43,6 @@ class SubmissionRepositorySpec extends IntegrationTestMongoSpec with EitherValue
     }
 
     "trying to save Submission with the same actionId twice" should {
-
       "return a 'DuplicateKey' error" in {
         repository.insertOne(submission).futureValue.isRight mustBe true
         val secondSubmission = submission_2.copy(actions = submission.actions)
@@ -57,59 +52,26 @@ class SubmissionRepositorySpec extends IntegrationTestMongoSpec with EitherValue
         result.isLeft mustBe true
         result.left.value.isInstanceOf[DuplicateKey] mustBe true
       }
-
-      "result in having only the first Submission persisted" in {
-        repository.insertOne(submission).futureValue.isRight mustBe true
-        val secondSubmission = submission_2.copy(actions = submission.actions)
-
-        repository.insertOne(secondSubmission).futureValue
-
-        val submissionsInDB = repository.findAll(eori, SubmissionQueryParameters()).futureValue
-        submissionsInDB.length must be(1)
-        submissionsInDB.head must equal(submission)
-      }
     }
 
-    "allow insertOne two submissions with empty actions" in {
+    "allow to insert two submissions with empty actions" in {
       repository.insertOne(emptySubmission_1).futureValue.isRight mustBe true
       repository.insertOne(emptySubmission_2).futureValue.isRight mustBe true
       repository.findAll(eori, SubmissionQueryParameters()).futureValue must have length 2
     }
   }
 
-  "Submission Repository on setMrnIfMissing" should {
-
-    "return empty Option" when {
-      "there is no Submission with given actionId" in {
-        val newMrn = mrn_2
-        repository.updateMrn(actionId, newMrn).futureValue mustNot be(defined)
-      }
-    }
-
-    "return Submission updated" when {
-      "there is a Submission containing Action with given actionId and MRN is None" in {
-        repository.insertOne(submission.copy(mrn = None)).futureValue.isRight mustBe true
-        val newMrn = mrn_2
-        val expectedUpdatedSubmission = submission.copy(mrn = Some(newMrn))
-
-        val updatedSubmission = repository.updateMrn(actionId, newMrn).futureValue
-
-        updatedSubmission.value must equal(expectedUpdatedSubmission)
-      }
-    }
-  }
-
   "Submission Repository on addAction" when {
 
-    "there is no Submission with given MRN" should {
-      "return empty Option" in {
+    "there is no Submission with the given MRN" should {
+      "return an empty Option" in {
         val newAction = Action(actionId_2, CancellationRequest)
         repository.addAction(mrn, newAction).futureValue mustNot be(defined)
       }
     }
 
-    "there is a Submission with given MRN" should {
-      "return Submission updated" in {
+    "there is a Submission with the given MRN" should {
+      "return the Submission updated" in {
         repository.insertOne(submission).futureValue.isRight mustBe true
         val newAction = Action(actionId_2, CancellationRequest)
         val expectedUpdatedSubmission = submission.copy(actions = submission.actions :+ newAction)
@@ -117,29 +79,6 @@ class SubmissionRepositorySpec extends IntegrationTestMongoSpec with EitherValue
         val updatedSubmission = repository.addAction(mrn, newAction).futureValue
 
         updatedSubmission.value must equal(expectedUpdatedSubmission)
-      }
-    }
-  }
-
-  "Submission Repository on findSubmissionByMrnAndEori" when {
-
-    def find(eori: String = "wrong"): Future[Option[Submission]] = repository.findOne(Json.obj("eori" -> eori, "mrn" -> mrn))
-
-    "there is no Submission with given MRN" should {
-      "return empty Option" in {
-        find(eori).futureValue mustNot be(defined)
-      }
-    }
-
-    "there is a Submission with given MRN" that {
-      "has different eori should return empty Option" in {
-        repository.insertOne(submission).futureValue.isRight mustBe true
-        find().futureValue mustNot be(defined)
-      }
-
-      "has correct eori should return this Submission" in {
-        repository.insertOne(submission).futureValue.isRight mustBe true
-        find(eori).futureValue.value must equal(submission)
       }
     }
   }

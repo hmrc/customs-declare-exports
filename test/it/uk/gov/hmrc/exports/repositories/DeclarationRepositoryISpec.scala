@@ -26,74 +26,57 @@ import scala.concurrent.Future
 
 class DeclarationRepositoryISpec extends IntegrationTestMongoSpec {
 
-  private val repository = getRepository[DeclarationRepository]
+  private val year = 2019
+
+  private val repository = instanceOf[DeclarationRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
     repository.removeAll.futureValue
   }
 
-  "Create" should {
-    "persist the declaration" in {
+  "DeclarationRepository" should {
+
+    "persist a declaration successfully" in {
       val declaration = aDeclaration(withId("id"), withEori("eori"))
       repository.create(declaration).futureValue mustBe declaration
 
       collectionSize mustBe 1
     }
-  }
-
-  "Update" should {
 
     def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
       repository.findOneAndReplace(Json.obj("id" -> declaration.id, "eori" -> declaration.eori), declaration, false)
 
-    "update the declaration" in {
+    "update a declaration successfully" in {
       val declaration = aDeclaration(withType(DeclarationType.STANDARD), withId("id"), withEori("eori"))
-      givenADeclarationExists(declaration)
+      repository.insertOne(declaration).futureValue.isRight mustBe true
 
       update(declaration).futureValue mustBe Some(declaration)
 
       collectionSize mustBe 1
     }
 
-    "do nothing for missing declaration" in {
+    "not add a new declaration to the collection during an update op if the declaration is not already in the collection" in {
       val declaration = aDeclaration(withId("id"), withEori("eori"))
 
       update(declaration).futureValue mustBe None
 
       collectionSize mustBe 0
     }
-  }
 
-  val eori = Eori("eori")
+    val eori = Eori("eori")
 
-  "Find by ID & EORI" should {
-
-    "return the persisted declaration" when {
-      "one exists with eori and id" in {
+    "retrieve an existing declaration" when {
+      "one exists with the given id and eori" in {
         val declaration = aDeclaration(withId("id"), withEori("eori"))
-        givenADeclarationExists(declaration)
-
+        repository.insertOne(declaration).futureValue.isRight mustBe true
         repository.findOne("id", eori).futureValue mustBe Some(declaration)
       }
     }
 
-    "return None" when {
-      "none exist with eori and id" in {
-        val declaration1 = aDeclaration(withId("some-other-id"), withEori("eori"))
-        val declaration2 = aDeclaration(withId("id"), withEori("some-other-eori"))
-        givenADeclarationExists(declaration1, declaration2)
+    "retrieve all existing declarations" when {
 
-        repository.findOne("id", eori).futureValue mustBe None
-      }
-    }
-  }
-
-  "Find by EORI" should {
-
-    "return the persisted declarations" when {
-
-      "some exist with eori" in {
+      "some exist with the given eori" in {
         val eori1 = Eori("eori1")
         val declaration1 = aDeclaration(withId("id1"), withEori(eori1))
         val declaration2 = aDeclaration(withId("id2"), withEori(eori1))
@@ -101,10 +84,11 @@ class DeclarationRepositoryISpec extends IntegrationTestMongoSpec {
         givenADeclarationExists(declaration1, declaration2, declaration3)
 
         val page = Page(index = 1, size = 10)
-        repository.find(DeclarationSearch(eori1), page, DeclarationSort()).futureValue mustBe Paginated(Seq(declaration1, declaration2), page, 2)
+        val paginated = Paginated(Seq(declaration1, declaration2), page, 2)
+        repository.find(DeclarationSearch(eori1), page, DeclarationSort()).futureValue mustBe paginated
       }
 
-      "there is multiple pages of results" in {
+      "there are multiple pages of results" in {
         val declaration1 = aDeclaration(withEori(eori.value))
         val declaration2 = aDeclaration(withEori(eori.value))
         val declaration3 = aDeclaration(withEori(eori.value))
@@ -131,20 +115,7 @@ class DeclarationRepositoryISpec extends IntegrationTestMongoSpec {
         val page3 = Page(index = 3, size = 2)
         repository.find(DeclarationSearch(eori), page3, DeclarationSort()).futureValue mustBe Paginated(Seq(declaration5), page3, expectedTotal)
       }
-    }
 
-    "return None" when {
-      "none exist with eori" in {
-        givenADeclarationExists(aDeclaration(withId("id"), withEori("some-other-eori")))
-
-        repository.find(DeclarationSearch(eori), Page(), DeclarationSort()).futureValue mustBe Paginated
-          .empty[ExportsDeclaration](Page())
-      }
-    }
-  }
-
-  "Find by DeclarationStatus" should {
-    "return the persisted declarations" when {
       "some exist with status DRAFT" in {
         val declaration1 = aDeclaration(withId("id1"), withStatus(DeclarationStatus.DRAFT))
         val declaration2 = aDeclaration(withId("id2"), withStatus(DeclarationStatus.DRAFT))
@@ -157,14 +128,11 @@ class DeclarationRepositoryISpec extends IntegrationTestMongoSpec {
           .futureValue mustBe Paginated(Seq(declaration1, declaration2), page, 2)
       }
     }
-  }
 
-  "Find with sort order" should {
-
-    "return the declarations in accending order" in {
-      val declaration1 = aDeclaration(withUpdateDate(2019, 1, 1))
-      val declaration2 = aDeclaration(withUpdateDate(2019, 1, 2))
-      val declaration3 = aDeclaration(withUpdateDate(2019, 1, 3))
+    "retrieve all existing declarations in ascending order" in {
+      val declaration1 = aDeclaration(withUpdateDate(year, 1, 1))
+      val declaration2 = aDeclaration(withUpdateDate(year, 1, 2))
+      val declaration3 = aDeclaration(withUpdateDate(year, 1, 3))
       givenADeclarationExists(declaration3, declaration1, declaration2)
 
       val page = Page(index = 1, size = 10)
@@ -173,10 +141,10 @@ class DeclarationRepositoryISpec extends IntegrationTestMongoSpec {
         .futureValue mustBe Paginated(Seq(declaration1, declaration2, declaration3), page, 3)
     }
 
-    "return the declarations in decending order" in {
-      val declaration1 = aDeclaration(withUpdateDate(2019, 1, 1))
-      val declaration2 = aDeclaration(withUpdateDate(2019, 1, 2))
-      val declaration3 = aDeclaration(withUpdateDate(2019, 1, 3))
+    "retrieve all existing declarations in descending order" in {
+      val declaration1 = aDeclaration(withUpdateDate(year, 1, 1))
+      val declaration2 = aDeclaration(withUpdateDate(year, 1, 2))
+      val declaration3 = aDeclaration(withUpdateDate(year, 1, 3))
       givenADeclarationExists(declaration3, declaration1, declaration2)
 
       val page = Page(index = 1, size = 10)
@@ -184,106 +152,76 @@ class DeclarationRepositoryISpec extends IntegrationTestMongoSpec {
         .find(DeclarationSearch(eori), page, DeclarationSort(SortBy.UPDATED, SortDirection.DES))
         .futureValue mustBe Paginated(Seq(declaration3, declaration2, declaration1), page, 3)
     }
-  }
 
-  "MarkCompleted" when {
+    "mark as completed a declaration" in {
+      val declaration = aDeclaration().copy(status = DeclarationStatus.DRAFT)
+      repository.create(declaration).futureValue.status mustBe DeclarationStatus.DRAFT
 
-    "declaration is NOT completed" should {
-
-      "return declaration before change" in {
-        val declaration = aDeclaration(withType(DeclarationType.STANDARD), withStatus(DeclarationStatus.DRAFT), withId("id"), withEori("eori"))
-        givenADeclarationExists(declaration)
-
-        repository.markStatusAsComplete("id", Eori("eori")).futureValue mustBe Some(declaration)
-      }
-
-      "change its status to COMPLETE" in {
-        val declaration = aDeclaration(withType(DeclarationType.STANDARD), withStatus(DeclarationStatus.DRAFT), withId("id"), withEori("eori"))
-        givenADeclarationExists(declaration)
-
-        repository.markStatusAsComplete("id", Eori("eori")).futureValue
-
-        val expectedDeclarationAfterUpdate = declaration.copy(status = DeclarationStatus.COMPLETE)
-        repository.findOne("id", Eori("eori")).futureValue mustBe Some(expectedDeclarationAfterUpdate)
-      }
+      val eori = Eori(declaration.eori)
+      repository.markStatusAsComplete(declaration.id, eori).futureValue.value.status mustBe DeclarationStatus.DRAFT
+      repository.findOne("id", declaration.id).futureValue.value.status mustBe DeclarationStatus.COMPLETE
     }
 
-    "declaration is completed" should {
-
-      "return declaration before change" in {
-        val declaration = aDeclaration(withType(DeclarationType.STANDARD), withStatus(DeclarationStatus.COMPLETE), withId("id"), withEori("eori"))
-        givenADeclarationExists(declaration)
-
-        repository.markStatusAsComplete("id", Eori("eori")).futureValue mustBe Some(declaration)
-      }
+    "be able to revert a COMPLETE declaration to DRAFT" in {
+      val declaration = aDeclaration()
+      repository.create(declaration).futureValue.status mustBe DeclarationStatus.COMPLETE
+      repository.revertStatusToDraft(declaration).futureValue.value.status mustBe DeclarationStatus.DRAFT
     }
 
-    "declaration is NOT present" should {
+    "return an empty Option" when {
 
-      "return empty Option" in {
+      "no declaration exists with the given id and eori" in {
+        val declaration1 = aDeclaration(withId("some-other-id"), withEori("eori"))
+        val declaration2 = aDeclaration(withId("id"), withEori("some-other-eori"))
+        givenADeclarationExists(declaration1, declaration2)
 
+        repository.findOne("id", eori).futureValue mustBe None
+      }
+
+      "no declaration exists with the given eori" in {
+        givenADeclarationExists(aDeclaration(withId("id"), withEori("some-other-eori")))
+
+        repository.find(DeclarationSearch(eori), Page(), DeclarationSort()).futureValue mustBe Paginated
+          .empty[ExportsDeclaration](Page())
+      }
+
+      "attempting to mark as completed a non-existing declaration" in {
         repository.markStatusAsComplete("id", Eori("eori")).futureValue mustBe empty
       }
-
-      "not upsert a declaration" in {
-
-        repository.markStatusAsComplete("id", Eori("eori")).futureValue mustBe empty
-
-        repository.findOne("id", Eori("eori")).futureValue mustBe empty
-      }
     }
-  }
-
-  "Delete" should {
 
     def delete(declaration: ExportsDeclaration): Future[Boolean] =
       repository.removeOne(Json.obj("id" -> declaration.id, "eori" -> declaration.eori))
 
-    "remove the declaration" in {
+    "remove a declaration" in {
       val declaration = aDeclaration(withId("id"), withEori("eori"))
-      givenADeclarationExists(declaration)
+      repository.insertOne(declaration).futureValue.isRight mustBe true
 
       delete(declaration).futureValue mustBe true
 
       collectionSize mustBe 0
     }
 
-    "maintain other declarations" when {
-      "they have a different EORI or ID" in {
-        val declaration1 = aDeclaration(withId("id"), withEori("eori"))
-        val declaration2 = aDeclaration(withId("id1"), withEori("eori1"))
-        val declaration3 = aDeclaration(withId("id1"), withEori("eori2"))
-        givenADeclarationExists(declaration2, declaration3)
+    "remove only declarations with given id and eori" in {
+      val declaration1 = aDeclaration(withId("id"), withEori("eori"))
+      val declaration2 = aDeclaration(withId("id1"), withEori("eori1"))
+      val declaration3 = aDeclaration(withId("id1"), withEori("eori2"))
+      givenADeclarationExists(declaration2, declaration3)
 
-        delete(declaration1).futureValue mustBe false
+      delete(declaration1).futureValue mustBe false
 
-        collectionSize mustBe 2
-      }
-    }
-  }
-
-  "Delete Expired Draft" should {
-    def expireDate(year: Int, month: Int, day: Int) =
-      LocalDate.of(year, month, day).atStartOfDay().toInstant(ZoneOffset.UTC)
-
-    "remove the expired draft declaration" in {
-      val draftDeclarationExpired = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(2019, 1, 1))
-      givenADeclarationExists(draftDeclarationExpired)
-
-      val count = repository.deleteExpiredDraft(expireDate(2019, 8, 1)).futureValue
-
-      count mustBe 1
-      collectionSize mustBe 0
+      collectionSize mustBe 2
     }
 
-    "remove the correct number of expired draft declarations" in {
-      val draftDeclarationExpired1 = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(2019, 1, 1))
-      val draftDeclarationExpired2 = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(2019, 1, 1))
-      val draftDeclarationOngoing = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(2019, 3, 1))
-      val completedDeclaration = aDeclaration(withStatus(DeclarationStatus.COMPLETE), withUpdateDate(2019, 1, 1))
+    "remove all expired draft declarations" in {
+      val draftDeclarationExpired1 = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(year, 1, 1))
+      val draftDeclarationExpired2 = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(year, 1, 1))
+      val draftDeclarationOngoing = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(year, 3, 1))
+      val completedDeclaration = aDeclaration(withStatus(DeclarationStatus.COMPLETE), withUpdateDate(year, 1, 1))
       givenADeclarationExists(draftDeclarationExpired1, draftDeclarationExpired2, draftDeclarationOngoing, completedDeclaration)
 
-      val count = repository.deleteExpiredDraft(expireDate(2019, 2, 1)).futureValue
+      val expireDate = LocalDate.of(year, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC)
+      val count = repository.deleteExpiredDraft(expireDate).futureValue
 
       count mustBe 2
       collectionSize mustBe 2
@@ -297,5 +235,6 @@ class DeclarationRepositoryISpec extends IntegrationTestMongoSpec {
 
   private def collectionSize: Int = repository.collection.countDocuments.toFuture.futureValue.toInt
 
-  private def givenADeclarationExists(declarations: ExportsDeclaration*): Unit = repository.bulkInsert(declarations).futureValue
+  private def givenADeclarationExists(declarations: ExportsDeclaration*): Unit =
+    repository.bulkInsert(declarations).futureValue mustBe declarations.size
 }

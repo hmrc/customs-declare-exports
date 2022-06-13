@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.services
 
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
@@ -40,46 +40,59 @@ class SubmissionService @Inject()(
   metaDataBuilder: CancellationMetaDataBuilder,
   wcoMapperService: WcoMapperService,
   metrics: ExportsMetrics
-)(implicit executionContext: ExecutionContext) {
+)(implicit executionContext: ExecutionContext)
+    extends Logging {
 
-  private val logger = Logger(classOf[SubmissionService])
+  def cancel(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationStatus] =
+    submissionRepository.findOne(Json.obj("eori" -> eori, "mrn" -> cancellation.mrn)).flatMap {
+      case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationAlreadyRequested)
+      case Some(submission)                                             => sendCancellationRequest(submission, cancellation)
+      case _                                                            => Future.successful(MrnNotFound)
+    }
 
-  private def logProgress(declaration: ExportsDeclaration, message: String): Unit =
-    logger.info(s"Declaration [${declaration.id}]: $message")
+  def findAllSubmissionsBy(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] =
+    submissionRepository.findAll(eori, queryParameters)
 
   def markCompleted(id: String, eori: Eori): Future[Option[ExportsDeclaration]] =
     declarationRepository.markStatusAsComplete(id, eori)
 
-  def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] = metrics.timeAsyncCall(Monitors.submissionMonitor) {
-    logProgress(declaration, "Beginning Submission")
+  def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] =
+    metrics.timeAsyncCall(Monitors.submissionMonitor) {
+      logProgress(declaration, "Beginning Submission")
 
-    val metaData = metrics.timeCall(Timers.submissionProduceMetaDataTimer)(wcoMapperService.produceMetaData(declaration))
+      val metaData = metrics.timeCall(Timers.submissionProduceMetaDataTimer)(wcoMapperService.produceMetaData(declaration))
 
-    val lrn = wcoMapperService
-      .declarationLrn(metaData)
-      .getOrElse(throw new IllegalArgumentException("A LRN is required"))
+      val lrn = wcoMapperService
+        .declarationLrn(metaData)
+        .getOrElse(throw new IllegalArgumentException("A LRN is required"))
 
-    val ducr = wcoMapperService
-      .declarationDucr(metaData)
-      .getOrElse(throw new IllegalArgumentException("A DUCR is required"))
+      val ducr = wcoMapperService
+        .declarationDucr(metaData)
+        .getOrElse(throw new IllegalArgumentException("A DUCR is required"))
 
-    val payload = metrics.timeCall(Timers.submissionConvertToXmlTimer)(wcoMapperService.toXml(metaData))
+      val payload = metrics.timeCall(Timers.submissionConvertToXmlTimer)(wcoMapperService.toXml(metaData))
 
-    logProgress(declaration, "Submitting to the Declaration API")
-    for {
-      // Submit the declaration to the Dec API
-      // Revert the declaration status back to DRAFT if it fails
-      conversationId: String <- metrics.timeAsyncCall(Timers.submissionSendToDecApiTimer)(submit(declaration, payload))
-      _ = logProgress(declaration, "Submitted to the Declaration API Successfully")
+      logProgress(declaration, "Submitting to the Declaration API")
+      for {
+        // Submit the declaration to the Dec API
+        // Revert the declaration status back to DRAFT if it fails
+        actionId: String <- metrics.timeAsyncCall(Timers.submissionSendToDecApiTimer)(submit(declaration, payload))
+        _ = logProgress(declaration, "Submitted to the Declaration API Successfully")
 
-      // Create the Submission with action
-      action = Action(id = conversationId, requestType = SubmissionRequest)
-      submission <- metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer)(
-        submissionRepository.create(Submission(declaration, lrn, ducr, action))
-      )
-      _ = logProgress(declaration, "New submission creation completed")
-    } yield submission
-  }
+        // Create the Submission with action
+        action = Action(id = actionId, requestType = SubmissionRequest)
+        submission <- metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer)(
+          submissionRepository.create(Submission(declaration, lrn, ducr, action))
+        )
+        _ = logProgress(declaration, "New submission creation completed")
+      } yield submission
+    }
+
+  private def isSubmissionAlreadyCancelled(submission: Submission): Boolean =
+    submission.actions.exists(_.requestType == CancellationRequest)
+
+  private def logProgress(declaration: ExportsDeclaration, message: String): Unit =
+    logger.info(s"Declaration [${declaration.id}]: $message")
 
   private def submit(declaration: ExportsDeclaration, payload: String)(implicit hc: HeaderCarrier): Future[String] =
     customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).recoverWith {
@@ -91,14 +104,7 @@ class SubmissionService @Inject()(
         }
     }
 
-  def cancel(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationStatus] =
-    submissionRepository.findOne(Json.obj("eori" -> eori, "mrn" -> cancellation.mrn)).flatMap {
-      case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationAlreadyRequested)
-      case Some(submission)                                             => sendCancelationRequest(submission, cancellation)
-      case _                                                            => Future.successful(MrnNotFound)
-    }
-
-  private def sendCancelationRequest(submission: Submission, cancellation: SubmissionCancellation)(
+  private def sendCancellationRequest(submission: Submission, cancellation: SubmissionCancellation)(
     implicit hc: HeaderCarrier
   ): Future[CancellationStatus] = {
     val metadata: MetaData = metaDataBuilder.buildRequest(
@@ -110,22 +116,16 @@ class SubmissionService @Inject()(
     )
 
     val xml: String = wcoMapperService.toXml(metadata)
-    customsDeclarationsConnector.submitCancellation(submission.eori, xml).flatMap { conversationId =>
-      updateSubmissionInDB(cancellation.mrn, conversationId)
+    customsDeclarationsConnector.submitCancellation(submission.eori, xml).flatMap { actionId =>
+      updateSubmissionInDB(cancellation.mrn, actionId)
     }
   }
 
-  def findAllSubmissionsBy(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] =
-    submissionRepository.findAll(eori, queryParameters)
-
-  private def updateSubmissionInDB(mrn: String, conversationId: String): Future[CancellationStatus] = {
-    val newAction = Action(requestType = CancellationRequest, id = conversationId)
+  private def updateSubmissionInDB(mrn: String, actionId: String): Future[CancellationStatus] = {
+    val newAction = Action(requestType = CancellationRequest, id = actionId)
     submissionRepository.addAction(mrn, newAction).map {
       case Some(_) => CancellationRequestSent
       case None    => MrnNotFound
     }
   }
-
-  private def isSubmissionAlreadyCancelled(submission: Submission): Boolean =
-    submission.actions.exists(_.requestType == CancellationRequest)
 }

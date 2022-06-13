@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.connectors
 
 import com.google.inject.Inject
-import play.api.Logger
+import play.api.Logging
 import play.api.http.{ContentTypes, HeaderNames, Status}
 import play.api.mvc.Codec
 import play.mvc.Http.Status.ACCEPTED
@@ -33,9 +33,8 @@ import javax.inject.Singleton
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: HttpClient, metrics: ExportsMetrics)(implicit ec: ExecutionContext) {
-
-  private val logger = Logger(this.getClass)
+class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: HttpClient, metrics: ExportsMetrics)(implicit ec: ExecutionContext)
+    extends Logging {
 
   def submitDeclaration(eori: String, xml: String)(implicit hc: HeaderCarrier): Future[String] =
     postMetaData(eori, appConfig.submitDeclarationUri, xml).map { res =>

@@ -16,22 +16,19 @@
 
 package uk.gov.hmrc.exports.migrations.changelogs.cache
 
-import java.util
-
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
 import org.mongodb.scala.model.Filters.{and, exists, not, size, eq => feq}
 import org.mongodb.scala.model.UpdateOneModel
 import org.mongodb.scala.model.Updates.set
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.generators.{IdGenerator, StringIdGenerator}
 
+import java.util
 import scala.collection.JavaConverters._
 
-class ChangePackageInformationId extends MigrationDefinition {
-
-  private val logger = Logger(this.getClass)
+class ChangePackageInformationId extends MigrationDefinition with Logging {
 
   private val INDEX_ID = "id"
   private val INDEX_EORI = "eori"

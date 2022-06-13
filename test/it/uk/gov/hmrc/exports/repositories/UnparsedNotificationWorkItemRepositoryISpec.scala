@@ -12,9 +12,9 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.duration._
 
-class UnparsedNotificationWorkItemRepositorySpec extends IntegrationTestMongoSpec with Eventually {
+class UnparsedNotificationWorkItemRepositoryISpec extends IntegrationTestMongoSpec with Eventually {
 
-  private val repository = getRepository[UnparsedNotificationWorkItemRepository]
+  private val repository = instanceOf[UnparsedNotificationWorkItemRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()

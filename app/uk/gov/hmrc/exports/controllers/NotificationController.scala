@@ -28,7 +28,7 @@ import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.{Counters, Timers}
 import uk.gov.hmrc.exports.models.Eori
-import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification.FrontendFormat._
+import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification.REST._
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionQueryParameters}
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.NotificationService

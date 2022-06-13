@@ -23,6 +23,6 @@ object AppDependencies {
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28" % hmrcMongoVersion     % testScope,
     "com.vladsch.flexmark"   %  "flexmark-all"            % "0.36.8"             % testScope,
     "com.github.tomakehurst" %  "wiremock-jre8"           % "2.33.2"             % testScope,
-    "org.mockito"            %% "mockito-scala"           % "1.17.5"             % "test"
+    "org.mockito"            %% "mockito-scala"           % "1.17.5"             % testScope
   )
 }

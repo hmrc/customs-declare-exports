@@ -17,14 +17,12 @@
 package uk.gov.hmrc.exports.services.notifications
 
 import com.github.tototoshi.csv.CSVReader
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.exports.models.{Pointer, PointerMapping, PointerPattern}
 
 import scala.io.Source
 
-object WCOPointerMappingService {
-
-  private val logger = Logger(this.getClass)
+object WCOPointerMappingService extends Logging {
 
   private val mappings: Set[PointerMapping] = {
     val reader =

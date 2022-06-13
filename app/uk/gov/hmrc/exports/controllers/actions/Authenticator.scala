@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.exports.controllers.actions
 
-import javax.inject.{Inject, Singleton}
-import play.api.Logger
+import play.api.Logging
 import play.api.mvc._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
@@ -25,14 +24,13 @@ import uk.gov.hmrc.exports.models.{AuthorizedSubmissionRequest, Eori, ErrorRespo
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 // TODO: This needs to be separated from BackendController and be injected instead of inheriting in other controllers
 @Singleton
 class Authenticator @Inject()(override val authConnector: AuthConnector, cc: ControllerComponents)(implicit ec: ExecutionContext)
-    extends BackendController(cc) with AuthorisedFunctions {
-
-  private val logger = Logger(this.getClass)
+    extends BackendController(cc) with AuthorisedFunctions with Logging {
 
   def authorisedAction[A](bodyParser: BodyParser[A])(body: AuthorizedSubmissionRequest[A] => Future[Result]): Action[A] =
     Action.async(bodyParser) { implicit request =>
@@ -40,6 +38,7 @@ class Authenticator @Inject()(override val authConnector: AuthConnector, cc: Con
         case Right(authorisedRequest) =>
           logger.info(s"Authorised request for ${authorisedRequest.eori.value}")
           body(authorisedRequest)
+
         case Left(error) =>
           logger.error(s"Problems with Authorisation: ${error.message}")
           Future.successful(error.XmlResult)
@@ -50,6 +49,7 @@ class Authenticator @Inject()(override val authConnector: AuthConnector, cc: Con
     authorised(Enrolment("HMRC-CUS-ORG")).retrieve(allEnrolments) { enrolments =>
       hasEnrolment(enrolments) match {
         case Some(eori) => Future.successful(Right(AuthorizedSubmissionRequest(Eori(eori.value), request)))
+
         case _ =>
           logger.error("Unauthorised access. User without eori.")
           Future.successful(Left(ErrorResponse.errorUnauthorized))
@@ -58,9 +58,11 @@ class Authenticator @Inject()(override val authConnector: AuthConnector, cc: Con
       case error: InsufficientEnrolments =>
         logger.error(s"Unauthorised access for ${request.uri} with error ${error.reason}")
         Left(ErrorResponse.errorUnauthorized("Unauthorized for exports"))
+
       case error: AuthorisationException =>
         logger.error(s"Unauthorised Exception for ${request.uri} with error ${error.reason}")
         Left(ErrorResponse.errorUnauthorized("Unauthorized for exports"))
+
       case ex: Throwable =>
         logger.error("Internal server error is " + ex.getMessage)
         Left(ErrorResponse.errorInternalServerError)

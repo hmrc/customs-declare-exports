@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
-import javax.inject.Inject
 import play.api.Logging
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
 
+import javax.inject.Inject
 import scala.util.{Failure, Success, Try}
 import scala.xml.XML
 
@@ -27,18 +27,17 @@ class NotificationFactory @Inject()(notificationParser: NotificationParser) exte
 
   def buildNotifications(unparsedNotification: UnparsedNotification): Seq[ParsedNotification] =
     Try(XML.loadString(unparsedNotification.payload)).map(notificationParser.parse) match {
-      case Success(notificationDetails) if notificationDetails.nonEmpty =>
+
+      case Success(notificationDetails) =>
         notificationDetails.map { details =>
           ParsedNotification(unparsedNotificationId = unparsedNotification.id, actionId = unparsedNotification.actionId, details = details)
         }
 
-      case Success(_) => Seq()
       case Failure(exc) =>
         logParseExceptionAtPagerDutyLevel(unparsedNotification.actionId, exc)
-        Seq()
+        List.empty
     }
 
   private def logParseExceptionAtPagerDutyLevel(actionId: String, exc: Throwable): Unit =
     logger.warn(s"There was a problem during parsing notification with actionId=${actionId} exception thrown: ${exc.getMessage}")
-
 }
