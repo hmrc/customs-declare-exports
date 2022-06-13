@@ -21,15 +21,13 @@ import org.bson.Document
 import org.mongodb.scala.model.Filters.{and, exists, not, size, eq => feq}
 import org.mongodb.scala.model.UpdateOneModel
 import org.mongodb.scala.model.Updates.set
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 
 import java.util
 import scala.collection.JavaConverters._
 
-class RenameToAdditionalDocuments extends MigrationDefinition {
-
-  private val logger = Logger(this.getClass)
+class RenameToAdditionalDocuments extends MigrationDefinition with Logging {
 
   private val INDEX_ID = "id"
   private val INDEX_EORI = "eori"

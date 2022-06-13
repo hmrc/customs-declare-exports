@@ -17,14 +17,14 @@
 package uk.gov.hmrc.exports.repositories
 
 import org.bson.types.ObjectId
-import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.Configuration
 import play.api.libs.json._
 import repositories.RepositoryOps
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
-import uk.gov.hmrc.mongo.{MongoComponent, MongoUtils}
 import uk.gov.hmrc.mongo.workitem.{WorkItem, WorkItemFields, WorkItemRepository}
+import uk.gov.hmrc.mongo.{MongoComponent, MongoUtils}
 
 import java.time.{Duration, Instant}
 import javax.inject.{Inject, Singleton}

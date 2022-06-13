@@ -21,12 +21,12 @@ import play.api.mvc.Codec
 import testdata.ExportsTestData.{actionId, actionId_2, actionId_4, mrn}
 import testdata.TestDataHelper
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
-import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, NotificationError, ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
+import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 
-import java.time.{ZoneId, ZonedDateTime}
 import java.time.temporal.ChronoUnit.MINUTES
+import java.time.{ZoneId, ZonedDateTime}
 import java.util.UUID
 import scala.util.Random
 import scala.xml.Elem
@@ -95,17 +95,17 @@ object NotificationTestData {
   val payload = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
 
   val notification = ParsedNotification(
-    unparsedNotificationId = UUID.randomUUID(),
+    unparsedNotificationId = UUID.randomUUID,
     actionId = actionId,
     details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = SubmissionStatus.UNKNOWN, errors = errors)
   )
   val notification_2 = ParsedNotification(
-    unparsedNotificationId = UUID.randomUUID(),
+    unparsedNotificationId = UUID.randomUUID,
     actionId = actionId,
     details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = SubmissionStatus.UNKNOWN, errors = errors)
   )
   val notification_3 = ParsedNotification(
-    unparsedNotificationId = UUID.randomUUID(),
+    unparsedNotificationId = UUID.randomUUID,
     actionId = actionId_2,
     details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = SubmissionStatus.UNKNOWN, errors = Seq.empty)
   )

@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.exports.services.email
 
-import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import uk.gov.hmrc.exports.connectors.{CustomsDataStoreConnector, EmailConnector}
 import uk.gov.hmrc.exports.models.emails.SendEmailResult.{BadEmailRequest, InternalEmailServiceError, MissingData}
 import uk.gov.hmrc.exports.models.emails._
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
 
@@ -50,8 +50,8 @@ class EmailSender @Inject()(
         Future.successful(MissingData)
     }
 
-  private def obtainEori(conversationId: String)(implicit ec: ExecutionContext): Future[Option[String]] =
-    submissionRepository.findOne("actions.id", conversationId).map(_.map(_.eori))
+  private def obtainEori(actionId: String)(implicit ec: ExecutionContext): Future[Option[String]] =
+    submissionRepository.findOne("actions.id", actionId).map(_.map(_.eori))
 
   private def obtainEmailAddress(eori: String)(implicit ec: ExecutionContext): Future[Option[Email]] =
     customsDataStoreConnector.getEmailAddress(eori)

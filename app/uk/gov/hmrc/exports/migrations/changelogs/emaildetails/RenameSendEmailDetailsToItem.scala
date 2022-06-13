@@ -20,12 +20,10 @@ import com.mongodb.client.MongoDatabase
 import org.mongodb.scala.model.Filters.exists
 import org.mongodb.scala.model.UpdateOptions
 import org.mongodb.scala.model.Updates.rename
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 
-class RenameSendEmailDetailsToItem extends MigrationDefinition {
-
-  private val logger = Logger(this.getClass)
+class RenameSendEmailDetailsToItem extends MigrationDefinition with Logging {
 
   private val collectionName = "sendEmailWorkItems"
 

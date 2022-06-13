@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.parties
 
-import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 import scala.xml.NodeSeq
 
-class AgentFunctionCodeParserSpec extends UnitSpec with EitherValues {
+class AgentFunctionCodeParserSpec extends UnitSpec {
 
   private val parser = new AgentFunctionCodeParser()
   private implicit val context = MappingContext(eori)

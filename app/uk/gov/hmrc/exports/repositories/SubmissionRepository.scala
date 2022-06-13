@@ -30,7 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 @Singleton
-class SubmissionRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
+class SubmissionRepository @Inject()(val mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[Submission](
       mongoComponent = mongoComponent,
       collectionName = "submissions",
@@ -53,12 +53,6 @@ class SubmissionRepository @Inject()(mongoComponent: MongoComponent)(implicit ec
       .find(BsonDocument(filter.toString))
       .sort(BsonDocument(Json.obj("actions.requestTimestamp" -> -1).toString))
       .toFuture
-  }
-
-  def updateMrn(actionId: String, mrn: String): Future[Option[Submission]] = {
-    val filter = Json.obj("actions.id" -> actionId)
-    val update = Json.obj("$set" -> Json.obj("mrn" -> mrn))
-    findOneAndUpdate(filter, update)
   }
 }
 

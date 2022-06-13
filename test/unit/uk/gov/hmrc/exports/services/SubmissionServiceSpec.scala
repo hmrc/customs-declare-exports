@@ -21,7 +21,6 @@ import org.mockito.ArgumentMatchers.any
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
@@ -59,7 +58,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
   "SubmissionService on cancel" should {
     val submission = Submission("id", "eori", "lrn", None, "ducr")
-    val submissionCancelled = Submission("id", "eori", "lrn", None, "ducr", Seq(Action("conv-id", CancellationRequest)))
+    val submissionCancelled = Submission("id", "eori", "lrn", None, "ducr", None, None, List(Action("conv-id", CancellationRequest)))
     val cancellation = SubmissionCancellation("ref-id", "mrn", "description", "reason")
 
     "submit and delegate to repository" when {
@@ -130,32 +129,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         actionGenerated.id mustBe "conv-id"
         actionGenerated.requestType mustBe SubmissionRequest
 
-        verify(submissionRepository, never).updateMrn(any[String], any[String])
+        verify(submissionRepository, never).findOne(any[String], any[String])
         verify(sendEmailForDmsDocAction, never).execute(any[String])
-      }
-    }
-
-    "revert declaration to draft" when {
-      "submission to the Dec API fails" in {
-        // Given
-        when(wcoMapperService.produceMetaData(any())).thenReturn(mock[MetaData])
-        when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
-        when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
-        when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(declarationRepository.revertStatusToDraft(any())).thenReturn(Future.successful(Some(mock[ExportsDeclaration])))
-        when(submissionRepository.create(any())).thenReturn(Future.successful(mock[Submission]))
-        when(customsDeclarationsConnector.submitDeclaration(any(), any())(any()))
-          .thenReturn(Future.failed(new RuntimeException("Some error")))
-
-        val declaration = aDeclaration()
-
-        // When
-        intercept[RuntimeException] {
-          submissionService.submit(declaration).futureValue
-        }
-
-        // Then
-        verify(submissionRepository, never).create(any[Submission])
       }
     }
 
@@ -181,5 +156,4 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       }
     }
   }
-
 }

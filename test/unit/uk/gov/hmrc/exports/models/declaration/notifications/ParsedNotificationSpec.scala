@@ -44,7 +44,7 @@ class ParsedNotificationSpec extends UnitSpec {
     )
 
     "have json writes that produce object which could be parsed by the front end service" in {
-      val json = Json.toJson(notification)(ParsedNotification.FrontendFormat.writes)
+      val json = Json.toJson(notification)(ParsedNotification.REST.writes)
 
       json.toString mustBe ParsedNotificationSpec.serialisedWithFrontendFormat(actionId, mrn, dateTime.format(formatter))
     }

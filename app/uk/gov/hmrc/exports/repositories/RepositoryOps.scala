@@ -22,7 +22,7 @@ import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.{FindOneAndReplaceOptions, FindOneAndUpdateOptions, InsertOneModel}
-import org.mongodb.scala.{Document, MongoCollection, MongoWriteException}
+import org.mongodb.scala.{ClientSession, Document, MongoCollection, MongoWriteException}
 import play.api.Logging
 import play.api.libs.json.JsValue
 import play.libs.Json
@@ -41,10 +41,13 @@ trait RepositoryOps[T] extends Logging {
   def bulkInsert(documents: Seq[T]): Future[Int] =
     collection.bulkWrite(documents.map(InsertOneModel(_))).toFuture.map(_.getInsertedCount)
 
+  def bulkInsert(session: ClientSession, documents: Seq[T]): Future[Int] =
+    collection.bulkWrite(session, documents.map(InsertOneModel(_))).toFuture.map(_.getInsertedCount)
+
   def create(document: T): Future[T] =
     collection.insertOne(document).toFuture.map(_ => document)
 
-  def findAll: Future[Seq[T]] =
+  def findAll(): Future[Seq[T]] =
     collection.find().toFuture
 
   def findAll[V](keyId: String, keyValue: V): Future[Seq[T]] =
@@ -85,13 +88,11 @@ trait RepositoryOps[T] extends Logging {
   def findOneOrCreate(filter: JsValue, document: => T): Future[T] =
     findOneOrCreate(BsonDocument(filter.toString), document)
 
+  private lazy val upsertAndReturnAfter = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+
   def findOneOrCreate(filter: Bson, document: => T): Future[T] =
     collection
-      .findOneAndUpdate(
-        filter = filter,
-        update = Updates.setOnInsert(BsonDocument(Json.toJson(document).toString)),
-        options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-      )
+      .findOneAndUpdate(filter = filter, update = Updates.setOnInsert(BsonDocument(Json.toJson(document).toString)), options = upsertAndReturnAfter)
       .toFuture
 
   def findOneAndRemove[V](keyId: String, keyValue: V): Future[Option[T]] =
@@ -140,9 +141,16 @@ trait RepositoryOps[T] extends Logging {
   def findOneAndUpdate(filter: JsValue, update: JsValue): Future[Option[T]] =
     findOneAndUpdate(BsonDocument(filter.toString), BsonDocument(update.toString))
 
+  private lazy val doNotUpsertAndReturnAfter = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
+
   def findOneAndUpdate(filter: Bson, update: Bson): Future[Option[T]] =
     collection
-      .findOneAndUpdate(filter = filter, update = update, options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
+      .findOneAndUpdate(filter = filter, update = update, options = doNotUpsertAndReturnAfter)
+      .toFutureOption
+
+  def findOneAndUpdate(session: ClientSession, filter: Bson, update: Bson): Future[Option[T]] =
+    collection
+      .findOneAndUpdate(session, filter = filter, update = update, options = doNotUpsertAndReturnAfter)
       .toFutureOption
 
   def indexList: Future[Seq[Document]] = collection.listIndexes.toFuture

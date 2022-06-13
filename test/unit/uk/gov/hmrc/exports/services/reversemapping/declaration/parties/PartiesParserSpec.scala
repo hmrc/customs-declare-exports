@@ -17,7 +17,6 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration.parties
 
 import org.mockito.ArgumentMatchersSugar.any
-import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType.CLEARANCE
@@ -30,7 +29,7 @@ import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, ExportsItemBuilder}
 
 import scala.xml.NodeSeq
 
-class PartiesParserSpec extends UnitSpec with EitherValues with ExportsDeclarationBuilder with ExportsItemBuilder {
+class PartiesParserSpec extends UnitSpec with ExportsDeclarationBuilder with ExportsItemBuilder {
   private val entityDetailsParser = mock[EntityDetailsParser]
   private val functionCodeParser = mock[AgentFunctionCodeParser]
   private val declarationHolderParser = mock[DeclarationHolderParser]

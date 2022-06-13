@@ -16,17 +16,14 @@
 
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.Mockito.verifyNoInteractions
-import org.mockito.{InOrder, Mockito}
-import testdata.ExportsTestData.{actionId, mrn}
-import testdata.RepositoryTestData.dummyWriteResultFailure
-import testdata.SubmissionTestData.submission
-import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
-import testdata.notifications.NotificationTestData.{notification, notificationUnparsed}
+import org.mockito.invocation.InvocationOnMock
+import testdata.SubmissionTestData.{submission, submission_2, submission_3}
+import testdata.notifications.NotificationTestData.{notification, notification_2, notification_3}
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
-import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{SubmissionRepository, TransactionalOps}
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -35,321 +32,61 @@ import scala.concurrent.Future
 class ParseAndSaveActionSpec extends UnitSpec {
 
   private val submissionRepository = mock[SubmissionRepository]
-  private val notificationRepository = mock[ParsedNotificationRepository]
-  private val notificationFactory = mock[NotificationFactory]
+  private val transactionalOps = mock[TransactionalOps]
 
-  private val parseAndSaveProcess = new ParseAndSaveAction(submissionRepository, notificationRepository, notificationFactory)
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-
-    reset(submissionRepository, notificationRepository, notificationFactory)
-
-    when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq(notification))
-    when(notificationRepository.bulkInsert(any)).thenReturn(Future.successful(2))
-    when(submissionRepository.findOne(any[String], any[String])).thenReturn(Future.successful(Some(submission)))
-  }
+  private val parseAndSaveAction = new ParseAndSaveAction(mock[NotificationFactory], submissionRepository, transactionalOps)
 
   override def afterEach(): Unit = {
-    reset(submissionRepository, notificationRepository, notificationFactory)
+    reset(submissionRepository, transactionalOps)
     super.afterEach()
   }
 
-  "SaveProcess on execute" when {
-
-    "provided with Notification" which {
-
-      "contains single Response element" should {
-
-        val inputNotification = UnparsedNotification(actionId = actionId, payload = exampleRejectNotification(mrn).asXml.toString)
-        val testNotification = ParsedNotification(
-          unparsedNotificationId = inputNotification.id,
-          actionId = inputNotification.actionId,
-          details = exampleRejectNotification(mrn).asDomainModel.head
-        )
-
-        "return successful Future" in {
-          when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq(testNotification))
-
-          parseAndSaveProcess.execute(inputNotification).futureValue must equal((): Unit)
-        }
-
-        "call NotificationFactory, NotificationRepository and SubmissionRepository in order" in {
-          when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq(testNotification))
-
-          parseAndSaveProcess.execute(inputNotification).futureValue
-
-          val inOrder: InOrder = Mockito.inOrder(notificationFactory, notificationRepository, submissionRepository)
-          inOrder.verify(notificationFactory).buildNotifications(any[UnparsedNotification])
-          inOrder.verify(submissionRepository).findOne(any[String], any[String])
-          inOrder.verify(notificationRepository).bulkInsert(any[Seq[ParsedNotification]])
-        }
-
-        "call NotificationFactory passing actionId and payload from Notification provided" in {
-          when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq(testNotification))
-
-          parseAndSaveProcess.execute(inputNotification).futureValue
-
-          verify(notificationFactory).buildNotifications(eqTo(inputNotification))
-        }
-
-        "call NotificationRepository.bulkInsert passing Notification returned by NotificationFactory" in {
-          when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq(testNotification))
-
-          parseAndSaveProcess.execute(inputNotification).futureValue
-
-          verify(notificationRepository).bulkInsert(eqTo(Seq(testNotification)))
-        }
-
-        "call SubmissionRepository passing actionId in the Notification" in {
-          when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq(testNotification))
-
-          parseAndSaveProcess.execute(inputNotification).futureValue
-
-          verify(submissionRepository).findOne(any[String], eqTo(actionId))
-          verify(submissionRepository, never).updateMrn(eqTo(actionId), eqTo(mrn))
-        }
-
-        "call SubmissionRepository updating the MRN contained in the Notification if not already set in the Submission record" in {
-          when(submissionRepository.findOne(any[String], any[String])).thenReturn(Future.successful(Some(submission.copy(mrn = None))))
-          when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq(testNotification))
-          when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(Some(submission)))
-
-          parseAndSaveProcess.execute(inputNotification).futureValue
-
-          verify(submissionRepository).updateMrn(eqTo(actionId), eqTo(mrn))
-        }
-      }
-
-      "contains multiple Response elements" should {
-
-        val inputNotification = UnparsedNotification(actionId = actionId, payload = exampleNotificationWithMultipleResponses(mrn).asXml.toString)
-        val testNotifications = exampleNotificationWithMultipleResponses(mrn).asDomainModel.map { details =>
-          ParsedNotification(unparsedNotificationId = inputNotification.id, actionId = inputNotification.actionId, details = details)
-        }
-
-        "return successful Future" in {
-          when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(testNotifications)
-
-          parseAndSaveProcess.execute(inputNotification).futureValue must equal((): Unit)
-        }
-
-        "call NotificationFactory, NotificationRepository and SubmissionRepository in order" in {
-          val inputNotification = UnparsedNotification(
-            actionId = "b1c09f1b-7c94-4e90-b754-7c5c71c55e44",
-            payload = exampleNotificationWithMultipleResponses(mrn).asXml.toString
-          )
-          val testNotifications = exampleNotificationWithMultipleResponses(mrn).asDomainModel.map { details =>
-            ParsedNotification(unparsedNotificationId = inputNotification.id, actionId = inputNotification.actionId, details = details)
-          }
-
-          when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(testNotifications)
-
-          parseAndSaveProcess.execute(inputNotification).futureValue
-
-          val inOrder: InOrder = Mockito.inOrder(notificationFactory, submissionRepository, notificationRepository)
-          inOrder.verify(notificationFactory).buildNotifications(any[UnparsedNotification])
-          inOrder.verify(submissionRepository).findOne(any[String], any[String])
-          inOrder.verify(notificationRepository).bulkInsert(any[Seq[ParsedNotification]])
-        }
-
-        "call NotificationFactory passing actionId and payload from Notification provided" in {
-          when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(testNotifications)
-
-          parseAndSaveProcess.execute(inputNotification).futureValue
-
-          verify(notificationFactory).buildNotifications(eqTo(inputNotification))
-        }
-
-        "call NotificationRepository.bulkInsert passing Notifications returned by NotificationFactory" in {
-          when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(testNotifications)
-
-          parseAndSaveProcess.execute(inputNotification).futureValue
-
-          verify(notificationRepository).bulkInsert(eqTo(testNotifications))
-        }
-
-        "call SubmissionRepository passing actionId in the Notifications" in {
-          when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(testNotifications)
-
-          parseAndSaveProcess.execute(inputNotification).futureValue
-
-          verify(submissionRepository).findOne(any[String], eqTo(actionId))
-          verify(submissionRepository, never).updateMrn(eqTo(actionId), eqTo(mrn))
-        }
-
-        "call SubmissionRepository updating the MRN contained in the Notification if not already set in the Submission record" in {
-          when(submissionRepository.findOne(any[String], any[String])).thenReturn(Future.successful(Some(submission.copy(mrn = None))))
-          when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(testNotifications)
-          when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(Some(submission)))
-
-          parseAndSaveProcess.execute(inputNotification).futureValue
-
-          verify(submissionRepository).updateMrn(eqTo(actionId), eqTo(mrn))
-        }
-      }
-
-      "cannot be parsed (NotificationFactory returns empty sequence)" should {
-
-        val inputNotification = UnparsedNotification(actionId = actionId, payload = exampleUnparsableNotification(mrn).asXml.toString)
-
-        "return successful Future" in {
-          when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq.empty)
-
-          parseAndSaveProcess.execute(inputNotification).futureValue must equal((): Unit)
-        }
-
-        "call NotificationFactory passing actionId and payload from Notification provided" in {
-          when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq.empty)
-
-          parseAndSaveProcess.execute(inputNotification).futureValue
-
-          verify(notificationFactory).buildNotifications(eqTo(inputNotification))
-        }
-
-        "not call NotificationRepository" in {
-          when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq.empty)
-
-          parseAndSaveProcess.execute(inputNotification).futureValue
-
-          verifyNoInteractions(notificationRepository)
-        }
-
-        "not call SubmissionRepository" in {
-          when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq.empty)
-
-          parseAndSaveProcess.execute(inputNotification).futureValue
-
-          verifyNoInteractions(submissionRepository)
-        }
-      }
-
-      "has a Submission record associated" that {
-        val inputNotification = UnparsedNotification(actionId = actionId, payload = exampleRejectNotification(mrn).asXml.toString)
-        val testNotification = ParsedNotification(
-          unparsedNotificationId = inputNotification.id,
-          actionId = inputNotification.actionId,
-          details = exampleRejectNotification(mrn).asDomainModel.head
-        )
-
-        "does not have an MRN value set" should {
-          "update the submission record's MRN value" in {
-            val noMrnSubmission = submission.copy(mrn = None)
-            when(submissionRepository.findOne(any[String], any[String])).thenReturn(Future.successful(Some(noMrnSubmission)))
-            when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(Some(noMrnSubmission)))
-            when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq(testNotification))
-
-            parseAndSaveProcess.execute(inputNotification).futureValue
-
-          }
-        }
-
-        "does have an MRN value set" should {
-          "not update the submission record's MRN value" in {
-            when(submissionRepository.findOne(any[String], any[String])).thenReturn(Future.successful(Some(submission)))
-            when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenReturn(Seq(testNotification))
-
-            parseAndSaveProcess.execute(inputNotification).futureValue
-            verify(submissionRepository, never).updateMrn(eqTo(actionId), eqTo(mrn))
-          }
-        }
-      }
-    }
-
-    "NotificationFactory throws exception" should {
-
-      "throw exception" in {
-        val exceptionMsg = "Test Exception message"
-        when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenThrow(new RuntimeException(exceptionMsg))
-
-        the[RuntimeException] thrownBy {
-          parseAndSaveProcess.execute(notificationUnparsed)
-        } must have message exceptionMsg
-      }
-
-      "not call NotificationRepository" in {
-        val exceptionMsg = "Test Exception message"
-        when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenThrow(new RuntimeException(exceptionMsg))
-
-        an[RuntimeException] mustBe thrownBy { parseAndSaveProcess.execute(notificationUnparsed) }
-
-        verifyNoInteractions(notificationRepository)
-      }
-
-      "not call SubmissionRepository" in {
-        val exceptionMsg = "Test Exception message"
-        when(notificationFactory.buildNotifications(any[UnparsedNotification])).thenThrow(new RuntimeException(exceptionMsg))
-
-        an[RuntimeException] mustBe thrownBy { parseAndSaveProcess.execute(notificationUnparsed) }
-
+  "ParseAndSaveAction.save" when {
+
+    "provided with no ParsedNotification instances" should {
+      "return a list with no submissions (empty)" in {
+        parseAndSaveAction.save(List.empty).futureValue mustBe List.empty
         verifyNoInteractions(submissionRepository)
+        verifyNoInteractions(transactionalOps)
       }
     }
 
-    "NotificationRepository on insert returns WriteResult with Error" should {
+    "provided with a ParsedNotification without a stored Submission document" should {
+      "return a list with no submissions (empty)" in {
+        when(submissionRepository.findOne(any, any)).thenReturn(Future.successful(None))
 
-      "return failed Future" in {
-        val exceptionMsg = "Test Exception message"
-        when(notificationRepository.bulkInsert(any)).thenReturn(Future.failed(dummyWriteResultFailure(exceptionMsg)))
-
-        parseAndSaveProcess.execute(notificationUnparsed).failed.futureValue must have message exceptionMsg
+        parseAndSaveAction.save(List(notification)).futureValue mustBe List.empty
+        verifyNoInteractions(transactionalOps)
       }
     }
 
-    "SubmissionRepository on updateMrn returns empty Option" should {
+    "provided with a single ParsedNotification with a stored Submission document and" should {
+      "return a List with a single Submission" in {
+        when(submissionRepository.findOne(any, any)).thenReturn(Future.successful(Some(submission)))
+        when(transactionalOps.updateSubmissionAndNotifications(any, any, any)).thenReturn(Future.successful(Some(submission)))
 
-      "result in throwing a NotificationProcessingException" in {
-        when(submissionRepository.findOne(any[String], any[String])).thenReturn(Future.successful(Some(submission.copy(mrn = None))))
-        when(submissionRepository.updateMrn(any, any)).thenReturn(Future.successful(None))
+        parseAndSaveAction.save(List(notification)).futureValue mustBe List(submission)
 
-        val throwable = parseAndSaveProcess.execute(notificationUnparsed).failed.futureValue
-        throwable.getMessage mustBe "No submission record was found for received notification!"
-
-        verifyNoInteractions(notificationRepository)
+        verify(transactionalOps).updateSubmissionAndNotifications(eqTo(notification.actionId), any, eqTo(submission))
       }
     }
 
-    "SubmissionRepository on findByConversationId" that {
-      "returns a None" should {
-        "not then call the NotificationRepository" in {
-          when(submissionRepository.findOne(any[String], any[String])).thenReturn(Future.successful(None))
-
-          val throwable = parseAndSaveProcess.execute(notificationUnparsed).failed.futureValue
-          throwable.getMessage mustBe "No submission record was found for received notification!"
-
-          verifyNoInteractions(notificationRepository)
+    "provided with multiple ParsedNotifications with stored Submission documents" should {
+      "return a list with multiple Submission documents" in {
+        val withResult = (invocation: InvocationOnMock) => {
+          val actionId = invocation.getArguments.head.asInstanceOf[String]
+          val submission = if (actionId == notification_2.actionId) submission_2 else submission_3
+          Future.successful(Some(submission))
         }
-      }
 
-      "throws an Exception" should {
-        "not then call the NotificationRepository" in {
-          val exceptionMsg = "Test Exception message"
-          when(submissionRepository.findOne(any[String], any[String])).thenReturn(Future.failed(dummyWriteResultFailure(exceptionMsg)))
+        val captor = ArgumentCaptor.forClass(classOf[String])
+        when(submissionRepository.findOne(any[String], captor.capture())).thenAnswer(withResult)
 
-          parseAndSaveProcess.execute(notificationUnparsed).failed.futureValue
+        when(transactionalOps.updateSubmissionAndNotifications(captor.capture(), any, any)).thenAnswer(withResult)
 
-          verifyNoInteractions(notificationRepository)
-        }
-      }
-    }
+        parseAndSaveAction.save(List(notification_2, notification_3)).futureValue mustBe List(submission_2, submission_3)
 
-    "SubmissionRepository on updateMrn" that {
-      "returns WriteResult with Error" should {
-        "not then call the NotificationRepository" in {
-          val exceptionMsg = "Test Exception message"
-          when(submissionRepository.updateMrn(any, any)).thenReturn(Future.failed(dummyWriteResultFailure(exceptionMsg)))
-
-          verifyNoInteractions(notificationRepository)
-        }
-      }
-
-      "returns a None" should {
-        "not then call the NotificationRepository" in {
-          when(submissionRepository.updateMrn(any, any))
-            .thenReturn(Future.successful(None))
-
-          verifyNoInteractions(notificationRepository)
-        }
+        verify(transactionalOps, times(2)).updateSubmissionAndNotifications(any, any, any)
       }
     }
   }

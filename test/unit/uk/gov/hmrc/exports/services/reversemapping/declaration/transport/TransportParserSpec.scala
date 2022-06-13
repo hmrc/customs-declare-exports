@@ -17,7 +17,6 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
 import org.mockito.ArgumentMatchersSugar.any
-import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.{ModeOfTransportCode, Transport, TransportPayment, YesNoAnswer}
@@ -26,7 +25,7 @@ import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlPar
 
 import scala.xml.{Elem, NodeSeq}
 
-class TransportParserSpec extends UnitSpec with EitherValues {
+class TransportParserSpec extends UnitSpec {
 
   private implicit val context = MappingContext(eori)
 

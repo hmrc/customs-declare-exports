@@ -18,5 +18,5 @@ trait IntegrationTestMongoSpec extends IntegrationTestBaseSpec with GuiceOneAppP
   override implicit lazy val app: Application =
     GuiceApplicationBuilder().configure(configuration).disable[PlayModule].build
 
-  def getRepository[T](implicit classTag: ClassTag[T]): T = app.injector.instanceOf[T]
+  def instanceOf[T](implicit classTag: ClassTag[T]): T = app.injector.instanceOf[T]
 }

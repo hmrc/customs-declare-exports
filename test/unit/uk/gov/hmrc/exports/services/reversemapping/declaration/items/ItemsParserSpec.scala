@@ -22,11 +22,10 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ExportItem
 
 import scala.xml.NodeSeq
-import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
-class ItemsParserSpec extends UnitSpec with EitherValues {
+class ItemsParserSpec extends UnitSpec {
 
   private val singleItemParser = mock[SingleItemParser]
   private val itemsParser = new ItemsParser(singleItemParser)

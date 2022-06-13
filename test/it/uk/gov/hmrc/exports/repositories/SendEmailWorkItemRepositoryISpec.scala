@@ -26,9 +26,9 @@ import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Failed, InProgress, Succeede
 
 import java.time.Instant
 
-class SendEmailWorkItemRepositorySpec extends IntegrationTestMongoSpec {
+class SendEmailWorkItemRepositoryISpec extends IntegrationTestMongoSpec {
 
-  private val repository = getRepository[SendEmailWorkItemRepository]
+  private val repository = instanceOf[SendEmailWorkItemRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()

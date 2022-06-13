@@ -17,7 +17,9 @@
 package testdata
 
 import testdata.ExportsTestData._
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest, Submission, SubmissionRequest}
+import testdata.notifications.NotificationTestData.{notification, notification_2}
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{GOODS_HAVE_EXITED, RECEIVED}
+import uk.gov.hmrc.exports.models.declaration.submissions._
 
 import java.time.temporal.ChronoUnit.HOURS
 import java.time.{ZoneId, ZonedDateTime}
@@ -25,8 +27,9 @@ import java.util.UUID
 
 object SubmissionTestData {
 
-  private val instant1971: ZonedDateTime = ZonedDateTime.of(1971, 1, 1, 1, 1, 0, 0, ZoneId.of("UTC"))
-  private val instant1972 = ZonedDateTime.of(1972, 1, 1, 1, 1, 0, 0, ZoneId.of("UTC"))
+  private val utc = ZoneId.of("UTC")
+  private val instant1971 = ZonedDateTime.of(1971, 1, 1, 1, 1, 0, 0, utc)
+  private val instant1972 = ZonedDateTime.of(1972, 1, 1, 1, 1, 0, 0, utc)
 
   lazy val action = Action(id = actionId, requestType = SubmissionRequest)
 
@@ -36,6 +39,10 @@ object SubmissionTestData {
 
   lazy val actionCancellation = Action(actionId, CancellationRequest, action.requestTimestamp.plus(3, HOURS))
 
+  lazy val uuid: String = UUID.randomUUID.toString
+  lazy val uuid_2: String = UUID.randomUUID.toString
+  lazy val uuid_3: String = UUID.randomUUID.toString
+
   lazy val submission: Submission = Submission(uuid, eori, lrn, Some(mrn), ducr, actions = Seq(action))
 
   lazy val submission_2: Submission = Submission(uuid_2, eori, lrn, Some(mrn_2), ducr, actions = Seq(action_2))
@@ -44,12 +51,10 @@ object SubmissionTestData {
 
   lazy val cancelledSubmission: Submission = Submission(uuid, eori, lrn, Some(mrn), ducr, actions = Seq(action, actionCancellation))
 
-  val uuid: String = UUID.randomUUID().toString
-  val uuid_2: String = UUID.randomUUID().toString
-  val uuid_3: String = UUID.randomUUID().toString
+  lazy val notificationSummary_1 = NotificationSummary(notification.unparsedNotificationId, instant1971, RECEIVED)
+  lazy val notificationSummary_2 = NotificationSummary(notification_2.unparsedNotificationId, instant1972, GOODS_HAVE_EXITED)
 
-  val emptySubmission_1 = Submission(uuid = uuid, eori = eori, lrn = lrn, mrn = Some(mrn), ducr = ducr, actions = Seq())
+  val emptySubmission_1 = Submission(uuid = uuid, eori = eori, lrn = lrn, mrn = Some(mrn), ducr = ducr, actions = List.empty)
 
-  val emptySubmission_2 =
-    Submission(uuid = uuid_2, eori = eori, lrn = lrn, mrn = Some(mrn_2), ducr = ducr, actions = Seq())
+  val emptySubmission_2 = Submission(uuid = uuid_2, eori = eori, lrn = lrn, mrn = Some(mrn_2), ducr = ducr, actions = List.empty)
 }

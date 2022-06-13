@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{BodyParser, ControllerComponents}
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
@@ -25,9 +25,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import scala.concurrent.ExecutionContext
 
 abstract class RESTController(override val controllerComponents: ControllerComponents)
-    extends BackendController(controllerComponents) with JSONResponses {
-
-  private val logger = Logger(this.getClass)
+    extends BackendController(controllerComponents) with JSONResponses with Logging {
 
   def parsingJson[T](implicit rds: Reads[T], exc: ExecutionContext): BodyParser[T] = parse.json.validate { json =>
     json.validate[T] match {

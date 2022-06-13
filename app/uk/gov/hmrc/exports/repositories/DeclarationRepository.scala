@@ -17,9 +17,10 @@
 package uk.gov.hmrc.exports.repositories
 
 import com.mongodb.client.model.Indexes.{ascending, compoundIndex, descending}
+import com.mongodb.client.model.ReturnDocument
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.Updates.set
-import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions}
 import play.api.libs.json.Json
 import repositories.RepositoryOps
 import uk.gov.hmrc.exports.config.AppConfig
@@ -81,12 +82,16 @@ class DeclarationRepository @Inject()(appConfig: AppConfig, mongoComponent: Mong
     collection
       .findOneAndUpdate(
         filter = BsonDocument(Json.obj("id" -> id, "eori" -> eori.value).toString),
-        update = set("status", DeclarationStatus.COMPLETE.toString)
+        update = set("status", DeclarationStatus.COMPLETE.toString),
+        options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.BEFORE)
       )
       .toFutureOption
 
   def revertStatusToDraft(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
-    findOneAndUpdate(Json.obj("id" -> declaration.id, "eori" -> declaration.eori), Json.obj("status" -> DeclarationStatus.DRAFT.toString))
+    findOneAndUpdate(
+      filter = BsonDocument(Json.obj("id" -> declaration.id, "eori" -> declaration.eori).toString),
+      update = set("status", DeclarationStatus.DRAFT.toString)
+    )
 }
 
 object DeclarationRepository {

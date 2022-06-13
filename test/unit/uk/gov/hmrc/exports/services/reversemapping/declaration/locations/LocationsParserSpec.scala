@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.locations
 
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchersSugar._
-import org.scalatest.{EitherValues, GivenWhenThen}
+import org.scalatest.GivenWhenThen
 import testdata.ExportsTestData
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.{SUPPLEMENTARY_EIDR, SUPPLEMENTARY_SIMPLIFIED}
@@ -29,7 +29,7 @@ import uk.gov.hmrc.exports.services.reversemapping.declaration.AdditionalDeclara
 
 import scala.xml.{Elem, NodeSeq}
 
-class LocationsParserSpec extends UnitSpec with EitherValues with GivenWhenThen {
+class LocationsParserSpec extends UnitSpec with GivenWhenThen {
 
   private val adtParser = mock[AdditionalDeclarationTypeParser]
   private val countryParser = mock[CountryParser]

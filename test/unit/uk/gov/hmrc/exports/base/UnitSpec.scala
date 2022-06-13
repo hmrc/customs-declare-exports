@@ -20,10 +20,11 @@ import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, OptionValues}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, EitherValues, OptionValues}
 
 trait UnitSpec
-    extends AnyWordSpec with BeforeAndAfterAll with BeforeAndAfterEach with Matchers with MockitoSugar with OptionValues with ScalaFutures {
+    extends AnyWordSpec with BeforeAndAfterAll with BeforeAndAfterEach with EitherValues with Matchers with MockitoSugar with OptionValues
+    with ScalaFutures {
 
   val unit: Unit = (): Unit
 }

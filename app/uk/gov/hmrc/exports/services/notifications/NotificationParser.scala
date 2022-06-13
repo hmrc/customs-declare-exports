@@ -16,18 +16,16 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
-import play.api.Logger
-import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
+import play.api.Logging
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, NotificationError}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
+import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType, StringOption}
 
 import java.time.format.DateTimeFormatter
 import java.time.{ZoneId, ZonedDateTime}
 import scala.xml.{Node, NodeSeq}
 
-class NotificationParser {
-
-  private val logger = Logger(this.getClass)
+class NotificationParser extends Logging {
 
   private val formatter304 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
 
@@ -39,10 +37,7 @@ class NotificationParser {
       val dateTimeIssued = ZonedDateTime.parse((singleResponseXml \ "IssueDateTime" \ "DateTimeString").text, formatter304)
       val functionCode = (singleResponseXml \ "FunctionCode").text
 
-      val nameCode =
-        if ((singleResponseXml \ "Status").nonEmpty)
-          Some((singleResponseXml \ "Status" \ "NameCode").text)
-        else None
+      val nameCode = StringOption((singleResponseXml \ "Status" \ "NameCode").text)
 
       val errors = buildErrors(singleResponseXml)
 

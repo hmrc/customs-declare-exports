@@ -16,59 +16,66 @@
 
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 
-import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
-import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.notifications.{NotificationFactory, NotificationProcessingException}
+import uk.gov.hmrc.exports.repositories.{SubmissionRepository, TransactionalOps}
+import uk.gov.hmrc.exports.services.notifications.NotificationFactory
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ParseAndSaveAction @Inject()(
+  notificationFactory: NotificationFactory,
   submissionRepository: SubmissionRepository,
-  notificationRepository: ParsedNotificationRepository,
-  notificationFactory: NotificationFactory
+  transactionalOps: TransactionalOps
 )(implicit executionContext: ExecutionContext)
     extends Logging {
 
-  def execute(notification: UnparsedNotification): Future[Unit] = {
-    val parsedNotifications = notificationFactory.buildNotifications(notification)
+  def execute(notification: UnparsedNotification): Future[Unit] =
+    save(notificationFactory.buildNotifications(notification)).map(_ => ())
 
-    if (parsedNotifications.nonEmpty) {
-      save(parsedNotifications)
-    } else
-      Future.successful((): Unit)
+  def save(notifications: Seq[ParsedNotification]): Future[Seq[Submission]] =
+    Future
+      .sequence(
+        notifications
+          .groupBy(_.actionId)
+          .map {
+            case (actionId, notificationsWithSameActionId) =>
+              // Add the notification group to the action (with the given actionId) of the including Submission document, if any
+              findAndUpdateSubmission(actionId, notificationsWithSameActionId)
+          }
+          .toList
+      )
+      .map(_.flatten)
+
+  /* Do not remove. It provides an example of a potential implementation in case we are notified that we could
+   receive from the parsing a list of notifications with different actionIds for the same Submission document.
+
+   This behaviour can be tested uncommenting the integration tests in ParseAndSaveActionISpec.scala
+
+  def save(notifications: Seq[ParsedNotification]): Future[Seq[Submission]] = {
+
+    def loop(list: List[(String, Seq[ParsedNotification])], maybeSubmissions: List[Option[Submission]]): Future[List[Option[Submission]]] =
+      list match {
+        case Nil => Future.successful(maybeSubmissions)
+        case head :: tail =>
+          val actionId = head._1
+          findAndUpdateSubmission(actionId, head._2).flatMap(maybeSubmission => loop(tail, maybeSubmissions :+ maybeSubmission))
+      }
+
+    loop(notifications.groupBy(_.actionId).toList, Nil).map(_.flatten)
   }
+   */
 
-  private def save(notifications: Seq[ParsedNotification]): Future[Unit] = {
-    val firstNotification = notifications.head
-
-    // Update the related submission records (an idempotent operation)
-    findRelatedSubmissionAndUpdateIfRequired(firstNotification.actionId, firstNotification.details.mrn).flatMap { _ =>
-      // If submission record found then persist all notifications
-      notificationRepository.bulkInsert(notifications)
-    }.map(_ => ())
-  }
-
-  private def findRelatedSubmissionAndUpdateIfRequired(actionId: String, mrn: String): Future[Option[Submission]] =
+  private def findAndUpdateSubmission(actionId: String, notifications: Seq[ParsedNotification]): Future[Option[Submission]] =
     submissionRepository
       .findOne("actions.id", actionId)
-      .flatMap { maybeSubmission =>
-        maybeSubmission match {
-          case Some(Submission(_, _, _, None, _, _)) =>
-            submissionRepository.updateMrn(actionId, mrn)
-          case _ =>
-            Future.successful(maybeSubmission)
-        }
-      }
-      .flatMap { maybeSubmission =>
-        maybeSubmission match {
-          case Some(_) =>
-            Future.successful(maybeSubmission)
-          case None =>
-            Future.failed(new NotificationProcessingException("No submission record was found for received notification!"))
-        }
+      .flatMap {
+        case Some(submission) => transactionalOps.updateSubmissionAndNotifications(actionId, notifications, submission)
+        case _ =>
+          logger.error(s"No submission record was found for (parsed) notifications with actionId($actionId)")
+          Future.successful(None)
       }
 }

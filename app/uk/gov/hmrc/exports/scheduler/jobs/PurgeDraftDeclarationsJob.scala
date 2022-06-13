@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs
 
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 
@@ -27,25 +27,21 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class PurgeDraftDeclarationsJob @Inject()(appConfig: AppConfig, declarationRepository: DeclarationRepository)(implicit ec: ExecutionContext)
-    extends ScheduledJob {
+    extends ScheduledJob with Logging {
 
   private val jobConfig = appConfig.purgeDraftDeclarations
   private val expireDuration = appConfig.draftTimeToLive
   private val clock = appConfig.clock
-
-  private val logger = Logger(this.getClass)
 
   override val name: String = "PurgeDraftDeclarations"
   override def interval: FiniteDuration = jobConfig.interval
   override def firstRunTime: Option[LocalTime] = Some(jobConfig.elapseTime)
 
   override def execute(): Future[Unit] = {
-
     val expiryDate = Instant.now(clock).minusSeconds(expireDuration.toSeconds)
     for {
       count <- declarationRepository.deleteExpiredDraft(expiryDate)
       _ = logger.info(s"${name}Job: Purged $count items updated before $expiryDate")
     } yield ()
   }
-
 }

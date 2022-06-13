@@ -17,7 +17,6 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import org.mockito.ArgumentMatchersSugar.any
-import org.scalatest.EitherValues
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.STANDARD_PRE_LODGED
 import uk.gov.hmrc.exports.models.declaration._
@@ -29,7 +28,7 @@ import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.Transpo
 
 import scala.xml.NodeSeq
 
-class ExportsDeclarationXmlParserSpec extends UnitSpec with EitherValues {
+class ExportsDeclarationXmlParserSpec extends UnitSpec {
 
   private val additionalDeclarationTypeParser = mock[AdditionalDeclarationTypeParser]
   private val consignmentReferencesParser = mock[ConsignmentReferencesParser]

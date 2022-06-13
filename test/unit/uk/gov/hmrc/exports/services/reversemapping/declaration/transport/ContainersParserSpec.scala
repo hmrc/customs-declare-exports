@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
-import org.scalatest.EitherValues
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
@@ -24,7 +23,7 @@ import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.Contain
 
 import scala.xml.Elem
 
-class ContainersParserSpec extends UnitSpec with EitherValues {
+class ContainersParserSpec extends UnitSpec {
 
   val parser = new ContainersParser()
   private implicit val context = MappingContext(eori)

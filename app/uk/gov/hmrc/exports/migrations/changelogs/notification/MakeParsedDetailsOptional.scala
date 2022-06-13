@@ -22,15 +22,13 @@ import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, exists, or, eq => feq}
 import org.mongodb.scala.model.UpdateOneModel
 import org.mongodb.scala.model.Updates.{combine, set, unset}
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 
 import java.util
 import scala.collection.JavaConverters._
 
-class MakeParsedDetailsOptional extends MigrationDefinition {
-
-  private val logger = Logger(this.getClass)
+class MakeParsedDetailsOptional extends MigrationDefinition with Logging {
 
   private val INDEX_ID = "_id"
   private val MRN = "mrn"
