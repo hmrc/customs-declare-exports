@@ -57,7 +57,7 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Dec
           if (submissionCanBeUpdated) updateSubmission(notificationCollection, action, submission) else action
         }
 
-        actions.collectFirst {
+        actions.collect {
           case action => if (action.requestType == SubmissionRequest) action.notifications.flatMap(_.headOption) else None
         }.flatten.map { notificationSummary =>
           val updatedSubmission = submission.copy(

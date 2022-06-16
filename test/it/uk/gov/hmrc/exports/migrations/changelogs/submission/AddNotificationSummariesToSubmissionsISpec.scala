@@ -40,14 +40,27 @@ class AddNotificationSummariesToSubmissionsISpec extends IntegrationTestMigratio
         "not have yet a 'latestEnhancedStatus' field and a 'enhancedStatusLastUpdated' field and" when {
           "has a 'SubmissionRequest' action which does not have yet a 'notifications' field" in {
             prepareNotificationCollection mustBe true
-            runTest(submissionBeforeMigration, submissionAfterMigration)
+            runTest(submission1BeforeMigration, submission1AfterMigration)
+          }
+        }
+      }
+    }
+
+    "update a Submission document" when {
+      "the document has a 'mrn' field and" when {
+        "not have yet a 'latestEnhancedStatus' field and a 'enhancedStatusLastUpdated' field and" when {
+          "the document has a 'CancellationRequest' action and" when {
+            "has a 'SubmissionRequest' action which does not have yet a 'notifications' field" in {
+              prepareNotificationCollection mustBe true
+              runTest(submission2BeforeMigration, submission2AfterMigration)
+            }
           }
         }
       }
     }
 
     "not update a Submission document" when {
-      "the document does not have a 'mrm' field" in {
+      "the document does not have a 'mrn' field" in {
         runTest(submissionOutOfScope1, submissionOutOfScope1)
       }
     }
@@ -68,12 +81,13 @@ class AddNotificationSummariesToSubmissionsISpec extends IntegrationTestMigratio
 
 object AddNotificationSummariesToSubmissionsISpec {
 
-  val submissionBeforeMigration =
+  val submission1BeforeMigration =
     """{
       |  "_id" : "62a719953e0e9418e3a638b9",
       |  "uuid" : "TEST-I6Zjj-RXX0VYH2",
       |  "eori" : "XL165511818906900",
       |  "lrn" : "MBf7qSpUMum5nplwGkH",
+      |  "mrn" : "18GBJP3OS8Y5KKS9I9",
       |  "ducr" : "8RK572948139853-9",
       |  "actions" : [
       |      {
@@ -81,16 +95,16 @@ object AddNotificationSummariesToSubmissionsISpec {
       |          "requestType" : "SubmissionRequest",
       |          "requestTimestamp" : "2022-06-13T11:03:49.488Z[UTC]"
       |      }
-      |  ],
-      |  "mrn" : "18GBJP3OS8Y5KKS9I9"
+      |  ]
       |}""".stripMargin
 
-  val submissionAfterMigration =
+  val submission1AfterMigration =
     """{
       |  "_id" : "62a719953e0e9418e3a638b9",
       |  "uuid" : "TEST-I6Zjj-RXX0VYH2",
       |  "eori" : "XL165511818906900",
       |  "lrn" : "MBf7qSpUMum5nplwGkH",
+      |  "mrn" : "18GBJP3OS8Y5KKS9I9",
       |  "ducr" : "8RK572948139853-9",
       |  "actions" : [
       |      {
@@ -117,8 +131,70 @@ object AddNotificationSummariesToSubmissionsISpec {
       |      }
       |  ],
       |  "enhancedStatusLastUpdated" : "2022-06-13T09:11:09Z[UTC]",
+      |  "latestEnhancedStatus" : "GOODS_ARRIVED"
+      }""".stripMargin
+
+  val submission2BeforeMigration =
+    """{
+      |  "_id" : "62a719953e0e9418e3a638b9",
+      |  "uuid" : "TEST-I6Zjj-RXX0VYH2",
+      |  "eori" : "XL165511818906900",
+      |  "lrn" : "MBf7qSpUMum5nplwGkH",
+      |  "mrn" : "18GBJP3OS8Y5KKS9I9",
+      |  "ducr" : "8RK572948139853-9",
+      |  "actions" : [
+      |      {
+      |          "id" : "90ece9c1-acf9-45ba-b5e6-b9692c6f7875",
+      |          "requestType" : "CancellationRequest",
+      |          "requestTimestamp" : "2022-06-20T11:04:50.3Z[UTC]"
+      |      },
+      |      {
+      |          "id" : "85ece9c1-acf9-45ba-b5e6-b9692c6f7882",
+      |          "requestType" : "SubmissionRequest",
+      |          "requestTimestamp" : "2022-06-13T11:03:49.488Z[UTC]"
+      |      }
+      |  ]
+      |}""".stripMargin
+
+  val submission2AfterMigration =
+    """{
+      |  "_id" : "62a719953e0e9418e3a638b9",
+      |  "uuid" : "TEST-I6Zjj-RXX0VYH2",
+      |  "eori" : "XL165511818906900",
+      |  "lrn" : "MBf7qSpUMum5nplwGkH",
+      |  "mrn" : "18GBJP3OS8Y5KKS9I9",
+      |  "ducr" : "8RK572948139853-9",
       |  "latestEnhancedStatus" : "GOODS_ARRIVED",
-      |  "mrn" : "18GBJP3OS8Y5KKS9I9"
+      |  "enhancedStatusLastUpdated" : "2022-06-13T09:11:09Z[UTC]",
+      |  "actions" : [
+      |      {
+      |          "id" : "90ece9c1-acf9-45ba-b5e6-b9692c6f7875",
+      |          "requestType" : "CancellationRequest",
+      |          "requestTimestamp" : "2022-06-20T11:04:50.3Z[UTC]"
+      |      },
+      |      {
+      |          "id" : "85ece9c1-acf9-45ba-b5e6-b9692c6f7882",
+      |          "requestType" : "SubmissionRequest",
+      |          "requestTimestamp" : "2022-06-13T11:03:49.488Z[UTC]",
+      |          "notifications" : [
+      |              {
+      |                  "notificationId" : "e6f12af4-e183-4eab-a0ca-e69564aeca52",
+      |                  "dateTimeIssued" : "2022-06-13T09:11:09Z[UTC]",
+      |                  "enhancedStatus" : "GOODS_ARRIVED"
+      |              },
+      |              {
+      |                  "notificationId" : "e6f12af4-e183-4eab-a0ca-e69564aeca52",
+      |                  "dateTimeIssued" : "2022-06-13T09:06:09Z[UTC]",
+      |                  "enhancedStatus" : "CLEARED"
+      |              },
+      |              {
+      |                  "notificationId" : "e6f12af4-e183-4eab-a0ca-e69564aeca52",
+      |                  "dateTimeIssued" : "2022-06-13T09:01:09Z[UTC]",
+      |                  "enhancedStatus" : "GOODS_HAVE_EXITED"
+      |              }
+      |          ]
+      |      }
+      |  ]
       }""".stripMargin
 
   val submissionOutOfScope1 =
@@ -152,6 +228,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |  "uuid" : "TEST-I6Zjj-RXX0VYH2",
       |  "eori" : "XL165511818906900",
       |  "lrn" : "MBf7qSpUMum5nplwGkH",
+      |  "mrn" : "18GBJP3OS8Y5KKS9I9",
       |  "ducr" : "8RK572948139853-9",
       |  "actions" : [
       |      {
@@ -168,8 +245,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |      }
       |  ],
       |  "enhancedStatusLastUpdated" : "2022-06-13T09:11:09Z[UTC]",
-      |  "latestEnhancedStatus" : "GOODS_ARRIVED",
-      |  "mrn" : "18GBJP3OS8Y5KKS9I9"
+      |  "latestEnhancedStatus" : "GOODS_ARRIVED"
       |}""".stripMargin
 
   val submissionOutOfScope3 =
@@ -178,6 +254,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |  "uuid" : "TEST-I6Zjj-RXX0VYH2",
       |  "eori" : "XL165511818906900",
       |  "lrn" : "MBf7qSpUMum5nplwGkH",
+      |  "mrn" : "18GBJP3OS8Y5KKS9I9",
       |  "ducr" : "8RK572948139853-9",
       |  "actions" : [
       |      {
@@ -186,8 +263,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |          "requestTimestamp" : "2022-06-13T11:03:49.488Z[UTC]",
       |          "notifications" : []
       |      }
-      |  ],
-      |  "mrn" : "18GBJP3OS8Y5KKS9I9"
+      |  ]
       |}""".stripMargin
 
   val parsedNotifications = List("""{
