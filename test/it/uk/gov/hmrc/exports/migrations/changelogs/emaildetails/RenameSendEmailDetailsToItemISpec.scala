@@ -16,24 +16,15 @@
 
 package uk.gov.hmrc.exports.migrations.changelogs.emaildetails
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.mongodb.client.MongoCollection
-import org.bson.Document
 import uk.gov.hmrc.exports.base.IntegrationTestMigrationToolSpec
 import uk.gov.hmrc.exports.migrations.changelogs.emaildetails.RenameSendEmailDetailsToItemISpec._
 
 class RenameSendEmailDetailsToItemISpec extends IntegrationTestMigrationToolSpec {
 
-  private val changeLog = new RenameSendEmailDetailsToItem()
+  override val collectionUnderTest = "sendEmailWorkItems"
+  override val changeLog = new RenameSendEmailDetailsToItem()
 
-  def getWorkItemCollection: MongoCollection[Document] = getCollection("sendEmailWorkItems")
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    removeAll(getWorkItemCollection)
-  }
-
-  "RenameSendEmailDetailsToItem migration definition" should {
+  "RenameSendEmailDetailsToItem" should {
 
     "correctly migrate documents renaming 'sendEmailDetails' to 'item'" in {
       runTest(testDataBeforeRenaming, testDataAfterRenaming)
@@ -46,27 +37,6 @@ class RenameSendEmailDetailsToItemISpec extends IntegrationTestMigrationToolSpec
     "not change the documents that do not include the 'sendEmailDetails' object" in {
       runTest(testDataOutOfScope, testDataOutOfScope)
     }
-  }
-
-  private def runTest(inputDataJson: String, expectedDataJson: String): Unit = {
-    val collection = getWorkItemCollection
-    collection.insertOne(Document.parse(inputDataJson))
-
-    changeLog.migrationFunction(database)
-
-    val result: Document = collection.find.first
-    val expectedResult: String = expectedDataJson
-
-    compareJson(result.toJson, expectedResult)
-  }
-
-  private def compareJson(actual: String, expected: String): Unit = {
-    val mapper = new ObjectMapper
-
-    val jsonActual = mapper.readTree(actual)
-    val jsonExpected = mapper.readTree(expected)
-
-    jsonActual mustBe jsonExpected
   }
 }
 

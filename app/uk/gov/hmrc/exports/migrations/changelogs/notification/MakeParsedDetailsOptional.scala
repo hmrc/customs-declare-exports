@@ -54,7 +54,7 @@ class MakeParsedDetailsOptional extends MigrationDefinition with Logging {
     val queryBatchSize = 10
     val updateBatchSize = 10
 
-    def createDetailsSubDoc(document: Document) = {
+    def createDetailsSubDoc(document: Document): Document = {
       val mrn = document.get(MRN).asInstanceOf[String]
       val dateTimeIssued = document.get(DATE_TIME_ISSUED).asInstanceOf[String]
       val status = document.get(STATUS).asInstanceOf[String]
@@ -98,7 +98,7 @@ class MakeParsedDetailsOptional extends MigrationDefinition with Logging {
     logger.info(s"Applying '${migrationInformation.id}' db migration... Done.")
   }
 
-  private def getDocumentsToUpdate(db: MongoDatabase, filter: Bson, queryBatchSize: Int) =
+  private def getDocumentsToUpdate(db: MongoDatabase, filter: Bson, queryBatchSize: Int): Iterator[Document] =
     asScalaIterator(
       db.getCollection(collectionName)
         .find(filter)

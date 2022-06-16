@@ -23,7 +23,7 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.migrations.changelogs.cache.{MakeTransportPaymentMethodNotOptional, RenameToAdditionalDocuments}
 import uk.gov.hmrc.exports.migrations.changelogs.emaildetails.RenameSendEmailDetailsToItem
 import uk.gov.hmrc.exports.migrations.changelogs.notification.{MakeParsedDetailsOptional, SplitTheNotificationsCollection}
-import uk.gov.hmrc.exports.migrations.changelogs.submission.RemoveRedundantIndexes
+import uk.gov.hmrc.exports.migrations.changelogs.submission.{AddNotificationSummariesToSubmissions, RemoveRedundantIndexes}
 
 import javax.inject.Inject
 
@@ -48,6 +48,7 @@ class MigrationRoutine @Inject()(appConfig: AppConfig) extends Logging {
     .register(new MakeTransportPaymentMethodNotOptional())
     .register(new RemoveRedundantIndexes())
     .register(new RenameSendEmailDetailsToItem())
+    .register(new AddNotificationSummariesToSubmissions())
 
   ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute
 

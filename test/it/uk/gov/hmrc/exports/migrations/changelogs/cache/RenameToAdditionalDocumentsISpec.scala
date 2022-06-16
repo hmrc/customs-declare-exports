@@ -16,62 +16,33 @@
 
 package uk.gov.hmrc.exports.migrations.changelogs.cache
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.mongodb.client.MongoCollection
-import org.bson.Document
 import uk.gov.hmrc.exports.base.IntegrationTestMigrationToolSpec
-import uk.gov.hmrc.exports.migrations.changelogs.cache.RenameToAdditionalDocumentsSpec._
+import uk.gov.hmrc.exports.migrations.changelogs.cache.RenameToAdditionalDocumentsISpec._
 
-class RenameToAdditionalDocumentsSpec extends IntegrationTestMigrationToolSpec {
+class RenameToAdditionalDocumentsISpec extends IntegrationTestMigrationToolSpec {
 
-  private val changeLog = new RenameToAdditionalDocuments()
+  override val collectionUnderTest = "declarations"
+  override val changeLog = new RenameToAdditionalDocuments()
 
-  def getDeclarationsCollection: MongoCollection[Document] = getCollection("declarations")
+  "RenameToAdditionalDocuments" should {
 
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    removeAll(getDeclarationsCollection)
-  }
-
-  "RenameToAdditionalDocuments migration definition" should {
-
-    "correctly migrate documents renaming in items 'documentsProducedData' to 'additionalDocuments'" in {
-      runTest(testDataBeforeRenaming, testDataAfterRenaming)
+    "correctly migrate declarations renaming in items 'documentsProducedData' to 'additionalDocuments'" in {
+      runTest(declarationBeforeMigration, declarationAfterMigration)
     }
 
-    "not change documents already migrated" in {
-      runTest(testDataAfterRenaming, testDataAfterRenaming)
+    "not change declarations already migrated" in {
+      runTest(declarationAfterMigration, declarationAfterMigration)
     }
 
-    "not change documents that do not include 'documentsProducedData' objects" in {
-      runTest(testDataOutOfScope, testDataOutOfScope)
+    "not change declarations that do not include 'documentsProducedData' objects" in {
+      runTest(declarationOutOfScope, declarationOutOfScope)
     }
-  }
-
-  private def runTest(inputDataJson: String, expectedDataJson: String): Unit = {
-    val collection = getDeclarationsCollection
-    collection.insertOne(Document.parse(inputDataJson))
-
-    changeLog.migrationFunction(database)
-
-    val result: Document = collection.find().first()
-    val expectedResult: String = expectedDataJson
-
-    compareJson(result.toJson, expectedResult)
-  }
-
-  private def compareJson(actual: String, expected: String): Unit = {
-    val mapper = new ObjectMapper
-
-    val jsonActual = mapper.readTree(actual)
-    val jsonExpected = mapper.readTree(expected)
-
-    jsonActual mustBe jsonExpected
   }
 }
 
-object RenameToAdditionalDocumentsSpec {
-  val testDataBeforeRenaming: String =
+object RenameToAdditionalDocumentsISpec {
+
+  val declarationBeforeMigration: String =
     """{
       |  "_id": "60ded91dd3b4338579ff253c",
       |  "id": "1fb39320-8d0d-4521-ba52-ffc835026e0e",
@@ -91,7 +62,7 @@ object RenameToAdditionalDocumentsSpec {
       |  ]
       |}""".stripMargin
 
-  val testDataAfterRenaming: String =
+  val declarationAfterMigration: String =
     """{
       |  "_id": "60ded91dd3b4338579ff253c",
       |  "id": "1fb39320-8d0d-4521-ba52-ffc835026e0e",
@@ -111,7 +82,7 @@ object RenameToAdditionalDocumentsSpec {
       |  ]
       |}""".stripMargin
 
-  val testDataOutOfScope: String =
+  val declarationOutOfScope: String =
     """{
       |  "_id": "60ddecd93b6074a90796af8a",
       |  "id": "68880c57-6986-4e21-9576-cdc477d60a43",
