@@ -21,7 +21,7 @@ import org.mongodb.scala.bson.BsonDocument
 import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, NotificationSummary, Submission}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest, NotificationSummary, Submission}
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.transaction.{TransactionConfiguration, Transactions}
@@ -64,7 +64,13 @@ class TransactionalOps @Inject()(
     val (actionWithAllNotificationSummaries, notificationSummaries) =
       updateActionWithNotificationSummaries(action, submission, notifications, seed)
 
-    updateSubmission(
+    if (action.requestType == CancellationRequest) updateCancellationRequest(
+      session,
+      submission.uuid,
+      notifications.head.details.mrn,
+      submission.actions.updated(index, actionWithAllNotificationSummaries)
+    )
+    else updateSubmissionRequest(
       session,
       submission.uuid,
       notifications.head.details.mrn,
@@ -73,7 +79,18 @@ class TransactionalOps @Inject()(
     )
   }
 
-  private def updateSubmission(
+  private def updateCancellationRequest(
+    session: ClientSession,
+    uuid: String,
+    mrn: String,
+    actions: Seq[Action]
+  ): Future[Option[Submission]] = {
+    val filter = Json.obj("uuid" -> uuid)
+    val update = Json.obj("$set" -> Json.obj("mrn" -> mrn, "actions" -> actions))
+    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
+  }
+
+  private def updateSubmissionRequest(
     session: ClientSession,
     uuid: String,
     mrn: String,

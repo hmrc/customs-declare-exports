@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.exports.migrations.changelogs.submission
 
+import com.mongodb.client.result.UpdateResult
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
 import org.mongodb.scala.model.Filters.{and, equal, exists}
@@ -47,29 +48,29 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Dec
     val notificationCollection = db.getCollection("notifications")
     val submissionCollection = db.getCollection("submissions")
 
-    val results = submissionCollection
+    val results: Iterable[UpdateResult] = submissionCollection
       .find(and(exists("mrn", true), exists(latestStatus, false), exists(statusLastUpdated, false)))
       .asScala
       .map { document =>
         val submission = Json.parse(document.toJson).as[Submission]
         val actions = submission.actions.map { action =>
-          val submissionCanBeUpdated = action.requestType == SubmissionRequest && action.notifications.isEmpty
-          if (submissionCanBeUpdated) updateSubmission(notificationCollection, action, submission) else action
+          if (action.notifications.isEmpty) updateSubmission(notificationCollection, action, submission) else action
         }
 
-        actions.collect {
+        val updatedSubmission = actions.collect {
           case action => if (action.requestType == SubmissionRequest) action.notifications.flatMap(_.headOption) else None
-        }.flatten.map { notificationSummary =>
-          val updatedSubmission = submission.copy(
+        }.flatten.headOption.fold(submission.copy(actions = actions)) { notificationSummary =>
+          submission.copy(
             latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
             enhancedStatusLastUpdated = Some(notificationSummary.dateTimeIssued),
             actions = actions
           )
-          submissionCollection.replaceOne(equal("uuid", document.get("uuid")), Document.parse(Json.toJson(updatedSubmission).toString))
         }
+
+        submissionCollection.replaceOne(equal("uuid", document.get("uuid")), Document.parse(Json.toJson(updatedSubmission).toString))
       }
 
-    val updates = results.toList.flatten.foldLeft(0L)((acc, result) => acc + result.getModifiedCount)
+    val updates = results.foldLeft(0L)((acc, result) => acc + result.getModifiedCount)
     logger.info(s"Updated $updates documents")
     logger.info(s"Applying '${migrationInformation.id}' db migration... Done.")
   }
