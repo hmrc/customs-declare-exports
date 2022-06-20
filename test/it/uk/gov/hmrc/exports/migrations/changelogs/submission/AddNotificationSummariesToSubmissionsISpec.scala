@@ -27,10 +27,10 @@ class AddNotificationSummariesToSubmissionsISpec extends IntegrationTestMigratio
   override val collectionUnderTest = "submissions"
   override val changeLog = new AddNotificationSummariesToSubmissions()
 
-  def prepareNotificationCollection: Boolean = {
+  def prepareNotificationCollection(parsedNotifications: List[Document]): Boolean = {
     val collection = getCollection("notifications")
     removeAll(collection)
-    collection.insertMany(parsedNotifications).wasAcknowledged
+    collection.insertMany(parsedNotifications.asJava).wasAcknowledged
   }
 
   "AddNotificationSummariesToSubmissions" should {
@@ -39,7 +39,7 @@ class AddNotificationSummariesToSubmissionsISpec extends IntegrationTestMigratio
       "the document has a 'mrn' field and" when {
         "not have yet a 'latestEnhancedStatus' field and a 'enhancedStatusLastUpdated' field and" when {
           "has a 'SubmissionRequest' action which does not have yet a 'notifications' field" in {
-            prepareNotificationCollection mustBe true
+            prepareNotificationCollection(parsedNotifications :+ parsedNotification) mustBe true
             runTest(submission1BeforeMigration, submission1AfterMigration)
           }
         }
@@ -51,7 +51,7 @@ class AddNotificationSummariesToSubmissionsISpec extends IntegrationTestMigratio
         "not have yet a 'latestEnhancedStatus' field and a 'enhancedStatusLastUpdated' field and" when {
           "the document has a 'CancellationRequest' action and" when {
             "has a 'SubmissionRequest' action which does not have yet a 'notifications' field" in {
-              prepareNotificationCollection mustBe true
+              prepareNotificationCollection(parsedNotifications) mustBe true
               runTest(submission2BeforeMigration, submission2AfterMigration)
             }
           }
@@ -94,6 +94,11 @@ object AddNotificationSummariesToSubmissionsISpec {
       |          "id" : "85ece9c1-acf9-45ba-b5e6-b9692c6f7882",
       |          "requestType" : "SubmissionRequest",
       |          "requestTimestamp" : "2022-06-13T11:03:49.488Z[UTC]"
+      |      },
+      |      {
+      |        "id": "7c7faf96-a65e-408d-a8f7-7cb181f696b6",
+      |        "requestType": "CancellationRequest",
+      |        "requestTimestamp": "2022-06-20T14:52:13.06Z[UTC]"
       |      }
       |  ]
       |}""".stripMargin
@@ -118,15 +123,27 @@ object AddNotificationSummariesToSubmissionsISpec {
       |                  "enhancedStatus" : "GOODS_ARRIVED"
       |              },
       |              {
-      |                  "notificationId" : "e6f12af4-e183-4eab-a0ca-e69564aeca52",
+      |                  "notificationId" : "e8f12af4-e183-4eab-a0ca-e69564aeca54",
       |                  "dateTimeIssued" : "2022-06-13T09:06:09Z[UTC]",
       |                  "enhancedStatus" : "CLEARED"
       |              },
       |              {
-      |                  "notificationId" : "e6f12af4-e183-4eab-a0ca-e69564aeca52",
+      |                  "notificationId" : "e7f12af4-e183-4eab-a0ca-e69564aeca53",
       |                  "dateTimeIssued" : "2022-06-13T09:01:09Z[UTC]",
       |                  "enhancedStatus" : "GOODS_HAVE_EXITED"
       |              }
+      |          ]
+      |      },
+      |      {
+      |          "id": "7c7faf96-a65e-408d-a8f7-7cb181f696b6",
+      |          "requestType": "CancellationRequest",
+      |          "requestTimestamp": "2022-06-20T14:52:13.06Z[UTC]",
+      |          "notifications": [
+      |            {
+      |                "notificationId": "e9f12af4-e183-4eab-a0ca-e69564aeca55",
+      |                "dateTimeIssued": "2022-06-20T14:52:13Z[UTC]",
+      |                "enhancedStatus": "EXPIRED_NO_DEPARTURE"
+      |            }
       |          ]
       |      }
       |  ],
@@ -183,12 +200,12 @@ object AddNotificationSummariesToSubmissionsISpec {
       |                  "enhancedStatus" : "GOODS_ARRIVED"
       |              },
       |              {
-      |                  "notificationId" : "e6f12af4-e183-4eab-a0ca-e69564aeca52",
+      |                  "notificationId" : "e8f12af4-e183-4eab-a0ca-e69564aeca54",
       |                  "dateTimeIssued" : "2022-06-13T09:06:09Z[UTC]",
       |                  "enhancedStatus" : "CLEARED"
       |              },
       |              {
-      |                  "notificationId" : "e6f12af4-e183-4eab-a0ca-e69564aeca52",
+      |                  "notificationId" : "e7f12af4-e183-4eab-a0ca-e69564aeca53",
       |                  "dateTimeIssued" : "2022-06-13T09:01:09Z[UTC]",
       |                  "enhancedStatus" : "GOODS_HAVE_EXITED"
       |              }
@@ -276,7 +293,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |      "errors" : []
       |  }
       |}""".stripMargin, """{
-      |  "unparsedNotificationId" : "e6f12af4-e183-4eab-a0ca-e69564aeca52",
+      |  "unparsedNotificationId" : "e7f12af4-e183-4eab-a0ca-e69564aeca53",
       |  "actionId" : "85ece9c1-acf9-45ba-b5e6-b9692c6f7882",
       |  "details" : {
       |      "mrn" : "18GBJP3OS8Y5KKS9I9",
@@ -285,7 +302,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |      "errors" : []
       |  }
       |}""".stripMargin, """{
-      |  "unparsedNotificationId" : "e6f12af4-e183-4eab-a0ca-e69564aeca52",
+      |  "unparsedNotificationId" : "e8f12af4-e183-4eab-a0ca-e69564aeca54",
       |  "actionId" : "85ece9c1-acf9-45ba-b5e6-b9692c6f7882",
       |  "details" : {
       |      "mrn" : "18GBJP3OS8Y5KKS9I9",
@@ -293,5 +310,16 @@ object AddNotificationSummariesToSubmissionsISpec {
       |      "status" : "CLEARED",
       |      "errors" : []
       |  }
-      |}""".stripMargin).map(Document.parse).asJava
+      |}""".stripMargin).map(Document.parse)
+
+  val parsedNotification = Document.parse("""{
+      |  "unparsedNotificationId" : "e9f12af4-e183-4eab-a0ca-e69564aeca55",
+      |  "actionId" : "7c7faf96-a65e-408d-a8f7-7cb181f696b6",
+      |  "details" : {
+      |      "mrn" : "18GBJP3OS8Y5KKS9I9",
+      |      "dateTimeIssued" : "2022-06-20T14:52:13Z[UTC]",
+      |      "status" : "CANCELLED",
+      |      "errors" : []
+      |  }
+      |}""".stripMargin)
 }

@@ -64,27 +64,24 @@ class TransactionalOps @Inject()(
     val (actionWithAllNotificationSummaries, notificationSummaries) =
       updateActionWithNotificationSummaries(action, submission, notifications, seed)
 
-    if (action.requestType == CancellationRequest) updateCancellationRequest(
-      session,
-      submission.uuid,
-      notifications.head.details.mrn,
-      submission.actions.updated(index, actionWithAllNotificationSummaries)
-    )
-    else updateSubmissionRequest(
-      session,
-      submission.uuid,
-      notifications.head.details.mrn,
-      notificationSummaries.head,
-      submission.actions.updated(index, actionWithAllNotificationSummaries)
-    )
+    if (action.requestType == CancellationRequest)
+      updateCancellationRequest(
+        session,
+        submission.uuid,
+        notifications.head.details.mrn,
+        submission.actions.updated(index, actionWithAllNotificationSummaries)
+      )
+    else
+      updateSubmissionRequest(
+        session,
+        submission.uuid,
+        notifications.head.details.mrn,
+        notificationSummaries.head,
+        submission.actions.updated(index, actionWithAllNotificationSummaries)
+      )
   }
 
-  private def updateCancellationRequest(
-    session: ClientSession,
-    uuid: String,
-    mrn: String,
-    actions: Seq[Action]
-  ): Future[Option[Submission]] = {
+  private def updateCancellationRequest(session: ClientSession, uuid: String, mrn: String, actions: Seq[Action]): Future[Option[Submission]] = {
     val filter = Json.obj("uuid" -> uuid)
     val update = Json.obj("$set" -> Json.obj("mrn" -> mrn, "actions" -> actions))
     submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
