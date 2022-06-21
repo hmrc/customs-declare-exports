@@ -122,8 +122,9 @@ class LockRepositorySpec extends UnitSpec {
     }
 
     "return LockEntry built from Document returned by MongoCollection" in {
-      val elementInDb =
-        new Document(mapAsJavaMap(Map(KeyField -> lockKey, StatusField -> "statusValue", OwnerField -> "ownerValue", ExpiresAtField -> date)))
+      val elementInDb = new Document(
+        mapAsJavaMap(Map(KeyField -> lockKey, StatusField -> "statusValue", OwnerField -> "ownerValue", ExpiresAtField -> date.toString))
+      )
       when(findIterable.iterator()).thenReturn(buildMongoCursor(Seq(elementInDb)))
 
       val result = repo.findByKey(lockKey)
@@ -187,7 +188,7 @@ class LockRepositorySpec extends UnitSpec {
       actualLockEntry.getString(KeyField).getValue mustBe lockEntry.key
       actualLockEntry.getString(StatusField).getValue mustBe lockEntry.status
       actualLockEntry.getString(OwnerField).getValue mustBe lockEntry.owner
-      actualLockEntry.getDateTime(ExpiresAtField) mustBe a[BsonDateTime]
+      Instant.parse(actualLockEntry.getString(ExpiresAtField).getValue) mustBe lockEntry.expiresAt
     }
 
     "provide MongoCollection with correct UpdateOptions" in {
@@ -289,7 +290,7 @@ class LockRepositorySpec extends UnitSpec {
       actualLockEntry.getString(KeyField).getValue mustBe lockEntry.key
       actualLockEntry.getString(StatusField).getValue mustBe lockEntry.status
       actualLockEntry.getString(OwnerField).getValue mustBe lockEntry.owner
-      actualLockEntry.getDateTime(ExpiresAtField) mustBe a[BsonDateTime]
+      Instant.parse(actualLockEntry.getString(ExpiresAtField).getValue) mustBe lockEntry.expiresAt
     }
 
     "provide MongoCollection with correct UpdateOptions" in {
