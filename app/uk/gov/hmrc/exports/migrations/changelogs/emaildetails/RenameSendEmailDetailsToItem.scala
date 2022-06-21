@@ -38,8 +38,9 @@ class RenameSendEmailDetailsToItem extends MigrationDefinition with Logging {
   override def migrationFunction(db: MongoDatabase): Unit = {
     logger.info(s"Applying '${migrationInformation.id}' db migration...")
 
-    val result =
-      db.getCollection(collectionName).updateMany(exists("sendEmailDetails"), rename("sendEmailDetails", "item"), new UpdateOptions().upsert(false))
+    val collection = db.getCollection(collectionName)
+
+    val result = collection.updateMany(exists("sendEmailDetails"), rename("sendEmailDetails", "item"), new UpdateOptions().upsert(false))
 
     logger.info(s"Updated ${result.getModifiedCount} documents")
     logger.info(s"Applying '${migrationInformation.id}' db migration... Done.")

@@ -22,27 +22,27 @@ import org.bson.Document
 import org.bson.types.ObjectId
 import org.mongodb.scala.model.{IndexOptions, Indexes}
 import uk.gov.hmrc.exports.base.IntegrationTestMigrationToolSpec
-import uk.gov.hmrc.exports.migrations.changelogs.notification.SplitTheNotificationsCollectionSpec._
+import uk.gov.hmrc.exports.migrations.changelogs.notification.SplitTheNotificationsCollectionISpec._
 
 import scala.collection.JavaConverters.iterableAsScalaIterableConverter
 
-class SplitTheNotificationsCollectionSpec extends IntegrationTestMigrationToolSpec {
+class SplitTheNotificationsCollectionISpec extends IntegrationTestMigrationToolSpec {
 
-  private val changeLog = new SplitTheNotificationsCollection()
+  override val collectionUnderTest = "notifications"
+  override val changeLog = new SplitTheNotificationsCollection()
 
-  def getNotificationsRepo: MongoCollection[Document] = getCollection("notifications")
   def getUnparsedNotificationsRepo: MongoCollection[Document] = getCollection("unparsedNotifications")
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    removeAll(getNotificationsRepo)
+    removeAll(getCollection(collectionUnderTest))
     removeAll(getUnparsedNotificationsRepo)
   }
 
-  "SplitNotificationsCollection migration definition" should {
+  "SplitNotificationsCollection" should {
 
     "drop 'detailsDocMissingIdx' index" in {
-      val collection = getNotificationsRepo
+      val collection = getCollection(collectionUnderTest)
       collection.createIndex(Indexes.ascending("details"), IndexOptions().name("detailsDocMissingIdx"))
 
       changeLog.migrationFunction(database)
@@ -53,7 +53,7 @@ class SplitTheNotificationsCollectionSpec extends IntegrationTestMigrationToolSp
     "not make any changes" when {
 
       "there is single ParsedNotification and corresponding UnparsedNotification" in {
-        val notificationsRepo = getNotificationsRepo
+        val notificationsRepo = getCollection(collectionUnderTest)
         val unparsedNotificationsRepo = getUnparsedNotificationsRepo
         notificationsRepo.insertOne(Document.parse(TestData_1.parsedNotificationAfterChanges))
         unparsedNotificationsRepo.insertOne(Document.parse(TestData_1.unparsedNotification))
@@ -85,7 +85,7 @@ class SplitTheNotificationsCollectionSpec extends IntegrationTestMigrationToolSp
         val allUnparsedNotifications = Seq(unparsedNotification_1, unparsedNotification_2, unparsedNotification_3)
         val allNotificationsBeforeChanges = allParsedNotifications zip allUnparsedNotifications
 
-        val notificationsRepo = getNotificationsRepo
+        val notificationsRepo = getCollection(collectionUnderTest)
         val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
         allNotificationsBeforeChanges.foreach {
@@ -126,7 +126,7 @@ class SplitTheNotificationsCollectionSpec extends IntegrationTestMigrationToolSp
         val parsedNotification_1 = Document.parse(TestData_1.parsedNotificationBeforeChanges)
         val allParsedNotificationsBeforeChanges = Seq(parsedNotification_1)
 
-        val notificationsRepo = getNotificationsRepo
+        val notificationsRepo = getCollection(collectionUnderTest)
         val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
         notificationsRepo.insertOne(parsedNotification_1)
@@ -168,7 +168,7 @@ class SplitTheNotificationsCollectionSpec extends IntegrationTestMigrationToolSp
         val parsedNotification_3 = Document.parse(testData.parsedNotificationBeforeChanges("5fc0d62750c11c0797a24573"))
         val allParsedNotificationsBeforeChanges = Seq(parsedNotification_1, parsedNotification_2, parsedNotification_3)
 
-        val notificationsRepo = getNotificationsRepo
+        val notificationsRepo = getCollection(collectionUnderTest)
         val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
         allParsedNotificationsBeforeChanges.foreach(notificationsRepo.insertOne(_))
@@ -214,7 +214,7 @@ class SplitTheNotificationsCollectionSpec extends IntegrationTestMigrationToolSp
           parsedNotification_3.put("actionId", "b1c09f1b-7c94-4e90-b754-7c5c71c44e11")
           val allParsedNotificationsBeforeChanges = Seq(parsedNotification_1, parsedNotification_2, parsedNotification_3)
 
-          val notificationsRepo = getNotificationsRepo
+          val notificationsRepo = getCollection(collectionUnderTest)
           val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
           allParsedNotificationsBeforeChanges.foreach(notificationsRepo.insertOne(_))
@@ -255,7 +255,7 @@ class SplitTheNotificationsCollectionSpec extends IntegrationTestMigrationToolSp
           val parsedNotification_3 = Document.parse(TestData_3.parsedNotificationBeforeChanges)
           val allParsedNotificationsBeforeChanges = Seq(parsedNotification_1, parsedNotification_2, parsedNotification_3)
 
-          val notificationsRepo = getNotificationsRepo
+          val notificationsRepo = getCollection(collectionUnderTest)
           val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
           allParsedNotificationsBeforeChanges.foreach(notificationsRepo.insertOne(_))
@@ -298,7 +298,7 @@ class SplitTheNotificationsCollectionSpec extends IntegrationTestMigrationToolSp
         val allParsedNotificationsBeforeChanges = Seq(parsedNotification_1, parsedNotification_2, parsedNotification_3)
         val unparsedNotification_1 = Document.parse(TestData_1.unparsedNotification)
 
-        val notificationsRepo = getNotificationsRepo
+        val notificationsRepo = getCollection(collectionUnderTest)
         val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
         allParsedNotificationsBeforeChanges.foreach(notificationsRepo.insertOne(_))
@@ -341,7 +341,7 @@ class SplitTheNotificationsCollectionSpec extends IntegrationTestMigrationToolSp
         val unparsableNotification = Document.parse(TestData_1.parsedNotificationBeforeChanges)
         unparsableNotification.remove("details")
 
-        val notificationsRepo = getNotificationsRepo
+        val notificationsRepo = getCollection(collectionUnderTest)
         val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
         notificationsRepo.insertOne(unparsableNotification)
@@ -367,7 +367,7 @@ class SplitTheNotificationsCollectionSpec extends IntegrationTestMigrationToolSp
         unparsableNotification.remove("details")
         val unparsedNotification = Document.parse(TestData_1.unparsedNotification)
 
-        val notificationsRepo = getNotificationsRepo
+        val notificationsRepo = getCollection(collectionUnderTest)
         val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
         notificationsRepo.insertOne(unparsableNotification)
@@ -401,7 +401,7 @@ class SplitTheNotificationsCollectionSpec extends IntegrationTestMigrationToolSp
   }
 }
 
-object SplitTheNotificationsCollectionSpec {
+object SplitTheNotificationsCollectionISpec {
 
   trait TestData {
     val parsedNotificationBeforeChanges: String
@@ -410,7 +410,9 @@ object SplitTheNotificationsCollectionSpec {
   }
 
   object TestData_1 extends TestData {
+
     override val parsedNotificationBeforeChanges: String = parsedNotificationBeforeChanges("5fc0d62750c11c0797a2456f")
+
     def parsedNotificationBeforeChanges(_id: String): String =
       s"""{
         |   "_id" : {"$$oid":"${_id}"},

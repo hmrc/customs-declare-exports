@@ -16,62 +16,33 @@
 
 package uk.gov.hmrc.exports.migrations.changelogs.cache
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.mongodb.client.MongoCollection
-import org.bson.Document
 import uk.gov.hmrc.exports.base.IntegrationTestMigrationToolSpec
-import uk.gov.hmrc.exports.migrations.changelogs.cache.MakeTransportPaymentMethodNotOptionalSpec._
+import uk.gov.hmrc.exports.migrations.changelogs.cache.MakeTransportPaymentMethodNotOptionalISpec._
 
-class MakeTransportPaymentMethodNotOptionalSpec extends IntegrationTestMigrationToolSpec {
+class MakeTransportPaymentMethodNotOptionalISpec extends IntegrationTestMigrationToolSpec {
 
-  private val changeLog = new MakeTransportPaymentMethodNotOptional()
+  override val collectionUnderTest = "declarations"
+  override val changeLog = new MakeTransportPaymentMethodNotOptional()
 
-  def getDeclarationsCollection: MongoCollection[Document] = getCollection("declarations")
+  "MakeTransportPayemntFieldNotOptional" should {
 
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    removeAll(getDeclarationsCollection)
-  }
-
-  "MakeTransportPayemntFieldNotOptional migration definition" should {
-
-    "correctly migrate documents removing 'transportPayment' field where 'paymentMethod' is not defined" in {
-      runTest(testDataBeforeRenaming, testDataAfterRenaming)
+    "correctly migrate declarations removing 'transportPayment' field where 'paymentMethod' is not defined" in {
+      runTest(declarationBeforeMigration, declarationAfterMigration)
     }
 
-    "not change documents already migrated" in {
-      runTest(testDataAfterRenaming, testDataAfterRenaming)
+    "not change declarations already migrated" in {
+      runTest(declarationAfterMigration, declarationAfterMigration)
     }
 
-    "not change documents that have a 'paymentMethod' value" in {
-      runTest(testDataOutOfScope, testDataOutOfScope)
+    "not change declarations that have a 'paymentMethod' value" in {
+      runTest(declarationOutOfScope, declarationOutOfScope)
     }
-  }
-
-  private def runTest(inputDataJson: String, expectedDataJson: String): Unit = {
-    val collection = getDeclarationsCollection
-    collection.insertOne(Document.parse(inputDataJson))
-
-    changeLog.migrationFunction(database)
-
-    val result: Document = collection.find.first
-    val expectedResult: String = expectedDataJson
-
-    compareJson(result.toJson, expectedResult)
-  }
-
-  private def compareJson(actual: String, expected: String): Unit = {
-    val mapper = new ObjectMapper
-
-    val jsonActual = mapper.readTree(actual)
-    val jsonExpected = mapper.readTree(expected)
-
-    jsonActual mustBe jsonExpected
   }
 }
 
-object MakeTransportPaymentMethodNotOptionalSpec {
-  val testDataBeforeRenaming: String =
+object MakeTransportPaymentMethodNotOptionalISpec {
+
+  val declarationBeforeMigration: String =
     """{
       |  "_id": "60ded91dd3b4338579ff253c",
       |  "id": "1fb39320-8d0d-4521-ba52-ffc835026e0e",
@@ -93,7 +64,7 @@ object MakeTransportPaymentMethodNotOptionalSpec {
       |  }
       |}""".stripMargin
 
-  val testDataAfterRenaming: String =
+  val declarationAfterMigration: String =
     """{
       |  "_id": "60ded91dd3b4338579ff253c",
       |  "id": "1fb39320-8d0d-4521-ba52-ffc835026e0e",
@@ -114,7 +85,7 @@ object MakeTransportPaymentMethodNotOptionalSpec {
       |  }
       |}""".stripMargin
 
-  val testDataOutOfScope: String =
+  val declarationOutOfScope: String =
     """{
       |  "_id": "60ddecd93b6074a90796af8a",
       |  "id": "68880c57-6986-4e21-9576-cdc477d60a43",

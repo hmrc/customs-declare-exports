@@ -20,21 +20,21 @@ In order to run the application you need to have SBT installed. Then, it is enou
 
 `sbt run`
 
-### Testing the application
-This repository contains unit and integration tests for the service. In order to run them, simply execute:
-
-`sbt test` - for unit tests
-
-`sbt it:test` - for integration tests
-
-Note that for the integration tests to work locally you need to run at least one time the following commands, as the integrations tests involve operations that use MongoDB transactions, which require a replica-set MongoDB instance to work successfully.
-Once the replica-set is installed locally, you can start and stop it with the usual `docker start mongo44-replica` and `docker stop mongo44-replica` commands.  
+However, note that the first time before starting the service or running the tests, you need to execute the following commands, as the service involves operations that use MongoDB transactions, which require a replica-set MongoDB instance to work successfully.
+Once the replica-set is installed locally, you can then start and stop it with the usual `docker start mongo44-replica` and `docker stop mongo44-replica` commands.  
 
 `cd customs-declare-exports`
 
 `docker build ./ -t mongodb:4.4.14-replica`
 
 `docker run --name mongo44-replica -p 27017:27017 -d mongodb:4.4.14-replica`     # Note that this command already starts the replica-set. You do not need to also run `docker start ...`. 
+
+### Testing the application
+This repository contains unit and integration tests for the service. In order to run them, simply execute:
+
+`sbt test` - for unit tests
+
+`sbt it:test` - for integration tests
 
 ## Test Only endpoints
 To enable these endpoint you must specify at startup the test-only conf file like this:

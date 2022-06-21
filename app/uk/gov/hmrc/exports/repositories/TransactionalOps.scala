@@ -21,7 +21,8 @@ import org.mongodb.scala.bson.BsonDocument
 import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, NotificationSummary, Submission}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, NotificationSummary, Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.transaction.{TransactionConfiguration, Transactions}
 
@@ -41,7 +42,7 @@ class TransactionalOps @Inject()(
   def updateSubmissionAndNotifications(actionId: String, notifications: Seq[ParsedNotification], submission: Submission): Future[Option[Submission]] =
     withSessionAndTransaction[Option[Submission]] { session =>
       for {
-        maybeSubmission <- addSummariesToSubmissionAndUpdate(session, actionId, notifications, submission)
+        maybeSubmission <- addNotificationSummariesToSubmissionAndUpdate(session, actionId, notifications, submission)
         _ <- notificationRepository.bulkInsert(session, notifications)
       } yield maybeSubmission
     }.recover {
@@ -50,7 +51,7 @@ class TransactionalOps @Inject()(
         None
     }
 
-  private def addSummariesToSubmissionAndUpdate(
+  private def addNotificationSummariesToSubmissionAndUpdate(
     session: ClientSession,
     actionId: String,
     notifications: Seq[ParsedNotification],
@@ -58,29 +59,35 @@ class TransactionalOps @Inject()(
   ): Future[Option[Submission]] = {
     val index = submission.actions.indexWhere(_.id == actionId)
     val action = submission.actions(index)
-
     val seed = action.notifications.fold(Seq.empty[NotificationSummary])(identity)
 
-    def prependNotificationSummary(accumulator: Seq[NotificationSummary], notification: ParsedNotification): Seq[NotificationSummary] =
-      NotificationSummary(notification, submission.actions, accumulator) +: accumulator
+    val (actionWithAllNotificationSummaries, notificationSummaries) =
+      updateActionWithNotificationSummaries(action, submission, notifications, seed)
 
-    // Parsed notifications need to be sorted (asc), by dateTimeIssued, due to the (ACCEPTED => GOODS_ARRIVED_MESSAGE) condition
-    val notificationSummaries = notifications.sorted.foldLeft(seed)(prependNotificationSummary)
-
-    // The resulting notificationSummaries are sorted again, this time (dsc), since it's not sure
-    // if they are more recent or not of the (maybe) existing notificationSummaries of the action.
-    val actionWithAllNotificationSummaries = action.copy(notifications = Some(notificationSummaries.sorted.reverse))
-
-    updateSubmission(
-      session,
-      submission.uuid,
-      notifications.head.details.mrn,
-      notificationSummaries.head,
-      submission.actions.updated(index, actionWithAllNotificationSummaries)
-    )
+    if (action.requestType == SubmissionRequest)
+      updateSubmissionRequest(
+        session,
+        submission.uuid,
+        notifications.head.details.mrn,
+        notificationSummaries.head,
+        submission.actions.updated(index, actionWithAllNotificationSummaries)
+      )
+    else
+      updateCancellationRequest(
+        session,
+        submission.uuid,
+        notifications.head.details.mrn,
+        submission.actions.updated(index, actionWithAllNotificationSummaries)
+      )
   }
 
-  private def updateSubmission(
+  private def updateCancellationRequest(session: ClientSession, uuid: String, mrn: String, actions: Seq[Action]): Future[Option[Submission]] = {
+    val filter = Json.obj("uuid" -> uuid)
+    val update = Json.obj("$set" -> Json.obj("mrn" -> mrn, "actions" -> actions))
+    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
+  }
+
+  private def updateSubmissionRequest(
     session: ClientSession,
     uuid: String,
     mrn: String,
@@ -97,5 +104,27 @@ class TransactionalOps @Inject()(
       )
     )
     submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
+  }
+}
+
+object ActionWithNotificationSummariesHelper {
+
+  def updateActionWithNotificationSummaries(
+    action: Action,
+    submission: Submission,
+    notifications: Seq[ParsedNotification],
+    seed: Seq[NotificationSummary]
+  ): (Action, Seq[NotificationSummary]) = {
+
+    def prependNotificationSummary(accumulator: Seq[NotificationSummary], notification: ParsedNotification): Seq[NotificationSummary] =
+      NotificationSummary(notification, submission.actions, accumulator) +: accumulator
+
+    // Parsed notifications need to be sorted (asc), by dateTimeIssued, due to the (ACCEPTED => GOODS_ARRIVED_MESSAGE) condition
+    val notificationSummaries = notifications.sorted.foldLeft(seed)(prependNotificationSummary)
+
+    // The resulting notificationSummaries are sorted again, this time (dsc), since it's not sure
+    // if they are more recent or not of the (maybe) existing notificationSummaries of the action.
+    val actionWithAllNotificationSummaries = action.copy(notifications = Some(notificationSummaries.sorted.reverse))
+    (actionWithAllNotificationSummaries, notificationSummaries)
   }
 }

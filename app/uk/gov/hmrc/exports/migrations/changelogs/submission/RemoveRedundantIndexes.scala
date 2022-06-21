@@ -48,8 +48,10 @@ class RemoveRedundantIndexes extends MigrationDefinition with Logging {
     val queryBatchSize = 10
     val updateBatchSize = 100
 
+    val collection = db.getCollection(sendEmailWorkItemsCollectionName)
+
     asScalaIterator(
-      db.getCollection(sendEmailWorkItemsCollectionName)
+      collection
         .find(and(exists(item), not(exists(s"${item}.${ACTION_ID}"))))
         .batchSize(queryBatchSize)
         .iterator
@@ -69,7 +71,7 @@ class RemoveRedundantIndexes extends MigrationDefinition with Logging {
       case (requests, idx) =>
         logger.info(s"Updating batch no. $idx...")
 
-        db.getCollection(sendEmailWorkItemsCollectionName).bulkWrite(seqAsJavaList(requests))
+        collection.bulkWrite(seqAsJavaList(requests))
         logger.info(s"Updated batch no. $idx")
     }
 

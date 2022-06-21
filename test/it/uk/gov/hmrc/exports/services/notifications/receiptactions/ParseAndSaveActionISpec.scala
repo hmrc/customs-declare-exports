@@ -16,15 +16,20 @@
 
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 
+import play.api.libs.json.Json
 import testdata.ExportsTestData.actionId_2
 import testdata.SubmissionTestData.{action_2, notificationSummary_1, notificationSummary_2, submission}
-import testdata.notifications.NotificationTestData.{notification_2, notification_3}
+import testdata.notifications.NotificationTestData.{errors, notification_2, notification_3}
 import uk.gov.hmrc.exports.base.IntegrationTestMongoSpec
+import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.UNKNOWN
-import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
+import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionStatus}
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, TransactionalOps}
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
+import uk.gov.hmrc.exports.services.notifications.receiptactions.ParseAndSaveActionISpec._
 
+import java.time.ZonedDateTime
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ParseAndSaveActionISpec extends IntegrationTestMongoSpec {
@@ -119,7 +124,7 @@ class ParseAndSaveActionISpec extends IntegrationTestMongoSpec {
     "provided with multiple ParsedNotifications with the same actionId, and" when {
       "the Submission's action DOES NOT CONTAIN yet any NotificationSummary" should {
         "return the Submission with the action including the new NotificationSummaries in desc order" in {
-          submissionRepository.create(submission.copy(actions = List(action_2))).futureValue
+          submissionRepository.insertOne(submission.copy(actions = List(action_2))).futureValue
 
           val notification3 = notification_3.copy(actionId = actionId_2)
           val submissions = parseAndSaveAction.save(List(notification2, notification3)).futureValue
@@ -166,5 +171,113 @@ class ParseAndSaveActionISpec extends IntegrationTestMongoSpec {
         }
       }
     }
+
+    "provided with multiple ParsedNotifications with different actionIds (for SubmissionRequest and CancellationRequest), and" when {
+      "the Submission's actions DO NOT CONTAIN yet any NotificationSummary" should {
+        "return the Submission with the actions including the new NotificationSummaries in desc order, and" should {
+          "the enhanced status be updated with the SubmissionRequest action's data only" in {
+            val submission = Json.parse(submissionWithoutNotificationSummaries).as[Submission]
+            submissionRepository.insertOne(submission).futureValue
+
+            parseAndSaveAction.save(List(submissionNotification)).futureValue
+            val submissions = parseAndSaveAction.save(List(cancellationNotification)).futureValue
+            submissions.size mustBe 1
+
+            val actualSubmission = Json.toJson(submissions.head)
+            actualSubmission mustBe Json.parse(submissionWithNotificationSummaries)
+          }
+        }
+      }
+    }
   }
+}
+
+object ParseAndSaveActionISpec {
+
+  val mrn = "22GB6RSL62FN1IOAA8"
+
+  val cancellationActionId = "7c7faf96-a65e-408d-a8f7-7cb181f696b6"
+  val cancellationDateTime = "2022-06-20T14:52:13Z[UTC]"
+
+  val cancellationNotification = ParsedNotification(
+    unparsedNotificationId = UUID.randomUUID,
+    actionId = cancellationActionId,
+    details = NotificationDetails(
+      mrn = mrn,
+      dateTimeIssued = ZonedDateTime.parse(cancellationDateTime),
+      status = SubmissionStatus.CANCELLED,
+      errors = List.empty
+    )
+  )
+
+  val submissionActionId = "914083cb-6647-4476-aedb-6edf45616b3d"
+  val submissionDateTime = "2022-06-20T14:48:17Z[UTC]"
+
+  val submissionNotification = ParsedNotification(
+    unparsedNotificationId = UUID.randomUUID,
+    actionId = submissionActionId,
+    details =
+      NotificationDetails(mrn = mrn, dateTimeIssued = ZonedDateTime.parse(submissionDateTime), status = SubmissionStatus.REJECTED, errors = errors)
+  )
+
+  val submissionWithoutNotificationSummaries =
+    s"""{
+      |  "_id": "62b088b16a76c36b550804ab",
+      |  "uuid": "9f324b20-71bf-4c70-ae8d-aa53f81a99ff",
+      |  "eori": "GB239355053000",
+      |  "lrn": "QSLRN2341102",
+      |  "ducr": "8GB123456261385-101SHIP3",
+      |  "actions": [
+      |    {
+      |      "id": "914083cb-6647-4476-aedb-6edf45616b3d",
+      |      "requestType": "SubmissionRequest",
+      |      "requestTimestamp": "2022-06-20T14:48:17.545Z[UTC]"
+      |    },
+      |    {
+      |      "id": "7c7faf96-a65e-408d-a8f7-7cb181f696b6",
+      |      "requestType": "CancellationRequest",
+      |      "requestTimestamp": "2022-06-20T14:52:13.06Z[UTC]"
+      |    }
+      |  ],
+      |  "mrn": "${mrn}"
+      |}
+      |""".stripMargin
+
+  val submissionWithNotificationSummaries =
+    s"""{
+      |  "uuid": "9f324b20-71bf-4c70-ae8d-aa53f81a99ff",
+      |  "eori": "GB239355053000",
+      |  "lrn": "QSLRN2341102",
+      |  "mrn": "${mrn}",
+      |  "ducr": "8GB123456261385-101SHIP3",
+      |  "latestEnhancedStatus": "ERRORS",
+      |  "enhancedStatusLastUpdated": "${submissionDateTime}",
+      |  "actions": [
+      |    {
+      |      "id": "${submissionActionId}",
+      |      "requestType": "SubmissionRequest",
+      |      "requestTimestamp": "2022-06-20T14:48:17.545Z[UTC]",
+      |      "notifications": [
+      |        {
+      |          "notificationId": "${submissionNotification.unparsedNotificationId}",
+      |          "dateTimeIssued": "${submissionDateTime}",
+      |          "enhancedStatus": "ERRORS"
+      |        }
+      |      ]
+      |    },
+      |    {
+      |      "id": "${cancellationActionId}",
+      |      "requestType": "CancellationRequest",
+      |      "requestTimestamp": "2022-06-20T14:52:13.06Z[UTC]",
+      |      "notifications": [
+      |        {
+      |          "notificationId": "${cancellationNotification.unparsedNotificationId}",
+      |          "dateTimeIssued": "${cancellationDateTime}",
+      |          "enhancedStatus": "EXPIRED_NO_DEPARTURE"
+      |        }
+      |      ]
+      |    }
+      |  ]
+      |}
+      |""".stripMargin
 }
