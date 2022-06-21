@@ -31,7 +31,7 @@ object LockEntry {
     document.getString(LockEntry.KeyField),
     document.getString(LockEntry.StatusField),
     document.getString(LockEntry.OwnerField),
-    document.get(LockEntry.ExpiresAtField, classOf[Instant])
+    Instant.parse(document.getString(LockEntry.ExpiresAtField))
   )
 }
 
@@ -42,7 +42,7 @@ case class LockEntry(key: String, status: String, owner: String, expiresAt: Inst
       .append(KeyField, this.key)
       .append(StatusField, this.status)
       .append(OwnerField, this.owner)
-      .append(ExpiresAtField, this.expiresAt)
+      .append(ExpiresAtField, this.expiresAt.toString)
 
   private[migrations] def isOwner(owner: String): Boolean = this.owner == owner
 }

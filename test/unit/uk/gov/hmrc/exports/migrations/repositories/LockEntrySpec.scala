@@ -28,7 +28,7 @@ class LockEntrySpec extends UnitSpec {
     "convert to correct Document" in {
       val date = Instant.now
       val expectedOutput =
-        new Document(mapAsJavaMap(Map("key" -> "keyValue", "status" -> "statusValue", "owner" -> "ownerValue", "expiresAt" -> date)))
+        new Document(mapAsJavaMap(Map("key" -> "keyValue", "status" -> "statusValue", "owner" -> "ownerValue", "expiresAt" -> date.toString)))
 
       val lockEntry = LockEntry(key = "keyValue", status = "statusValue", owner = "ownerValue", expiresAt = date)
       lockEntry.buildFullDBObject mustBe expectedOutput
