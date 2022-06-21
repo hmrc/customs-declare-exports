@@ -21,7 +21,7 @@ import org.mongodb.scala.bson.BsonDocument
 import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, CancellationRequest, NotificationSummary, Submission}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, NotificationSummary, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.transaction.{TransactionConfiguration, Transactions}
@@ -64,19 +64,19 @@ class TransactionalOps @Inject()(
     val (actionWithAllNotificationSummaries, notificationSummaries) =
       updateActionWithNotificationSummaries(action, submission, notifications, seed)
 
-    if (action.requestType == CancellationRequest)
-      updateCancellationRequest(
-        session,
-        submission.uuid,
-        notifications.head.details.mrn,
-        submission.actions.updated(index, actionWithAllNotificationSummaries)
-      )
-    else
+    if (action.requestType == SubmissionRequest)
       updateSubmissionRequest(
         session,
         submission.uuid,
         notifications.head.details.mrn,
         notificationSummaries.head,
+        submission.actions.updated(index, actionWithAllNotificationSummaries)
+      )
+    else
+      updateCancellationRequest(
+        session,
+        submission.uuid,
+        notifications.head.details.mrn,
         submission.actions.updated(index, actionWithAllNotificationSummaries)
       )
   }
