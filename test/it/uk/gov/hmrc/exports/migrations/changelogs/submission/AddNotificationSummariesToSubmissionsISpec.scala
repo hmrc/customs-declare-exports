@@ -38,17 +38,12 @@ class AddNotificationSummariesToSubmissionsISpec extends IntegrationTestMigratio
     "update a Submission document" when {
       "the document has a 'mrn' field and" when {
         "not have yet a 'latestEnhancedStatus' field and a 'enhancedStatusLastUpdated' field and" when {
+
           "has a 'SubmissionRequest' action which does not have yet a 'notifications' field" in {
             prepareNotificationCollection(parsedNotifications :+ parsedNotification) mustBe true
             runTest(submission1BeforeMigration, submission1AfterMigration)
           }
-        }
-      }
-    }
 
-    "update a Submission document" when {
-      "the document has a 'mrn' field and" when {
-        "not have yet a 'latestEnhancedStatus' field and a 'enhancedStatusLastUpdated' field and" when {
           "the document has a 'CancellationRequest' action and" when {
             "has a 'SubmissionRequest' action which does not have yet a 'notifications' field" in {
               prepareNotificationCollection(parsedNotifications) mustBe true
