@@ -23,7 +23,6 @@ import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.{FindOneAndReplaceOptions, FindOneAndUpdateOptions, InsertOneModel}
 import org.mongodb.scala.{ClientSession, Document, MongoCollection, MongoWriteException}
-import play.api.Logging
 import play.api.libs.json.JsValue
 import play.libs.Json
 
@@ -31,7 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 // scalastyle:off
-trait RepositoryOps[T] extends Logging {
+trait RepositoryOps[T] {
 
   implicit def classTag: ClassTag[T]
   implicit val executionContext: ExecutionContext

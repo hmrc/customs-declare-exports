@@ -94,6 +94,8 @@ class AppConfig @Inject()(val configuration: Configuration, val environment: Env
   lazy val sendEmailPath: String = configuration.get[String]("microservice.services.hmrc-email.send-email-path")
 
   lazy val replaceIndexesOfDeclarationRepository: Boolean = configuration.get[Boolean]("declarations.repository.replace.indexes")
+
+  lazy val useTransactionalDBOps: Boolean = configuration.get[Boolean]("mongodb.transactional.operations")
 }
 
 object AppConfig {
