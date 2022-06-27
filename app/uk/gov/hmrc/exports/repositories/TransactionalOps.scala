@@ -20,6 +20,7 @@ import org.mongodb.scala.ClientSession
 import org.mongodb.scala.bson.BsonDocument
 import play.api.Logging
 import play.api.libs.json.Json
+import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, NotificationSummary, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
@@ -33,23 +34,33 @@ import scala.concurrent.{ExecutionContext, Future}
 class TransactionalOps @Inject()(
   val mongoComponent: MongoComponent,
   submissionRepository: SubmissionRepository,
-  notificationRepository: ParsedNotificationRepository
+  notificationRepository: ParsedNotificationRepository,
+  appConfig: AppConfig
 )(implicit ec: ExecutionContext)
     extends Transactions with Logging {
 
   private implicit val tc = TransactionConfiguration.strict
 
+  private lazy val nonTransactionalSession = mongoComponent.client.startSession().toFuture
+
   def updateSubmissionAndNotifications(actionId: String, notifications: Seq[ParsedNotification], submission: Submission): Future[Option[Submission]] =
-    withSessionAndTransaction[Option[Submission]] { session =>
-      for {
-        maybeSubmission <- addNotificationSummariesToSubmissionAndUpdate(session, actionId, notifications, submission)
-        _ <- notificationRepository.bulkInsert(session, notifications)
-      } yield maybeSubmission
-    }.recover {
-      case e: Exception =>
-        logger.warn(s"There was an error while writing to the DB => ${e.getMessage}", e)
-        None
-    }
+    if (appConfig.useTransactionalDBOps)
+      withSessionAndTransaction[Option[Submission]](startOp(_, actionId, notifications, submission)).recover {
+        case e: Exception =>
+          logger.warn(s"There was an error while writing to the DB => ${e.getMessage}", e)
+          None
+      } else nonTransactionalSession.flatMap(startOp(_, actionId, notifications, submission))
+
+  private def startOp(
+    session: ClientSession,
+    actionId: String,
+    notifications: Seq[ParsedNotification],
+    submission: Submission
+  ): Future[Option[Submission]] =
+    for {
+      maybeSubmission <- addNotificationSummariesToSubmissionAndUpdate(session, actionId, notifications, submission)
+      _ <- notificationRepository.bulkInsert(session, notifications)
+    } yield maybeSubmission
 
   private def addNotificationSummariesToSubmissionAndUpdate(
     session: ClientSession,
