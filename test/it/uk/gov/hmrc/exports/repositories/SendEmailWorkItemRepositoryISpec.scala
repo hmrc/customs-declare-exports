@@ -20,13 +20,13 @@ import com.mongodb.MongoWriteException
 import org.bson.types.ObjectId
 import testdata.ExportsTestData
 import testdata.WorkItemTestData._
-import uk.gov.hmrc.exports.base.IntegrationTestMongoSpec
+import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Failed, InProgress, Succeeded, ToDo}
 
 import java.time.Instant
 
-class SendEmailWorkItemRepositoryISpec extends IntegrationTestMongoSpec {
+class SendEmailWorkItemRepositoryISpec extends IntegrationTestSpec {
 
   private val repository = instanceOf[SendEmailWorkItemRepository]
 

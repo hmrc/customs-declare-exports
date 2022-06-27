@@ -17,22 +17,17 @@
 package uk.gov.hmrc.exports.flows
 
 import play.api.test.Helpers._
-import play.api.test.{FakeRequest, Helpers}
-import testdata.ExportsTestData
+import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.{AuthTestSupport, IntegrationTestSpec}
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.CustomsDataStoreConnector
 import uk.gov.hmrc.exports.controllers.routes
-import uk.gov.hmrc.http.HeaderNames
 
 class VerifiedEmailByEoriFlowSpec extends IntegrationTestSpec with AuthTestSupport {
 
-  implicit val appConfig: AppConfig = inject[AppConfig]
-  val customsDataStoreUrl = CustomsDataStoreConnector.verifiedEmailPath(ExportsTestData.eori)
-  val fakeRequest = FakeRequest(Helpers.GET, routes.EmailByEoriController.getEmailIfVerified(ExportsTestData.eori).url)
-    .withHeaders(HeaderNames.authorisation -> "Bearer some-token")
-
-  val enrolments = Some("""{"allEnrolments":[{"key":"HMRC-CUS-ORG","identifiers":[{"key":"EORINumber","value":"GB12345"}],"state":"Activated"}]}""")
+  implicit val appConfig: AppConfig = instanceOf[AppConfig]
+  val customsDataStoreUrl = CustomsDataStoreConnector.verifiedEmailPath(eori)
+  val getRequest = getWithAuth(routes.EmailByEoriController.getEmailIfVerified(eori))
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
@@ -46,7 +41,7 @@ class VerifiedEmailByEoriFlowSpec extends IntegrationTestSpec with AuthTestSuppo
       val expectedEmailAddress = """{"address":"some@email.com","deliverable":true}"""
 
       getFromDownstreamService(customsDataStoreUrl, OK, Some(expectedEmailJson))
-      val response = route(app, fakeRequest).get
+      val response = route(app, getRequest).get
       status(response) mustBe OK
       contentAsString(response) mustBe expectedEmailAddress
       verifyGetFromDownStreamService(customsDataStoreUrl)
@@ -76,7 +71,7 @@ class VerifiedEmailByEoriFlowSpec extends IntegrationTestSpec with AuthTestSuppo
       val expectedEmailAddress = """{"address":"some@email.com","deliverable":false}"""
 
       getFromDownstreamService(customsDataStoreUrl, OK, Some(expectedEmailJson))
-      val response = route(app, fakeRequest).get
+      val response = route(app, getRequest).get
       status(response) mustBe OK
       contentAsString(response) mustBe expectedEmailAddress
       verifyGetFromDownStreamService(customsDataStoreUrl)
@@ -84,21 +79,21 @@ class VerifiedEmailByEoriFlowSpec extends IntegrationTestSpec with AuthTestSuppo
 
     "return 404(NOT_FOUND) status if the email address for the given EORI was not provided or was not verified yet" in {
       getFromDownstreamService(customsDataStoreUrl, NOT_FOUND, Some("The email address is not verified"))
-      val response = route(app, fakeRequest).get
+      val response = route(app, getRequest).get
       status(response) mustBe NOT_FOUND
       verifyGetFromDownStreamService(customsDataStoreUrl)
     }
 
     "return 500(INTERNAL_SERVER_ERROR) status for any 4xx returned by the downstream service, let apart 404" in {
       getFromDownstreamService(customsDataStoreUrl, BAD_REQUEST)
-      val response = route(app, fakeRequest).get
+      val response = route(app, getRequest).get
       status(response) mustBe INTERNAL_SERVER_ERROR
       verifyGetFromDownStreamService(customsDataStoreUrl)
     }
 
     "return 500(INTERNAL_SERVER_ERROR) status for any 5xx http error code returned by the downstream service" in {
       getFromDownstreamService(customsDataStoreUrl, BAD_GATEWAY)
-      val response = route(app, fakeRequest).get
+      val response = route(app, getRequest).get
       status(response) mustBe INTERNAL_SERVER_ERROR
       verifyGetFromDownStreamService(customsDataStoreUrl)
     }

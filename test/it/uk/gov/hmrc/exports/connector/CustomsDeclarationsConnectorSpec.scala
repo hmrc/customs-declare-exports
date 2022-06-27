@@ -32,7 +32,7 @@ import uk.gov.hmrc.http.InternalServerException
 
 class CustomsDeclarationsConnectorSpec extends IntegrationTestSpec with ExportsDeclarationBuilder {
 
-  private lazy val connector = inject[CustomsDeclarationsConnector]
+  private lazy val connector = instanceOf[CustomsDeclarationsConnector]
 
   val submissionURL = "/"
 

@@ -27,8 +27,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class CustomsDataStoreConnectorSpec extends IntegrationTestSpec {
 
-  implicit private val appConfig: AppConfig = inject[AppConfig]
-  private val connector = inject[CustomsDataStoreConnector]
+  implicit private val appConfig: AppConfig = instanceOf[AppConfig]
+  private val connector = instanceOf[CustomsDataStoreConnector]
 
   "CustomsDataStoreConnector.getEmailAddress" when {
 

@@ -19,9 +19,9 @@ package uk.gov.hmrc.exports.repositories
 import org.bson.types.ObjectId
 import testdata.ExportsTestData._
 import testdata.notifications.NotificationTestData._
-import uk.gov.hmrc.exports.base.IntegrationTestMongoSpec
+import uk.gov.hmrc.exports.base.IntegrationTestSpec
 
-class ParsedNotificationRepositoryISpec extends IntegrationTestMongoSpec {
+class ParsedNotificationRepositoryISpec extends IntegrationTestSpec {
 
   private val repository = instanceOf[ParsedNotificationRepository]
 
