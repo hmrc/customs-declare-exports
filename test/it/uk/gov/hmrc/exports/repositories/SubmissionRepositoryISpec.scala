@@ -19,10 +19,10 @@ package uk.gov.hmrc.exports.repositories
 import repositories.DuplicateKey
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
-import uk.gov.hmrc.exports.base.IntegrationTestMongoSpec
+import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.models.declaration.submissions._
 
-class SubmissionRepositoryISpec extends IntegrationTestMongoSpec {
+class SubmissionRepositoryISpec extends IntegrationTestSpec {
 
   private val repository = instanceOf[SubmissionRepository]
 

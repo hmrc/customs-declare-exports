@@ -19,14 +19,18 @@ package uk.gov.hmrc.exports.base
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.Injecting
+import play.api.mvc.{AnyContentAsEmpty, Call}
+import play.api.test.{FakeRequest, Helpers}
 import stubs.ExternalServicesConfig.{Host, Port}
 import stubs.MockGenericDownstreamService
-import testdata.ExportsTestData
-import uk.gov.hmrc.exports.util.TestModule
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
+import testdata.ExportsTestData.{authToken, eori}
+import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, TestModule}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames}
 
-trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSuite with Injecting with MockGenericDownstreamService {
+import scala.reflect.ClassTag
+
+trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSuite with ExportsDeclarationBuilder with MockGenericDownstreamService {
+  val databaseName = "test-customs-declare-exports"
 
   override implicit lazy val app: Application =
     GuiceApplicationBuilder(overrides = Seq(TestModule.asGuiceableModule))
@@ -39,14 +43,15 @@ trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSui
           "microservice.services.customs-declarations.host" -> Host,
           "microservice.services.customs-declarations.port" -> Port,
           "microservice.services.customs-declarations.submit-uri" -> "/",
-          "microservice.services.customs-declarations.bearer-token" -> ExportsTestData.authToken,
+          "microservice.services.customs-declarations.bearer-token" -> authToken,
           "microservice.services.customs-declarations.api-version" -> "1.0",
           "microservice.services.customs-declarations-information.host" -> Host,
           "microservice.services.customs-declarations-information.port" -> Port,
           "microservice.services.customs-declarations-information.fetch-mrn-status" -> "/mrn/ID/status",
           "microservice.services.customs-declarations-information.api-version" -> "1.0",
           "microservice.services.hmrc-email.host" -> Host,
-          "microservice.services.hmrc-email.port" -> Port
+          "microservice.services.hmrc-email.port" -> Port,
+          "mongodb.uri" -> s"mongodb://localhost/$databaseName"
         )
       )
       .build()
@@ -67,4 +72,24 @@ trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSui
     stopMockServer
     super.afterAll
   }
+
+  val enrolments = Some(s"""{
+      | "allEnrolments" : [
+      |   {
+      |     "key" : "HMRC-CUS-ORG",
+      |     "identifiers" : [
+      |       {
+      |         "key" : "EORINumber",
+      |         "value" : "$eori"
+      |       }
+      |     ],
+      |     "state" : "Activated"
+      |   }
+      | ]
+      |}""".stripMargin)
+
+  def getWithAuth(call: Call): FakeRequest[AnyContentAsEmpty.type] =
+    FakeRequest(Helpers.GET, call.url).withHeaders(HeaderNames.authorisation -> "Bearer some-token")
+
+  def instanceOf[T](implicit classTag: ClassTag[T]): T = app.injector.instanceOf[T]
 }

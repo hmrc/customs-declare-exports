@@ -35,9 +35,7 @@ class Authenticator @Inject()(override val authConnector: AuthConnector, cc: Con
   def authorisedAction[A](bodyParser: BodyParser[A])(body: AuthorizedSubmissionRequest[A] => Future[Result]): Action[A] =
     Action.async(bodyParser) { implicit request =>
       authorisedWithEori.flatMap {
-        case Right(authorisedRequest) =>
-          logger.info(s"Authorised request for ${authorisedRequest.eori.value}")
-          body(authorisedRequest)
+        case Right(authorisedRequest) => body(authorisedRequest)
 
         case Left(error) =>
           logger.error(s"Problems with Authorisation: ${error.message}")

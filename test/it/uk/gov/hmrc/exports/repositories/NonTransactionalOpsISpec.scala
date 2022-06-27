@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.repositories
 import testdata.ExportsTestData.actionId
 import testdata.SubmissionTestData.{action, notificationSummary_1, notificationSummary_2, submission}
 import testdata.notifications.NotificationTestData.notification
-import uk.gov.hmrc.exports.base.IntegrationTestMongoSpec
+import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{EnhancedStatus, GOODS_ARRIVED_MESSAGE, UNKNOWN}
@@ -28,7 +28,7 @@ import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class NonTransactionalOpsISpec extends IntegrationTestMongoSpec {
+class NonTransactionalOpsISpec extends IntegrationTestSpec {
 
   private val appConfig = mock[AppConfig]
   private val mongoComponent = instanceOf[MongoComponent]

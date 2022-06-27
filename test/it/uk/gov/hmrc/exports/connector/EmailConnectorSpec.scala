@@ -31,8 +31,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class EmailConnectorSpec extends IntegrationTestSpec {
 
-  implicit val appConfig: AppConfig = inject[AppConfig]
-  val connector = inject[EmailConnector]
+  implicit val appConfig: AppConfig = instanceOf[AppConfig]
+  val connector = instanceOf[EmailConnector]
 
   val actualPath = EmailConnector.sendEmailPath
   val sendEmailRequest = SendEmailRequest(List("trader@mycompany.com"), DMSDOC_NOTIFICATION, EmailParameters(Map(MRN -> "18GB1234567890")))

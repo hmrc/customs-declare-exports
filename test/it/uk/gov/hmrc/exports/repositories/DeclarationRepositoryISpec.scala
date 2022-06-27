@@ -17,14 +17,14 @@
 package uk.gov.hmrc.exports.repositories
 
 import play.api.libs.json.Json
-import uk.gov.hmrc.exports.base.IntegrationTestMongoSpec
+import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 
 import java.time.{LocalDate, ZoneOffset}
 import scala.concurrent.Future
 
-class DeclarationRepositoryISpec extends IntegrationTestMongoSpec {
+class DeclarationRepositoryISpec extends IntegrationTestSpec {
 
   private val year = 2019
 

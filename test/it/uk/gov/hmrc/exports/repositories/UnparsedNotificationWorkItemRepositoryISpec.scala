@@ -5,14 +5,14 @@ import org.mongodb.scala.bson.BsonDocument
 import org.scalatest.concurrent.Eventually
 import testdata.ExportsTestData.{actionId, actionId_2}
 import testdata.notifications.NotificationTestData
-import uk.gov.hmrc.exports.base.IntegrationTestMongoSpec
+import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.duration._
 
-class UnparsedNotificationWorkItemRepositoryISpec extends IntegrationTestMongoSpec with Eventually {
+class UnparsedNotificationWorkItemRepositoryISpec extends IntegrationTestSpec with Eventually {
 
   private val repository = instanceOf[UnparsedNotificationWorkItemRepository]
 

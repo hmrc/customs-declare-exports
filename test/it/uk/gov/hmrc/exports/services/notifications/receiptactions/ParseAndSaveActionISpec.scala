@@ -20,7 +20,7 @@ import play.api.libs.json.Json
 import testdata.ExportsTestData.actionId_2
 import testdata.SubmissionTestData.{action_2, notificationSummary_1, notificationSummary_2, submission}
 import testdata.notifications.NotificationTestData.{errors, notification_2, notification_3}
-import uk.gov.hmrc.exports.base.IntegrationTestMongoSpec
+import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.UNKNOWN
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionStatus}
@@ -32,7 +32,7 @@ import java.time.ZonedDateTime
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class ParseAndSaveActionISpec extends IntegrationTestMongoSpec {
+class ParseAndSaveActionISpec extends IntegrationTestSpec {
 
   private val notificationFactory = instanceOf[NotificationFactory]
   private val notificationRepository = instanceOf[ParsedNotificationRepository]

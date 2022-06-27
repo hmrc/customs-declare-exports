@@ -28,7 +28,7 @@ import uk.gov.hmrc.http.InternalServerException
 
 class CustomsDeclarationsInformationConnectorSpec extends IntegrationTestSpec {
 
-  private lazy val connector = inject[CustomsDeclarationsInformationConnector]
+  private lazy val connector = instanceOf[CustomsDeclarationsInformationConnector]
 
   val id = "ID"
   val fetchMrnStatusUrl = "/mrn/" + id + "/status"

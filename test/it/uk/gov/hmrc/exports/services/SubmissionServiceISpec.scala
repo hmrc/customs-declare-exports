@@ -2,7 +2,7 @@ package uk.gov.hmrc.exports.services
 
 import org.mockito.ArgumentMatchers.any
 import play.api.Logging
-import uk.gov.hmrc.exports.base.{IntegrationTestMongoSpec, MockMetrics}
+import uk.gov.hmrc.exports.base.{IntegrationTestSpec, MockMetrics}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
@@ -14,7 +14,7 @@ import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 import scala.concurrent.ExecutionContext.global
 import scala.concurrent.Future
 
-class SubmissionServiceISpec extends IntegrationTestMongoSpec with MockMetrics with Logging {
+class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics with Logging {
 
   private val customsDeclarationsConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
   private val metaDataBuilder: CancellationMetaDataBuilder = mock[CancellationMetaDataBuilder]
