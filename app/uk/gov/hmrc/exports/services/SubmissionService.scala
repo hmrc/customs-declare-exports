@@ -23,6 +23,7 @@ import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.{Monitors, Timers}
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{CUSTOMS_POSITION_DENIED, CUSTOMS_POSITION_GRANTED}
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
@@ -89,7 +90,10 @@ class SubmissionService @Inject()(
     }
 
   private def isSubmissionAlreadyCancelled(submission: Submission): Boolean =
-    submission.actions.exists(_.requestType == CancellationRequest)
+    submission.actions.find(_.requestType == CancellationRequest) match {
+      case Some(action) => action.latestNotificationSummary.fold(false)(_.enhancedStatus == CUSTOMS_POSITION_GRANTED)
+      case _            => false
+    }
 
   private def logProgress(declaration: ExportsDeclaration, message: String): Unit =
     logger.info(s"Declaration [${declaration.id}]: $message")

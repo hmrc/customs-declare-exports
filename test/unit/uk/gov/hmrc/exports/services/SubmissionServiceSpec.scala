@@ -21,6 +21,7 @@ import org.mockito.ArgumentMatchers.any
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.CUSTOMS_POSITION_GRANTED
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
@@ -30,6 +31,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import java.time.{ZoneOffset, ZonedDateTime}
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with MockMetrics {
@@ -58,7 +60,17 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
   "SubmissionService on cancel" should {
     val submission = Submission("id", "eori", "lrn", None, "ducr")
-    val submissionCancelled = Submission("id", "eori", "lrn", None, "ducr", None, None, List(Action("conv-id", CancellationRequest)))
+    val notification = Some(Seq(new NotificationSummary(UUID.randomUUID(), ZonedDateTime.now(), CUSTOMS_POSITION_GRANTED)))
+    val submissionCancelled = Submission(
+      "id",
+      "eori",
+      "lrn",
+      None,
+      "ducr",
+      None,
+      None,
+      List(Action(id = "conv-id", requestType = CancellationRequest, notifications = notification))
+    )
     val cancellation = SubmissionCancellation("ref-id", "mrn", "description", "reason")
 
     "submit and delegate to repository" when {

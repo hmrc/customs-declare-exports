@@ -26,7 +26,10 @@ case class Action(
   requestType: RequestType,
   requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")),
   notifications: Option[Seq[NotificationSummary]] = None
-)
+) {
+  val latestNotificationSummary: Option[NotificationSummary] =
+    notifications.flatMap(_.lastOption)
+}
 
 object Action {
 
