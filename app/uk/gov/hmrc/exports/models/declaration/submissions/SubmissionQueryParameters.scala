@@ -19,9 +19,14 @@ package uk.gov.hmrc.exports.models.declaration.submissions
 import play.api.libs.json.{Json, OFormat}
 import play.api.mvc.QueryStringBindable
 
-case class SubmissionQueryParameters(uuid: Option[String] = None, ducr: Option[String] = None, lrn: Option[String] = None) {
+case class SubmissionQueryParameters(
+  uuid: Option[String] = None,
+  ducr: Option[String] = None,
+  lrn: Option[String] = None,
+  mrn: Option[String] = None
+) {
 
-  def isEmpty: Boolean = uuid.isEmpty && ducr.isEmpty && lrn.isEmpty
+  def isEmpty: Boolean = uuid.isEmpty && ducr.isEmpty && lrn.isEmpty && mrn.isEmpty
   def nonEmpty: Boolean = !isEmpty
 }
 
@@ -35,8 +40,9 @@ object SubmissionQueryParameters {
         val uuid = params.get("id").flatMap(_.headOption)
         val ducr = params.get("ducr").flatMap(_.headOption)
         val lrn = params.get("lrn").flatMap(_.headOption)
+        val mrn = params.get("mrn").flatMap(_.headOption)
 
-        val queryParams = SubmissionQueryParameters(uuid = uuid, ducr = ducr, lrn = lrn)
+        val queryParams = SubmissionQueryParameters(uuid = uuid, ducr = ducr, lrn = lrn, mrn = mrn)
         Some(Right(queryParams))
       }
 
@@ -44,8 +50,9 @@ object SubmissionQueryParameters {
         val id = value.uuid.map(uuid => s"id=$uuid")
         val ducr = value.ducr.map(ducr => s"ducr=$ducr")
         val lrn = value.lrn.map(lrn => s"lrn=$lrn")
+        val mrn = value.mrn.map(mrn => s"mrn=$mrn")
 
-        Seq(id, ducr, lrn).flatten.mkString("&")
+        Seq(id, ducr, lrn, mrn).flatten.mkString("&")
       }
     }
 }
