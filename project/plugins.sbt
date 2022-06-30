@@ -13,6 +13,6 @@ addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.9.3")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-digest" % "1.1.4")
 
-addSbtPlugin("com.lucidchart" % "sbt-scalafmt" % "1.16")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.6")
 
 addSbtPlugin("uk.gov.hmrc" % "sbt-git-stamp" % "6.2.0")
