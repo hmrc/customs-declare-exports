@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class NotificationReceiptActionsExecutor @Inject()(parseAndSaveAction: ParseAndSaveAction, sendEmailForDmsDocAction: SendEmailForDmsDocAction) {
+class NotificationReceiptActionsExecutor @Inject() (parseAndSaveAction: ParseAndSaveAction, sendEmailForDmsDocAction: SendEmailForDmsDocAction) {
 
   def executeActions(notification: UnparsedNotification)(implicit ec: ExecutionContext): Future[Unit] =
     for {

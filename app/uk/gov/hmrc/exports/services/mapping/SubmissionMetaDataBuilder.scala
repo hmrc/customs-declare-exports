@@ -25,7 +25,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 import wco.datamodel.wco.metadata_ds_dms._2._
 
-class SubmissionMetaDataBuilder @Inject()(declarationBuilder: DeclarationBuilder) {
+class SubmissionMetaDataBuilder @Inject() (declarationBuilder: DeclarationBuilder) {
 
   val functionCode = "9"
   val wcoDataModelVersionCode = "3.6"

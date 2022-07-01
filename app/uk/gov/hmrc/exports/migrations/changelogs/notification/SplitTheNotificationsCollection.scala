@@ -21,7 +21,7 @@ import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
 import org.bson.types.ObjectId
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters.{and, exists, not, eq => feq}
+import org.mongodb.scala.model.Filters.{and, eq => feq, exists, not}
 import org.mongodb.scala.model.Updates.{combine, set, unset}
 import play.api.Logging
 import play.api.libs.json.Json
@@ -36,17 +36,17 @@ import javax.inject.Singleton
 import scala.collection.JavaConverters._
 
 /**
-  * Migration definition for splitting existing 'notifications' collection into 2 collections. The first one stores XML
-  * payload unchanged and ConversationId, while the second one stores data extracted from the payload.
-  *
-  * Notification handling depends on whether it has been parsed in the past or not. In both scenarios a new
-  * `UnparsedNotification` is inserted into 'unparsedNotifications' collection. If it has been parsed, then the existing
-  * document in 'notifications' collection is updated with 'unparsedNotificationId' field and has 'payload' field
-  * removed. If it has not been parsed, then the document is removed from 'notifications' collection.
-  *
-  * Migration also contains "recovery" scenarios, when a previous run failed and some data might have been left in
-  * corrupted state.
-  */
+ * Migration definition for splitting existing 'notifications' collection into 2 collections. The first one stores XML
+ * payload unchanged and ConversationId, while the second one stores data extracted from the payload.
+ *
+ * Notification handling depends on whether it has been parsed in the past or not. In both scenarios a new
+ * `UnparsedNotification` is inserted into 'unparsedNotifications' collection. If it has been parsed, then the existing
+ * document in 'notifications' collection is updated with 'unparsedNotificationId' field and has 'payload' field
+ * removed. If it has not been parsed, then the document is removed from 'notifications' collection.
+ *
+ * Migration also contains "recovery" scenarios, when a previous run failed and some data might have been left in
+ * corrupted state.
+ */
 @Singleton
 class SplitTheNotificationsCollection extends MigrationDefinition with Logging {
 

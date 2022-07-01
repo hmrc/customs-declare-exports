@@ -34,5 +34,5 @@ class JobsExecutionContextModule extends AbstractModule {
 
 object JobsExecutionContextModule {
   @Singleton
-  class JobsExecutionContext @Inject()(actorSystem: ActorSystem) extends CustomExecutionContext(actorSystem, "contexts.background-tasks") {}
+  class JobsExecutionContext @Inject() (actorSystem: ActorSystem) extends CustomExecutionContext(actorSystem, "contexts.background-tasks") {}
 }

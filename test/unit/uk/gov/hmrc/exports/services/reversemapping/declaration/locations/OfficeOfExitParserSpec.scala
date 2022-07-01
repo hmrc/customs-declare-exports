@@ -65,11 +65,13 @@ object OfficeOfExitParserSpec {
   private def inputXml(exitOfficeId: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        { exitOfficeId.map { id =>
+        {
+      exitOfficeId.map { id =>
         <ns3:ExitOffice>
           <ns3:ID>{id}</ns3:ID>
         </ns3:ExitOffice>
-      }.getOrElse(NodeSeq.Empty) }
+      }.getOrElse(NodeSeq.Empty)
+    }
       </ns3:Declaration>
     </meta>
 

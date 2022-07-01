@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.migrations.changelogs.cache
 
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
-import org.mongodb.scala.model.Filters.{and, exists, not, eq => feq}
+import org.mongodb.scala.model.Filters.{and, eq => feq, exists, not}
 import org.mongodb.scala.model.UpdateOneModel
 import org.mongodb.scala.model.Updates.set
 import play.api.Logging
@@ -59,12 +59,11 @@ class MakeTransportPaymentMethodNotOptional extends MigrationDefinition with Log
       logger.debug(s"[filter: $filter] [update: $update]")
 
       new UpdateOneModel[Document](filter, update)
-    }.grouped(updateBatchSize).zipWithIndex.foreach {
-      case (requests, idx) =>
-        logger.info(s"Updating batch no. $idx...")
+    }.grouped(updateBatchSize).zipWithIndex.foreach { case (requests, idx) =>
+      logger.info(s"Updating batch no. $idx...")
 
-        getDeclarationsCollection(db).bulkWrite(seqAsJavaList(requests))
-        logger.info(s"Updated batch no. $idx")
+      getDeclarationsCollection(db).bulkWrite(seqAsJavaList(requests))
+      logger.info(s"Updated batch no. $idx")
     }
 
     logger.info(s"Applying '${migrationInformation.id}' db migration... Done.")

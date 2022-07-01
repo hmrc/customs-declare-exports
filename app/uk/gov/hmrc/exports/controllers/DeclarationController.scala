@@ -33,7 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 @Singleton
-class DeclarationController @Inject()(
+class DeclarationController @Inject() (
   declarationService: DeclarationService,
   authenticator: Authenticator,
   override val controllerComponents: ControllerComponents

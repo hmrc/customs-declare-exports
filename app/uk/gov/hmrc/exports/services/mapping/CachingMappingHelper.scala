@@ -55,9 +55,9 @@ class CachingMappingHelper {
   }
 
   private def createMeasure(unitValue: String) =
-    try {
+    try
       Measure(Some(defaultMeasureCode), value = Some(BigDecimal(unitValue)))
-    } catch {
+    catch {
       case _: NumberFormatException => Measure(Some(defaultMeasureCode), value = Some(BigDecimal(0)))
     }
 }
@@ -83,10 +83,9 @@ object CachingMappingHelper {
       nationalAdditionalCodes.map(code => toClassification(code, NationalAdditionalCode.value))
 
     def nationalExemptionCodeToClassification: Option[Classification] =
-      nationalExemptionCode.flatMap(
-        code =>
-          if (nationalAdditionalCodes.contains(code)) None
-          else Some(toClassification(code, NationalAdditionalCode.value))
+      nationalExemptionCode.flatMap(code =>
+        if (nationalAdditionalCodes.contains(code)) None
+        else Some(toClassification(code, NationalAdditionalCode.value))
       )
 
     def taricCodesToClassification: Seq[Classification] = taricCodes.map(code => toClassification(code, TARICAdditionalCode.value))

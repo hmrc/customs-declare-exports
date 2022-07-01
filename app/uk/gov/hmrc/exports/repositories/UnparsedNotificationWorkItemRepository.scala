@@ -28,7 +28,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class UnparsedNotificationWorkItemRepository @Inject()(config: Configuration, mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
+class UnparsedNotificationWorkItemRepository @Inject() (config: Configuration, mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
     extends WorkItemRepository[UnparsedNotification](
       collectionName = "unparsedNotifications",
       mongoComponent = mongoComponent,

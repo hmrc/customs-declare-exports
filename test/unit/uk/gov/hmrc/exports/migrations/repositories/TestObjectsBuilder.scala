@@ -23,14 +23,14 @@ import org.bson.Document
 object TestObjectsBuilder {
 
   /**
-    * Creates a dummy MongoCursor for testing purposes.
-    *
-    * Some of the methods are missing implementation, because they are not used in tests yet.
-    * Only the iterative part of the MongoCursor is being used for now.
-    *
-    * @param elements sequence of Document objects to be iterated over
-    * @return MongoCursor
-    */
+   * Creates a dummy MongoCursor for testing purposes.
+   *
+   * Some of the methods are missing implementation, because they are not used in tests yet.
+   * Only the iterative part of the MongoCursor is being used for now.
+   *
+   * @param elements sequence of Document objects to be iterated over
+   * @return MongoCursor
+   */
   def buildMongoCursor(elements: Seq[Document]): MongoCursor[Document] = new MongoCursor[Document] {
     private val iterator = elements.iterator
 

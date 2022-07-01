@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.declaration_ds.dms._2.GoodsShipmentTransactionNatureCodeType
 
-class GoodsShipmentNatureOfTransactionBuilder @Inject()() extends ModifyingBuilder[NatureOfTransaction, GoodsShipment] {
+class GoodsShipmentNatureOfTransactionBuilder @Inject() () extends ModifyingBuilder[NatureOfTransaction, GoodsShipment] {
   override def buildThenAdd(natureOfTransaction: NatureOfTransaction, goodsShipment: GoodsShipment) {
     if (isDefined(natureOfTransaction)) {
       val natureOfTransactionWCO = new GoodsShipmentTransactionNatureCodeType()

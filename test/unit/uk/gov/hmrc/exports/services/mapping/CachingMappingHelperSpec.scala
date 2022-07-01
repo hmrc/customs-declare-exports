@@ -71,12 +71,8 @@ class CachingMappingHelperSpec extends UnitSpec {
         commodity.description mustBe Some("description")
         commodity.dangerousGoods.size mustBe 1
         commodity.dangerousGoods.head.undgid mustBe Some("unDangerousGoodsCode")
-        commodity.classifications.map(c => c.id) mustBe Seq(
-          Some("12345678"),
-          Some("cusCode"),
-          Some("nationalAdditionalCodes"),
-          Some("taricAdditionalCodes")
-        )
+        commodity.classifications
+          .map(c => c.id) mustBe Seq(Some("12345678"), Some("cusCode"), Some("nationalAdditionalCodes"), Some("taricAdditionalCodes"))
       }
 
       "Only commodity code and description provided" in {

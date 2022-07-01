@@ -37,7 +37,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 @Singleton
-class DeclarationRepository @Inject()(appConfig: AppConfig, mongoComponent: MongoComponent, metrics: ExportsMetrics)(implicit ec: ExecutionContext)
+class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoComponent, metrics: ExportsMetrics)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[ExportsDeclaration](
       mongoComponent = mongoComponent,
       collectionName = "declarations",
@@ -67,9 +67,7 @@ class DeclarationRepository @Inject()(appConfig: AppConfig, mongoComponent: Mong
           .limit(page.size)
           .toFuture
         total <- collection.countDocuments(filter).toFuture
-      } yield {
-        Paginated(currentPageElements = results, page = page, total = total)
-      }
+      } yield Paginated(currentPageElements = results, page = page, total = total)
     }
   }
 

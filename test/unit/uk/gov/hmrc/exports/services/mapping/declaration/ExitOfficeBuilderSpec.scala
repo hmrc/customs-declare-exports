@@ -27,13 +27,15 @@ class ExitOfficeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
   "ExitOfficeBuilder" should {
 
     "build then add" when {
-      for (declarationType: DeclarationType <- Seq(
-             DeclarationType.STANDARD,
-             DeclarationType.SUPPLEMENTARY,
-             DeclarationType.SIMPLIFIED,
-             DeclarationType.OCCASIONAL,
-             DeclarationType.CLEARANCE
-           )) {
+      for (
+        declarationType: DeclarationType <- Seq(
+          DeclarationType.STANDARD,
+          DeclarationType.SUPPLEMENTARY,
+          DeclarationType.SIMPLIFIED,
+          DeclarationType.OCCASIONAL,
+          DeclarationType.CLEARANCE
+        )
+      ) {
         s"$declarationType journey with no data" in {
           val model = aDeclaration(withType(declarationType), withoutOfficeOfExit())
           val declaration = new Declaration()
@@ -57,7 +59,7 @@ class ExitOfficeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
     }
 
     "build then add for clearance request with no office id" when {
-      for (declarationType: DeclarationType <- Seq(DeclarationType.CLEARANCE)) {
+      for (declarationType: DeclarationType <- Seq(DeclarationType.CLEARANCE))
         s"$declarationType journey with populated data" in {
           val model = aDeclaration(withType(declarationType), withOfficeOfExit(officeId = None))
           val declaration = new Declaration()
@@ -66,7 +68,6 @@ class ExitOfficeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
           declaration.getExitOffice must be(null)
         }
-      }
     }
   }
 

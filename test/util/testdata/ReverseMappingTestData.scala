@@ -30,7 +30,7 @@ object ReverseMappingTestData {
       <ns3:ResponsibleCountryCode>GB</ns3:ResponsibleCountryCode>
       <ns3:ResponsibleAgencyName>HMRC</ns3:ResponsibleAgencyName>
       <ns3:AgencyAssignedCustomizationCode>v2.1</ns3:AgencyAssignedCustomizationCode>
-      { addNamespace(declarationXmlContent) }
+      {addNamespace(declarationXmlContent)}
     </MetaData>
 
   def addNamespace(xml: NodeSeq): NodeSeq = {

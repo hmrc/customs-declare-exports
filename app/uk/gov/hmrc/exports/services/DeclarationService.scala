@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import javax.inject.Inject
 import scala.concurrent.Future
 
-class DeclarationService @Inject()(declarationRepository: DeclarationRepository) {
+class DeclarationService @Inject() (declarationRepository: DeclarationRepository) {
 
   def create(declaration: ExportsDeclaration): Future[ExportsDeclaration] =
     declarationRepository.create(declaration)

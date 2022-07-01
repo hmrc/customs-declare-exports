@@ -31,9 +31,14 @@ abstract class RESTController(override val controllerComponents: ControllerCompo
     json.validate[T] match {
       case JsSuccess(value, _) => Right(value)
       case JsError(errors) =>
-        val payload = Json.toJson(ErrorResponse("Bad Request", Some(errors.map {
-          case (path, errs) => path.toString() + ": " + errs.map(_.message).headOption.getOrElse("unknown")
-        })))
+        val payload = Json.toJson(
+          ErrorResponse(
+            "Bad Request",
+            Some(errors.map { case (path, errs) =>
+              path.toString() + ": " + errs.map(_.message).headOption.getOrElse("unknown")
+            })
+          )
+        )
         logger.warn(s"Bad Request [$payload]")
         Left(BadRequest(payload))
     }

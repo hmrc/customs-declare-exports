@@ -24,7 +24,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration.CurrencyExchange
 
 import scala.collection.JavaConverters._
 
-class CurrencyExchangeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class CurrencyExchangeBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit = {
     val currencyExchanges: Seq[CurrencyExchange] = model.totalNumberOfItems

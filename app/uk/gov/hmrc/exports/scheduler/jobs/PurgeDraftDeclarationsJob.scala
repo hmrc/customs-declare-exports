@@ -26,7 +26,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PurgeDraftDeclarationsJob @Inject()(appConfig: AppConfig, declarationRepository: DeclarationRepository)(implicit ec: ExecutionContext)
+class PurgeDraftDeclarationsJob @Inject() (appConfig: AppConfig, declarationRepository: DeclarationRepository)(implicit ec: ExecutionContext)
     extends ScheduledJob with Logging {
 
   private val jobConfig = appConfig.purgeDraftDeclarations

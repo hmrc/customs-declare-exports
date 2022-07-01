@@ -25,7 +25,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class CancellationController @Inject()(authenticator: Authenticator, submissionService: SubmissionService, cc: ControllerComponents)(
+class CancellationController @Inject() (authenticator: Authenticator, submissionService: SubmissionService, cc: ControllerComponents)(
   implicit executionContext: ExecutionContext
 ) extends RESTController(cc) with JSONResponses {
 

@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.services.mapping.goodsshipment.ConsignmentConsignorBu
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentCarrierBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class DeclarationConsignmentBuilder @Inject()(
+class DeclarationConsignmentBuilder @Inject() (
   freightBuilder: FreightBuilder,
   iteneraryBuilder: IteneraryBuilder,
   consignmentCarrierBuilder: ConsignmentCarrierBuilder,

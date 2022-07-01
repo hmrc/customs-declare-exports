@@ -56,7 +56,8 @@ object SubmissionControllerISpec extends IntegrationTestSpec {
 
   val actionId = "74d4670c-93ab-41df-99eb-d811fd5de75f"
 
-  val submission = Json.parse(s"""{
+  val submission = Json
+    .parse(s"""{
        |  "uuid" : "${UUID.randomUUID.toString}",
        |  "eori" : "$eori",
        |  "lrn" : "MNscA32pIUdNv6nzo",
@@ -84,5 +85,6 @@ object SubmissionControllerISpec extends IntegrationTestSpec {
        |  "latestEnhancedStatus" : "AMENDED",
        |  "mrn" : "22GB9515JH78573779"
        |}
-      |""".stripMargin).as[Submission]
+      |""".stripMargin)
+    .as[Submission]
 }

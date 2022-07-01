@@ -23,7 +23,7 @@ import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class ConsignmentConsignorBuilder @Inject()(countriesService: CountriesService)
+class ConsignmentConsignorBuilder @Inject() (countriesService: CountriesService)
     extends ModifyingBuilder[ExportsDeclaration, Declaration.Consignment] {
 
   override def buildThenAdd(model: ExportsDeclaration, consignment: Declaration.Consignment) =

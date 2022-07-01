@@ -54,9 +54,9 @@ class GenerateDraftDecControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
     (1 to 5).foreach { itemCount =>
       s"insert declaration with $itemCount items" in {
         val captorDeclaration: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
-        when(declarationRepository.create(captorDeclaration.capture())).thenAnswer({ invocation: InvocationOnMock =>
+        when(declarationRepository.create(captorDeclaration.capture())).thenAnswer { invocation: InvocationOnMock =>
           Future.successful(invocation.getArguments.head.asInstanceOf[ExportsDeclaration])
-        })
+        }
 
         val request = Json.obj("eori" -> eoriSpecified, "itemCount" -> itemCount, "lrn" -> s"SOMELRN$itemCount")
         val result = route(app, post.withJsonBody(request)).get

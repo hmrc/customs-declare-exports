@@ -32,7 +32,7 @@ object TransportPayment {
   val notPrePaid = "Z"
   val notAvailable = "_"
 
-  val paymentMethodsAllowedToBeSent = Set(cash, creditCard, cheque, other, eFunds, accHolder, notPrePaid) //does not include 'notAvailable'
+  val paymentMethodsAllowedToBeSent = Set(cash, creditCard, cheque, other, eFunds, accHolder, notPrePaid) // does not include 'notAvailable'
 
   def canBeSent(paymentMethod: String): Boolean = paymentMethodsAllowedToBeSent.contains(paymentMethod)
 }

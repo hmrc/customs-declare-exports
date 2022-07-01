@@ -25,11 +25,11 @@ import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
-class ConsignmentReferencesParser @Inject()(additionalDeclarationTypeParser: AdditionalDeclarationTypeParser)
+class ConsignmentReferencesParser @Inject() (additionalDeclarationTypeParser: AdditionalDeclarationTypeParser)
     extends DeclarationXmlParser[Option[ConsignmentReferences]] {
 
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Option[ConsignmentReferences]] = {
-    val previousDocumentNode = (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
+    val previousDocumentNode = inputXml \ Declaration \ GoodsShipment \ PreviousDocument
     val additionalDeclarationType: XmlParserResult[AdtMaybe] = additionalDeclarationTypeParser.parse(inputXml)
 
     val ducrOpt = previousDocumentNode

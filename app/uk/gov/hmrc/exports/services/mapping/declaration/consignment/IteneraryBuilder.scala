@@ -25,11 +25,11 @@ import wco.datamodel.wco.declaration_ds.dms._2.ItineraryRoutingCountryCodeType
 
 import scala.collection.JavaConverters._
 
-class IteneraryBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration.Consignment] {
+class IteneraryBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration, Declaration.Consignment] {
 
   def buildThenAdd(model: ExportsDeclaration, consignment: Declaration.Consignment): Unit = {
-    val itineraries = getRoutingCountries(model).flatMap(_.code).zipWithIndex.map {
-      case (countryCode, idx) => createItenerary(idx, countryCode)
+    val itineraries = getRoutingCountries(model).flatMap(_.code).zipWithIndex.map { case (countryCode, idx) =>
+      createItenerary(idx, countryCode)
     }
 
     consignment.getItinerary.addAll(itineraries.toList.asJava)

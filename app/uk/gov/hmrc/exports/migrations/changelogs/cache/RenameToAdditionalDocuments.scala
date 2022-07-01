@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.migrations.changelogs.cache
 
 import com.mongodb.client.MongoDatabase
 import org.bson.Document
-import org.mongodb.scala.model.Filters.{and, exists, not, size, eq => feq}
+import org.mongodb.scala.model.Filters.{and, eq => feq, exists, not, size}
 import org.mongodb.scala.model.UpdateOneModel
 import org.mongodb.scala.model.Updates.set
 import play.api.Logging
@@ -63,12 +63,11 @@ class RenameToAdditionalDocuments extends MigrationDefinition with Logging {
       logger.debug(s"[filter: $filter] [update: $updatedItems]")
 
       new UpdateOneModel[Document](filter, updatedItems)
-    }.grouped(batchSize).zipWithIndex.foreach {
-      case (documents, idx) =>
-        logger.info(s"Updating batch no. $idx...")
+    }.grouped(batchSize).zipWithIndex.foreach { case (documents, idx) =>
+      logger.info(s"Updating batch no. $idx...")
 
-        collection.bulkWrite(seqAsJavaList(documents))
-        logger.info(s"Updated batch no. $idx")
+      collection.bulkWrite(seqAsJavaList(documents))
+      logger.info(s"Updated batch no. $idx")
     }
 
     logger.info(s"Applying '${migrationInformation.id}' db migration... Done.")

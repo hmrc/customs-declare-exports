@@ -117,17 +117,21 @@ class ProcedureCodesParserSpec extends UnitSpec {
     <ns3:GovernmentAgencyGoodsItem>
       <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
       {
-        governmentProcedures.map { governmentProcedure =>
-          <ns3:GovernmentProcedure>
-            {governmentProcedure.previousCode.map { code =>
+      governmentProcedures.map { governmentProcedure =>
+        <ns3:GovernmentProcedure>
+            {
+          governmentProcedure.previousCode.map { code =>
             <ns3:PreviousCode>{code}</ns3:PreviousCode>
-          }.getOrElse(NodeSeq.Empty)}
-            {governmentProcedure.currentCode.map { code =>
-            <ns3:CurrentCode>{code}</ns3:CurrentCode>
-          }.getOrElse(NodeSeq.Empty)}
-          </ns3:GovernmentProcedure>
+          }.getOrElse(NodeSeq.Empty)
         }
+            {
+          governmentProcedure.currentCode.map { code =>
+            <ns3:CurrentCode>{code}</ns3:CurrentCode>
+          }.getOrElse(NodeSeq.Empty)
+        }
+          </ns3:GovernmentProcedure>
       }
+    }
     </ns3:GovernmentAgencyGoodsItem>
 
 }

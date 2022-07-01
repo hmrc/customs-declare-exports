@@ -57,11 +57,11 @@ class AppConfigSpec extends AnyFunSuite with Matchers with GuiceOneAppPerSuite {
   override lazy val app: Application = GuiceApplicationBuilder().build()
   private val appConfig = app.injector.instanceOf[AppConfig]
 
-  test(s"mongodbUri must be $mongodbUri") { appConfig.mongodbUri mustBe mongodbUri }
+  test(s"mongodbUri must be $mongodbUri")(appConfig.mongodbUri mustBe mongodbUri)
 
-  test(s"authUrl must be $authUrl") { appConfig.authUrl mustBe authUrl }
+  test(s"authUrl must be $authUrl")(appConfig.authUrl mustBe authUrl)
 
-  test(s"loginUrl must be $loginUrl") { appConfig.loginUrl mustBe loginUrl }
+  test(s"loginUrl must be $loginUrl")(appConfig.loginUrl mustBe loginUrl)
 
   test(s"customsDeclarationsBaseUrl must be $customsDeclarationsBaseUrl") {
     appConfig.customsDeclarationsBaseUrl mustBe customsDeclarationsBaseUrl
@@ -71,15 +71,15 @@ class AppConfigSpec extends AnyFunSuite with Matchers with GuiceOneAppPerSuite {
     appConfig.customsDeclarationsApiVersion mustBe customsDeclarationsApiVersion
   }
 
-  test(s"submitDeclarationUri must be $submitDeclarationUri") { appConfig.submitDeclarationUri mustBe submitDeclarationUri }
+  test(s"submitDeclarationUri must be $submitDeclarationUri")(appConfig.submitDeclarationUri mustBe submitDeclarationUri)
 
-  test(s"cancelDeclarationUri must be $cancelDeclarationUri") { appConfig.cancelDeclarationUri mustBe cancelDeclarationUri }
+  test(s"cancelDeclarationUri must be $cancelDeclarationUri")(appConfig.cancelDeclarationUri mustBe cancelDeclarationUri)
 
-  test(s"notificationBearerToken must be $notificationBearerToken") { appConfig.notificationBearerToken mustBe notificationBearerToken }
+  test(s"notificationBearerToken must be $notificationBearerToken")(appConfig.notificationBearerToken mustBe notificationBearerToken)
 
-  test(s"developerHubClientId must be $developerHubClientId") { appConfig.developerHubClientId mustBe developerHubClientId }
+  test(s"developerHubClientId must be $developerHubClientId")(appConfig.developerHubClientId mustBe developerHubClientId)
 
-  test(s"draftTimeToLive must be $draftTimeToLive") { appConfig.draftTimeToLive mustBe draftTimeToLive }
+  test(s"draftTimeToLive must be $draftTimeToLive")(appConfig.draftTimeToLive mustBe draftTimeToLive)
 
   test(s"purgeDraftDeclarations must be $purgeDraftDeclarations") {
     appConfig.purgeDraftDeclarations.elapseTime mustBe purgeDraftDeclarations.elapseTime
@@ -106,19 +106,19 @@ class AppConfigSpec extends AnyFunSuite with Matchers with GuiceOneAppPerSuite {
     appConfig.customsDeclarationsInformationBaseUrl mustBe customsDeclarationsInformationBaseUrl
   }
 
-  test(s"fetchMrnStatus must be $fetchMrnStatus") { appConfig.fetchMrnStatus mustBe fetchMrnStatus }
+  test(s"fetchMrnStatus must be $fetchMrnStatus")(appConfig.fetchMrnStatus mustBe fetchMrnStatus)
 
-  test(s"cdiApiVersion must be $cdiApiVersion") { appConfig.cdiApiVersion mustBe cdiApiVersion }
+  test(s"cdiApiVersion must be $cdiApiVersion")(appConfig.cdiApiVersion mustBe cdiApiVersion)
 
-  test(s"cdiClientID must be $cdiClientID") { appConfig.cdiClientID mustBe cdiClientID }
+  test(s"cdiClientID must be $cdiClientID")(appConfig.cdiClientID mustBe cdiClientID)
 
-  test(s"cdiBearerToken must be $cdiBearerToken") { appConfig.cdiBearerToken mustBe cdiBearerToken }
+  test(s"cdiBearerToken must be $cdiBearerToken")(appConfig.cdiBearerToken mustBe cdiBearerToken)
 
-  test(s"customsDataStoreBaseUrl must be $customsDataStoreBaseUrl") { appConfig.customsDataStoreBaseUrl mustBe customsDataStoreBaseUrl }
+  test(s"customsDataStoreBaseUrl must be $customsDataStoreBaseUrl")(appConfig.customsDataStoreBaseUrl mustBe customsDataStoreBaseUrl)
 
-  test(s"verifiedEmailPath must be $verifiedEmailPath") { appConfig.verifiedEmailPath mustBe verifiedEmailPath }
+  test(s"verifiedEmailPath must be $verifiedEmailPath")(appConfig.verifiedEmailPath mustBe verifiedEmailPath)
 
-  test(s"emailServiceBaseUrl must be $emailServiceBaseUrl") { appConfig.emailServiceBaseUrl mustBe emailServiceBaseUrl }
+  test(s"emailServiceBaseUrl must be $emailServiceBaseUrl")(appConfig.emailServiceBaseUrl mustBe emailServiceBaseUrl)
 
-  test(s"sendEmailPath must be $sendEmailPath") { appConfig.sendEmailPath mustBe sendEmailPath }
+  test(s"sendEmailPath must be $sendEmailPath")(appConfig.sendEmailPath mustBe sendEmailPath)
 }

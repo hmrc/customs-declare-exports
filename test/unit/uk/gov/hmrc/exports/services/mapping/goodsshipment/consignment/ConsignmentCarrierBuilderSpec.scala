@@ -32,12 +32,14 @@ class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuil
     when(mockCountriesService.allCountries).thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
     "build then add" when {
-      for (declarationType: DeclarationType <- Seq(
-             DeclarationType.SIMPLIFIED,
-             DeclarationType.STANDARD,
-             DeclarationType.OCCASIONAL,
-             DeclarationType.CLEARANCE
-           )) {
+      for (
+        declarationType: DeclarationType <- Seq(
+          DeclarationType.SIMPLIFIED,
+          DeclarationType.STANDARD,
+          DeclarationType.OCCASIONAL,
+          DeclarationType.CLEARANCE
+        )
+      )
         s"Declaration Type ${declarationType}" when {
           "no carrier details" in {
             // Given
@@ -126,7 +128,6 @@ class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuil
             consignment.getCarrier.getAddress.getCountryCode.getValue mustBe ""
           }
         }
-      }
     }
   }
 }

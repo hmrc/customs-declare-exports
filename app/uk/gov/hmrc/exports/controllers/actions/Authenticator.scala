@@ -29,7 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 // TODO: This needs to be separated from BackendController and be injected instead of inheriting in other controllers
 @Singleton
-class Authenticator @Inject()(override val authConnector: AuthConnector, cc: ControllerComponents)(implicit ec: ExecutionContext)
+class Authenticator @Inject() (override val authConnector: AuthConnector, cc: ControllerComponents)(implicit ec: ExecutionContext)
     extends BackendController(cc) with AuthorisedFunctions with Logging {
 
   def authorisedAction[A](bodyParser: BodyParser[A])(body: AuthorizedSubmissionRequest[A] => Future[Result]): Action[A] =

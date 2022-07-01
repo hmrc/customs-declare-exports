@@ -25,14 +25,12 @@ import wco.datamodel.wco.declaration_ds.dms._2.{AdditionalInformationStatementCo
 
 import javax.inject.Inject
 
-class AdditionalInformationBuilder @Inject()() extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
+class AdditionalInformationBuilder @Inject() () extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
 
   override def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem): Unit =
     exportItem.additionalInformation.foreach { additionalInformationData =>
-      {
-        additionalInformationData.items.foreach { additionalInformation =>
-          wcoGovernmentAgencyGoodsItem.getAdditionalInformation.add(buildAdditionalInformation(additionalInformation))
-        }
+      additionalInformationData.items.foreach { additionalInformation =>
+        wcoGovernmentAgencyGoodsItem.getAdditionalInformation.add(buildAdditionalInformation(additionalInformation))
       }
     }
 

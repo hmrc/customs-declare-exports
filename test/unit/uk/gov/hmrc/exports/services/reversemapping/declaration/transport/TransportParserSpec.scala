@@ -205,60 +205,71 @@ class TransportParserSpec extends UnitSpec {
   private def borderModeOfTransportCodeXml(inputValue: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        { inputValue.map { value =>
+        {
+      inputValue.map { value =>
         <ns3:BorderTransportMeans>
           <ns3:ModeCode>{value}</ns3:ModeCode>
         </ns3:BorderTransportMeans>
-      }.getOrElse(NodeSeq.Empty) }
+      }.getOrElse(NodeSeq.Empty)
+    }
       </ns3:Declaration>
     </meta>
 
   private def expressConsignmentXml(inputValue: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        { inputValue.map { value =>
+        {
+      inputValue.map { value =>
         <ns3:DeclarationSpecificCircumstancesCodeCodeType>{value}</ns3:DeclarationSpecificCircumstancesCodeCodeType>
-      }.getOrElse(NodeSeq.Empty) }
+      }.getOrElse(NodeSeq.Empty)
+    }
       </ns3:Declaration>
     </meta>
 
   private def meansOfTransportCrossingTheBorderIDNumber(idNumber: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        { idNumber.map { id =>
+        {
+      idNumber.map { id =>
         <ns3:BorderTransportMeans>
           <ns3:ID>{id}</ns3:ID>
         </ns3:BorderTransportMeans>
-      }.getOrElse(NodeSeq.Empty) }
+      }.getOrElse(NodeSeq.Empty)
+    }
       </ns3:Declaration>
     </meta>
 
   private def transportCrossingTheBorderNationality(inputValue: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        { inputValue.map { value =>
+        {
+      inputValue.map { value =>
         <ns3:BorderTransportMeans>
           <ns3:RegistrationNationalityCode>{value}</ns3:RegistrationNationalityCode>
         </ns3:BorderTransportMeans>
-      }.getOrElse(NodeSeq.Empty) }
+      }.getOrElse(NodeSeq.Empty)
+    }
       </ns3:Declaration>
     </meta>
 
   private def meansOfTransportCrossingTheBorderType(inputValue: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        { inputValue.map { value =>
+        {
+      inputValue.map { value =>
         <ns3:BorderTransportMeans>
           <ns3:IdentificationTypeCode>{value}</ns3:IdentificationTypeCode>
         </ns3:BorderTransportMeans>
-      }.getOrElse(NodeSeq.Empty) }
+      }.getOrElse(NodeSeq.Empty)
+    }
       </ns3:Declaration>
     </meta>
 
   private def meansOfTransportOnDepartureIDNumber(inputValue: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        { inputValue.map { value =>
+        {
+      inputValue.map { value =>
         <ns3:GoodsShipment>
           <ns3:Consignment>
             <ns3:DepartureTransportMeans>
@@ -266,14 +277,16 @@ class TransportParserSpec extends UnitSpec {
             </ns3:DepartureTransportMeans>
           </ns3:Consignment>
         </ns3:GoodsShipment>
-      }.getOrElse(NodeSeq.Empty) }
+      }.getOrElse(NodeSeq.Empty)
+    }
       </ns3:Declaration>
     </meta>
 
   private def meansOfTransportOnDepartureType(inputValue: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        { inputValue.map { value =>
+        {
+      inputValue.map { value =>
         <ns3:GoodsShipment>
           <ns3:Consignment>
             <ns3:DepartureTransportMeans>
@@ -281,20 +294,23 @@ class TransportParserSpec extends UnitSpec {
             </ns3:DepartureTransportMeans>
           </ns3:Consignment>
         </ns3:GoodsShipment>
-      }.getOrElse(NodeSeq.Empty) }
+      }.getOrElse(NodeSeq.Empty)
+    }
       </ns3:Declaration>
     </meta>
 
   private def transportPaymentXml(inputValue: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        { inputValue.map { value =>
+        {
+      inputValue.map { value =>
         <ns3:Consignment>
           <ns3:Freight>
             <ns3:PaymentMethodCode>{value}</ns3:PaymentMethodCode>
           </ns3:Freight>
         </ns3:Consignment>
-      }.getOrElse(NodeSeq.Empty) }
+      }.getOrElse(NodeSeq.Empty)
+    }
       </ns3:Declaration>
     </meta>
 }

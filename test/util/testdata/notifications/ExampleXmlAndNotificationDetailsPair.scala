@@ -63,7 +63,7 @@ object ExampleXmlAndNotificationDetailsPair {
       )
     )
 
-  //noinspection ScalaStyle
+  // noinspection ScalaStyle
   def exampleRejectNotification(
     mrn: String,
     dateTime: String = ZonedDateTime.now(ZoneId.of("UCT")).format(formatter304),
@@ -187,21 +187,25 @@ object ExampleXmlAndNotificationDetailsPair {
   )
 
   def exampleEmptyNotification(mrn: String): ExampleXmlAndNotificationDetailsPair =
-    ExampleXmlAndNotificationDetailsPair(asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+    ExampleXmlAndNotificationDetailsPair(
+      asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
       <WCOTypeName>RES</WCOTypeName>
       <ResponsibleCountryCode/>
       <ResponsibleAgencyName/>
       <AgencyAssignedCustomizationCode/>
       <AgencyAssignedCustomizationVersionCode/>
-    </MetaData>, asDomainModel = Seq.empty)
+    </MetaData>,
+      asDomainModel = Seq.empty
+    )
 
   def exampleUnparsableNotification(
     mrn: String,
     dateTime_received: String = ZonedDateTime.now(ZoneId.of("UCT")).format(formatter304),
     dateTime_accepted: String = ZonedDateTime.now(ZoneId.of("UCT")).plusHours(1).format(formatter304)
   ): ExampleXmlAndNotificationDetailsPair =
-    ExampleXmlAndNotificationDetailsPair(asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+    ExampleXmlAndNotificationDetailsPair(
+      asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
       <WCOTypeName>RES</WCOTypeName>
       <ResponsibleCountryCode/>
@@ -228,13 +232,16 @@ object ExampleXmlAndNotificationDetailsPair {
           <ID>{mrn}</ID>
         </Declaration>
       </Response>
-    </MetaData>, asDomainModel = Seq.empty)
+    </MetaData>,
+      asDomainModel = Seq.empty
+    )
 
   def exampleNotificationInIncorrectFormatXML(
     mrn: String,
     dateTime: String = ZonedDateTime.now(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
   ): ExampleXmlAndNotificationDetailsPair =
-    ExampleXmlAndNotificationDetailsPair(asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+    ExampleXmlAndNotificationDetailsPair(
+      asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
       <WCOTypeName>RES</WCOTypeName>
       <ResponsibleCountryCode/>
@@ -277,6 +284,8 @@ object ExampleXmlAndNotificationDetailsPair {
           <VersionID>1</VersionID>
         </Declaration>
       </Response>
-    </MetaData>, asDomainModel = Seq.empty)
+    </MetaData>,
+      asDomainModel = Seq.empty
+    )
 
 }

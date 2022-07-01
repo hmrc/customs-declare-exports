@@ -157,27 +157,31 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
   ): Elem = ReverseMappingTestData.inputXmlMetaData {
     <ns3:Declaration>
       {
-        functionalReferenceId.map { refId =>
-          <ns3:FunctionalReferenceID>{refId}</ns3:FunctionalReferenceID>
-        }.getOrElse(NodeSeq.Empty)
-      }
+      functionalReferenceId.map { refId =>
+        <ns3:FunctionalReferenceID>{refId}</ns3:FunctionalReferenceID>
+      }.getOrElse(NodeSeq.Empty)
+    }
       {
-        typeCode.map { code =>
-          <ns3:TypeCode>{code}</ns3:TypeCode>
-        }.getOrElse(NodeSeq.Empty)
-      }
+      typeCode.map { code =>
+        <ns3:TypeCode>{code}</ns3:TypeCode>
+      }.getOrElse(NodeSeq.Empty)
+    }
       <ns3:GoodsShipment>
-        { previousDocument.map { prevDoc =>
-          <ns3:PreviousDocument>
+        {
+      previousDocument.map { prevDoc =>
+        <ns3:PreviousDocument>
             <ns3:TypeCode>{prevDoc.typeCode}</ns3:TypeCode>
             <ns3:ID>{prevDoc.id}</ns3:ID>
           </ns3:PreviousDocument>
-        } }
-        { traderAssignedReferenceID.map { refId =>
-          <ns3:UCR>
+      }
+    }
+        {
+      traderAssignedReferenceID.map { refId =>
+        <ns3:UCR>
             <ns3:TraderAssignedReferenceID>{refId}</ns3:TraderAssignedReferenceID>
           </ns3:UCR>
-        }.getOrElse(NodeSeq.Empty) }
+      }.getOrElse(NodeSeq.Empty)
+    }
       </ns3:GoodsShipment>
     </ns3:Declaration>
   }

@@ -33,7 +33,7 @@ import javax.inject.Singleton
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: HttpClient, metrics: ExportsMetrics)(implicit ec: ExecutionContext)
+class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: HttpClient, metrics: ExportsMetrics)(implicit ec: ExecutionContext)
     extends Logging {
 
   def submitDeclaration(eori: String, xml: String)(implicit hc: HeaderCarrier): Future[String] =
@@ -65,20 +65,19 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
     metrics.timeAsyncCall(Timers.upstreamCustomsDeclarationsTimer) {
       httpClient
         .POSTString[CustomsDeclarationsResponse](s"${appConfig.customsDeclarationsBaseUrl}$uri", body, headers = headers(eori))
-        .recover {
-          case error: Throwable =>
-            logger.error(s"Error during submitting declaration: ${error.getMessage}")
+        .recover { case error: Throwable =>
+          logger.error(s"Error during submitting declaration: ${error.getMessage}")
 
-            error match {
-              case response: UpstreamErrorResponse if is4xx(response.statusCode) =>
-                val conversationId = response.headers.get("X-Conversation-ID") match {
-                  case Some(data) => data.head
-                  case None       => "No conversation ID found"
-                }
+          error match {
+            case response: UpstreamErrorResponse if is4xx(response.statusCode) =>
+              val conversationId = response.headers.get("X-Conversation-ID") match {
+                case Some(data) => data.head
+                case None       => "No conversation ID found"
+              }
 
-                CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, Some(conversationId))
-              case _ => CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, None)
-            }
+              CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, Some(conversationId))
+            case _ => CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, None)
+          }
         }
     }
   }
@@ -93,7 +92,7 @@ class CustomsDeclarationsConnector @Inject()(appConfig: AppConfig, httpClient: H
   private val ApplicationErrorStatus = 4
   private val ServerErrorStatus = 5
 
-  //noinspection ConvertExpressionToSAM
+  // noinspection ConvertExpressionToSAM
   private implicit val responseReader: HttpReads[CustomsDeclarationsResponse] =
     new HttpReads[CustomsDeclarationsResponse] {
       override def read(method: String, url: String, response: HttpResponse): CustomsDeclarationsResponse = {

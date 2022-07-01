@@ -29,7 +29,7 @@ import javax.inject.{Inject, Singleton}
 import scala.xml.NodeSeq
 
 @Singleton
-class LocationsParser @Inject()(
+class LocationsParser @Inject() (
   additionalDeclarationTypeParser: AdditionalDeclarationTypeParser,
   countryParser: CountryParser,
   goodsLocationParser: GoodsLocationParser,

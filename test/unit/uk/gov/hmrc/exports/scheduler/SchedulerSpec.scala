@@ -55,7 +55,9 @@ class SchedulerSpec extends UnitSpec {
     super.beforeEach()
     given(config.clock) willReturn clock
     given(actorSystem.scheduler) willReturn internalScheduler
-    given(internalScheduler.scheduleWithFixedDelay(any[FiniteDuration], any[FiniteDuration])(any[Runnable])(any[ExecutionContext])) will runTheJobImmediately
+    given(
+      internalScheduler.scheduleWithFixedDelay(any[FiniteDuration], any[FiniteDuration])(any[Runnable])(any[ExecutionContext])
+    ) will runTheJobImmediately
     given(job.execute()) willReturn Future.successful(())
   }
 

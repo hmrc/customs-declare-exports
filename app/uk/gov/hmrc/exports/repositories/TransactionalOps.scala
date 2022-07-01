@@ -31,7 +31,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class TransactionalOps @Inject()(
+class TransactionalOps @Inject() (
   val mongoComponent: MongoComponent,
   submissionRepository: SubmissionRepository,
   notificationRepository: ParsedNotificationRepository,
@@ -45,11 +45,11 @@ class TransactionalOps @Inject()(
 
   def updateSubmissionAndNotifications(actionId: String, notifications: Seq[ParsedNotification], submission: Submission): Future[Option[Submission]] =
     if (appConfig.useTransactionalDBOps)
-      withSessionAndTransaction[Option[Submission]](startOp(_, actionId, notifications, submission)).recover {
-        case e: Exception =>
-          logger.warn(s"There was an error while writing to the DB => ${e.getMessage}", e)
-          None
-      } else nonTransactionalSession.flatMap(startOp(_, actionId, notifications, submission))
+      withSessionAndTransaction[Option[Submission]](startOp(_, actionId, notifications, submission)).recover { case e: Exception =>
+        logger.warn(s"There was an error while writing to the DB => ${e.getMessage}", e)
+        None
+      }
+    else nonTransactionalSession.flatMap(startOp(_, actionId, notifications, submission))
 
   private def startOp(
     session: ClientSession,

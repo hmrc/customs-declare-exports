@@ -24,7 +24,7 @@ import wco.datamodel.wco.declaration_ds.dms._2.{WarehouseIdentificationIDType, W
 
 import javax.inject.Inject
 
-class WarehouseBuilder @Inject()() extends ModifyingBuilder[WarehouseIdentification, GoodsShipment] {
+class WarehouseBuilder @Inject() () extends ModifyingBuilder[WarehouseIdentification, GoodsShipment] {
   override def buildThenAdd(warehouseIdentification: WarehouseIdentification, goodsShipment: GoodsShipment): Unit =
     if (warehouseIdentification.identificationNumber.nonEmpty) {
       goodsShipment.setWarehouse(createWarehouse(warehouseIdentification))

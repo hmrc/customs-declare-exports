@@ -23,7 +23,7 @@ import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class BorderTransportMeansBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class BorderTransportMeansBuilder @Inject() (countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, t: Declaration): Unit = {
     val transport = model.transport
 

@@ -22,7 +22,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment.DepartureTransportMeans
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class DepartureTransportMeansBuilder @Inject()() {
+class DepartureTransportMeansBuilder @Inject() () {
   def buildThenAdd(transport: Transport, inlandModeOfTransportCode: Option[InlandModeOfTransportCode], consignment: Consignment): Unit =
     if (transport.hasDepartureTransportDetails || inlandModeOfTransportCode.nonEmpty) {
       consignment.setDepartureTransportMeans(createDepartureTransportMeans(transport, inlandModeOfTransportCode))

@@ -22,7 +22,7 @@ import testdata.TestDataHelper.randomAlphanumericString
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames._
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.emails.Email
-import uk.gov.hmrc.wco.dec.{MetaData, Declaration => WcoDeclaration}
+import uk.gov.hmrc.wco.dec.{Declaration => WcoDeclaration, MetaData}
 
 object ExportsTestData {
 

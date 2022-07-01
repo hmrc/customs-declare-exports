@@ -25,7 +25,7 @@ import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, Submissio
 import uk.gov.hmrc.exports.services.notifications.receiptactions._
 
 @Singleton
-class NotificationService @Inject()(
+class NotificationService @Inject() (
   submissionRepository: SubmissionRepository,
   unparsedNotificationWorkItemRepository: UnparsedNotificationWorkItemRepository,
   notificationRepository: ParsedNotificationRepository,

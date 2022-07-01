@@ -445,11 +445,13 @@ class SingleItemParserSpec extends UnitSpec {
   private def additionalFiscalReferencesData(values: Seq[String]): Elem =
     <ns3:GovernmentAgencyGoodsItem>
       <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
-      { values.map { value =>
+      {
+      values.map { value =>
         <ns3:DomesticDutyTaxParty>
           <ns3:ID>{value}</ns3:ID>
         </ns3:DomesticDutyTaxParty>
-      }}
+      }
+    }
     </ns3:GovernmentAgencyGoodsItem>
 
   private def statisticalValue(value: String): NodeSeq =
@@ -466,20 +468,26 @@ class SingleItemParserSpec extends UnitSpec {
     <ns3:GovernmentAgencyGoodsItem>
       <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
       <ns3:Commodity>
-        { description.map { desc =>
-          <ns3:Description>{desc}</ns3:Description>
-        }.getOrElse(NodeSeq.Empty) }
-        { classifications.map { classification =>
-          <ns3:Classification>
+        {
+      description.map { desc =>
+        <ns3:Description>{desc}</ns3:Description>
+      }.getOrElse(NodeSeq.Empty)
+    }
+        {
+      classifications.map { classification =>
+        <ns3:Classification>
             <ns3:ID>{classification._1}</ns3:ID>
             <ns3:IdentificationTypeCode>{classification._2}</ns3:IdentificationTypeCode>
           </ns3:Classification>
-        }}
-        { dangerousGoods.map { code =>
-          <ns3:DangerousGoods>
+      }
+    }
+        {
+      dangerousGoods.map { code =>
+        <ns3:DangerousGoods>
             <ns3:UNDGID>{code}</ns3:UNDGID>
           </ns3:DangerousGoods>
-        }.getOrElse(NodeSeq.Empty) }
+      }.getOrElse(NodeSeq.Empty)
+    }
       </ns3:Commodity>
     </ns3:GovernmentAgencyGoodsItem>
 
@@ -493,23 +501,31 @@ class SingleItemParserSpec extends UnitSpec {
     <ns3:GovernmentAgencyGoodsItem>
       <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
       <ns3:Commodity>
-        { goodsMeasure.map { gm =>
-          <ns3:GoodsMeasure>
+        {
+      goodsMeasure.map { gm =>
+        <ns3:GoodsMeasure>
 
-            { gm.tariffQuantity.map { tariffQuantity =>
-              <ns3:TariffQuantity>{tariffQuantity}</ns3:TariffQuantity>
-            }.getOrElse(NodeSeq.Empty) }
+            {
+          gm.tariffQuantity.map { tariffQuantity =>
+            <ns3:TariffQuantity>{tariffQuantity}</ns3:TariffQuantity>
+          }.getOrElse(NodeSeq.Empty)
+        }
 
-            { gm.netWeightMeasure.map { netWeightMeasure =>
-              <ns3:NetNetWeightMeasure>{netWeightMeasure}</ns3:NetNetWeightMeasure>
-            }.getOrElse(NodeSeq.Empty) }
+            {
+          gm.netWeightMeasure.map { netWeightMeasure =>
+            <ns3:NetNetWeightMeasure>{netWeightMeasure}</ns3:NetNetWeightMeasure>
+          }.getOrElse(NodeSeq.Empty)
+        }
 
-            { gm.grossMassMeasure.map { grossMassMeasure =>
-              <ns3:GrossMassMeasure>{grossMassMeasure}</ns3:GrossMassMeasure>
-            }.getOrElse(NodeSeq.Empty) }
+            {
+          gm.grossMassMeasure.map { grossMassMeasure =>
+            <ns3:GrossMassMeasure>{grossMassMeasure}</ns3:GrossMassMeasure>
+          }.getOrElse(NodeSeq.Empty)
+        }
 
           </ns3:GoodsMeasure>
-        }.getOrElse(NodeSeq.Empty) }
+      }.getOrElse(NodeSeq.Empty)
+    }
       </ns3:Commodity>
     </ns3:GovernmentAgencyGoodsItem>
 
@@ -518,18 +534,24 @@ class SingleItemParserSpec extends UnitSpec {
   private def additionalInformation(additionalInformationForXml: List[AdditionalInformationForXml]): Elem =
     <ns3:GovernmentAgencyGoodsItem>
       <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
-      { additionalInformationForXml.map { ai =>
+      {
+      additionalInformationForXml.map { ai =>
         <ns3:AdditionalInformation>
 
-          { ai.code.map { code =>
+          {
+          ai.code.map { code =>
             <ns3:StatementCode>{code}</ns3:StatementCode>
-          }.getOrElse(NodeSeq.Empty) }
+          }.getOrElse(NodeSeq.Empty)
+        }
 
-          { ai.description.map { description =>
+          {
+          ai.description.map { description =>
             <ns3:StatementDescription>{description}</ns3:StatementDescription>
-          }.getOrElse(NodeSeq.Empty) }
+          }.getOrElse(NodeSeq.Empty)
+        }
 
         </ns3:AdditionalInformation>
-      } }
+      }
+    }
     </ns3:GovernmentAgencyGoodsItem>
 }

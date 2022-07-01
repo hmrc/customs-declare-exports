@@ -278,7 +278,8 @@ object AddNotificationSummariesToSubmissionsISpec {
       |  ]
       |}""".stripMargin
 
-  val parsedNotifications = List("""{
+  val parsedNotifications = List(
+    """{
       |  "unparsedNotificationId" : "e6f12af4-e183-4eab-a0ca-e69564aeca52",
       |  "actionId" : "85ece9c1-acf9-45ba-b5e6-b9692c6f7882",
       |  "details" : {
@@ -287,7 +288,8 @@ object AddNotificationSummariesToSubmissionsISpec {
       |      "status" : "ACCEPTED",
       |      "errors" : []
       |  }
-      |}""".stripMargin, """{
+      |}""".stripMargin,
+    """{
       |  "unparsedNotificationId" : "e7f12af4-e183-4eab-a0ca-e69564aeca53",
       |  "actionId" : "85ece9c1-acf9-45ba-b5e6-b9692c6f7882",
       |  "details" : {
@@ -296,7 +298,8 @@ object AddNotificationSummariesToSubmissionsISpec {
       |      "status" : "GOODS_HAVE_EXITED_THE_COMMUNITY",
       |      "errors" : []
       |  }
-      |}""".stripMargin, """{
+      |}""".stripMargin,
+    """{
       |  "unparsedNotificationId" : "e8f12af4-e183-4eab-a0ca-e69564aeca54",
       |  "actionId" : "85ece9c1-acf9-45ba-b5e6-b9692c6f7882",
       |  "details" : {
@@ -305,7 +308,8 @@ object AddNotificationSummariesToSubmissionsISpec {
       |      "status" : "CLEARED",
       |      "errors" : []
       |  }
-      |}""".stripMargin).map(Document.parse)
+      |}""".stripMargin
+  ).map(Document.parse)
 
   val parsedNotification = Document.parse("""{
       |  "unparsedNotificationId" : "e9f12af4-e183-4eab-a0ca-e69564aeca55",

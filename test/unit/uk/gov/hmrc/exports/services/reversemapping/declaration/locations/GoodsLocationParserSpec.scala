@@ -158,11 +158,14 @@ object GoodsLocationParserSpec {
       <ns3:Declaration>
         <ns3:GoodsShipment>
           <ns3:Consignment>
-            { maybeGoodsLocation.map { goodsLocation =>
-              <ns3:GoodsLocation>
-                { goodsLocation.identificationOfLocation.map { idOfLocation =>
-                  <ns3:Name>{idOfLocation}</ns3:Name>
-                }.getOrElse(NodeSeq.Empty) }
+            {
+      maybeGoodsLocation.map { goodsLocation =>
+        <ns3:GoodsLocation>
+                {
+          goodsLocation.identificationOfLocation.map { idOfLocation =>
+            <ns3:Name>{idOfLocation}</ns3:Name>
+          }.getOrElse(NodeSeq.Empty)
+        }
 
                 <ns3:TypeCode>{goodsLocation.typeOfLocation}</ns3:TypeCode>
                 <ns3:Address>
@@ -170,7 +173,8 @@ object GoodsLocationParserSpec {
                   <ns3:CountryCode>{goodsLocation.country}</ns3:CountryCode>
                 </ns3:Address>
               </ns3:GoodsLocation>
-            }.getOrElse(NodeSeq.Empty) }
+      }.getOrElse(NodeSeq.Empty)
+    }
           </ns3:Consignment>
         </ns3:GoodsShipment>
       </ns3:Declaration>

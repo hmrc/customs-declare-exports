@@ -28,7 +28,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorR
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class EmailConnector @Inject()(http: HttpClient)(implicit appConfig: AppConfig) extends Logging {
+class EmailConnector @Inject() (http: HttpClient)(implicit appConfig: AppConfig) extends Logging {
 
   import EmailConnector._
 
@@ -40,8 +40,8 @@ class EmailConnector @Inject()(http: HttpClient)(implicit appConfig: AppConfig) 
       .map { response =>
         if (response.status == ACCEPTED) EmailAccepted else sendEmailError(sendEmailRequest, response.status, response.body)
       }
-      .recover {
-        case response: UpstreamErrorResponse => sendEmailError(sendEmailRequest, response.statusCode, response.message)
+      .recover { case response: UpstreamErrorResponse =>
+        sendEmailError(sendEmailRequest, response.statusCode, response.message)
       }
   }
 

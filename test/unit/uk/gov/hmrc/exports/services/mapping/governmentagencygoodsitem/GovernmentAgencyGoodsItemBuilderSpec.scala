@@ -57,7 +57,7 @@ class GovernmentAgencyGoodsItemBuilderSpec
   "GovernmentAgencyGoodsItemBuilder" should {
 
     "map ExportItem Correctly" when {
-      for (declarationType: DeclarationType <- Seq(DeclarationType.STANDARD, DeclarationType.SUPPLEMENTARY, DeclarationType.CLEARANCE)) {
+      for (declarationType: DeclarationType <- Seq(DeclarationType.STANDARD, DeclarationType.SUPPLEMENTARY, DeclarationType.CLEARANCE))
         s"on the $declarationType journey" in {
           val exportItem = anItem(
             withSequenceId(99),
@@ -99,9 +99,8 @@ class GovernmentAgencyGoodsItemBuilderSpec
           goodsShipment.getGovernmentAgencyGoodsItem mustNot be(empty)
           goodsShipment.getGovernmentAgencyGoodsItem.get(0).getSequenceNumeric.intValue() mustBe 99
         }
-      }
 
-      for (declarationType: DeclarationType <- Seq(DeclarationType.SIMPLIFIED, DeclarationType.OCCASIONAL)) {
+      for (declarationType: DeclarationType <- Seq(DeclarationType.SIMPLIFIED, DeclarationType.OCCASIONAL))
         s"on the $declarationType journey" in {
           val exportItem = anItem(
             withSequenceId(99),
@@ -133,7 +132,6 @@ class GovernmentAgencyGoodsItemBuilderSpec
           goodsShipment.getGovernmentAgencyGoodsItem mustNot be(empty)
           goodsShipment.getGovernmentAgencyGoodsItem.get(0).getSequenceNumeric.intValue() mustBe 99
         }
-      }
     }
   }
 

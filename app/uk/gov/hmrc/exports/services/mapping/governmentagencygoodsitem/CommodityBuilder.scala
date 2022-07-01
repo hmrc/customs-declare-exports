@@ -30,7 +30,7 @@ import wco.datamodel.wco.declaration_ds.dms._2._
 
 import scala.collection.JavaConverters._
 
-class CommodityBuilder @Inject()() extends ModifyingBuilder[Commodity, GovernmentAgencyGoodsItem] {
+class CommodityBuilder @Inject() () extends ModifyingBuilder[Commodity, GovernmentAgencyGoodsItem] {
   val defaultMeasureCode = "KGM"
 
   override def buildThenAdd(model: Commodity, item: GovernmentAgencyGoodsItem): Unit =
@@ -61,37 +61,31 @@ class CommodityBuilder @Inject()() extends ModifyingBuilder[Commodity, Governmen
   }
 
   private def mapClassification(classifications: Seq[Classification]): java.util.List[WCOClassification] =
-    classifications
-      .map(classification => {
-        val wcoClassification = new WCOClassification
-        classification.identificationTypeCode.foreach { value =>
-          val typeCode = new ClassificationIdentificationTypeCodeType
-          typeCode.setValue(value)
-          wcoClassification.setIdentificationTypeCode(typeCode)
-        }
+    classifications.map { classification =>
+      val wcoClassification = new WCOClassification
+      classification.identificationTypeCode.foreach { value =>
+        val typeCode = new ClassificationIdentificationTypeCodeType
+        typeCode.setValue(value)
+        wcoClassification.setIdentificationTypeCode(typeCode)
+      }
 
-        classification.id.foreach { value =>
-          val id = new ClassificationIdentificationIDType
-          id.setValue(value)
-          wcoClassification.setID(id)
-        }
-        wcoClassification
-      })
-      .toList
-      .asJava
+      classification.id.foreach { value =>
+        val id = new ClassificationIdentificationIDType
+        id.setValue(value)
+        wcoClassification.setID(id)
+      }
+      wcoClassification
+    }.toList.asJava
 
   private def mapDangerousGoods(dangerousGoods: Seq[DangerousGoods]): java.util.List[WCODangerousGoods] =
-    dangerousGoods
-      .map(good => {
-        val wcoDangerousGoods = new WCODangerousGoods
-        val goodsUNDGIDType = new DangerousGoodsUNDGIDType
-        goodsUNDGIDType.setValue(good.undgid.get)
-        wcoDangerousGoods.setUNDGID(goodsUNDGIDType)
+    dangerousGoods.map { good =>
+      val wcoDangerousGoods = new WCODangerousGoods
+      val goodsUNDGIDType = new DangerousGoodsUNDGIDType
+      goodsUNDGIDType.setValue(good.undgid.get)
+      wcoDangerousGoods.setUNDGID(goodsUNDGIDType)
 
-        wcoDangerousGoods
-      })
-      .toList
-      .asJava
+      wcoDangerousGoods
+    }.toList.asJava
 
   private def mapGoodsMeasure(data: GoodsMeasure): WCOGoodsMeasure = {
 

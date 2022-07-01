@@ -30,7 +30,7 @@ import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.items.SingleItemParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.{DeclarationXmlParser, XmlTags}
 
-class SingleItemParser @Inject()(packageInformationParser: PackageInformationParser, procedureCodesParser: ProcedureCodesParser)
+class SingleItemParser @Inject() (packageInformationParser: PackageInformationParser, procedureCodesParser: ProcedureCodesParser)
     extends DeclarationXmlParser[ExportItem] {
 
   override def parse(itemXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[ExportItem] =

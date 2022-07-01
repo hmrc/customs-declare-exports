@@ -23,7 +23,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.UCR
 import wco.datamodel.wco.declaration_ds.dms._2.UCRTraderAssignedReferenceIDType
 
-class UCRBuilder @Inject()() extends ModifyingBuilder[ConsignmentReferences, GoodsShipment] {
+class UCRBuilder @Inject() () extends ModifyingBuilder[ConsignmentReferences, GoodsShipment] {
   override def buildThenAdd(model: ConsignmentReferences, goodsShipment: GoodsShipment): Unit =
     if (isDefined(model)) {
       goodsShipment.setUCR(createPersonalUCR(model))

@@ -64,19 +64,19 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with GuiceOneAppPerSui
 
     "insert all required entities with correct correlating values" in {
       val captorDeclaration: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
-      when(declarationRepository.create(captorDeclaration.capture())).thenAnswer({ invocation: InvocationOnMock =>
+      when(declarationRepository.create(captorDeclaration.capture())).thenAnswer { invocation: InvocationOnMock =>
         Future.successful(invocation.getArguments.head.asInstanceOf[ExportsDeclaration])
-      })
+      }
 
       val captorSubmission: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
-      when(submissionRepository.create(captorSubmission.capture())).thenAnswer({ invocation: InvocationOnMock =>
+      when(submissionRepository.create(captorSubmission.capture())).thenAnswer { invocation: InvocationOnMock =>
         Future.successful(invocation.getArguments.head.asInstanceOf[Submission])
-      })
+      }
 
       val captorParsedNotification: ArgumentCaptor[ParsedNotification] = ArgumentCaptor.forClass(classOf[ParsedNotification])
-      when(parsedNotificationRepository.create(captorParsedNotification.capture())).thenAnswer({ invocation: InvocationOnMock =>
+      when(parsedNotificationRepository.create(captorParsedNotification.capture())).thenAnswer { invocation: InvocationOnMock =>
         Future.successful(invocation.getArguments.head.asInstanceOf[ParsedNotification])
-      })
+      }
 
       val request = Json.obj("eori" -> eoriSpecified)
       val result: Future[Result] = route(app, post.withJsonBody(request)).get

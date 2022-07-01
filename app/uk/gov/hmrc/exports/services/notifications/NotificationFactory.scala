@@ -23,7 +23,7 @@ import javax.inject.Inject
 import scala.util.{Failure, Success, Try}
 import scala.xml.XML
 
-class NotificationFactory @Inject()(notificationParser: NotificationParser) extends Logging {
+class NotificationFactory @Inject() (notificationParser: NotificationParser) extends Logging {
 
   def buildNotifications(unparsedNotification: UnparsedNotification): Seq[ParsedNotification] =
     Try(XML.loadString(unparsedNotification.payload)).map(notificationParser.parse) match {

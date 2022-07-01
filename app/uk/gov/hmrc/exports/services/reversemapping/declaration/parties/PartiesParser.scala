@@ -28,7 +28,7 @@ import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 import javax.inject.Inject
 import scala.xml.NodeSeq
 
-class PartiesParser @Inject()(
+class PartiesParser @Inject() (
   entityDetailsParser: EntityDetailsParser,
   agentFunctionCodeParser: AgentFunctionCodeParser,
   declarationHolderParser: DeclarationHolderParser
@@ -70,7 +70,7 @@ class PartiesParser @Inject()(
       if exporterEori.equals(context.eori)
     } yield DeclarantIsExporter(YesNoStringAnswers.yes)
 
-  //the ConsigneeDetails section should never have an eori, so remove if present
+  // the ConsigneeDetails section should never have an eori, so remove if present
   private def filterOutEori(details: ConsigneeDetails): ConsigneeDetails =
     details.copy(details = details.details.copy(eori = None))
 
@@ -112,8 +112,8 @@ object PartiesParser {
         else
           None
 
-      explicitDec.copy(
-        parties = explicitDec.parties
+      explicitDec.copy(parties =
+        explicitDec.parties
           .copy(isExs = Some(IsExs(isExs)), isEntryIntoDeclarantsRecords = maybeEntryIntoDec, personPresentingGoodsDetails = maybePersonPresenting)
       )
     } else explicitDec

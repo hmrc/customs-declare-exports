@@ -24,7 +24,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 
 import javax.inject.Inject
 
-class DeclarationBuilder @Inject()(
+class DeclarationBuilder @Inject() (
   functionCodeBuilder: FunctionCodeBuilder,
   functionalReferenceIdBuilder: FunctionalReferenceIdBuilder,
   typeCodeBuilder: TypeCodeBuilder,

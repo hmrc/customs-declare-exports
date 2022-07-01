@@ -25,7 +25,7 @@ import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import javax.inject.Inject
 import scala.xml.NodeSeq
 
-class ItemsParser @Inject()(singleItemParser: SingleItemParser) extends DeclarationXmlParser[Seq[ExportItem]] {
+class ItemsParser @Inject() (singleItemParser: SingleItemParser) extends DeclarationXmlParser[Seq[ExportItem]] {
 
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Seq[ExportItem]] =
     (inputXml \ Declaration \ GoodsShipment \ GovernmentAgencyGoodsItem).map(singleItemParser.parse).toEitherOfList

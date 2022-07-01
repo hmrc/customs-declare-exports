@@ -24,7 +24,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.Declarant
 import wco.datamodel.wco.declaration_ds.dms._2.{DeclarantIdentificationIDType, _}
 
-class DeclarantBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class DeclarantBuilder @Inject() (countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
     if (isEidrWithPersonPresentingGoodsDetails(model))
@@ -61,12 +61,12 @@ class DeclarantBuilder @Inject()(countriesService: CountriesService) extends Mod
         declarantIdentificationIDType.setValue(eori)
         declarant.setID(declarantIdentificationIDType)
       case _ =>
-        declarantDetails.details.address.foreach(address => {
+        declarantDetails.details.address.foreach { address =>
           val declarantNameTextType = new DeclarantNameTextType
           declarantNameTextType.setValue(address.fullName)
           declarant.setName(declarantNameTextType)
           declarant.setAddress(mapAddress(address))
-        })
+        }
     }
 
     declarant

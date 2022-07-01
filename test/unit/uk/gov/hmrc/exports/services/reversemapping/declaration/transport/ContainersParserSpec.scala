@@ -150,18 +150,22 @@ class ContainersParserSpec extends UnitSpec {
       <ns3:Declaration>
         <ns3:GoodsShipment>
           <ns3:Consignment>
-            {transportStructure.map {case (id, seals) =>
-              <ns3:TransportEquipment>
+            {
+      transportStructure.map { case (id, seals) =>
+        <ns3:TransportEquipment>
                 <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
                 <ns3:ID>{id}</ns3:ID>
-                {seals.map { sealId =>
-                  <ns3:Seal>
+                {
+          seals.map { sealId =>
+            <ns3:Seal>
                     <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
                     <ns3:ID>{sealId}</ns3:ID>
                   </ns3:Seal>
-                }}
+          }
+        }
               </ns3:TransportEquipment>
-            }}
+      }
+    }
           </ns3:Consignment>
         </ns3:GoodsShipment>
       </ns3:Declaration>

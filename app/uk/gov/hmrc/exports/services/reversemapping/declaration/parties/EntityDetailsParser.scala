@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.parties
 
-import uk.gov.hmrc.exports.models.declaration.{EntityDetails, Address => AddressModel}
+import uk.gov.hmrc.exports.models.declaration.{Address => AddressModel, EntityDetails}
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._

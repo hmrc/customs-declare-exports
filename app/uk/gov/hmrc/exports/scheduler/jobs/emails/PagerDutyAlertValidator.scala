@@ -24,7 +24,7 @@ import uk.gov.hmrc.mongo.workitem.WorkItem
 import java.time.{Duration, Instant}
 import javax.inject.Inject
 
-class PagerDutyAlertValidator @Inject()(appConfig: AppConfig) {
+class PagerDutyAlertValidator @Inject() (appConfig: AppConfig) {
 
   def isPagerDutyAlertRequiredFor(workItem: WorkItem[SendEmailDetails]): Boolean = {
     val isStatusFailed = workItem.status == Failed

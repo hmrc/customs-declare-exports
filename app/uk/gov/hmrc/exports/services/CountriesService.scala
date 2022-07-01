@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.models.Country
 
 import scala.collection.JavaConverters._
 
-class CountriesService @Inject()() {
+class CountriesService @Inject() () {
 
   private val countries: List[Country] = {
     val jsonFile = getClass.getResourceAsStream("/code-lists/location-autocomplete-canonical-list.json")
@@ -32,9 +32,8 @@ class CountriesService @Inject()() {
     def fromJsonFile: List[Country] =
       Json.parse(jsonFile) match {
         case JsArray(cs) =>
-          cs.toList.collect {
-            case JsArray(Seq(c: JsString, cc: JsString)) =>
-              Country(c.value, countryCode(cc.value))
+          cs.toList.collect { case JsArray(Seq(c: JsString, cc: JsString)) =>
+            Country(c.value, countryCode(cc.value))
           }
         case _ =>
           throw new IllegalArgumentException("Could not read JSON array of countries from : " + jsonFile)

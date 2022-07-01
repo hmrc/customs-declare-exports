@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.controllers.RESTController
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
-import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionRequest, Action => SubmissionAction}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action => SubmissionAction, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.{ACCEPTED, ADDITIONAL_DOCUMENTS_REQUIRED, SubmissionStatus}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
@@ -34,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
 @Singleton
-class GenerateSubmittedDecController @Inject()(
+class GenerateSubmittedDecController @Inject() (
   declarationRepository: DeclarationRepository,
   submissionRepository: SubmissionRepository,
   parsedNotificationRepository: ParsedNotificationRepository,

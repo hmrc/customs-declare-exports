@@ -27,7 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
 
 @Singleton
-class EmailSender @Inject()(
+class EmailSender @Inject() (
   submissionRepository: SubmissionRepository,
   customsDataStoreConnector: CustomsDataStoreConnector,
   emailConnector: EmailConnector

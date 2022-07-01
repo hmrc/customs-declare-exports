@@ -22,14 +22,14 @@ import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.declaration_ds.dms._2.DeclarationFunctionalReferenceIDType
 
-class FunctionalReferenceIdBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class FunctionalReferenceIdBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
   override def buildThenAdd(exportsCacheModel: ExportsDeclaration, declaration: Declaration) {
-    exportsCacheModel.consignmentReferences.foreach(references => {
+    exportsCacheModel.consignmentReferences.foreach { references =>
       if (references.lrn.nonEmpty) {
         buildThenAdd(references.lrn, declaration)
       }
-    })
+    }
   }
 
   def buildThenAdd(functionalReferenceId: String, declaration: Declaration): Unit = {

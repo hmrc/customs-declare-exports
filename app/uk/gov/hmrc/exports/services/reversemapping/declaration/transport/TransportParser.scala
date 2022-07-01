@@ -25,7 +25,7 @@ import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlPar
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
 
-class TransportParser @Inject()(containersParser: ContainersParser) extends DeclarationXmlParser[Transport] {
+class TransportParser @Inject() (containersParser: ContainersParser) extends DeclarationXmlParser[Transport] {
 
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Transport] =
     containersParser.parse(inputXml).map { containers =>

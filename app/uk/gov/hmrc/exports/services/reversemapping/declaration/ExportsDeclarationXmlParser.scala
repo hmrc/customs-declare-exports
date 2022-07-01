@@ -31,7 +31,7 @@ import java.util.UUID
 import javax.inject.Inject
 import scala.xml.NodeSeq
 
-class ExportsDeclarationXmlParser @Inject()(
+class ExportsDeclarationXmlParser @Inject() (
   additionalDeclarationTypeParser: AdditionalDeclarationTypeParser,
   consignmentReferencesParser: ConsignmentReferencesParser,
   mucrParser: MucrParser,
@@ -48,7 +48,7 @@ class ExportsDeclarationXmlParser @Inject()(
 
   private def buildExportsDeclaration(declarationXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[ExportsDeclaration] = {
 
-    //set fields from values found in xml
+    // set fields from values found in xml
     val decFromXmlValues = for {
       additionalDeclarationType <- additionalDeclarationTypeParser.parse(declarationXml)
       declarationType <- deriveDeclarationType(additionalDeclarationType)
@@ -58,31 +58,30 @@ class ExportsDeclarationXmlParser @Inject()(
       transport <- transportParser.parse(declarationXml)
       parties <- partiesParser.parse(declarationXml)
       locations <- locationsParser.parse(declarationXml)
-    } yield
-      ExportsDeclaration(
-        id = UUID.randomUUID().toString,
-        eori = context.eori,
-        status = DeclarationStatus.COMPLETE,
-        createdDateTime = Instant.now(),
-        updatedDateTime = Instant.now(),
-        sourceId = None,
-        `type` = declarationType,
-        dispatchLocation = None,
-        additionalDeclarationType = additionalDeclarationType,
-        consignmentReferences = consignmentReferences,
-        linkDucrToMucr = mucr.map(_ => YesNoAnswer.yes),
-        mucr = mucr,
-        transport = transport,
-        parties = parties,
-        locations = locations,
-        items = items,
-        readyForSubmission = Some(true),
-        totalNumberOfItems = None,
-        previousDocuments = None,
-        natureOfTransaction = None
-      )
+    } yield ExportsDeclaration(
+      id = UUID.randomUUID().toString,
+      eori = context.eori,
+      status = DeclarationStatus.COMPLETE,
+      createdDateTime = Instant.now(),
+      updatedDateTime = Instant.now(),
+      sourceId = None,
+      `type` = declarationType,
+      dispatchLocation = None,
+      additionalDeclarationType = additionalDeclarationType,
+      consignmentReferences = consignmentReferences,
+      linkDucrToMucr = mucr.map(_ => YesNoAnswer.yes),
+      mucr = mucr,
+      transport = transport,
+      parties = parties,
+      locations = locations,
+      items = items,
+      readyForSubmission = Some(true),
+      totalNumberOfItems = None,
+      previousDocuments = None,
+      natureOfTransaction = None
+    )
 
-    //infer other values not present in the xml
+    // infer other values not present in the xml
     decFromXmlValues.map(PartiesParser.setInferredValues)
   }
 

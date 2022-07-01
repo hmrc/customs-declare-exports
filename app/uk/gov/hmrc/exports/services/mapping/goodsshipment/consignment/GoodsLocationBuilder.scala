@@ -24,7 +24,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class GoodsLocationBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[GoodsLocation, GoodsShipment.Consignment] {
+class GoodsLocationBuilder @Inject() (countriesService: CountriesService) extends ModifyingBuilder[GoodsLocation, GoodsShipment.Consignment] {
   override def buildThenAdd(model: GoodsLocation, consignment: Consignment): Unit =
     if (isDefined(model)) {
       consignment.setGoodsLocation(buildEoriOrAddress(model))

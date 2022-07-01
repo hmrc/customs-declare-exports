@@ -101,11 +101,13 @@ class ItemsParserSpec extends UnitSpec {
   private def inputXml(governmentAgencyGoodsItemsAmount: Int = 0) = ReverseMappingTestData.inputXmlMetaData {
     <ns3:Declaration>
       <ns3:GoodsShipment>
-        { (1 to governmentAgencyGoodsItemsAmount).map { i =>
-          <ns3:GovernmentAgencyGoodsItem>
+        {
+      (1 to governmentAgencyGoodsItemsAmount).map { i =>
+        <ns3:GovernmentAgencyGoodsItem>
             <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
           </ns3:GovernmentAgencyGoodsItem>
-        } }
+      }
+    }
       </ns3:GoodsShipment>
     </ns3:Declaration>
   }

@@ -29,7 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 @Singleton
-class ParsedNotificationRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
+class ParsedNotificationRepository @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[ParsedNotification](
       mongoComponent = mongoComponent,
       collectionName = "notifications",

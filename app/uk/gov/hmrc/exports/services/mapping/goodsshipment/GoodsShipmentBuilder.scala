@@ -25,7 +25,7 @@ import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.Government
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class GoodsShipmentBuilder @Inject()(
+class GoodsShipmentBuilder @Inject() (
   goodsShipmentNatureOfTransactionBuilder: GoodsShipmentNatureOfTransactionBuilder,
   consigneeBuilder: ConsigneeBuilder,
   consignmentBuilder: ConsignmentBuilder,

@@ -23,7 +23,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGo
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem.DomesticDutyTaxParty
 import wco.datamodel.wco.declaration_ds.dms._2.{DomesticDutyTaxPartyIdentificationIDType, DomesticDutyTaxPartyRoleCodeType}
 
-class DomesticDutyTaxPartyBuilder @Inject()() extends ModifyingBuilder[AdditionalFiscalReference, GovernmentAgencyGoodsItem] {
+class DomesticDutyTaxPartyBuilder @Inject() () extends ModifyingBuilder[AdditionalFiscalReference, GovernmentAgencyGoodsItem] {
   override def buildThenAdd(model: AdditionalFiscalReference, item: GovernmentAgencyGoodsItem): Unit =
     item.getDomesticDutyTaxParty.add(createDomesticDutyTaxParty(model))
 

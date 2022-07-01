@@ -25,7 +25,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.Random
 
-class RoutineRunner @Inject()(
+class RoutineRunner @Inject() (
   reattemptParsing: ReattemptNotificationParsingRoutine,
   actorSystem: ActorSystem,
   applicationLifecycle: ApplicationLifecycle,
