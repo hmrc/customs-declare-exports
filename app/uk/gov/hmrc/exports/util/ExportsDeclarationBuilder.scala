@@ -97,10 +97,10 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
   def withoutDepartureTransport(): ExportsDeclarationModifier =
     declaration =>
-      declaration.copy(
-        transport = declaration.transport
+      declaration.copy(transport =
+        declaration.transport
           .copy(borderModeOfTransportCode = None, meansOfTransportOnDepartureIDNumber = None, meansOfTransportOnDepartureType = None)
-    )
+      )
 
   def withDepartureTransport(
     borderModeOfTransportCode: ModeOfTransportCode = ModeOfTransportCode.Empty,
@@ -119,13 +119,13 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     meansOfTransportOnDepartureIDNumber: String
   ): ExportsDeclarationModifier =
     declaration =>
-      declaration.copy(
-        transport = declaration.transport.copy(
+      declaration.copy(transport =
+        declaration.transport.copy(
           borderModeOfTransportCode = Some(borderModeOfTransportCode),
           meansOfTransportOnDepartureIDNumber = Some(meansOfTransportOnDepartureIDNumber),
           meansOfTransportOnDepartureType = Some(meansOfTransportOnDepartureType)
         )
-    )
+      )
 
   def withoutContainerData(): ExportsDeclarationModifier =
     declaration => declaration.copy(transport = declaration.transport.copy(containers = None))
@@ -181,10 +181,10 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     representingAnotherAgent: Option[String] = Some("Yes")
   ): ExportsDeclarationModifier =
     cache =>
-      cache.copy(
-        parties = cache.parties
+      cache.copy(parties =
+        cache.parties
           .copy(representativeDetails = Some(RepresentativeDetails(details, statusCode, representingAnotherAgent)))
-    )
+      )
 
   def withDeclarationAdditionalActors(data: DeclarationAdditionalActor*): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(declarationAdditionalActorsData = Some(DeclarationAdditionalActors(data))))
@@ -194,8 +194,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
   def withDeclarationHolders(holders: DeclarationHolder*): ExportsDeclarationModifier = {
     val isRequired = Some(YesNoAnswer(if (holders.isEmpty) "No" else "Yes"))
-    cache =>
-      cache.copy(parties = cache.parties.copy(declarationHoldersData = Some(DeclarationHolders(holders, isRequired))))
+    cache => cache.copy(parties = cache.parties.copy(declarationHoldersData = Some(DeclarationHolders(holders, isRequired))))
   }
 
   def withoutCarrierDetails(): ExportsDeclarationModifier =
@@ -273,8 +272,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
       itemModifiers.foldLeft(ExportItem(id = uuid, sequenceId = idx))((current, modifier) => modifier(current))
     }
 
-    cache =>
-      cache.copy(items = cache.items ++ items.toSet)
+    cache => cache.copy(items = cache.items ++ items.toSet)
   }
 
   def withoutTotalNumberOfItems(): ExportsDeclarationModifier = _.copy(totalNumberOfItems = None)
@@ -286,8 +284,8 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     exchangeRate: Option[String] = None,
     totalPackage: String = "1"
   ): ExportsDeclarationModifier =
-    _.copy(
-      totalNumberOfItems = Some(
+    _.copy(totalNumberOfItems =
+      Some(
         TotalNumberOfItems(
           totalAmountInvoiced,
           totalAmountInvoicedCurrency,
@@ -305,26 +303,26 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
   val withoutBorderTransport: ExportsDeclarationModifier =
     declaration =>
-      declaration.copy(
-        transport = declaration.transport.copy(
+      declaration.copy(transport =
+        declaration.transport.copy(
           meansOfTransportCrossingTheBorderIDNumber = None,
           meansOfTransportCrossingTheBorderNationality = None,
           meansOfTransportCrossingTheBorderType = None
         )
-    )
+      )
 
   def withBorderTransport(
     meansOfTransportCrossingTheBorderType: Option[String] = None,
     meansOfTransportCrossingTheBorderIDNumber: Option[String] = None
   ): ExportsDeclarationModifier =
     declaration =>
-      declaration.copy(
-        transport = declaration.transport.copy(
+      declaration.copy(transport =
+        declaration.transport.copy(
           meansOfTransportCrossingTheBorderNationality = None,
           meansOfTransportCrossingTheBorderType = meansOfTransportCrossingTheBorderType,
           meansOfTransportCrossingTheBorderIDNumber = meansOfTransportCrossingTheBorderIDNumber
         )
-    )
+      )
 
   val withoutTransportCountry: ExportsDeclarationModifier =
     declaration => declaration.copy(transport = declaration.transport.copy(transportCrossingTheBorderNationality = None))
@@ -335,10 +333,10 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
   def withTransportPayment(payment: String): ExportsDeclarationModifier =
     declaration =>
-      declaration.copy(
-        transport = declaration.transport
+      declaration.copy(transport =
+        declaration.transport
           .copy(expressConsignment = Some(YesNoAnswer.yes), transportPayment = Some(TransportPayment(payment)))
-    )
+      )
 
   def withUpdateDate(year: Int, month: Int, dayOfMonth: Int): ExportsDeclarationModifier =
     _.copy(updatedDateTime = ZonedDateTime.of(year, month, dayOfMonth, 10, 0, 0, 0, ZoneOffset.UTC).toInstant)

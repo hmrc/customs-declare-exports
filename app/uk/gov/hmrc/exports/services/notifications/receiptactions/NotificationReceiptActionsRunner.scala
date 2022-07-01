@@ -27,7 +27,7 @@ import javax.inject.{Inject, Named, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class NotificationReceiptActionsRunner @Inject()(
+class NotificationReceiptActionsRunner @Inject() (
   unparsedNotificationWorkItemRepository: UnparsedNotificationWorkItemRepository,
   notificationReceiptActionsExecutor: NotificationReceiptActionsExecutor
 )(implicit @Named("backgroundTasksExecutionContext") ec: ExecutionContext)
@@ -55,9 +55,8 @@ class NotificationReceiptActionsRunner @Inject()(
       .flatMap { _ =>
         unparsedNotificationWorkItemRepository.complete(unparsedNotificationWorkItem.id, Succeeded)
       }
-      .recoverWith {
-        case _ =>
-          unparsedNotificationWorkItemRepository.markAs(unparsedNotificationWorkItem.id, Failed)
+      .recoverWith { case _ =>
+        unparsedNotificationWorkItemRepository.markAs(unparsedNotificationWorkItem.id, Failed)
       }
 
 }

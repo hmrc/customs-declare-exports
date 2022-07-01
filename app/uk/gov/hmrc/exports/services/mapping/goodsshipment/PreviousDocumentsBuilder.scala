@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.services.mapping.goodsshipment.PreviousDocumentsBuild
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.declaration_ds.dms._2.{PreviousDocumentCategoryCodeType, PreviousDocumentIdentificationIDType, PreviousDocumentTypeCodeType}
 
-class PreviousDocumentsBuilder @Inject()() extends ModifyingBuilder[PreviousDocuments, GoodsShipment] {
+class PreviousDocumentsBuilder @Inject() () extends ModifyingBuilder[PreviousDocuments, GoodsShipment] {
 
   private val ducrTypeCodeValue = "DCR"
   private val mucrTypeCodeValue = "MCR"

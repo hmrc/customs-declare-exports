@@ -25,7 +25,7 @@ import wco.datamodel.wco.declaration_ds.dms._2._
 
 import javax.inject.Inject
 
-class SpecificCircumstancesCodeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class SpecificCircumstancesCodeBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(exportsDeclaration: ExportsDeclaration, declaration: Declaration): Unit =
     exportsDeclaration.`type` match {
       case STANDARD | SIMPLIFIED | OCCASIONAL | CLEARANCE =>

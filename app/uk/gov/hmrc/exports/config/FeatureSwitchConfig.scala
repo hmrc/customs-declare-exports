@@ -23,7 +23,7 @@ import uk.gov.hmrc.exports.features.FeatureStatus.FeatureStatus
 import uk.gov.hmrc.exports.features.{Feature, FeatureStatus}
 
 @Singleton
-class FeatureSwitchConfig @Inject()(configuration: Configuration) {
+class FeatureSwitchConfig @Inject() (configuration: Configuration) {
 
   private def loadConfig(key: String): String =
     configuration.getOptional[String](key).getOrElse(throw new Exception(s"Missing configuration key: $key"))

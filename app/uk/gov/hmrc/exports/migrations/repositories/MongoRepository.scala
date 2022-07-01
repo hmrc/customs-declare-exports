@@ -70,9 +70,8 @@ abstract class MongoRepository private[migrations] (val mongoDatabase: MongoData
 
   private def getIndexDocument(uniqueFields: Array[String]): Document = {
     val indexDocument = new Document
-    for (field <- uniqueFields) {
+    for (field <- uniqueFields)
       indexDocument.append(field, 1)
-    }
     indexDocument
   }
 

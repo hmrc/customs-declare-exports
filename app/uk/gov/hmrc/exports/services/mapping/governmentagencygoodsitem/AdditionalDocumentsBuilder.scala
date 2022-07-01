@@ -30,7 +30,7 @@ import wco.datamodel.wco.declaration_ds.dms._2.{AdditionalDocumentEffectiveDateT
 
 import scala.collection.JavaConverters._
 
-class AdditionalDocumentsBuilder @Inject()() extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
+class AdditionalDocumentsBuilder @Inject() () extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
 
   def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem): Unit = {
 
@@ -89,7 +89,7 @@ object AdditionalDocumentsBuilder {
       .toList
       .asJava
 
-  //TODO get rid of the interim model GovernmentAgencyGoodsItemAdditionalDocument and map to wco dec directly
+  // TODO get rid of the interim model GovernmentAgencyGoodsItemAdditionalDocument and map to wco dec directly
 
   def createAdditionalDocument(doc: GovernmentAgencyGoodsItemAdditionalDocument): WCOAdditionalDocument = {
     val additionalDocument = new WCOAdditionalDocument
@@ -207,8 +207,8 @@ object AdditionalDocumentsBuilder {
         GovernmentAgencyGoodsItemAdditionalDocumentSubmitter(name = Some(stripCarriageReturns(name)))
       },
       effectiveDateTime = additionalDocument.dateOfValidity
-        .map(
-          date => DateTimeElement(DateTimeString(formatCode = dateTimeCode, value = date.toLocalDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"))))
+        .map(date =>
+          DateTimeElement(DateTimeString(formatCode = dateTimeCode, value = date.toLocalDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"))))
         ),
       writeOff = createAdditionalDocumentWriteOff(additionalDocument, applyDefaults)
     )

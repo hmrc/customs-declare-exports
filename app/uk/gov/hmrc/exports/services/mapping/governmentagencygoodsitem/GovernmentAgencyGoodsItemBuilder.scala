@@ -26,7 +26,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.{GovernmentAgencyG
 
 import javax.inject.Inject
 
-class GovernmentAgencyGoodsItemBuilder @Inject()(
+class GovernmentAgencyGoodsItemBuilder @Inject() (
   statisticalValueAmountBuilder: StatisticalValueAmountBuilder,
   packagingBuilder: PackagingBuilder,
   governmentProcedureBuilder: GovernmentProcedureBuilder,
@@ -40,7 +40,7 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
   private val journeysWithCommodityMeasurements = Set(DeclarationType.STANDARD, DeclarationType.SUPPLEMENTARY, DeclarationType.CLEARANCE)
 
   override def buildThenAdd(exportsCacheModel: ExportsDeclaration, goodsShipment: Declaration.GoodsShipment): Unit =
-    exportsCacheModel.items.foreach(exportItem => {
+    exportsCacheModel.items.foreach { exportItem =>
       val wcoGovernmentAgencyGoodsItem = new WCOGovernmentAgencyGoodsItem
       wcoGovernmentAgencyGoodsItem.setSequenceNumeric(new java.math.BigDecimal(exportItem.sequenceId))
 
@@ -59,7 +59,7 @@ class GovernmentAgencyGoodsItemBuilder @Inject()(
       )
 
       goodsShipment.getGovernmentAgencyGoodsItem.add(wcoGovernmentAgencyGoodsItem)
-    })
+    }
 
   private def buildCommodityMeasurements(
     exportItem: ExportItem,

@@ -23,13 +23,12 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem.Packaging
 import wco.datamodel.wco.declaration_ds.dms._2.{PackagingMarksNumbersIDType, PackagingQuantityQuantityType, PackagingTypeCodeType}
 
-class PackagingBuilder @Inject()() extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
+class PackagingBuilder @Inject() () extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
 
   def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem): Unit =
-    exportItem.packageInformation.getOrElse(List.empty).zipWithIndex.foreach {
-      case (packing, index) =>
-        wcoGovernmentAgencyGoodsItem.getPackaging
-          .add(createWcoPackaging(index, packing.typesOfPackages, packing.numberOfPackages, packing.shippingMarks))
+    exportItem.packageInformation.getOrElse(List.empty).zipWithIndex.foreach { case (packing, index) =>
+      wcoGovernmentAgencyGoodsItem.getPackaging
+        .add(createWcoPackaging(index, packing.typesOfPackages, packing.numberOfPackages, packing.shippingMarks))
     }
 
   private def createWcoPackaging(
@@ -48,7 +47,7 @@ class PackagingBuilder @Inject()() extends ModifyingBuilder[ExportItem, GoodsShi
 
     quantityOpt.foreach { quantity =>
       val packagingQuantityQuantityType = new PackagingQuantityQuantityType
-      //TODO noticed here that quantity type in old scala wco is not captured.. no cannot set :-
+      // TODO noticed here that quantity type in old scala wco is not captured.. no cannot set :-
       // packagingQuantityQuantityType.setUnitCode(????)
       packagingQuantityQuantityType.setValue(new java.math.BigDecimal(quantity))
       wcoPackaging.setQuantityQuantity(packagingQuantityQuantityType)

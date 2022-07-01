@@ -51,7 +51,7 @@ class ExportsMigrationTool(
         case exc: Throwable =>
           logger.error("ExportsMigrationTool - error on executing migration", exc)
       } finally {
-        lockManager.releaseLockDefault() //we do it anyway, it's idempotent
+        lockManager.releaseLockDefault() // we do it anyway, it's idempotent
         logger.info("ExportsMigrationTool has finished his job.")
       }
 
@@ -67,7 +67,7 @@ class ExportsMigrationTool(
   private def executeIfNewOrRunAlways(migrDefinition: MigrationDefinition): Unit = {
     val changeEntry = ChangeEntry(migrDefinition)
 
-    try {
+    try
       if (isNewChange(changeEntry)) {
         lockManager.ensureLockDefault()
         migrDefinition.migrationFunction(database)
@@ -82,7 +82,7 @@ class ExportsMigrationTool(
       } else {
         logger.info(s"${changeEntry} pass over")
       }
-    } catch {
+    catch {
       case exc: ExportsMigrationException =>
         logger.error(s"Error while executing '${migrDefinition.migrationInformation}' ${exc.getMessage}")
     }

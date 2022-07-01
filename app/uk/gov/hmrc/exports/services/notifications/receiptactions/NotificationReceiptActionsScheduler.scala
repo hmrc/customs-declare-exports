@@ -24,7 +24,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 
 @Singleton
-class NotificationReceiptActionsScheduler @Inject()(actorSystem: ActorSystem, notificationReceiptActionsRunner: NotificationReceiptActionsRunner) {
+class NotificationReceiptActionsScheduler @Inject() (actorSystem: ActorSystem, notificationReceiptActionsRunner: NotificationReceiptActionsRunner) {
 
   def scheduleActionsExecution()(implicit ec: ExecutionContext): Cancellable =
     actorSystem.scheduler.scheduleOnce(FiniteDuration(0, SECONDS)) {

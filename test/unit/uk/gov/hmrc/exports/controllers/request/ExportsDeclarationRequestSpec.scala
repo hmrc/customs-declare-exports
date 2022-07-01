@@ -27,12 +27,15 @@ class ExportsDeclarationRequestSpec extends UnitSpec {
       Json
         .parse(ExportsDeclarationSpec.exportsDeclarationRequestAsString)
         .validate[ExportsDeclarationRequest]
-        .fold(error => fail(s"Could not parse - $error"), declaration => {
-          declaration.transport.borderModeOfTransportCode mustNot be(empty)
-          declaration.transport.meansOfTransportOnDepartureType mustNot be(empty)
-          declaration.transport.expressConsignment mustBe Some(YesNoAnswer.yes)
-          declaration.transport.transportPayment mustNot be(empty)
-        })
+        .fold(
+          error => fail(s"Could not parse - $error"),
+          declaration => {
+            declaration.transport.borderModeOfTransportCode mustNot be(empty)
+            declaration.transport.meansOfTransportOnDepartureType mustNot be(empty)
+            declaration.transport.expressConsignment mustBe Some(YesNoAnswer.yes)
+            declaration.transport.transportPayment mustNot be(empty)
+          }
+        )
     }
   }
 }

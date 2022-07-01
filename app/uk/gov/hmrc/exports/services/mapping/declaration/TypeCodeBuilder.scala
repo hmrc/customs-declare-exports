@@ -24,13 +24,13 @@ import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.declaration_ds.dms._2.DeclarationTypeCodeType
 
-class TypeCodeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class TypeCodeBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
   override def buildThenAdd(exportsDeclaration: ExportsDeclaration, declaration: Declaration): Unit =
-    exportsDeclaration.additionalDeclarationType.foreach(additionalDeclarationType => {
+    exportsDeclaration.additionalDeclarationType.foreach { additionalDeclarationType =>
       val dispatchLocation = codeForDispatchLocation(exportsDeclaration)
       declaration.setTypeCode(createTypeCode(additionalDeclarationType, dispatchLocation))
-    })
+    }
 
   def buildThenAdd(codeType: String, declaration: Declaration): Unit = {
     val typeCodeType = new DeclarationTypeCodeType()

@@ -56,14 +56,16 @@ class MucrParserSpec extends UnitSpec {
   private def inputXml(previousDocument: Option[PreviousDocument] = None): Elem =
     <meta>
       <ns3:Declaration>
-        { previousDocument.map { tc =>
-          <ns3:GoodsShipment>
+        {
+      previousDocument.map { tc =>
+        <ns3:GoodsShipment>
             <ns3:PreviousDocument>
               <ns3:TypeCode>{tc.typeCode}</ns3:TypeCode>
               <ns3:ID>{tc.id}</ns3:ID>
             </ns3:PreviousDocument>
           </ns3:GoodsShipment>
-        }.getOrElse(NodeSeq.Empty) }
+      }.getOrElse(NodeSeq.Empty)
+    }
       </ns3:Declaration>
     </meta>
 }

@@ -26,7 +26,7 @@ import uk.gov.hmrc.exports.controllers.{JSONResponses, RESTController}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class EADController @Inject()(
+class EADController @Inject() (
   authenticator: Authenticator,
   connector: CustomsDeclarationsInformationConnector,
   headerValidator: HeaderValidator,

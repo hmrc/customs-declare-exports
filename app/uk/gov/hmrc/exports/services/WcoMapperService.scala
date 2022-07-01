@@ -25,7 +25,7 @@ import java.io.StringWriter
 import javax.inject.Inject
 import javax.xml.bind.{JAXBContext, JAXBElement, Marshaller}
 
-class WcoMapperService @Inject()(submissionMetadataBuilder: SubmissionMetaDataBuilder) {
+class WcoMapperService @Inject() (submissionMetadataBuilder: SubmissionMetaDataBuilder) {
 
   def produceMetaData(exportsCacheModel: ExportsDeclaration): MetaData =
     submissionMetadataBuilder.build(exportsCacheModel)

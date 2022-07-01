@@ -29,7 +29,7 @@ import wco.datamodel.wco.declaration_ds.dms._2.{
 
 import javax.inject.Inject
 
-class AdditionalInformationBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class AdditionalInformationBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit = {
     val maybeLast3CharsOfGoodsLocation = model.locations.goodsLocation.flatMap(_.identificationOfLocation).map(_.takeRight(3).toUpperCase)

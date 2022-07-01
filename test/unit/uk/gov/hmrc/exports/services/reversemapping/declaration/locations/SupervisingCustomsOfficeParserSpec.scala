@@ -66,11 +66,13 @@ object SupervisingCustomsOfficeParserSpec {
   private def inputXml(supervisingOffice: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        { supervisingOffice.map { id =>
+        {
+      supervisingOffice.map { id =>
         <ns3:SupervisingOffice>
           <ns3:ID>{id}</ns3:ID>
         </ns3:SupervisingOffice>
-      }.getOrElse(NodeSeq.Empty) }
+      }.getOrElse(NodeSeq.Empty)
+    }
       </ns3:Declaration>
     </meta>
 

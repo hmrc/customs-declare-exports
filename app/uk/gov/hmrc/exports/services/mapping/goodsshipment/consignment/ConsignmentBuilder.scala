@@ -21,7 +21,7 @@ import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
-class ConsignmentBuilder @Inject()(
+class ConsignmentBuilder @Inject() (
   goodsLocationBuilder: GoodsLocationBuilder,
   containerCodeBuilder: ContainerCodeBuilder,
   departureTransportMeansBuilder: DepartureTransportMeansBuilder,

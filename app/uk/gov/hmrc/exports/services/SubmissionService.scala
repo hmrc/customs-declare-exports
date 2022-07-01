@@ -23,7 +23,7 @@ import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.{Monitors, Timers}
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{CUSTOMS_POSITION_DENIED, CUSTOMS_POSITION_GRANTED}
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.CUSTOMS_POSITION_GRANTED
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
@@ -34,7 +34,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SubmissionService @Inject()(
+class SubmissionService @Inject() (
   customsDeclarationsConnector: CustomsDeclarationsConnector,
   submissionRepository: SubmissionRepository,
   declarationRepository: DeclarationRepository,
@@ -99,13 +99,12 @@ class SubmissionService @Inject()(
     logger.info(s"Declaration [${declaration.id}]: $message")
 
   private def submit(declaration: ExportsDeclaration, payload: String)(implicit hc: HeaderCarrier): Future[String] =
-    customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).recoverWith {
-      case throwable: Throwable =>
-        logProgress(declaration, "Submission failed")
-        declarationRepository.revertStatusToDraft(declaration) flatMap { _ =>
-          logProgress(declaration, "Reverted declaration to DRAFT")
-          Future.failed[String](throwable)
-        }
+    customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).recoverWith { case throwable: Throwable =>
+      logProgress(declaration, "Submission failed")
+      declarationRepository.revertStatusToDraft(declaration) flatMap { _ =>
+        logProgress(declaration, "Reverted declaration to DRAFT")
+        Future.failed[String](throwable)
+      }
     }
 
   private def sendCancellationRequest(submission: Submission, cancellation: SubmissionCancellation)(

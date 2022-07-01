@@ -97,8 +97,8 @@ object WarehouseIdentificationParserSpec {
       <ns3:Declaration>
         <ns3:GoodsShipment>
           <ns3:Warehouse>
-            { typeCode.map { code => <ns3:TypeCode>{code}</ns3:TypeCode> }.getOrElse(NodeSeq.Empty) }
-            { warehouseId.map { id => <ns3:ID>{id}</ns3:ID> }.getOrElse(NodeSeq.Empty) }
+            {typeCode.map(code => <ns3:TypeCode>{code}</ns3:TypeCode>).getOrElse(NodeSeq.Empty)}
+            {warehouseId.map(id => <ns3:ID>{id}</ns3:ID>).getOrElse(NodeSeq.Empty)}
           </ns3:Warehouse>
         </ns3:GoodsShipment>
       </ns3:Declaration>

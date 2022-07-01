@@ -88,10 +88,9 @@ class SplitTheNotificationsCollectionISpec extends IntegrationTestMigrationToolS
         val notificationsRepo = getCollection(collectionUnderTest)
         val unparsedNotificationsRepo = getUnparsedNotificationsRepo
 
-        allNotificationsBeforeChanges.foreach {
-          case (parsed, unparsed) =>
-            notificationsRepo.insertOne(parsed)
-            unparsedNotificationsRepo.insertOne(unparsed)
+        allNotificationsBeforeChanges.foreach { case (parsed, unparsed) =>
+          notificationsRepo.insertOne(parsed)
+          unparsedNotificationsRepo.insertOne(unparsed)
         }
 
         changeLog.migrationFunction(database)
@@ -101,21 +100,18 @@ class SplitTheNotificationsCollectionISpec extends IntegrationTestMigrationToolS
         parsedNotificationsAfter.length mustBe 3
         unparsedNotificationsAfter.length mustBe 3
 
-        allNotificationsBeforeChanges.foreach {
-          case (parsed, unparsed) =>
-            val parsedNotificationAfter = parsedNotificationsAfter.find(_.get("_id", classOf[ObjectId]) == parsed.get("_id", classOf[ObjectId]))
-            parsedNotificationAfter mustBe defined
-            val unparsedNotificationAfter = unparsedNotificationsAfter.find(_.get("_id", classOf[ObjectId]) == unparsed.get("_id", classOf[ObjectId]))
-            unparsedNotificationAfter mustBe defined
+        allNotificationsBeforeChanges.foreach { case (parsed, unparsed) =>
+          val parsedNotificationAfter = parsedNotificationsAfter.find(_.get("_id", classOf[ObjectId]) == parsed.get("_id", classOf[ObjectId]))
+          parsedNotificationAfter mustBe defined
+          val unparsedNotificationAfter = unparsedNotificationsAfter.find(_.get("_id", classOf[ObjectId]) == unparsed.get("_id", classOf[ObjectId]))
+          unparsedNotificationAfter mustBe defined
 
-            compareJson(parsedNotificationAfter.get.toJson, parsed.toJson)
-            compareJson(unparsedNotificationAfter.get.toJson, unparsed.toJson)
-            unparsedNotificationAfter.get.get("item", classOf[Document]).getString("id") mustBe parsedNotificationAfter.get.getString(
-              "unparsedNotificationId"
-            )
-            unparsedNotificationAfter.get.get("item", classOf[Document]).getString("actionId") mustBe parsedNotificationAfter.get.getString(
-              "actionId"
-            )
+          compareJson(parsedNotificationAfter.get.toJson, parsed.toJson)
+          compareJson(unparsedNotificationAfter.get.toJson, unparsed.toJson)
+          unparsedNotificationAfter.get.get("item", classOf[Document]).getString("id") mustBe parsedNotificationAfter.get.getString(
+            "unparsedNotificationId"
+          )
+          unparsedNotificationAfter.get.get("item", classOf[Document]).getString("actionId") mustBe parsedNotificationAfter.get.getString("actionId")
         }
       }
     }

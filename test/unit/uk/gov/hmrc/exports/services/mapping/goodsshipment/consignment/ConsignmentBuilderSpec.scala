@@ -36,13 +36,15 @@ class ConsignmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       val meansOfTransportOnDepartureType = "T"
       val meansOfTransportOnDepartureIDNumber = "12345"
 
-      for (declarationType: DeclarationType <- Seq(
-             DeclarationType.STANDARD,
-             DeclarationType.SUPPLEMENTARY,
-             DeclarationType.SIMPLIFIED,
-             DeclarationType.OCCASIONAL,
-             DeclarationType.CLEARANCE
-           )) {
+      for (
+        declarationType: DeclarationType <- Seq(
+          DeclarationType.STANDARD,
+          DeclarationType.SUPPLEMENTARY,
+          DeclarationType.SIMPLIFIED,
+          DeclarationType.OCCASIONAL,
+          DeclarationType.CLEARANCE
+        )
+      )
         s"for $declarationType declaration" in {
           val model: ExportsDeclaration =
             aDeclaration(
@@ -65,7 +67,6 @@ class ConsignmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
           assert(Option(consignment.getDepartureTransportMeans).isDefined)
           assert(Option(consignment.getTransportEquipment).isDefined)
         }
-      }
 
     }
 

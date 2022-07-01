@@ -42,7 +42,7 @@ object ParsedNotification {
           "dateTimeIssued" -> notification.details.dateTimeIssued,
           "status" -> notification.details.status,
           "errors" -> notification.details.errors
-      )
+        )
 
     implicit val notificationsWrites: Writes[Seq[ParsedNotification]] = Writes.seq(writes)
   }

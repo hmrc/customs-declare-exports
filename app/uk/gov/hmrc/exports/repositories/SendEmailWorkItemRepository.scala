@@ -32,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 @Singleton
-class SendEmailWorkItemRepository @Inject()(config: Configuration, mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
+class SendEmailWorkItemRepository @Inject() (config: Configuration, mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
     extends WorkItemRepository[SendEmailDetails](
       collectionName = "sendEmailWorkItems",
       mongoComponent = mongoComponent,
@@ -44,9 +44,8 @@ class SendEmailWorkItemRepository @Inject()(config: Configuration, mongoComponen
   override val executionContext = ec
 
   override def ensureIndexes: Future[Seq[String]] = {
-    val workItemIndexes: Seq[IndexModel] = indexes ++ List(
-      IndexModel(ascending("item.notificationId"), IndexOptions().name("sendEmailDetailsNotificationIdIdx").unique(true))
-    )
+    val workItemIndexes: Seq[IndexModel] =
+      indexes ++ List(IndexModel(ascending("item.notificationId"), IndexOptions().name("sendEmailDetailsNotificationIdIdx").unique(true)))
     MongoUtils.ensureIndexes(collection, workItemIndexes, replaceIndexes = true)
   }
 

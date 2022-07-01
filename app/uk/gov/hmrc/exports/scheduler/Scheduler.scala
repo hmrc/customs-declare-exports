@@ -30,7 +30,7 @@ import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class Scheduler @Inject()(
+class Scheduler @Inject() (
   actorSystem: ActorSystem,
   applicationLifecycle: ApplicationLifecycle,
   appConfig: AppConfig,
@@ -47,9 +47,8 @@ class Scheduler @Inject()(
       override def run(): Unit =
         job.execute().map { _ =>
           logger.info(s"Scheduled Job [${job.name}]: Completed Successfully")
-        } recover {
-          case t: Throwable =>
-            logger.error(s"Scheduled Job [${job.name}]: Failed", t)
+        } recover { case t: Throwable =>
+          logger.error(s"Scheduled Job [${job.name}]: Failed", t)
         }
     })
   }

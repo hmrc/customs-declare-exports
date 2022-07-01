@@ -28,7 +28,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class GenerateDraftDecController @Inject()(declarationRepository: DeclarationRepository, cc: ControllerComponents)(
+class GenerateDraftDecController @Inject() (declarationRepository: DeclarationRepository, cc: ControllerComponents)(
   implicit executionContext: ExecutionContext
 ) extends RESTController(cc) {
   import GenerateDraftDecController._
@@ -38,9 +38,7 @@ class GenerateDraftDecController @Inject()(declarationRepository: DeclarationRep
   def createDraftDec(): Action[CreateDraftDecDocumentsRequest] = Action.async(parsingJson[CreateDraftDecDocumentsRequest]) { implicit request =>
     for {
       declaration <- declarationRepository.create(createDeclaration())
-    } yield {
-      Ok(Json.obj("declarationId" -> declaration.id))
-    }
+    } yield Ok(Json.obj("declarationId" -> declaration.id))
   }
 }
 

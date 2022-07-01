@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.services.notifications.receiptactions.NotificationRec
 import javax.inject.Inject
 import scala.concurrent.Future
 
-class ReattemptNotificationParsingRoutine @Inject()(notificationReceiptActionsRunner: NotificationReceiptActionsRunner)(
+class ReattemptNotificationParsingRoutine @Inject() (notificationReceiptActionsRunner: NotificationReceiptActionsRunner)(
   implicit mec: RoutinesExecutionContext
 ) extends Routine with Logging {
 

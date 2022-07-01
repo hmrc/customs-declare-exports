@@ -73,7 +73,8 @@ object InlandModeOfTransportCodeParserSpec {
   private def inputXml(modeCode: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        { modeCode.map { id =>
+        {
+      modeCode.map { id =>
         <ns3:GoodsShipment>
           <ns3:Consignment>
             <ns3:DepartureTransportMeans>
@@ -81,7 +82,8 @@ object InlandModeOfTransportCodeParserSpec {
             </ns3:DepartureTransportMeans>
           </ns3:Consignment>
         </ns3:GoodsShipment>
-      }.getOrElse(NodeSeq.Empty) }
+      }.getOrElse(NodeSeq.Empty)
+    }
       </ns3:Declaration>
     </meta>
 }

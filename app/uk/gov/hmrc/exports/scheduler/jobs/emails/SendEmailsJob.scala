@@ -33,7 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
 
 @Singleton
-class SendEmailsJob @Inject()(
+class SendEmailsJob @Inject() (
   appConfig: AppConfig,
   sendEmailWorkItemRepository: SendEmailWorkItemRepository,
   emailCancellationValidator: EmailCancellationValidator,

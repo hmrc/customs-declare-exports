@@ -24,7 +24,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.Exporter
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class ExporterBuilder @Inject()(countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class ExporterBuilder @Inject() (countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit = {
 
     val declarentDetailsIfExporter: Option[EntityDetails] =
@@ -45,12 +45,12 @@ class ExporterBuilder @Inject()(countriesService: CountriesService) extends Modi
         exporterIdentificationIDType.setValue(eori)
         exporter.setID(exporterIdentificationIDType)
       case _ =>
-        details.address.foreach(address => {
+        details.address.foreach { address =>
           val exporterNameTextType = new ExporterNameTextType
           exporterNameTextType.setValue(address.fullName)
           exporter.setName(exporterNameTextType)
           exporter.setAddress(mapAddress(address))
-        })
+        }
     }
 
     exporter

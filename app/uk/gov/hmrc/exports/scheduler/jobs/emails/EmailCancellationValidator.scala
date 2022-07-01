@@ -25,7 +25,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-private[emails] class EmailCancellationValidator @Inject()(notificationRepository: ParsedNotificationRepository) extends Logging {
+private[emails] class EmailCancellationValidator @Inject() (notificationRepository: ParsedNotificationRepository) extends Logging {
 
   private val statusesCancellingEmailSending = Set(REJECTED, CLEARED, CANCELLED)
 

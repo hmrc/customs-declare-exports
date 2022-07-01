@@ -25,7 +25,7 @@ import java.time.{Clock, LocalTime}
 import scala.concurrent.duration.FiniteDuration
 
 @Singleton
-class AppConfig @Inject()(val configuration: Configuration, val environment: Environment, servicesConfig: ServicesConfig) {
+class AppConfig @Inject() (val configuration: Configuration, val environment: Environment, servicesConfig: ServicesConfig) {
 
   lazy val clock: Clock = Clock.systemUTC()
 

@@ -30,9 +30,8 @@ object WCOPointerMappingService extends Logging {
 
     val errors: List[List[String]] = reader.all()
 
-    errors.map {
-      case List(wcoPattern, exportsPattern) =>
-        PointerMapping(PointerPattern(wcoPattern.trim), PointerPattern(exportsPattern.trim))
+    errors.map { case List(wcoPattern, exportsPattern) =>
+      PointerMapping(PointerPattern(wcoPattern.trim), PointerPattern(exportsPattern.trim))
     }.toSet
   }
 

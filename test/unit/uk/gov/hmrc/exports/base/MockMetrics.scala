@@ -28,8 +28,8 @@ trait MockMetrics {
     override def defaultRegistry: MetricRegistry = metricRegistry
 
     /**
-      * This method is used on metric reporting - is not require for this mock/stub and intentionally not implement
-      */
+     * This method is used on metric reporting - is not require for this mock/stub and intentionally not implement
+     */
     override def toJson: String = ???
   }
 

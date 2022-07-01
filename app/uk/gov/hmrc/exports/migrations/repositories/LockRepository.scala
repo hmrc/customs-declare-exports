@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.migrations.repositories
 
 import com.mongodb.client.MongoDatabase
-import com.mongodb.client.model.Filters.{and, lt, or, eq => feq}
+import com.mongodb.client.model.Filters.{and, eq => feq, lt, or}
 import com.mongodb.client.model.UpdateOptions
 import com.mongodb.client.result.UpdateResult
 import com.mongodb.{DuplicateKeyException, ErrorCategory, MongoWriteException}
@@ -32,42 +32,42 @@ import scala.collection.JavaConverters.asScalaIterator
 class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRepository(db, collectionName, Array(KeyField)) {
 
   /**
-    * Retrieves a lock by key
-    *
-    * @param lockKey key
-    * @return LockEntry
-    */
+   * Retrieves a lock by key
+   *
+   * @param lockKey key
+   * @return LockEntry
+   */
   private[migrations] def findByKey(lockKey: String): Option[LockEntry] =
     asScalaIterator(collection.find(new Document().append(KeyField, lockKey)).iterator).toSeq.headOption
       .map(LockEntry(_))
 
   /**
-    * Removes from database all the locks with the same key (only can be one) and owner
-    *
-    * @param lockKey lock key
-    * @param owner   lock owner
-    */
+   * Removes from database all the locks with the same key (only can be one) and owner
+   *
+   * @param lockKey lock key
+   * @param owner   lock owner
+   */
   private[migrations] def removeByKeyAndOwner(lockKey: String, owner: String): Unit =
     collection.deleteMany(and(feq(KeyField, lockKey), feq(OwnerField, owner)))
 
   /**
-    * If there is a lock in the database with the same key, updates it if either is expired or both share the same owner.
-    * If there is no lock with the same key, it's inserted.
-    *
-    * @param newLock lock to replace the existing one or be inserted.
-    * @throws LockPersistenceException if there is a lock in database with same key, but belongs to another owner
-    *                                   and is not expired or cannot insert/update the lock for any other reason
-    */
+   * If there is a lock in the database with the same key, updates it if either is expired or both share the same owner.
+   * If there is no lock with the same key, it's inserted.
+   *
+   * @param newLock lock to replace the existing one or be inserted.
+   * @throws LockPersistenceException if there is a lock in database with same key, but belongs to another owner
+   *                                   and is not expired or cannot insert/update the lock for any other reason
+   */
   private[migrations] def insertUpdate(newLock: LockEntry): Unit =
     insertUpdate(newLock, onlyIfSameOwner = false)
 
   /**
-    * If there is a lock in the database with the same key and owner, updates it. Otherwise throws a LockPersistenceException
-    *
-    * @param newLock lock to replace the existing one.
-    * @throws LockPersistenceException if there is no lock in the database with the same key and owner or cannot update
-    *                                  the lock for any other reason
-    */
+   * If there is a lock in the database with the same key and owner, updates it. Otherwise throws a LockPersistenceException
+   *
+   * @param newLock lock to replace the existing one.
+   * @throws LockPersistenceException if there is no lock in the database with the same key and owner or cannot update
+   *                                  the lock for any other reason
+   */
   private[migrations] def updateIfSameOwner(newLock: LockEntry): Unit =
     insertUpdate(newLock, onlyIfSameOwner = true)
 

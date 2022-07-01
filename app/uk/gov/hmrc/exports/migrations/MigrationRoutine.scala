@@ -28,7 +28,7 @@ import uk.gov.hmrc.exports.migrations.changelogs.submission.{AddNotificationSumm
 import javax.inject.Inject
 
 @Singleton
-class MigrationRoutine @Inject()(appConfig: AppConfig) extends Logging {
+class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
 
   logger.info("Starting migration with ExportsMigrationTool")
 

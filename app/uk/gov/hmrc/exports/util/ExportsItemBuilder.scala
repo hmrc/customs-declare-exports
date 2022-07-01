@@ -25,7 +25,7 @@ trait ExportsItemBuilder {
   private type ItemModifier = ExportItem => ExportItem
   private val modelWithDefaults: ExportItem = ExportItem(id = uuid)
 
-  def anItem(modifiers: (ItemModifier)*): ExportItem =
+  def anItem(modifiers: ItemModifier*): ExportItem =
     modifiers.foldLeft(modelWithDefaults)((current, modifier) => modifier(current))
 
   def withSequenceId(id: Int): ItemModifier = _.copy(sequenceId = id)
@@ -77,12 +77,12 @@ trait ExportsItemBuilder {
     shippingMarks: Option[String] = None
   ): ItemModifier =
     cache =>
-      cache.copy(
-        packageInformation = Some(
+      cache.copy(packageInformation =
+        Some(
           cache.packageInformation
             .getOrElse(List.empty) :+ PackageInformation("1234567890", typesOfPackages, numberOfPackages, shippingMarks)
         )
-    )
+      )
 
   def withAdditionalDocuments(isRequired: Option[YesNoAnswer], first: AdditionalDocument, docs: AdditionalDocument*): ItemModifier = cache => {
     val existing = cache.additionalDocuments.map(_.documents).getOrElse(Seq.empty)

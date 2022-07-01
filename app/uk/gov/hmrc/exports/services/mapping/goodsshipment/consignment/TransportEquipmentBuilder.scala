@@ -25,7 +25,7 @@ import wco.datamodel.wco.declaration_ds.dms._2.{SealIdentificationIDType, Transp
 
 import scala.collection.JavaConverters._
 
-class TransportEquipmentBuilder @Inject()() extends ModifyingBuilder[Seq[Container], GoodsShipment.Consignment] {
+class TransportEquipmentBuilder @Inject() () extends ModifyingBuilder[Seq[Container], GoodsShipment.Consignment] {
 
   import TransportEquipmentBuilder._
 

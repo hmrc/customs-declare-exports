@@ -29,7 +29,7 @@ class ConsignmentConsignorBuilderSpec extends UnitSpec with ExportsDeclarationBu
   when(mockCountriesService.allCountries)
     .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
-  Seq(DeclarationType.CLEARANCE).map(declarationType => {
+  Seq(DeclarationType.CLEARANCE).map { declarationType =>
     "ConsignorBuilder" should {
       "correctly map to the WCO-DEC GoodsShipment.Consignee instance" when {
         "only eori is supplied " in {
@@ -106,7 +106,7 @@ class ConsignmentConsignorBuilderSpec extends UnitSpec with ExportsDeclarationBu
         }
       }
     }
-  })
+  }
 }
 
 object ConsignmentConsignorBuilderSpec {

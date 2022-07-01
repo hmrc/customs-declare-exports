@@ -35,32 +35,32 @@ trait GovernmentAgencyGoodsItemData {
 
   val measurementUnit = "KGM"
 
-  //Package Information Data
+  // Package Information Data
   val shippingMarks = "shippingMarks"
   val packageTypeValue = "packageType"
   val numberOfPackages = 12
 
   val packageInformation = new PackageInformation("1234567890", Some(packageTypeValue), Some(numberOfPackages), Some(shippingMarks))
 
-  //Item Type Data
+  // Item Type Data
   val descriptionOfGoods = "descriptionOfGoods"
   val unDangerousGoodsCode = "unDangerousGoodsCode"
   val statisticalValue = StatisticalValue("10")
 
-  //commodity measure data
+  // commodity measure data
   val netMassString = "15.00"
   val grossMassString = "25.00"
   val tariffQuantity = "31"
   val commodityMeasure = CommodityMeasure(Some(tariffQuantity), Some(false), netMass = Some(netMassString), grossMass = Some(grossMassString))
 
-  //procedureCodes Data
+  // procedureCodes Data
 
   val previousCode = "1stPrevcode"
   val previousCodes = Seq(previousCode)
   val cachedCode = "CUPR"
   val procedureCodesData = ProcedureCodes(Some(cachedCode), previousCodes)
 
-  //Additional Information data
+  // Additional Information data
   val statementCode = "code"
   val descriptionValue = "description"
   val additionalInformation = AdditionalInformation(statementCode, descriptionValue)

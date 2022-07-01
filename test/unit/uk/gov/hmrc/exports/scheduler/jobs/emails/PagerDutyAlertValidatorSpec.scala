@@ -64,28 +64,28 @@ class PagerDutyAlertValidatorSpec extends UnitSpec {
     testDefinitions.foreach { testDefinition =>
       s"WorkItem status is '${testDefinition.workItemStatus}', alertTriggered field equals ${testDefinition.alertTriggered}" +
         s" and receivedAt field is ${testDefinition.workItemAge} in the past" should {
-        s"return ${testDefinition.expectedResult}" in {
+          s"return ${testDefinition.expectedResult}" in {
 
-          val receivedAtValue = Instant.now.minusMillis(testDefinition.workItemAge.toMillis)
+            val receivedAtValue = Instant.now.minusMillis(testDefinition.workItemAge.toMillis)
 
-          val testWorkItem = WorkItem[SendEmailDetails](
-            id = ObjectId.get,
-            receivedAt = receivedAtValue,
-            updatedAt = Instant.now,
-            availableAt = Instant.now,
-            status = testDefinition.workItemStatus,
-            failureCount = 0,
-            item = SendEmailDetails(
-              notificationId = ObjectId.get,
-              mrn = ExportsTestData.mrn,
-              actionId = "actionId",
-              alertTriggered = testDefinition.alertTriggered
+            val testWorkItem = WorkItem[SendEmailDetails](
+              id = ObjectId.get,
+              receivedAt = receivedAtValue,
+              updatedAt = Instant.now,
+              availableAt = Instant.now,
+              status = testDefinition.workItemStatus,
+              failureCount = 0,
+              item = SendEmailDetails(
+                notificationId = ObjectId.get,
+                mrn = ExportsTestData.mrn,
+                actionId = "actionId",
+                alertTriggered = testDefinition.alertTriggered
+              )
             )
-          )
 
-          pagerDutyAlertManager.isPagerDutyAlertRequiredFor(testWorkItem) mustBe testDefinition.expectedResult
+            pagerDutyAlertManager.isPagerDutyAlertRequiredFor(testWorkItem) mustBe testDefinition.expectedResult
+          }
         }
-      }
     }
   }
 }

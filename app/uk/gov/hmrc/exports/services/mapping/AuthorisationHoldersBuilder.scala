@@ -24,7 +24,7 @@ import wco.datamodel.wco.declaration_ds.dms._2.{AuthorisationHolderCategoryCodeT
 
 import scala.collection.JavaConverters._
 
-class AuthorisationHoldersBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class AuthorisationHoldersBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit = {
 
     val holders = model.parties.declarationHoldersData.map {

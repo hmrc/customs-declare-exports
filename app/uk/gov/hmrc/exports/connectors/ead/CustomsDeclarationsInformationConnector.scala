@@ -29,7 +29,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CustomsDeclarationsInformationConnector @Inject()(mrnStatusParser: MrnStatusParser, appConfig: AppConfig, httpClient: HttpClient)(
+class CustomsDeclarationsInformationConnector @Inject() (mrnStatusParser: MrnStatusParser, appConfig: AppConfig, httpClient: HttpClient)(
   implicit ec: ExecutionContext
 ) extends Logging {
 

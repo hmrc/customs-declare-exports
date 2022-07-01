@@ -27,7 +27,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class EmailByEoriController @Inject()(authenticator: Authenticator, customsDataStoreConnector: CustomsDataStoreConnector, cc: ControllerComponents)(
+class EmailByEoriController @Inject() (authenticator: Authenticator, customsDataStoreConnector: CustomsDataStoreConnector, cc: ControllerComponents)(
   implicit ec: ExecutionContext
 ) extends BackendController(cc) {
 

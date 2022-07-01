@@ -26,7 +26,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ParseAndSaveAction @Inject()(
+class ParseAndSaveAction @Inject() (
   notificationFactory: NotificationFactory,
   submissionRepository: SubmissionRepository,
   transactionalOps: TransactionalOps
@@ -41,10 +41,9 @@ class ParseAndSaveAction @Inject()(
       .sequence(
         notifications
           .groupBy(_.actionId)
-          .map {
-            case (actionId, notificationsWithSameActionId) =>
-              // Add the notification group to the action (with the given actionId) of the including Submission document, if any
-              findAndUpdateSubmission(actionId, notificationsWithSameActionId)
+          .map { case (actionId, notificationsWithSameActionId) =>
+            // Add the notification group to the action (with the given actionId) of the including Submission document, if any
+            findAndUpdateSubmission(actionId, notificationsWithSameActionId)
           }
           .toList
       )
@@ -73,7 +72,8 @@ class ParseAndSaveAction @Inject()(
     submissionRepository
       .findOne("actions.id", actionId)
       .flatMap {
-        case Some(submission) => transactionalOps.updateSubmissionAndNotifications(actionId, notifications, submission)
+        case Some(submission) =>
+          transactionalOps.updateSubmissionAndNotifications(actionId, notifications, submission)
         case _ =>
           logger.error(s"No submission record was found for (parsed) notifications with actionId($actionId)")
           Future.successful(None)

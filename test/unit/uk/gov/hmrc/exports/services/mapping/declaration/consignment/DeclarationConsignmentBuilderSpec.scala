@@ -41,12 +41,14 @@ class DeclarationConsignmentBuilderSpec extends UnitSpec with ExportsDeclaration
 
     "build then add" when {
 
-      for (declarationType: DeclarationType <- Seq(
-             DeclarationType.STANDARD,
-             DeclarationType.SIMPLIFIED,
-             DeclarationType.OCCASIONAL,
-             DeclarationType.CLEARANCE
-           )) {
+      for (
+        declarationType: DeclarationType <- Seq(
+          DeclarationType.STANDARD,
+          DeclarationType.SIMPLIFIED,
+          DeclarationType.OCCASIONAL,
+          DeclarationType.CLEARANCE
+        )
+      )
         s"$declarationType journey" in {
           // Given
           val model = aDeclaration(withType(declarationType))
@@ -62,7 +64,6 @@ class DeclarationConsignmentBuilderSpec extends UnitSpec with ExportsDeclaration
           verify(consignmentCarrierBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
           verify(consignorBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
         }
-      }
 
       "other journey" in {
         // Given

@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, Upstream4xxResponse}
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class CustomsDataStoreConnector @Inject()(http: HttpClient)(implicit appConfig: AppConfig) {
+class CustomsDataStoreConnector @Inject() (http: HttpClient)(implicit appConfig: AppConfig) {
 
   import CustomsDataStoreConnector._
 
@@ -39,8 +39,8 @@ class CustomsDataStoreConnector @Inject()(http: HttpClient)(implicit appConfig: 
         case EmailResponse(email, _, _)    => Some(Email(email, deliverable = false))
         case _                             => None
       }
-      .recover {
-        case Upstream4xxResponse(_, NOT_FOUND, _, _) => None
+      .recover { case Upstream4xxResponse(_, NOT_FOUND, _, _) =>
+        None
       }
   }
 }

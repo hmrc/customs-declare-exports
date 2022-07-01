@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.{GovernmentAgencyGoodsItem => WCOGovernmentAgencyGoodsItem}
 import wco.datamodel.wco.declaration_ds.dms._2.GovernmentAgencyGoodsItemStatisticalValueAmountType
 
-class StatisticalValueAmountBuilder @Inject()() extends ModifyingBuilder[ExportItem, WCOGovernmentAgencyGoodsItem] {
+class StatisticalValueAmountBuilder @Inject() () extends ModifyingBuilder[ExportItem, WCOGovernmentAgencyGoodsItem] {
 
   private val defaultCurrencyCode = "GBP"
 

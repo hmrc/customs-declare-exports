@@ -34,7 +34,7 @@ import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.NotificationService
 
 @Singleton
-class NotificationController @Inject()(
+class NotificationController @Inject() (
   authConnector: AuthConnector,
   headerValidator: HeaderValidator,
   metrics: ExportsMetrics,
@@ -62,8 +62,8 @@ class NotificationController @Inject()(
     }
   }
 
-  //TODO response should be streamed or paginated depending on the no of notifications.
-  //TODO Return NO CONTENT (204) when there are no notifications
+  // TODO response should be streamed or paginated depending on the no of notifications.
+  // TODO Return NO CONTENT (204) when there are no notifications
   val findAllNotificationsForUser: Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
     notificationsService
       .findAllNotificationsForUser(request.eori.value)

@@ -84,7 +84,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
         when(transactionalOps.updateSubmissionAndNotifications(captor.capture(), any, any)).thenAnswer(withResult)
 
-        parseAndSaveAction.save(List(notification_2, notification_3)).futureValue mustBe List(submission_2, submission_3)
+        parseAndSaveAction.save(List(notification_2, notification_3)).futureValue must contain theSameElementsAs (List(submission_2, submission_3))
 
         verify(transactionalOps, times(2)).updateSubmissionAndNotifications(any, any, any)
       }

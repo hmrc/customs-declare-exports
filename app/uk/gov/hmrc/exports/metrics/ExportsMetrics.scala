@@ -27,7 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
-class ExportsMetrics @Inject()(metrics: Metrics) {
+class ExportsMetrics @Inject() (metrics: Metrics) {
 
   private val registry = metrics.defaultRegistry
 

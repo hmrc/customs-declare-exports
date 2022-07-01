@@ -160,7 +160,7 @@ trait RepositoryOps[T] {
       .toFuture
       .map(_ => Right(document))
       .recover {
-        case exc: MongoWriteException if (exc.getError.getCategory == DUPLICATE_KEY) =>
+        case exc: MongoWriteException if exc.getError.getCategory == DUPLICATE_KEY =>
           Left(DuplicateKey(exc.getError.getMessage))
       }
 

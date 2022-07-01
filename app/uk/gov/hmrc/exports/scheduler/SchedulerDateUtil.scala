@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.config.AppConfig
 import scala.concurrent.duration.FiniteDuration
 
 @Singleton
-class SchedulerDateUtil @Inject()(appConfig: AppConfig) {
+class SchedulerDateUtil @Inject() (appConfig: AppConfig) {
 
   private lazy val clock = appConfig.clock
 

@@ -21,7 +21,7 @@ import javax.inject.{Inject, Singleton}
 import scala.io.Source
 
 @Singleton
-class FileReader @Inject()() {
+class FileReader @Inject() () {
 
   def readLines(filename: String, skipHeaderLine: Boolean = false): List[String] = {
     val lines = read(filename)
@@ -32,9 +32,9 @@ class FileReader @Inject()() {
 
   private def read(filename: String): List[String] = {
     val source = Source.fromURL(getClass.getClassLoader.getResource(filename), "UTF-8")
-    try {
+    try
       source.getLines().toList
-    } finally source.close()
+    finally source.close()
   }
 
 }

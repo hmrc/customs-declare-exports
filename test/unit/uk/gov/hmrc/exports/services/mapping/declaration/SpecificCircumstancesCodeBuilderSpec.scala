@@ -37,12 +37,14 @@ class SpecificCircumstancesCodeBuilderSpec extends UnitSpec with ExportsDeclarat
         Option(declaration.getSpecificCircumstancesCodeCode) mustBe None
       }
 
-      for (declarationType: DeclarationType <- Seq(
-             DeclarationType.STANDARD,
-             DeclarationType.SIMPLIFIED,
-             DeclarationType.OCCASIONAL,
-             DeclarationType.CLEARANCE
-           )) {
+      for (
+        declarationType: DeclarationType <- Seq(
+          DeclarationType.STANDARD,
+          DeclarationType.SIMPLIFIED,
+          DeclarationType.OCCASIONAL,
+          DeclarationType.CLEARANCE
+        )
+      )
         s"Declaration Type $declarationType" when {
           "no office of exit" in {
             val model = aDeclaration(withType(declarationType), withoutOfficeOfExit())
@@ -62,7 +64,6 @@ class SpecificCircumstancesCodeBuilderSpec extends UnitSpec with ExportsDeclarat
             declaration.getSpecificCircumstancesCodeCode.getValue mustBe "A20"
           }
         }
-      }
     }
   }
 

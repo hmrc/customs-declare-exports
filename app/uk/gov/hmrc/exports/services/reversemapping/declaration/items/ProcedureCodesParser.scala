@@ -53,7 +53,7 @@ class ProcedureCodesParser extends DeclarationXmlParser[Option[ProcedureCodes]] 
     val isThereGovernmentProcedureWithPreviousCodeOnly = (xml: NodeSeq) =>
       (xml \ GovernmentProcedure).exists { governmentProcedureNode =>
         (governmentProcedureNode \ PreviousCode).nonEmpty && (governmentProcedureNode \ CurrentCode).isEmpty
-    }
+      }
 
     val areThereMultipleGovernmentProceduresWithPreviousCodes = (xml: NodeSeq) =>
       (xml \ GovernmentProcedure).count { governmentProcedureNode =>

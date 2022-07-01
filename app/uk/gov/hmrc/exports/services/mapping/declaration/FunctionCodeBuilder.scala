@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.declaration_ds.dms._2.DeclarationFunctionCodeType
 
-class FunctionCodeBuilder @Inject()() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class FunctionCodeBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
   private val defaultFunctionCode = "9"
 

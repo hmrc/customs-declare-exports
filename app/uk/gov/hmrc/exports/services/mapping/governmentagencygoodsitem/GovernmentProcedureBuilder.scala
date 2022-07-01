@@ -23,16 +23,14 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem.GovernmentProcedure
 import wco.datamodel.wco.declaration_ds.dms._2.{GovernmentProcedureCurrentCodeType, GovernmentProcedurePreviousCodeType}
 
-class GovernmentProcedureBuilder @Inject()() extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
+class GovernmentProcedureBuilder @Inject() () extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
 
   override def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem): Unit =
     exportItem.procedureCodes.foreach { procedureCode =>
-      {
-        val code = procedureCode.extractProcedureCode()
-        wcoGovernmentAgencyGoodsItem.getGovernmentProcedure.add(createGovernmentProcedure(code._1, code._2))
-        procedureCode.additionalProcedureCodes.foreach { additionalProcedureCode =>
-          wcoGovernmentAgencyGoodsItem.getGovernmentProcedure.add(createGovernmentProcedure(Some(additionalProcedureCode)))
-        }
+      val code = procedureCode.extractProcedureCode()
+      wcoGovernmentAgencyGoodsItem.getGovernmentProcedure.add(createGovernmentProcedure(code._1, code._2))
+      procedureCode.additionalProcedureCodes.foreach { additionalProcedureCode =>
+        wcoGovernmentAgencyGoodsItem.getGovernmentProcedure.add(createGovernmentProcedure(Some(additionalProcedureCode)))
       }
     }
 
