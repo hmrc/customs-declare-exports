@@ -11,9 +11,6 @@ GET         /submissions                                  uk.gov.hmrc.exports.co
 POST        /submission/:id                               uk.gov.hmrc.exports.controllers.SubmissionController.create(id: String)
 
 GET         /submission/notifications/:id                 uk.gov.hmrc.exports.controllers.NotificationController.findAll(id: String)
-GET         /submission/latest-notification/:id           uk.gov.hmrc.exports.controllers.NotificationController.findLatest(id: String)
-
-GET         /notifications                                uk.gov.hmrc.exports.controllers.NotificationController.findAllNotificationsForUser
 
 GET         /ead/:mrn                                     uk.gov.hmrc.exports.controllers.ead.EADController.findByMrn(mrn: String)
 

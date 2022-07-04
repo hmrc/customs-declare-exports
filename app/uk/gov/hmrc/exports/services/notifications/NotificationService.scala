@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.NodeSeq
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
-import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionQueryParameters, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, UnparsedNotificationWorkItemRepository}
 import uk.gov.hmrc.exports.services.notifications.receiptactions._
+
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.xml.NodeSeq
 
 @Singleton
 class NotificationService @Inject() (
@@ -34,17 +35,6 @@ class NotificationService @Inject() (
 
   def findAllNotificationsSubmissionRelated(submission: Submission): Future[Seq[ParsedNotification]] =
     notificationRepository.findNotifications(actionIdsSubmissionRelated(submission))
-
-  def findAllNotificationsForUser(eori: String): Future[Seq[ParsedNotification]] =
-    submissionRepository.findAll(eori, SubmissionQueryParameters()).flatMap {
-      case Seq() => Future.successful(Seq.empty)
-      case submissions =>
-        val conversationIds = submissions.flatMap(_.actions.map(_.id))
-        notificationRepository.findNotifications(conversationIds)
-    }
-
-  def findLatestNotificationSubmissionRelated(submission: Submission): Future[Option[ParsedNotification]] =
-    notificationRepository.findLatestNotification(actionIdsSubmissionRelated(submission))
 
   def handleNewNotification(actionId: String, notificationXml: NodeSeq): Future[Unit] = {
     val notification: UnparsedNotification = UnparsedNotification(actionId = actionId, payload = notificationXml.toString)
