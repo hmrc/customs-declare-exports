@@ -65,9 +65,7 @@ object UnitTestMockBuilder extends MockitoSugar {
 
   def buildNotificationServiceMock: NotificationService = {
     val notificationServiceMock: NotificationService = mock[NotificationService]
-    when(notificationServiceMock.findAllNotificationsForUser(any())).thenReturn(Future.successful(Seq.empty))
     when(notificationServiceMock.findAllNotificationsSubmissionRelated(any())).thenReturn(Future.successful(Seq.empty))
     notificationServiceMock
   }
-
 }

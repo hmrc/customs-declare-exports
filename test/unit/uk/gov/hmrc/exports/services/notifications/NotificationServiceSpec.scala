@@ -18,9 +18,8 @@ package uk.gov.hmrc.exports.services.notifications
 
 import akka.actor.Cancellable
 import org.bson.types.ObjectId
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
-import org.mockito.Mockito._
-import org.mockito.{ArgumentCaptor, InOrder, Mockito}
+import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchersSugar.any
 import org.scalatest.concurrent.IntegrationPatience
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
@@ -68,78 +67,6 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
     super.afterEach()
   }
 
-  "NotificationService on findAllNotificationsForUser" when {
-
-    trait GetAllNotificationsForUserHappyPathTest {
-      when(submissionRepository.findAll(any, any)).thenReturn(Future.successful(Seq(submission, submission_2)))
-      val notificationsToBeReturned = Seq(notification, notification_2, notification_3)
-      when(notificationRepository.findNotifications(any)).thenReturn(Future.successful(notificationsToBeReturned))
-    }
-
-    "everything works correctly" should {
-
-      "return all Notifications returned by Notification Repository" in new GetAllNotificationsForUserHappyPathTest {
-        val returnedNotifications = notificationService.findAllNotificationsForUser(eori).futureValue
-
-        returnedNotifications.length must equal(3)
-        notificationsToBeReturned.foreach(returnedNotifications must contain(_))
-      }
-
-      "call SubmissionRepository and NotificationRepository afterwards" in new GetAllNotificationsForUserHappyPathTest {
-        notificationService.findAllNotificationsForUser(eori).futureValue
-
-        val inOrder: InOrder = Mockito.inOrder(submissionRepository, notificationRepository)
-        inOrder.verify(submissionRepository).findAll(any, any)
-        inOrder.verify(notificationRepository).findNotifications(any)
-      }
-
-      "call SubmissionRepository, passing EORI provided" in new GetAllNotificationsForUserHappyPathTest {
-        notificationService.findAllNotificationsForUser(eori).futureValue
-
-        verify(submissionRepository).findAll(eqTo(eori), eqTo(SubmissionQueryParameters()))
-      }
-
-      "call NotificationRepository, passing all conversation IDs" in new GetAllNotificationsForUserHappyPathTest {
-        notificationService.findAllNotificationsForUser(eori).futureValue
-
-        val conversationIdCaptor: ArgumentCaptor[Seq[String]] = ArgumentCaptor.forClass(classOf[Seq[String]])
-        verify(notificationRepository).findNotifications(conversationIdCaptor.capture())
-        val actualConversationIds: Seq[String] = conversationIdCaptor.getValue
-        actualConversationIds.length must equal(2)
-        actualConversationIds must contain(notification.actionId)
-        actualConversationIds must contain(notification_2.actionId)
-        actualConversationIds must contain(notification_3.actionId)
-      }
-    }
-
-    "SubmissionRepository on findAllSubmissionsForEori returns empty list" should {
-
-      "return empty list" in {
-        when(submissionRepository.findAll(any, any)).thenReturn(Future.successful(Seq.empty))
-
-        notificationService.findAllNotificationsForUser(eori).futureValue must equal(Seq.empty)
-      }
-
-      "not call NotificationRepository" in {
-        when(submissionRepository.findAll(any, any)).thenReturn(Future.successful(Seq.empty))
-
-        notificationService.findAllNotificationsForUser(eori).futureValue
-
-        verifyNoInteractions(notificationRepository)
-      }
-    }
-
-    "NotificationRepository on findNotificationsByConversationIds returns empty list" should {
-
-      "return empty list" in {
-        when(submissionRepository.findAll(any, any)).thenReturn(Future.successful(Seq(submission, submission_2)))
-        when(notificationRepository.findNotifications(any)).thenReturn(Future.successful(Seq.empty))
-
-        notificationService.findAllNotificationsForUser(eori).futureValue must equal(Seq.empty)
-      }
-    }
-  }
-
   "NotificationService on findAllNotificationsSubmissionRelated" should {
 
     "retrieve by conversation IDs" in {
@@ -166,43 +93,6 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       notificationService.findAllNotificationsSubmissionRelated(submission).futureValue
 
       verify(notificationRepository).findNotifications(Seq(actionId))
-    }
-  }
-
-  "NotificationService on findLatestNotificationSubmissionRelated" should {
-
-    "return the expected notification" when {
-      "the notification repository op is successful" in {
-        val details = NotificationDetails("mrn", ZonedDateTime.now, ACCEPTED, Seq.empty)
-        val notification = ParsedNotification(unparsedNotificationId = UUID.randomUUID(), actionId = "id1", details = details)
-        when(notificationRepository.findLatestNotification(any[Seq[String]])).thenReturn(Future.successful(Some(notification)))
-
-        val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", None, None, Seq(Action("id1", SubmissionRequest)))
-        notificationService.findLatestNotificationSubmissionRelated(submission).futureValue.head mustBe notification
-
-        verify(notificationRepository).findLatestNotification(Seq("id1"))
-      }
-    }
-
-    "return None" when {
-      "the notification repository op is not successful" in {
-        when(notificationRepository.findLatestNotification(any[Seq[String]])).thenReturn(Future.successful(None))
-
-        val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", None, None, Seq(Action("id1", SubmissionRequest)))
-        notificationService.findLatestNotificationSubmissionRelated(submission).futureValue mustBe None
-
-        verify(notificationRepository).findLatestNotification(Seq("id1"))
-      }
-    }
-
-    "only retrieve notifications related to the submissions of declarations (must filter out actionCancellation)" in {
-      val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", None, None, Seq(actionCancellation, action))
-      // Not relevant to the test
-      when(notificationRepository.findLatestNotification(any[Seq[String]])).thenReturn(Future.successful(None))
-
-      notificationService.findLatestNotificationSubmissionRelated(submission).futureValue
-
-      verify(notificationRepository).findLatestNotification(Seq(actionId))
     }
   }
 

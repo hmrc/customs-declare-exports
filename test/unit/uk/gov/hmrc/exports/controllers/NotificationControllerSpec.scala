@@ -18,7 +18,6 @@ package uk.gov.hmrc.exports.controllers
 
 import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentMatchers.{any, anyString}
-import org.mockito.Mockito._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.bind
@@ -30,7 +29,7 @@ import play.api.test.Helpers._
 import testdata.SubmissionTestData.submission
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
 import testdata.notifications.NotificationTestData._
-import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.base.UnitTestMockBuilder.buildNotificationServiceMock
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
@@ -124,117 +123,6 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     }
 
     def routeGetFindAll: Future[Result] = route(app, FakeRequest(GET, findSubmissionNotificationsUri)).get
-  }
-
-  "Notification Controller on findLatest" should {
-
-    "return 200" when {
-      "submission found" in {
-        when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
-        when(notificationService.findLatestNotificationSubmissionRelated(any())).thenReturn(Future.successful(Option(notification)))
-
-        val result = routeGetFindLatest
-
-        status(result) must be(OK)
-        contentAsJson(result) must be(Json.toJson(notification)(REST.writes))
-      }
-    }
-
-    "return 400" when {
-
-      "submission not found" in {
-        when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq.empty))
-
-        val result = routeGetFindLatest
-
-        status(result) must be(NOT_FOUND)
-      }
-
-      "no notifications have been received for that submission" in {
-        when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
-        when(notificationService.findLatestNotificationSubmissionRelated(any())).thenReturn(Future.successful(None))
-
-        val result = routeGetFindLatest
-
-        status(result) must be(NOT_FOUND)
-      }
-    }
-
-    "return 401" when {
-      "not authenticated" in {
-        userWithoutEori()
-
-        val failedResult = routeGetFindLatest
-
-        status(failedResult) must be(UNAUTHORIZED)
-      }
-    }
-
-    def routeGetFindLatest: Future[Result] = route(app, FakeRequest(GET, findLatestNotificationUri)).get
-  }
-
-  "Notification Controller on findAllNotificationsForUser" when {
-
-    "everything works correctly" should {
-
-      "return Ok status" in {
-        val notificationsFromService = Seq(notification, notification_2, notification_3)
-        when(notificationService.findAllNotificationsForUser(any())).thenReturn(Future.successful(notificationsFromService))
-
-        val result = routeGetAllNotificationsForUser()
-
-        status(result) must be(OK)
-      }
-
-      "return all Notifications returned by Notification Service" in {
-        val notificationsFromService = Seq(notification, notification_2, notification_3)
-        when(notificationService.findAllNotificationsForUser(any())).thenReturn(Future.successful(notificationsFromService))
-
-        val result = routeGetAllNotificationsForUser()
-
-        contentAsJson(result) must equal(Json.toJson(notificationsFromService)(REST.notificationsWrites))
-      }
-
-      "return only those Notifications returned by Notification Service that have been parsed" in {
-        val notificationsFromService = Seq(notification, notification_2, notification_3)
-        when(notificationService.findAllNotificationsForUser(any())).thenReturn(Future.successful(notificationsFromService))
-
-        val result = routeGetAllNotificationsForUser()
-
-        contentAsJson(result) must equal(Json.toJson(Seq(notification, notification_2, notification_3))(REST.notificationsWrites))
-      }
-
-      "call Notification Service once" in {
-        val notificationsFromService = Seq(notification, notification_2, notification_3)
-        when(notificationService.findAllNotificationsForUser(any())).thenReturn(Future.successful(notificationsFromService))
-
-        routeGetAllNotificationsForUser().futureValue
-
-        verify(notificationService).findAllNotificationsForUser(any())
-      }
-    }
-
-    "authorisation header is missing" should {
-
-      "return Unauthorised response" in {
-        withUnauthorizedUser(InsufficientEnrolments())
-
-        val result = routeGetAllNotificationsForUser(headersWithoutAuthorisation)
-
-        status(result) must be(UNAUTHORIZED)
-      }
-
-      "not call NotificationService" in {
-        withUnauthorizedUser(InsufficientEnrolments())
-
-        routeGetAllNotificationsForUser(headersWithoutAuthorisation).futureValue
-
-        verifyNoInteractions(notificationService)
-      }
-    }
-
-    def routeGetAllNotificationsForUser(headers: Map[String, String] = validHeaders): Future[Result] =
-      route(app, FakeRequest(GET, findAllNotificationsForUserUri).withHeaders(headers.toSeq: _*)).get
   }
 
   "Notification Controller on saveNotification" when {

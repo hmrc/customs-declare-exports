@@ -52,24 +52,6 @@ class NotificationController @Inject() (
     }
   }
 
-  def findLatest(submissionId: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
-    retrieveSubmissions(request.eori, submissionId) flatMap {
-      case Nil => Future.successful(NotFound("Submission not found"))
-      case submission +: _ =>
-        notificationsService.findLatestNotificationSubmissionRelated(submission).map { maybeNotification =>
-          maybeNotification.fold(NotFound("Notification not found"))(Ok(_))
-        }
-    }
-  }
-
-  // TODO response should be streamed or paginated depending on the no of notifications.
-  // TODO Return NO CONTENT (204) when there are no notifications
-  val findAllNotificationsForUser: Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
-    notificationsService
-      .findAllNotificationsForUser(request.eori.value)
-      .map(notifications => Ok(notifications))
-  }
-
   val saveNotification: Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
     metrics.incrementCounter(Counters.notificationCounter)
 

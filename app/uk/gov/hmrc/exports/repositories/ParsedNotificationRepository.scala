@@ -40,14 +40,6 @@ class ParsedNotificationRepository @Inject() (mongoComponent: MongoComponent)(im
   override def classTag: ClassTag[ParsedNotification] = implicitly[ClassTag[ParsedNotification]]
   override val executionContext = ec
 
-  def findLatestNotification(actionIds: Seq[String]): Future[Option[ParsedNotification]] =
-    if (actionIds.isEmpty) Future.successful(None)
-    else {
-      val filter = Json.obj("$or" -> actionIds.map(id => Json.obj("actionId" -> id)))
-      val sort = Json.obj("details.dateTimeIssued" -> -1)
-      findFirst(filter, sort)
-    }
-
   def findNotifications(actionIds: Seq[String]): Future[Seq[ParsedNotification]] =
     if (actionIds.isEmpty) Future.successful(List.empty)
     else findAll(Json.obj("$or" -> actionIds.map(id => Json.obj("actionId" -> JsString(id)))))
