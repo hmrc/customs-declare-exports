@@ -39,7 +39,6 @@ class TransportParser @Inject() (containersParser: ContainersParser) extends Dec
         borderModeOfTransportCode = parseBorderModeOfTransportCode(inputXml),
         meansOfTransportOnDepartureType = (departureTransportMeans \ IdentificationTypeCode).toStringOption,
         meansOfTransportOnDepartureIDNumber = (departureTransportMeans \ ID).toStringOption,
-        meansOfTransportCrossingTheBorderNationality = (borderTransportMeans \ RegistrationNationalityCode).toStringOption,
         transportCrossingTheBorderNationality = parseTransportCrossingTheBorderNationality(borderTransportMeans),
         meansOfTransportCrossingTheBorderType = (borderTransportMeans \ IdentificationTypeCode).toStringOption,
         meansOfTransportCrossingTheBorderIDNumber = (borderTransportMeans \ ID).toStringOption
