@@ -99,7 +99,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     declaration =>
       declaration.copy(transport =
         declaration.transport
-          .copy(borderModeOfTransportCode = None, meansOfTransportOnDepartureIDNumber = None, meansOfTransportOnDepartureType = None)
+          .copy(borderModeOfTransportCode = None, meansOfTransportOnDepartureType = None, meansOfTransportOnDepartureIDNumber = None)
       )
 
   def withDepartureTransport(
@@ -122,8 +122,8 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
       declaration.copy(transport =
         declaration.transport.copy(
           borderModeOfTransportCode = Some(borderModeOfTransportCode),
-          meansOfTransportOnDepartureIDNumber = Some(meansOfTransportOnDepartureIDNumber),
-          meansOfTransportOnDepartureType = Some(meansOfTransportOnDepartureType)
+          meansOfTransportOnDepartureType = Some(meansOfTransportOnDepartureType),
+          meansOfTransportOnDepartureIDNumber = Some(meansOfTransportOnDepartureIDNumber)
         )
       )
 
@@ -304,11 +304,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
   val withoutBorderTransport: ExportsDeclarationModifier =
     declaration =>
       declaration.copy(transport =
-        declaration.transport.copy(
-          meansOfTransportCrossingTheBorderIDNumber = None,
-          meansOfTransportCrossingTheBorderNationality = None,
-          meansOfTransportCrossingTheBorderType = None
-        )
+        declaration.transport.copy(meansOfTransportCrossingTheBorderType = None, meansOfTransportCrossingTheBorderIDNumber = None)
       )
 
   def withBorderTransport(
@@ -318,7 +314,6 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     declaration =>
       declaration.copy(transport =
         declaration.transport.copy(
-          meansOfTransportCrossingTheBorderNationality = None,
           meansOfTransportCrossingTheBorderType = meansOfTransportCrossingTheBorderType,
           meansOfTransportCrossingTheBorderIDNumber = meansOfTransportCrossingTheBorderIDNumber
         )

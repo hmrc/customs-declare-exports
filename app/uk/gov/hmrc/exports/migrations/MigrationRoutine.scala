@@ -20,7 +20,11 @@ import com.google.inject.Singleton
 import com.mongodb.client.{MongoClient, MongoClients}
 import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.migrations.changelogs.cache.{MakeTransportPaymentMethodNotOptional, RenameToAdditionalDocuments}
+import uk.gov.hmrc.exports.migrations.changelogs.cache.{
+  MakeTransportPaymentMethodNotOptional,
+  RemoveMeansOfTransportCrossingTheBorderNationality,
+  RenameToAdditionalDocuments
+}
 import uk.gov.hmrc.exports.migrations.changelogs.emaildetails.RenameSendEmailDetailsToItem
 import uk.gov.hmrc.exports.migrations.changelogs.notification.{MakeParsedDetailsOptional, SplitTheNotificationsCollection}
 import uk.gov.hmrc.exports.migrations.changelogs.submission.{AddNotificationSummariesToSubmissions, RemoveRedundantIndexes}
@@ -49,6 +53,7 @@ class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
     .register(new RemoveRedundantIndexes())
     .register(new RenameSendEmailDetailsToItem())
     .register(new AddNotificationSummariesToSubmissions())
+    .register(new RemoveMeansOfTransportCrossingTheBorderNationality())
 
   ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute
 
