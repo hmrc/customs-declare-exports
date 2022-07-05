@@ -176,7 +176,8 @@ case class ExportItem(
   commodityMeasure: Option[CommodityMeasure] = None,
   additionalInformation: Option[AdditionalInformations] = None,
   additionalDocuments: Option[AdditionalDocuments] = None,
-  isLicenceRequired: Option[Boolean] = None
+  isLicenceRequired: Option[Boolean] = None,
+  containsCatOrDogFur: Option[YesNoAnswer] = None
 )
 object ExportItem {
   implicit val format: OFormat[ExportItem] = Json.format[ExportItem]

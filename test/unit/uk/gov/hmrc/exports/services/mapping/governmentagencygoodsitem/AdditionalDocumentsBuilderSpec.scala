@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.{AdditionalDocument, AdditionalDocuments, Date, DocumentWriteOff, ExportItem}
+import uk.gov.hmrc.exports.models.declaration.{AdditionalDocument, AdditionalDocuments, Date, DocumentWriteOff, ExportItem, YesNoAnswer}
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.AdditionalDocumentsBuilder.{
   documentStatusesRequiringOptionalFields,
   documentTypeCodesRequiringOptionalFields
@@ -110,6 +110,60 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
         governmentAgencyGoodsItem.getAdditionalDocument.get(1).getName.getValue mustBe "EXPORT WAIVER"
         governmentAgencyGoodsItem.getAdditionalDocument.get(1).getTypeCode.getValue mustBe "999"
         governmentAgencyGoodsItem.getAdditionalDocument.get(1).getCategoryCode.getValue mustBe "Y"
+      }
+    }
+
+    "map document from 'containsCatOrDogFur'" when {
+      "yes" in {
+        val additionalDocumentsBuilder = new AdditionalDocumentsBuilder()
+        val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
+
+        val item =
+          ExportItem(
+            id = "id",
+            additionalDocuments = Some(AdditionalDocuments(None, Seq(additionalDocument))),
+            containsCatOrDogFur = Some(YesNoAnswer.yes)
+          )
+
+        additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
+
+        governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 2
+        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getName.getValue mustBe "Education and taxidermy only"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getTypeCode.getValue mustBe "922"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getCategoryCode.getValue mustBe "Y"
+      }
+      "no" in {
+
+        val additionalDocumentsBuilder = new AdditionalDocumentsBuilder()
+        val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
+
+        val item =
+          ExportItem(
+            id = "id",
+            additionalDocuments = Some(AdditionalDocuments(None, Seq(additionalDocument))),
+            containsCatOrDogFur = Some(YesNoAnswer.no)
+          )
+
+        additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
+
+        governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 2
+        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getName.getValue mustBe "No cat or dog fur"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getTypeCode.getValue mustBe "922"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getCategoryCode.getValue mustBe "Y"
+
+      }
+      "empty" in {
+
+        val additionalDocumentsBuilder = new AdditionalDocumentsBuilder()
+        val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
+
+        val item =
+          ExportItem(id = "id", additionalDocuments = Some(AdditionalDocuments(None, Seq(additionalDocument))), containsCatOrDogFur = None)
+
+        additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
+
+        governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 1
+
       }
     }
 
