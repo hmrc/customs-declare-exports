@@ -30,7 +30,6 @@ class TransportSpec extends UnitSpec {
       "borderModeOfTransportCode" -> Json.obj("code" -> "3"),
       "meansOfTransportOnDepartureType" -> "means-of-transport-on-departure",
       "meansOfTransportOnDepartureIDNumber" -> "means-of-transport-on-departure-id-number",
-      "meansOfTransportCrossingTheBorderNationality" -> "crossing-the-border-nationality",
       "transportCrossingTheBorderNationality" -> Json.obj("countryName" -> "crossing-the-border-nationality"),
       "meansOfTransportCrossingTheBorderType" -> "crossing-the-border-type",
       "meansOfTransportCrossingTheBorderIDNumber" -> "crossing-the-border-id-number"
@@ -43,7 +42,6 @@ class TransportSpec extends UnitSpec {
       borderModeOfTransportCode = Some(TransportLeavingTheBorder(Some(ModeOfTransportCode.Road))),
       meansOfTransportOnDepartureType = Some("means-of-transport-on-departure"),
       meansOfTransportOnDepartureIDNumber = Some("means-of-transport-on-departure-id-number"),
-      meansOfTransportCrossingTheBorderNationality = Some("crossing-the-border-nationality"),
       transportCrossingTheBorderNationality = Some(TransportCountry(Some("crossing-the-border-nationality"))),
       meansOfTransportCrossingTheBorderType = Some("crossing-the-border-type"),
       meansOfTransportCrossingTheBorderIDNumber = Some("crossing-the-border-id-number")

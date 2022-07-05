@@ -31,7 +31,6 @@ case class Transport(
   borderModeOfTransportCode: Option[TransportLeavingTheBorder] = None,
   meansOfTransportOnDepartureType: Option[String] = None,
   meansOfTransportOnDepartureIDNumber: Option[String] = None,
-  meansOfTransportCrossingTheBorderNationality: Option[String] = None,
   transportCrossingTheBorderNationality: Option[TransportCountry] = None,
   meansOfTransportCrossingTheBorderType: Option[String] = None,
   meansOfTransportCrossingTheBorderIDNumber: Option[String] = None
