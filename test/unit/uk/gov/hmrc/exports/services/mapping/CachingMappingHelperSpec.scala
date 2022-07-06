@@ -116,8 +116,8 @@ class CachingMappingHelperSpec extends UnitSpec {
           val exportItem = ExportItem(
             "id",
             commodityDetails = None,
-            cusCode = Some(CUSCode(Some("cusCode"))),
-            dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("dangerousCode")))
+            dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("dangerousCode"))),
+            cusCode = Some(CUSCode(Some("cusCode")))
           )
 
           val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
