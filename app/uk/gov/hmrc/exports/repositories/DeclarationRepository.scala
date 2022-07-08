@@ -73,7 +73,7 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
 
   def findOne(id: String, eori: Eori): Future[Option[ExportsDeclaration]] =
     metrics.timeAsyncCall(Timers.declarationFindSingleTimer) {
-      findOne(Json.obj("id" -> id, "eori" -> eori))
+      findOne(Json.obj("eori" -> eori, "id" -> id))
     }
 
   def markStatusAsComplete(id: String, eori: Eori): Future[Option[ExportsDeclaration]] =
