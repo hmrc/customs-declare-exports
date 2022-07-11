@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.services
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 
 import javax.inject.Inject
@@ -30,7 +30,11 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
     declarationRepository.create(declaration)
 
   def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
-    declarationRepository.findOneAndReplace(Json.obj("id" -> declaration.id, "eori" -> declaration.eori), declaration, false)
+    declarationRepository.findOneAndReplace(
+      Json.obj("id" -> declaration.id, "eori" -> declaration.eori, "status" -> Json.obj("$ne" -> DeclarationStatus.COMPLETE.toString)),
+      declaration,
+      false
+    )
 
   def find(search: DeclarationSearch, pagination: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] =
     declarationRepository.find(search, pagination, sort)

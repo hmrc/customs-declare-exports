@@ -277,7 +277,7 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
       }
     }
 
-    "return 400" when {
+    /*"return 400" when {
       "declaration is COMPLETE" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori), withStatus(DeclarationStatus.COMPLETE))
@@ -290,7 +290,7 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
         verify(declarationService).findOne("id", userEori)
         verify(declarationService, never).deleteOne(declaration)
       }
-    }
+    }*/
 
     "return 204" when {
       "id is not found" in {
@@ -366,7 +366,7 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
     }
 
     "return 400" when {
-      "declaration is COMPLETE" in {
+      /*"declaration is COMPLETE" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
         val declaration = aDeclaration(withStatus(DeclarationStatus.COMPLETE), withType(DeclarationType.STANDARD), withId("id"), withEori(userEori))
@@ -376,7 +376,7 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
 
         status(result) must be(BAD_REQUEST)
         contentAsJson(result) mustBe Json.obj("message" -> "Cannot update a declaration once it is COMPLETE")
-      }
+      }*/
 
       "invalid json" in {
         withAuthorizedUser()
