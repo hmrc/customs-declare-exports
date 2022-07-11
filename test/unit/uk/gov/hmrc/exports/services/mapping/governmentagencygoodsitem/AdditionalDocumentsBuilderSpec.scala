@@ -17,15 +17,13 @@
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.{AdditionalDocument, AdditionalDocuments, Date, DocumentWriteOff, ExportItem, YesNoAnswer}
+import uk.gov.hmrc.exports.models.declaration.{AdditionalDocument, _}
 import uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem.AdditionalDocumentsBuilder.{
   documentStatusesRequiringOptionalFields,
   documentTypeCodesRequiringOptionalFields
 }
 import uk.gov.hmrc.wco.dec._
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem
-
-import scala.BigDecimal
 
 class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoodsItemData {
 
@@ -122,7 +120,7 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
           ExportItem(
             id = "id",
             additionalDocuments = Some(AdditionalDocuments(None, Seq(additionalDocument))),
-            containsCatOrDogFur = Some(YesNoAnswer.yes)
+            catOrDogFurDetails = Some(CatOrDogFurDetails("Yes", Some("educational-or-taxidermy-purpose")))
           )
 
         additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
@@ -141,7 +139,7 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
           ExportItem(
             id = "id",
             additionalDocuments = Some(AdditionalDocuments(None, Seq(additionalDocument))),
-            containsCatOrDogFur = Some(YesNoAnswer.no)
+            catOrDogFurDetails = Some(CatOrDogFurDetails("No", None))
           )
 
         additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
@@ -158,7 +156,7 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
         val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
 
         val item =
-          ExportItem(id = "id", additionalDocuments = Some(AdditionalDocuments(None, Seq(additionalDocument))), containsCatOrDogFur = None)
+          ExportItem(id = "id", additionalDocuments = Some(AdditionalDocuments(None, Seq(additionalDocument))), catOrDogFurDetails = None)
 
         additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
 
