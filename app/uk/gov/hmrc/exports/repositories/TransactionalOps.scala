@@ -78,7 +78,7 @@ class TransactionalOps @Inject() (
     if (action.requestType == SubmissionRequest)
       updateSubmissionRequest(
         session,
-        submission.uuid,
+        actionId,
         notifications.head.details.mrn,
         notificationSummaries.head,
         submission.actions.updated(index, actionWithAllNotificationSummaries)
@@ -86,26 +86,26 @@ class TransactionalOps @Inject() (
     else
       updateCancellationRequest(
         session,
-        submission.uuid,
+        actionId,
         notifications.head.details.mrn,
         submission.actions.updated(index, actionWithAllNotificationSummaries)
       )
   }
 
-  private def updateCancellationRequest(session: ClientSession, uuid: String, mrn: String, actions: Seq[Action]): Future[Option[Submission]] = {
-    val filter = Json.obj("uuid" -> uuid)
+  private def updateCancellationRequest(session: ClientSession, actionId: String, mrn: String, actions: Seq[Action]): Future[Option[Submission]] = {
+    val filter = Json.obj("actions.id" -> actionId)
     val update = Json.obj("$set" -> Json.obj("mrn" -> mrn, "actions" -> actions))
     submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
   }
 
   private def updateSubmissionRequest(
     session: ClientSession,
-    uuid: String,
+    actionId: String,
     mrn: String,
     summary: NotificationSummary,
     actions: Seq[Action]
   ): Future[Option[Submission]] = {
-    val filter = Json.obj("uuid" -> uuid)
+    val filter = Json.obj("actions.id" -> actionId)
     val update = Json.obj(
       "$set" -> Json.obj(
         "mrn" -> mrn,
