@@ -73,6 +73,33 @@ class AdditionalDocumentsBuilder @Inject() () extends ModifyingBuilder[ExportIte
             documentWriteOff = None
           ),
           AdditionalDocument(
+            documentTypeCode = Some("Y903"),
+            documentIdentifier = None,
+            documentStatus = None,
+            documentStatusReason = Some("CULTURAL GOODS - NOT LISTED"),
+            issuingAuthorityName = None,
+            dateOfValidity = None,
+            documentWriteOff = None
+          ),
+          AdditionalDocument(
+            documentTypeCode = Some("Y923"),
+            documentIdentifier = None,
+            documentStatus = None,
+            documentStatusReason = Some("EXCLUDED PRODUCT"),
+            issuingAuthorityName = None,
+            dateOfValidity = None,
+            documentWriteOff = None
+          ),
+          AdditionalDocument(
+            documentTypeCode = Some("Y924"),
+            documentIdentifier = None,
+            documentStatus = None,
+            documentStatusReason = Some("EXCLUDED FROM PROHIBITION"),
+            issuingAuthorityName = None,
+            dateOfValidity = None,
+            documentWriteOff = None
+          ),
+          AdditionalDocument(
             documentTypeCode = Some("Y999"),
             documentIdentifier = None,
             documentStatus = None,
