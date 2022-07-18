@@ -52,23 +52,13 @@ class DeclarationController @Inject() (
   def update(id: String): Action[ExportsDeclarationRequest] =
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
       logPayload("Update Declaration Request Received", request.body)
-      declarationService.findOne(id, request.eori).flatMap {
-        case Some(declaration) if declaration.status == DeclarationStatus.COMPLETE =>
-          val response = ErrorResponse("Cannot update a declaration once it is COMPLETE")
-          logPayload("Update Declaration Response", response)
-          Future.successful(BadRequest(response))
-        case Some(_) =>
-          declarationService
-            .update(ExportsDeclaration(id, request.eori, request.body))
-            .map(logPayload("Update Declaration Response", _))
-            .map {
-              case Some(declaration) => Ok(declaration)
-              case None              => NotFound
-            }
-        case None =>
-          logPayload("Update Declaration Response", "Not Found")
-          Future.successful(NotFound)
-      }
+      declarationService
+        .update(ExportsDeclaration(id, request.eori, request.body))
+        .map(logPayload("Update Declaration Response", _))
+        .map {
+          case Some(declaration) => Ok(declaration)
+          case None              => NotFound
+        }
     }
 
   def findAll(status: Option[String], pagination: Page, sort: DeclarationSort): Action[AnyContent] =
