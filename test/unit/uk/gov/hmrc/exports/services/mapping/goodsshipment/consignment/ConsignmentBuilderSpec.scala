@@ -48,7 +48,7 @@ class ConsignmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         s"for $declarationType declaration" in {
           val model: ExportsDeclaration =
             aDeclaration(
-              withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
+              withGoodsLocation(GoodsLocationBuilderSpec.validGoodsLocation),
               withDepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, meansOfTransportOnDepartureIDNumber),
               withType(declarationType),
               withBorderTransport(Some("40"), Some("1234567878ui")),

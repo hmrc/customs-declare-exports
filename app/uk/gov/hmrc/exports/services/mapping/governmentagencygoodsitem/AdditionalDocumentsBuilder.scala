@@ -58,6 +58,7 @@ class AdditionalDocumentsBuilder @Inject() () extends ModifyingBuilder[ExportIte
       }
     }
 
+  // scalastyle:off
   private def cdsWaiver(exportItem: ExportItem): Option[Seq[AdditionalDocument]] = exportItem.isLicenceRequired.flatMap {
     case true => None
     case false =>
@@ -111,11 +112,12 @@ class AdditionalDocumentsBuilder @Inject() () extends ModifyingBuilder[ExportIte
         )
       )
   }
+  // scalastyle:on
 
   private def docsReasonForContainingFur(exportItem: ExportItem): Option[Seq[AdditionalDocument]] =
     exportItem.containsCatOrDogFur map {
       case YesNoAnswer.yes => "Education and taxidermy only"
-      case YesNoAnswer.no  => "No cat or dog fur"
+      case YesNoAnswer(_)  => "No cat or dog fur"
     } map { reason =>
       Seq(
         AdditionalDocument(
