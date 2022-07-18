@@ -73,7 +73,7 @@ class TransactionalOps @Inject() (
     val seed = action.notifications.fold(Seq.empty[NotificationSummary])(identity)
 
     val (actionWithAllNotificationSummaries, notificationSummaries) =
-      updateActionWithNotificationSummaries(action, submission, notifications, seed)
+      updateActionWithNotificationSummaries(action, submission.actions, notifications, seed)
 
     if (action.requestType == SubmissionRequest)
       updateSubmissionRequest(
@@ -122,13 +122,13 @@ object ActionWithNotificationSummariesHelper {
 
   def updateActionWithNotificationSummaries(
     action: Action,
-    submission: Submission,
+    existingActions: Seq[Action],
     notifications: Seq[ParsedNotification],
     seed: Seq[NotificationSummary]
   ): (Action, Seq[NotificationSummary]) = {
 
     def prependNotificationSummary(accumulator: Seq[NotificationSummary], notification: ParsedNotification): Seq[NotificationSummary] =
-      NotificationSummary(notification, submission.actions, accumulator) +: accumulator
+      NotificationSummary(notification, existingActions, accumulator) +: accumulator
 
     // Parsed notifications need to be sorted (asc), by dateTimeIssued, due to the (ACCEPTED => GOODS_ARRIVED_MESSAGE) condition
     val notificationSummaries = notifications.sorted.foldLeft(seed)(prependNotificationSummary)

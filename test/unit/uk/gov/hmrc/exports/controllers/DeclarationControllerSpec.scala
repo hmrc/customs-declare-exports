@@ -359,17 +359,6 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
         status(result) must be(NOT_FOUND)
         contentAsString(result) mustBe empty
       }
-
-      "declaration is not found because it is in the COMPLETE state" in {
-        withAuthorizedUser()
-        val request = aDeclarationRequest()
-        given(declarationService.update(any())).willReturn(Future.successful(None))
-
-        val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
-
-        status(result) must be(NOT_FOUND)
-        contentAsString(result) mustBe empty
-      }
     }
 
     "return 400" when {
