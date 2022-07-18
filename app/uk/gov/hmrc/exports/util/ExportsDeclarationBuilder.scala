@@ -27,7 +27,8 @@ import java.time.{Instant, ZoneOffset, ZonedDateTime}
 //noinspection ScalaStyle
 trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
-  private type ExportsDeclarationModifier = ExportsDeclaration => ExportsDeclaration
+  protected type ExportsDeclarationModifier = ExportsDeclaration => ExportsDeclaration
+
   protected val VALID_PERSONAL_UCR = "5GB123456789000"
   protected val VALID_DUCR = "5GB123456789000-123ABC456DEFIIIII"
   protected val VALID_LRN = "FG7676767889"

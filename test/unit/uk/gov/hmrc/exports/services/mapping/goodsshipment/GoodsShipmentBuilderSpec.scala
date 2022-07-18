@@ -147,7 +147,7 @@ class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       withConsigneeDetails(eori = Some(VALID_EORI), address = Some(correctAddress)),
       withConsignorDetails(eori = Some(VALID_EORI), address = Some(ConsignmentConsignorBuilderSpec.correctAddress)),
       withDeclarationAdditionalActors(correctAdditionalActors1, correctAdditionalActors2),
-      withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation),
+      withGoodsLocation(GoodsLocationBuilderSpec.validGoodsLocation),
       withOriginationCountry(),
       withDestinationCountry(),
       withoutRoutingCountries(),
