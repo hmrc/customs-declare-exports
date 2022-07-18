@@ -22,9 +22,10 @@ import uk.gov.hmrc.exports.controllers.RESTController
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action => SubmissionAction, Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action => SubmissionAction, NotificationSummary, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.{ACCEPTED, ADDITIONAL_DOCUMENTS_REQUIRED, SubmissionStatus}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
 import java.time.{ZoneId, ZonedDateTime}
@@ -51,7 +52,7 @@ class GenerateSubmittedDecController @Inject() (
         declaration <- declarationRepository.create(createDeclaration())
         notification <- saveNotification(createNotification(declaration))
         maybeDmsDocNotification <- optionallySaveDmsDocNotification(declaration, notification)
-        _ <- submissionRepository.create(createSubmission(declaration, notification))
+        _ <- submissionRepository.create(createSubmission(declaration, Seq(notification, maybeDmsDocNotification).distinct))
       } yield {
         val status = if (notification != maybeDmsDocNotification) "CREATED WITH DMSDOC" else "CREATED"
         val conRef = declaration.consignmentReferences
@@ -61,7 +62,7 @@ class GenerateSubmittedDecController @Inject() (
 
   private def optionallySaveDmsDocNotification(declaration: ExportsDeclaration, notification: ParsedNotification) =
     if (notification.details.mrn.take(2).toInt % 2 == 0)
-      saveNotification(createNotification(declaration, ADDITIONAL_DOCUMENTS_REQUIRED))
+      saveNotification(createNotification(declaration, ADDITIONAL_DOCUMENTS_REQUIRED, notification.actionId))
     else
       Future.successful(notification)
 
@@ -72,22 +73,35 @@ class GenerateSubmittedDecController @Inject() (
 object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
   case class CreateSubmitDecDocumentsRequest(eori: String)
 
-  def createSubmission(declaration: ExportsDeclaration, parsedNotification: ParsedNotification) = Submission(
-    eori = declaration.eori,
-    lrn = declaration.consignmentReferences.map(_.lrn).getOrElse(""),
-    mrn = declaration.consignmentReferences.flatMap(_.mrn),
-    ducr = declaration.consignmentReferences.map(_.ducr.ducr).getOrElse(""),
-    actions = List(
-      SubmissionAction(id = parsedNotification.actionId, requestType = SubmissionRequest, requestTimestamp = ZonedDateTime.now(ZoneId.of("UTC")))
+  def createSubmission(declaration: ExportsDeclaration, parsedNotifications: Seq[ParsedNotification]) = {
+    val tempAction = SubmissionAction(
+      id = parsedNotifications.head.actionId,
+      requestType = SubmissionRequest,
+      requestTimestamp = ZonedDateTime.now(ZoneId.of("UTC"))
     )
-  )
 
-  def createNotification(declaration: ExportsDeclaration, status: SubmissionStatus = ACCEPTED) = ParsedNotification(
-    unparsedNotificationId = UUID.randomUUID(),
-    actionId = UUID.randomUUID().toString,
-    details =
-      NotificationDetails(declaration.consignmentReferences.flatMap(_.mrn).getOrElse(""), ZonedDateTime.now(ZoneId.of("UTC")), status, Seq.empty)
-  )
+    val (action, notificationSummaries) =
+      updateActionWithNotificationSummaries(tempAction, Seq.empty[submissions.Action], parsedNotifications, Seq.empty[NotificationSummary])
+    val notificationSummary = notificationSummaries.head
+
+    Submission(
+      eori = declaration.eori,
+      lrn = declaration.consignmentReferences.map(_.lrn).getOrElse(""),
+      mrn = declaration.consignmentReferences.flatMap(_.mrn),
+      ducr = declaration.consignmentReferences.map(_.ducr.ducr).getOrElse(""),
+      latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
+      enhancedStatusLastUpdated = Some(notificationSummary.dateTimeIssued),
+      actions = List(action)
+    )
+  }
+
+  def createNotification(declaration: ExportsDeclaration, status: SubmissionStatus = ACCEPTED, actionId: String = UUID.randomUUID().toString) =
+    ParsedNotification(
+      unparsedNotificationId = UUID.randomUUID(),
+      actionId = actionId,
+      details =
+        NotificationDetails(declaration.consignmentReferences.flatMap(_.mrn).getOrElse(""), ZonedDateTime.now(ZoneId.of("UTC")), status, Seq.empty)
+    )
 
   def createDeclaration()(implicit request: Request[CreateSubmitDecDocumentsRequest]) = aDeclaration(
     withEori(request.body.eori),
