@@ -58,6 +58,7 @@ class AdditionalDocumentsBuilder @Inject() () extends ModifyingBuilder[ExportIte
       }
     }
 
+  // scalastyle:off
   private def cdsWaiver(exportItem: ExportItem): Option[Seq[AdditionalDocument]] = exportItem.isLicenceRequired.flatMap {
     case true => None
     case false =>
@@ -68,6 +69,33 @@ class AdditionalDocumentsBuilder @Inject() () extends ModifyingBuilder[ExportIte
             documentIdentifier = None,
             documentStatus = None,
             documentStatusReason = Some("CDS WAIVER"),
+            issuingAuthorityName = None,
+            dateOfValidity = None,
+            documentWriteOff = None
+          ),
+          AdditionalDocument(
+            documentTypeCode = Some("Y903"),
+            documentIdentifier = None,
+            documentStatus = None,
+            documentStatusReason = Some("CULTURAL GOODS - NOT LISTED"),
+            issuingAuthorityName = None,
+            dateOfValidity = None,
+            documentWriteOff = None
+          ),
+          AdditionalDocument(
+            documentTypeCode = Some("Y923"),
+            documentIdentifier = None,
+            documentStatus = None,
+            documentStatusReason = Some("EXCLUDED PRODUCT"),
+            issuingAuthorityName = None,
+            dateOfValidity = None,
+            documentWriteOff = None
+          ),
+          AdditionalDocument(
+            documentTypeCode = Some("Y924"),
+            documentIdentifier = None,
+            documentStatus = None,
+            documentStatusReason = Some("EXCLUDED FROM PROHIBITION"),
             issuingAuthorityName = None,
             dateOfValidity = None,
             documentWriteOff = None
@@ -84,6 +112,7 @@ class AdditionalDocumentsBuilder @Inject() () extends ModifyingBuilder[ExportIte
         )
       )
   }
+  // scalastyle:on
 
   private def docsReasonForContainingFur(exportItem: ExportItem): Option[Seq[AdditionalDocument]] =
     exportItem.catOrDogFurDetails map {

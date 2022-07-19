@@ -325,7 +325,6 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
         withAuthorizedUser()
         val request = aDeclarationRequest()
         val declaration = aDeclaration(withStatus(DeclarationStatus.DRAFT), withType(DeclarationType.STANDARD), withId("id"), withEori(userEori))
-        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(Some(declaration)))
         given(declarationService.update(any[ExportsDeclaration])).willReturn(Future.successful(Some(declaration)))
 
         val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
@@ -342,7 +341,6 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
       "declaration is not found - on find" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
-        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(None))
         given(declarationService.update(any[ExportsDeclaration])).willReturn(Future.successful(None))
 
         val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
@@ -354,8 +352,6 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
       "declaration is not found - on update" in {
         withAuthorizedUser()
         val request = aDeclarationRequest()
-        val declaration = aDeclaration(withStatus(DeclarationStatus.DRAFT), withType(DeclarationType.STANDARD), withId("id"), withEori(userEori))
-        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(Some(declaration)))
         given(declarationService.update(any[ExportsDeclaration])).willReturn(Future.successful(None))
 
         val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
@@ -366,17 +362,6 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
     }
 
     "return 400" when {
-      "declaration is COMPLETE" in {
-        withAuthorizedUser()
-        val request = aDeclarationRequest()
-        val declaration = aDeclaration(withStatus(DeclarationStatus.COMPLETE), withType(DeclarationType.STANDARD), withId("id"), withEori(userEori))
-        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(Some(declaration)))
-
-        val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
-
-        status(result) must be(BAD_REQUEST)
-        contentAsJson(result) mustBe Json.obj("message" -> "Cannot update a declaration once it is COMPLETE")
-      }
 
       "invalid json" in {
         withAuthorizedUser()

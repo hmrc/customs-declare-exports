@@ -84,6 +84,6 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Dec
       .toList
 
     if (notifications.isEmpty) action
-    else updateActionWithNotificationSummaries(action, submission, notifications, Seq.empty[NotificationSummary])._1
+    else updateActionWithNotificationSummaries(action, submission.actions, notifications, Seq.empty[NotificationSummary])._1
   }
 }
