@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.exports.models.declaration
 
-import java.time.LocalDate
-
 import play.api.libs.json._
+
+import java.time.LocalDate
 
 case class ProcedureCodes(procedureCode: Option[String], additionalProcedureCodes: Seq[String]) {
   def extractProcedureCode(): (Option[String], Option[String]) =
@@ -46,6 +46,11 @@ object AdditionalFiscalReferences {
 case class CommodityDetails(combinedNomenclatureCode: Option[String], descriptionOfGoods: Option[String])
 object CommodityDetails {
   implicit val format: OFormat[CommodityDetails] = Json.format[CommodityDetails]
+}
+
+case class CatOrDogFurDetails(yesNo: String, purpose: Option[String])
+object CatOrDogFurDetails {
+  implicit val format: OFormat[CatOrDogFurDetails] = Json.format[CatOrDogFurDetails]
 }
 
 case class UNDangerousGoodsCode(dangerousGoodsCode: Option[String])
@@ -167,6 +172,7 @@ case class ExportItem(
   additionalFiscalReferencesData: Option[AdditionalFiscalReferences] = None,
   statisticalValue: Option[StatisticalValue] = None,
   commodityDetails: Option[CommodityDetails] = None,
+  catOrDogFurDetails: Option[CatOrDogFurDetails] = None,
   dangerousGoodsCode: Option[UNDangerousGoodsCode] = None,
   cusCode: Option[CUSCode] = None,
   taricCodes: Option[List[TaricCode]] = None,
@@ -176,8 +182,7 @@ case class ExportItem(
   commodityMeasure: Option[CommodityMeasure] = None,
   additionalInformation: Option[AdditionalInformations] = None,
   additionalDocuments: Option[AdditionalDocuments] = None,
-  isLicenceRequired: Option[Boolean] = None,
-  containsCatOrDogFur: Option[YesNoAnswer] = None
+  isLicenceRequired: Option[Boolean] = None
 )
 object ExportItem {
   implicit val format: OFormat[ExportItem] = Json.format[ExportItem]

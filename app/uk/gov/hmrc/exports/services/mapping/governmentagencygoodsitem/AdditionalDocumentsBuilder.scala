@@ -16,18 +16,18 @@
 
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
-import java.time.format.DateTimeFormatter
-import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{AdditionalDocument, AdditionalDocuments, DocumentWriteOff, ExportItem, YesNoAnswer}
+import uk.gov.hmrc.exports.models.declaration.{AdditionalDocument, _}
 import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper._
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import uk.gov.hmrc.wco.dec._
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
-import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem.{AdditionalDocument => WCOAdditionalDocument}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem.AdditionalDocument.{Submitter, WriteOff => WCOWriteOff}
+import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem.{AdditionalDocument => WCOAdditionalDocument}
 import wco.datamodel.wco.declaration_ds.dms._2.AdditionalDocumentEffectiveDateTimeType.{DateTimeString => WCODateTimeString}
-import wco.datamodel.wco.declaration_ds.dms._2.{AdditionalDocumentEffectiveDateTimeType, SubmitterNameTextType, WriteOffQuantityQuantityType, _}
+import wco.datamodel.wco.declaration_ds.dms._2._
 
+import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 import scala.collection.JavaConverters._
 
 class AdditionalDocumentsBuilder @Inject() () extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
@@ -115,9 +115,10 @@ class AdditionalDocumentsBuilder @Inject() () extends ModifyingBuilder[ExportIte
   // scalastyle:on
 
   private def docsReasonForContainingFur(exportItem: ExportItem): Option[Seq[AdditionalDocument]] =
-    exportItem.containsCatOrDogFur map {
-      case YesNoAnswer.yes => "Education and taxidermy only"
-      case YesNoAnswer(_)  => "No cat or dog fur"
+    exportItem.catOrDogFurDetails map {
+      case CatOrDogFurDetails("Yes", Some("educational-or-taxidermy-purpose")) => "Education and taxidermy only"
+      case CatOrDogFurDetails("No", _)                                         => "No cat or dog fur"
+      case _ => throw new IllegalStateException("No valid answer for cat or dog fur")
     } map { reason =>
       Seq(
         AdditionalDocument(
