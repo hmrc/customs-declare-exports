@@ -86,6 +86,7 @@ object ExportsDeclarationSpec {
   private val natureOfTransaction = mock[NatureOfTransaction]
 
   val exportsDeclarationRequest = ExportsDeclarationRequest(
+    parentDeclarationId = Some("parentDeclarationId"),
     createdDateTime = createdDate,
     updatedDateTime = updatedDate,
     sourceId = Some(sourceId),
@@ -107,6 +108,7 @@ object ExportsDeclarationSpec {
 
   val exportsDeclaration = ExportsDeclaration(
     id = id,
+    parentDeclarationId = Some("parentDeclarationId"),
     eori = eori,
     status = DeclarationStatus.DRAFT,
     createdDateTime = createdDate,
@@ -131,6 +133,7 @@ object ExportsDeclarationSpec {
   val exportsDeclarationRequestAsString: String =
     """{
       |  "id": "6f31582e-bfd5-4b27-90be-2dca6e236b20",
+      |  "parentDeclarationId": "parentDeclarationId",
       |  "eori": "GB7172755078551",
       |  "status": "DRAFT",
       |  "createdDateTime": "2019-12-10T15:52:32.681Z",

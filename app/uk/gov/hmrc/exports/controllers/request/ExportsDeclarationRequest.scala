@@ -24,6 +24,7 @@ import uk.gov.hmrc.exports.models.declaration._
 import java.time.Instant
 
 case class ExportsDeclarationRequest(
+  parentDeclarationId: Option[String] = None,
   createdDateTime: Instant,
   updatedDateTime: Instant,
   sourceId: Option[String] = None,
