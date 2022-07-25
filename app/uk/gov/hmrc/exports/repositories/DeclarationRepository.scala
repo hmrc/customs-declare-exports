@@ -71,23 +71,23 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
     }
   }
 
-  def findOne(id: String, eori: Eori): Future[Option[ExportsDeclaration]] =
-    metrics.timeAsyncCall(Timers.declarationFindSingleTimer) {
-      findOne(Json.obj("eori" -> eori, "id" -> id))
-    }
-
-  def markStatusAsComplete(id: String, eori: Eori): Future[Option[ExportsDeclaration]] =
+  def markStatusAsComplete(eori: Eori, id: String): Future[Option[ExportsDeclaration]] =
     collection
       .findOneAndUpdate(
-        filter = BsonDocument(Json.obj("id" -> id, "eori" -> eori.value).toString),
+        filter = BsonDocument(Json.obj("eori" -> eori.value, "id" -> id).toString),
         update = set("status", DeclarationStatus.COMPLETE.toString),
         options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.BEFORE)
       )
       .toFutureOption
 
+  def findOne(eori: Eori, id: String): Future[Option[ExportsDeclaration]] =
+    metrics.timeAsyncCall(Timers.declarationFindSingleTimer) {
+      findOne(Json.obj("eori" -> eori, "id" -> id))
+    }
+
   def revertStatusToDraft(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
     findOneAndUpdate(
-      filter = BsonDocument(Json.obj("id" -> declaration.id, "eori" -> declaration.eori).toString),
+      filter = BsonDocument(Json.obj("eori" -> declaration.eori, "id" -> declaration.id).toString),
       update = set("status", DeclarationStatus.DRAFT.toString)
     )
 }

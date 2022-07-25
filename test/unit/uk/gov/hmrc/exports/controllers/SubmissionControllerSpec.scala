@@ -68,7 +68,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
     "request is correct" should {
       "return 201 (Created)" in {
         val declaration = aDeclaration(withId("id"), withStatus(DeclarationStatus.DRAFT))
-        when(submissionService.markCompleted(anyString(), any())).thenReturn(Future.successful(Some(declaration)))
+        when(submissionService.markCompleted(any(), anyString())).thenReturn(Future.successful(Some(declaration)))
         when(submissionService.submit(any())(any())).thenReturn(Future.successful(submission))
 
         val result = controller.create("id")(fakePostRequest)
@@ -81,7 +81,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
     "DeclarationService returns completed Declaration" should {
       "return 409 (Conflict)" in {
         val declaration = aDeclaration(withId("id"), withStatus(DeclarationStatus.COMPLETE))
-        when(submissionService.markCompleted(anyString(), any())).thenReturn(Future.successful(Some(declaration)))
+        when(submissionService.markCompleted(any(), anyString())).thenReturn(Future.successful(Some(declaration)))
         when(submissionService.submit(any())(any())).thenReturn(Future.successful(submission))
 
         val result = controller.create("id")(fakePostRequest)
@@ -93,7 +93,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
 
     "DeclarationService returns no Declaration for given UUID" should {
       "return 404 (NotFound)" in {
-        when(submissionService.markCompleted(anyString(), any())).thenReturn(Future.successful(None))
+        when(submissionService.markCompleted(any(), anyString())).thenReturn(Future.successful(None))
 
         val result = controller.create("id")(fakePostRequest)
 
