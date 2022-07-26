@@ -152,6 +152,15 @@ trait RepositoryOps[T] {
       .findOneAndUpdate(session, filter = filter, update = update, options = doNotUpsertAndReturnAfter)
       .toFutureOption
 
+  def get[V](keyId: String, keyValue: V): Future[T] =
+    get(equal(keyId, keyValue))
+
+  def get(filter: JsValue): Future[T] =
+    get(BsonDocument(filter.toString))
+
+  def get(filter: Bson): Future[T] =
+    collection.find(filter).limit(1).toFuture.map(_.head)
+
   def indexList: Future[Seq[Document]] = collection.listIndexes.toFuture
 
   def insertOne(document: T): Future[Either[WriteError, T]] =

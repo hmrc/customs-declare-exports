@@ -24,7 +24,7 @@ import play.api.test.{FakeRequest, Helpers}
 import stubs.ExternalServicesConfig.{Host, Port}
 import stubs.MockGenericDownstreamService
 import testdata.ExportsTestData.{authToken, eori}
-import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, TestModule}
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames}
 
 import scala.reflect.ClassTag

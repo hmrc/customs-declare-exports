@@ -23,8 +23,10 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
+import uk.gov.hmrc.exports.services.DeclarationService.{CREATED, FOUND}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
+import scala.concurrent.ExecutionContext.global
 import scala.concurrent.Future
 
 class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
@@ -79,10 +81,29 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
   "Find by ID & EORI" should {
     "delegate to the repository" in {
       val declaration = mock[ExportsDeclaration]
-      given(declarationRepository.findOne("id", Eori("eori"))).willReturn(Future.successful(Some(declaration)))
+      given(declarationRepository.findOne(Eori("eori"), "id")).willReturn(Future.successful(Some(declaration)))
 
-      service.findOne("id", Eori("eori")).futureValue mustBe Some(declaration)
+      service.findOne(Eori("eori"), "id").futureValue mustBe Some(declaration)
     }
   }
 
+  "findOrCreateDraftFromParent" should {
+    val newId = "newId"
+    val parentId = "parentId"
+
+    "return a value indicating that a draft declaration with 'parentDeclarationId' equal to the given parentId was found" in {
+      when(declarationRepository.findOne(any[JsValue]())).thenReturn(Future.successful(Some(aDeclaration(withId(newId)))))
+      service.findOrCreateDraftFromParent(Eori("eori"), parentId)(global).futureValue mustBe ((FOUND, newId): (Boolean, String))
+    }
+
+    "return a value indicating that a draft declaration with 'parentDeclarationId' equal to the given parentId was created" in {
+      when(declarationRepository.findOne(any[JsValue]())).thenReturn(Future.successful(None))
+
+      val declaration = aDeclaration(withId(newId))
+      when(declarationRepository.get(any[JsValue]())).thenReturn(Future.successful(declaration))
+      when(declarationRepository.create(any[ExportsDeclaration]())).thenReturn(Future.successful(declaration))
+
+      service.findOrCreateDraftFromParent(Eori("eori"), parentId)(global).futureValue._1 mustBe CREATED
+    }
+  }
 }

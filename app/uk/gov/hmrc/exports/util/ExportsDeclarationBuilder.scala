@@ -67,6 +67,8 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
   def withId(id: String): ExportsDeclarationModifier = _.copy(id = id)
 
+  def withParentDeclarationId(parentId: String): ExportsDeclarationModifier = _.copy(parentDeclarationId = Some(parentId))
+
   def withEori(eori: String): ExportsDeclarationModifier = _.copy(eori = eori)
 
   def withEori(eori: Eori): ExportsDeclarationModifier = _.copy(eori = eori.value)

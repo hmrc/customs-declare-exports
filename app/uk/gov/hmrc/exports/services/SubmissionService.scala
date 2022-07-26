@@ -54,8 +54,8 @@ class SubmissionService @Inject() (
   def findAllSubmissionsBy(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] =
     submissionRepository.findAll(eori, queryParameters)
 
-  def markCompleted(id: String, eori: Eori): Future[Option[ExportsDeclaration]] =
-    declarationRepository.markStatusAsComplete(id, eori)
+  def markCompleted(eori: Eori, id: String): Future[Option[ExportsDeclaration]] =
+    declarationRepository.markStatusAsComplete(eori, id)
 
   def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] =
     metrics.timeAsyncCall(Monitors.submissionMonitor) {

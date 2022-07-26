@@ -49,6 +49,7 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
   override lazy val app: Application = GuiceApplicationBuilder()
     .overrides(bind[AuthConnector].to(mockAuthConnector), bind[DeclarationService].to(declarationService))
     .build()
+
   private val declarationService: DeclarationService = mock[DeclarationService]
 
   override def beforeEach(): Unit = {
@@ -56,7 +57,7 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
     reset(mockAuthConnector, declarationService)
   }
 
-  "POST /" should {
+  "POST /declarations" should {
     val post = FakeRequest("POST", "/declarations")
 
     "return 201" when {
@@ -216,33 +217,33 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
     }
   }
 
-  "GET /:id" should {
+  "GET /declarations/:id" should {
     val get = FakeRequest("GET", "/declarations/id")
 
     "return 200" when {
       "request is valid" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.findOne(anyString(), any[Eori]())).willReturn(Future.successful(Some(declaration)))
+        given(declarationService.findOne(any[Eori](), anyString())).willReturn(Future.successful(Some(declaration)))
 
         val result: Future[Result] = route(app, get).get
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(declaration)
-        verify(declarationService).findOne("id", userEori)
+        verify(declarationService).findOne(userEori, "id")
       }
     }
 
     "return 404" when {
       "id is not found" in {
         withAuthorizedUser()
-        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(None))
+        given(declarationService.findOne(any(), anyString())).willReturn(Future.successful(None))
 
         val result: Future[Result] = route(app, get).get
 
         status(result) must be(NOT_FOUND)
         contentAsString(result) mustBe empty
-        verify(declarationService).findOne(eqRef("id"), eqRef(userEori))
+        verify(declarationService).findOne(eqRef(userEori), eqRef("id"))
       }
     }
 
@@ -258,21 +259,21 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
     }
   }
 
-  "DELETE /:id" should {
+  "DELETE /declarations/:id" should {
     val delete = FakeRequest("DELETE", "/declarations/id")
 
     "return 204" when {
       "request is valid" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori), withStatus(DeclarationStatus.DRAFT))
-        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(Some(declaration)))
+        given(declarationService.findOne(any(), anyString())).willReturn(Future.successful(Some(declaration)))
         given(declarationService.deleteOne(any[ExportsDeclaration])).willReturn(Future.successful(true))
 
         val result: Future[Result] = route(app, delete).get
 
         status(result) must be(NO_CONTENT)
         contentAsString(result) mustBe empty
-        verify(declarationService).findOne("id", userEori)
+        verify(declarationService).findOne(userEori, "id")
         verify(declarationService).deleteOne(declaration)
       }
     }
@@ -281,13 +282,13 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
       "declaration is COMPLETE" in {
         withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori), withStatus(DeclarationStatus.COMPLETE))
-        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(Some(declaration)))
+        given(declarationService.findOne(any(), anyString())).willReturn(Future.successful(Some(declaration)))
 
         val result: Future[Result] = route(app, delete).get
 
         status(result) must be(BAD_REQUEST)
         contentAsJson(result) mustBe Json.obj("message" -> "Cannot remove a declaration once it is COMPLETE")
-        verify(declarationService).findOne("id", userEori)
+        verify(declarationService).findOne(userEori, "id")
         verify(declarationService, never).deleteOne(declaration)
       }
     }
@@ -295,13 +296,13 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
     "return 204" when {
       "id is not found" in {
         withAuthorizedUser()
-        given(declarationService.findOne(anyString(), any())).willReturn(Future.successful(None))
+        given(declarationService.findOne(any(), anyString())).willReturn(Future.successful(None))
 
         val result: Future[Result] = route(app, delete).get
 
         status(result) must be(NO_CONTENT)
         contentAsString(result) mustBe empty
-        verify(declarationService).findOne("id", userEori)
+        verify(declarationService).findOne(userEori, "id")
       }
     }
 
@@ -317,7 +318,7 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
     }
   }
 
-  "PUT /:id" should {
+  "PUT /declarations/:id" should {
     val put = FakeRequest("PUT", "/declarations/id")
 
     "return 200" when {
@@ -386,18 +387,50 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
     }
   }
 
+  "GET /draft-declaration/:parentId" should {
+    val newId = "newId"
+    val parentId = "parentId"
+    val get = FakeRequest("GET", "/draft-declaration/parentId")
+
+    "return 200" when {
+      "a draft declaration with 'parentDeclarationId' equal to the given parentId is found" in {
+        withAuthorizedUser()
+        when(declarationService.findOrCreateDraftFromParent(any[Eori](), refEq(parentId))(any()))
+          .thenReturn(Future.successful((DeclarationService.FOUND, newId)))
+
+        val result: Future[Result] = route(app, get).get
+
+        status(result) must be(OK)
+        contentAsJson(result).as[String] mustBe newId
+      }
+    }
+
+    "return 201" when {
+      "a draft declaration with 'parentDeclarationId' equal to the given parentId is created" in {
+        withAuthorizedUser()
+        when(declarationService.findOrCreateDraftFromParent(any[Eori](), refEq(parentId))(any()))
+          .thenReturn(Future.successful((DeclarationService.CREATED, newId)))
+
+        val result: Future[Result] = route(app, get).get
+
+        status(result) must be(CREATED)
+        contentAsJson(result).as[String] mustBe newId
+      }
+    }
+  }
+
   def aDeclarationRequest() =
-    ExportsDeclarationRequest(createdDateTime = Instant.now(), updatedDateTime = Instant.now(), `type` = DeclarationType.STANDARD)
+    ExportsDeclarationRequest(createdDateTime = Instant.now, updatedDateTime = Instant.now, `type` = DeclarationType.STANDARD)
 
   def theDeclarationCreated: ExportsDeclaration = {
     val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
-    verify(declarationService).create(captor.capture())
+    verify(declarationService).create(captor.capture)
     captor.getValue
   }
 
   def theDeclarationUpdated: ExportsDeclaration = {
     val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
-    verify(declarationService).update(captor.capture())
+    verify(declarationService).update(captor.capture)
     captor.getValue
   }
 }
