@@ -16,7 +16,7 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestSpec {
   "PurgeAncientSubmissionsJob" should {
 
     "print from submissions, decs, notifications" in {
-      testJob.executePurge()
+      testJob.execute()
     }
 
   }

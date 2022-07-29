@@ -42,7 +42,7 @@ class PurgeSubmissionsTransactionalOps @Inject() (
     declaration: Option[ExportsDeclaration],
     notifications: Seq[ParsedNotification],
     submission: Submission
-  ): Future[_] =
+  ): Future[Unit] =
     if (appConfig.useTransactionalDBOps)
       withSessionAndTransaction[Unit](startRemoveOp(_, notifications, declaration, submission)).recover { case e: Exception =>
         logger.warn(s"There was an error while writing to the DB => ${e.getMessage}", e)
@@ -57,9 +57,14 @@ class PurgeSubmissionsTransactionalOps @Inject() (
     submission: Submission
   ): Future[Unit] =
     for {
-      notificationsRemoved <- notificationRepository.removeEvery(session, Filters.equal("id", submission.uuid))
-      declarationsRemoved <- declarationRepository.removeEvery(session, Filters.in("id", declaration.map(_.id)))
-      submissionsRemoved <- submissionRepository.removeEvery(session, Filters.in("id", notifications.map(_.actionId)))
-    } yield notificationsRemoved + declarationsRemoved + submissionsRemoved
+      notificationsRemoved <- notificationRepository.removeEvery(session, Filters.in("actionId", notifications.map(_.actionId): _*))
+//      declarationsRemoved <- declarationRepository.removeEvery(session, Filters.in("id", declaration.map(_.id)))
+      submissionsRemoved <- submissionRepository.removeEvery(session, Filters.in("uuid", submission.uuid))
+    } yield {
+      println(">>>>>>>>>>")
+      println(">>>>>>>>>>" + notificationsRemoved)
+      println(">>>>>>>>>>" + submissionsRemoved)
+      println(">>>>>>>>>>")
+    }
 
 }

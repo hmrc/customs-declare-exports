@@ -86,7 +86,7 @@ class PurgeAncientSubmissionsJob @Inject() (
 
   val olderThanDate = lte(statusLastUpdated, expiryDate)
 
-  def executePurge(): Unit = {
+  override def execute(): Future[Unit] = {
 
     val notificationCollection = exportsClient.db.getCollection("notifications")
     val submissionCollection = exportsClient.db.getCollection("submissions")
@@ -127,52 +127,9 @@ class PurgeAncientSubmissionsJob @Inject() (
       result.map { nots =>
         transactionalOps.removeSubmissionAndNotifications(nots.declaration, nots.notifications, nots.submission)
       }
-    }
+    } map { _ => () }
 
   }
-
-  def execute(): Future[Unit] =
-    for {
-      submissions <- submissionRepository.findAll(latestStatusLookup)
-      declarations <- submissionsToDeclarations(submissions)
-      notifications <- submissionsToNotifications(declarations)
-      _ <- Future.sequence {
-        notifications.map { nots =>
-          transactionalOps.removeSubmissionAndNotifications(nots.declaration, nots.notifications, nots.submission)
-        }
-      }
-    } yield {
-
-      println("\n\n\n\n\n" + submissions)
-      println("\n\n\n\n\n" + declarations)
-      println("\n\n\n\n\n" + notifications)
-
-    }
-
-  private def submissionsToDeclarations(submissions: Seq[Submission]): Future[Seq[SubmissionToNotifications]] =
-    Future.sequence {
-      submissions.map { submission =>
-        declarationRepository.findOne("id", submission.uuid).map { dec =>
-          SubmissionToNotifications(submission, dec, Seq.empty)
-        }
-      }
-    }
-
-  private def submissionsToNotifications(submissions: Seq[SubmissionToNotifications]): Future[Seq[SubmissionToNotifications]] =
-    Future.sequence {
-      submissions.map { sub =>
-        notificationService
-          .findAllNotificationsSubmissionRelated(sub.submission)
-          .map { not =>
-            println(">%%%%%£$£$£@£$@£")
-            sub.copy(notifications = not)
-          }
-          .recover { case e =>
-            println(">>>>> " + e + "...\n\n\n")
-            sub
-          }
-      }
-    }
 
   case class SubmissionToNotifications(submission: Submission, declaration: Option[ExportsDeclaration], notifications: Seq[ParsedNotification])
 
