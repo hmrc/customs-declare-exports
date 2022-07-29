@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.DeclarationType
+import uk.gov.hmrc.exports.models.DeclarationType.STANDARD
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
@@ -39,8 +40,7 @@ class ConsignmentBuilder @Inject() (
     departureTransportMeansBuilder.buildThenAdd(exportsCacheModel.transport, exportsCacheModel.locations.inlandModeOfTransportCode, consignment)
 
     exportsCacheModel.`type` match {
-      case DeclarationType.STANDARD | DeclarationType.SIMPLIFIED | DeclarationType.SUPPLEMENTARY | DeclarationType.OCCASIONAL |
-          DeclarationType.CLEARANCE =>
+      case STANDARD | DeclarationType.SIMPLIFIED | DeclarationType.SUPPLEMENTARY | DeclarationType.OCCASIONAL | DeclarationType.CLEARANCE =>
         transportEquipmentBuilder.buildThenAdd(exportsCacheModel.transport.containers.getOrElse(Seq.empty), consignment)
       case _ => (): Unit
     }

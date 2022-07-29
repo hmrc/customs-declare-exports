@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.controllers
 
 import play.api.Logging
-import play.api.libs.json.{Json, Writes}
+import play.api.libs.json.{JsString, Json, Writes}
 import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
@@ -49,27 +49,15 @@ class DeclarationController @Inject() (
         .map(declaration => Created(declaration))
     }
 
-  def update(id: String): Action[ExportsDeclarationRequest] =
-    authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
-      logPayload("Update Declaration Request Received", request.body)
-      declarationService.findOne(id, request.eori).flatMap {
-        case Some(declaration) if declaration.status == DeclarationStatus.COMPLETE =>
-          val response = ErrorResponse("Cannot update a declaration once it is COMPLETE")
-          logPayload("Update Declaration Response", response)
-          Future.successful(BadRequest(response))
-        case Some(_) =>
-          declarationService
-            .update(ExportsDeclaration(id, request.eori, request.body))
-            .map(logPayload("Update Declaration Response", _))
-            .map {
-              case Some(declaration) => Ok(declaration)
-              case None              => NotFound
-            }
-        case None =>
-          logPayload("Update Declaration Response", "Not Found")
-          Future.successful(NotFound)
+  def findOrCreateDraftFromParent(parentId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    declarationService.findOrCreateDraftFromParent(request.eori, parentId).map { result =>
+      result match {
+        case (DeclarationService.CREATED, id) => Created(JsString(id))
+        /* FOUND */
+        case (_, id) => Ok(JsString(id))
       }
     }
+  }
 
   def findAll(status: Option[String], pagination: Page, sort: DeclarationSort): Action[AnyContent] =
     authenticator.authorisedAction(parse.default) { implicit request =>
@@ -79,20 +67,32 @@ class DeclarationController @Inject() (
     }
 
   def findById(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    declarationService.findOne(id, request.eori).map {
+    declarationService.findOne(request.eori, id).map {
       case Some(declaration) => Ok(declaration)
       case None              => NotFound
     }
   }
 
   def deleteById(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    declarationService.findOne(id, request.eori).flatMap {
+    declarationService.findOne(request.eori, id).flatMap {
       case Some(declaration) if declaration.status == DeclarationStatus.COMPLETE =>
         Future.successful(BadRequest(ErrorResponse("Cannot remove a declaration once it is COMPLETE")))
       case Some(declaration) => declarationService.deleteOne(declaration).map(_ => NoContent)
       case None              => Future.successful(NoContent)
     }
   }
+
+  def update(id: String): Action[ExportsDeclarationRequest] =
+    authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
+      logPayload("Update Declaration Request Received", request.body)
+      declarationService
+        .update(ExportsDeclaration(id, request.eori, request.body))
+        .map(logPayload("Update Declaration Response", _))
+        .map {
+          case Some(declaration) => Ok(declaration)
+          case None              => NotFound
+        }
+    }
 
   private def logPayload[T](prefix: String, payload: T)(implicit wts: Writes[T]): T = {
     logger.debug(s"$prefix: ${Json.toJson(payload)}")

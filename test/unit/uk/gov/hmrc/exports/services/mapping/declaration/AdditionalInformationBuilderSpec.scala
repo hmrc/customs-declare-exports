@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.services.mapping.declaration
 
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.Address
-import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.GoodsLocationBuilderSpec
+import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.GoodsLocationBuilderSpec.{gvmGoodsLocation, validGoodsLocation}
 import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, ExportsItemBuilder}
 import wco.datamodel.wco.dec_dms._2.Declaration
 
@@ -27,7 +27,6 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
   private val builder = new AdditionalInformationBuilder()
 
   private val RRS01 = "RRS01"
-  private val GVM_IDENTIFICATION_OF_LOCATION = "TXTGVM"
 
   "build then add from ExportsDeclaration" should {
     "not add an AdditionalInformation element" when {
@@ -40,7 +39,7 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
       }
 
       "GoodsLocation code is present but does not contain an 'identificationOfLocation' value" in {
-        val model = aDeclaration(withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation.copy(identificationOfLocation = None)))
+        val model = aDeclaration(withGoodsLocation(validGoodsLocation.copy(identificationOfLocation = None)))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -48,7 +47,7 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
       }
 
       "GoodsLocation code 'identificationOfLocation' value contains less than 3 chars" in {
-        val model = aDeclaration(withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation.copy(identificationOfLocation = Some("GV"))))
+        val model = aDeclaration(withGoodsLocation(validGoodsLocation.copy(identificationOfLocation = Some("GV"))))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -56,7 +55,7 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
       }
 
       "GoodsLocation code does not end with 'GVM'" in {
-        val model = aDeclaration(withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation.copy(identificationOfLocation = Some("TXT"))))
+        val model = aDeclaration(withGoodsLocation(validGoodsLocation.copy(identificationOfLocation = Some("TXT"))))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -66,10 +65,7 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
       s"add an AdditionalInformation element at header level with 'StatementCode' value of '$RRS01'" when {
         "GoodsLocation code ends with 'GVM'" which {
           "has a 'StatementDescription' value that equals the carrier's EORI number when user supplied the carrier's EORI number" in {
-            val model = aDeclaration(
-              withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation.copy(identificationOfLocation = Some(GVM_IDENTIFICATION_OF_LOCATION))),
-              withCarrierDetails(eori = Some(VALID_EORI), address = None)
-            )
+            val model = aDeclaration(withGoodsLocation(gvmGoodsLocation), withCarrierDetails(eori = Some(VALID_EORI), address = None))
             val declaration = new Declaration()
             builder.buildThenAdd(model, declaration)
 
@@ -79,7 +75,7 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
           "has a 'StatementDescription' value that equals the carrier's 'full name' when user supplied the carrier's address" in {
             val carrierName = "XYZ Carrier"
             val model = aDeclaration(
-              withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation.copy(identificationOfLocation = Some(GVM_IDENTIFICATION_OF_LOCATION))),
+              withGoodsLocation(gvmGoodsLocation),
               withCarrierDetails(eori = None, Some(Address(carrierName, "School Road", "London", "WS1 2AB", "United Kingdom")))
             )
             val declaration = new Declaration()
@@ -89,10 +85,7 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
           }
 
           "has a 'StatementDescription' value that equals 'Unknown' when user does not supply any carrier details" in {
-            val model = aDeclaration(
-              withGoodsLocation(GoodsLocationBuilderSpec.correctGoodsLocation.copy(identificationOfLocation = Some(GVM_IDENTIFICATION_OF_LOCATION))),
-              withoutCarrierDetails()
-            )
+            val model = aDeclaration(withGoodsLocation(gvmGoodsLocation), withoutCarrierDetails())
             val declaration = new Declaration()
             builder.buildThenAdd(model, declaration)
 

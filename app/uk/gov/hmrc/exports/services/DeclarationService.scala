@@ -18,26 +18,53 @@ package uk.gov.hmrc.exports.services
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.{COMPLETE, DRAFT}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
+import uk.gov.hmrc.exports.services.DeclarationService.{CREATED, FOUND}
 
+import java.util.UUID
 import javax.inject.Inject
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class DeclarationService @Inject() (declarationRepository: DeclarationRepository) {
 
   def create(declaration: ExportsDeclaration): Future[ExportsDeclaration] =
     declarationRepository.create(declaration)
 
-  def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
-    declarationRepository.findOneAndReplace(Json.obj("id" -> declaration.id, "eori" -> declaration.eori), declaration, false)
+  def findOrCreateDraftFromParent(eori: Eori, parentId: String)(implicit ec: ExecutionContext): Future[(Boolean, String)] = {
+    val filter = Json.obj("eori" -> eori, "parentDeclarationId" -> parentId, "status" -> DRAFT.toString)
+    declarationRepository.findOne(filter).flatMap {
+      case Some(declaration) => Future.successful((FOUND, declaration.id))
+
+      case _ =>
+        declarationRepository.get(Json.obj("eori" -> eori, "id" -> parentId)).flatMap { declaration =>
+          declarationRepository
+            .create(declaration.copy(id = UUID.randomUUID.toString, parentDeclarationId = Some(parentId), status = DRAFT))
+            .map(declaration => (CREATED, declaration.id))
+        }
+    }
+  }
 
   def find(search: DeclarationSearch, pagination: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] =
     declarationRepository.find(search, pagination, sort)
 
-  def findOne(id: String, eori: Eori): Future[Option[ExportsDeclaration]] =
-    declarationRepository.findOne(id, eori)
+  def findOne(eori: Eori, id: String): Future[Option[ExportsDeclaration]] =
+    declarationRepository.findOne(eori, id)
 
   def deleteOne(declaration: ExportsDeclaration): Future[Boolean] =
     declarationRepository.removeOne(Json.obj("id" -> declaration.id, "eori" -> declaration.eori))
+
+  def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
+    declarationRepository.findOneAndReplace(
+      Json.obj("id" -> declaration.id, "eori" -> declaration.eori, "status" -> Json.obj("$ne" -> COMPLETE.toString)),
+      declaration,
+      false
+    )
+}
+
+object DeclarationService {
+
+  val CREATED = true
+  val FOUND = false
 }

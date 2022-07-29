@@ -65,7 +65,10 @@ case class RepresentativeDetails(details: Option[EntityDetails], statusCode: Opt
   def isRepresentingOtherAgent = representingOtherAgent.contains("Yes")
 }
 object RepresentativeDetails {
+
   implicit val format: OFormat[RepresentativeDetails] = Json.format[RepresentativeDetails]
+
+  // Fot testing purpose only
   val Declarant = "1"
   val DirectRepresentative = "2"
   val IndirectRepresentative = "3"

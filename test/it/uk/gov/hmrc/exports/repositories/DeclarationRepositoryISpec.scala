@@ -70,7 +70,7 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
       "one exists with the given id and eori" in {
         val declaration = aDeclaration(withId("id"), withEori("eori"))
         repository.insertOne(declaration).futureValue.isRight mustBe true
-        repository.findOne("id", eori).futureValue mustBe Some(declaration)
+        repository.findOne(eori, "id").futureValue mustBe Some(declaration)
       }
     }
 
@@ -158,7 +158,7 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
       repository.create(declaration).futureValue.status mustBe DeclarationStatus.DRAFT
 
       val eori = Eori(declaration.eori)
-      repository.markStatusAsComplete(declaration.id, eori).futureValue.value.status mustBe DeclarationStatus.DRAFT
+      repository.markStatusAsComplete(eori, declaration.id).futureValue.value.status mustBe DeclarationStatus.DRAFT
       repository.findOne("id", declaration.id).futureValue.value.status mustBe DeclarationStatus.COMPLETE
     }
 
@@ -175,7 +175,7 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
         val declaration2 = aDeclaration(withId("id"), withEori("some-other-eori"))
         givenADeclarationExists(declaration1, declaration2)
 
-        repository.findOne("id", eori).futureValue mustBe None
+        repository.findOne(eori, "id").futureValue mustBe None
       }
 
       "no declaration exists with the given eori" in {
@@ -186,7 +186,7 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
       }
 
       "attempting to mark as completed a non-existing declaration" in {
-        repository.markStatusAsComplete("id", Eori("eori")).futureValue mustBe empty
+        repository.markStatusAsComplete(Eori("eori"), "id").futureValue mustBe empty
       }
     }
 

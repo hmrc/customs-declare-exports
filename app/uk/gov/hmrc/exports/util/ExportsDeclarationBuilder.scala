@@ -27,7 +27,8 @@ import java.time.{Instant, ZoneOffset, ZonedDateTime}
 //noinspection ScalaStyle
 trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
-  private type ExportsDeclarationModifier = ExportsDeclaration => ExportsDeclaration
+  protected type ExportsDeclarationModifier = ExportsDeclaration => ExportsDeclaration
+
   protected val VALID_PERSONAL_UCR = "5GB123456789000"
   protected val VALID_DUCR = "5GB123456789000-123ABC456DEFIIIII"
   protected val VALID_LRN = "FG7676767889"
@@ -66,6 +67,8 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
   def withId(id: String): ExportsDeclarationModifier = _.copy(id = id)
 
+  def withParentDeclarationId(parentId: String): ExportsDeclarationModifier = _.copy(parentDeclarationId = Some(parentId))
+
   def withEori(eori: String): ExportsDeclarationModifier = _.copy(eori = eori)
 
   def withEori(eori: Eori): ExportsDeclarationModifier = _.copy(eori = eori.value)
@@ -99,7 +102,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     declaration =>
       declaration.copy(transport =
         declaration.transport
-          .copy(borderModeOfTransportCode = None, meansOfTransportOnDepartureIDNumber = None, meansOfTransportOnDepartureType = None)
+          .copy(borderModeOfTransportCode = None, meansOfTransportOnDepartureType = None, meansOfTransportOnDepartureIDNumber = None)
       )
 
   def withDepartureTransport(
@@ -122,8 +125,8 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
       declaration.copy(transport =
         declaration.transport.copy(
           borderModeOfTransportCode = Some(borderModeOfTransportCode),
-          meansOfTransportOnDepartureIDNumber = Some(meansOfTransportOnDepartureIDNumber),
-          meansOfTransportOnDepartureType = Some(meansOfTransportOnDepartureType)
+          meansOfTransportOnDepartureType = Some(meansOfTransportOnDepartureType),
+          meansOfTransportOnDepartureIDNumber = Some(meansOfTransportOnDepartureIDNumber)
         )
       )
 
@@ -304,11 +307,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
   val withoutBorderTransport: ExportsDeclarationModifier =
     declaration =>
       declaration.copy(transport =
-        declaration.transport.copy(
-          meansOfTransportCrossingTheBorderIDNumber = None,
-          meansOfTransportCrossingTheBorderNationality = None,
-          meansOfTransportCrossingTheBorderType = None
-        )
+        declaration.transport.copy(meansOfTransportCrossingTheBorderType = None, meansOfTransportCrossingTheBorderIDNumber = None)
       )
 
   def withBorderTransport(
@@ -318,7 +317,6 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     declaration =>
       declaration.copy(transport =
         declaration.transport.copy(
-          meansOfTransportCrossingTheBorderNationality = None,
           meansOfTransportCrossingTheBorderType = meansOfTransportCrossingTheBorderType,
           meansOfTransportCrossingTheBorderIDNumber = meansOfTransportCrossingTheBorderIDNumber
         )

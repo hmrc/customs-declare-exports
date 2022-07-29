@@ -28,6 +28,7 @@ import java.time.Instant
 
 case class ExportsDeclaration(
   id: String,
+  parentDeclarationId: Option[String] = None,
   eori: String,
   status: DeclarationStatus,
   createdDateTime: Instant,
@@ -65,6 +66,7 @@ object ExportsDeclaration {
   def apply(id: String, eori: Eori, declarationRequest: ExportsDeclarationRequest): ExportsDeclaration =
     ExportsDeclaration(
       id = id,
+      parentDeclarationId = declarationRequest.parentDeclarationId,
       eori = eori.value,
       status = declarationRequest.consignmentReferences.map(_ => DeclarationStatus.DRAFT).getOrElse(DeclarationStatus.INITIAL),
       createdDateTime = declarationRequest.createdDateTime,

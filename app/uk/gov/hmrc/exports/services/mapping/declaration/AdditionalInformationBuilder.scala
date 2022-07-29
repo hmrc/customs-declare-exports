@@ -32,14 +32,11 @@ import javax.inject.Inject
 class AdditionalInformationBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit = {
-    val maybeLast3CharsOfGoodsLocation = model.locations.goodsLocation.flatMap(_.identificationOfLocation).map(_.takeRight(3).toUpperCase)
-
-    if (maybeLast3CharsOfGoodsLocation contains "GVM") {
-      declaration.getAdditionalInformation.add(buildAdditionalInformation(model))
-    }
+    val isGVMPort = model.locations.goodsLocation.flatMap(_.identificationOfLocation).exists(_.takeRight(3).toUpperCase == "GVM")
+    if (isGVMPort) declaration.getAdditionalInformation.add(buildAdditionalInformation(model))
   }
 
-  private def buildAdditionalInformation(model: ExportsDeclaration) = {
+  private def buildAdditionalInformation(model: ExportsDeclaration): Declaration.AdditionalInformation = {
     val additionalInformation = new Declaration.AdditionalInformation()
 
     val statementCode = new AdditionalInformationStatementCodeType()

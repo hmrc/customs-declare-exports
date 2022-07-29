@@ -69,12 +69,12 @@ class TransactionalOps @Inject() (
     val seed = action.notifications.fold(Seq.empty[NotificationSummary])(identity)
 
     val (actionWithAllNotificationSummaries, notificationSummaries) =
-      updateActionWithNotificationSummaries(action, submission, notifications, seed)
+      updateActionWithNotificationSummaries(action, submission.actions, notifications, seed)
 
     if (action.requestType == SubmissionRequest)
       updateSubmissionRequest(
         session,
-        submission.uuid,
+        actionId,
         notifications.head.details.mrn,
         notificationSummaries.head,
         submission.actions.updated(index, actionWithAllNotificationSummaries)
@@ -82,26 +82,26 @@ class TransactionalOps @Inject() (
     else
       updateCancellationRequest(
         session,
-        submission.uuid,
+        actionId,
         notifications.head.details.mrn,
         submission.actions.updated(index, actionWithAllNotificationSummaries)
       )
   }
 
-  private def updateCancellationRequest(session: ClientSession, uuid: String, mrn: String, actions: Seq[Action]): Future[Option[Submission]] = {
-    val filter = Json.obj("uuid" -> uuid)
+  private def updateCancellationRequest(session: ClientSession, actionId: String, mrn: String, actions: Seq[Action]): Future[Option[Submission]] = {
+    val filter = Json.obj("actions.id" -> actionId)
     val update = Json.obj("$set" -> Json.obj("mrn" -> mrn, "actions" -> actions))
     submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
   }
 
   private def updateSubmissionRequest(
     session: ClientSession,
-    uuid: String,
+    actionId: String,
     mrn: String,
     summary: NotificationSummary,
     actions: Seq[Action]
   ): Future[Option[Submission]] = {
-    val filter = Json.obj("uuid" -> uuid)
+    val filter = Json.obj("actions.id" -> actionId)
     val update = Json.obj(
       "$set" -> Json.obj(
         "mrn" -> mrn,
@@ -118,13 +118,13 @@ object ActionWithNotificationSummariesHelper {
 
   def updateActionWithNotificationSummaries(
     action: Action,
-    submission: Submission,
+    existingActions: Seq[Action],
     notifications: Seq[ParsedNotification],
     seed: Seq[NotificationSummary]
   ): (Action, Seq[NotificationSummary]) = {
 
     def prependNotificationSummary(accumulator: Seq[NotificationSummary], notification: ParsedNotification): Seq[NotificationSummary] =
-      NotificationSummary(notification, submission.actions, accumulator) +: accumulator
+      NotificationSummary(notification, existingActions, accumulator) +: accumulator
 
     // Parsed notifications need to be sorted (asc), by dateTimeIssued, due to the (ACCEPTED => GOODS_ARRIVED_MESSAGE) condition
     val notificationSummaries = notifications.sorted.foldLeft(seed)(prependNotificationSummary)

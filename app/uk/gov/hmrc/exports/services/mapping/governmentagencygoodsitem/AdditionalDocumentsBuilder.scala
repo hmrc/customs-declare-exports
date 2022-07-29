@@ -16,67 +16,122 @@
 
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
-import java.time.format.DateTimeFormatter
-import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.{AdditionalDocument, DocumentWriteOff, ExportItem}
+import uk.gov.hmrc.exports.models.declaration.{AdditionalDocument, _}
 import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper._
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import uk.gov.hmrc.wco.dec._
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
-import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem.{AdditionalDocument => WCOAdditionalDocument}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem.AdditionalDocument.{Submitter, WriteOff => WCOWriteOff}
+import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem.{AdditionalDocument => WCOAdditionalDocument}
 import wco.datamodel.wco.declaration_ds.dms._2.AdditionalDocumentEffectiveDateTimeType.{DateTimeString => WCODateTimeString}
-import wco.datamodel.wco.declaration_ds.dms._2.{AdditionalDocumentEffectiveDateTimeType, SubmitterNameTextType, WriteOffQuantityQuantityType, _}
+import wco.datamodel.wco.declaration_ds.dms._2._
 
+import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 import scala.collection.JavaConverters._
 
 class AdditionalDocumentsBuilder @Inject() () extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
 
   def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem): Unit = {
 
-    val additionalDocs = exportItem.additionalDocuments.map(_.documents)
+    val docs: Option[AdditionalDocuments] => Option[Seq[AdditionalDocument]] = _.map(_.documents)
 
-    val cdsWaiver = exportItem.isLicenceRequired.flatMap {
-      case true => None
-      case false =>
-        Some(
-          Seq(
-            AdditionalDocument(
-              documentTypeCode = Some("999L"),
-              documentIdentifier = None,
-              documentStatus = None,
-              documentStatusReason = Some("CDS WAIVER"),
-              issuingAuthorityName = None,
-              dateOfValidity = None,
-              documentWriteOff = None
-            ),
-            AdditionalDocument(
-              documentTypeCode = Some("Y999"),
-              documentIdentifier = None,
-              documentStatus = None,
-              documentStatusReason = Some("EXPORT WAIVER"),
-              issuingAuthorityName = None,
-              dateOfValidity = None,
-              documentWriteOff = None
-            )
-          )
-        )
-    }
+    val docsWithWaiver: Option[Seq[AdditionalDocument]] => Option[Seq[AdditionalDocument]] =
+      addToDocs(_)(cdsWaiver(exportItem))
 
-    val docsWithWaiver = cdsWaiver.fold(additionalDocs) { waiver =>
-      additionalDocs match {
-        case Some(docs) => Some(docs ++ waiver)
-        case _          => Some(waiver)
-      }
-    }
+    val docsWithLicenceForFur: Option[Seq[AdditionalDocument]] => Option[Seq[AdditionalDocument]] =
+      addToDocs(_)(docsReasonForContainingFur(exportItem))
 
-    docsWithWaiver foreach {
+    (docs andThen docsWithWaiver andThen docsWithLicenceForFur)(exportItem.additionalDocuments) foreach {
       _ map AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument foreach { goodsItemAdditionalDocument =>
         wcoGovernmentAgencyGoodsItem.getAdditionalDocument
           .add(AdditionalDocumentsBuilder.createAdditionalDocument(goodsItemAdditionalDocument))
       }
     }
   }
+
+  private def addToDocs(ifEmpty: Option[Seq[AdditionalDocument]]): Option[Seq[AdditionalDocument]] => Option[Seq[AdditionalDocument]] =
+    _.fold(ifEmpty) { additionalDocs =>
+      ifEmpty match {
+        case Some(docs) => Some(docs ++ additionalDocs)
+        case _          => Some(additionalDocs)
+      }
+    }
+
+  // scalastyle:off
+  private def cdsWaiver(exportItem: ExportItem): Option[Seq[AdditionalDocument]] = exportItem.isLicenceRequired.flatMap {
+    case true => None
+    case false =>
+      Some(
+        Seq(
+          AdditionalDocument(
+            documentTypeCode = Some("999L"),
+            documentIdentifier = None,
+            documentStatus = None,
+            documentStatusReason = Some("CDS WAIVER"),
+            issuingAuthorityName = None,
+            dateOfValidity = None,
+            documentWriteOff = None
+          ),
+          AdditionalDocument(
+            documentTypeCode = Some("Y903"),
+            documentIdentifier = None,
+            documentStatus = None,
+            documentStatusReason = Some("CULTURAL GOODS - NOT LISTED"),
+            issuingAuthorityName = None,
+            dateOfValidity = None,
+            documentWriteOff = None
+          ),
+          AdditionalDocument(
+            documentTypeCode = Some("Y923"),
+            documentIdentifier = None,
+            documentStatus = None,
+            documentStatusReason = Some("EXCLUDED PRODUCT"),
+            issuingAuthorityName = None,
+            dateOfValidity = None,
+            documentWriteOff = None
+          ),
+          AdditionalDocument(
+            documentTypeCode = Some("Y924"),
+            documentIdentifier = None,
+            documentStatus = None,
+            documentStatusReason = Some("EXCLUDED FROM PROHIBITION"),
+            issuingAuthorityName = None,
+            dateOfValidity = None,
+            documentWriteOff = None
+          ),
+          AdditionalDocument(
+            documentTypeCode = Some("Y999"),
+            documentIdentifier = None,
+            documentStatus = None,
+            documentStatusReason = Some("EXPORT WAIVER"),
+            issuingAuthorityName = None,
+            dateOfValidity = None,
+            documentWriteOff = None
+          )
+        )
+      )
+  }
+  // scalastyle:on
+
+  private def docsReasonForContainingFur(exportItem: ExportItem): Option[Seq[AdditionalDocument]] =
+    exportItem.catOrDogFurDetails map {
+      case CatOrDogFurDetails("Yes", Some("educational-or-taxidermy-purpose")) => "Education and taxidermy only"
+      case CatOrDogFurDetails("No", _)                                         => "No cat or dog fur"
+      case _ => throw new IllegalStateException("No valid answer for cat or dog fur")
+    } map { reason =>
+      Seq(
+        AdditionalDocument(
+          documentTypeCode = Some("Y922"),
+          documentIdentifier = None,
+          documentStatus = None,
+          documentStatusReason = Some(reason),
+          issuingAuthorityName = None,
+          dateOfValidity = None,
+          documentWriteOff = None
+        )
+      )
+    }
 
 }
 
