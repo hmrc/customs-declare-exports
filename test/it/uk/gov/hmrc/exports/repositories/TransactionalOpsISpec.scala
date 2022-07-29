@@ -33,6 +33,7 @@ class TransactionalOpsISpec extends IntegrationTestSpec {
   private val appConfig = instanceOf[AppConfig]
   private val mongoComponent = instanceOf[MongoComponent]
   private val notificationRepository = instanceOf[ParsedNotificationRepository]
+  private val declarationRepository = instanceOf[DeclarationRepository]
   private val submissionRepository = instanceOf[SubmissionRepository]
 
   private val transactionalOps = new TransactionalOps(mongoComponent, submissionRepository, notificationRepository, appConfig)

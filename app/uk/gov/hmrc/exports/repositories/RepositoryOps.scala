@@ -176,6 +176,9 @@ trait RepositoryOps[T] {
   def removeEvery(filter: Bson): Future[Long] =
     collection.deleteMany(filter).toFuture.map(_.getDeletedCount)
 
+  def removeEvery(clientSession: ClientSession, filter: Bson): Future[Long] =
+    collection.deleteMany(clientSession, filter).toFuture.map(_.getDeletedCount)
+
   def removeOne[V](keyId: String, keyValue: V): Future[Boolean] =
     collection.deleteOne(equal(keyId, keyValue)).toFuture.map(_.getDeletedCount > 0)
 

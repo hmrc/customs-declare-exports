@@ -32,6 +32,7 @@ class NonTransactionalOpsISpec extends IntegrationTestSpec {
 
   private val appConfig = mock[AppConfig]
   private val mongoComponent = instanceOf[MongoComponent]
+  private val declarationRepository = instanceOf[DeclarationRepository]
   private val notificationRepository = instanceOf[ParsedNotificationRepository]
   private val submissionRepository = instanceOf[SubmissionRepository]
 

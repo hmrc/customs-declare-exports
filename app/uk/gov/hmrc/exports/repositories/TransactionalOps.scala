@@ -37,11 +37,7 @@ class TransactionalOps @Inject() (
   notificationRepository: ParsedNotificationRepository,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext)
-    extends Transactions with Logging {
-
-  private implicit val tc = TransactionConfiguration.strict
-
-  private lazy val nonTransactionalSession = mongoComponent.client.startSession().toFuture
+    extends TransactionsOps with Logging {
 
   def updateSubmissionAndNotifications(actionId: String, notifications: Seq[ParsedNotification], submission: Submission): Future[Option[Submission]] =
     if (appConfig.useTransactionalDBOps)
