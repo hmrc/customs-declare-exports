@@ -20,6 +20,7 @@ import com.mongodb.client.MongoCollection
 import org.bson.Document
 import org.mongodb.scala.model.Filters._
 import play.api.Logging
+import uk.gov.hmrc.mongo.play.json.Codecs
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
@@ -56,7 +57,7 @@ class PurgeAncientSubmissionsJob @Inject() (
   val latestStatus = "latestEnhancedStatus"
   val statusLastUpdated = "enhancedStatusLastUpdated"
 
-  val expiryDate = LocalDateTime.now(clock).minusDays(1)
+  val expiryDate = Codecs.toBson(ZonedDateTime.now(clock).minusDays(180))
 
   val latestStatusLookup =
     or(
@@ -79,7 +80,7 @@ class PurgeAncientSubmissionsJob @Inject() (
     implicit val formatDeclaration: Format[ExportsDeclaration] = ExportsDeclaration.Mongo.format
 
     val submissions: List[Submission] = submissionCollection
-      .find(olderThanDate)
+      .find(and(olderThanDate, latestStatusLookup))
       .asScala
       .flatMap { document =>
         Json.parse(document.toJson).asOpt[Submission]
@@ -107,10 +108,6 @@ class PurgeAncientSubmissionsJob @Inject() (
 
     val parsedNotifications: List[ParsedNotification] = notifications[ParsedNotification](notificationCollection)
     val unparsedNotifications: List[UnparsedNotification] = notifications[UnparsedNotification](unparsedNotificationCollection)
-
-    println("///////////////////////////" + expiryDate)
-    println("///////////////////////////" + olderThanDate)
-    println("///////////////////////////" + submissions)
 
     transactionalOps.removeSubmissionAndNotifications(submissions, declarations, parsedNotifications, unparsedNotifications) map { removed =>
       logger.info(s"${removed.sum} records removed from purge of submissions")
