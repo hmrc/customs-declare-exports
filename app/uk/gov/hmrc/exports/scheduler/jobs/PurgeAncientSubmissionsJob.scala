@@ -47,6 +47,11 @@ class PurgeAncientSubmissionsJob @Inject() (
 )(implicit ec: ExecutionContext)
     extends ScheduledJob with Logging with DecorateAsScala {
 
+  val submissionCollection: MongoCollection[Document] = exportsClient.db.getCollection(submissionRepository.collectionName)
+  val declarationCollection: MongoCollection[Document] = exportsClient.db.getCollection(declarationRepository.collectionName)
+  val notificationCollection: MongoCollection[Document] = exportsClient.db.getCollection(parsedNotificationRepository.collectionName)
+  val unparsedNotificationCollection: MongoCollection[Document] = exportsClient.db.getCollection(unparsedNotificationRepository.collectionName)
+
   private val jobConfig = appConfig.purgeAncientSubmissions
   private val clock = appConfig.clock
 
@@ -70,11 +75,6 @@ class PurgeAncientSubmissionsJob @Inject() (
   val olderThanDate = lte(statusLastUpdated, expiryDate)
 
   override def execute(): Future[Unit] = {
-
-    val submissionCollection = exportsClient.db.getCollection(submissionRepository.collectionName)
-    val declarationCollection = exportsClient.db.getCollection(declarationRepository.collectionName)
-    val notificationCollection = exportsClient.db.getCollection(parsedNotificationRepository.collectionName)
-    val unparsedNotificationCollection = exportsClient.db.getCollection(unparsedNotificationRepository.collectionName)
 
     implicit val formatNotification: Format[ParsedNotification] = ParsedNotification.format
     implicit val formatDeclaration: Format[ExportsDeclaration] = ExportsDeclaration.Mongo.format
