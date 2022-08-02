@@ -16,18 +16,17 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs
 
-import com.mongodb.client.MongoDatabase
-import org.mongodb.scala.model.Filters
+import com.mongodb.client.MongoCollection
+import org.bson.Document
 import org.mongodb.scala.model.Filters._
 import play.api.Logging
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.repositories._
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.mongo.ExportsClient
-import uk.gov.hmrc.exports.services.notifications.NotificationService
 
 import java.time._
 import javax.inject.{Inject, Singleton}
@@ -39,7 +38,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class PurgeAncientSubmissionsJob @Inject() (
   appConfig: AppConfig,
   exportsClient: ExportsClient,
-  notificationService: NotificationService,
   submissionRepository: SubmissionRepository,
   declarationRepository: DeclarationRepository,
   unparsedNotificationRepository: UnparsedNotificationWorkItemRepository,
@@ -47,21 +45,6 @@ class PurgeAncientSubmissionsJob @Inject() (
   transactionalOps: PurgeSubmissionsTransactionalOps
 )(implicit ec: ExecutionContext)
     extends ScheduledJob with Logging with DecorateAsScala {
-
-  // x fetch submissions of statusLastUpdated > 180 days
-  // x where latestStatus =
-  // x GOODS_HAVE_EXITED_THE_COMMUNITY (DMSEOG)
-  // x DECLARATION_HANDLED_EXTERNALLY (DMSEXT)
-  // x CANCELLED (DMSINV)
-  // x REJECTED (DMSREJ)
-  // x fetch the declaration from submission
-  // fetch unparsed notification from notification (use id from item)
-  // x fetch notifications from declaration
-  // use transaction to delete from branch to tree
-
-  // link between submission and declaration
-  // link between submission and notifications
-  // link between unparsed notification and notifications
 
   private val jobConfig = appConfig.purgeAncientSubmissions
   private val clock = appConfig.clock
@@ -73,8 +56,7 @@ class PurgeAncientSubmissionsJob @Inject() (
   val latestStatus = "latestEnhancedStatus"
   val statusLastUpdated = "enhancedStatusLastUpdated"
 
-  val olderThan: FiniteDuration = 180 days
-  val expiryDate = Instant.now(clock).minusSeconds(olderThan.toSeconds)
+  val expiryDate = LocalDateTime.now(clock).minusDays(1)
 
   val latestStatusLookup =
     or(
@@ -88,49 +70,52 @@ class PurgeAncientSubmissionsJob @Inject() (
 
   override def execute(): Future[Unit] = {
 
-    val notificationCollection = exportsClient.db.getCollection("notifications")
-    val submissionCollection = exportsClient.db.getCollection("submissions")
-    val declarationCollection = exportsClient.db.getCollection("declarations")
+    val submissionCollection = exportsClient.db.getCollection(submissionRepository.collectionName)
+    val declarationCollection = exportsClient.db.getCollection(declarationRepository.collectionName)
+    val notificationCollection = exportsClient.db.getCollection(parsedNotificationRepository.collectionName)
+    val unparsedNotificationCollection = exportsClient.db.getCollection(unparsedNotificationRepository.collectionName)
 
-    implicit val formatNotification = ParsedNotification.format
-    implicit val formatDeclaration = ExportsDeclaration.Mongo.format
+    implicit val formatNotification: Format[ParsedNotification] = ParsedNotification.format
+    implicit val formatDeclaration: Format[ExportsDeclaration] = ExportsDeclaration.Mongo.format
 
-    val result = submissionCollection
-      .find(latestStatusLookup)
+    val submissions: List[Submission] = submissionCollection
+      .find(olderThanDate)
       .asScala
-      .map { document =>
-        val submission: Submission = Json.parse(document.toJson).as[Submission]
-
-        val declaration: Option[ExportsDeclaration] = declarationCollection
-          .find(equal("id", submission.uuid))
-          .asScala
-          .map(document => Json.parse(document.toJson).asOpt[ExportsDeclaration])
-          .headOption
-          .flatten
-
-        val actionIds: Seq[String] = submission.actions.filter(_.requestType == SubmissionRequest).map(_.id)
-
-        val notifications: Seq[ParsedNotification] = notificationCollection
-          .find(in("actionId", actionIds: _*))
-          .asScala
-          .map(document => Json.parse(document.toJson).as[ParsedNotification])
-          .toList
-
-        val result: SubmissionToNotifications = SubmissionToNotifications(submission, declaration, notifications)
-
-        println("\n\n\n\n\" >>>>>>>>" + result + "\n\n\n\n")
-
-        result
+      .flatMap { document =>
+        Json.parse(document.toJson).asOpt[Submission]
       }
+      .toList
 
-    Future.sequence {
-      result.map { nots =>
-        transactionalOps.removeSubmissionAndNotifications(nots.declaration, nots.notifications, nots.submission)
-      }
-    } map { _ => () }
+    val declarations: List[ExportsDeclaration] = submissions.flatMap { submission =>
+      declarationCollection
+        .find(equal("id", submission.uuid))
+        .asScala
+        .flatMap { document =>
+          Json.parse(document.toJson).asOpt[ExportsDeclaration]
+        }
+    }
+
+    def notifications[A](collection: MongoCollection[Document])(implicit format: Format[A]): List[A] = submissions.flatMap { submission =>
+      collection
+        .find(in("actionId", submission.actions.filter(_.requestType == SubmissionRequest).map(_.id): _*))
+        .asScala
+        .flatMap { document =>
+          Json.parse(document.toJson).asOpt[A]
+        }
+        .toList
+    }
+
+    val parsedNotifications: List[ParsedNotification] = notifications[ParsedNotification](notificationCollection)
+    val unparsedNotifications: List[UnparsedNotification] = notifications[UnparsedNotification](unparsedNotificationCollection)
+
+    println("///////////////////////////" + expiryDate)
+    println("///////////////////////////" + olderThanDate)
+    println("///////////////////////////" + submissions)
+
+    transactionalOps.removeSubmissionAndNotifications(submissions, declarations, parsedNotifications, unparsedNotifications) map { removed =>
+      logger.info(s"${removed.sum} records removed from purge of submissions")
+    }
 
   }
-
-  case class SubmissionToNotifications(submission: Submission, declaration: Option[ExportsDeclaration], notifications: Seq[ParsedNotification])
 
 }

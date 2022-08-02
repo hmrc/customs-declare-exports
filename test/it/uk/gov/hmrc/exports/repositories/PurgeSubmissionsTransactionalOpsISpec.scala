@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.exports.repositories
 
+import org.bson.conversions.Bson
+import org.mockito.ArgumentMatchers.any
+import org.mongodb.scala.ClientSession
 import testdata.ExportsTestData.actionId
 import testdata.SubmissionTestData.{action, notificationSummary_1, notificationSummary_2, submission}
 import testdata.notifications.NotificationTestData.notification
@@ -27,16 +30,26 @@ import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, Submissio
 import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class NonTransactionalOpsISpec extends IntegrationTestSpec {
+class PurgeSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
 
-  private val appConfig = mock[AppConfig]
+  private val appConfig = instanceOf[AppConfig]
   private val mongoComponent = instanceOf[MongoComponent]
+
+  private val submissionRepository = instanceOf[SubmissionRepository]
   private val declarationRepository = instanceOf[DeclarationRepository]
   private val notificationRepository = instanceOf[ParsedNotificationRepository]
-  private val submissionRepository = instanceOf[SubmissionRepository]
+  private val unparsedNotificationWorkItemRepository = instanceOf[UnparsedNotificationWorkItemRepository]
 
-  private val transactionalOps = new TransactionalOps(mongoComponent, submissionRepository, notificationRepository, appConfig)
+  private val transactionalOps = new PurgeSubmissionsTransactionalOps(
+    mongoComponent,
+    submissionRepository,
+    declarationRepository,
+    notificationRepository,
+    unparsedNotificationWorkItemRepository,
+    appConfig
+  )
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -44,15 +57,21 @@ class NonTransactionalOpsISpec extends IntegrationTestSpec {
     submissionRepository.removeAll.futureValue
   }
 
-  "TransactionalOps.updateSubmissionAndNotifications" when {
+  "TransactionalOps.removeSubmissionAndNotifications" when {
 
-    "appConfig.useTransactionalDBOps is false, and" when {
+    "appConfig.useTransactionalDBOps is true, and" when {
 
-      appConfig.useTransactionalDBOps mustBe false
+      appConfig.useTransactionalDBOps mustBe true
 
-      "a ParsedNotification is given without a stored Submission document (because it was removed in the meanwhile)" should {
-        "return an empty option" in {
-          transactionalOps.updateSubmissionAndNotifications(actionId, List(notification), submission).futureValue mustBe None
+      "given records to remove from collections" should {
+        "return an empty seq" when {
+          "a attempt to remove submission has failed " in {
+
+            when(submissionRepository.removeEvery(any[ClientSession](), any()))
+              .thenReturn(Future.failed(new Throwable()))
+
+            transactionalOps.removeSubmissionAndNotifications(Seq.empty, Seq.empty, Seq.empty, Seq.empty).futureValue mustBe Seq.empty
+          }
         }
       }
 
@@ -86,18 +105,6 @@ class NonTransactionalOpsISpec extends IntegrationTestSpec {
     submission: Submission,
     expectedEnhancedStatus: EnhancedStatus,
     expectedNotificationSummaries: Int
-  ): Option[Submission] =
-    transactionalOps.updateSubmissionAndNotifications(actionId, notifications, submission).futureValue.map { actualSubmission =>
-      actualSubmission.mrn mustBe submission.mrn
-      actualSubmission.latestEnhancedStatus.value mustBe expectedEnhancedStatus
-
-      actualSubmission.actions.size mustBe 1
-      val notificationSummaries = actualSubmission.actions.head.notifications.value
-      notificationSummaries.size mustBe expectedNotificationSummaries
-
-      val notificationSummary = notificationSummaries.head
-      notificationSummary.dateTimeIssued mustBe actualSubmission.enhancedStatusLastUpdated.value
-      notificationSummary.enhancedStatus mustBe actualSubmission.latestEnhancedStatus.value
-      actualSubmission
-    }
+  ): Seq[Long] =
+    transactionalOps.removeSubmissionAndNotifications(Seq.empty, Seq.empty, Seq.empty, Seq.empty).futureValue
 }

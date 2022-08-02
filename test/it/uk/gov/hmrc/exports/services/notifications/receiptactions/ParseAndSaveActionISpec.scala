@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.UNKNOWN
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionStatus}
-import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, TransactionalOps}
+import uk.gov.hmrc.exports.repositories.{MigrationsTransactionalOps, ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
 import uk.gov.hmrc.exports.services.notifications.receiptactions.ParseAndSaveActionISpec._
 
@@ -37,7 +37,7 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
   private val notificationFactory = instanceOf[NotificationFactory]
   private val notificationRepository = instanceOf[ParsedNotificationRepository]
   private val submissionRepository = instanceOf[SubmissionRepository]
-  private val transactionalOps = instanceOf[TransactionalOps]
+  private val transactionalOps = instanceOf[MigrationsTransactionalOps]
 
   private val parseAndSaveAction = new ParseAndSaveAction(notificationFactory, submissionRepository, transactionalOps)
 

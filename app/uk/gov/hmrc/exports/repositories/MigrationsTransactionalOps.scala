@@ -31,13 +31,17 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class TransactionalOps @Inject() (
+class MigrationsTransactionalOps @Inject() (
   val mongoComponent: MongoComponent,
   submissionRepository: SubmissionRepository,
   notificationRepository: ParsedNotificationRepository,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext)
-    extends TransactionsOps with Logging {
+    extends Transactions with Logging {
+
+  private implicit val tc = TransactionConfiguration.strict
+
+  private lazy val nonTransactionalSession = mongoComponent.client.startSession().toFuture
 
   def updateSubmissionAndNotifications(actionId: String, notifications: Seq[ParsedNotification], submission: Submission): Future[Option[Submission]] =
     if (appConfig.useTransactionalDBOps)
