@@ -58,6 +58,9 @@ trait RepositoryOps[T] {
   def findAll(filter: Bson): Future[Seq[T]] =
     collection.find(filter).toFuture
 
+  def findAll(clientSession: ClientSession, filter: Bson): Future[Seq[T]] =
+    collection.find(clientSession, filter).toFuture
+
   def findFirst(filter: JsValue, sort: JsValue): Future[Option[T]] =
     findFirst(BsonDocument(filter.toString), BsonDocument(sort.toString))
 

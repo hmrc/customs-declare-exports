@@ -1,69 +1,66 @@
 package uk.gov.hmrc.exports.scheduler.jobs
 
+import com.kenshoo.play.metrics.PlayModule
 import com.mongodb.client.MongoCollection
 import org.bson.Document
+import play.api.Application
+import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.base.IntegrationTestPurgeSubmissionsToolSpec
+import uk.gov.hmrc.exports.mongo.ExportsClient
+import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.collection.JavaConverters._
 
 class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsToolSpec {
 
-  private val testJob = app.injector.instanceOf[PurgeAncientSubmissionsJob]
+  import PurgeAncientSubmissionsJobSpec._
+
+  implicit lazy val application: Application = GuiceApplicationBuilder()
+    .disable[PlayModule]
+    .overrides(bind[ExportsClient].toInstance(testExportsClient))
+    .configure(("mongodb.transactional.operations", false))
+    .build
+
+  private val testJob = application.injector.instanceOf[PurgeAncientSubmissionsJob]
 
   private def prepareCollection(collection: MongoCollection[Document], records: List[Document]): Boolean =
-    collection.insertMany(records.asJava).wasAcknowledged
-
-  override def beforeEach(): Unit = {
-    removeAll(testJob.submissionCollection)
-    removeAll(testJob.declarationCollection)
-    removeAll(testJob.notificationCollection)
-    removeAll(testJob.unparsedNotificationCollection)
-    super.beforeEach()
-  }
+    removeAll(collection).isValidLong && collection.insertMany(records.asJava).wasAcknowledged
 
   "PurgeAncientSubmissionsJob" should {
 
     "remove all records" when {
-      "'submission.statusLastUpdated' is 180 days ago or older" when {
-        "'submission.latestEnhancedStatus' is GOODS_HAVE_EXITED" in {
-          testJob.execute()
+      "'submission.statusLastUpdated' is 180 days ago" in {
+
+        val collection: MongoCollection[Document] = testJob.db.getCollection("submissions")
+
+        prepareCollection(collection, submissions) mustBe true
+
+        whenReady(testJob.execute()) { _ =>
+          collection.countDocuments() mustBe 0
         }
-        "'submission.latestEnhancedStatus' is DECLARATION_HANDLED_EXTERNALLY" in {
-          testJob.execute()
-        }
-        "'submission.latestEnhancedStatus' is CANCELLED" in {
-          testJob.execute()
-        }
-        "'submission.latestEnhancedStatus' is REJECTED" in {
-          testJob.execute()
-        }
+
       }
+
     }
 
-    "remove zero records" when {
-      "'submission.statusLastUpdated' is less than than 180 days ago" when {
-        "'submission.latestEnhancedStatus' is GOODS_HAVE_EXITED" in {
-          testJob.execute()
-        }
-        "'submission.latestEnhancedStatus' is DECLARATION_HANDLED_EXTERNALLY" in {
-          testJob.execute()
-        }
-        "'submission.latestEnhancedStatus' is CANCELLED" in {
-          testJob.execute()
-        }
-        "'submission.latestEnhancedStatus' is REJECTED" in {
-          testJob.execute()
-        }
+    "remove zero records" ignore {
+      "'submission.statusLastUpdated' is less than than 180 days ago" in {
+
+        testJob.execute()
       }
 
       "'submission.latestEnhancedStatus' is other" when {
         "'submission.statusLastUpdated' is 180 days ago or older" in {
+
           testJob.execute()
         }
         "'submission.statusLastUpdated' is less than than 180 days ago" in {
+
           testJob.execute()
         }
       }
+
     }
 
   }
@@ -75,11 +72,19 @@ object PurgeAncientSubmissionsJobSpec {
   private val actionId = "8a5ef91c-a62a-4337-b51a-750b175fe6d1"
   private val unparsedNotificationId = "c5429490-8688-48ec-bdca-8d6f48c5ad5f"
 
-  private val latestEnhancedStatus = "GOODS_HAVE_EXITED"
-  private val enhancedStatusLastUpdated = "2022-08-02T13:20:06Z[UTC]"
   private val uuid = "TEST-SA7hb-rLAZo0a8"
 
-  def declaration(uuid: String = uuid): Document = Document.parse(s"""
+  val enhancedStatusLastUpdatedOlderThan = "2021-08-02T13:20:06Z[UTC]"
+  val enhancedStatusLastUpdatedRecent = "2022-08-02T13:20:06Z[UTC]"
+
+  val GOODS_HAVE_EXITED = "GOODS_HAVE_EXITED"
+  val DECLARATION_HANDLED_EXTERNALLY = "DECLARATION_HANDLED_EXTERNALLY"
+  val CANCELLED = "CANCELLED"
+  val REJECTED = "REJECTED"
+
+  val submissions: List[Document] = List(submission(latestEnhancedStatus = GOODS_HAVE_EXITED, actionId = actionId, uuid = uuid))
+
+  def declaration(uuid: String): Document = Document.parse(s"""
       |{
       |    "_id" : ObjectId("62e923c75b03a31168606642"),
       |    "id" : "$uuid",
@@ -279,14 +284,12 @@ object PurgeAncientSubmissionsJobSpec {
       |""".stripMargin)
 
   def submission(
-    latestEnhancedStatus: String = latestEnhancedStatus,
-    enhancedStatusLastUpdated: String = enhancedStatusLastUpdated,
-    actionId: String = actionId,
-    uuid: String = uuid
-  ): Document =
-    Document.parse(s"""
+    latestEnhancedStatus: String = GOODS_HAVE_EXITED,
+    enhancedStatusLastUpdated: String = enhancedStatusLastUpdatedOlderThan,
+    actionId: String,
+    uuid: String
+  ): Document = Document.parse(s"""
       |{
-      |    "_id" : ObjectId("62e923d034cc427d04be8b98"),
       |    "uuid" : "$uuid",
       |    "eori" : "XL165944621471200",
       |    "lrn" : "XzmBvLMY6ZfrZL9lxu",
@@ -326,7 +329,7 @@ object PurgeAncientSubmissionsJobSpec {
       |}
       |""".stripMargin)
 
-  def notifications(unparsedNotificationId: String = unparsedNotificationId, actionId: String = actionId): Document = Document.parse(s"""
+  def notifications(unparsedNotificationId: String, actionId: String): Document = Document.parse(s"""
       |{
       |    "_id" : ObjectId("62e923d234cc427d04be8b9d"),
       |    "unparsedNotificationId" : "$unparsedNotificationId",

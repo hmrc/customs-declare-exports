@@ -28,16 +28,14 @@ import uk.gov.hmrc.exports.migrations.changelogs.cache.{
 import uk.gov.hmrc.exports.migrations.changelogs.emaildetails.RenameSendEmailDetailsToItem
 import uk.gov.hmrc.exports.migrations.changelogs.notification.{MakeParsedDetailsOptional, SplitTheNotificationsCollection}
 import uk.gov.hmrc.exports.migrations.changelogs.submission.{AddNotificationSummariesToSubmissions, RemoveRedundantIndexes}
+import uk.gov.hmrc.exports.mongo.ExportsClient
 
 import javax.inject.Inject
 
 @Singleton
-class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
+class MigrationRoutine @Inject() (val appConfig: AppConfig) extends ExportsClient with Logging {
 
   logger.info("Starting migration with ExportsMigrationTool")
-
-  private val (client, mongoDatabase) = createMongoClient
-  private val db = client.getDatabase(mongoDatabase)
 
   private val lockMaxTries = 10
   private val lockMaxWaitMillis = minutesToMillis(5)
@@ -55,18 +53,9 @@ class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
     .register(new AddNotificationSummariesToSubmissions())
     .register(new RemoveMeansOfTransportCrossingTheBorderNationality())
 
-  ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute
+  ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute()
 
   client.close()
-
-  private def createMongoClient: (MongoClient, String) = {
-    val (mongoUri, _) = {
-      val sslParamPos = appConfig.mongodbUri.lastIndexOf('?'.toInt)
-      if (sslParamPos > 0) appConfig.mongodbUri.splitAt(sslParamPos) else (appConfig.mongodbUri, "")
-    }
-    val (_, mongoDatabase) = mongoUri.splitAt(mongoUri.lastIndexOf('/'.toInt))
-    (MongoClients.create(appConfig.mongodbUri), mongoDatabase.drop(1))
-  }
 
   private def minutesToMillis(minutes: Int): Long = minutes * 60L * 1000L
 }

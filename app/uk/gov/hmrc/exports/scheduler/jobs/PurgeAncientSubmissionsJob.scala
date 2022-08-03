@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs
 
-import com.mongodb.client.MongoCollection
+import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
 import org.mongodb.scala.model.Filters._
 import play.api.Logging
@@ -37,34 +37,34 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class PurgeAncientSubmissionsJob @Inject() (
-  appConfig: AppConfig,
-  exportsClient: ExportsClient,
+  val appConfig: AppConfig,
   submissionRepository: SubmissionRepository,
   declarationRepository: DeclarationRepository,
   unparsedNotificationRepository: UnparsedNotificationWorkItemRepository,
   parsedNotificationRepository: ParsedNotificationRepository,
   transactionalOps: PurgeSubmissionsTransactionalOps
 )(implicit ec: ExecutionContext)
-    extends ScheduledJob with Logging with DecorateAsScala {
+    extends ScheduledJob with ExportsClient with Logging with DecorateAsScala {
 
-  val submissionCollection: MongoCollection[Document] = exportsClient.db.getCollection(submissionRepository.collectionName)
-  val declarationCollection: MongoCollection[Document] = exportsClient.db.getCollection(declarationRepository.collectionName)
-  val notificationCollection: MongoCollection[Document] = exportsClient.db.getCollection(parsedNotificationRepository.collectionName)
-  val unparsedNotificationCollection: MongoCollection[Document] = exportsClient.db.getCollection(unparsedNotificationRepository.collectionName)
-
-  private val jobConfig = appConfig.purgeAncientSubmissions
-  private val clock = appConfig.clock
+  val submissionCollection = db.getCollection(submissionRepository.collectionName)
+  val declarationCollection = db.getCollection(declarationRepository.collectionName)
+  val notificationCollection = db.getCollection(parsedNotificationRepository.collectionName)
+  val unparsedNotificationCollection = db.getCollection(unparsedNotificationRepository.collectionName)
 
   override val name: String = "PurgeAncientSubmissions"
+
   override def interval: FiniteDuration = jobConfig.interval
   override def firstRunTime: Option[LocalTime] = Some(jobConfig.elapseTime)
 
-  val latestStatus = "latestEnhancedStatus"
-  val statusLastUpdated = "enhancedStatusLastUpdated"
+  private val jobConfig = appConfig.purgeAncientSubmissions
+  private val clock: Clock = appConfig.clock
 
-  val expiryDate = Codecs.toBson(ZonedDateTime.now(clock).minusDays(180))
+  private val latestStatus = "latestEnhancedStatus"
+  private val statusLastUpdated = "enhancedStatusLastUpdated"
 
-  val latestStatusLookup =
+  private val expiryDate = Codecs.toBson(ZonedDateTime.now(clock).minusDays(180))
+
+  private val latestStatusLookup =
     or(
       equal(latestStatus, "GOODS_HAVE_EXITED"),
       equal(latestStatus, "DECLARATION_HANDLED_EXTERNALLY"),
@@ -72,7 +72,7 @@ class PurgeAncientSubmissionsJob @Inject() (
       equal(latestStatus, "REJECTED")
     )
 
-  val olderThanDate = lte(statusLastUpdated, expiryDate)
+  private val olderThanDate = lte(statusLastUpdated, expiryDate)
 
   override def execute(): Future[Unit] = {
 
@@ -87,6 +87,8 @@ class PurgeAncientSubmissionsJob @Inject() (
       }
       .toList
 
+    logger.info(s"Submissions found older than 180 days: ${submissions.size}")
+
     val declarations: List[ExportsDeclaration] = submissions.flatMap { submission =>
       declarationCollection
         .find(equal("id", submission.uuid))
@@ -95,6 +97,8 @@ class PurgeAncientSubmissionsJob @Inject() (
           Json.parse(document.toJson).asOpt[ExportsDeclaration]
         }
     }
+
+    logger.info(s"Declarations found linked to submissions: ${declarations.size}")
 
     def notifications[A](collection: MongoCollection[Document])(implicit format: Format[A]): List[A] = submissions.flatMap { submission =>
       collection
@@ -109,8 +113,11 @@ class PurgeAncientSubmissionsJob @Inject() (
     val parsedNotifications: List[ParsedNotification] = notifications[ParsedNotification](notificationCollection)
     val unparsedNotifications: List[UnparsedNotification] = notifications[UnparsedNotification](unparsedNotificationCollection)
 
+    logger.info(s"Parsed notifications found linked to submissions: ${parsedNotifications.size}")
+    logger.info(s"Unparsed found linked to submissions: ${unparsedNotifications.size}")
+
     transactionalOps.removeSubmissionAndNotifications(submissions, declarations, parsedNotifications, unparsedNotifications) map { removed =>
-      logger.info(s"${removed.sum} records removed from purge of submissions")
+      logger.info(s"${removed.sum} records removed linked to ancient submissions")
     }
 
   }

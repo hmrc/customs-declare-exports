@@ -19,14 +19,14 @@ package uk.gov.hmrc.exports.mongo
 import com.mongodb.client.{MongoClient, MongoClients}
 import uk.gov.hmrc.exports.config.AppConfig
 
-import javax.inject.Inject
+trait ExportsClient {
 
-class ExportsClient @Inject() (appConfig: AppConfig) {
+  val appConfig: AppConfig
 
   val (client, mongoDatabase) = createMongoClient
   val db = client.getDatabase(mongoDatabase)
 
-  private def createMongoClient: (MongoClient, String) = {
+  protected def createMongoClient: (MongoClient, String) = {
     val (mongoUri, _) = {
       val sslParamPos = appConfig.mongodbUri.lastIndexOf('?'.toInt)
       if (sslParamPos > 0) appConfig.mongodbUri.splitAt(sslParamPos) else (appConfig.mongodbUri, "")

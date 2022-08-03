@@ -20,6 +20,7 @@ import org.bson.conversions.Bson
 import org.mongodb.scala.ClientSession
 import org.mongodb.scala.model.Filters
 import play.api.Logging
+import repositories.RepositoryOps
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
@@ -67,16 +68,40 @@ class PurgeSubmissionsTransactionalOps @Inject() (
     unparsedNotification: Seq[UnparsedNotification]
   ): Future[Seq[Long]] =
     for {
-      submissionsRemoved <- submissionRepository.removeEvery(session, Filters.in("uuid", submissions.map(_.uuid)))
+      submissionsRemoved <- removeSubmissions(submissions, session)
       declarationsRemoved <- removeDeclarations(declarations: Seq[ExportsDeclaration], session)
-      notificationsRemoved <- notificationRepository.removeEvery(session, Filters.in("actionId", parsedNotification.map(_.actionId): _*))
-      unparsedNotification <- removeUnparsedNotifications(session, Filters.in("actionId", unparsedNotification.map(_.actionId): _*))
-    } yield Seq(submissionsRemoved, declarationsRemoved, notificationsRemoved, unparsedNotification)
+      notificationsRemoved <- removeParsedNotifications(parsedNotification, session)
+      unparsedNotificationRemoved <- removeUnparsedNotifications(unparsedNotification, session)
+    } yield Seq(submissionsRemoved, declarationsRemoved, notificationsRemoved, unparsedNotificationRemoved)
 
-  private def removeDeclarations(declarations: Seq[ExportsDeclaration], session: ClientSession): Future[Long] =
-    declarationRepository.removeEvery(session, Filters.in("id", declarations.map(_.id)))
+  private def removeSubmissions(submissions: Seq[Submission], session: ClientSession): Future[Long] = {
+    val filter = Filters.in("uuid", submissions.map(_.uuid): _*)
+    submissionRepository.findAll(session, filter).map(x => println("!!!>>>>>>" + x))
+    submissionRepository.removeEvery(session, filter).map(x => println("[][][][]]>>>>>>" + x))
+    submissionRepository.findAll(session, filter).map(x => println("!!!>>>>>>" + x))
+    logger.info(s"Attempting to remove submissions: $filter")
+    submissionRepository.removeEvery(session, filter)
+  }
 
-  private def removeUnparsedNotifications(session: ClientSession, filter: Bson): Future[Long] =
-    unparsedNotificationRespository.collection.deleteMany(session, filter).toFuture.map(_.getDeletedCount)
+  private def removeDeclarations(declarations: Seq[ExportsDeclaration], session: ClientSession): Future[Long] = {
+    val filter = Filters.in("id", declarations.map(_.id): _*)
+    logger.info(s"Attempting to remove declarations: $filter")
+    declarationRepository.removeEvery(session, filter)
+  }
+
+  private def removeParsedNotifications(parsedNotification: Seq[ParsedNotification], session: ClientSession): Future[Long] = {
+    val filter = Filters.in("actionId", parsedNotification.map(_.actionId): _*)
+    logger.info(s"Attempting to remove notifications: $filter")
+    notificationRepository.removeEvery(session, filter)
+  }
+
+  private def removeUnparsedNotifications(unparsedNotification: Seq[UnparsedNotification], session: ClientSession): Future[Long] = {
+    val filter = Filters.in("actionId", unparsedNotification.map(_.actionId): _*)
+    logger.info(s"Attempting to remove unparsed notifications: $filter")
+    unparsedNotificationRespository.collection
+      .deleteMany(session, filter)
+      .toFuture
+      .map(_.getDeletedCount)
+  }
 
 }
