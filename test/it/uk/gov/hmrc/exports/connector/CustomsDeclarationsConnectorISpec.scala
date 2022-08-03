@@ -16,21 +16,24 @@
 
 package uk.gov.hmrc.exports.connector
 
-import java.util.UUID
-import scala.concurrent.Future
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.http.ContentTypes
 import play.api.mvc.Codec
 import play.api.test.Helpers._
 import testdata.ExportsTestData._
+import testdata.SubmissionTestData.{action, submission}
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
+import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import uk.gov.hmrc.http.InternalServerException
 
-class CustomsDeclarationsConnectorSpec extends IntegrationTestSpec with ExportsDeclarationBuilder {
+import java.util.UUID
+import scala.concurrent.Future
+
+class CustomsDeclarationsConnectorISpec extends IntegrationTestSpec with ExportsDeclarationBuilder {
 
   private lazy val connector = instanceOf[CustomsDeclarationsConnector]
 
@@ -39,7 +42,7 @@ class CustomsDeclarationsConnectorSpec extends IntegrationTestSpec with ExportsD
   // TODO: added couple of tests for having convId or not, seems like there is logic which even if we got 202 but not convId
   // TODO: it will be wrapped into 500 (to be confirmed)
   // TODO: do we handle cancellations now ? as if so we would need to add tests here
-  "Customs Declarations Connector" should {
+  "CustomsDeclarationsConnector.submitDeclaration" should {
 
     "return response with specific status" when {
 
@@ -68,18 +71,33 @@ class CustomsDeclarationsConnectorSpec extends IntegrationTestSpec with ExportsD
         }
       }
     }
+
+    def sendValidXml(xml: String): Future[String] = connector.submitDeclaration(declarantEoriValue, xml)
+
+    def verifyDecServiceWasCalledCorrectly(requestBody: String, expectedEori: String, expectedApiVersion: String = "1.0"): Unit =
+      WireMock.verify(
+        1,
+        postRequestedFor(urlMatching(submissionURL))
+          .withHeader(CONTENT_TYPE, equalTo(ContentTypes.XML(Codec.utf_8)))
+          .withHeader(ACCEPT, equalTo(s"application/vnd.hmrc.$expectedApiVersion+xml"))
+          .withHeader(CustomsHeaderNames.XEoriIdentifierHeaderName, equalTo(expectedEori))
+          .withRequestBody(equalToXml(requestBody))
+      )
   }
 
-  private def sendValidXml(xml: String): Future[String] =
-    connector.submitDeclaration(declarantEoriValue, xml)
+  "CustomsDeclarationsConnector.submitCancellation" should {
+    "send the expected ConversationId header" when {
+      "the 'isUpstreamStubbed' config property is set to 'true'" in {
+        val body = "some XML body"
+        val appConfig: AppConfig = instanceOf[AppConfig]
+        val headers = Map("X-Conversation-ID" -> UUID.randomUUID.toString)
+        postToDownstreamService(appConfig.cancelDeclarationUri, ACCEPTED, None, headers)
+        await(connector.submitCancellation(submission, expectedSubmissionRequestPayload(body)))
 
-  private def verifyDecServiceWasCalledCorrectly(requestBody: String, expectedEori: String, expectedApiVersion: String = "1.0"): Unit =
-    WireMock.verify(
-      1,
-      postRequestedFor(urlMatching(submissionURL))
-        .withHeader(CONTENT_TYPE, equalTo(ContentTypes.XML(Codec.utf_8)))
-        .withHeader(ACCEPT, equalTo(s"application/vnd.hmrc.$expectedApiVersion+xml"))
-        .withHeader(CustomsHeaderNames.XEoriIdentifierHeaderName, equalTo(expectedEori))
-        .withRequestBody(equalToXml(requestBody))
-    )
+        val url = urlMatching(appConfig.cancelDeclarationUri)
+        val postRequest = postRequestedFor(url).withHeader(CustomsHeaderNames.SubmissionConversationId, equalTo(action.id))
+        WireMock.verify(1, postRequest)
+      }
+    }
+  }
 }

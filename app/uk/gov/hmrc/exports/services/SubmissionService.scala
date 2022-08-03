@@ -119,7 +119,7 @@ class SubmissionService @Inject() (
     )
 
     val xml: String = wcoMapperService.toXml(metadata)
-    customsDeclarationsConnector.submitCancellation(submission.eori, xml).flatMap { actionId =>
+    customsDeclarationsConnector.submitCancellation(submission, xml).flatMap { actionId =>
       updateSubmissionInDB(cancellation.mrn, actionId)
     }
   }

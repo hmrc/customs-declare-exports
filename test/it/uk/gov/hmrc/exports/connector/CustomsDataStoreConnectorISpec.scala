@@ -25,7 +25,7 @@ import uk.gov.hmrc.exports.models.emails.Email
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class CustomsDataStoreConnectorSpec extends IntegrationTestSpec {
+class CustomsDataStoreConnectorISpec extends IntegrationTestSpec {
 
   implicit private val appConfig: AppConfig = instanceOf[AppConfig]
   private val connector = instanceOf[CustomsDataStoreConnector]

@@ -26,7 +26,7 @@ import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnecto
 import uk.gov.hmrc.exports.models.ead.parsers.MrnStatusParserTestData
 import uk.gov.hmrc.http.InternalServerException
 
-class CustomsDeclarationsInformationConnectorSpec extends IntegrationTestSpec {
+class CustomsDeclarationsInformationConnectorISpec extends IntegrationTestSpec {
 
   private lazy val connector = instanceOf[CustomsDeclarationsInformationConnector]
 

@@ -24,5 +24,5 @@ object CustomsHeaderNames {
   val XDucrHeaderName = "X-DUCR"
   val XClientIdName = "X-Client-ID"
   val XConversationIdName = "X-Conversation-ID"
-
+  val SubmissionConversationId = "SubmissionConversationId"
 }
