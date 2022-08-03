@@ -23,9 +23,11 @@ import play.api.mvc.Codec
 import play.mvc.Http.Status.ACCEPTED
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
+import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames.SubmissionConversationId
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timers
 import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
+import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionRequest}
 import uk.gov.hmrc.http.HttpReads.is4xx
 import uk.gov.hmrc.http.{HttpClient, _}
 
@@ -46,8 +48,12 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: 
       }
     }
 
-  def submitCancellation(eori: String, xml: String)(implicit hc: HeaderCarrier): Future[String] =
-    postMetaData(eori, appConfig.cancelDeclarationUri, xml).map { res =>
+  def submitCancellation(submission: Submission, xml: String)(implicit hc: HeaderCarrier): Future[String] = {
+    def actionId: String = submission.actions.find(_.requestType == SubmissionRequest).fold("Not a SubmissionRequest?")(_.id)
+
+    val headerCarrier = if (appConfig.isUpstreamStubbed) hc.withExtraHeaders(SubmissionConversationId -> actionId) else hc
+
+    postMetaData(submission.eori, appConfig.cancelDeclarationUri, xml)(headerCarrier).map { res =>
       logger.debug(s"CUSTOMS_DECLARATIONS cancellation response is  --> ${res.toString}")
       res match {
         case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) => conversationId
@@ -55,6 +61,7 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: 
           throw new RuntimeException(s"Bad response status [${status}] from Cancellation Request ")
       }
     }
+  }
 
   private def postMetaData(eori: String, uri: String, xml: String)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] =
     post(eori, uri, xml)

@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.connectors
 import org.mockito.ArgumentMatchers.{any, anyString}
 import play.api.http.Status
 import play.api.test.Helpers._
+import testdata.SubmissionTestData.submission
 import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
@@ -66,12 +67,10 @@ class CustomsDeclarationsConnectorSpec extends UnitSpec with MockMetrics {
     }
 
     "cancelDeclaration" in new SetUp() {
-      val eori = "GB123456"
       val xmlPayload: Elem = <SomeXML></SomeXML>
 
-      val result: String = await(testObj.submitCancellation(eori, xmlPayload.toString()))
+      val result: String = await(testObj.submitCancellation(submission, xmlPayload.toString()))
       result mustBe testConversationId
     }
-
   }
 }

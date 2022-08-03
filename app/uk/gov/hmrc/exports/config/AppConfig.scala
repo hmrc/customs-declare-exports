@@ -57,6 +57,9 @@ class AppConfig @Inject() (val configuration: Configuration, val environment: En
   lazy val developerHubClientId: String =
     servicesConfig.getString("microservice.services.customs-declarations.client-id")
 
+  lazy val isUpstreamStubbed: Boolean =
+    servicesConfig.getBoolean("microservice.services.customs-declarations.is-upstream-stubbed")
+
   lazy val draftTimeToLive: FiniteDuration =
     servicesConfig.getDuration("draft.timeToLive").asInstanceOf[FiniteDuration]
 

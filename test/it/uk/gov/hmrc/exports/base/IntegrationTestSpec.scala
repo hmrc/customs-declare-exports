@@ -45,6 +45,8 @@ trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSui
           "microservice.services.customs-declarations.submit-uri" -> "/",
           "microservice.services.customs-declarations.bearer-token" -> authToken,
           "microservice.services.customs-declarations.api-version" -> "1.0",
+          "microservice.services.customs-declarations.cancel-uri" -> "/cancellation-requests",
+          "microservice.services.customs-declarations.is-upstream-stubbed" -> true,
           "microservice.services.customs-declarations-information.host" -> Host,
           "microservice.services.customs-declarations-information.port" -> Port,
           "microservice.services.customs-declarations-information.fetch-mrn-status" -> "/mrn/ID/status",
