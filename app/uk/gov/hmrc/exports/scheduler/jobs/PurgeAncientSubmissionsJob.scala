@@ -99,8 +99,8 @@ class PurgeAncientSubmissionsJob @Inject() (
       collection
         .find(in("actionId", submission.actions.filter(_.requestType == SubmissionRequest).map(_.id): _*))
         .asScala
-        .flatMap { document =>
-          Json.parse(document.toJson).asOpt[A]
+        .map { document =>
+          Json.parse(document.toJson).as[A]
         }
         .toList
     }
