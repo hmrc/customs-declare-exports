@@ -28,6 +28,7 @@ import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification,
 import uk.gov.hmrc.exports.repositories._
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.mongo.ExportsClient
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
 
 import java.time._
 import javax.inject.{Inject, Singleton}
@@ -65,12 +66,7 @@ class PurgeAncientSubmissionsJob @Inject() (
   private val expiryDate = Codecs.toBson(ZonedDateTime.now(clock).minusDays(180))
 
   private val latestStatusLookup =
-    or(
-      equal(latestStatus, "GOODS_HAVE_EXITED"),
-      equal(latestStatus, "DECLARATION_HANDLED_EXTERNALLY"),
-      equal(latestStatus, "CANCELLED"),
-      equal(latestStatus, "REJECTED")
-    )
+    or(equal(latestStatus, "GOODS_HAVE_EXITED"), equal(latestStatus, "DECLARATION_HANDLED_EXTERNALLY"), equal(latestStatus, "CANCELLED"))
 
   private val olderThanDate = lte(statusLastUpdated, expiryDate)
 
@@ -89,14 +85,13 @@ class PurgeAncientSubmissionsJob @Inject() (
 
     logger.info(s"Submissions found older than 180 days: ${submissions.size}")
 
-    val declarations: List[ExportsDeclaration] = submissions.flatMap { submission =>
-      declarationCollection
-        .find(equal("id", submission.uuid))
-        .asScala
-        .flatMap { document =>
-          Json.parse(document.toJson).asOpt[ExportsDeclaration]
-        }
-    }
+    val declarations: List[ExportsDeclaration] = declarationCollection
+      .find(in("id", submissions.map(_.uuid): _*))
+      .asScala
+      .flatMap { document =>
+        Json.parse(document.toJson).asOpt[ExportsDeclaration]
+      }
+      .toList
 
     logger.info(s"Declarations found linked to submissions: ${declarations.size}")
 

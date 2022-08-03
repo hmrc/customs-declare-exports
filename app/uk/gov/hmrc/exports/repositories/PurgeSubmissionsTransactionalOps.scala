@@ -20,7 +20,6 @@ import org.bson.conversions.Bson
 import org.mongodb.scala.ClientSession
 import org.mongodb.scala.model.Filters
 import play.api.Logging
-import repositories.RepositoryOps
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
@@ -76,9 +75,6 @@ class PurgeSubmissionsTransactionalOps @Inject() (
 
   private def removeSubmissions(submissions: Seq[Submission], session: ClientSession): Future[Long] = {
     val filter = Filters.in("uuid", submissions.map(_.uuid): _*)
-    submissionRepository.findAll(session, filter).map(x => println("!!!>>>>>>" + x))
-    submissionRepository.removeEvery(session, filter).map(x => println("[][][][]]>>>>>>" + x))
-    submissionRepository.findAll(session, filter).map(x => println("!!!>>>>>>" + x))
     logger.info(s"Attempting to remove submissions: $filter")
     submissionRepository.removeEvery(session, filter)
   }
