@@ -7,7 +7,7 @@ import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import uk.gov.hmrc.exports.base.IntegrationTestPurgeSubmissionsToolSpec
+import uk.gov.hmrc.exports.base.{IntegrationTestPurgeSubmissionsToolSpec, TestExportsClient}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo._
 import uk.gov.hmrc.exports.mongo.ExportsClient
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
@@ -20,7 +20,7 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
 
   implicit lazy val application: Application = GuiceApplicationBuilder()
     .disable[PlayModule]
-    .overrides(bind[ExportsClient].toInstance(testExportsClient))
+    .overrides(bind[ExportsClient].to(TestExportsClient))
     .build
 
   private val testJob = application.injector.instanceOf[PurgeAncientSubmissionsJob]

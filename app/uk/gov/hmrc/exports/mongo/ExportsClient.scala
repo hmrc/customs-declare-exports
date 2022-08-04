@@ -23,8 +23,8 @@ trait ExportsClient {
 
   val appConfig: AppConfig
 
-  val (client, mongoDatabase) = createMongoClient
-  val db = client.getDatabase(mongoDatabase)
+  lazy val (client, mongoDatabase) = createMongoClient
+  lazy val db = client.getDatabase(mongoDatabase)
 
   protected def createMongoClient: (MongoClient, String) = {
     val (mongoUri, _) = {

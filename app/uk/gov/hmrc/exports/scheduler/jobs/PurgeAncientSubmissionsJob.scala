@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs
 
-import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
 import org.bson.json.{JsonMode, JsonWriterSettings}
 import org.mongodb.scala.model.Filters._
@@ -29,7 +28,6 @@ import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification,
 import uk.gov.hmrc.exports.repositories._
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.mongo.ExportsClient
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
 
 import java.time._
 import javax.inject.{Inject, Singleton}
