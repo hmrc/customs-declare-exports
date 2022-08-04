@@ -29,6 +29,7 @@ import uk.gov.hmrc.exports.repositories._
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.mongo.ExportsClient
 import uk.gov.hmrc.mongo.workitem.WorkItem
+import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
 
 import java.time._
 import javax.inject.{Inject, Singleton}
@@ -75,8 +76,8 @@ class PurgeAncientSubmissionsJob @Inject() (
   override def execute(): Future[Unit] = {
 
     implicit val formatNotification: Format[ParsedNotification] = ParsedNotification.format
+    implicit val formatWorkItem: Format[WorkItem[UnparsedNotification]] = WorkItem.workItemRestFormat(UnparsedNotification.format)
     import ExportsDeclaration.Mongo._
-    implicit val formatWorkItem = WorkItem.workItemRestFormat(UnparsedNotification.format)
 
     val submissions: List[Submission] = submissionCollection
       .find(and(olderThanDate, latestStatusLookup))
@@ -106,19 +107,17 @@ class PurgeAncientSubmissionsJob @Inject() (
       }
       .toList
 
+    logger.info(s"Parsed notifications found linked to submissions: ${parsedNotifications.size}")
+
     val unparsedNotifications: List[UnparsedNotification] =
       unparsedNotificationCollection
         .find(in("item.id", parsedNotifications.map(_.unparsedNotificationId.toString): _*))
         .asScala
         .map { document =>
-          Json.parse(document.toJson(jsonSettings(JsonMode.RELAXED))).as[WorkItem[UnparsedNotification]]
-        }
-        .map {
-          _.item
+          Json.parse(document.toJson)("item").as[UnparsedNotification]
         }
         .toList
 
-    logger.info(s"Parsed notifications found linked to submissions: ${parsedNotifications.size}")
     logger.info(s"Unparsed found linked to submissions: ${unparsedNotifications.size}")
 
     transactionalOps.removeSubmissionAndNotifications(submissions, declarations, parsedNotifications, unparsedNotifications) map { removed =>

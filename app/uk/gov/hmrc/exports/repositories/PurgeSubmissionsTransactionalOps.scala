@@ -92,7 +92,7 @@ class PurgeSubmissionsTransactionalOps @Inject() (
   }
 
   private def removeUnparsedNotifications(unparsedNotification: Seq[UnparsedNotification], session: ClientSession): Future[Long] = {
-    val filter = Filters.in("actionId", unparsedNotification.map(_.actionId): _*)
+    val filter = Filters.in("item.id", unparsedNotification.map(_.id.toString): _*)
     logger.info(s"Attempting to remove unparsed notifications: $filter")
     unparsedNotificationRespository.collection
       .deleteMany(session, filter)
