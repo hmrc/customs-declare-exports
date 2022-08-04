@@ -28,6 +28,7 @@ import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification,
 import uk.gov.hmrc.exports.repositories._
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.mongo.ExportsClient
+import uk.gov.hmrc.mongo.workitem.WorkItem
 
 import java.time._
 import javax.inject.{Inject, Singleton}
@@ -56,7 +57,7 @@ class PurgeAncientSubmissionsJob @Inject() (
   override def interval: FiniteDuration = jobConfig.interval
   override def firstRunTime: Option[LocalTime] = Some(jobConfig.elapseTime)
 
-  private val jsonSettings = JsonWriterSettings.builder.outputMode(JsonMode.EXTENDED).build
+  private def jsonSettings(mode: JsonMode) = JsonWriterSettings.builder.outputMode(mode).build
 
   private val jobConfig = appConfig.purgeAncientSubmissions
   private val clock: Clock = appConfig.clock
@@ -75,6 +76,7 @@ class PurgeAncientSubmissionsJob @Inject() (
 
     implicit val formatNotification: Format[ParsedNotification] = ParsedNotification.format
     import ExportsDeclaration.Mongo._
+    implicit val formatWorkItem = WorkItem.workItemRestFormat(UnparsedNotification.format)
 
     val submissions: List[Submission] = submissionCollection
       .find(and(olderThanDate, latestStatusLookup))
@@ -104,13 +106,17 @@ class PurgeAncientSubmissionsJob @Inject() (
       }
       .toList
 
-    val unparsedNotifications: List[UnparsedNotification] = unparsedNotificationCollection
-      .find(in("item.id", parsedNotifications.map(_.unparsedNotificationId.toString): _*))
-      .asScala
-      .flatMap {
-        parseJsonFromDocument[UnparsedNotification]
-      }
-      .toList
+    val unparsedNotifications: List[UnparsedNotification] =
+      unparsedNotificationCollection
+        .find(in("item.id", parsedNotifications.map(_.unparsedNotificationId.toString): _*))
+        .asScala
+        .map { document =>
+          Json.parse(document.toJson(jsonSettings(JsonMode.RELAXED))).as[WorkItem[UnparsedNotification]]
+        }
+        .map {
+          _.item
+        }
+        .toList
 
     logger.info(s"Parsed notifications found linked to submissions: ${parsedNotifications.size}")
     logger.info(s"Unparsed found linked to submissions: ${unparsedNotifications.size}")
@@ -122,6 +128,6 @@ class PurgeAncientSubmissionsJob @Inject() (
   }
 
   private def parseJsonFromDocument[A](document: Document)(implicit format: Format[A]): Option[A] =
-    Json.parse(document.toJson(jsonSettings)).asOpt[A]
+    Json.parse(document.toJson(jsonSettings(JsonMode.EXTENDED))).asOpt[A]
 
 }

@@ -25,7 +25,7 @@ import javax.inject.{Inject, Provider}
 
 class ScheduledJobModule extends play.api.inject.Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
-    Seq(bind[ScheduledJobs].toProvider[ScheduledJobProvider], bind[Scheduler].toSelf)
+    Seq(bind[ScheduledJobs].toProvider[ScheduledJobProvider], bind[Scheduler].toSelf.eagerly())
 }
 
 class ScheduledJobProvider @Inject() (
