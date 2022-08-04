@@ -95,15 +95,13 @@ class PurgeAncientSubmissionsJob @Inject() (
 
     logger.info(s"Declarations found linked to submissions: ${declarations.size}")
 
-    def notifications[A](collection: MongoCollection[Document])(implicit format: Format[A]): List[A] = submissions.flatMap { submission =>
-      collection
-        .find(in("actionId", submission.actions.filter(_.requestType == SubmissionRequest).map(_.id): _*))
-        .asScala
-        .map { document =>
-          Json.parse(document.toJson).as[A]
-        }
-        .toList
-    }
+    def notifications[A](collection: MongoCollection[Document])(implicit format: Format[A]): List[A] = collection
+      .find(in("actionId", submissions.flatMap(_.actions.filter(_.requestType == SubmissionRequest).map(_.id)): _*))
+      .asScala
+      .map { document =>
+        Json.parse(document.toJson).as[A]
+      }
+      .toList
 
     val parsedNotifications: List[ParsedNotification] = notifications[ParsedNotification](notificationCollection)
     val unparsedNotifications: List[UnparsedNotification] = notifications[UnparsedNotification](unparsedNotificationCollection)
