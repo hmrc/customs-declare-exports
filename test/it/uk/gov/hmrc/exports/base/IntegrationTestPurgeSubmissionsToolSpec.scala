@@ -37,23 +37,4 @@ trait IntegrationTestPurgeSubmissionsToolSpec extends IntegrationTestBaseSpec wi
 
   def removeAll(collection: MongoCollection[Document]): Long = collection.deleteMany(BsonDocument()).getDeletedCount
 
-  def runTest(collectionUnderTest: String, inputDataJson: String, expectedDataJson: String): Unit = {
-    val collection = getCollection(collectionUnderTest)
-    removeAll(collection)
-    collection.insertOne(Document.parse(inputDataJson))
-
-    val result: Document = collection.find.first
-    val expectedResult: String = expectedDataJson
-
-    compareJson(result.toJson, expectedResult)
-  }
-
-  def compareJson(actual: String, expected: String): Unit = {
-    val mapper = new ObjectMapper
-
-    val jsonActual = mapper.readTree(actual)
-    val jsonExpected = mapper.readTree(expected)
-
-    jsonActual mustBe jsonExpected
-  }
 }

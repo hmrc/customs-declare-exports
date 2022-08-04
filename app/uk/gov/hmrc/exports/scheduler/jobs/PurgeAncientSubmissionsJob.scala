@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.scheduler.jobs
 
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
+import org.bson.json.{JsonMode, JsonWriterSettings}
 import org.mongodb.scala.model.Filters._
 import play.api.Logging
 import uk.gov.hmrc.mongo.play.json.Codecs
@@ -57,6 +58,8 @@ class PurgeAncientSubmissionsJob @Inject() (
   override def interval: FiniteDuration = jobConfig.interval
   override def firstRunTime: Option[LocalTime] = Some(jobConfig.elapseTime)
 
+  private val jsonSettings = JsonWriterSettings.builder.outputMode(JsonMode.EXTENDED).build
+
   private val jobConfig = appConfig.purgeAncientSubmissions
   private val clock: Clock = appConfig.clock
 
@@ -73,13 +76,13 @@ class PurgeAncientSubmissionsJob @Inject() (
   override def execute(): Future[Unit] = {
 
     implicit val formatNotification: Format[ParsedNotification] = ParsedNotification.format
-    implicit val formatDeclaration: Format[ExportsDeclaration] = ExportsDeclaration.Mongo.format
+    import ExportsDeclaration.Mongo._
 
     val submissions: List[Submission] = submissionCollection
       .find(and(olderThanDate, latestStatusLookup))
       .asScala
-      .flatMap { document =>
-        Json.parse(document.toJson).asOpt[Submission]
+      .flatMap {
+        parseJsonFromDocument[Submission]
       }
       .toList
 
@@ -88,8 +91,8 @@ class PurgeAncientSubmissionsJob @Inject() (
     val declarations: List[ExportsDeclaration] = declarationCollection
       .find(in("id", submissions.map(_.uuid): _*))
       .asScala
-      .map { document =>
-        Json.parse(document.toJson).as[ExportsDeclaration]
+      .flatMap {
+        parseJsonFromDocument[ExportsDeclaration]
       }
       .toList
 
@@ -98,16 +101,16 @@ class PurgeAncientSubmissionsJob @Inject() (
     val parsedNotifications: List[ParsedNotification] = notificationCollection
       .find(in("actionId", submissions.flatMap(_.actions.filter(_.requestType == SubmissionRequest).map(_.id)): _*))
       .asScala
-      .flatMap { document =>
-        Json.parse(document.toJson).asOpt[ParsedNotification]
+      .flatMap {
+        parseJsonFromDocument[ParsedNotification]
       }
       .toList
 
     val unparsedNotifications: List[UnparsedNotification] = unparsedNotificationCollection
       .find(in("item.id", parsedNotifications.map(_.unparsedNotificationId.toString): _*))
       .asScala
-      .flatMap { document =>
-        Json.parse(document.toJson).asOpt[UnparsedNotification]
+      .flatMap {
+        parseJsonFromDocument[UnparsedNotification]
       }
       .toList
 
@@ -119,5 +122,8 @@ class PurgeAncientSubmissionsJob @Inject() (
     }
 
   }
+
+  private def parseJsonFromDocument[A](document: Document)(implicit format: Format[A]): Option[A] =
+    Json.parse(document.toJson(jsonSettings)).asOpt[A]
 
 }
