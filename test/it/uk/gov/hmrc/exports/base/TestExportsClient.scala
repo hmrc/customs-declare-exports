@@ -8,9 +8,9 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 object TestExportsClient extends ExportsClient {
 
-  val mongoClient = MongoClients.create()
+  val mongoClient: MongoClient = MongoClients.create()
 
-  private val config = Configuration()
+  val config: Configuration = Configuration()
 
   override val appConfig: AppConfig = new AppConfig(config, Environment.simple(), new ServicesConfig(config))
 
