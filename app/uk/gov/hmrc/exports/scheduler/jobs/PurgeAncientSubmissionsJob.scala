@@ -88,23 +88,28 @@ class PurgeAncientSubmissionsJob @Inject() (
     val declarations: List[ExportsDeclaration] = declarationCollection
       .find(in("id", submissions.map(_.uuid): _*))
       .asScala
-      .flatMap { document =>
-        Json.parse(document.toJson).asOpt[ExportsDeclaration]
+      .map { document =>
+        Json.parse(document.toJson).as[ExportsDeclaration]
       }
       .toList
 
     logger.info(s"Declarations found linked to submissions: ${declarations.size}")
 
-    def notifications[A](collection: MongoCollection[Document])(implicit format: Format[A]): List[A] = collection
+    val parsedNotifications: List[ParsedNotification] = notificationCollection
       .find(in("actionId", submissions.flatMap(_.actions.filter(_.requestType == SubmissionRequest).map(_.id)): _*))
       .asScala
-      .map { document =>
-        Json.parse(document.toJson).as[A]
+      .flatMap { document =>
+        Json.parse(document.toJson).asOpt[ParsedNotification]
       }
       .toList
 
-    val parsedNotifications: List[ParsedNotification] = notifications[ParsedNotification](notificationCollection)
-    val unparsedNotifications: List[UnparsedNotification] = notifications[UnparsedNotification](unparsedNotificationCollection)
+    val unparsedNotifications: List[UnparsedNotification] = unparsedNotificationCollection
+      .find(in("item.id", parsedNotifications.map(_.unparsedNotificationId.toString): _*))
+      .asScala
+      .flatMap { document =>
+        Json.parse(document.toJson).asOpt[UnparsedNotification]
+      }
+      .toList
 
     logger.info(s"Parsed notifications found linked to submissions: ${parsedNotifications.size}")
     logger.info(s"Unparsed found linked to submissions: ${unparsedNotifications.size}")

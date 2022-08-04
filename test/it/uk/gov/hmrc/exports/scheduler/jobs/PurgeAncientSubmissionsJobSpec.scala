@@ -9,6 +9,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.base.IntegrationTestPurgeSubmissionsToolSpec
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo._
+import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import uk.gov.hmrc.exports.mongo.ExportsClient
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
@@ -26,8 +27,9 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
   private val testJob = application.injector.instanceOf[PurgeAncientSubmissionsJob]
 
   val submissionCollection: MongoCollection[Document] = testJob.db.getCollection("submissions")
-  val notificationsCollection: MongoCollection[Document] = testJob.db.getCollection("notifications")
   val declarationCollection: MongoCollection[Document] = testJob.db.getCollection("declarations")
+  val notificationsCollection: MongoCollection[Document] = testJob.db.getCollection("notifications")
+  val unparsedNotificationCollection: MongoCollection[Document] = testJob.db.getCollection("unparsedNotifications")
 
   private def prepareCollection(collection: MongoCollection[Document], records: List[Document]): Boolean =
     removeAll(collection).isValidLong && collection.insertMany(records.asJava).wasAcknowledged
@@ -61,15 +63,18 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
           notification(unparsedNotificationId = unparsedNotificationIds(1), actionId = actionIds(1)),
           notification(unparsedNotificationId = unparsedNotificationIds(2), actionId = actionIds(2))
         )
+        val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds.head, actionIds.head))
 
         prepareCollection(submissionCollection, submissions) mustBe true
         prepareCollection(declarationCollection, declarations) mustBe true
         prepareCollection(notificationsCollection, notifications) mustBe true
+        prepareCollection(unparsedNotificationCollection, unparsedNotifications) mustBe true
 
         whenReady(testJob.execute()) { _ =>
           submissionCollection.countDocuments() mustBe 0
-          notificationsCollection.countDocuments() mustBe 0
           declarationCollection.countDocuments() mustBe 0
+          notificationsCollection.countDocuments() mustBe 0
+          unparsedNotificationCollection.countDocuments() mustBe 0
         }
 
       }
@@ -102,15 +107,18 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
 
         val declarations: List[Document] = List(Document.parse(Json.stringify(Json.toJson(aDeclaration(withId(uuids.head))))))
         val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds.head, actionId = actionIds.head))
+        val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds.head, actionIds.head))
 
         prepareCollection(submissionCollection, submissions) mustBe true
         prepareCollection(declarationCollection, declarations) mustBe true
         prepareCollection(notificationsCollection, notifications) mustBe true
+        prepareCollection(unparsedNotificationCollection, unparsedNotifications) mustBe true
 
         whenReady(testJob.execute()) { _ =>
           submissionCollection.countDocuments() mustBe submissions.size
           declarationCollection.countDocuments() mustBe declarations.size
           notificationsCollection.countDocuments() mustBe notifications.size
+          unparsedNotificationCollection.countDocuments() mustBe notifications.size
         }
 
       }
@@ -133,15 +141,18 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
         )
         val declarations: List[Document] = List(Document.parse(Json.stringify(Json.toJson(aDeclaration(withId(uuids.head))))))
         val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds.head, actionId = actionIds.head))
+        val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds.head, actionIds.head))
 
         prepareCollection(submissionCollection, submissions) mustBe true
         prepareCollection(declarationCollection, declarations) mustBe true
         prepareCollection(notificationsCollection, notifications) mustBe true
+        prepareCollection(unparsedNotificationCollection, unparsedNotifications) mustBe true
 
         whenReady(testJob.execute()) { _ =>
           submissionCollection.countDocuments() mustBe submissions.size
           declarationCollection.countDocuments() mustBe declarations.size
           notificationsCollection.countDocuments() mustBe notifications.size
+          unparsedNotificationCollection.countDocuments() mustBe notifications.size
         }
 
       }
@@ -322,6 +333,20 @@ object PurgeAncientSubmissionsJobSpec {
       |        "dateTimeIssued" : "2022-08-02T13:20:06Z[UTC]",
       |        "status" : "GOODS_HAVE_EXITED_THE_COMMUNITY",
       |        "errors" : []
+      |    }
+      |}
+      |""".stripMargin)
+
+  def unparsedNotification(unparsedNotificationId: String, actionId: String) = Document.parse(s"""
+      |{
+      |    "receivedAt" : ISODate("2022-08-03T12:38:59.584Z"),
+      |    "updatedAt" : ISODate("2022-08-03T12:39:08.100Z"),
+      |    "status" : "succeeded",
+      |    "failureCount" : 0,
+      |    "item" : {
+      |        "id" : "1de0f5ec-4aff-40a4-bc06-db825d16a89e",
+      |        "actionId" : "$actionId",
+      |        "payload" : "payload"
       |    }
       |}
       |""".stripMargin)
