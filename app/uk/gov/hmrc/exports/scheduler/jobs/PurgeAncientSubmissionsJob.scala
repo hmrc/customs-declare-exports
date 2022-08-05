@@ -46,10 +46,10 @@ class PurgeAncientSubmissionsJob @Inject() (
 )(implicit ec: ExecutionContext)
     extends ScheduledJob with ExportsClient with Logging with DecorateAsScala {
 
-  val submissionCollection = db.getCollection(submissionRepository.collectionName)
-  val declarationCollection = db.getCollection(declarationRepository.collectionName)
-  val notificationCollection = db.getCollection(parsedNotificationRepository.collectionName)
-  val unparsedNotificationCollection = db.getCollection(unparsedNotificationRepository.collectionName)
+  lazy val submissionCollection = db.getCollection(submissionRepository.collectionName)
+  lazy val declarationCollection = db.getCollection(declarationRepository.collectionName)
+  lazy val notificationCollection = db.getCollection(parsedNotificationRepository.collectionName)
+  lazy val unparsedNotificationCollection = db.getCollection(unparsedNotificationRepository.collectionName)
 
   override val name: String = "PurgeAncientSubmissions"
 
