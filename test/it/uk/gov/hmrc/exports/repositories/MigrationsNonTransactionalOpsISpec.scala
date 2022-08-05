@@ -35,7 +35,7 @@ class MigrationsNonTransactionalOpsISpec extends IntegrationTestSpec {
   private val notificationRepository = instanceOf[ParsedNotificationRepository]
   private val submissionRepository = instanceOf[SubmissionRepository]
 
-  private val transactionalOps = new MigrationsTransactionalOps(mongoComponent, submissionRepository, notificationRepository, appConfig)
+  private val transactionalOps = new SubmissionsTransactionalOps(mongoComponent, submissionRepository, notificationRepository, appConfig)
 
   override def beforeEach(): Unit = {
     super.beforeEach()

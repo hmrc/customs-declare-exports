@@ -26,5 +26,4 @@ trait ScheduledJob {
   def execute(): Future[Unit]
   def firstRunTime: Option[LocalTime]
   def interval: FiniteDuration
-
 }

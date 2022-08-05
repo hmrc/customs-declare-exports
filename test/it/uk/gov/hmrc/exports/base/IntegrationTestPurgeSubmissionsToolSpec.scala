@@ -6,7 +6,6 @@ import org.mongodb.scala.bson.BsonDocument
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.mongo.ExportsClient
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 trait IntegrationTestPurgeSubmissionsToolSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSuite {

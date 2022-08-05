@@ -16,114 +16,103 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs
 
-import org.bson.Document
-import org.bson.json.{JsonMode, JsonWriterSettings}
-import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.ClientSession
+import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.model.Filters.{and, equal, in, lte}
 import play.api.Logging
-import uk.gov.hmrc.mongo.play.json.Codecs
-import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
+import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
+import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories._
-import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionRequest}
-import uk.gov.hmrc.exports.mongo.ExportsClient
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.Codecs
+import uk.gov.hmrc.mongo.transaction.{TransactionConfiguration, Transactions}
 
 import java.time._
 import javax.inject.{Inject, Singleton}
-import scala.collection.convert.DecorateAsScala
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class PurgeAncientSubmissionsJob @Inject() (
-  val appConfig: AppConfig,
+  val mongoComponent: MongoComponent,
   submissionRepository: SubmissionRepository,
   declarationRepository: DeclarationRepository,
-  unparsedNotificationRepository: UnparsedNotificationWorkItemRepository,
   parsedNotificationRepository: ParsedNotificationRepository,
-  transactionalOps: PurgeSubmissionsTransactionalOps
+  unparsedNotificationRepository: UnparsedNotificationWorkItemRepository,
+  appConfig: AppConfig
 )(implicit ec: ExecutionContext)
-    extends ScheduledJob with ExportsClient with Logging with DecorateAsScala {
-
-  val submissionCollection = db.getCollection(submissionRepository.collectionName)
-  val declarationCollection = db.getCollection(declarationRepository.collectionName)
-  val notificationCollection = db.getCollection(parsedNotificationRepository.collectionName)
-  val unparsedNotificationCollection = db.getCollection(unparsedNotificationRepository.collectionName)
+    extends ScheduledJob with Logging with Transactions {
 
   override val name: String = "PurgeAncientSubmissions"
 
-  override def interval: FiniteDuration = jobConfig.interval
-  override def firstRunTime: Option[LocalTime] = Some(jobConfig.elapseTime)
+  override def interval: FiniteDuration = appConfig.purgeAncientSubmissions.interval
+  override def firstRunTime: Option[LocalTime] = Some(appConfig.purgeAncientSubmissions.elapseTime)
 
-  private def jsonSettings(mode: JsonMode) = JsonWriterSettings.builder.outputMode(mode).build
+  private implicit val tc = TransactionConfiguration.strict
 
-  private val jobConfig = appConfig.purgeAncientSubmissions
-  private val clock: Clock = appConfig.clock
-
-  private val latestStatus = "latestEnhancedStatus"
-  private val statusLastUpdated = "enhancedStatusLastUpdated"
-
-  private val expiryDate = Codecs.toBson(ZonedDateTime.now(clock).minusDays(180))
-
-  private val latestStatusLookup =
-    in(latestStatus, List("GOODS_HAVE_EXITED", "DECLARATION_HANDLED_EXTERNALLY", "CANCELLED"): _*)
-
-  private val olderThanDate = lte(statusLastUpdated, expiryDate)
+  private lazy val nonTransactionalSession = mongoComponent.client.startSession().toFuture
 
   override def execute(): Future[Unit] = {
+    val expiryDate = Codecs.toBson(ZonedDateTime.now(appConfig.clock).minusDays(180))
+    val olderThanDate = lte("enhancedStatusLastUpdated", expiryDate)
 
-    implicit val formatNotification: Format[ParsedNotification] = ParsedNotification.format
-    import ExportsDeclaration.Mongo._
+    val latestStatusLookup =
+      in("latestEnhancedStatus", List("GOODS_HAVE_EXITED", "DECLARATION_HANDLED_EXTERNALLY", "CANCELLED"): _*)
 
-    val submissions: List[Submission] = submissionCollection
-      .find(and(olderThanDate, latestStatusLookup))
-      .asScala
-      .flatMap {
-        parseJsonFromDocument[Submission]
+    submissionRepository.findAll(and(olderThanDate, latestStatusLookup)).flatMap { submissions =>
+      if (submissions.isEmpty) Future.unit
+      else {
+        logger.info(s"Found ${submissions.size} Submission documents older than 180 days")
+        if (appConfig.useTransactionalDBOps)
+          withSessionAndTransaction[Unit](removeOlderDocuments(_, submissions)).recover {
+            case e: Exception =>
+              logger.warn(s"There was an error while reading/writing to the DB => ${e.getMessage}", e)
+          }
+        else nonTransactionalSession.flatMap(removeOlderDocuments(_, submissions))
       }
-      .toList
-
-    logger.info(s"Submissions found older than 180 days: ${submissions.size}")
-
-    val declarations: List[ExportsDeclaration] = declarationCollection
-      .find(in("id", submissions.map(_.uuid): _*))
-      .asScala
-      .flatMap {
-        parseJsonFromDocument[ExportsDeclaration]
-      }
-      .toList
-
-    logger.info(s"Declarations found linked to submissions: ${declarations.size}")
-
-    val parsedNotifications: List[ParsedNotification] = notificationCollection
-      .find(in("actionId", submissions.flatMap(_.actions.map(_.id)): _*))
-      .asScala
-      .flatMap {
-        parseJsonFromDocument[ParsedNotification]
-      }
-      .toList
-
-    logger.info(s"Parsed notifications found linked to submissions: ${parsedNotifications.size}")
-
-    val unparsedNotifications: List[UnparsedNotification] =
-      unparsedNotificationCollection
-        .find(in("item.id", parsedNotifications.map(_.unparsedNotificationId.toString): _*))
-        .asScala
-        .map { document =>
-          Json.parse(document.toJson)("item").as[UnparsedNotification]
-        }
-        .toList
-
-    logger.info(s"Unparsed found linked to submissions: ${unparsedNotifications.size}")
-
-    transactionalOps.removeSubmissionAndNotifications(submissions, declarations, parsedNotifications, unparsedNotifications) map { removed =>
-      logger.info(s"${removed.sum} records removed linked to ancient submissions")
     }
-
   }
 
-  private def parseJsonFromDocument[A](document: Document)(implicit format: Format[A]): Option[A] =
-    Json.parse(document.toJson(jsonSettings(JsonMode.EXTENDED))).asOpt[A]
+  private def removeOlderDocuments(session: ClientSession, submissions: Seq[Submission]): Future[Unit] = {
+    for {
+      submissionsRemoved <- submissionRepository.removeEvery(session, in("uuid", submissions.map(_.uuid): _*))
+      declarationsRemoved <- removeDeclarations(session, submissions)
+      parsedNotifications <- removeParsedNotifications(session, submissions)
+        definedNotifications = filterOutNullValues(parsedNotifications)
+      unparsedNotificationsRemoved <- removeUnparsedNotifications(session, definedNotifications)
+    }
+    yield {
+      if (submissionsRemoved > 0L) logger.info(s"Removed $submissionsRemoved Submission documents")
+      if (declarationsRemoved > 0L) logger.info(s"Removed $declarationsRemoved Declaration documents")
+      if (definedNotifications.size > 0L) logger.info(s"Removed ${definedNotifications.size} ParsedNotification documents")
+      if (unparsedNotificationsRemoved > 0L) logger.info(s"Removed $unparsedNotificationsRemoved UnparsedNotification documents")
+    }
+  }
 
+  private def removeDeclarations(session: ClientSession, submissions: Seq[Submission]): Future[Long] = {
+    val collection = declarationRepository.collection
+    Future.sequence(submissions.map { submission =>
+      val filter = and(equal("eori", submission.eori), equal("id", submission.uuid))
+      collection.deleteOne(session, filter).toFuture.map(_.getDeletedCount)
+    }).map(_.foldLeft(0L)(_ + _))
+  }
+
+  private def removeParsedNotifications(session: ClientSession, submissions: Seq[Submission]): Future[Seq[ParsedNotification]] = {
+    val collection = parsedNotificationRepository.collection
+    Future.sequence(submissions.flatMap { submission =>
+      submission.actions.map { action =>
+        val filter = BsonDocument("actionId" -> action.id)
+        collection.findOneAndDelete(session, filter).toFuture
+      }
+    })
+  }
+
+  private def removeUnparsedNotifications(session: ClientSession, parsedNotifications: Seq[ParsedNotification]): Future[Long] = {
+    val definedNotifications = filterOutNullValues(parsedNotifications)
+    val filter = in("item.id", definedNotifications.map(_.unparsedNotificationId.toString): _*)
+    unparsedNotificationRepository.collection.deleteMany(session, filter).toFuture.map(_.getDeletedCount)
+  }
+
+  private def filterOutNullValues[T](seq: Seq[T]): Seq[T] = seq.filter(Option(_).isDefined)
 }

@@ -36,7 +36,7 @@ class SchedulerDateUtil @Inject() (appConfig: AppConfig) {
 
     val intervalSeconds: Long = interval.toSeconds
     val deltaSeconds: Int = offsetSeconds - currentSeconds
-    val intervalRemainder: Long = deltaSeconds % intervalSeconds
+    val intervalRemainder: Long = if (intervalSeconds != 0) deltaSeconds % intervalSeconds else deltaSeconds
 
     val intervalRemaining: Long = if (intervalRemainder < 0) intervalRemainder + intervalSeconds else intervalRemainder
     LocalDate

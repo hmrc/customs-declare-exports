@@ -3,7 +3,6 @@ package uk.gov.hmrc.exports.base
 import com.mongodb.client.{MongoClient, MongoClients}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.mongo.ExportsClient
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 object TestExportsClient extends ExportsClient {

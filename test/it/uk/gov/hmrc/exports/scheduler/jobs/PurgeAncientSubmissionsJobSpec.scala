@@ -10,7 +10,6 @@ import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.exports.base.{IntegrationTestPurgeSubmissionsToolSpec, TestExportsClient}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo._
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
-import uk.gov.hmrc.exports.mongo.ExportsClient
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import uk.gov.hmrc.mongo.workitem.{WorkItem, WorkItemFields}
 

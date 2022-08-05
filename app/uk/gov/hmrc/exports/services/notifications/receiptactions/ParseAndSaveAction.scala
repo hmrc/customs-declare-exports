@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.services.notifications.receiptactions
 import play.api.Logging
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
-import uk.gov.hmrc.exports.repositories.{MigrationsTransactionalOps, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{SubmissionRepository, SubmissionsTransactionalOps}
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
 
 import javax.inject.{Inject, Singleton}
@@ -29,7 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class ParseAndSaveAction @Inject() (
   notificationFactory: NotificationFactory,
   submissionRepository: SubmissionRepository,
-  transactionalOps: MigrationsTransactionalOps
+  transactionalOps: SubmissionsTransactionalOps
 )(implicit executionContext: ExecutionContext)
     extends Logging {
 
