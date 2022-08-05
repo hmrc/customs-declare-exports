@@ -63,14 +63,14 @@ class PurgeSubmissionsTransactionalOps @Inject() (
     session: ClientSession,
     submissions: Seq[Submission],
     declarations: Seq[ExportsDeclaration],
-    parsedNotification: Seq[ParsedNotification],
-    unparsedNotification: Seq[UnparsedNotification]
+    parsedNotifications: Seq[ParsedNotification],
+    unparsedNotifications: Seq[UnparsedNotification]
   ): Future[Seq[Long]] =
     for {
+      unparsedNotificationRemoved <- removeUnparsedNotifications(unparsedNotifications, session)
+      notificationsRemoved <- removeParsedNotifications(parsedNotifications, session)
+      declarationsRemoved <- removeDeclarations(declarations, session)
       submissionsRemoved <- removeSubmissions(submissions, session)
-      declarationsRemoved <- removeDeclarations(declarations: Seq[ExportsDeclaration], session)
-      notificationsRemoved <- removeParsedNotifications(parsedNotification, session)
-      unparsedNotificationRemoved <- removeUnparsedNotifications(unparsedNotification, session)
     } yield Seq(submissionsRemoved, declarationsRemoved, notificationsRemoved, unparsedNotificationRemoved)
 
   private def removeSubmissions(submissions: Seq[Submission], session: ClientSession): Future[Long] = {

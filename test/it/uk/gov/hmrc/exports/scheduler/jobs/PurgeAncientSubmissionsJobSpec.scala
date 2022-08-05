@@ -51,19 +51,27 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
             actionIds = Seq(actionIds(4), actionIds(5), actionIds(6), actionIds(7)),
             uuid = uuids(1)
           ),
-          submission(latestEnhancedStatus = CANCELLED, actionIds = Seq(actionIds(8), actionIds(9), actionIds(10), actionIds(11)), uuid = uuids(2))
+          submission(latestEnhancedStatus = CANCELLED, actionIds = Seq(actionIds(8), actionIds(9), actionIds(10), actionIds(11)), uuid = uuids(2)),
+          submission(actionIds = Seq(actionIds(12), actionIds(13), actionIds(14), actionIds(15)), uuid = uuids(3))
         )
         val declarations: List[Document] = List(
           Document.parse(Json.stringify(Json.toJson(aDeclaration(withId(uuids.head), withUpdatedDateTime())))),
           Document.parse(Json.stringify(Json.toJson(aDeclaration(withId(uuids(1)), withUpdatedDateTime())))),
-          Document.parse(Json.stringify(Json.toJson(aDeclaration(withId(uuids(2)), withUpdatedDateTime()))))
+          Document.parse(Json.stringify(Json.toJson(aDeclaration(withId(uuids(2)), withUpdatedDateTime())))),
+          Document.parse(Json.stringify(Json.toJson(aDeclaration(withId(uuids(3)), withUpdatedDateTime()))))
         )
         val notifications = List(
           notification(unparsedNotificationId = unparsedNotificationIds.head, actionId = actionIds.head),
           notification(unparsedNotificationId = unparsedNotificationIds(1), actionId = actionIds(1)),
-          notification(unparsedNotificationId = unparsedNotificationIds(2), actionId = actionIds(2))
+          notification(unparsedNotificationId = unparsedNotificationIds(2), actionId = actionIds(2)),
+          notification(unparsedNotificationId = unparsedNotificationIds(3), actionId = actionIds(3))
         )
-        val unparsedNotifications: List[Document] = List(unparsedNotification(unparsedNotificationIds.head, actionIds.head))
+        val unparsedNotifications: List[Document] = List(
+          unparsedNotification(unparsedNotificationIds.head, actionIds.head),
+          unparsedNotification(unparsedNotificationIds(1), actionIds(1)),
+          unparsedNotification(unparsedNotificationIds(2), actionIds(2)),
+          unparsedNotification(unparsedNotificationIds(3), actionIds(3))
+        )
 
         prepareCollection(submissionCollection, submissions) mustBe true
         prepareCollection(declarationCollection, declarations) mustBe true
@@ -112,6 +120,7 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
         prepareCollection(submissionCollection, submissions) mustBe true
         prepareCollection(declarationCollection, declarations) mustBe true
         prepareCollection(notificationsCollection, notifications) mustBe true
+        prepareCollection(unparsedNotificationCollection, unparsedNotifications) mustBe true
 
         whenReady(testJob.execute()) { _ =>
           submissionCollection.countDocuments() mustBe submissions.size
@@ -145,6 +154,7 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
         prepareCollection(submissionCollection, submissions) mustBe true
         prepareCollection(declarationCollection, declarations) mustBe true
         prepareCollection(notificationsCollection, notifications) mustBe true
+        prepareCollection(unparsedNotificationCollection, unparsedNotifications) mustBe true
 
         whenReady(testJob.execute()) { _ =>
           submissionCollection.countDocuments() mustBe submissions.size
@@ -176,7 +186,11 @@ object PurgeAncientSubmissionsJobSpec {
     "1b5ef91c-a62a-4337-b51a-750b175fe6d1",
     "2b5ef91c-a62a-4337-b51a-750b175fe6d1",
     "3b5ef91c-a62a-4337-b51a-750b175fe6d1",
-    "4b5ef91c-a62a-4337-b51a-750b175fe6d1"
+    "4b5ef91c-a62a-4337-b51a-750b175fe6d1",
+    "5b5ef91c-a62a-4337-b51a-750b175fe6d1",
+    "6b5ef91c-a62a-4337-b51a-750b175fe6d1",
+    "7b5ef91c-a62a-4337-b51a-750b175fe6d1",
+    "8b5ef91c-a62a-4337-b51a-750b175fe6d1"
   )
   private val unparsedNotificationIds = Seq(
     "1a429490-8688-48ec-bdca-8d6f48c5ad5f",
@@ -193,7 +207,6 @@ object PurgeAncientSubmissionsJobSpec {
   val GOODS_HAVE_EXITED = "GOODS_HAVE_EXITED"
   val DECLARATION_HANDLED_EXTERNALLY = "DECLARATION_HANDLED_EXTERNALLY"
   val CANCELLED = "CANCELLED"
-  val REJECTED = "REJECTED"
 
   def submission(
     latestEnhancedStatus: String = GOODS_HAVE_EXITED,

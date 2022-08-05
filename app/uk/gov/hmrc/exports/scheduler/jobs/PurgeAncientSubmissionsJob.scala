@@ -28,8 +28,6 @@ import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification,
 import uk.gov.hmrc.exports.repositories._
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.mongo.ExportsClient
-import uk.gov.hmrc.mongo.workitem.WorkItem
-import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
 
 import java.time._
 import javax.inject.{Inject, Singleton}
@@ -69,20 +67,19 @@ class PurgeAncientSubmissionsJob @Inject() (
   private val expiryDate = Codecs.toBson(ZonedDateTime.now(clock).minusDays(180))
 
   private val latestStatusLookup =
-    or(equal(latestStatus, "GOODS_HAVE_EXITED"), equal(latestStatus, "DECLARATION_HANDLED_EXTERNALLY"), equal(latestStatus, "CANCELLED"))
+    in(latestStatus, List("GOODS_HAVE_EXITED", "DECLARATION_HANDLED_EXTERNALLY", "CANCELLED"): _*)
 
   private val olderThanDate = lte(statusLastUpdated, expiryDate)
 
   override def execute(): Future[Unit] = {
 
     implicit val formatNotification: Format[ParsedNotification] = ParsedNotification.format
-    implicit val formatWorkItem: Format[WorkItem[UnparsedNotification]] = WorkItem.workItemRestFormat(UnparsedNotification.format)
     import ExportsDeclaration.Mongo._
 
     val submissions: List[Submission] = submissionCollection
       .find(and(olderThanDate, latestStatusLookup))
       .asScala
-      .flatMap {
+      .map { document =>
         parseJsonFromDocument[Submission]
       }
       .toList
@@ -100,7 +97,7 @@ class PurgeAncientSubmissionsJob @Inject() (
     logger.info(s"Declarations found linked to submissions: ${declarations.size}")
 
     val parsedNotifications: List[ParsedNotification] = notificationCollection
-      .find(in("actionId", submissions.flatMap(_.actions.filter(_.requestType == SubmissionRequest).map(_.id)): _*))
+      .find(in("actionId", submissions.flatMap(_.actions.map(_.id)): _*))
       .asScala
       .flatMap {
         parseJsonFromDocument[ParsedNotification]
