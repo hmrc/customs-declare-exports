@@ -1,39 +1,16 @@
 package uk.gov.hmrc.exports.scheduler.jobs
 
-import com.kenshoo.play.metrics.PlayModule
-import com.mongodb.client.MongoCollection
 import org.bson.Document
-import play.api.Application
-import play.api.inject.bind
-import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.exports.base.{IntegrationTestPurgeSubmissionsToolSpec, TestExportsClient}
+import play.api.libs.json.Json
+import uk.gov.hmrc.exports.base.IntegrationTestPurgeSubmissionsToolSpec
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo._
-import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
-import uk.gov.hmrc.exports.mongo.ExportsClient
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
-import uk.gov.hmrc.mongo.workitem.{WorkItem, WorkItemFields}
-
-import scala.collection.JavaConverters._
 
 class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsToolSpec with ExportsDeclarationBuilder {
 
   import PurgeAncientSubmissionsJobSpec._
 
-  implicit lazy val application: Application = GuiceApplicationBuilder()
-    .disable[PlayModule]
-    .overrides(bind[ExportsClient].to(TestExportsClient))
-    .build
-
-  private val testJob = application.injector.instanceOf[PurgeAncientSubmissionsJob]
-
-  val submissionCollection: MongoCollection[Document] = testJob.db.getCollection("submissions")
-  val declarationCollection: MongoCollection[Document] = testJob.db.getCollection("declarations")
-  val notificationsCollection: MongoCollection[Document] = testJob.db.getCollection("notifications")
-  val unparsedNotificationCollection: MongoCollection[Document] = testJob.db.getCollection("unparsedNotifications")
-
-  private def prepareCollection(collection: MongoCollection[Document], records: List[Document]): Boolean =
-    removeAll(collection).isValidLong && collection.insertMany(records.asJava).wasAcknowledged
+  val testJob: PurgeAncientSubmissionsJob = application.injector.instanceOf[PurgeAncientSubmissionsJob]
 
   "PurgeAncientSubmissionsJob" should {
 

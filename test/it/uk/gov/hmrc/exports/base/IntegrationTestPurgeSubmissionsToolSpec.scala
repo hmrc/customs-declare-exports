@@ -1,23 +1,44 @@
 package uk.gov.hmrc.exports.base
 
-import com.mongodb.client.{MongoClient, MongoClients, MongoCollection}
+import com.kenshoo.play.metrics.PlayModule
+import com.mongodb.client.MongoCollection
 import org.bson.Document
 import org.mongodb.scala.bson.BsonDocument
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.{Configuration, Environment}
-import uk.gov.hmrc.exports.config.AppConfig
+import play.api.Application
+import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.mongo.ExportsClient
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.exports.scheduler.jobs.PurgeAncientSubmissionsJob
+
+import scala.collection.JavaConverters._
 
 trait IntegrationTestPurgeSubmissionsToolSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSuite {
 
+  val testJob: PurgeAncientSubmissionsJob
+
+  implicit val application: Application = GuiceApplicationBuilder()
+    .disable[PlayModule]
+    .overrides(bind[ExportsClient].to(TestExportsClient))
+    .build
+
+  lazy val submissionCollection: MongoCollection[Document] = testJob.db.getCollection("submissions")
+  lazy val declarationCollection: MongoCollection[Document] = testJob.db.getCollection("declarations")
+  lazy val notificationsCollection: MongoCollection[Document] = testJob.db.getCollection("notifications")
+  lazy val unparsedNotificationCollection: MongoCollection[Document] = testJob.db.getCollection("unparsedNotifications")
+
+  protected def prepareCollection(collection: MongoCollection[Document], records: List[Document]): Boolean =
+    removeAll(collection).isValidLong && collection.insertMany(records.asJava).wasAcknowledged
+
   override def afterAll() {
-    TestExportsClient.mongoClient.close
+    removeAll(submissionCollection)
+    removeAll(declarationCollection)
+    removeAll(notificationsCollection)
+    removeAll(unparsedNotificationCollection)
+    TestExportsClient.mongoClient.close()
     super.afterAll()
   }
 
-  def getCollection(collectionId: String): MongoCollection[Document] = TestExportsClient.db.getCollection(collectionId)
-
-  def removeAll(collection: MongoCollection[Document]): Long = collection.deleteMany(BsonDocument()).getDeletedCount
+  private def removeAll(collection: MongoCollection[Document]): Long = collection.deleteMany(BsonDocument()).getDeletedCount
 
 }
