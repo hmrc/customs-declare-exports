@@ -79,7 +79,7 @@ class PurgeAncientSubmissionsJob @Inject() (
     val submissions: List[Submission] = submissionCollection
       .find(and(olderThanDate, latestStatusLookup))
       .asScala
-      .map { document =>
+      .flatMap {
         parseJsonFromDocument[Submission]
       }
       .toList
