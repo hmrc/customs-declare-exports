@@ -29,7 +29,8 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PurgeAncientSubmissionsJob @Inject() (appConfig: AppConfig,
+class PurgeAncientSubmissionsJob @Inject() (
+  appConfig: AppConfig,
   submissionRepository: SubmissionRepository,
   transactionalOps: PurgeSubmissionsTransactionalOps
 )(implicit ec: ExecutionContext)
