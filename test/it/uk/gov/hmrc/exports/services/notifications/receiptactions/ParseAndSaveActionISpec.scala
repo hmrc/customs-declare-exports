@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.UNKNOWN
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionStatus}
-import uk.gov.hmrc.exports.repositories.{UpdateSubmissionsTransactionalOps, ParsedNotificationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, UpdateSubmissionsTransactionalOps}
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
 import uk.gov.hmrc.exports.services.notifications.receiptactions.ParseAndSaveActionISpec._
 
