@@ -16,13 +16,10 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import org.bson.conversions.Bson
 import org.mongodb.scala.ClientSession
 import org.mongodb.scala.model.Filters
 import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.transaction.{TransactionConfiguration, Transactions}
@@ -45,31 +42,19 @@ class PurgeSubmissionsTransactionalOps @Inject() (
 
   protected lazy val nonTransactionalSession = mongoComponent.client.startSession().toFuture
 
-  def removeSubmissionAndNotifications(
-    submissions: Seq[Submission],
-    declarations: Seq[ExportsDeclaration],
-    parsedNotification: Seq[ParsedNotification],
-    unparsedNotification: Seq[UnparsedNotification]
-  ): Future[Seq[Long]] =
+  def removeSubmissionAndNotifications(submissions: Seq[Submission]): Future[Seq[Long]] =
     if (appConfig.useTransactionalDBOps)
-      withSessionAndTransaction[Seq[Long]](startRemoveOp(_, submissions, declarations, parsedNotification, unparsedNotification)).recover {
-        case e: Exception =>
-          logger.warn(s"There was an error while writing to the DB => ${e.getMessage}", e)
-          Seq.empty
+      withSessionAndTransaction[Seq[Long]](startRemovals(_, submissions)).recover { case e: Exception =>
+        logger.warn(s"There was an error while writing to the DB => ${e.getMessage}", e)
+        Seq.empty
       }
-    else nonTransactionalSession.flatMap(startRemoveOp(_, submissions, declarations, parsedNotification, unparsedNotification))
+    else nonTransactionalSession.flatMap(startRemovals(_, submissions))
 
-  private def startRemoveOp(
-    session: ClientSession,
-    submissions: Seq[Submission],
-    declarations: Seq[ExportsDeclaration],
-    parsedNotifications: Seq[ParsedNotification],
-    unparsedNotifications: Seq[UnparsedNotification]
-  ): Future[Seq[Long]] =
+  private def startRemovals(session: ClientSession, submissions: Seq[Submission]): Future[Seq[Long]] =
     for {
-      unparsedNotificationRemoved <- removeUnparsedNotifications(unparsedNotifications, session)
-      notificationsRemoved <- removeParsedNotifications(parsedNotifications, session)
-      declarationsRemoved <- removeDeclarations(declarations, session)
+      unparsedNotificationRemoved <- removeUnparsedNotifications(submissions, session)
+      notificationsRemoved <- removeParsedNotifications(submissions, session)
+      declarationsRemoved <- removeDeclarations(submissions, session)
       submissionsRemoved <- removeSubmissions(submissions, session)
     } yield Seq(submissionsRemoved, declarationsRemoved, notificationsRemoved, unparsedNotificationRemoved)
 
@@ -79,25 +64,28 @@ class PurgeSubmissionsTransactionalOps @Inject() (
     submissionRepository.removeEvery(session, filter)
   }
 
-  private def removeDeclarations(declarations: Seq[ExportsDeclaration], session: ClientSession): Future[Long] = {
-    val filter = Filters.in("id", declarations.map(_.id): _*)
+  private def removeDeclarations(submissions: Seq[Submission], session: ClientSession): Future[Long] = {
+    val filter = Filters.in("id", submissions.map(_.uuid): _*)
     logger.info(s"Attempting to remove declarations: $filter")
     declarationRepository.removeEvery(session, filter)
   }
 
-  private def removeParsedNotifications(parsedNotification: Seq[ParsedNotification], session: ClientSession): Future[Long] = {
-    val filter = Filters.in("actionId", parsedNotification.map(_.actionId): _*)
+  private def removeParsedNotifications(submissions: Seq[Submission], session: ClientSession): Future[Long] = {
+    val filter = Filters.in("actionId", submissions.flatMap(_.actions.map(_.id)): _*)
     logger.info(s"Attempting to remove notifications: $filter")
     notificationRepository.removeEvery(session, filter)
   }
 
-  private def removeUnparsedNotifications(unparsedNotification: Seq[UnparsedNotification], session: ClientSession): Future[Long] = {
-    val filter = Filters.in("item.id", unparsedNotification.map(_.id.toString): _*)
-    logger.info(s"Attempting to remove unparsed notifications: $filter")
-    unparsedNotificationRespository.collection
-      .deleteMany(session, filter)
-      .toFuture
-      .map(_.getDeletedCount)
-  }
+  private def removeUnparsedNotifications(submissions: Seq[Submission], session: ClientSession): Future[Long] =
+    notificationRepository.findNotifications(submissions.flatMap(_.actions.map(_.id))).flatMap { notifications =>
+      val filter = Filters.in("item.id", notifications.map(_.unparsedNotificationId.toString): _*)
+      logger.info(s"Attempting to remove unparsed notifications: $filter")
+
+      unparsedNotificationRespository.collection
+        .deleteMany(session, filter)
+        .toFuture
+        .map(_.getDeletedCount)
+
+    }
 
 }

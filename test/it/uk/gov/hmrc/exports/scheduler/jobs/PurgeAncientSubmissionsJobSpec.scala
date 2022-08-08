@@ -1,10 +1,17 @@
 package uk.gov.hmrc.exports.scheduler.jobs
 
-import org.bson.Document
-import play.api.libs.json.Json
 import uk.gov.hmrc.exports.base.IntegrationTestPurgeSubmissionsToolSpec
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.Mongo._
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification, UnparsedNotification}
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
+import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
+import uk.gov.hmrc.mongo.workitem.ProcessingStatus
+
+import java.time.ZonedDateTime
+import java.util.UUID
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Success
 
 class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsToolSpec with ExportsDeclarationBuilder {
 
@@ -17,25 +24,37 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
     "remove all records" when {
       "'submission.statusLastUpdated' is 180 days ago" in {
 
-        val submissions: List[Document] = List(
+        val submissions: List[Submission] = List(
           submission(
-            latestEnhancedStatus = GOODS_HAVE_EXITED,
+            latestEnhancedStatus = EnhancedStatus.GOODS_HAVE_EXITED,
             actionIds = Seq(actionIds.head, actionIds(1), actionIds(2), actionIds(3)),
-            uuid = uuids.head
+            uuid = uuids.head,
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan
           ),
           submission(
-            latestEnhancedStatus = DECLARATION_HANDLED_EXTERNALLY,
+            latestEnhancedStatus = EnhancedStatus.DECLARATION_HANDLED_EXTERNALLY,
             actionIds = Seq(actionIds(4), actionIds(5), actionIds(6), actionIds(7)),
-            uuid = uuids(1)
+            uuid = uuids(1),
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan
           ),
-          submission(latestEnhancedStatus = CANCELLED, actionIds = Seq(actionIds(8), actionIds(9), actionIds(10), actionIds(11)), uuid = uuids(2)),
-          submission(actionIds = Seq(actionIds(12), actionIds(13), actionIds(14), actionIds(15)), uuid = uuids(3))
+          submission(
+            latestEnhancedStatus = EnhancedStatus.CANCELLED,
+            actionIds = Seq(actionIds(8), actionIds(9), actionIds(10), actionIds(11)),
+            uuid = uuids(2),
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan
+          ),
+          submission(
+            latestEnhancedStatus = EnhancedStatus.GOODS_HAVE_EXITED,
+            actionIds = Seq(actionIds(12), actionIds(13), actionIds(14), actionIds(15)),
+            uuid = uuids(3),
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan
+          )
         )
-        val declarations: List[Document] = List(
-          Document.parse(Json.stringify(Json.toJson(aDeclaration(withId(uuids.head), withUpdatedDateTime())))),
-          Document.parse(Json.stringify(Json.toJson(aDeclaration(withId(uuids(1)), withUpdatedDateTime())))),
-          Document.parse(Json.stringify(Json.toJson(aDeclaration(withId(uuids(2)), withUpdatedDateTime())))),
-          Document.parse(Json.stringify(Json.toJson(aDeclaration(withId(uuids(3)), withUpdatedDateTime()))))
+        val declarations: List[ExportsDeclaration] = List(
+          aDeclaration(withId(uuids.head), withUpdatedDateTime()),
+          aDeclaration(withId(uuids(1)), withUpdatedDateTime()),
+          aDeclaration(withId(uuids(2)), withUpdatedDateTime()),
+          aDeclaration(withId(uuids(3)), withUpdatedDateTime())
         )
         val notifications = List(
           notification(unparsedNotificationId = unparsedNotificationIds.head, actionId = actionIds.head),
@@ -43,101 +62,126 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
           notification(unparsedNotificationId = unparsedNotificationIds(2), actionId = actionIds(2)),
           notification(unparsedNotificationId = unparsedNotificationIds(3), actionId = actionIds(3))
         )
-        val unparsedNotifications: List[Document] = List(
+        val unparsedNotifications: List[UnparsedNotification] = List(
           unparsedNotification(unparsedNotificationIds.head, actionIds.head),
           unparsedNotification(unparsedNotificationIds(1), actionIds(1)),
           unparsedNotification(unparsedNotificationIds(2), actionIds(2)),
           unparsedNotification(unparsedNotificationIds(3), actionIds(3))
         )
 
-        prepareCollection(submissionCollection, submissions) mustBe true
-        prepareCollection(declarationCollection, declarations) mustBe true
-        prepareCollection(notificationsCollection, notifications) mustBe true
-        prepareCollection(unparsedNotificationCollection, unparsedNotifications) mustBe true
+        whenReady {
 
-        whenReady(testJob.execute()) { _ =>
-          submissionCollection.countDocuments() mustBe 0
-          notificationsCollection.countDocuments() mustBe 0
-          declarationCollection.countDocuments() mustBe 0
-          unparsedNotificationCollection.countDocuments() mustBe 0
+          for {
+            _ <- submissionRepository.bulkInsert(submissions)
+            _ <- declarationRepository.bulkInsert(declarations)
+            _ <- notificationRepository.bulkInsert(notifications)
+            _ <- unparsedNotificationRepository.pushNewBatch(unparsedNotifications)
+            _ <- testJob.execute()
+            sub <- submissionRepository.findAll()
+            not <- notificationRepository.findAll()
+            dec <- declarationRepository.findAll()
+            unt <- unparsedNotificationRepository.count(ProcessingStatus.ToDo)
+          } yield (sub.size, not.size, dec.size, unt)
+
+        } { case (submission, declarations, notifications, unparsed) =>
+          submission mustBe 0
+          declarations mustBe 0
+          notifications mustBe 0
+          unparsed mustBe 0
         }
 
       }
 
-    }
+      "remove zero records" when {
+        "'submission.statusLastUpdated' is less than than 180 days ago" in {
 
-    "remove zero records" when {
-      "'submission.statusLastUpdated' is less than than 180 days ago" in {
-
-        val submissions: List[Document] = List(
-          submission(
-            enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
-            latestEnhancedStatus = GOODS_HAVE_EXITED,
-            actionIds = Seq(actionIds.head, actionIds(1), actionIds(2), actionIds(3)),
-            uuid = uuids.head
-          ),
-          submission(
-            enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
-            latestEnhancedStatus = DECLARATION_HANDLED_EXTERNALLY,
-            actionIds = Seq(actionIds(4), actionIds(5), actionIds(6), actionIds(7)),
-            uuid = uuids(1)
-          ),
-          submission(
-            enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
-            latestEnhancedStatus = CANCELLED,
-            actionIds = Seq(actionIds(8), actionIds(9), actionIds(10), actionIds(11)),
-            uuid = uuids(2)
+          val submissions: List[Submission] = List(
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
+              latestEnhancedStatus = EnhancedStatus.GOODS_HAVE_EXITED,
+              actionIds = Seq(actionIds.head, actionIds(1), actionIds(2), actionIds(3)),
+              uuid = uuids.head
+            ),
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
+              latestEnhancedStatus = EnhancedStatus.DECLARATION_HANDLED_EXTERNALLY,
+              actionIds = Seq(actionIds(4), actionIds(5), actionIds(6), actionIds(7)),
+              uuid = uuids(1)
+            ),
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
+              latestEnhancedStatus = EnhancedStatus.CANCELLED,
+              actionIds = Seq(actionIds(8), actionIds(9), actionIds(10), actionIds(11)),
+              uuid = uuids(2)
+            )
           )
-        )
 
-        val declarations: List[Document] = List(Document.parse(Json.stringify(Json.toJson(aDeclaration(withId(uuids.head))))))
-        val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds.head, actionId = actionIds.head))
-        val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds.head, actionIds.head))
+          val declarations: List[ExportsDeclaration] = List(aDeclaration(withId(uuids.head)))
+          val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds.head, actionId = actionIds.head))
+          val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds.head, actionIds.head))
 
-        prepareCollection(submissionCollection, submissions) mustBe true
-        prepareCollection(declarationCollection, declarations) mustBe true
-        prepareCollection(notificationsCollection, notifications) mustBe true
-        prepareCollection(unparsedNotificationCollection, unparsedNotifications) mustBe true
+          whenReady {
 
-        whenReady(testJob.execute()) { _ =>
-          submissionCollection.countDocuments() mustBe submissions.size
-          declarationCollection.countDocuments() mustBe declarations.size
-          notificationsCollection.countDocuments() mustBe notifications.size
-          unparsedNotificationCollection.countDocuments() mustBe notifications.size
+            for {
+              _ <- submissionRepository.bulkInsert(submissions)
+              _ <- declarationRepository.bulkInsert(declarations)
+              _ <- notificationRepository.bulkInsert(notifications)
+              _ <- unparsedNotificationRepository.pushNewBatch(unparsedNotifications)
+              _ <- testJob.execute()
+              sub <- submissionRepository.findAll()
+              not <- notificationRepository.findAll()
+              dec <- declarationRepository.findAll()
+              unt <- unparsedNotificationRepository.count(ProcessingStatus.ToDo)
+            } yield (sub.size, not.size, dec.size, unt)
+          } { case (subCount, decCount, notCount, unCount) =>
+            subCount mustBe submissions.size
+            decCount mustBe declarations.size
+            notCount mustBe notifications.size
+            unCount mustBe unparsedNotifications.size
+          }
+
         }
 
-      }
+        "'submission.latestEnhancedStatus' is other" in {
 
-      "'submission.latestEnhancedStatus' is other" in {
-
-        val submissions: List[Document] = List(
-          submission(
-            enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
-            latestEnhancedStatus = "OTHER",
-            actionIds = Seq(actionIds.head, actionIds(1), actionIds(2), actionIds(3)),
-            uuid = uuids.head
-          ),
-          submission(
-            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
-            latestEnhancedStatus = "OTHER",
-            actionIds = Seq(actionIds(4), actionIds(5), actionIds(6), actionIds(7)),
-            uuid = uuids.tail.head
+          val submissions: List[Submission] = List(
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
+              latestEnhancedStatus = EnhancedStatus.PENDING,
+              actionIds = Seq(actionIds.head, actionIds(1), actionIds(2), actionIds(3)),
+              uuid = uuids.head
+            ),
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+              latestEnhancedStatus = EnhancedStatus.PENDING,
+              actionIds = Seq(actionIds(4), actionIds(5), actionIds(6), actionIds(7)),
+              uuid = uuids.tail.head
+            )
           )
-        )
-        val declarations: List[Document] = List(Document.parse(Json.stringify(Json.toJson(aDeclaration(withId(uuids.head))))))
-        val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds.head, actionId = actionIds.head))
-        val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds.head, actionIds.head))
+          val declarations: List[ExportsDeclaration] = List(aDeclaration(withId(uuids.head)))
+          val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds.head, actionId = actionIds.head))
+          val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds.head, actionIds.head))
 
-        prepareCollection(submissionCollection, submissions) mustBe true
-        prepareCollection(declarationCollection, declarations) mustBe true
-        prepareCollection(notificationsCollection, notifications) mustBe true
-        prepareCollection(unparsedNotificationCollection, unparsedNotifications) mustBe true
+          whenReady {
 
-        whenReady(testJob.execute()) { _ =>
-          submissionCollection.countDocuments() mustBe submissions.size
-          declarationCollection.countDocuments() mustBe declarations.size
-          notificationsCollection.countDocuments() mustBe notifications.size
-          unparsedNotificationCollection.countDocuments() mustBe notifications.size
+            for {
+              _ <- submissionRepository.bulkInsert(submissions)
+              _ <- declarationRepository.bulkInsert(declarations)
+              _ <- notificationRepository.bulkInsert(notifications)
+              _ <- unparsedNotificationRepository.pushNewBatch(unparsedNotifications)
+              _ <- testJob.execute()
+              sub <- submissionRepository.findAll()
+              not <- notificationRepository.findAll()
+              dec <- declarationRepository.findAll()
+              unt <- unparsedNotificationRepository.count(ProcessingStatus.ToDo)
+            } yield (sub.size, not.size, dec.size, unt)
+          } { case (subCount, decCount, notCount, unCount) =>
+            subCount mustBe submissions.size
+            decCount mustBe declarations.size
+            notCount mustBe notifications.size
+            unCount mustBe unparsedNotifications.size
+          }
+
         }
 
       }
@@ -185,157 +229,27 @@ object PurgeAncientSubmissionsJobSpec {
   val DECLARATION_HANDLED_EXTERNALLY = "DECLARATION_HANDLED_EXTERNALLY"
   val CANCELLED = "CANCELLED"
 
-  def submission(
-    latestEnhancedStatus: String = GOODS_HAVE_EXITED,
-    enhancedStatusLastUpdated: String = enhancedStatusLastUpdatedOlderThan,
-    actionIds: Seq[String],
-    uuid: String
-  ): Document = Document.parse(s"""
-      |{
-      |    "uuid" : "$uuid",
-      |    "eori" : "XL165944621471200",
-      |    "lrn" : "XzmBvLMY6ZfrZL9lxu",
-      |    "ducr" : "6TS321341891866-112L6H21L",
-      |    "actions" : [
-      |        {
-      |            "id" : "${actionIds.head}",
-      |            "requestType" : "SubmissionRequest",
-      |            "requestTimestamp" : "2022-08-02T13:17:04.102Z[UTC]",
-      |            "notifications" : [
-      |                {
-      |                    "notificationId" : "c5429490-8688-48ec-bdca-8d6f48c5ad5f",
-      |                    "dateTimeIssued" : "2022-08-02T13:20:06Z[UTC]",
-      |                    "enhancedStatus" : "GOODS_HAVE_EXITED"
-      |                },
-      |                {
-      |                    "notificationId" : "c5429490-8688-48ec-bdca-8d6f48c5ad5f",
-      |                    "dateTimeIssued" : "2022-08-02T13:19:06Z[UTC]",
-      |                    "enhancedStatus" : "CLEARED"
-      |                },
-      |                {
-      |                    "notificationId" : "c5429490-8688-48ec-bdca-8d6f48c5ad5f",
-      |                    "dateTimeIssued" : "2022-08-02T13:18:06Z[UTC]",
-      |                    "enhancedStatus" : "GOODS_ARRIVED_MESSAGE"
-      |                },
-      |                {
-      |                    "notificationId" : "c5429490-8688-48ec-bdca-8d6f48c5ad5f",
-      |                    "dateTimeIssued" : "2022-08-02T13:17:06Z[UTC]",
-      |                    "enhancedStatus" : "RECEIVED"
-      |                }
-      |            ]
-      |        },
-      |        {
-      |            "id" : "${actionIds(1)}",
-      |            "requestType" : "SubmissionRequest",
-      |            "requestTimestamp" : "2022-08-02T13:17:04.102Z[UTC]",
-      |            "notifications" : [
-      |                {
-      |                    "notificationId" : "c5429490-8688-48ec-bdca-8d6f48c5ad5f",
-      |                    "dateTimeIssued" : "2022-08-02T13:20:06Z[UTC]",
-      |                    "enhancedStatus" : "GOODS_HAVE_EXITED"
-      |                },
-      |                {
-      |                    "notificationId" : "c5429490-8688-48ec-bdca-8d6f48c5ad5f",
-      |                    "dateTimeIssued" : "2022-08-02T13:19:06Z[UTC]",
-      |                    "enhancedStatus" : "CLEARED"
-      |                },
-      |                {
-      |                    "notificationId" : "c5429490-8688-48ec-bdca-8d6f48c5ad5f",
-      |                    "dateTimeIssued" : "2022-08-02T13:18:06Z[UTC]",
-      |                    "enhancedStatus" : "GOODS_ARRIVED_MESSAGE"
-      |                },
-      |                {
-      |                    "notificationId" : "c5429490-8688-48ec-bdca-8d6f48c5ad5f",
-      |                    "dateTimeIssued" : "2022-08-02T13:17:06Z[UTC]",
-      |                    "enhancedStatus" : "RECEIVED"
-      |                }
-      |            ]
-      |        },
-      |        {
-      |            "id" : "${actionIds(2)}",
-      |            "requestType" : "SubmissionRequest",
-      |            "requestTimestamp" : "2022-08-02T13:17:04.102Z[UTC]",
-      |            "notifications" : [
-      |                {
-      |                    "notificationId" : "c5429490-8688-48ec-bdca-8d6f48c5ad5f",
-      |                    "dateTimeIssued" : "2022-08-02T13:20:06Z[UTC]",
-      |                    "enhancedStatus" : "GOODS_HAVE_EXITED"
-      |                },
-      |                {
-      |                    "notificationId" : "c5429490-8688-48ec-bdca-8d6f48c5ad5f",
-      |                    "dateTimeIssued" : "2022-08-02T13:19:06Z[UTC]",
-      |                    "enhancedStatus" : "CLEARED"
-      |                },
-      |                {
-      |                    "notificationId" : "c5429490-8688-48ec-bdca-8d6f48c5ad5f",
-      |                    "dateTimeIssued" : "2022-08-02T13:18:06Z[UTC]",
-      |                    "enhancedStatus" : "GOODS_ARRIVED_MESSAGE"
-      |                },
-      |                {
-      |                    "notificationId" : "c5429490-8688-48ec-bdca-8d6f48c5ad5f",
-      |                    "dateTimeIssued" : "2022-08-02T13:17:06Z[UTC]",
-      |                    "enhancedStatus" : "RECEIVED"
-      |                }
-      |            ]
-      |        },
-      |        {
-      |            "id" : "${actionIds(3)}",
-      |            "requestType" : "SubmissionRequest",
-      |            "requestTimestamp" : "2022-08-02T13:17:04.102Z[UTC]",
-      |            "notifications" : [
-      |                {
-      |                    "notificationId" : "c5429490-8688-48ec-bdca-8d6f48c5ad5f",
-      |                    "dateTimeIssued" : "2022-08-02T13:20:06Z[UTC]",
-      |                    "enhancedStatus" : "GOODS_HAVE_EXITED"
-      |                },
-      |                {
-      |                    "notificationId" : "c5429490-8688-48ec-bdca-8d6f48c5ad5f",
-      |                    "dateTimeIssued" : "2022-08-02T13:19:06Z[UTC]",
-      |                    "enhancedStatus" : "CLEARED"
-      |                },
-      |                {
-      |                    "notificationId" : "c5429490-8688-48ec-bdca-8d6f48c5ad5f",
-      |                    "dateTimeIssued" : "2022-08-02T13:18:06Z[UTC]",
-      |                    "enhancedStatus" : "GOODS_ARRIVED_MESSAGE"
-      |                },
-      |                {
-      |                    "notificationId" : "c5429490-8688-48ec-bdca-8d6f48c5ad5f",
-      |                    "dateTimeIssued" : "2022-08-02T13:17:06Z[UTC]",
-      |                    "enhancedStatus" : "RECEIVED"
-      |                }
-      |            ]
-      |        },
-      |    ],
-      |    "enhancedStatusLastUpdated" : "$enhancedStatusLastUpdated",
-      |    "latestEnhancedStatus" : "$latestEnhancedStatus",
-      |    "mrn" : "22GB1168DI14797408"
-      |}
-      |""".stripMargin)
+  def submission(latestEnhancedStatus: EnhancedStatus, enhancedStatusLastUpdated: String, actionIds: Seq[String], uuid: String): Submission =
+    Submission(eori = "XL165944621471200", lrn = "XzmBvLMY6ZfrZL9lxu", ducr = "6TS321341891866-112L6H21L").copy(
+      uuid = uuid,
+      latestEnhancedStatus = Some(latestEnhancedStatus),
+      enhancedStatusLastUpdated = Some(ZonedDateTime.parse(enhancedStatusLastUpdated)),
+      actions = actionIds.map(id => Action(id = id, SubmissionRequest))
+    )
 
-  def notification(unparsedNotificationId: String, actionId: String): Document = Document.parse(s"""
-      |{
-      |    "unparsedNotificationId" : "$unparsedNotificationId",
-      |    "actionId" : "$actionId",
-      |    "details" : {
-      |        "mrn" : "22GB1168DI14797408",
-      |        "dateTimeIssued" : "2022-08-02T13:20:06Z[UTC]",
-      |        "status" : "GOODS_HAVE_EXITED_THE_COMMUNITY",
-      |        "errors" : []
-      |    }
-      |}
-      |""".stripMargin)
+  def notification(unparsedNotificationId: String, actionId: String): ParsedNotification =
+    ParsedNotification(
+      unparsedNotificationId = UUID.fromString(unparsedNotificationId),
+      actionId = actionId,
+      details = NotificationDetails(
+        "22GB1168DI14797408",
+        ZonedDateTime.parse("2022-08-02T13:20:06Z[UTC]"),
+        SubmissionStatus.GOODS_HAVE_EXITED_THE_COMMUNITY,
+        Seq.empty
+      )
+    )
 
-  def unparsedNotification(unparsedNotificationId: String, actionId: String): Document = Document.parse(s"""
-      |{
-      |    "receivedAt" : "2022-08-03T12:38:59.584Z",
-      |    "updatedAt" : "2022-08-03T12:39:08.100Z",
-      |    "status" : "succeeded",
-      |    "failureCount" : 0,
-      |    "item" : {
-      |        "id" : "$unparsedNotificationId",
-      |        "actionId" : "$actionId",
-      |        "payload" : "payload"
-      |    }
-      |}
-      |""".stripMargin)
+  def unparsedNotification(unparsedNotificationId: String, actionId: String): UnparsedNotification =
+    UnparsedNotification(id = UUID.fromString(unparsedNotificationId), actionId = actionId, payload = "payload")
+
 }
