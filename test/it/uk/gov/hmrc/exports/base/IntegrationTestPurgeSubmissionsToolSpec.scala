@@ -1,11 +1,8 @@
 package uk.gov.hmrc.exports.base
 
-import com.kenshoo.play.metrics.PlayModule
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.BsonDocument
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.repositories.{
   DeclarationRepository,
   ParsedNotificationRepository,
@@ -13,16 +10,12 @@ import uk.gov.hmrc.exports.repositories.{
   UnparsedNotificationWorkItemRepository
 }
 
-trait IntegrationTestPurgeSubmissionsToolSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSuite {
+trait IntegrationTestPurgeSubmissionsToolSpec extends IntegrationTestSpec with GuiceOneAppPerSuite {
 
-  implicit val application: Application = GuiceApplicationBuilder()
-    .disable[PlayModule]
-    .build
-
-  val submissionRepository = application.injector.instanceOf[SubmissionRepository]
-  val declarationRepository = application.injector.instanceOf[DeclarationRepository]
-  val notificationRepository = application.injector.instanceOf[ParsedNotificationRepository]
-  val unparsedNotificationRepository = application.injector.instanceOf[UnparsedNotificationWorkItemRepository]
+  val submissionRepository = app.injector.instanceOf[SubmissionRepository]
+  val declarationRepository = app.injector.instanceOf[DeclarationRepository]
+  val notificationRepository = app.injector.instanceOf[ParsedNotificationRepository]
+  val unparsedNotificationRepository = app.injector.instanceOf[UnparsedNotificationWorkItemRepository]
 
   override def beforeEach(): Unit = {
     removeAll(submissionRepository.collection)

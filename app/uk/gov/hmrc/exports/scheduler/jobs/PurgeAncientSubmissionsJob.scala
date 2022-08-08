@@ -50,7 +50,7 @@ class PurgeAncientSubmissionsJob @Inject() (
   private val expiryDate = Codecs.toBson(ZonedDateTime.now(clock).minusDays(180))
 
   private val latestStatusLookup =
-    in(latestStatus, List("GOODS_HAVE_EXITED", "DECLARATION_HANDLED_EXTERNALLY", "CANCELLED"): _*)
+    in(latestStatus, List("GOODS_HAVE_EXITED", "DECLARATION_HANDLED_EXTERNALLY", "CANCELLED", "EXPIRED_NO_ARRIVAL", "ERRORS"): _*)
 
   private val olderThanDate = lte(statusLastUpdated, expiryDate)
 

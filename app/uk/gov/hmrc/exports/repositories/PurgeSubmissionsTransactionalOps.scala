@@ -65,7 +65,7 @@ class PurgeSubmissionsTransactionalOps @Inject() (
   }
 
   private def removeDeclarations(submissions: Seq[Submission], session: ClientSession): Future[Long] = {
-    val filter = Filters.in("id", submissions.map(_.uuid): _*)
+    val filter = Filters.and(Filters.in("id", submissions.map(_.uuid): _*), Filters.in("eori", submissions.map(_.eori): _*))
     logger.info(s"Attempting to remove declarations: $filter")
     declarationRepository.removeEvery(session, filter)
   }
