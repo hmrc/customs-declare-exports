@@ -28,14 +28,14 @@ import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MigrationsTransactionalOpsISpec extends IntegrationTestSpec {
+class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
 
   private val appConfig = instanceOf[AppConfig]
   private val mongoComponent = instanceOf[MongoComponent]
   private val notificationRepository = instanceOf[ParsedNotificationRepository]
   private val submissionRepository = instanceOf[SubmissionRepository]
 
-  private val transactionalOps = new MigrationsTransactionalOps(mongoComponent, submissionRepository, notificationRepository, appConfig)
+  private val transactionalOps = new UpdateSubmissionsTransactionalOps(mongoComponent, submissionRepository, notificationRepository, appConfig)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
