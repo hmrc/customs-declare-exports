@@ -68,6 +68,11 @@ class AppConfig @Inject() (val configuration: Configuration, val environment: En
     servicesConfig.getDuration("scheduler.purge-draft-declarations.interval").asInstanceOf[FiniteDuration]
   )
 
+  lazy val purgeAncientSubmissions: JobConfig = JobConfig(
+    LocalTime.parse(servicesConfig.getString("scheduler.purge-ancient-submissions.run-time")),
+    servicesConfig.getDuration("scheduler.purge-ancient-submissions.interval").asInstanceOf[FiniteDuration]
+  )
+
   lazy val sendEmailsJobInterval: FiniteDuration = servicesConfig.getDuration("scheduler.send-emails.interval").asInstanceOf[FiniteDuration]
 
   lazy val notificationReattemptInterval: FiniteDuration =

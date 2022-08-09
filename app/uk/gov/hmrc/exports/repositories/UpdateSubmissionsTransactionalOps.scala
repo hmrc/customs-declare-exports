@@ -31,7 +31,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class TransactionalOps @Inject() (
+class UpdateSubmissionsTransactionalOps @Inject() (
   val mongoComponent: MongoComponent,
   submissionRepository: SubmissionRepository,
   notificationRepository: ParsedNotificationRepository,

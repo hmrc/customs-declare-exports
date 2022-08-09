@@ -23,7 +23,7 @@ import org.mockito.invocation.InvocationOnMock
 import testdata.SubmissionTestData.{submission, submission_2, submission_3}
 import testdata.notifications.NotificationTestData.{notification, notification_2, notification_3}
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.repositories.{SubmissionRepository, TransactionalOps}
+import uk.gov.hmrc.exports.repositories.{SubmissionRepository, UpdateSubmissionsTransactionalOps}
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,7 +32,7 @@ import scala.concurrent.Future
 class ParseAndSaveActionSpec extends UnitSpec {
 
   private val submissionRepository = mock[SubmissionRepository]
-  private val transactionalOps = mock[TransactionalOps]
+  private val transactionalOps = mock[UpdateSubmissionsTransactionalOps]
 
   private val parseAndSaveAction = new ParseAndSaveAction(mock[NotificationFactory], submissionRepository, transactionalOps)
 

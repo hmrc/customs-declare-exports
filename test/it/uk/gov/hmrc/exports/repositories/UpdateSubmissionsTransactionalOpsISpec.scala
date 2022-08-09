@@ -28,14 +28,14 @@ import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class TransactionalOpsISpec extends IntegrationTestSpec {
+class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
 
-  private val appConfig = instanceOf[AppConfig]
+  private val appConfig = mock[AppConfig]
   private val mongoComponent = instanceOf[MongoComponent]
   private val notificationRepository = instanceOf[ParsedNotificationRepository]
   private val submissionRepository = instanceOf[SubmissionRepository]
 
-  private val transactionalOps = new TransactionalOps(mongoComponent, submissionRepository, notificationRepository, appConfig)
+  private val transactionalOps = new UpdateSubmissionsTransactionalOps(mongoComponent, submissionRepository, notificationRepository, appConfig)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -45,9 +45,9 @@ class TransactionalOpsISpec extends IntegrationTestSpec {
 
   "TransactionalOps.updateSubmissionAndNotifications" when {
 
-    "appConfig.useTransactionalDBOps is true, and" when {
+    "appConfig.useTransactionalDBOps is false, and" when {
 
-      appConfig.useTransactionalDBOps mustBe true
+      appConfig.useTransactionalDBOps mustBe false
 
       "a ParsedNotification is given without a stored Submission document (because it was removed in the meanwhile)" should {
         "return an empty option" in {
