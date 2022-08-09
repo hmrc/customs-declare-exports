@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.repositories
 
 import testdata.ExportsTestData.actionId
-import testdata.SubmissionTestData.{action, notificationSummary_1, notificationSummary_2, submission}
+import testdata.SubmissionTestData.{action, notificationSummary_1, notificationSummary_2, pendingSubmissionWithoutMrn, submission}
 import testdata.notifications.NotificationTestData.notification
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.config.AppConfig
@@ -58,8 +58,8 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
       "a single ParsedNotification is given with a stored Submission document and" when {
 
         "the stored Submission document's related action DOES NOT CONTAIN yet any NotificationSummary" should {
-          "return the Submission document with the action including a new NotificationSummary" in {
-            val storedSubmission = submissionRepository.insertOne(submission).futureValue.right.value
+          "return the Submission document with the action including a new NotificationSummary and MRN" in {
+            val storedSubmission = submissionRepository.insertOne(pendingSubmissionWithoutMrn).futureValue.right.value
             testUpdateSubmissionAndNotifications(actionId, List(notification), storedSubmission, UNKNOWN, 1)
           }
         }
@@ -87,7 +87,9 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
     expectedNotificationSummaries: Int
   ): Option[Submission] =
     transactionalOps.updateSubmissionAndNotifications(actionId, notifications, submission).futureValue.map { actualSubmission =>
-      actualSubmission.mrn mustBe submission.mrn
+      if (submission.mrn.isDefined) actualSubmission.mrn mustBe submission.mrn
+      else actualSubmission.mrn mustBe defined
+
       actualSubmission.latestEnhancedStatus.value mustBe expectedEnhancedStatus
 
       actualSubmission.actions.size mustBe 1

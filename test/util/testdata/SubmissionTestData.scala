@@ -49,6 +49,8 @@ object SubmissionTestData {
 
   lazy val submission_3: Submission = Submission(uuid_3, eori, lrn, Some(mrn_2), ducr, actions = Seq(action_3))
 
+  lazy val pendingSubmissionWithoutMrn = Submission(uuid, eori, lrn, None, ducr, actions = Seq(action))
+
   lazy val cancelledSubmission: Submission = Submission(uuid, eori, lrn, Some(mrn), ducr, actions = Seq(action, actionCancellation))
 
   lazy val notificationSummary_1 = NotificationSummary(notification.unparsedNotificationId, instant1971, RECEIVED)
