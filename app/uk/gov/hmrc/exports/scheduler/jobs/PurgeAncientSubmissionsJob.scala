@@ -54,12 +54,12 @@ class PurgeAncientSubmissionsJob @Inject() (
 
   private val olderThanDate = lte(statusLastUpdated, expiryDate)
 
-  override def execute(): Future[Unit] =
+  override def execute(): Future[Unit] = {
+    logger.info("Starting PurgeAncientSubmissionsJob execution...")
     submissionRepository.findAll(and(olderThanDate, latestStatusLookup)) flatMap { submissions =>
       transactionalOps.removeSubmissionAndNotifications(submissions) map { removed =>
-        logger.info(s"${removed.sum} records removed linked to ancient submissions")
+        logger.info(s"Finishing PurgeAncientSubmissionsJob - ${removed.sum} records removed linked to ancient submissions")
       }
-
     }
-
+  }
 }

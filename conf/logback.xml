@@ -43,6 +43,8 @@
 
     <logger name="com.google.inject" level="INFO"/>
 
+    <logger name="org.mongodb.driver" level="WARN"/>
+
     <logger name="uk.gov" level="INFO"/>
 
     <logger name="application" level="DEBUG"/>
