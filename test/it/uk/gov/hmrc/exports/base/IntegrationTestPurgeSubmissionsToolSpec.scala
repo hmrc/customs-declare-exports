@@ -19,14 +19,6 @@ trait IntegrationTestPurgeSubmissionsToolSpec extends IntegrationTestSpec {
     super.beforeEach()
   }
 
-  override protected def afterEach(): Unit = {
-    removeAll(submissionRepository.collection)
-    removeAll(declarationRepository.collection)
-    removeAll(notificationRepository.collection)
-    removeAll(unparsedNotificationRepository.collection)
-    super.afterEach
-  }
-
   def removeAll(collection: MongoCollection[_]) =
     collection.deleteMany(BsonDocument()).toFuture.futureValue
 

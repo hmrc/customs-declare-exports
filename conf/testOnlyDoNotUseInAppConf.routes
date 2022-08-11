@@ -15,3 +15,5 @@
 POST        /test-only/create-submitted-dec-record        uk.gov.hmrc.exports.controllers.testonly.GenerateSubmittedDecController.createSubmittedDecDocuments
 
 POST        /test-only/create-draft-dec-record            uk.gov.hmrc.exports.controllers.testonly.GenerateDraftDecController.createDraftDec
+
+GET        /test-only/purge-ancient-submissions          uk.gov.hmrc.exports.controllers.testonly.PurgeAncientSubmissionsController.run
