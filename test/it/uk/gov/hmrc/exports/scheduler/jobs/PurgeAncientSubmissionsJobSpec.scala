@@ -1,6 +1,7 @@
 package uk.gov.hmrc.exports.scheduler.jobs
 
 import uk.gov.hmrc.exports.base.IntegrationTestPurgeSubmissionsToolSpec
+import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
@@ -8,7 +9,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus
 
-import java.time.ZonedDateTime
+import java.time.{Clock, ZonedDateTime}
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -16,7 +17,15 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
 
   import PurgeAncientSubmissionsJobSpec._
 
-  val testJob: PurgeAncientSubmissionsJob = app.injector.instanceOf[PurgeAncientSubmissionsJob]
+  val testJob: PurgeAncientSubmissionsJob = instanceOf[PurgeAncientSubmissionsJob]
+
+  private val clock: Clock = instanceOf[AppConfig].clock
+
+  val enhancedStatusLastUpdatedOlderThan = testJob.expiryDate
+  val enhancedStatusLastUpdatedRecent = ZonedDateTime.now(clock).minusDays(1)
+
+  println(">>>>>>>>>" + enhancedStatusLastUpdatedOlderThan)
+  println(">>>>>>>>>" + enhancedStatusLastUpdatedRecent)
 
   "PurgeAncientSubmissionsJob" should {
 
@@ -383,14 +392,12 @@ object PurgeAncientSubmissionsJobSpec {
   )
 
   val eori = "XL165944621471200"
-  val enhancedStatusLastUpdatedOlderThan = "2021-08-02T13:20:06Z[UTC]"
-  val enhancedStatusLastUpdatedRecent = "2022-08-02T13:20:06Z[UTC]"
 
-  def submission(latestEnhancedStatus: EnhancedStatus, enhancedStatusLastUpdated: String, actionIds: Seq[String], uuid: String): Submission =
+  def submission(latestEnhancedStatus: EnhancedStatus, enhancedStatusLastUpdated: ZonedDateTime, actionIds: Seq[String], uuid: String): Submission =
     Submission(eori = eori, lrn = "XzmBvLMY6ZfrZL9lxu", ducr = "6TS321341891866-112L6H21L").copy(
       uuid = uuid,
       latestEnhancedStatus = Some(latestEnhancedStatus),
-      enhancedStatusLastUpdated = Some(ZonedDateTime.parse(enhancedStatusLastUpdated)),
+      enhancedStatusLastUpdated = Some(enhancedStatusLastUpdated),
       actions = actionIds.map(id => Action(id = id, SubmissionRequest))
     )
 
