@@ -110,6 +110,7 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
       }
 
       "remove zero records" when {
+
         "'submission.statusLastUpdated' is less than than 180 days ago" in {
 
           val submissions: List[Submission] = List(
@@ -122,24 +123,24 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
             submission(
               enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
               latestEnhancedStatus = EnhancedStatus.DECLARATION_HANDLED_EXTERNALLY,
-              actionIds = Seq(actionIds(4), actionIds(5), actionIds(6), actionIds(7)),
+              actionIds = Seq.empty,
               uuid = uuids(1)
             ),
             submission(
               enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
               latestEnhancedStatus = EnhancedStatus.CANCELLED,
-              actionIds = Seq(actionIds(8), actionIds(9), actionIds(10), actionIds(11)),
+              actionIds = Seq.empty,
               uuid = uuids(2)
             ),
             submission(
               latestEnhancedStatus = EnhancedStatus.EXPIRED_NO_ARRIVAL,
-              actionIds = Seq(actionIds(12), actionIds(13), actionIds(14), actionIds(15)),
+              actionIds = Seq.empty,
               uuid = uuids(3),
               enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
             ),
             submission(
               latestEnhancedStatus = EnhancedStatus.ERRORS,
-              actionIds = Seq(actionIds(16), actionIds(17), actionIds(18), actionIds(19)),
+              actionIds = Seq.empty,
               uuid = uuids(4),
               enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
             ),
@@ -151,8 +152,14 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
             ),
             submission(
               latestEnhancedStatus = EnhancedStatus.EXPIRED_NO_DEPARTURE,
-              actionIds = Seq(actionIds(24), actionIds(25), actionIds(26), actionIds(27)),
+              actionIds = Seq.empty,
               uuid = uuids(6),
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
+            ),
+            submission(
+              latestEnhancedStatus = EnhancedStatus.PENDING,
+              actionIds = Seq.empty,
+              uuid = uuids.head,
               enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
             )
           )
@@ -188,17 +195,90 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
           val submissions: List[Submission] = List(
             submission(
               enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
-              latestEnhancedStatus = EnhancedStatus.PENDING,
-              actionIds = Seq(actionIds.head, actionIds(1), actionIds(2), actionIds(3)),
+              latestEnhancedStatus = EnhancedStatus.ADDITIONAL_DOCUMENTS_REQUIRED,
+              actionIds = Seq(actionIds.head),
               uuid = uuids.head
             ),
             submission(
               enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
-              latestEnhancedStatus = EnhancedStatus.PENDING,
-              actionIds = Seq(actionIds(4), actionIds(5), actionIds(6), actionIds(7)),
+              latestEnhancedStatus = EnhancedStatus.AMENDED,
+              actionIds = Seq.empty,
               uuid = uuids.tail.head
+            ),
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+              latestEnhancedStatus = EnhancedStatus.AWAITING_EXIT_RESULTS,
+              actionIds = Seq.empty,
+              uuid = uuids(2)
+            ),
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+              latestEnhancedStatus = EnhancedStatus.CLEARED,
+              actionIds = Seq.empty,
+              uuid = uuids(3)
+            ),
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+              latestEnhancedStatus = EnhancedStatus.CUSTOMS_POSITION_DENIED,
+              actionIds = Seq.empty,
+              uuid = uuids(4)
+            ),
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+              latestEnhancedStatus = EnhancedStatus.CUSTOMS_POSITION_GRANTED,
+              actionIds = Seq.empty,
+              uuid = uuids(5)
+            ),
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+              latestEnhancedStatus = EnhancedStatus.GOODS_ARRIVED,
+              actionIds = Seq.empty,
+              uuid = uuids(6)
+            ),
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+              latestEnhancedStatus = EnhancedStatus.GOODS_ARRIVED_MESSAGE,
+              actionIds = Seq.empty,
+              uuid = uuids(7)
+            ),
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+              latestEnhancedStatus = EnhancedStatus.QUERY_NOTIFICATION_MESSAGE,
+              actionIds = Seq.empty,
+              uuid = uuids(8)
+            ),
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+              latestEnhancedStatus = EnhancedStatus.RECEIVED,
+              actionIds = Seq.empty,
+              uuid = uuids(9)
+            ),
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+              latestEnhancedStatus = EnhancedStatus.RELEASED,
+              actionIds = Seq.empty,
+              uuid = uuids(10)
+            ),
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+              latestEnhancedStatus = EnhancedStatus.UNDERGOING_PHYSICAL_CHECK,
+              actionIds = Seq.empty,
+              uuid = uuids(11)
+            ),
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+              latestEnhancedStatus = EnhancedStatus.PENDING,
+              actionIds = Seq.empty,
+              uuid = uuids(12)
+            ),
+            submission(
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+              latestEnhancedStatus = EnhancedStatus.REQUESTED_CANCELLATION,
+              actionIds = Seq.empty,
+              uuid = uuids(13)
             )
           )
+
           val declarations: List[ExportsDeclaration] = List(aDeclaration(withId(uuids.head), withEori(eori)))
           val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds.head, actionId = actionIds.head))
           val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds.head, actionIds.head))
@@ -281,7 +361,25 @@ object PurgeAncientSubmissionsJobSpec {
     "6TEST-SA7hb-rLAZo0a8",
     "7TEST-SA7hb-rLAZo0a8",
     "8TEST-SA7hb-rLAZo0a8",
-    "9TEST-SA7hb-rLAZo0a8"
+    "9TEST-SA7hb-rLAZo0a8",
+    "1TEST-SA7hb-rLAZo0b8",
+    "2TEST-SA7hb-rLAZo0b8",
+    "3TEST-SA7hb-rLAZo0b8",
+    "4TEST-SA7hb-rLAZo0b8",
+    "5TEST-SA7hb-rLAZo0b8",
+    "6TEST-SA7hb-rLAZo0b8",
+    "7TEST-SA7hb-rLAZo0b8",
+    "8TEST-SA7hb-rLAZo0b8",
+    "9TEST-SA7hb-rLAZo0b8",
+    "1TEST-SA7hb-rLAZo0c8",
+    "2TEST-SA7hb-rLAZo0c8",
+    "3TEST-SA7hb-rLAZo0c8",
+    "4TEST-SA7hb-rLAZo0c8",
+    "5TEST-SA7hb-rLAZo0c8",
+    "6TEST-SA7hb-rLAZo0c8",
+    "7TEST-SA7hb-rLAZo0c8",
+    "8TEST-SA7hb-rLAZo0c8",
+    "9TEST-SA7hb-rLAZo0c8"
   )
 
   val eori = "XL165944621471200"
