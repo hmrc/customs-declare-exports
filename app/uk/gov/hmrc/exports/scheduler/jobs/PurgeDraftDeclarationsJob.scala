@@ -38,10 +38,11 @@ class PurgeDraftDeclarationsJob @Inject() (appConfig: AppConfig, declarationRepo
   override def firstRunTime: Option[LocalTime] = Some(jobConfig.elapseTime)
 
   override def execute(): Future[Unit] = {
+    logger.info("Starting PurgeDraftDeclarationsJob execution...")
     val expiryDate = Instant.now(clock).minusSeconds(expireDuration.toSeconds)
     for {
       count <- declarationRepository.deleteExpiredDraft(expiryDate)
-      _ = logger.info(s"${name}Job: Purged $count items updated before $expiryDate")
+      _ = logger.info(s"Finishing ${name}Job: Purged $count items updated before $expiryDate")
     } yield ()
   }
 }

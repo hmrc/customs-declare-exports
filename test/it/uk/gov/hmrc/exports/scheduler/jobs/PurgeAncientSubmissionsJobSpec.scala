@@ -53,6 +53,18 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
             actionIds = Seq(actionIds(16), actionIds(17), actionIds(18), actionIds(19)),
             uuid = uuids(4),
             enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan
+          ),
+          submission(
+            latestEnhancedStatus = EnhancedStatus.WITHDRAWN,
+            actionIds = Seq(actionIds(20), actionIds(21), actionIds(22), actionIds(23)),
+            uuid = uuids(5),
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan
+          ),
+          submission(
+            latestEnhancedStatus = EnhancedStatus.EXPIRED_NO_DEPARTURE,
+            actionIds = Seq(actionIds(24), actionIds(25), actionIds(26), actionIds(27)),
+            uuid = uuids(6),
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan
           )
         )
         val declarations: List[ExportsDeclaration] = List(
@@ -129,6 +141,18 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
               latestEnhancedStatus = EnhancedStatus.ERRORS,
               actionIds = Seq(actionIds(16), actionIds(17), actionIds(18), actionIds(19)),
               uuid = uuids(4),
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
+            ),
+            submission(
+              latestEnhancedStatus = EnhancedStatus.WITHDRAWN,
+              actionIds = Seq(actionIds(20), actionIds(21), actionIds(22), actionIds(23)),
+              uuid = uuids(5),
+              enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
+            ),
+            submission(
+              latestEnhancedStatus = EnhancedStatus.EXPIRED_NO_DEPARTURE,
+              actionIds = Seq(actionIds(24), actionIds(25), actionIds(26), actionIds(27)),
+              uuid = uuids(6),
               enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
             )
           )
@@ -233,7 +257,13 @@ object PurgeAncientSubmissionsJobSpec {
     "1c5ef91c-a62a-4337-b51a-750b175fe6d1",
     "2c5ef91c-a62a-4337-b51a-750b175fe6d1",
     "3c5ef91c-a62a-4337-b51a-750b175fe6d1",
-    "4c5ef91c-a62a-4337-b51a-750b175fe6d1"
+    "4c5ef91c-a62a-4337-b51a-750b175fe6d1",
+    "5c5ef91c-a62a-4337-b51a-750b175fe6d1",
+    "6c5ef91c-a62a-4337-b51a-750b175fe6d1",
+    "7c5ef91c-a62a-4337-b51a-750b175fe6d1",
+    "8c5ef91c-a62a-4337-b51a-750b175fe6d1",
+    "9c5ef91c-a62a-4337-b51a-750b175fe6d1",
+    "1d5ef91c-a62a-4337-b51a-750b175fe6d1"
   )
   private val unparsedNotificationIds = Seq(
     "1a429490-8688-48ec-bdca-8d6f48c5ad5f",
@@ -250,7 +280,8 @@ object PurgeAncientSubmissionsJobSpec {
     "5TEST-SA7hb-rLAZo0a8",
     "6TEST-SA7hb-rLAZo0a8",
     "7TEST-SA7hb-rLAZo0a8",
-    "8TEST-SA7hb-rLAZo0a8"
+    "8TEST-SA7hb-rLAZo0a8",
+    "9TEST-SA7hb-rLAZo0a8"
   )
 
   val eori = "XL165944621471200"

@@ -40,10 +40,11 @@ class Scheduler @Inject() (
     extends Logging {
 
   val runningJobs: Iterable[Cancellable] = scheduledJobs.jobs.map { job =>
+    val initialDelay = calcInitialDelay(job)
     logger.info(
-      s"Scheduling job [${job.name}] to run periodically at [${job.firstRunTime}] with interval [${job.interval.length} ${job.interval.unit}]"
+      s"Scheduling job [${job.name}] to run periodically at [${job.firstRunTime}] with initialDelay of [${initialDelay}] and interval [${job.interval.length} ${job.interval.unit}]"
     )
-    actorSystem.scheduler.scheduleWithFixedDelay(calcInitialDelay(job), job.interval)(new Runnable() {
+    actorSystem.scheduler.scheduleWithFixedDelay(initialDelay, job.interval)(new Runnable() {
       override def run(): Unit =
         job.execute().map { _ =>
           logger.info(s"Scheduled Job [${job.name}]: Completed Successfully")
