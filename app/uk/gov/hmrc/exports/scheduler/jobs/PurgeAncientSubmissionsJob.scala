@@ -47,12 +47,23 @@ class PurgeAncientSubmissionsJob @Inject() (
   private val latestStatus = "latestEnhancedStatus"
   private val statusLastUpdated = "enhancedStatusLastUpdated"
 
-  private val expiryDate = Codecs.toBson(ZonedDateTime.now(clock).minusDays(180))
+  val expiryDate = ZonedDateTime.now(clock).minusDays(180)
 
   private val latestStatusLookup =
-    in(latestStatus, List("GOODS_HAVE_EXITED", "DECLARATION_HANDLED_EXTERNALLY", "CANCELLED", "EXPIRED_NO_ARRIVAL", "ERRORS"): _*)
+    in(
+      latestStatus,
+      List(
+        "GOODS_HAVE_EXITED",
+        "DECLARATION_HANDLED_EXTERNALLY",
+        "CANCELLED",
+        "EXPIRED_NO_ARRIVAL",
+        "ERRORS",
+        "EXPIRED_NO_DEPARTURE",
+        "WITHDRAWN"
+      ): _*
+    )
 
-  private val olderThanDate = lte(statusLastUpdated, expiryDate)
+  private def olderThanDate = lte(statusLastUpdated, Codecs.toBson(expiryDate))
 
   override def execute(): Future[Unit] = {
     logger.info("Starting PurgeAncientSubmissionsJob execution...")

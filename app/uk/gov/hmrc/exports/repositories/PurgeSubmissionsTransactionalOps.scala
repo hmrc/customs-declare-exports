@@ -60,26 +60,26 @@ class PurgeSubmissionsTransactionalOps @Inject() (
 
   private def removeSubmissions(submissions: Seq[Submission], session: ClientSession): Future[Long] = {
     val filter = Filters.in("uuid", submissions.map(_.uuid): _*)
-    logger.info(s"Attempting to remove submissions: $filter")
+    logger.debug(s"Attempting to remove submissions: $filter")
     submissionRepository.removeEvery(session, filter)
   }
 
   private def removeDeclarations(submissions: Seq[Submission], session: ClientSession): Future[Long] = {
     val filter = Filters.and(Filters.in("id", submissions.map(_.uuid): _*), Filters.in("eori", submissions.map(_.eori): _*))
-    logger.info(s"Attempting to remove declarations: $filter")
+    logger.debug(s"Attempting to remove declarations: $filter")
     declarationRepository.removeEvery(session, filter)
   }
 
   private def removeParsedNotifications(submissions: Seq[Submission], session: ClientSession): Future[Long] = {
     val filter = Filters.in("actionId", submissions.flatMap(_.actions.map(_.id)): _*)
-    logger.info(s"Attempting to remove notifications: $filter")
+    logger.debug(s"Attempting to remove notifications: $filter")
     notificationRepository.removeEvery(session, filter)
   }
 
   private def removeUnparsedNotifications(submissions: Seq[Submission], session: ClientSession): Future[Long] =
     notificationRepository.findNotifications(submissions.flatMap(_.actions.map(_.id))).flatMap { notifications =>
       val filter = Filters.in("item.id", notifications.map(_.unparsedNotificationId.toString): _*)
-      logger.info(s"Attempting to remove unparsed notifications: $filter")
+      logger.debug(s"Attempting to remove unparsed notifications: $filter")
 
       unparsedNotificationRespository.collection
         .deleteMany(session, filter)
