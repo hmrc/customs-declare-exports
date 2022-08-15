@@ -24,9 +24,6 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
   val enhancedStatusLastUpdatedOlderThan = testJob.expiryDate
   val enhancedStatusLastUpdatedRecent = ZonedDateTime.now(clock).minusDays(1)
 
-  println(">>>>>>>>>" + enhancedStatusLastUpdatedOlderThan)
-  println(">>>>>>>>>" + enhancedStatusLastUpdatedRecent)
-
   "PurgeAncientSubmissionsJob" should {
 
     "remove all records" when {

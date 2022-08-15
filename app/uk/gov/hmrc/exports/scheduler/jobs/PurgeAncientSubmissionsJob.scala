@@ -65,12 +65,6 @@ class PurgeAncientSubmissionsJob @Inject() (
 
   private def olderThanDate = lte(statusLastUpdated, Codecs.toBson(expiryDate))
 
-  println(">>>>>>>>>" + olderThanDate)
-
-  // 2022-02-13T14:45:38.259Z
-
-  // '2022-02-13T14:45:37.529Z
-
   override def execute(): Future[Unit] = {
     logger.info("Starting PurgeAncientSubmissionsJob execution...")
     submissionRepository.findAll(and(olderThanDate, latestStatusLookup)) flatMap { submissions =>
