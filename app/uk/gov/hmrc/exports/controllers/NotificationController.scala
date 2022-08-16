@@ -62,7 +62,7 @@ class NotificationController @Inject() (
             .handleNewNotification(extractedHeaders.conversationId.value, request.body)
             .map(_ => Accepted)
         }
-      case Left(_) => Future.successful(Accepted)
+      case Left(errorResponse) => Future.successful(errorResponse.XmlResult)
     }
   }
 

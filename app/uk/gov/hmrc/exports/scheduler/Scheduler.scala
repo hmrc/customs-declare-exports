@@ -41,8 +41,9 @@ class Scheduler @Inject() (
 
   val runningJobs: Iterable[Cancellable] = scheduledJobs.jobs.map { job =>
     val initialDelay = calcInitialDelay(job)
+    val interval = s"${job.interval.length} ${job.interval.unit}"
     logger.info(
-      s"Scheduling job [${job.name}] to run periodically at [${job.firstRunTime}] with initialDelay of [${initialDelay}] and interval [${job.interval.length} ${job.interval.unit}]"
+      s"Scheduling job [${job.name}] to run periodically at [${job.firstRunTime}] with initialDelay of [$initialDelay] and interval [$interval]"
     )
     actorSystem.scheduler.scheduleWithFixedDelay(initialDelay, job.interval)(new Runnable() {
       override def run(): Unit =

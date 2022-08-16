@@ -32,6 +32,7 @@ import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.base.UnitTestMockBuilder.buildNotificationServiceMock
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
+import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification.REST
 import uk.gov.hmrc.exports.services.SubmissionService
@@ -146,8 +147,16 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       }
     }
 
-    "NotificationService returns failure" should {
+    "a mandatory header is missiing" should {
+      "return 400" in {
+        val invalidHeaders = validHeaders - CustomsHeaderNames.XConversationIdName
+        val result = routePostSaveNotification(invalidHeaders)
+        status(result) must be(BAD_REQUEST)
+        assert(contentAsString(result).contains("Invalid headers"))
+      }
+    }
 
+    "NotificationService returns failure" should {
       "throw an Exception" in {
         when(notificationService.handleNewNotification(any(), any[NodeSeq]))
           .thenReturn(Future.failed(new Exception("Test Exception")))
