@@ -2,6 +2,7 @@ package uk.gov.hmrc.exports.base
 
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.result.DeleteResult
 import uk.gov.hmrc.exports.repositories._
 
 trait IntegrationTestPurgeSubmissionsToolSpec extends IntegrationTestSpec {
@@ -19,7 +20,6 @@ trait IntegrationTestPurgeSubmissionsToolSpec extends IntegrationTestSpec {
     super.beforeEach()
   }
 
-  def removeAll(collection: MongoCollection[_]) =
+  def removeAll(collection: MongoCollection[_]): DeleteResult =
     collection.deleteMany(BsonDocument()).toFuture.futureValue
-
 }
