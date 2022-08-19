@@ -27,9 +27,9 @@ import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, NotificationSummary, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
 
-import scala.collection.convert.DecorateAsScala
+import scala.jdk.CollectionConverters.IterableHasAsScala
 
-class AddNotificationSummariesToSubmissions extends MigrationDefinition with DecorateAsScala with Logging {
+class AddNotificationSummariesToSubmissions extends MigrationDefinition with Logging {
 
   val latestStatus = "latestEnhancedStatus"
   val statusLastUpdated = "enhancedStatusLastUpdated"

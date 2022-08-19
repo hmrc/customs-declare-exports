@@ -33,7 +33,7 @@ import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem, WorkItemFields}
 
 import java.time.Instant
 import javax.inject.Singleton
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
  * Migration definition for splitting existing 'notifications' collection into 2 collections. The first one stores XML
@@ -119,12 +119,12 @@ class SplitTheNotificationsCollection extends MigrationDefinition with Logging {
     logger.info(s"Applying '${migrationInformation.id}' db migration... Done.")
   }
 
-  private def getDocumentsToMigrate(query: Bson, queryBatchSize: Int)(implicit db: MongoDatabase): Iterator[Document] = asScalaIterator(
+  private def getDocumentsToMigrate(query: Bson, queryBatchSize: Int)(implicit db: MongoDatabase): Iterator[Document] =
     getNotificationsCollection
       .find(query)
       .batchSize(queryBatchSize)
       .iterator
-  )
+      .asScala
 
   private def initialRegistryOfMigratedUnparsedNotifications(implicit db: MongoDatabase): Set[Int] =
     new MigratedUnparsedNotificationsRegistry(getUnparsedNotificationsCollection)
@@ -194,7 +194,11 @@ object SplitTheNotificationsCollection {
     private def initUnderlying(): Set[Int] = {
       val queryBatchSize = 10
 
-      asScalaIterator(collection.find().batchSize(queryBatchSize).iterator)
+      collection
+        .find()
+        .batchSize(queryBatchSize)
+        .iterator
+        .asScala
         .map(_.get("item", classOf[Document]))
         .foldLeft(Set.empty[Int])((mapAcc, doc) => mapAcc + HashFields(doc).##)
     }
@@ -204,8 +208,8 @@ object SplitTheNotificationsCollection {
     override def iterator: Iterator[Int] = underlying.iterator
 
     // scalastyle:off
-    override def +(elem: Int): Set[Int] = underlying + elem
+    override def incl(elem: Int): Set[Int] = underlying + elem
 
-    override def -(elem: Int): Set[Int] = underlying - elem
+    override def excl(elem: Int): Set[Int] = underlying - elem
   }
 }

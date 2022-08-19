@@ -26,7 +26,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.migrations.repositories.TestObjectsBuilder.buildMongoCursor
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class MongoRepositorySpec extends UnitSpec {
 
@@ -57,8 +57,8 @@ class MongoRepositorySpec extends UnitSpec {
   }
 
   private def buildIndex(field: String): Document = {
-    val fields = Map("key" -> new Document(field, 1), "name" -> s"${field}Name")
-    new Document(mapAsJavaMap(fields))
+    val fields: Map[String, Object] = Map("key" -> new Document(field, 1), "name" -> s"${field}Name")
+    new Document(fields.asJava)
   }
 
   private def buildUniqueIndex(field: String): Document = {

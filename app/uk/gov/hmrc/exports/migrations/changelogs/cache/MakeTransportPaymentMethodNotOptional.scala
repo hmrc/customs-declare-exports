@@ -24,7 +24,7 @@ import org.mongodb.scala.model.Updates.set
 import play.api.Logging
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class MakeTransportPaymentMethodNotOptional extends MigrationDefinition with Logging {
 
@@ -42,29 +42,32 @@ class MakeTransportPaymentMethodNotOptional extends MigrationDefinition with Log
     val queryBatchSize = 10
     val updateBatchSize = 100
 
-    asScalaIterator(
-      getDeclarationsCollection(db)
-        .find(and(exists("transport.transportPayment"), not(exists("transport.transportPayment.paymentMethod"))))
-        .batchSize(queryBatchSize)
-        .iterator
-    ).map { document =>
-      val transportDoc = document.get(TRANSPORT, classOf[Document])
-      transportDoc.remove(TRANSPORT_PAYMENT)
-      logger.debug(s"Updated: $transportDoc")
+    getDeclarationsCollection(db)
+      .find(and(exists("transport.transportPayment"), not(exists("transport.transportPayment.paymentMethod"))))
+      .batchSize(queryBatchSize)
+      .iterator
+      .asScala
+      .map { document =>
+        val transportDoc = document.get(TRANSPORT, classOf[Document])
+        transportDoc.remove(TRANSPORT_PAYMENT)
+        logger.debug(s"Updated: $transportDoc")
 
-      val documentId = document.get(INDEX_ID).asInstanceOf[String]
-      val eori = document.get(INDEX_EORI).asInstanceOf[String]
-      val filter = and(feq(INDEX_ID, documentId), feq(INDEX_EORI, eori))
-      val update = set(TRANSPORT, transportDoc)
-      logger.debug(s"[filter: $filter] [update: $update]")
+        val documentId = document.get(INDEX_ID).asInstanceOf[String]
+        val eori = document.get(INDEX_EORI).asInstanceOf[String]
+        val filter = and(feq(INDEX_ID, documentId), feq(INDEX_EORI, eori))
+        val update = set(TRANSPORT, transportDoc)
+        logger.debug(s"[filter: $filter] [update: $update]")
 
-      new UpdateOneModel[Document](filter, update)
-    }.grouped(updateBatchSize).zipWithIndex.foreach { case (requests, idx) =>
-      logger.info(s"Updating batch no. $idx...")
+        new UpdateOneModel[Document](filter, update)
+      }
+      .grouped(updateBatchSize)
+      .zipWithIndex
+      .foreach { case (requests, idx) =>
+        logger.info(s"Updating batch no. $idx...")
 
-      getDeclarationsCollection(db).bulkWrite(seqAsJavaList(requests))
-      logger.info(s"Updated batch no. $idx")
-    }
+        getDeclarationsCollection(db).bulkWrite(requests.asJava)
+        logger.info(s"Updated batch no. $idx")
+      }
 
     logger.info(s"Applying '${migrationInformation.id}' db migration... Done.")
   }

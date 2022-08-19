@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.exports.services
 
-import java.util
-
-import javax.inject.Inject
 import play.api.libs.json._
 import uk.gov.hmrc.exports.models.Country
 
-import scala.collection.JavaConverters._
+import java.util
+import javax.inject.Inject
+import scala.jdk.CollectionConverters._
 
 class CountriesService @Inject() () {
 
@@ -32,7 +31,7 @@ class CountriesService @Inject() () {
     def fromJsonFile: List[Country] =
       Json.parse(jsonFile) match {
         case JsArray(cs) =>
-          cs.toList.collect { case JsArray(Seq(c: JsString, cc: JsString)) =>
+          cs.toList.collect { case JsArray(scala.collection.Seq(c: JsString, cc: JsString)) =>
             Country(c.value, countryCode(cc.value))
           }
         case _ =>
