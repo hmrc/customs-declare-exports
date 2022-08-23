@@ -24,7 +24,6 @@ import uk.gov.hmrc.mongo.play.json.Codecs
 
 import java.time._
 import javax.inject.{Inject, Singleton}
-import scala.collection.convert.DecorateAsScala
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,7 +33,7 @@ class PurgeAncientSubmissionsJob @Inject() (
   submissionRepository: SubmissionRepository,
   transactionalOps: PurgeSubmissionsTransactionalOps
 )(implicit ec: ExecutionContext)
-    extends ScheduledJob with Logging with DecorateAsScala {
+    extends ScheduledJob with Logging {
 
   override val name: String = "PurgeAncientSubmissions"
 

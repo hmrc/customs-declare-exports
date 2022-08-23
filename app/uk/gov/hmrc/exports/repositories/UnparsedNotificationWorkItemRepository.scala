@@ -44,5 +44,5 @@ class UnparsedNotificationWorkItemRepository @Inject() (config: Configuration, m
   override lazy val inProgressRetryAfter: Duration =
     Duration.ofMillis(config.getMillis("workItem.unparsedNotification.retryAfterMillis"))
 
-  override def now: Instant = Instant.now
+  override def now(): Instant = Instant.now()
 }

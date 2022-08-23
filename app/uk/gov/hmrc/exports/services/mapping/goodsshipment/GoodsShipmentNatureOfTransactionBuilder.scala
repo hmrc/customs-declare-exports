@@ -23,13 +23,12 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.declaration_ds.dms._2.GoodsShipmentTransactionNatureCodeType
 
 class GoodsShipmentNatureOfTransactionBuilder @Inject() () extends ModifyingBuilder[NatureOfTransaction, GoodsShipment] {
-  override def buildThenAdd(natureOfTransaction: NatureOfTransaction, goodsShipment: GoodsShipment) {
+  override def buildThenAdd(natureOfTransaction: NatureOfTransaction, goodsShipment: GoodsShipment): Unit =
     if (isDefined(natureOfTransaction)) {
       val natureOfTransactionWCO = new GoodsShipmentTransactionNatureCodeType()
       natureOfTransactionWCO.setValue(natureOfTransaction.natureType.take(1))
       goodsShipment.setTransactionNatureCode(natureOfTransactionWCO)
     }
-  }
 
   private def isDefined(natureOfTransaction: NatureOfTransaction): Boolean = natureOfTransaction.natureType.nonEmpty
 

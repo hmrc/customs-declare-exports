@@ -21,5 +21,5 @@ trait IntegrationTestPurgeSubmissionsToolSpec extends IntegrationTestSpec {
   }
 
   def removeAll(collection: MongoCollection[_]): DeleteResult =
-    collection.deleteMany(BsonDocument()).toFuture.futureValue
+    collection.deleteMany(BsonDocument()).toFuture().futureValue
 }

@@ -41,7 +41,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
 
   private implicit val tc = TransactionConfiguration.strict
 
-  private lazy val nonTransactionalSession = mongoComponent.client.startSession().toFuture
+  private lazy val nonTransactionalSession = mongoComponent.client.startSession().toFuture()
 
   def updateSubmissionAndNotifications(actionId: String, notifications: Seq[ParsedNotification], submission: Submission): Future[Option[Submission]] =
     if (appConfig.useTransactionalDBOps)

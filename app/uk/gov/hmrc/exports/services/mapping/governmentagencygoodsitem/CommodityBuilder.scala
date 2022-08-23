@@ -28,7 +28,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGo
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem.{Commodity => WCOCommodity}
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class CommodityBuilder @Inject() () extends ModifyingBuilder[Commodity, GovernmentAgencyGoodsItem] {
   val defaultMeasureCode = "KGM"

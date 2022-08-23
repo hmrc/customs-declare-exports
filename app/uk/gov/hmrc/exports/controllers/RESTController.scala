@@ -36,7 +36,7 @@ abstract class RESTController(override val controllerComponents: ControllerCompo
             "Bad Request",
             Some(errors.map { case (path, errs) =>
               path.toString() + ": " + errs.map(_.message).headOption.getOrElse("unknown")
-            })
+            }.toSeq)
           )
         )
         logger.warn(s"Bad Request [$payload]")

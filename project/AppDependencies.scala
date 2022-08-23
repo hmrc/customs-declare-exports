@@ -10,12 +10,14 @@ object AppDependencies {
     "uk.gov.hmrc"                    %% "bootstrap-backend-play-28"         % bootstrapPlayVersion,
     "uk.gov.hmrc.mongo"              %% "hmrc-mongo-play-28"                % hmrcMongoVersion,
     "uk.gov.hmrc.mongo"              %% "hmrc-mongo-work-item-repo-play-28" % hmrcMongoVersion,
-    "uk.gov.hmrc"                    %% "wco-dec"                           % "0.36.0",
+    "uk.gov.hmrc"                    %% "wco-dec"                           % "0.37.0",
     "uk.gov.hmrc"                    %% "logback-json-logger"               % "5.2.0",
     "com.github.tototoshi"           %% "scala-csv"                         % "1.3.10",
     "com.fasterxml.jackson.module"   %% "jackson-module-scala"              % "2.13.3",
     // Used by the Migration tool. Keep this library's version to the same major.minor version as the mongo-scala-driver.
-    "org.mongodb"                    %  "mongodb-driver-sync"               % "4.6.0"
+    "org.mongodb"                    %  "mongodb-driver-sync"               % "4.6.0",
+    // Added to replace javax.xml.bind (removed in Java 11)
+    "org.glassfish.jaxb" % "jaxb-runtime" % "2.3.6"
   )
 
   val test = Seq(

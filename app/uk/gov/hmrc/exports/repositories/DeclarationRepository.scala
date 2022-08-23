@@ -65,8 +65,8 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
           .skip((page.index - 1) * page.size)
           .batchSize(page.size)
           .limit(page.size)
-          .toFuture
-        total <- collection.countDocuments(filter).toFuture
+          .toFuture()
+        total <- collection.countDocuments(filter).toFuture()
       } yield Paginated(currentPageElements = results, page = page, total = total)
     }
   }
@@ -78,7 +78,7 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
         update = set("status", DeclarationStatus.COMPLETE.toString),
         options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.BEFORE)
       )
-      .toFutureOption
+      .toFutureOption()
 
   def findOne(eori: Eori, id: String): Future[Option[ExportsDeclaration]] =
     metrics.timeAsyncCall(Timers.declarationFindSingleTimer) {

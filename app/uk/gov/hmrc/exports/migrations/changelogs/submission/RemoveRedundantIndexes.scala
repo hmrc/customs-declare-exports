@@ -24,7 +24,7 @@ import org.mongodb.scala.model.Updates.set
 import play.api.Logging
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class RemoveRedundantIndexes extends MigrationDefinition with Logging {
 
@@ -50,29 +50,32 @@ class RemoveRedundantIndexes extends MigrationDefinition with Logging {
 
     val collection = db.getCollection(sendEmailWorkItemsCollectionName)
 
-    asScalaIterator(
-      collection
-        .find(and(exists(item), not(exists(s"${item}.${ACTION_ID}"))))
-        .batchSize(queryBatchSize)
-        .iterator
-    ).map { document =>
-      val sendEmailDetails = document.get(item, classOf[Document])
+    collection
+      .find(and(exists(item), not(exists(s"${item}.${ACTION_ID}"))))
+      .batchSize(queryBatchSize)
+      .iterator
+      .asScala
+      .map { document =>
+        val sendEmailDetails = document.get(item, classOf[Document])
 
-      sendEmailDetails.put(ACTION_ID, "?unknown?") //
-      logger.debug(s"SendEmailDetails updated: $sendEmailDetails")
+        sendEmailDetails.put(ACTION_ID, "?unknown?") //
+        logger.debug(s"SendEmailDetails updated: $sendEmailDetails")
 
-      val documentId = document.get("_id").asInstanceOf[org.bson.types.ObjectId]
-      val filter = feq("_id", documentId)
-      val update = set(item, sendEmailDetails)
-      logger.debug(s"[filter: $filter] [update: $update]")
+        val documentId = document.get("_id").asInstanceOf[org.bson.types.ObjectId]
+        val filter = feq("_id", documentId)
+        val update = set(item, sendEmailDetails)
+        logger.debug(s"[filter: $filter] [update: $update]")
 
-      new UpdateOneModel[Document](filter, update)
-    }.grouped(updateBatchSize).zipWithIndex.foreach { case (requests, idx) =>
-      logger.info(s"Updating batch no. $idx...")
+        new UpdateOneModel[Document](filter, update)
+      }
+      .grouped(updateBatchSize)
+      .zipWithIndex
+      .foreach { case (requests, idx) =>
+        logger.info(s"Updating batch no. $idx...")
 
-      collection.bulkWrite(seqAsJavaList(requests))
-      logger.info(s"Updated batch no. $idx")
-    }
+        collection.bulkWrite(requests.asJava)
+        logger.info(s"Updated batch no. $idx")
+      }
 
     logger.info(s"Applying '${migrationInformation.id}' db migration... Done.")
   }

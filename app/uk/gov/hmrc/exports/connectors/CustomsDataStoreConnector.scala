@@ -20,7 +20,7 @@ import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.emails.{Email, EmailResponse}
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, Upstream4xxResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, UpstreamErrorResponse}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,7 +39,7 @@ class CustomsDataStoreConnector @Inject() (http: HttpClient)(implicit appConfig:
         case EmailResponse(email, _, _)    => Some(Email(email, deliverable = false))
         case _                             => None
       }
-      .recover { case Upstream4xxResponse(_, NOT_FOUND, _, _) =>
+      .recover { case UpstreamErrorResponse(_, NOT_FOUND, _, _) =>
         None
       }
   }

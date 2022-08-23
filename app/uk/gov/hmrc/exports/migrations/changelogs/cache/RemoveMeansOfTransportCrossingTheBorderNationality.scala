@@ -23,7 +23,7 @@ import org.mongodb.scala.model.Updates.{combine, set, unset}
 import play.api.Logging
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 
-import scala.collection.JavaConverters.iterableAsScalaIterableConverter
+import scala.jdk.CollectionConverters._
 
 class RemoveMeansOfTransportCrossingTheBorderNationality extends MigrationDefinition with Logging {
 

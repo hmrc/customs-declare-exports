@@ -23,7 +23,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration.AuthorisationHolder
 import wco.datamodel.wco.declaration_ds.dms._2.{AuthorisationHolderCategoryCodeType, AuthorisationHolderIdentificationIDType}
 
 import javax.inject.Inject
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class AuthorisationHoldersBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 

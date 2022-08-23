@@ -66,7 +66,7 @@ class PurgeDraftDeclarationsJobSpec extends UnitSpec {
   "Scheduled Job 'Execute'" should {
     "Purge expired draft declarations" in {
 
-      val expireAfter: FiniteDuration = 5 days
+      val expireAfter: FiniteDuration = 5.days
       val expiryDate = Instant.now(appConfig.clock).minusSeconds(expireAfter.toSeconds)
 
       given(appConfig.draftTimeToLive).willReturn(expireAfter)

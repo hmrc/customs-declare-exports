@@ -52,7 +52,7 @@ class SendEmailWorkItemRepository @Inject() (config: Configuration, mongoCompone
   override lazy val inProgressRetryAfter: Duration =
     Duration.ofMillis(config.getMillis("workItem.sendEmail.retryAfterMillis"))
 
-  override def now: Instant = Instant.now
+  override def now(): Instant = Instant.now()
 
   def markAlertTriggered(id: ObjectId): Future[Boolean] = {
     val fields = Json.obj("item.alertTriggered" -> true)
