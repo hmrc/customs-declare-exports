@@ -24,13 +24,12 @@ import wco.datamodel.wco.declaration_ds.dms._2.DeclarationFunctionalReferenceIDT
 
 class FunctionalReferenceIdBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
-  override def buildThenAdd(exportsCacheModel: ExportsDeclaration, declaration: Declaration) {
+  override def buildThenAdd(exportsCacheModel: ExportsDeclaration, declaration: Declaration): Unit =
     exportsCacheModel.consignmentReferences.foreach { references =>
       if (references.lrn.nonEmpty) {
         buildThenAdd(references.lrn, declaration)
       }
     }
-  }
 
   def buildThenAdd(functionalReferenceId: String, declaration: Declaration): Unit = {
     val referenceId = new DeclarationFunctionalReferenceIDType()

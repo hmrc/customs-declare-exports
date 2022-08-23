@@ -233,7 +233,7 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
     }
   }
 
-  private def collectionSize: Int = repository.collection.countDocuments.toFuture.futureValue.toInt
+  private def collectionSize: Int = repository.collection.countDocuments().toFuture().futureValue.toInt
 
   private def givenADeclarationExists(declarations: ExportsDeclaration*): Unit =
     repository.bulkInsert(declarations).futureValue mustBe declarations.size

@@ -18,7 +18,7 @@ class UnparsedNotificationWorkItemRepositoryISpec extends IntegrationTestSpec wi
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    repository.collection.deleteMany(BsonDocument()).toFuture.futureValue
+    repository.collection.deleteMany(BsonDocument()).toFuture().futureValue
   }
 
   "UnparsedNotificationWorkItemRepository on pushNew" should {

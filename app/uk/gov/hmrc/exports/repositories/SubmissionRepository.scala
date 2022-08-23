@@ -52,7 +52,7 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     collection
       .find(BsonDocument(filter.toString))
       .sort(BsonDocument(Json.obj("actions.requestTimestamp" -> -1).toString))
-      .toFuture
+      .toFuture()
   }
 }
 

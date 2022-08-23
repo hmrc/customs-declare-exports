@@ -27,7 +27,7 @@ import uk.gov.hmrc.exports.migrations.exceptions.LockPersistenceException
 import uk.gov.hmrc.exports.migrations.repositories.LockEntry.{ExpiresAtField, KeyField, OwnerField, StatusField}
 
 import java.time.Instant
-import scala.collection.JavaConverters.asScalaIterator
+import scala.jdk.CollectionConverters._
 
 class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRepository(db, collectionName, Array(KeyField)) {
 
@@ -38,7 +38,12 @@ class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRep
    * @return LockEntry
    */
   private[migrations] def findByKey(lockKey: String): Option[LockEntry] =
-    asScalaIterator(collection.find(new Document().append(KeyField, lockKey)).iterator).toSeq.headOption
+    collection
+      .find(new Document().append(KeyField, lockKey))
+      .iterator
+      .asScala
+      .toSeq
+      .headOption
       .map(LockEntry(_))
 
   /**

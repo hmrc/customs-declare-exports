@@ -65,7 +65,7 @@ object Pointer {
   implicit val format: Format[Pointer] =
     Format(Reads(js => js.validate[String].map(Pointer(_))), Writes(pointer => JsString(pointer.toString)))
 
-  def apply(sections: String): Pointer = Pointer(sections.split("\\.").map(PointerSection(_)))
+  def apply(sections: String): Pointer = Pointer(sections.split("\\.").toIndexedSeq.map(PointerSection(_)))
 }
 
 case class PointerPattern(sections: List[PointerPatternSection]) {

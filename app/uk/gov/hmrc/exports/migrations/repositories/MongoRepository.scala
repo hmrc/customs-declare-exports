@@ -21,7 +21,7 @@ import com.mongodb.client.model.IndexOptions
 import org.bson.Document
 import play.api.Logging
 
-import scala.collection.JavaConverters.asScalaIterator
+import scala.jdk.CollectionConverters._
 
 abstract class MongoRepository private[migrations] (val mongoDatabase: MongoDatabase, val collectionName: String, val uniqueFields: Array[String])
     extends Logging {
@@ -31,13 +31,13 @@ abstract class MongoRepository private[migrations] (val mongoDatabase: MongoData
   private[migrations] val collection = mongoDatabase.getCollection(collectionName)
   private[migrations] val fullCollectionName = collection.getNamespace.getDatabaseName + "." + collection.getNamespace.getCollectionName
 
-  private lazy val indexes: Seq[Document] = asScalaIterator(collection.listIndexes.iterator()).toSeq
+  private lazy val indexes: Seq[Document] = collection.listIndexes.iterator().asScala.toSeq
 
   private[migrations] def ensureIndex(): Unit =
     if (!this.ensuredCollectionIndex) {
       indexes.size match {
         case 0 =>
-          createRequiredUniqueIndex
+          createRequiredUniqueIndex()
           logger.debug(s"Index in collection ${getCollectionName} was created")
 
         case _ =>
@@ -45,7 +45,7 @@ abstract class MongoRepository private[migrations] (val mongoDatabase: MongoData
 
           if (indexes.exists(isIndexUnique)) logger.debug(s"Index in collection ${getCollectionName} already exists")
           else {
-            createRequiredUniqueIndex
+            createRequiredUniqueIndex()
             logger.debug(s"Index in collection ${getCollectionName} was recreated")
           }
       }

@@ -55,7 +55,7 @@ class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
     .register(new AddNotificationSummariesToSubmissions())
     .register(new RemoveMeansOfTransportCrossingTheBorderNationality())
 
-  ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute
+  ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute()
 
   client.close()
 

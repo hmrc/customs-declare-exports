@@ -38,34 +38,34 @@ trait RepositoryOps[T] {
   val collection: MongoCollection[T]
 
   def bulkInsert(documents: Seq[T]): Future[Int] =
-    collection.bulkWrite(documents.map(InsertOneModel(_))).toFuture.map(_.getInsertedCount)
+    collection.bulkWrite(documents.map(InsertOneModel(_))).toFuture().map(_.getInsertedCount)
 
   def bulkInsert(session: ClientSession, documents: Seq[T]): Future[Int] =
-    collection.bulkWrite(session, documents.map(InsertOneModel(_))).toFuture.map(_.getInsertedCount)
+    collection.bulkWrite(session, documents.map(InsertOneModel(_))).toFuture().map(_.getInsertedCount)
 
   def create(document: T): Future[T] =
-    collection.insertOne(document).toFuture.map(_ => document)
+    collection.insertOne(document).toFuture().map(_ => document)
 
   def findAll(): Future[Seq[T]] =
-    collection.find().toFuture
+    collection.find().toFuture()
 
   def findAll[V](keyId: String, keyValue: V): Future[Seq[T]] =
-    collection.find(equal(keyId, keyValue)).toFuture
+    collection.find(equal(keyId, keyValue)).toFuture()
 
   def findAll(filter: JsValue): Future[Seq[T]] =
-    collection.find(BsonDocument(filter.toString)).toFuture
+    collection.find(BsonDocument(filter.toString)).toFuture()
 
   def findAll(filter: Bson): Future[Seq[T]] =
-    collection.find(filter).toFuture
+    collection.find(filter).toFuture()
 
   def findAll(clientSession: ClientSession, filter: Bson): Future[Seq[T]] =
-    collection.find(clientSession, filter).toFuture
+    collection.find(clientSession, filter).toFuture()
 
   def findFirst(filter: JsValue, sort: JsValue): Future[Option[T]] =
     findFirst(BsonDocument(filter.toString), BsonDocument(sort.toString))
 
   def findFirst(filter: Bson, sort: Bson): Future[Option[T]] =
-    collection.find(filter).sort(sort).limit(1).toFuture.map(_.headOption)
+    collection.find(filter).sort(sort).limit(1).toFuture().map(_.headOption)
 
   def findOne[V](keyId: String, keyValue: V): Future[Option[T]] =
     findOne(equal(keyId, keyValue))
@@ -74,7 +74,7 @@ trait RepositoryOps[T] {
     findOne(BsonDocument(filter.toString))
 
   def findOne(filter: Bson): Future[Option[T]] =
-    collection.find(filter).limit(1).toFuture.map(_.headOption)
+    collection.find(filter).limit(1).toFuture().map(_.headOption)
 
   /*
    Find one and return if a document with keyId=keyValue exists,
@@ -95,16 +95,16 @@ trait RepositoryOps[T] {
   def findOneOrCreate(filter: Bson, document: => T): Future[T] =
     collection
       .findOneAndUpdate(filter = filter, update = Updates.setOnInsert(BsonDocument(Json.toJson(document).toString)), options = upsertAndReturnAfter)
-      .toFuture
+      .toFuture()
 
   def findOneAndRemove[V](keyId: String, keyValue: V): Future[Option[T]] =
-    collection.findOneAndDelete(equal(keyId, keyValue)).toFutureOption
+    collection.findOneAndDelete(equal(keyId, keyValue)).toFutureOption()
 
   def findOneAndRemove(filter: JsValue): Future[Option[T]] =
-    collection.findOneAndDelete(BsonDocument(filter.toString)).toFutureOption
+    collection.findOneAndDelete(BsonDocument(filter.toString)).toFutureOption()
 
   def findOneAndRemove(filter: Bson): Future[Option[T]] =
-    collection.findOneAndDelete(filter).toFutureOption
+    collection.findOneAndDelete(filter).toFutureOption()
 
   /*
    Find one and replace with "document: T" if a document with keyId=keyValue exists,
@@ -128,7 +128,7 @@ trait RepositoryOps[T] {
         options = FindOneAndReplaceOptions().upsert(createIfNotExists).returnDocument(ReturnDocument.AFTER)
       )
 
-    if (result == null) Future.successful(None) else result.toFutureOption
+    if (result == null) Future.successful(None) else result.toFutureOption()
   }
 
   /*
@@ -148,12 +148,12 @@ trait RepositoryOps[T] {
   def findOneAndUpdate(filter: Bson, update: Bson): Future[Option[T]] =
     collection
       .findOneAndUpdate(filter = filter, update = update, options = doNotUpsertAndReturnAfter)
-      .toFutureOption
+      .toFutureOption()
 
   def findOneAndUpdate(session: ClientSession, filter: Bson, update: Bson): Future[Option[T]] =
     collection
       .findOneAndUpdate(session, filter = filter, update = update, options = doNotUpsertAndReturnAfter)
-      .toFutureOption
+      .toFutureOption()
 
   def get[V](keyId: String, keyValue: V): Future[T] =
     get(equal(keyId, keyValue))
@@ -162,14 +162,14 @@ trait RepositoryOps[T] {
     get(BsonDocument(filter.toString))
 
   def get(filter: Bson): Future[T] =
-    collection.find(filter).limit(1).toFuture.map(_.head)
+    collection.find(filter).limit(1).toFuture().map(_.head)
 
-  def indexList: Future[Seq[Document]] = collection.listIndexes.toFuture
+  def indexList: Future[Seq[Document]] = collection.listIndexes().toFuture()
 
   def insertOne(document: T): Future[Either[WriteError, T]] =
     collection
       .insertOne(document)
-      .toFuture
+      .toFuture()
       .map(_ => Right(document))
       .recover {
         case exc: MongoWriteException if exc.getError.getCategory == DUPLICATE_KEY =>
@@ -177,30 +177,30 @@ trait RepositoryOps[T] {
       }
 
   def removeAll: Future[Long] =
-    collection.deleteMany(BsonDocument()).toFuture.map(_.getDeletedCount)
+    collection.deleteMany(BsonDocument()).toFuture().map(_.getDeletedCount)
 
   def removeEvery[V](keyId: String, keyValue: V): Future[Long] =
-    collection.deleteMany(equal(keyId, keyValue)).toFuture.map(_.getDeletedCount)
+    collection.deleteMany(equal(keyId, keyValue)).toFuture().map(_.getDeletedCount)
 
   def removeEvery(filter: JsValue): Future[Long] =
-    collection.deleteMany(BsonDocument(filter.toString)).toFuture.map(_.getDeletedCount)
+    collection.deleteMany(BsonDocument(filter.toString)).toFuture().map(_.getDeletedCount)
 
   def removeEvery(filter: Bson): Future[Long] =
-    collection.deleteMany(filter).toFuture.map(_.getDeletedCount)
+    collection.deleteMany(filter).toFuture().map(_.getDeletedCount)
 
   def removeEvery(clientSession: ClientSession, filter: Bson): Future[Long] =
-    collection.deleteMany(clientSession, filter).toFuture.map(_.getDeletedCount)
+    collection.deleteMany(clientSession, filter).toFuture().map(_.getDeletedCount)
 
   def removeOne[V](keyId: String, keyValue: V): Future[Boolean] =
-    collection.deleteOne(equal(keyId, keyValue)).toFuture.map(_.getDeletedCount > 0)
+    collection.deleteOne(equal(keyId, keyValue)).toFuture().map(_.getDeletedCount > 0)
 
   def removeOne(filter: JsValue): Future[Boolean] =
-    collection.deleteOne(BsonDocument(filter.toString)).toFuture.map(_.getDeletedCount > 0)
+    collection.deleteOne(BsonDocument(filter.toString)).toFuture().map(_.getDeletedCount > 0)
 
   def removeOne(filter: Bson): Future[Boolean] =
-    collection.deleteOne(filter).toFuture.map(_.getDeletedCount > 0)
+    collection.deleteOne(filter).toFuture().map(_.getDeletedCount > 0)
 
-  def size: Future[Long] = collection.countDocuments.toFuture
+  def size: Future[Long] = collection.countDocuments().toFuture()
 }
 // scalastyle:on
 

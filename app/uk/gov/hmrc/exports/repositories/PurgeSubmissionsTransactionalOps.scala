@@ -40,7 +40,7 @@ class PurgeSubmissionsTransactionalOps @Inject() (
 
   protected implicit val tc = TransactionConfiguration.strict
 
-  protected lazy val nonTransactionalSession = mongoComponent.client.startSession().toFuture
+  protected lazy val nonTransactionalSession = mongoComponent.client.startSession().toFuture()
 
   def removeSubmissionAndNotifications(submissions: Seq[Submission]): Future[Seq[Long]] =
     if (appConfig.useTransactionalDBOps)
@@ -83,7 +83,7 @@ class PurgeSubmissionsTransactionalOps @Inject() (
 
       unparsedNotificationRespository.collection
         .deleteMany(session, filter)
-        .toFuture
+        .toFuture()
         .map(_.getDeletedCount)
 
     }

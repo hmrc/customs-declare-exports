@@ -82,7 +82,7 @@ object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
       val declarations = (1 to batchSize).map { _ =>
         InsertOneModel(declaration.copy(id = UUID.randomUUID.toString, eori = generateEori, status = randomStatus))
       }.toList
-      Await.ready(collection.bulkWrite(declarations).toFuture, Duration.Inf)
+      Await.ready(collection.bulkWrite(declarations).toFuture(), Duration.Inf)
       print(s"Inserted ${batchSize * batchNumber} out of ${target} declarations\n")
     }
 
