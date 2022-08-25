@@ -45,10 +45,10 @@ class SubmissionService @Inject() (
     extends Logging {
 
   def cancel(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationStatus] =
-    submissionRepository.findOne(Json.obj("eori" -> eori, "mrn" -> cancellation.mrn)).flatMap {
+    submissionRepository.findOne(Json.obj("eori" -> eori, "uuid" -> cancellation.submissionId)).flatMap {
       case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationAlreadyRequested)
       case Some(submission)                                             => sendCancellationRequest(submission, cancellation)
-      case _                                                            => Future.successful(MrnNotFound)
+      case _                                                            => Future.successful(NotFound)
     }
 
   def findAllSubmissionsBy(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] =
@@ -128,7 +128,7 @@ class SubmissionService @Inject() (
     val newAction = Action(requestType = CancellationRequest, id = actionId)
     submissionRepository.addAction(mrn, newAction).map {
       case Some(_) => CancellationRequestSent
-      case None    => MrnNotFound
+      case None    => NotFound
     }
   }
 }

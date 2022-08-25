@@ -30,7 +30,7 @@ class CancellationStatusSpec extends UnitSpec {
 
       reads(JsString(CancellationAlreadyRequestedName)) must be(JsSuccess(CancellationAlreadyRequested))
       reads(JsString(CancellationRequestSentName)) must be(JsSuccess(CancellationRequestSent))
-      reads(JsString(MrnNotFoundName)) must be(JsSuccess(MrnNotFound))
+      reads(JsString(MrnNotFoundName)) must be(JsSuccess(NotFound))
       reads(JsString("IncorrectStatus")) must be(JsError("Incorrect cancellation status"))
     }
   }
@@ -43,7 +43,7 @@ class CancellationStatusSpec extends UnitSpec {
 
       writes(CancellationAlreadyRequested) must be(JsString(CancellationAlreadyRequestedName))
       writes(CancellationRequestSent) must be(JsString(CancellationRequestSentName))
-      writes(MrnNotFound) must be(JsString(MrnNotFoundName))
+      writes(NotFound) must be(JsString(MrnNotFoundName))
     }
   }
 
