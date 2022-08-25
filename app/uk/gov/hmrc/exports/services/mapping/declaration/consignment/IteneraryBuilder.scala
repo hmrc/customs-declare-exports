@@ -23,7 +23,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.Consignment.Itinerary
 import wco.datamodel.wco.declaration_ds.dms._2.ItineraryRoutingCountryCodeType
 
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 
 class IteneraryBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration, Declaration.Consignment] {
 

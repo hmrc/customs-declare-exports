@@ -21,7 +21,7 @@ import uk.gov.hmrc.exports.models.Country
 
 import java.util
 import javax.inject.Inject
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 
 class CountriesService @Inject() () {
 

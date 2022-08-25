@@ -28,7 +28,7 @@ import wco.datamodel.wco.declaration_ds.dms._2._
 
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 
 class AdditionalDocumentsBuilder @Inject() () extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
 

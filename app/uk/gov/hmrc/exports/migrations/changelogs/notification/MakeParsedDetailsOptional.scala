@@ -26,7 +26,7 @@ import play.api.Logging
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 
 import java.util
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 
 class MakeParsedDetailsOptional extends MigrationDefinition with Logging {
 
