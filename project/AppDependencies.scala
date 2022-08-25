@@ -15,7 +15,7 @@ object AppDependencies {
     "com.github.tototoshi"           %% "scala-csv"                         % "1.3.10",
     "com.fasterxml.jackson.module"   %% "jackson-module-scala"              % "2.13.3",
     // Used by the Migration tool. Keep this library's version to the same major.minor version as the mongo-scala-driver.
-    "org.mongodb"                    %  "mongodb-driver-sync"               % "4.6.0",
+    "org.mongodb"                    %  "mongodb-driver-sync"               % "4.6.0"
   )
 
   val test = Seq(

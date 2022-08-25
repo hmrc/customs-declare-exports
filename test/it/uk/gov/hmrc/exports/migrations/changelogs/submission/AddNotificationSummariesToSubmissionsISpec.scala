@@ -20,7 +20,7 @@ import org.bson.Document
 import uk.gov.hmrc.exports.base.IntegrationTestMigrationToolSpec
 import uk.gov.hmrc.exports.migrations.changelogs.submission.AddNotificationSummariesToSubmissionsISpec._
 
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 
 class AddNotificationSummariesToSubmissionsISpec extends IntegrationTestMigrationToolSpec {
 

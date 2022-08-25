@@ -27,7 +27,7 @@ import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, NotificationSummary, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
 
-import scala.jdk.CollectionConverters.IterableHasAsScala
+import scala.collection.JavaConverters._
 
 class AddNotificationSummariesToSubmissions extends MigrationDefinition with Logging {
 

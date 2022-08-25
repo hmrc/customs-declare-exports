@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.CurrencyExchange
 
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 
 class CurrencyExchangeBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 

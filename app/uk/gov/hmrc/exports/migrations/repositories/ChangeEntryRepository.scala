@@ -20,7 +20,7 @@ import com.mongodb.client.MongoDatabase
 import org.bson.Document
 import uk.gov.hmrc.exports.migrations.repositories.ChangeEntry.{KeyAuthor, KeyChangeId}
 
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 
 class ChangeEntryRepository(collectionName: String, mongoDatabase: MongoDatabase)
     extends MongoRepository(mongoDatabase, collectionName, Array(KeyAuthor, KeyChangeId)) {
