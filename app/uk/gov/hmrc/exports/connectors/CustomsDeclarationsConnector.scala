@@ -43,6 +43,8 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: 
       logger.debug(s"CUSTOMS_DECLARATIONS response is  --> ${res.toString}")
       res match {
         case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) => conversationId
+        case CustomsDeclarationsResponse(status, Some(message)) =>
+          throw new InternalServerException(s"Customs Declarations Service returned [$status] with error message: $message")
         case CustomsDeclarationsResponse(status, _) =>
           throw new InternalServerException(s"Customs Declarations Service returned [$status]")
       }
@@ -83,7 +85,7 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: 
               }
 
               CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, Some(conversationId))
-            case _ => CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, None)
+            case _ => CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, Some(error.getMessage))
           }
         }
     }
