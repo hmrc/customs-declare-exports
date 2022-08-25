@@ -24,7 +24,7 @@ import org.mongodb.scala.model.Updates.set
 import play.api.Logging
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class RemoveRedundantIndexes extends MigrationDefinition with Logging {
 

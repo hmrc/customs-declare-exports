@@ -27,7 +27,7 @@ import uk.gov.hmrc.exports.migrations.exceptions.LockPersistenceException
 import uk.gov.hmrc.exports.migrations.repositories.LockEntry.{ExpiresAtField, KeyField, OwnerField, StatusField}
 
 import java.time.Instant
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRepository(db, collectionName, Array(KeyField)) {
 

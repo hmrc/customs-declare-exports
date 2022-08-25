@@ -23,7 +23,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment
 import wco.datamodel.wco.declaration_ds.dms._2.{SealIdentificationIDType, TransportEquipmentIdentificationIDType}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class TransportEquipmentBuilder @Inject() () extends ModifyingBuilder[Seq[Container], GoodsShipment.Consignment] {
 
