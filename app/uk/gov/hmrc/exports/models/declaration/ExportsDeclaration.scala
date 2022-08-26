@@ -22,6 +22,7 @@ import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time.Instant
@@ -29,11 +30,11 @@ import java.time.Instant
 case class ExportsDeclaration(
   id: String,
   parentDeclarationId: Option[String] = None,
+  parentDeclarationEnhancedStatus: Option[EnhancedStatus] = None,
   eori: String,
   status: DeclarationStatus,
   createdDateTime: Instant,
   updatedDateTime: Instant,
-  sourceId: Option[String],
   `type`: DeclarationType,
   dispatchLocation: Option[DispatchLocation],
   additionalDeclarationType: Option[AdditionalDeclarationType],
@@ -67,11 +68,11 @@ object ExportsDeclaration {
     ExportsDeclaration(
       id = id,
       parentDeclarationId = declarationRequest.parentDeclarationId,
+      parentDeclarationEnhancedStatus = declarationRequest.parentDeclarationEnhancedStatus,
       eori = eori.value,
       status = declarationRequest.consignmentReferences.map(_ => DeclarationStatus.DRAFT).getOrElse(DeclarationStatus.INITIAL),
       createdDateTime = declarationRequest.createdDateTime,
       updatedDateTime = declarationRequest.updatedDateTime,
-      sourceId = declarationRequest.sourceId,
       `type` = declarationRequest.`type`,
       dispatchLocation = declarationRequest.dispatchLocation,
       additionalDeclarationType = declarationRequest.additionalDeclarationType,

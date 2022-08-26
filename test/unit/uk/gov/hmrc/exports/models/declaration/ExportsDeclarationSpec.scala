@@ -73,7 +73,6 @@ object ExportsDeclarationSpec {
   private val `type` = DeclarationType.STANDARD
   private val createdDate = Instant.MIN
   private val updatedDate = Instant.MAX
-  private val sourceId = "source-id"
   private val dispatchLocation = mock[DispatchLocation]
   private val additionalDeclarationType = mock[AdditionalDeclarationType]
   private val consignmentReferences = mock[ConsignmentReferences]
@@ -89,7 +88,6 @@ object ExportsDeclarationSpec {
     parentDeclarationId = Some("parentDeclarationId"),
     createdDateTime = createdDate,
     updatedDateTime = updatedDate,
-    sourceId = Some(sourceId),
     `type` = `type`,
     dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),
@@ -113,7 +111,6 @@ object ExportsDeclarationSpec {
     status = DeclarationStatus.DRAFT,
     createdDateTime = createdDate,
     updatedDateTime = updatedDate,
-    sourceId = Some(sourceId),
     `type` = `type`,
     dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),

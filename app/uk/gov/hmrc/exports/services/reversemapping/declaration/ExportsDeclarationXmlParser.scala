@@ -64,7 +64,6 @@ class ExportsDeclarationXmlParser @Inject() (
       status = DeclarationStatus.COMPLETE,
       createdDateTime = Instant.now(),
       updatedDateTime = Instant.now(),
-      sourceId = None,
       `type` = declarationType,
       dispatchLocation = None,
       additionalDeclarationType = additionalDeclarationType,
