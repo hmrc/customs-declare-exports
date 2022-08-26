@@ -46,7 +46,6 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     status = DeclarationStatus.COMPLETE,
     createdDateTime = ZonedDateTime.of(2019, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC).toInstant,
     updatedDateTime = ZonedDateTime.of(2019, 2, 2, 0, 0, 0, 0, ZoneOffset.UTC).toInstant,
-    sourceId = None,
     `type` = DeclarationType.STANDARD,
     dispatchLocation = None,
     additionalDeclarationType = None,
