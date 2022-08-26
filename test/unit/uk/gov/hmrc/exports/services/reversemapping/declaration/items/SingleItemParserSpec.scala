@@ -53,7 +53,7 @@ class SingleItemParserSpec extends UnitSpec {
       val result = singleItemParser.parse(inputXml)
 
       result.isRight mustBe true
-      result.right.value mustBe an[ExportItem]
+      result.toOption.get mustBe an[ExportItem]
 
       verify(packageInformationParser).parse(eqTo(inputXml))(any[MappingContext])
       verify(procedureCodesParser).parse(eqTo(inputXml))(any[MappingContext])
@@ -72,7 +72,7 @@ class SingleItemParserSpec extends UnitSpec {
 
         result.isRight mustBe true
 
-        val exportItem = result.right.value
+        val exportItem = result.toOption.get
         exportItem.id mustNot be(empty)
         exportItem.sequenceId mustBe 1
 
@@ -105,7 +105,7 @@ class SingleItemParserSpec extends UnitSpec {
     "set ExportItem.statisticalValue to None" when {
       "the '/ GovernmentAgencyGoodsItem / StatisticalValueAmount' element is NOT present" in {
         val result = singleItemParser.parse(inputXml)
-        result.right.value.statisticalValue mustBe None
+        result.toOption.get.statisticalValue mustBe None
       }
     }
 
@@ -113,28 +113,28 @@ class SingleItemParserSpec extends UnitSpec {
       "the '/ GovernmentAgencyGoodsItem / StatisticalValueAmount' element is present" in {
         val expectedValue = "1000"
         val result = singleItemParser.parse(statisticalValue(expectedValue))
-        result.right.value.statisticalValue.get.statisticalValue mustBe expectedValue
+        result.toOption.get.statisticalValue.get.statisticalValue mustBe expectedValue
       }
     }
 
     "set ExportItem.fiscalInformation to None" when {
       "'/ GovernmentAgencyGoodsItem / DomesticDutyTaxParty' elements are NOT present" in {
         val result = singleItemParser.parse(inputXml)
-        result.right.value.fiscalInformation mustBe None
+        result.toOption.get.fiscalInformation mustBe None
       }
     }
 
     "set ExportItem.fiscalInformation to 'yes'" when {
       "at least one '/ GovernmentAgencyGoodsItem / DomesticDutyTaxParty' element is present" in {
         val result = singleItemParser.parse(additionalFiscalReferencesData(List("GB12345678")))
-        result.right.value.fiscalInformation.get.onwardSupplyRelief mustBe YesNoStringAnswers.yes
+        result.toOption.get.fiscalInformation.get.onwardSupplyRelief mustBe YesNoStringAnswers.yes
       }
     }
 
     "set ExportItem.additionalFiscalReferencesData to None" when {
       "'/ GovernmentAgencyGoodsItem / DomesticDutyTaxParty' elements are NOT present" in {
         val result = singleItemParser.parse(inputXml)
-        result.right.value.additionalFiscalReferencesData mustBe None
+        result.toOption.get.additionalFiscalReferencesData mustBe None
       }
     }
 
@@ -142,24 +142,24 @@ class SingleItemParserSpec extends UnitSpec {
 
       "one '/ GovernmentAgencyGoodsItem / DomesticDutyTaxParty' element is present" in {
         val result = singleItemParser.parse(additionalFiscalReferencesData(List("GB12345678")))
-        val references = result.right.value.additionalFiscalReferencesData.get.references
+        val references = result.toOption.get.additionalFiscalReferencesData.get.references
         references.size mustBe 1
       }
 
       "multiple '/ GovernmentAgencyGoodsItem / DomesticDutyTaxParty' elements are present" in {
         val result = singleItemParser.parse(additionalFiscalReferencesData(List("GB12345678", "GB987654321", "IT1234")))
-        val references = result.right.value.additionalFiscalReferencesData.get.references
+        val references = result.toOption.get.additionalFiscalReferencesData.get.references
         references.size mustBe 3
       }
 
       "'/ GovernmentAgencyGoodsItem / DomesticDutyTaxParty' elements are not fully defined" in {
         val result1 = singleItemParser.parse(additionalFiscalReferencesData(List("G")))
-        val references1 = result1.right.value.additionalFiscalReferencesData.get.references
+        val references1 = result1.toOption.get.additionalFiscalReferencesData.get.references
         references1.size mustBe 1
         references1.head.country mustBe "G?"
 
         val result2 = singleItemParser.parse(additionalFiscalReferencesData(List("GB12345678", "B")))
-        val references2 = result2.right.value.additionalFiscalReferencesData.get.references
+        val references2 = result2.toOption.get.additionalFiscalReferencesData.get.references
         references2.size mustBe 2
         references2.last.country mustBe "B?"
       }
@@ -169,7 +169,7 @@ class SingleItemParserSpec extends UnitSpec {
       "'/ GovernmentAgencyGoodsItem / DomesticDutyTaxParty' elements are present and well defined" in {
         val result = singleItemParser.parse(additionalFiscalReferencesData(List("GB12345678", "IT")))
 
-        val references = result.right.value.additionalFiscalReferencesData.get.references
+        val references = result.toOption.get.additionalFiscalReferencesData.get.references
 
         references.head.country mustBe "GB"
         references.head.reference mustBe "12345678"
@@ -187,14 +187,14 @@ class SingleItemParserSpec extends UnitSpec {
 
           val result = singleItemParser.parse(commodityDetails())
 
-          result.right.value.commodityDetails mustBe None
+          result.toOption.get.commodityDetails mustBe None
         }
 
         "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'TSP' IdentificationTypeCode value" in {
 
           val result = singleItemParser.parse(commodityDetails(classifications = Seq(("1234", "GN"))))
 
-          result.right.value.commodityDetails mustBe None
+          result.toOption.get.commodityDetails mustBe None
         }
       }
     }
@@ -205,20 +205,20 @@ class SingleItemParserSpec extends UnitSpec {
 
         val result = singleItemParser.parse(commodityDetails(description = Some("description")))
 
-        result.right.value.commodityDetails mustBe defined
-        result.right.value.commodityDetails.get.combinedNomenclatureCode mustBe None
-        result.right.value.commodityDetails.get.descriptionOfGoods mustBe defined
-        result.right.value.commodityDetails.get.descriptionOfGoods.get mustBe "description"
+        result.toOption.get.commodityDetails mustBe defined
+        result.toOption.get.commodityDetails.get.combinedNomenclatureCode mustBe None
+        result.toOption.get.commodityDetails.get.descriptionOfGoods mustBe defined
+        result.toOption.get.commodityDetails.get.descriptionOfGoods.get mustBe "description"
       }
 
       "there is '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'TSP' IdentificationTypeCode value" in {
 
         val result = singleItemParser.parse(commodityDetails(classifications = Seq(("1234", "GN"), ("12345678", "TSP"))))
 
-        result.right.value.commodityDetails mustBe defined
-        result.right.value.commodityDetails.get.descriptionOfGoods mustBe None
-        result.right.value.commodityDetails.get.combinedNomenclatureCode mustBe defined
-        result.right.value.commodityDetails.get.combinedNomenclatureCode.get mustBe "12345678"
+        result.toOption.get.commodityDetails mustBe defined
+        result.toOption.get.commodityDetails.get.descriptionOfGoods mustBe None
+        result.toOption.get.commodityDetails.get.combinedNomenclatureCode mustBe defined
+        result.toOption.get.commodityDetails.get.combinedNomenclatureCode.get mustBe "12345678"
       }
 
       "both of required values are provided" in {
@@ -226,11 +226,11 @@ class SingleItemParserSpec extends UnitSpec {
         val inputXml = commodityDetails(description = Some("description"), classifications = Seq(("1234", "GN"), ("12345678", "TSP")))
         val result = singleItemParser.parse(inputXml)
 
-        result.right.value.commodityDetails mustBe defined
-        result.right.value.commodityDetails.get.descriptionOfGoods mustBe defined
-        result.right.value.commodityDetails.get.descriptionOfGoods.get mustBe "description"
-        result.right.value.commodityDetails.get.combinedNomenclatureCode mustBe defined
-        result.right.value.commodityDetails.get.combinedNomenclatureCode.get mustBe "12345678"
+        result.toOption.get.commodityDetails mustBe defined
+        result.toOption.get.commodityDetails.get.descriptionOfGoods mustBe defined
+        result.toOption.get.commodityDetails.get.descriptionOfGoods.get mustBe "description"
+        result.toOption.get.commodityDetails.get.combinedNomenclatureCode mustBe defined
+        result.toOption.get.commodityDetails.get.combinedNomenclatureCode.get mustBe "12345678"
       }
     }
 
@@ -239,7 +239,7 @@ class SingleItemParserSpec extends UnitSpec {
 
         val result = singleItemParser.parse(commodityDetails())
 
-        result.right.value.dangerousGoodsCode mustBe None
+        result.toOption.get.dangerousGoodsCode mustBe None
       }
     }
 
@@ -248,9 +248,9 @@ class SingleItemParserSpec extends UnitSpec {
 
         val result = singleItemParser.parse(commodityDetails(dangerousGoods = Some("9876")))
 
-        result.right.value.dangerousGoodsCode mustBe defined
-        result.right.value.dangerousGoodsCode.get.dangerousGoodsCode mustBe defined
-        result.right.value.dangerousGoodsCode.get.dangerousGoodsCode.get mustBe "9876"
+        result.toOption.get.dangerousGoodsCode mustBe defined
+        result.toOption.get.dangerousGoodsCode.get.dangerousGoodsCode mustBe defined
+        result.toOption.get.dangerousGoodsCode.get.dangerousGoodsCode.get mustBe "9876"
       }
     }
 
@@ -260,14 +260,14 @@ class SingleItemParserSpec extends UnitSpec {
 
         val result = singleItemParser.parse(commodityDetails())
 
-        result.right.value.cusCode mustBe None
+        result.toOption.get.cusCode mustBe None
       }
 
       "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'CV' IdentificationTypeCode value" in {
 
         val result = singleItemParser.parse(commodityDetails(classifications = Seq(("12345678", "TSP"))))
 
-        result.right.value.cusCode mustBe None
+        result.toOption.get.cusCode mustBe None
       }
     }
 
@@ -276,9 +276,9 @@ class SingleItemParserSpec extends UnitSpec {
 
         val result = singleItemParser.parse(commodityDetails(classifications = Seq(("12345678", "TSP"), ("11111111", "CV"))))
 
-        result.right.value.cusCode mustBe defined
-        result.right.value.cusCode.get.cusCode mustBe defined
-        result.right.value.cusCode.get.cusCode.get mustBe "11111111"
+        result.toOption.get.cusCode mustBe defined
+        result.toOption.get.cusCode.get.cusCode mustBe defined
+        result.toOption.get.cusCode.get.cusCode.get mustBe "11111111"
       }
     }
 
@@ -288,16 +288,16 @@ class SingleItemParserSpec extends UnitSpec {
 
         val result = singleItemParser.parse(commodityDetails())
 
-        result.right.value.taricCodes mustBe defined
-        result.right.value.taricCodes.get mustBe List.empty
+        result.toOption.get.taricCodes mustBe defined
+        result.toOption.get.taricCodes.get mustBe List.empty
       }
 
       "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'TRA' IdentificationTypeCode value" in {
 
         val result = singleItemParser.parse(commodityDetails(classifications = Seq(("12345678", "TSP"))))
 
-        result.right.value.taricCodes mustBe defined
-        result.right.value.taricCodes.get mustBe List.empty
+        result.toOption.get.taricCodes mustBe defined
+        result.toOption.get.taricCodes.get mustBe List.empty
       }
     }
 
@@ -307,18 +307,18 @@ class SingleItemParserSpec extends UnitSpec {
 
         val result = singleItemParser.parse(commodityDetails(classifications = Seq(("12345678", "TSP"), ("3333", "TRA"))))
 
-        result.right.value.taricCodes mustBe defined
-        result.right.value.taricCodes.get.length mustBe 1
-        result.right.value.taricCodes.get mustBe Seq(TaricCode("3333"))
+        result.toOption.get.taricCodes mustBe defined
+        result.toOption.get.taricCodes.get.length mustBe 1
+        result.toOption.get.taricCodes.get mustBe Seq(TaricCode("3333"))
       }
 
       "there are multiple '/ GovernmentAgencyGoodsItem / Commodity / Classification' elements with 'TRA' IdentificationTypeCode value" in {
 
         val result = singleItemParser.parse(commodityDetails(classifications = Seq(("12345678", "TSP"), ("3333", "TRA"), ("7777", "TRA"))))
 
-        result.right.value.taricCodes mustBe defined
-        result.right.value.taricCodes.get.length mustBe 2
-        result.right.value.taricCodes.get mustBe Seq(TaricCode("3333"), TaricCode("7777"))
+        result.toOption.get.taricCodes mustBe defined
+        result.toOption.get.taricCodes.get.length mustBe 2
+        result.toOption.get.taricCodes.get mustBe Seq(TaricCode("3333"), TaricCode("7777"))
       }
     }
 
@@ -328,16 +328,16 @@ class SingleItemParserSpec extends UnitSpec {
 
         val result = singleItemParser.parse(commodityDetails())
 
-        result.right.value.nactCodes mustBe defined
-        result.right.value.nactCodes.get mustBe List.empty
+        result.toOption.get.nactCodes mustBe defined
+        result.toOption.get.nactCodes.get mustBe List.empty
       }
 
       "there is NO '/ GovernmentAgencyGoodsItem / Commodity / Classification' element with 'GN' IdentificationTypeCode value" in {
 
         val result = singleItemParser.parse(commodityDetails(classifications = Seq(("3333", "TRA"))))
 
-        result.right.value.nactCodes mustBe defined
-        result.right.value.nactCodes.get mustBe List.empty
+        result.toOption.get.nactCodes mustBe defined
+        result.toOption.get.nactCodes.get mustBe List.empty
       }
     }
 
@@ -347,18 +347,18 @@ class SingleItemParserSpec extends UnitSpec {
 
         val result = singleItemParser.parse(commodityDetails(classifications = Seq(("3333", "TRA"), ("1234", "GN"))))
 
-        result.right.value.nactCodes mustBe defined
-        result.right.value.nactCodes.get.length mustBe 1
-        result.right.value.nactCodes.get mustBe Seq(NactCode("1234"))
+        result.toOption.get.nactCodes mustBe defined
+        result.toOption.get.nactCodes.get.length mustBe 1
+        result.toOption.get.nactCodes.get mustBe Seq(NactCode("1234"))
       }
 
       "there are multiple '/ GovernmentAgencyGoodsItem / Commodity / Classification' elements with 'GN' IdentificationTypeCode value" in {
 
         val result = singleItemParser.parse(commodityDetails(classifications = Seq(("3333", "TRA"), ("1234", "GN"), ("1235", "GN"))))
 
-        result.right.value.nactCodes mustBe defined
-        result.right.value.nactCodes.get.length mustBe 2
-        result.right.value.nactCodes.get mustBe Seq(NactCode("1234"), NactCode("1235"))
+        result.toOption.get.nactCodes mustBe defined
+        result.toOption.get.nactCodes.get.length mustBe 2
+        result.toOption.get.nactCodes.get mustBe Seq(NactCode("1234"), NactCode("1235"))
       }
     }
 
@@ -366,12 +366,12 @@ class SingleItemParserSpec extends UnitSpec {
 
       "the '/ GovernmentAgencyGoodsItem / Commodity / GoodsMeasure' element is NOT present" in {
         val result = singleItemParser.parse(goodsMeasure())
-        result.right.value.commodityMeasure mustBe None
+        result.toOption.get.commodityMeasure mustBe None
       }
 
       "the '/ GovernmentAgencyGoodsItem / Commodity / GoodsMeasure' element is empty" in {
         val result = singleItemParser.parse(goodsMeasure(Some(GoodsMeasure())))
-        result.right.value.commodityMeasure mustBe None
+        result.toOption.get.commodityMeasure mustBe None
       }
     }
 
@@ -384,14 +384,14 @@ class SingleItemParserSpec extends UnitSpec {
         val expectedCommodityMeasure = CommodityMeasure(Some("TariffQuantity"), Some(false), Some("NetNetWeightMeasure"), Some("GrossMassMeasure"))
 
         val result = singleItemParser.parse(xmlForGoodsMeasure(expectedCommodityMeasure))
-        result.right.value.commodityMeasure.value mustBe expectedCommodityMeasure
+        result.toOption.get.commodityMeasure.value mustBe expectedCommodityMeasure
       }
 
       "the '/ GovernmentAgencyGoodsItem / Commodity / GoodsMeasure / TariffQuantity' element is NOT present" in {
         val expectedCommodityMeasure = CommodityMeasure(None, None, Some("NetNetWeightMeasure"), Some("GrossMassMeasure"))
 
         val result = singleItemParser.parse(xmlForGoodsMeasure(expectedCommodityMeasure))
-        result.right.value.commodityMeasure.value mustBe expectedCommodityMeasure
+        result.toOption.get.commodityMeasure.value mustBe expectedCommodityMeasure
       }
     }
 
@@ -401,17 +401,17 @@ class SingleItemParserSpec extends UnitSpec {
 
       "the '/ GovernmentAgencyGoodsItem / AdditionalInformation' element is NOT present" in {
         val result = singleItemParser.parse(inputXml)
-        result.right.value.additionalInformation.get mustBe noExpectedAdditionalInformation
+        result.toOption.get.additionalInformation.get mustBe noExpectedAdditionalInformation
       }
 
       "the '/ GovernmentAgencyGoodsItem / AdditionalInformation' element is empty" in {
         val result = singleItemParser.parse(additionalInformation(List(AdditionalInformationForXml(None, None))))
-        result.right.value.additionalInformation.get mustBe noExpectedAdditionalInformation
+        result.toOption.get.additionalInformation.get mustBe noExpectedAdditionalInformation
       }
 
       "all elements of '/ GovernmentAgencyGoodsItem / AdditionalInformation' element are present but empty" in {
         val result = singleItemParser.parse(additionalInformation(List(AdditionalInformationForXml(Some(""), Some("")))))
-        result.right.value.additionalInformation.get mustBe noExpectedAdditionalInformation
+        result.toOption.get.additionalInformation.get mustBe noExpectedAdditionalInformation
       }
 
       "a single '/ GovernmentAgencyGoodsItem / AdditionalInformation' element is fully present" in {
@@ -420,7 +420,7 @@ class SingleItemParserSpec extends UnitSpec {
           AdditionalInformationForXml(Some(expectedAdditionalInformation.code), Some(expectedAdditionalInformation.description))
         val result = singleItemParser.parse(additionalInformation(List(additionalInformationForXml)))
 
-        val additionalInfo = result.right.value.additionalInformation.get
+        val additionalInfo = result.toOption.get.additionalInformation.get
         additionalInfo.isRequired.get mustBe YesNoAnswer.yes
         additionalInfo.items.head mustBe expectedAdditionalInformation
       }
@@ -431,7 +431,7 @@ class SingleItemParserSpec extends UnitSpec {
           AdditionalInformationForXml(Some(expectedAdditionalInformation.code), Some(expectedAdditionalInformation.description))
         val result = singleItemParser.parse(additionalInformation(List(additionalInformationForXml, additionalInformationForXml)))
 
-        val additionalInfos = result.right.value.additionalInformation.get
+        val additionalInfos = result.toOption.get.additionalInformation.get
 
         additionalInfos.isRequired.get mustBe YesNoAnswer.yes
 

@@ -36,7 +36,7 @@ class SubmissionQueryParametersSpec extends UnitSpec {
 
           result mustBe defined
           result.get.isRight mustBe true
-          result.get.right.value mustBe expectedSubmissionQueryParameters
+          result.get.toOption.get mustBe expectedSubmissionQueryParameters
         }
 
         "provided with params containing NO known keys" in {
@@ -47,7 +47,7 @@ class SubmissionQueryParametersSpec extends UnitSpec {
 
           result mustBe defined
           result.get.isRight mustBe true
-          result.get.right.value mustBe expectedSubmissionQueryParameters
+          result.get.toOption.get mustBe expectedSubmissionQueryParameters
         }
       }
 
@@ -61,7 +61,7 @@ class SubmissionQueryParametersSpec extends UnitSpec {
 
           result mustBe defined
           result.get.isRight mustBe true
-          result.get.right.value mustBe expectedSubmissionQueryParameters
+          result.get.toOption.get mustBe expectedSubmissionQueryParameters
         }
       }
     }

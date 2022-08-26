@@ -38,13 +38,13 @@ class OfficeOfExitParserSpec extends UnitSpec {
         val result = parser.parse(inputXml())
 
         result.isRight mustBe true
-        result.right.value mustBe None
+        result.toOption.get mustBe None
       }
 
       "the 'ExitOffice' element is present but it is empty" in {
         val result = parser.parse(emptyExitOfficeElement)
         result.isRight mustBe true
-        result.right.value mustBe None
+        result.toOption.get mustBe None
       }
     }
 
@@ -54,7 +54,7 @@ class OfficeOfExitParserSpec extends UnitSpec {
         val result = parser.parse(inputXml(Some(exitOfficeId)))
 
         result.isRight mustBe true
-        result.right.value mustBe Some(OfficeOfExit(Some(exitOfficeId)))
+        result.toOption.get mustBe Some(OfficeOfExit(Some(exitOfficeId)))
       }
     }
   }

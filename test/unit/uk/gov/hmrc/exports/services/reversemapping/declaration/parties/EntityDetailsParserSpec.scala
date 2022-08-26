@@ -34,28 +34,28 @@ class EntityDetailsParserSpec extends UnitSpec {
         val result = parser.parse(NodeSeq.Empty)
 
         result.isRight mustBe true
-        result.right.value.isDefined mustBe false
+        result.toOption.get.isDefined mustBe false
       }
 
       "contains an unpopulated ID element and no Address element" in {
         val result = parser.parse(suppliedEmptyIdElementsXml)
 
         result.isRight mustBe true
-        result.right.value.isDefined mustBe false
+        result.toOption.get.isDefined mustBe false
       }
 
       "contains an unpopulated Address element and no ID element" in {
         val result = parser.parse(suppliedEmptyAddressElementsXml)
 
         result.isRight mustBe true
-        result.right.value.isDefined mustBe false
+        result.toOption.get.isDefined mustBe false
       }
 
       "contains an unpopulated Address element and an unpopulated ID element" in {
         val result = parser.parse(suppliedEmptyAddressAndIdElementsXml)
 
         result.isRight mustBe true
-        result.right.value.isDefined mustBe false
+        result.toOption.get.isDefined mustBe false
       }
     }
 
@@ -65,9 +65,9 @@ class EntityDetailsParserSpec extends UnitSpec {
           val result = parser.parse(suppliedIdElementsXml)
 
           result.isRight mustBe true
-          result.right.value.isDefined mustBe true
+          result.toOption.get.isDefined mustBe true
 
-          val entityDetail = result.right.value.get
+          val entityDetail = result.toOption.get.get
           entityDetail.eori.isDefined mustBe true
           entityDetail.eori.get mustBe eori
 
@@ -78,9 +78,9 @@ class EntityDetailsParserSpec extends UnitSpec {
           val result = parser.parse(suppliedCompleteAddressElementsXml)
 
           result.isRight mustBe true
-          result.right.value.isDefined mustBe true
+          result.toOption.get.isDefined mustBe true
 
-          val entityDetail = result.right.value.get
+          val entityDetail = result.toOption.get.get
           entityDetail.eori.isDefined mustBe false
 
           entityDetail.address.isDefined mustBe true
@@ -97,9 +97,9 @@ class EntityDetailsParserSpec extends UnitSpec {
           val result = parser.parse(suppliedPartialAddressElementsXml)
 
           result.isRight mustBe true
-          result.right.value.isDefined mustBe true
+          result.toOption.get.isDefined mustBe true
 
-          val entityDetail = result.right.value.get
+          val entityDetail = result.toOption.get.get
           entityDetail.eori.isDefined mustBe false
 
           entityDetail.address.isDefined mustBe true
@@ -116,9 +116,9 @@ class EntityDetailsParserSpec extends UnitSpec {
           val result = parser.parse(suppliedIDAndAddressElementsXml)
 
           result.isRight mustBe true
-          result.right.value.isDefined mustBe true
+          result.toOption.get.isDefined mustBe true
 
-          val entityDetail = result.right.value.get
+          val entityDetail = result.toOption.get.get
           entityDetail.eori.isDefined mustBe true
           entityDetail.eori.get mustBe eori
 

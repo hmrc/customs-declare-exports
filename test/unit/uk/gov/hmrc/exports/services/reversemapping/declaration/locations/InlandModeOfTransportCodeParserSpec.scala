@@ -37,14 +37,14 @@ class InlandModeOfTransportCodeParserSpec extends UnitSpec {
         val result = parser.parse(inputXml())
 
         result.isRight mustBe true
-        result.right.value mustBe None
+        result.toOption.get mustBe None
       }
 
       "the 'GoodsShipment / Consignment / DepartureTransportMeans / ModeCode' element is present but it is empty" in {
         val result = parser.parse(inputXml(Some("")))
 
         result.isRight mustBe true
-        result.right.value mustBe None
+        result.toOption.get mustBe None
       }
     }
 
@@ -53,7 +53,7 @@ class InlandModeOfTransportCodeParserSpec extends UnitSpec {
         val result = parser.parse(inputXml(Some("INCORRECT")))
 
         result.isRight mustBe true
-        result.right.value mustBe Some(InlandModeOfTransportCode(Some(ModeOfTransportCode.Empty)))
+        result.toOption.get mustBe Some(InlandModeOfTransportCode(Some(ModeOfTransportCode.Empty)))
       }
     }
 
@@ -62,7 +62,7 @@ class InlandModeOfTransportCodeParserSpec extends UnitSpec {
         val result = parser.parse(inputXml(Some("1")))
 
         result.isRight mustBe true
-        result.right.value mustBe Some(InlandModeOfTransportCode(Some(ModeOfTransportCode.Maritime)))
+        result.toOption.get mustBe Some(InlandModeOfTransportCode(Some(ModeOfTransportCode.Maritime)))
       }
     }
   }

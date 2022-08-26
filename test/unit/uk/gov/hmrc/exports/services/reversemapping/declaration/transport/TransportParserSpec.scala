@@ -42,7 +42,7 @@ class TransportParserSpec extends UnitSpec {
     val xml = <meta></meta>
 
     "call all sub-parsers" in {
-      transportParser.parse(xml).right.value
+      transportParser.parse(xml).toOption.get
 
       verify(containersParser).parse(any[NodeSeq])(any[MappingContext])
     }
@@ -52,7 +52,7 @@ class TransportParserSpec extends UnitSpec {
         val result = transportParser.parse(xml)
 
         result.isRight mustBe true
-        result.right.value mustBe an[Transport]
+        result.toOption.get mustBe an[Transport]
       }
     }
 
@@ -72,33 +72,33 @@ class TransportParserSpec extends UnitSpec {
 
       "the '/ DeclarationSpecificCircumstancesCodeCodeType' element is NOT present" in {
         val result = transportParser.parse(expressConsignmentXml())
-        result.right.value.expressConsignment mustBe None
+        result.toOption.get.expressConsignment mustBe None
       }
 
       "the '/ DeclarationSpecificCircumstancesCodeCodeType' element has not 'A20' as value" in {
         val result = transportParser.parse(expressConsignmentXml(Some("value")))
-        result.right.value.expressConsignment mustBe None
+        result.toOption.get.expressConsignment mustBe None
       }
     }
 
     "set Transport.expressConsignment to 'yes'" when {
       "the '/ DeclarationSpecificCircumstancesCodeCodeType' element has 'A20' as value" in {
         val result = transportParser.parse(expressConsignmentXml(Some("A20")))
-        result.right.value.expressConsignment.get mustBe YesNoAnswer.yes
+        result.toOption.get.expressConsignment.get mustBe YesNoAnswer.yes
       }
     }
 
     "set Transport.transportPayment to None" when {
       "the '/ Consignment / Freight / PaymentMethodCode' element is NOT present" in {
         val result = transportParser.parse(transportPaymentXml())
-        result.right.value.transportPayment mustBe None
+        result.toOption.get.transportPayment mustBe None
       }
     }
 
     "set Transport.transportPayment to the expected PaymentMethod" when {
       "the '/ Consignment / Freight / PaymentMethodCode' element is present" in {
         val result = transportParser.parse(transportPaymentXml(Some(TransportPayment.cash)))
-        val transportPayment = result.right.value.transportPayment.get
+        val transportPayment = result.toOption.get.transportPayment.get
         transportPayment.paymentMethod mustBe TransportPayment.cash
       }
     }
@@ -106,14 +106,14 @@ class TransportParserSpec extends UnitSpec {
     "set Transport.borderModeOfTransportCode to None" when {
       "the 'BorderTransportMeans / ModeCode' element is NOT present" in {
         val result = transportParser.parse(borderModeOfTransportCodeXml())
-        result.right.value.borderModeOfTransportCode mustBe None
+        result.toOption.get.borderModeOfTransportCode mustBe None
       }
     }
 
     "set Transport.borderModeOfTransportCode.code to ModeOfTransportCode.Empty" when {
       "the 'BorderTransportMeans / ModeCode' element is present but not known" in {
         val result = transportParser.parse(borderModeOfTransportCodeXml(Some("value")))
-        val transportLeavingTheBorder = result.right.value.borderModeOfTransportCode.get
+        val transportLeavingTheBorder = result.toOption.get.borderModeOfTransportCode.get
         transportLeavingTheBorder.code.get mustBe ModeOfTransportCode.Empty
       }
     }
@@ -121,7 +121,7 @@ class TransportParserSpec extends UnitSpec {
     "set Transport.borderModeOfTransportCode.code to the expected ModeOfTransportCode" when {
       "the 'BorderTransportMeans / ModeCode' element is present and known" in {
         val result = transportParser.parse(borderModeOfTransportCodeXml(Some("1")))
-        val transportLeavingTheBorder = result.right.value.borderModeOfTransportCode.get
+        val transportLeavingTheBorder = result.toOption.get.borderModeOfTransportCode.get
         transportLeavingTheBorder.code.get mustBe ModeOfTransportCode.Maritime
       }
     }
@@ -129,7 +129,7 @@ class TransportParserSpec extends UnitSpec {
     "set Transport.meansOfTransportOnDepartureType to None" when {
       "the '/ GoodsShipment / Consignment / DepartureTransportMeans / IdentificationTypeCode' element is NOT present" in {
         val result = transportParser.parse(meansOfTransportOnDepartureType())
-        result.right.value.meansOfTransportOnDepartureType mustBe None
+        result.toOption.get.meansOfTransportOnDepartureType mustBe None
       }
     }
 
@@ -137,14 +137,14 @@ class TransportParserSpec extends UnitSpec {
       "the '/ GoodsShipment / Consignment / DepartureTransportMeans / IdentificationTypeCode' element is present" in {
         val expectedValue = "11"
         val result = transportParser.parse(meansOfTransportOnDepartureType(Some(expectedValue)))
-        result.right.value.meansOfTransportOnDepartureType.get mustBe expectedValue
+        result.toOption.get.meansOfTransportOnDepartureType.get mustBe expectedValue
       }
     }
 
     "set Transport.meansOfTransportOnDepartureIDNumber to None" when {
       "the '/ GoodsShipment / Consignment / DepartureTransportMeans / ID' element is NOT present" in {
         val result = transportParser.parse(meansOfTransportOnDepartureIDNumber())
-        result.right.value.meansOfTransportOnDepartureIDNumber mustBe None
+        result.toOption.get.meansOfTransportOnDepartureIDNumber mustBe None
       }
     }
 
@@ -152,14 +152,14 @@ class TransportParserSpec extends UnitSpec {
       "the '/ GoodsShipment / Consignment / DepartureTransportMeans / ID' element is present" in {
         val expectedValue = "SHIP1"
         val result = transportParser.parse(meansOfTransportOnDepartureIDNumber(Some(expectedValue)))
-        result.right.value.meansOfTransportOnDepartureIDNumber.get mustBe expectedValue
+        result.toOption.get.meansOfTransportOnDepartureIDNumber.get mustBe expectedValue
       }
     }
 
     "set Transport.transportCrossingTheBorderNationality to None" when {
       "the '/ BorderTransportMeans / RegistrationNationalityCode' element is NOT present" in {
         val result = transportParser.parse(transportCrossingTheBorderNationality())
-        result.right.value.transportCrossingTheBorderNationality mustBe None
+        result.toOption.get.transportCrossingTheBorderNationality mustBe None
       }
     }
 
@@ -167,14 +167,14 @@ class TransportParserSpec extends UnitSpec {
       "the '/ BorderTransportMeans / RegistrationNationalityCode' element is present" in {
         val expectedValue = Some("GB")
         val result = transportParser.parse(transportCrossingTheBorderNationality(expectedValue))
-        result.right.value.transportCrossingTheBorderNationality.value.countryName mustBe expectedValue
+        result.toOption.get.transportCrossingTheBorderNationality.value.countryName mustBe expectedValue
       }
     }
 
     "set Transport.meansOfTransportCrossingTheBorderType to None" when {
       "the '/ BorderTransportMeans / IdentificationTypeCode' element is NOT present" in {
         val result = transportParser.parse(meansOfTransportCrossingTheBorderType())
-        result.right.value.meansOfTransportCrossingTheBorderType mustBe None
+        result.toOption.get.meansOfTransportCrossingTheBorderType mustBe None
       }
     }
 
@@ -182,14 +182,14 @@ class TransportParserSpec extends UnitSpec {
       "the '/ BorderTransportMeans / IdentificationTypeCode' element is present" in {
         val expectedValue = "11"
         val result = transportParser.parse(meansOfTransportCrossingTheBorderType(Some(expectedValue)))
-        result.right.value.meansOfTransportCrossingTheBorderType.get mustBe expectedValue
+        result.toOption.get.meansOfTransportCrossingTheBorderType.get mustBe expectedValue
       }
     }
 
     "set Transport.meansOfTransportCrossingTheBorderIDNumber to None" when {
       "the '/ BorderTransportMeans / ID' element is NOT present" in {
         val result = transportParser.parse(meansOfTransportCrossingTheBorderIDNumber())
-        result.right.value.meansOfTransportCrossingTheBorderIDNumber mustBe None
+        result.toOption.get.meansOfTransportCrossingTheBorderIDNumber mustBe None
       }
     }
 
@@ -197,7 +197,7 @@ class TransportParserSpec extends UnitSpec {
       "the '/ BorderTransportMeans / ID' element is present" in {
         val expectedValue = "Superfast Hawk Millenium"
         val result = transportParser.parse(meansOfTransportCrossingTheBorderIDNumber(Some(expectedValue)))
-        result.right.value.meansOfTransportCrossingTheBorderIDNumber.get mustBe expectedValue
+        result.toOption.get.meansOfTransportCrossingTheBorderIDNumber.get mustBe expectedValue
       }
     }
   }

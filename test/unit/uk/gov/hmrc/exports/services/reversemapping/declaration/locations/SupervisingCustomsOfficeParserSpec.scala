@@ -38,14 +38,14 @@ class SupervisingCustomsOfficeParserSpec extends UnitSpec {
         val result = parser.parse(inputXml())
 
         result.isRight mustBe true
-        result.right.value mustBe None
+        result.toOption.get mustBe None
       }
 
       "the 'SupervisingOffice' element is present but it is empty" in {
         val result = parser.parse(emptySupervisingOfficeElement)
 
         result.isRight mustBe true
-        result.right.value mustBe None
+        result.toOption.get mustBe None
       }
     }
 
@@ -55,7 +55,7 @@ class SupervisingCustomsOfficeParserSpec extends UnitSpec {
         val result = parser.parse(inputXml(Some(supervisingOffice)))
 
         result.isRight mustBe true
-        result.right.value mustBe Some(SupervisingCustomsOffice(Some(supervisingOffice)))
+        result.toOption.get mustBe Some(SupervisingCustomsOffice(Some(supervisingOffice)))
       }
     }
   }

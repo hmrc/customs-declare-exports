@@ -20,7 +20,7 @@ import org.bson.Document
 import uk.gov.hmrc.exports.base.UnitSpec
 
 import java.time.Instant
-import scala.collection.JavaConverters.mapAsJavaMap
+import scala.jdk.CollectionConverters._
 
 class LockEntrySpec extends UnitSpec {
 
@@ -28,7 +28,9 @@ class LockEntrySpec extends UnitSpec {
     "convert to correct Document" in {
       val date = Instant.now
       val expectedOutput =
-        new Document(mapAsJavaMap(Map("key" -> "keyValue", "status" -> "statusValue", "owner" -> "ownerValue", "expiresAt" -> date.toString)))
+        new Document(
+          Map[String, AnyRef]("key" -> "keyValue", "status" -> "statusValue", "owner" -> "ownerValue", "expiresAt" -> date.toString).asJava
+        )
 
       val lockEntry = LockEntry(key = "keyValue", status = "statusValue", owner = "ownerValue", expiresAt = date)
       lockEntry.buildFullDBObject mustBe expectedOutput

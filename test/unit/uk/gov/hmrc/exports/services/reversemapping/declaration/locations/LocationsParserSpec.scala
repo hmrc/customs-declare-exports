@@ -105,7 +105,7 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.right.value mustBe Locations(hasRoutingCountries = Some(false))
+        result.toOption.get mustBe Locations(hasRoutingCountries = Some(false))
       }
     }
 
@@ -128,8 +128,8 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.right.value.originationCountry mustBe defined
-        result.right.value.originationCountry.get mustBe originationCountry
+        result.toOption.get.originationCountry mustBe defined
+        result.toOption.get.originationCountry.get mustBe originationCountry
       }
 
       "has destinationCountry set to value returned by CountryParser" in {
@@ -139,8 +139,8 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.right.value.destinationCountry mustBe defined
-        result.right.value.destinationCountry.get mustBe destinationCountry
+        result.toOption.get.destinationCountry mustBe defined
+        result.toOption.get.destinationCountry.get mustBe destinationCountry
       }
 
       "has hasRoutingCountries set to false" when {
@@ -150,8 +150,8 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
           val result = parser.parse(xml)
 
           result.isRight mustBe true
-          result.right.value.hasRoutingCountries mustBe defined
-          result.right.value.hasRoutingCountries.get mustBe false
+          result.toOption.get.hasRoutingCountries mustBe defined
+          result.toOption.get.hasRoutingCountries.get mustBe false
         }
       }
 
@@ -163,8 +163,8 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
           val result = parser.parse(xml)
 
           result.isRight mustBe true
-          result.right.value.hasRoutingCountries mustBe defined
-          result.right.value.hasRoutingCountries.get mustBe true
+          result.toOption.get.hasRoutingCountries mustBe defined
+          result.toOption.get.hasRoutingCountries.get mustBe true
         }
       }
 
@@ -176,8 +176,8 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.right.value.routingCountries mustNot be(empty)
-        result.right.value.routingCountries mustBe routingCountries
+        result.toOption.get.routingCountries mustNot be(empty)
+        result.toOption.get.routingCountries mustBe routingCountries
       }
 
       "has goodsLocation set to value returned by GoodsLocationParser" in {
@@ -188,8 +188,8 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.right.value.goodsLocation mustBe defined
-        result.right.value.goodsLocation.get mustBe goodsLocation
+        result.toOption.get.goodsLocation mustBe defined
+        result.toOption.get.goodsLocation.get mustBe goodsLocation
       }
 
       "has officeOfExit set to value returned by OfficeOfExitParser" in {
@@ -199,8 +199,8 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.right.value.officeOfExit mustBe defined
-        result.right.value.officeOfExit.get mustBe officeOfExit
+        result.toOption.get.officeOfExit mustBe defined
+        result.toOption.get.officeOfExit.get mustBe officeOfExit
       }
 
       "has supervisingCustomsOffice set to value returned by SupervisingCustomsOfficeParser" in {
@@ -210,8 +210,8 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.right.value.supervisingCustomsOffice mustBe defined
-        result.right.value.supervisingCustomsOffice.get mustBe supervisingCustomsOffice
+        result.toOption.get.supervisingCustomsOffice mustBe defined
+        result.toOption.get.supervisingCustomsOffice.get mustBe supervisingCustomsOffice
       }
 
       "has warehouseIdentification set to value returned by WarehouseIdentificationParser" in {
@@ -221,8 +221,8 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.right.value.warehouseIdentification mustBe defined
-        result.right.value.warehouseIdentification.get mustBe warehouseIdentification
+        result.toOption.get.warehouseIdentification mustBe defined
+        result.toOption.get.warehouseIdentification.get mustBe warehouseIdentification
       }
 
       "has inlandModeOfTransportCode set to value returned by InlandModeOfTransportCodeParser" in {
@@ -232,8 +232,8 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
         val result = parser.parse(xml)
 
         result.isRight mustBe true
-        result.right.value.inlandModeOfTransportCode mustBe defined
-        result.right.value.inlandModeOfTransportCode.get mustBe inlandModeOfTransportCode
+        result.toOption.get.inlandModeOfTransportCode mustBe defined
+        result.toOption.get.inlandModeOfTransportCode.get mustBe inlandModeOfTransportCode
       }
     }
   }
@@ -252,7 +252,7 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
           val result = parser.parse(xml)
 
           result.isRight mustBe true
-          result.right.value.inlandOrBorder.value mustBe Inland
+          result.toOption.get.inlandOrBorder.value mustBe Inland
         }
       }
 
@@ -264,7 +264,7 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
           val result = parser.parse(xml)
 
           result.isRight mustBe true
-          result.right.value.inlandOrBorder.value mustBe Border
+          result.toOption.get.inlandOrBorder.value mustBe Border
         }
       }
 
@@ -274,7 +274,7 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
           val result = parser.parse(xml)
 
           result.isRight mustBe true
-          result.right.value.inlandOrBorder mustBe None
+          result.toOption.get.inlandOrBorder mustBe None
         }
       }
     }

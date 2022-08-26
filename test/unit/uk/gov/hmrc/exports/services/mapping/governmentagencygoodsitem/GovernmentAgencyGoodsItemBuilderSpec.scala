@@ -42,8 +42,8 @@ class GovernmentAgencyGoodsItemBuilderSpec
   private val dutyTaxPartyBuilder = mock[DomesticDutyTaxPartyBuilder]
   private val mockCachingMappingHelper = mock[CachingMappingHelper]
 
-  override def afterEach: Unit =
-    Mockito.reset(
+  override def afterEach(): Unit =
+    Mockito.reset[Object](
       statisticalValueAmountBuilder,
       packagingBuilder,
       governmentProcedureBuilder,

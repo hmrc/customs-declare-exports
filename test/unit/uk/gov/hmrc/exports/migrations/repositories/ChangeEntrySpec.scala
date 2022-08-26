@@ -20,7 +20,7 @@ import org.bson.Document
 import uk.gov.hmrc.exports.base.UnitSpec
 
 import java.time.Instant
-import scala.collection.JavaConverters.mapAsJavaMap
+import scala.jdk.CollectionConverters._
 
 class ChangeEntrySpec extends UnitSpec {
 
@@ -28,7 +28,12 @@ class ChangeEntrySpec extends UnitSpec {
     "convert to correct Document" in {
       val date = Instant.now
       val expectedOutput = new Document(
-        mapAsJavaMap(Map("changeId" -> "changeIdValue", "author" -> "authorValue", "timestamp" -> date, "changeLogClass" -> "changeLogClassValue"))
+        Map[String, AnyRef](
+          "changeId" -> "changeIdValue",
+          "author" -> "authorValue",
+          "timestamp" -> date,
+          "changeLogClass" -> "changeLogClassValue"
+        ).asJava
       )
 
       val changeEntry = ChangeEntry(changeId = "changeIdValue", author = "authorValue", timestamp = date, changeLogClass = "changeLogClassValue")

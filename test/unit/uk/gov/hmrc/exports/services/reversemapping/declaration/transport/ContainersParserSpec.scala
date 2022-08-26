@@ -35,7 +35,7 @@ class ContainersParserSpec extends UnitSpec {
         val result = parser.parse(generateValidXml())
 
         result.isRight mustBe true
-        result.right.value.size mustBe 0
+        result.toOption.get.size mustBe 0
       }
     }
 
@@ -49,9 +49,9 @@ class ContainersParserSpec extends UnitSpec {
           val result = parser.parse(generateValidXml(Map(containerId -> Seq.empty[String])))
 
           result.isRight mustBe true
-          result.right.value.size mustBe 1
+          result.toOption.get.size mustBe 1
 
-          val container = result.right.value.head
+          val container = result.toOption.get.head
 
           container.id mustBe containerId
           container.seals.size mustBe 0
@@ -61,9 +61,9 @@ class ContainersParserSpec extends UnitSpec {
           val result = parser.parse(generateValidXml(Map(containerId -> Seq(sealId))))
 
           result.isRight mustBe true
-          result.right.value.size mustBe 1
+          result.toOption.get.size mustBe 1
 
-          val container = result.right.value.head
+          val container = result.toOption.get.head
 
           container.id mustBe containerId
           container.seals.size mustBe 1
@@ -74,9 +74,9 @@ class ContainersParserSpec extends UnitSpec {
           val result = parser.parse(generateValidXml(Map(containerId -> Seq(NO_SEALS))))
 
           result.isRight mustBe true
-          result.right.value.size mustBe 1
+          result.toOption.get.size mustBe 1
 
-          val container = result.right.value.head
+          val container = result.toOption.get.head
 
           container.id mustBe containerId
           container.seals.size mustBe 0
@@ -86,9 +86,9 @@ class ContainersParserSpec extends UnitSpec {
           val result = parser.parse(generateValidXml(Map(containerId -> Seq(sealId, secondSealId, NO_SEALS))))
 
           result.isRight mustBe true
-          result.right.value.size mustBe 1
+          result.toOption.get.size mustBe 1
 
-          val container = result.right.value.head
+          val container = result.toOption.get.head
 
           container.id mustBe containerId
           container.seals.size mustBe 2
@@ -98,9 +98,9 @@ class ContainersParserSpec extends UnitSpec {
           val result = parser.parse(generateValidXml(Map(containerId -> Seq(sealId, secondSealId))))
 
           result.isRight mustBe true
-          result.right.value.size mustBe 1
+          result.toOption.get.size mustBe 1
 
-          val container = result.right.value.head
+          val container = result.toOption.get.head
 
           container.id mustBe containerId
           container.seals.size mustBe 2
@@ -114,15 +114,15 @@ class ContainersParserSpec extends UnitSpec {
         val result = parser.parse(generateValidXml(Map(containerId -> Seq(sealId), secondContainerId -> Seq(secondSealId))))
 
         result.isRight mustBe true
-        result.right.value.size mustBe 2
+        result.toOption.get.size mustBe 2
 
-        val container1 = result.right.value.head
+        val container1 = result.toOption.get.head
 
         container1.id mustBe containerId
         container1.seals.size mustBe 1
         container1.seals.head.id mustBe sealId
 
-        val container2 = result.right.value.last
+        val container2 = result.toOption.get.last
 
         container2.id mustBe secondContainerId
         container2.seals.size mustBe 1

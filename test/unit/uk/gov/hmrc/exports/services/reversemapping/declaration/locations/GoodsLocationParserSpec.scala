@@ -39,7 +39,7 @@ class GoodsLocationParserSpec extends UnitSpec {
         val result = parser.parse(inputXml())
 
         result.isRight mustBe true
-        result.right.value mustBe None
+        result.toOption.get mustBe None
       }
 
       "GoodsLocation element is present but it has no elements" in {
@@ -47,7 +47,7 @@ class GoodsLocationParserSpec extends UnitSpec {
         val result = parser.parse(missingAllElements)
 
         result.isRight mustBe true
-        result.right.value mustBe None
+        result.toOption.get mustBe None
       }
 
       "GoodsLocation element is present but its elements are empty" in {
@@ -55,7 +55,7 @@ class GoodsLocationParserSpec extends UnitSpec {
         val result = parser.parse(inputXml(Some(GoodsLocation("", "", "", None))))
 
         result.isRight mustBe true
-        result.right.value mustBe None
+        result.toOption.get mustBe None
       }
     }
 
@@ -69,12 +69,12 @@ class GoodsLocationParserSpec extends UnitSpec {
         val result = parser.parse(inputXml(Some(testGoodsLocation)))
 
         result.isRight mustBe true
-        result.right.value mustBe defined
-        result.right.value.get.country mustBe "GB"
-        result.right.value.get.typeOfLocation mustBe "ToL"
-        result.right.value.get.qualifierOfIdentification mustBe "QoI"
-        result.right.value.get.identificationOfLocation mustBe defined
-        result.right.value.get.identificationOfLocation.get mustBe "IdOfLocation"
+        result.toOption.get mustBe defined
+        result.toOption.get.get.country mustBe "GB"
+        result.toOption.get.get.typeOfLocation mustBe "ToL"
+        result.toOption.get.get.qualifierOfIdentification mustBe "QoI"
+        result.toOption.get.get.identificationOfLocation mustBe defined
+        result.toOption.get.get.identificationOfLocation.get mustBe "IdOfLocation"
       }
 
       "GoodsLocation element is present with NO 'Name' element" in {
@@ -85,11 +85,11 @@ class GoodsLocationParserSpec extends UnitSpec {
         val result = parser.parse(inputXml(Some(testGoodsLocation)))
 
         result.isRight mustBe true
-        result.right.value mustBe defined
-        result.right.value.get.country mustBe "GB"
-        result.right.value.get.typeOfLocation mustBe "ToL"
-        result.right.value.get.qualifierOfIdentification mustBe "QoI"
-        result.right.value.get.identificationOfLocation mustNot be(defined)
+        result.toOption.get mustBe defined
+        result.toOption.get.get.country mustBe "GB"
+        result.toOption.get.get.typeOfLocation mustBe "ToL"
+        result.toOption.get.get.qualifierOfIdentification mustBe "QoI"
+        result.toOption.get.get.identificationOfLocation mustNot be(defined)
       }
     }
 
@@ -100,12 +100,12 @@ class GoodsLocationParserSpec extends UnitSpec {
         val result = parser.parse(missingAddressCountryCodeElementXml)
 
         result.isRight mustBe true
-        result.right.value mustBe defined
-        result.right.value.get.country mustBe ""
-        result.right.value.get.typeOfLocation mustBe "A"
-        result.right.value.get.qualifierOfIdentification mustBe "U"
-        result.right.value.get.identificationOfLocation mustBe defined
-        result.right.value.get.identificationOfLocation.get mustBe "FXTFXTFXT"
+        result.toOption.get mustBe defined
+        result.toOption.get.get.country mustBe ""
+        result.toOption.get.get.typeOfLocation mustBe "A"
+        result.toOption.get.get.qualifierOfIdentification mustBe "U"
+        result.toOption.get.get.identificationOfLocation mustBe defined
+        result.toOption.get.get.identificationOfLocation.get mustBe "FXTFXTFXT"
       }
 
       "GoodsLocation element is present with NO 'Address / TypeCode' element" in {
@@ -113,12 +113,12 @@ class GoodsLocationParserSpec extends UnitSpec {
         val result = parser.parse(missingAddressTypeCodeElementXml)
 
         result.isRight mustBe true
-        result.right.value mustBe defined
-        result.right.value.get.country mustBe "GB"
-        result.right.value.get.typeOfLocation mustBe "A"
-        result.right.value.get.qualifierOfIdentification mustBe ""
-        result.right.value.get.identificationOfLocation mustBe defined
-        result.right.value.get.identificationOfLocation.get mustBe "FXTFXTFXT"
+        result.toOption.get mustBe defined
+        result.toOption.get.get.country mustBe "GB"
+        result.toOption.get.get.typeOfLocation mustBe "A"
+        result.toOption.get.get.qualifierOfIdentification mustBe ""
+        result.toOption.get.get.identificationOfLocation mustBe defined
+        result.toOption.get.get.identificationOfLocation.get mustBe "FXTFXTFXT"
       }
 
       "GoodsLocation element is present with NO 'TypeCode' element" in {
@@ -126,12 +126,12 @@ class GoodsLocationParserSpec extends UnitSpec {
         val result = parser.parse(missingTypeCodeElementXml)
 
         result.isRight mustBe true
-        result.right.value mustBe defined
-        result.right.value.get.country mustBe "GB"
-        result.right.value.get.typeOfLocation mustBe ""
-        result.right.value.get.qualifierOfIdentification mustBe "U"
-        result.right.value.get.identificationOfLocation mustBe defined
-        result.right.value.get.identificationOfLocation.get mustBe "FXTFXTFXT"
+        result.toOption.get mustBe defined
+        result.toOption.get.get.country mustBe "GB"
+        result.toOption.get.get.typeOfLocation mustBe ""
+        result.toOption.get.get.qualifierOfIdentification mustBe "U"
+        result.toOption.get.get.identificationOfLocation mustBe defined
+        result.toOption.get.get.identificationOfLocation.get mustBe "FXTFXTFXT"
       }
 
       "GoodsLocation element is present with ONLY 'Name' element" in {
@@ -139,12 +139,12 @@ class GoodsLocationParserSpec extends UnitSpec {
         val result = parser.parse(missingAllMandatoryElements)
 
         result.isRight mustBe true
-        result.right.value mustBe defined
-        result.right.value.get.country mustBe ""
-        result.right.value.get.typeOfLocation mustBe ""
-        result.right.value.get.qualifierOfIdentification mustBe ""
-        result.right.value.get.identificationOfLocation mustBe defined
-        result.right.value.get.identificationOfLocation.get mustBe "FXTFXTFXT"
+        result.toOption.get mustBe defined
+        result.toOption.get.get.country mustBe ""
+        result.toOption.get.get.typeOfLocation mustBe ""
+        result.toOption.get.get.qualifierOfIdentification mustBe ""
+        result.toOption.get.get.identificationOfLocation mustBe defined
+        result.toOption.get.get.identificationOfLocation.get mustBe "FXTFXTFXT"
       }
     }
   }
