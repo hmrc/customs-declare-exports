@@ -26,7 +26,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.migrations.repositories.TestObjectsBuilder.buildMongoCursor
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class MongoRepositorySpec extends UnitSpec {
 

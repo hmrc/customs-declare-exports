@@ -26,7 +26,7 @@ import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, Migration
 import uk.gov.hmrc.exports.models.generators.{IdGenerator, StringIdGenerator}
 
 import java.util
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class ChangePackageInformationId extends MigrationDefinition with Logging {
 

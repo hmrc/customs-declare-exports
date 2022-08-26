@@ -33,7 +33,7 @@ import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem, WorkItemFields}
 
 import java.time.Instant
 import javax.inject.Singleton
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
  * Migration definition for splitting existing 'notifications' collection into 2 collections. The first one stores XML
@@ -208,8 +208,8 @@ object SplitTheNotificationsCollection {
     override def iterator: Iterator[Int] = underlying.iterator
 
     // scalastyle:off
-    override def +(elem: Int): Set[Int] = underlying + elem
+    override def incl(elem: Int): Set[Int] = underlying + elem
 
-    override def -(elem: Int): Set[Int] = underlying - elem
+    override def excl(elem: Int): Set[Int] = underlying - elem
   }
 }
