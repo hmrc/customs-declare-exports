@@ -74,7 +74,7 @@ class AdditionalDeclarationTypeSpec extends UnitSpec {
           val result = AdditionalDeclarationType.fromString(validCode._1)
 
           result.isRight mustBe true
-          result.right.value mustBe Some(validCode._2)
+          result.toOption.get mustBe Some(validCode._2)
         }
       }
     }

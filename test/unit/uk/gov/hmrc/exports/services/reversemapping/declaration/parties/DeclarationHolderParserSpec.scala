@@ -36,21 +36,21 @@ class DeclarationHolderParserSpec extends UnitSpec {
         val result = parser.parse(NodeSeq.Empty)
 
         result.isRight mustBe true
-        result.right.value.size mustBe 0
+        result.toOption.get.size mustBe 0
       }
 
       "AuthorisationHolder elements are present that contain no child elements" in {
         val result = parser.parse(emptyAuthHolderElement)
 
         result.isRight mustBe true
-        result.right.value.size mustBe 0
+        result.toOption.get.size mustBe 0
       }
 
       "AuthorisationHolder elements are present that contain child elements with empty values" in {
         val result = parser.parse(suppliedCategoryCodeAndIdElementsXml("", ""))
 
         result.isRight mustBe true
-        result.right.value.size mustBe 0
+        result.toOption.get.size mustBe 0
       }
     }
 
@@ -59,44 +59,44 @@ class DeclarationHolderParserSpec extends UnitSpec {
         val result = parser.parse(suppliedCategoryCodeAndIdElementsXml())
 
         result.isRight mustBe true
-        result.right.value.size mustBe 1
+        result.toOption.get.size mustBe 1
 
-        result.right.value.head.authorisationTypeCode.isDefined mustBe true
-        result.right.value.head.authorisationTypeCode.get mustBe catCode1
+        result.toOption.get.head.authorisationTypeCode.isDefined mustBe true
+        result.toOption.get.head.authorisationTypeCode.get mustBe catCode1
 
-        result.right.value.head.eori.isDefined mustBe true
-        result.right.value.head.eori.get mustBe eori
+        result.toOption.get.head.eori.isDefined mustBe true
+        result.toOption.get.head.eori.get mustBe eori
 
-        result.right.value.head.eoriSource.isDefined mustBe true
-        result.right.value.head.eoriSource.get mustBe EoriSource.OtherEori
+        result.toOption.get.head.eoriSource.isDefined mustBe true
+        result.toOption.get.head.eoriSource.get mustBe EoriSource.OtherEori
       }
 
       "one partially populated (only TypeCode) AuthorisationHolder element is present" in {
         val result = parser.parse(suppliedCategoryCodeAndIdElementsXml(eori = ""))
 
         result.isRight mustBe true
-        result.right.value.size mustBe 1
+        result.toOption.get.size mustBe 1
 
-        result.right.value.head.authorisationTypeCode.isDefined mustBe true
-        result.right.value.head.authorisationTypeCode.get mustBe catCode1
+        result.toOption.get.head.authorisationTypeCode.isDefined mustBe true
+        result.toOption.get.head.authorisationTypeCode.get mustBe catCode1
 
-        result.right.value.head.eori.isDefined mustBe false
-        result.right.value.head.eoriSource.isDefined mustBe false
+        result.toOption.get.head.eori.isDefined mustBe false
+        result.toOption.get.head.eoriSource.isDefined mustBe false
       }
 
       "one partially populated (only Eori) AuthorisationHolder element is present" in {
         val result = parser.parse(suppliedCategoryCodeAndIdElementsXml(catCode = ""))
 
         result.isRight mustBe true
-        result.right.value.size mustBe 1
+        result.toOption.get.size mustBe 1
 
-        result.right.value.head.authorisationTypeCode.isDefined mustBe false
+        result.toOption.get.head.authorisationTypeCode.isDefined mustBe false
 
-        result.right.value.head.eori.isDefined mustBe true
-        result.right.value.head.eori.get mustBe eori
+        result.toOption.get.head.eori.isDefined mustBe true
+        result.toOption.get.head.eori.get mustBe eori
 
-        result.right.value.head.eoriSource.isDefined mustBe true
-        result.right.value.head.eoriSource.get mustBe EoriSource.OtherEori
+        result.toOption.get.head.eoriSource.isDefined mustBe true
+        result.toOption.get.head.eoriSource.get mustBe EoriSource.OtherEori
       }
 
       "multiple AuthorisationHolder elements are present" in {
@@ -107,7 +107,7 @@ class DeclarationHolderParserSpec extends UnitSpec {
         val result = parser.parse(xmlToParse)
 
         result.isRight mustBe true
-        result.right.value.size mustBe 3
+        result.toOption.get.size mustBe 3
       }
     }
   }

@@ -81,7 +81,7 @@ object NotificationTestData {
    */
   private lazy val functionCodes: Seq[String] =
     Seq("01", "02", "03", "05", "06", "07", "08", "09", "10", "11", "16", "17", "18")
-  private lazy val functionCodesRandomised: Iterator[String] = Random.shuffle(functionCodes).toIterator
+  private lazy val functionCodesRandomised: Iterator[String] = Random.shuffle(functionCodes).iterator
   private def randomResponseFunctionCode: String = functionCodesRandomised.next()
 
   val dateTimeIssued: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC"))

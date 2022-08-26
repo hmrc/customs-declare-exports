@@ -33,14 +33,14 @@ class AgentFunctionCodeParserSpec extends UnitSpec {
         val result = parser.parse(NodeSeq.Empty)
 
         result.isRight mustBe true
-        result.right.value.isDefined mustBe false
+        result.toOption.get.isDefined mustBe false
       }
 
       "contains an unpopulated FunctionCode element" in {
         val result = parser.parse(defineXml())
 
         result.isRight mustBe true
-        result.right.value.isDefined mustBe false
+        result.toOption.get.isDefined mustBe false
       }
     }
 
@@ -51,8 +51,8 @@ class AgentFunctionCodeParserSpec extends UnitSpec {
           val result = parser.parse(defineXml(functionCode))
 
           result.isRight mustBe true
-          result.right.value.isDefined mustBe true
-          result.right.value.get mustBe functionCode
+          result.toOption.get.isDefined mustBe true
+          result.toOption.get.get mustBe functionCode
         }
       }
     }

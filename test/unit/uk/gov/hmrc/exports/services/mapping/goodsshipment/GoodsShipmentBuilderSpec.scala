@@ -45,8 +45,8 @@ class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
   private val mockAEOMutualRecognitionPartiesBuilder = mock[AEOMutualRecognitionPartiesBuilder]
   private val governmentAgencyItemBuilder = mock[GovernmentAgencyGoodsItemBuilder]
 
-  override def afterEach: Unit =
-    Mockito.reset(
+  override def afterEach(): Unit =
+    Mockito.reset[Object](
       mockGoodsShipmentNatureOfTransactionBuilder,
       mockConsigneeBuilder,
       mockConsignmentBuilder,

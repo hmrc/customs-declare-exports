@@ -67,15 +67,15 @@ class PartiesParserSpec extends UnitSpec with ExportsDeclarationBuilder with Exp
         val result = partiesParser.parse(xml)
 
         result.isRight mustBe true
-        result.right.value mustBe an[Parties]
+        result.toOption.get mustBe an[Parties]
 
-        result.right.value.exporterDetails.isDefined mustBe true
-        result.right.value.consigneeDetails.isDefined mustBe true
-        result.right.value.consignorDetails.isDefined mustBe true
-        result.right.value.carrierDetails.isDefined mustBe true
-        result.right.value.declarantDetails.isDefined mustBe true
-        result.right.value.representativeDetails.isDefined mustBe true
-        result.right.value.declarationHoldersData.isDefined mustBe true
+        result.toOption.get.exporterDetails.isDefined mustBe true
+        result.toOption.get.consigneeDetails.isDefined mustBe true
+        result.toOption.get.consignorDetails.isDefined mustBe true
+        result.toOption.get.carrierDetails.isDefined mustBe true
+        result.toOption.get.declarantDetails.isDefined mustBe true
+        result.toOption.get.representativeDetails.isDefined mustBe true
+        result.toOption.get.declarationHoldersData.isDefined mustBe true
       }
     }
 
@@ -86,8 +86,8 @@ class PartiesParserSpec extends UnitSpec with ExportsDeclarationBuilder with Exp
         val result = partiesParser.parse(xml)
 
         result.isLeft mustBe true
-        result.left.get mustBe an[XmlParserError]
-        result.left.get mustBe "Test Exception"
+        result.swap.getOrElse("") mustBe an[XmlParserError]
+        result.swap.getOrElse("") mustBe "Test Exception"
       }
     }
 
@@ -95,7 +95,7 @@ class PartiesParserSpec extends UnitSpec with ExportsDeclarationBuilder with Exp
       "set the declarantDetails value to the eori supplied in the MappingContext" in {
         val result = partiesParser.parse(xml)
 
-        val maybeDeclarantEori = result.right.value.declarantDetails
+        val maybeDeclarantEori = result.toOption.get.declarantDetails
           .flatMap(_.details.eori)
 
         maybeDeclarantEori mustBe Some(context.eori)
@@ -107,9 +107,9 @@ class PartiesParserSpec extends UnitSpec with ExportsDeclarationBuilder with Exp
         val result = partiesParser.parse(xml)
 
         result.isRight mustBe true
-        result.right.value mustBe an[Parties]
-        result.right.value.declarantIsExporter.isDefined mustBe true
-        result.right.value.declarantIsExporter.get.isExporter mustBe true
+        result.toOption.get mustBe an[Parties]
+        result.toOption.get.declarantIsExporter.isDefined mustBe true
+        result.toOption.get.declarantIsExporter.get.isExporter mustBe true
       }
 
       "do not set the declarantIsExporter value if the ID supplied in the Exporter element doesn't match the MappingContext's eori value" in {
@@ -118,8 +118,8 @@ class PartiesParserSpec extends UnitSpec with ExportsDeclarationBuilder with Exp
         val result = partiesParser.parse(xml)
 
         result.isRight mustBe true
-        result.right.value mustBe an[Parties]
-        result.right.value.declarantIsExporter.isDefined mustBe false
+        result.toOption.get mustBe an[Parties]
+        result.toOption.get.declarantIsExporter.isDefined mustBe false
       }
 
       "remove any ID value if supplied in the Consignee element that should not be there" in {
@@ -128,9 +128,9 @@ class PartiesParserSpec extends UnitSpec with ExportsDeclarationBuilder with Exp
         val result = partiesParser.parse(xml)
 
         result.isRight mustBe true
-        result.right.value mustBe an[Parties]
-        result.right.value.consigneeDetails.isDefined mustBe true
-        result.right.value.consigneeDetails.get.details.eori.isDefined mustBe false
+        result.toOption.get mustBe an[Parties]
+        result.toOption.get.consigneeDetails.isDefined mustBe true
+        result.toOption.get.consigneeDetails.get.details.eori.isDefined mustBe false
       }
 
       "set the representativeDetails eori value to" when {
@@ -140,9 +140,9 @@ class PartiesParserSpec extends UnitSpec with ExportsDeclarationBuilder with Exp
           val result = partiesParser.parse(xml)
 
           result.isRight mustBe true
-          result.right.value mustBe an[Parties]
+          result.toOption.get mustBe an[Parties]
 
-          val representativeDetailsEori = result.right.value.representativeDetails
+          val representativeDetailsEori = result.toOption.get.representativeDetails
             .flatMap(_.details)
             .flatMap(_.eori)
 
@@ -156,9 +156,9 @@ class PartiesParserSpec extends UnitSpec with ExportsDeclarationBuilder with Exp
           val result = partiesParser.parse(xml)
 
           result.isRight mustBe true
-          result.right.value mustBe an[Parties]
+          result.toOption.get mustBe an[Parties]
 
-          val representativeDetailsEori = result.right.value.representativeDetails
+          val representativeDetailsEori = result.toOption.get.representativeDetails
             .flatMap(_.details)
             .flatMap(_.eori)
 
@@ -174,9 +174,9 @@ class PartiesParserSpec extends UnitSpec with ExportsDeclarationBuilder with Exp
         val result = partiesParser.parse(xml)
 
         result.isRight mustBe true
-        result.right.value mustBe an[Parties]
+        result.toOption.get mustBe an[Parties]
 
-        val declarationHoldersDataIsRequired = result.right.value.declarationHoldersData
+        val declarationHoldersDataIsRequired = result.toOption.get.declarationHoldersData
           .flatMap(_.isRequired)
 
         declarationHoldersDataIsRequired.isDefined mustBe true

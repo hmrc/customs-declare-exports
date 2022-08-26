@@ -74,7 +74,7 @@ class TypeCodeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder with G
     And(s"AdditionalDeclarationType is '$declarationType'")
 
     val declaration = new Declaration
-    val model = aDeclaration(modifiers: _*)
+    val model = aDeclaration(modifiers.toIndexedSeq: _*)
     typeCodeBuilder.buildThenAdd(model, declaration)
 
     declaration.getTypeCode.getValue must be(s"$expectedTypeCode$declarationType")

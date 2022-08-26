@@ -37,7 +37,7 @@ object TestObjectsBuilder {
     override def available(): Int = ???
     override def close(): Unit = ???
     override def hasNext: Boolean = iterator.hasNext
-    override def next(): Document = iterator.next
+    override def next(): Document = iterator.next()
     override def tryNext(): Document = ???
     override def getServerCursor: ServerCursor = ???
     override def getServerAddress: ServerAddress = ???

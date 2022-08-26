@@ -34,12 +34,12 @@ class AdditionalDeclarationTypeParserSpec extends UnitSpec {
 
       "the '/ TypeCode' element is not present" in {
         val input = inputXml(None)
-        parser.parse(input).right.value mustBe None
+        parser.parse(input).toOption.get mustBe None
       }
 
       "the '/ TypeCode' element contains only 2 characters" in {
         val input = inputXml(Some("EX"))
-        parser.parse(input).right.value mustBe None
+        parser.parse(input).toOption.get mustBe None
       }
     }
 
@@ -48,7 +48,7 @@ class AdditionalDeclarationTypeParserSpec extends UnitSpec {
       AdditionalDeclarationType.values.foreach { additionalDeclarationTypeCode =>
         s"the 3rd character of the '/ TypeCode' element is ${additionalDeclarationTypeCode.toString}" in {
           val input = inputXml(Some("EX" + additionalDeclarationTypeCode.toString))
-          parser.parse(input).right.value.get mustBe additionalDeclarationTypeCode
+          parser.parse(input).toOption.get.get mustBe additionalDeclarationTypeCode
         }
       }
     }

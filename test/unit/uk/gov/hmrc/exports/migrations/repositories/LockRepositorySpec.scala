@@ -32,7 +32,7 @@ import uk.gov.hmrc.exports.migrations.repositories.LockEntry._
 import uk.gov.hmrc.exports.migrations.repositories.TestObjectsBuilder.buildMongoCursor
 
 import java.time.Instant
-import scala.collection.JavaConverters.mapAsJavaMap
+import scala.jdk.CollectionConverters._
 
 class LockRepositorySpec extends UnitSpec {
 
@@ -123,7 +123,7 @@ class LockRepositorySpec extends UnitSpec {
 
     "return LockEntry built from Document returned by MongoCollection" in {
       val elementInDb = new Document(
-        mapAsJavaMap(Map(KeyField -> lockKey, StatusField -> "statusValue", OwnerField -> "ownerValue", ExpiresAtField -> date.toString))
+        Map[String, AnyRef](KeyField -> lockKey, StatusField -> "statusValue", OwnerField -> "ownerValue", ExpiresAtField -> date.toString).asJava
       )
       when(findIterable.iterator()).thenReturn(buildMongoCursor(Seq(elementInDb)))
 

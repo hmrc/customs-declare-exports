@@ -34,19 +34,19 @@ class MucrParserSpec extends UnitSpec {
 
       "PreviousDocument element is NOT present" in {
         val input = inputXml()
-        parser.parse(input).right.value mustBe None
+        parser.parse(input).toOption.get mustBe None
       }
 
       "PreviousDocument contains 'DCR' TypeCode" in {
         val input = inputXml(Some(PreviousDocument(id = "id", typeCode = "DCR")))
-        parser.parse(input).right.value mustBe None
+        parser.parse(input).toOption.get mustBe None
       }
     }
 
     "return correct MUCR" when {
       "PreviousDocument contains ID and 'MCR' TypeCode" in {
         val input = inputXml(Some(PreviousDocument(id = "mucr")))
-        parser.parse(input).right.value mustBe Some(MUCR("mucr"))
+        parser.parse(input).toOption.get mustBe Some(MUCR("mucr"))
       }
     }
   }

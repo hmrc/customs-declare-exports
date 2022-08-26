@@ -59,7 +59,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
 
         "the stored Submission document's related action DOES NOT CONTAIN yet any NotificationSummary" should {
           "return the Submission document with the action including a new NotificationSummary and MRN" in {
-            val storedSubmission = submissionRepository.insertOne(pendingSubmissionWithoutMrn).futureValue.right.value
+            val storedSubmission = submissionRepository.insertOne(pendingSubmissionWithoutMrn).futureValue.toOption.get
             testUpdateSubmissionAndNotifications(actionId, List(notification), storedSubmission, UNKNOWN, 1)
           }
         }
@@ -68,7 +68,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
           "return the Submission document with the action including, prepended since more recent, a new NotificationSummary" in {
             val actionWithNotificationSummaries = action.copy(notifications = Some(List(notificationSummary_2, notificationSummary_1)))
             val submissionWithActionWithNotificationSummaries = submission.copy(actions = List(actionWithNotificationSummaries))
-            val storedSubmission = submissionRepository.insertOne(submissionWithActionWithNotificationSummaries).futureValue.right.value
+            val storedSubmission = submissionRepository.insertOne(submissionWithActionWithNotificationSummaries).futureValue.toOption.get
 
             val details = notification.details.copy(status = SubmissionStatus.ACCEPTED)
 
