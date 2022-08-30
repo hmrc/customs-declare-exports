@@ -4,15 +4,16 @@ import org.scalatest.exceptions.TestFailedException
 import play.api.Logging
 import uk.gov.hmrc.exports.base.{IntegrationTestSpec, MockMetrics}
 import uk.gov.hmrc.exports.models.Eori
-import uk.gov.hmrc.exports.repositories.DeclarationRepository
+import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 
 import scala.concurrent.ExecutionContext.global
 
 class DeclarationServiceISpec extends IntegrationTestSpec with MockMetrics with Logging {
 
   private val declarationRepository = instanceOf[DeclarationRepository]
+  private val submissionRepository = instanceOf[SubmissionRepository]
 
-  private val submissionService = new DeclarationService(declarationRepository)
+  private val submissionService = new DeclarationService(declarationRepository, submissionRepository)
 
   override def beforeEach(): Unit = {
     declarationRepository.removeAll.futureValue

@@ -54,6 +54,9 @@ class SubmissionService @Inject() (
   def findAllSubmissionsBy(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] =
     submissionRepository.findAll(eori, queryParameters)
 
+  def findSubmission(eori: String, id: String): Future[Option[Submission]] =
+    submissionRepository.find(eori, id)
+
   def markCompleted(eori: Eori, id: String): Future[Option[ExportsDeclaration]] =
     declarationRepository.markStatusAsComplete(eori, id)
 

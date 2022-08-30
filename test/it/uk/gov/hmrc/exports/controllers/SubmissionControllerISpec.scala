@@ -50,15 +50,39 @@ class SubmissionControllerISpec extends IntegrationTestSpec with AuthTestSupport
       }
     }
   }
+
+  "SubmissionController.find" should {
+
+    "return a 200 response" when {
+      "a matching submission is found" in {
+        repository.insertOne(submission).futureValue
+
+        val getRequest = getWithAuth(routes.SubmissionController.find(SubmissionControllerISpec.id))
+        val response = route(app, getRequest).get
+        status(response) mustBe OK
+        val result = contentAsJson(response).as[Submission]
+        result mustBe submission
+      }
+    }
+
+    "return a 400 response" when {
+      "no matching submission is found" in {
+        val getRequest = getWithAuth(routes.SubmissionController.find(SubmissionControllerISpec.id))
+        val response = route(app, getRequest).get
+        status(response) mustBe NOT_FOUND
+      }
+    }
+  }
 }
 
 object SubmissionControllerISpec extends IntegrationTestSpec {
 
+  val id = UUID.randomUUID.toString
   val actionId = "74d4670c-93ab-41df-99eb-d811fd5de75f"
 
   val submission = Json
     .parse(s"""{
-       |  "uuid" : "${UUID.randomUUID.toString}",
+       |  "uuid" : "$id",
        |  "eori" : "$eori",
        |  "lrn" : "MNscA32pIUdNv6nzo",
        |  "ducr" : "5OG921285214345-PV45",

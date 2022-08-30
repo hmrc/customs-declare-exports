@@ -20,14 +20,14 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.{COMPLETE, DRAFT}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.repositories.DeclarationRepository
+import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.DeclarationService.{CREATED, FOUND}
 
 import java.util.UUID
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class DeclarationService @Inject() (declarationRepository: DeclarationRepository) {
+class DeclarationService @Inject() (declarationRepository: DeclarationRepository, submissionRepository: SubmissionRepository) {
 
   def create(declaration: ExportsDeclaration): Future[ExportsDeclaration] =
     declarationRepository.create(declaration)
@@ -38,11 +38,20 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
       case Some(declaration) => Future.successful((FOUND, declaration.id))
 
       case _ =>
-        declarationRepository.get(Json.obj("eori" -> eori, "id" -> parentId)).flatMap { declaration =>
-          declarationRepository
-            .create(declaration.copy(id = UUID.randomUUID.toString, parentDeclarationId = Some(parentId), status = DRAFT))
+        for {
+          declaration <- declarationRepository.get(Json.obj("eori" -> eori, "id" -> parentId))
+          submission <- submissionRepository.find(eori.value, parentId)
+          newDraft <- declarationRepository
+            .create(
+              declaration.copy(
+                id = UUID.randomUUID.toString,
+                parentDeclarationId = Some(parentId),
+                parentDeclarationEnhancedStatus = submission.flatMap(_.latestEnhancedStatus),
+                status = DRAFT
+              )
+            )
             .map(declaration => (CREATED, declaration.id))
-        }
+        } yield newDraft
     }
   }
 

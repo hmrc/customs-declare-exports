@@ -167,4 +167,21 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
       }
     }
   }
+
+  "SubmissionRepository on find" when {
+    "there is no Submission with given Id for the given EORI" should {
+      "return None" in {
+
+        repository.find(eori, "123").futureValue mustBe None
+      }
+    }
+
+    "there is a Submission with given Id for the given EORI" should {
+      "return Some submission entity" in {
+        repository.insertOne(submission).futureValue.isRight mustBe true
+
+        repository.find(submission.eori, submission.uuid).futureValue mustBe Some(submission)
+      }
+    }
+  }
 }
