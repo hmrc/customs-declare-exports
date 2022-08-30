@@ -22,7 +22,7 @@ import play.api.libs.json.JsValue
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.repositories.DeclarationRepository
+import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.DeclarationService.{CREATED, FOUND}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
@@ -32,7 +32,8 @@ import scala.concurrent.Future
 class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   private val declarationRepository = mock[DeclarationRepository]
-  private val service = new DeclarationService(declarationRepository)
+  private val submissionRepository = mock[SubmissionRepository]
+  private val service = new DeclarationService(declarationRepository, submissionRepository)
 
   "Create" should {
     "delegate to the repository" in {
@@ -98,6 +99,7 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
 
     "return a value indicating that a draft declaration with 'parentDeclarationId' equal to the given parentId was created" in {
       when(declarationRepository.findOne(any[JsValue]())).thenReturn(Future.successful(None))
+      when(submissionRepository.find(any(), any())).thenReturn(Future.successful(None))
 
       val declaration = aDeclaration(withId(newId))
       when(declarationRepository.get(any[JsValue]())).thenReturn(Future.successful(declaration))

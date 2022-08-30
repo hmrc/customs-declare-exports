@@ -54,6 +54,14 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
       .sort(BsonDocument(Json.obj("actions.requestTimestamp" -> -1).toString))
       .toFuture()
   }
+
+  def find(eori: String, id: String): Future[Option[Submission]] = {
+    val filter = Json.obj("uuid" -> id, "eori" -> JsString(eori))
+    collection
+      .find(BsonDocument(filter.toString))
+      .toFuture()
+      .map(_.headOption)
+  }
 }
 
 object SubmissionRepository {
