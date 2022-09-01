@@ -71,7 +71,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       None,
       List(Action(id = "conv-id", requestType = CancellationRequest, notifications = notification))
     )
-    val cancellation = SubmissionCancellation("ref-id", "mrn", "description", "reason")
+    val cancellation = SubmissionCancellation("id", "ref-id", "mrn", "description", "reason")
 
     "submit and delegate to repository" when {
       "submission exists" in {
@@ -90,7 +90,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(None))
 
-        submissionService.cancel("eori", cancellation).futureValue mustBe MrnNotFound
+        submissionService.cancel("eori", cancellation).futureValue mustBe NotFound
       }
 
       "submission exists and previously cancelled" in {

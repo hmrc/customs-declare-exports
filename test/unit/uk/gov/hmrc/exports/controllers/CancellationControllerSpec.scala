@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import scala.concurrent.Future
-
 import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
@@ -36,6 +34,8 @@ import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.services.SubmissionService
 
+import scala.concurrent.Future
+
 class CancellationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestSupport {
 
   private val submissionService: SubmissionService = mock[SubmissionService]
@@ -52,7 +52,7 @@ class CancellationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
   "Create" should {
     val post = FakeRequest("POST", "/cancellations")
-    val cancellation = SubmissionCancellation("ref", "mrn", "statement", "reason")
+    val cancellation = SubmissionCancellation("id", "ref", "mrn", "statement", "reason")
 
     "return 200" when {
       "request is valid" in {
@@ -79,12 +79,12 @@ class CancellationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
       "declaration doesnt exist" in {
         withAuthorizedUser()
-        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(MrnNotFound))
+        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(NotFound))
 
         val result: Future[Result] = route(app, post.withJsonBody(toJson(cancellation))).get
 
         status(result) mustBe OK
-        contentAsJson(result) mustBe Json.toJson(MrnNotFound.toString)
+        contentAsJson(result) mustBe Json.toJson(NotFound.toString)
         verify(submissionService).cancel(refEq(userEori.value), refEq(cancellation))(any())
       }
     }
