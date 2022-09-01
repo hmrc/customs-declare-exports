@@ -68,6 +68,7 @@ object SubmissionRepository {
 
   val filter = Json.obj("actions.id" -> Json.obj("$exists" -> JsBoolean(true)))
 
+  //Need to add index by LRN or remove 48Hr reuse check in frontend
   val indexes: Seq[IndexModel] = List(
     IndexModel(
       ascending("actions.id"),
