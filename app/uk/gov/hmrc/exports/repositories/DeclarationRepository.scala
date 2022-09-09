@@ -95,9 +95,15 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
 object DeclarationRepository {
 
   val indexes: Seq[IndexModel] = List(
+    // Used for getting a declaration owned by a given user
     IndexModel(ascending("eori", "id"), IndexOptions().name("eoriAndIdIdx").unique(true)),
+    // Used for getting a draft declaration that was copy of another owned by a given user
+    IndexModel(ascending("eori", "parentDeclarationId", "status"), IndexOptions().name("eoriAndParentDecIdIdx")),
+    // ?? Used for dashboard ??
     IndexModel(ascending("eori", "updatedDateTime", "status"), IndexOptions().name("eoriAndUpdateTimeAndStatusIdx")),
+    // Used for pulling draft declarations for user in date order
     IndexModel(ascending("eori", "createdDateTime", "status"), IndexOptions().name("eoriAndCreateTimeAndStatusIdx")),
+    // Use for deleting draft decs older than X
     IndexModel(compoundIndex(descending("updatedDateTime"), ascending("status")), IndexOptions().name("statusAndUpdateIdx"))
   )
 }

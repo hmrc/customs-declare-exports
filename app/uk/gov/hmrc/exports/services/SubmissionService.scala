@@ -51,11 +51,14 @@ class SubmissionService @Inject() (
       case _                                                            => Future.successful(NotFound)
     }
 
-  def findAllSubmissionsBy(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] =
-    submissionRepository.findAll(eori, queryParameters)
+  def findAllSubmissions(eori: String): Future[Seq[Submission]] =
+    submissionRepository.findAll(eori)
 
   def findSubmission(eori: String, id: String): Future[Option[Submission]] =
-    submissionRepository.find(eori, id)
+    submissionRepository.findById(eori, id)
+
+  def findSubmissionsByLrn(eori: String, lrn: String): Future[Seq[Submission]] =
+    submissionRepository.findByLrn(eori, lrn)
 
   def markCompleted(eori: Eori, id: String): Future[Option[ExportsDeclaration]] =
     declarationRepository.markStatusAsComplete(eori, id)

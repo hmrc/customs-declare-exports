@@ -40,7 +40,7 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
       case _ =>
         for {
           declaration <- declarationRepository.get(Json.obj("eori" -> eori, "id" -> parentId))
-          submission <- submissionRepository.find(eori.value, parentId)
+          submission <- submissionRepository.findById(eori.value, parentId)
           newDraft <- declarationRepository
             .create(
               declaration.copy(

@@ -16,22 +16,20 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.NodeSeq
-
 import com.google.inject.Singleton
-import javax.inject.Inject
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.{Counters, Timers}
-import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification.REST._
-import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionQueryParameters}
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.NotificationService
+
+import javax.inject.Inject
+import scala.concurrent.{ExecutionContext, Future}
+import scala.xml.NodeSeq
 
 @Singleton
 class NotificationController @Inject() (
@@ -46,9 +44,9 @@ class NotificationController @Inject() (
     extends Authenticator(authConnector, cc) with JSONResponses {
 
   def findAll(submissionId: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
-    retrieveSubmissions(request.eori, submissionId) flatMap {
-      case Nil             => Future.successful(NotFound)
-      case submission +: _ => notificationsService.findAllNotificationsSubmissionRelated(submission).map(Ok(_))
+    submissionService.findSubmission(request.eori.value, submissionId) flatMap {
+      case None             => Future.successful(NotFound)
+      case Some(submission) => notificationsService.findAllNotificationsSubmissionRelated(submission).map(Ok(_))
     }
   }
 
@@ -65,7 +63,4 @@ class NotificationController @Inject() (
       case Left(errorResponse) => Future.successful(errorResponse.XmlResult)
     }
   }
-
-  private def retrieveSubmissions(eori: Eori, submissionId: String): Future[Seq[Submission]] =
-    submissionService.findAllSubmissionsBy(eori.value, SubmissionQueryParameters(uuid = Some(submissionId)))
 }
