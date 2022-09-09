@@ -33,6 +33,8 @@ case class Action(
 
 object Action {
 
+  val defaultDateTimeZone: ZoneId = ZoneId.of("UTC")
+
   implicit val readLocalDateTimeFromString: Reads[ZonedDateTime] = implicitly[Reads[LocalDateTime]]
     .map(ZonedDateTime.of(_, ZoneId.of("UTC")))
 

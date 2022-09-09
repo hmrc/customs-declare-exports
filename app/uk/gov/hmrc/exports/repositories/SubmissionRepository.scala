@@ -19,9 +19,9 @@ package uk.gov.hmrc.exports.repositories
 import com.mongodb.client.model.Indexes.{ascending, compoundIndex, descending}
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
-import play.api.libs.json.{JsBoolean, JsObject, JsString, Json}
+import play.api.libs.json.{JsBoolean, JsString, Json}
 import repositories.RepositoryOps
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionQueryParameters}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
@@ -47,20 +47,27 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     findOneAndUpdate(filter, update)
   }
 
-  def findAll(eori: String, queryParameters: SubmissionQueryParameters): Future[Seq[Submission]] = {
-    val filter = Json.toJson(queryParameters).as[JsObject] + ("eori" -> JsString(eori))
+  def findAll(eori: String): Future[Seq[Submission]] = {
+    val filter = Json.obj("eori" -> JsString(eori))
     collection
       .find(BsonDocument(filter.toString))
       .sort(BsonDocument(Json.obj("actions.requestTimestamp" -> -1).toString))
       .toFuture()
   }
 
-  def find(eori: String, id: String): Future[Option[Submission]] = {
-    val filter = Json.obj("uuid" -> id, "eori" -> JsString(eori))
+  def findById(eori: String, id: String): Future[Option[Submission]] = {
+    val filter = Json.obj("uuid" -> JsString(id), "eori" -> JsString(eori))
     collection
       .find(BsonDocument(filter.toString))
       .toFuture()
       .map(_.headOption)
+  }
+
+  def findByLrn(eori: String, lrn: String): Future[Seq[Submission]] = {
+    val filter = Json.obj("lrn" -> lrn, "eori" -> JsString(eori))
+    collection
+      .find(BsonDocument(filter.toString))
+      .toFuture()
   }
 }
 
@@ -76,6 +83,7 @@ object SubmissionRepository {
         .partialFilterExpression(BsonDocument(filter.toString))
         .unique(true)
     ),
-    IndexModel(compoundIndex(ascending("eori"), descending("action.requestTimestamp")), IndexOptions().name("actionOrderedEori"))
+    IndexModel(compoundIndex(ascending("eori"), descending("action.requestTimestamp")), IndexOptions().name("actionOrderedEori")),
+    IndexModel(compoundIndex(ascending("eori"), descending("lrn")), IndexOptions().name("lrnByEori"))
   )
 }

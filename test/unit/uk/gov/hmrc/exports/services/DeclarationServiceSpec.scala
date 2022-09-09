@@ -99,7 +99,7 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
 
     "return a value indicating that a draft declaration with 'parentDeclarationId' equal to the given parentId was created" in {
       when(declarationRepository.findOne(any[JsValue]())).thenReturn(Future.successful(None))
-      when(submissionRepository.find(any(), any())).thenReturn(Future.successful(None))
+      when(submissionRepository.findById(any(), any())).thenReturn(Future.successful(None))
 
       val declaration = aDeclaration(withId(newId))
       when(declarationRepository.get(any[JsValue]())).thenReturn(Future.successful(declaration))

@@ -37,7 +37,7 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
       "return true" in {
         repository.insertOne(submission).futureValue.isRight mustBe true
 
-        val submissionInDB = repository.findAll(eori, SubmissionQueryParameters(Some(submission.uuid))).futureValue
+        val submissionInDB = repository.findAll(eori).futureValue
         submissionInDB.headOption must be(defined)
       }
     }
@@ -57,7 +57,7 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
     "allow to insert two submissions with empty actions" in {
       repository.insertOne(emptySubmission_1).futureValue.isRight mustBe true
       repository.insertOne(emptySubmission_2).futureValue.isRight mustBe true
-      repository.findAll(eori, SubmissionQueryParameters()).futureValue must have length 2
+      repository.findAll(eori).futureValue must have length 2
     }
   }
 
@@ -83,87 +83,17 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
     }
   }
 
-  "SubmissionRepository on findBy" when {
+  "SubmissionRepository on findAll" when {
 
     "querying with empty SubmissionQueryParameters" should {
       "return all Submissions for given EORI" in {
         repository.insertOne(submission).futureValue
         repository.insertOne(submission_2).futureValue
+        repository.insertOne(submission_3.copy(eori = "GB1234567")).futureValue
 
-        val queryParams = SubmissionQueryParameters()
-
-        val result = repository.findAll(submission.eori, queryParams).futureValue
+        val result = repository.findAll(submission.eori).futureValue
 
         result mustBe Seq(submission, submission_2)
-      }
-    }
-
-    "querying by UUID only" when {
-
-      "there is no Submission with given UUID for the given EORI" should {
-        "return empty Sequence" in {
-          val queryParams = SubmissionQueryParameters(uuid = Some(uuid))
-
-          repository.findAll(eori, queryParams).futureValue mustBe Seq.empty[Submission]
-        }
-      }
-
-      "there is a Submission with given UUID for the given EORI" should {
-        "return this Submission" in {
-          repository.insertOne(submission).futureValue
-          val queryParams = SubmissionQueryParameters(uuid = Some(submission.uuid))
-
-          val retrievedSubmissions = repository.findAll(submission.eori, queryParams).futureValue
-
-          retrievedSubmissions.length mustBe 1
-          retrievedSubmissions.head mustBe submission
-        }
-      }
-    }
-
-    "querying by DUCR only" when {
-
-      "there is no Submission with given DUCR for the given EORI" should {
-        "return empty Sequence" in {
-          val queryParams = SubmissionQueryParameters(ducr = Some(ducr))
-
-          repository.findAll(eori, queryParams).futureValue mustBe Seq.empty[Submission]
-        }
-      }
-
-      "there is a Submission with given DUCR for the given EORI" should {
-        "return this Submission" in {
-          repository.insertOne(submission).futureValue
-          val queryParams = SubmissionQueryParameters(ducr = Some(submission.ducr))
-
-          val retrievedSubmissions = repository.findAll(submission.eori, queryParams).futureValue
-
-          retrievedSubmissions.length mustBe 1
-          retrievedSubmissions.head mustBe submission
-        }
-      }
-    }
-
-    "querying by LRN only" when {
-
-      "there is no Submission with given MRN for the given EORI" should {
-        "return empty Sequence" in {
-          val queryParams = SubmissionQueryParameters(lrn = Some(lrn))
-
-          repository.findAll(eori, queryParams).futureValue mustBe Seq.empty[Submission]
-        }
-      }
-
-      "there is a Submission with given MRN for the given EORI" should {
-        "return this Submission" in {
-          repository.insertOne(submission).futureValue
-          val queryParams = SubmissionQueryParameters(lrn = Some(submission.lrn))
-
-          val retrievedSubmissions = repository.findAll(submission.eori, queryParams).futureValue
-
-          retrievedSubmissions.length mustBe 1
-          retrievedSubmissions.head mustBe submission
-        }
       }
     }
   }
@@ -171,8 +101,7 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
   "SubmissionRepository on find" when {
     "there is no Submission with given Id for the given EORI" should {
       "return None" in {
-
-        repository.find(eori, "123").futureValue mustBe None
+        repository.findById(eori, "123").futureValue mustBe None
       }
     }
 
@@ -180,7 +109,29 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
       "return Some submission entity" in {
         repository.insertOne(submission).futureValue.isRight mustBe true
 
-        repository.find(submission.eori, submission.uuid).futureValue mustBe Some(submission)
+        repository.findById(submission.eori, submission.uuid).futureValue mustBe Some(submission)
+      }
+    }
+  }
+
+  "SubmissionRepository on findByLrn" should {
+    "return an empty sequence" when {
+      "there is no Submission with given LRN" in {
+        repository.findByLrn(eori, "123").futureValue mustBe Seq.empty
+      }
+
+      "there is no Submission with given LRN & EORI combination" in {
+        repository.insertOne(submission.copy(eori = "1234567")).futureValue.isRight mustBe true
+
+        repository.findByLrn(eori, submission.lrn).futureValue mustBe Seq.empty
+      }
+    }
+
+    "return a sequence of matching Submission entities" when {
+      "there are Submissions with given LRN & EORI combination" in {
+        repository.insertOne(submission).futureValue.isRight mustBe true
+
+        repository.findByLrn(eori, submission.lrn).futureValue mustBe Seq(submission)
       }
     }
   }

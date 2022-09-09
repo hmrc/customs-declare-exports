@@ -81,7 +81,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
     "return 200" when {
       "submission found" in {
-        when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
+        when(submissionService.findSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
         when(notificationService.findAllNotificationsSubmissionRelated(any())).thenReturn(Future.successful(Seq(notification)))
 
         val result = routeGetFindAll
@@ -93,7 +93,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
     "not return notifications" when {
       "those notifications have not had the details parsed from them" in {
-        when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission)))
+        when(submissionService.findSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
         when(notificationService.findAllNotificationsSubmissionRelated(any())).thenReturn(Future.successful(Seq.empty))
 
         val result = routeGetFindAll
@@ -105,7 +105,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
 
     "return 400" when {
       "submission not found" in {
-        when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq.empty))
+        when(submissionService.findSubmission(any(), any())).thenReturn(Future.successful(None))
 
         val result = routeGetFindAll
 

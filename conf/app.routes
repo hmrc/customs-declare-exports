@@ -9,7 +9,9 @@ GET         /draft-declaration/:parentId                  uk.gov.hmrc.exports.co
 
 POST        /cancellations                                uk.gov.hmrc.exports.controllers.CancellationController.create()
 
-GET         /submissions                                  uk.gov.hmrc.exports.controllers.SubmissionController.findAllBy(queryParameters: uk.gov.hmrc.exports.models.declaration.submissions.SubmissionQueryParameters)
+GET         /lrn-already-used/:lrn                        uk.gov.hmrc.exports.controllers.SubmissionController.isLrnAlreadyUsed(lrn: String)
+
+GET         /submissions                                  uk.gov.hmrc.exports.controllers.SubmissionController.findAll()
 GET         /submission/:id                               uk.gov.hmrc.exports.controllers.SubmissionController.find(id: String)
 POST        /submission/:id                               uk.gov.hmrc.exports.controllers.SubmissionController.create(id: String)
 

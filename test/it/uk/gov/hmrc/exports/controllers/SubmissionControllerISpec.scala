@@ -24,6 +24,7 @@ import uk.gov.hmrc.exports.controllers.SubmissionControllerISpec.submission
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 
+import java.time.{ZoneId, ZonedDateTime}
 import java.util.UUID
 
 class SubmissionControllerISpec extends IntegrationTestSpec with AuthTestSupport {
@@ -36,18 +37,16 @@ class SubmissionControllerISpec extends IntegrationTestSpec with AuthTestSupport
     postToDownstreamService("/auth/authorise", OK, enrolments)
   }
 
-  "SubmissionController.findAllBy" when {
+  "SubmissionController.findAll" should {
 
-    "receives an empty parameter" should {
-      "return all Submissions for given EORI" in {
-        repository.insertOne(submission).futureValue
+    "return all Submissions for given EORI" in {
+      repository.insertOne(submission).futureValue
 
-        val getRequest = getWithAuth(routes.SubmissionController.findAllBy(SubmissionQueryParameters()))
-        val response = route(app, getRequest).get
-        status(response) mustBe OK
-        val result = contentAsJson(response).as[List[Submission]].head
-        result mustBe submission
-      }
+      val getRequest = getWithAuth(routes.SubmissionController.findAll())
+      val response = route(app, getRequest).get
+      status(response) mustBe OK
+      val result = contentAsJson(response).as[List[Submission]].head
+      result mustBe submission
     }
   }
 
@@ -73,24 +72,51 @@ class SubmissionControllerISpec extends IntegrationTestSpec with AuthTestSupport
       }
     }
   }
+
+  "SubmissionController.isLrnAlreadyUsed" should {
+
+    "return a 200 response with 'true'" when {
+      "a lrn has been used within 48hrs" in {
+        repository.insertOne(submission).futureValue
+
+        val getRequest = getWithAuth(routes.SubmissionController.isLrnAlreadyUsed(SubmissionControllerISpec.lrn))
+        val response = route(app, getRequest).get
+        status(response) mustBe OK
+        val result = contentAsJson(response).as[Boolean]
+        result mustBe true
+      }
+    }
+
+    "return a 400 response with 'false'" when {
+      "a lrn has not been used within 48hr" in {
+        val getRequest = getWithAuth(routes.SubmissionController.isLrnAlreadyUsed("lrn"))
+        val response = route(app, getRequest).get
+        status(response) mustBe OK
+        val result = contentAsJson(response).as[Boolean]
+        result mustBe false
+      }
+    }
+  }
 }
 
 object SubmissionControllerISpec extends IntegrationTestSpec {
 
   val id = UUID.randomUUID.toString
   val actionId = "74d4670c-93ab-41df-99eb-d811fd5de75f"
+  val lrn = "MNscA32pIUdNv6nzo"
+  val now = ZonedDateTime.now(ZoneId.of("UTC"))
 
   val submission = Json
     .parse(s"""{
        |  "uuid" : "$id",
        |  "eori" : "$eori",
-       |  "lrn" : "MNscA32pIUdNv6nzo",
+       |  "lrn" : "$lrn",
        |  "ducr" : "5OG921285214345-PV45",
        |  "actions" : [
        |    {
        |      "id" : "$actionId",
        |      "requestType" : "SubmissionRequest",
-       |      "requestTimestamp" : "2022-05-11T09:42:41.138Z[UTC]",
+       |      "requestTimestamp" : "$now",
        |      "notifications" : [
        |        {
        |          "notificationId" : "8ce6ea97-cd82-41e7-90b3-e016c29e8768",

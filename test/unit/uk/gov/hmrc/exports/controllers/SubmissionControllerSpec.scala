@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import org.mockito.ArgumentMatchers.{any, anyString, eq => eqTo}
+import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
 import play.api.libs.json.Json.toJson
 import play.api.mvc.{AnyContent, Request}
@@ -102,7 +102,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
     }
   }
 
-  "SubmissionController on findAllBy" should {
+  "SubmissionController on findAll" should {
 
     val fakeGetRequest: Request[AnyContent] = FakeRequest("GET", "/submissions")
 
@@ -110,7 +110,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
       "request is unauthorised" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result = controller.findAllBy(SubmissionQueryParameters())(fakeGetRequest)
+        val result = controller.findAll()(fakeGetRequest)
 
         status(result) mustBe UNAUTHORIZED
         verifyNoInteractions(submissionService)
@@ -120,18 +120,18 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
     "return 200 (Ok) with the value returned by SubmissionService" when {
 
       "SubmissionService returns empty Sequence" in {
-        when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq.empty))
+        when(submissionService.findAllSubmissions(any())).thenReturn(Future.successful(Seq.empty))
 
-        val result = controller.findAllBy(SubmissionQueryParameters())(fakeGetRequest)
+        val result = controller.findAll()(fakeGetRequest)
 
         status(result) mustBe OK
         contentAsJson(result) mustBe toJson(Seq.empty[Submission])
       }
 
       "SubmissionService returns non-empty Sequence" in {
-        when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq(submission, submission_2)))
+        when(submissionService.findAllSubmissions(any())).thenReturn(Future.successful(Seq(submission, submission_2)))
 
-        val result = controller.findAllBy(SubmissionQueryParameters())(fakeGetRequest)
+        val result = controller.findAll()(fakeGetRequest)
 
         status(result) mustBe OK
         contentAsJson(result) mustBe toJson(Seq(submission, submission_2))
@@ -139,12 +139,101 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
     }
 
     "call SubmissionService, passing SubmissionQueryParameters provided" in {
-      when(submissionService.findAllSubmissionsBy(any(), any())).thenReturn(Future.successful(Seq.empty))
-      val queryParams = SubmissionQueryParameters(uuid = Some("testUuid"), ducr = Some("testDucr"), lrn = Some("testLrn"))
+      when(submissionService.findAllSubmissions(any())).thenReturn(Future.successful(Seq.empty))
 
-      controller.findAllBy(queryParams)(fakeGetRequest).futureValue
+      controller.findAll()(fakeGetRequest).futureValue
 
-      verify(submissionService).findAllSubmissionsBy(any(), eqTo(queryParams))
+      verify(submissionService).findAllSubmissions(any())
+    }
+  }
+
+  "SubmissionController on find" should {
+
+    val fakeGetRequest: Request[AnyContent] = FakeRequest("GET", "/submission")
+
+    "return 401 (Unauthorised)" when {
+      "request is unauthorised" in {
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        val result = controller.find("id")(fakeGetRequest)
+
+        status(result) mustBe UNAUTHORIZED
+        verifyNoInteractions(submissionService)
+      }
+    }
+
+    "return 200 (Ok) with the specified submission if it exists" in {
+      when(submissionService.findSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
+
+      val result = controller.find(submission.uuid)(fakeGetRequest)
+
+      status(result) mustBe OK
+      contentAsJson(result) mustBe toJson(submission)
+    }
+
+    "return 404 (NotFound) specified submission does not exists" in {
+      when(submissionService.findSubmission(any(), any())).thenReturn(Future.successful(None))
+
+      val result = controller.find(submission.uuid)(fakeGetRequest)
+
+      status(result) mustBe NOT_FOUND
+    }
+  }
+
+  "SubmissionController on isLrnAlreadyUsed" should {
+
+    val fakeGetRequest: Request[AnyContent] = FakeRequest("GET", "/lrn-already-used")
+
+    "return 401 (Unauthorised)" when {
+      "request is unauthorised" in {
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        val result = controller.isLrnAlreadyUsed("lrn")(fakeGetRequest)
+
+        status(result) mustBe UNAUTHORIZED
+        verifyNoInteractions(submissionService)
+      }
+    }
+
+    "return 200 (Ok) with 'true'" when {
+      "the specified LRN has been used within 48h" in {
+        when(submissionService.findSubmissionsByLrn(any(), any())).thenReturn(Future.successful(Seq(submission)))
+
+        val result = controller.isLrnAlreadyUsed(submission.lrn)(fakeGetRequest)
+
+        status(result) mustBe OK
+        contentAsJson(result) mustBe toJson(true)
+      }
+    }
+
+    "return 200 (Ok) with 'false'" when {
+      "a submission with the specified LRN does not exists " in {
+        when(submissionService.findSubmissionsByLrn(any(), any())).thenReturn(Future.successful(Seq()))
+
+        val result = controller.isLrnAlreadyUsed(submission.lrn)(fakeGetRequest)
+
+        status(result) mustBe OK
+        contentAsJson(result) mustBe toJson(false)
+      }
+
+      "the specified LRN has not been used within 48hr" in {
+        when(submissionService.findSubmissionsByLrn(any(), any())).thenReturn(Future.successful(Seq(submission_2)))
+
+        val result = controller.isLrnAlreadyUsed(submission.lrn)(fakeGetRequest)
+
+        status(result) mustBe OK
+        contentAsJson(result) mustBe toJson(false)
+      }
+
+      "the specified LRN exists within 48hrs but in an ERRORS submission" in {
+        when(submissionService.findSubmissionsByLrn(any(), any()))
+          .thenReturn(Future.successful(Seq(submission.copy(latestEnhancedStatus = Some(EnhancedStatus.ERRORS)))))
+
+        val result = controller.isLrnAlreadyUsed(submission.lrn)(fakeGetRequest)
+
+        status(result) mustBe OK
+        contentAsJson(result) mustBe toJson(false)
+      }
     }
   }
 }
