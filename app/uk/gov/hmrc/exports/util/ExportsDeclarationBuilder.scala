@@ -97,11 +97,15 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
   ): ExportsDeclarationModifier =
     _.copy(consignmentReferences = Some(ConsignmentReferences(DUCR(ducr), lrn, personalUcr, eidrDateStamp, mrn)))
 
-  def withoutDepartureTransport(): ExportsDeclarationModifier =
+  def withoutDepartureTransport(borderModeOfTransportCode: Option[TransportLeavingTheBorder] = None): ExportsDeclarationModifier =
     declaration =>
       declaration.copy(transport =
         declaration.transport
-          .copy(borderModeOfTransportCode = None, meansOfTransportOnDepartureType = None, meansOfTransportOnDepartureIDNumber = None)
+          .copy(
+            borderModeOfTransportCode = borderModeOfTransportCode,
+            meansOfTransportOnDepartureType = None,
+            meansOfTransportOnDepartureIDNumber = None
+          )
       )
 
   def withDepartureTransport(
@@ -205,6 +209,11 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
   def withCarrierDetails(eori: Option[String] = None, address: Option[Address] = None): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(carrierDetails = Some(CarrierDetails(EntityDetails(eori, address)))))
 
+  def withAuthorisationProcedureCodeChoice(
+    authorisationProcedureCodeChoice: Option[AuthorisationProcedureCodeChoice] = None
+  ): ExportsDeclarationModifier =
+    cache => cache.copy(parties = cache.parties.copy(authorisationProcedureCodeChoice = authorisationProcedureCodeChoice))
+
   def withoutOriginationCountry(): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(originationCountry = None))
 
@@ -224,7 +233,10 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     cache => cache.copy(locations = cache.locations.copy(routingCountries = Seq.empty))
 
   def withRoutingCountries(countries: Seq[Country] = Seq(Country(Some("GB")), Country(Some("PL")))): ExportsDeclarationModifier =
-    cache => cache.copy(locations = cache.locations.copy(routingCountries = countries))
+    cache => cache.copy(locations = cache.locations.copy(routingCountries = countries, hasRoutingCountries = Some(!countries.isEmpty)))
+
+  def withInlandOrBorder(inlandOrBorder: Option[InlandOrBorder] = None): ExportsDeclarationModifier =
+    cache => cache.copy(locations = cache.locations.copy(inlandOrBorder = inlandOrBorder))
 
   def withoutGoodsLocation(): ExportsDeclarationModifier =
     m => m.copy(locations = m.locations.copy(goodsLocation = None))

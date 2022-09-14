@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.exports.util
 
-import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.exports.models.declaration.{FiscalInformation, _}
+import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoStringAnswers
 
 import java.util.UUID
 
@@ -99,4 +100,16 @@ trait ExportsItemBuilder {
     cache => cache.copy(isLicenceRequired = Some(false))
 
   protected def uuid: String = UUID.randomUUID().toString
+
+  def withFiscalInformation(fiscalInformation: Option[FiscalInformation] = Some(FiscalInformation(YesNoStringAnswers.yes))): ItemModifier =
+    cache => cache.copy(fiscalInformation = fiscalInformation)
+
+  def withTaricCodes(codes: Seq[TaricCode] = Seq()): ItemModifier =
+    cache => cache.copy(taricCodes = codes.headOption.map(_ => codes.toList))
+
+  def withNactExemptionCode(code: Option[String] = None): ItemModifier =
+    cache => cache.copy(nactExemptionCode = code.map(NactCode(_)))
+
+  def withNactCodes(codes: Option[List[NactCode]] = None): ItemModifier =
+    cache => cache.copy(nactCodes = codes)
 }

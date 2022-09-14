@@ -43,43 +43,50 @@ class GenerateDraftDecController @Inject() (declarationRepository: DeclarationRe
 }
 
 object GenerateDraftDecController extends ExportsDeclarationBuilder {
-  case class CreateDraftDecDocumentsRequest(eori: String, itemCount: Int = 1, lrn: String)
+  case class CreateDraftDecDocumentsRequest(eori: String, itemCount: Int = 1, lrn: String, ducr: Option[String])
 
-  def createDeclaration()(implicit request: Request[CreateDraftDecDocumentsRequest]) = aDeclaration(
-    withEori(request.body.eori),
-    withStatus(DeclarationStatus.DRAFT),
-    withAdditionalDeclarationType(),
-    withDispatchLocation(),
-    withConsignmentReferences(lrn = request.body.lrn),
-    withDepartureTransport(ModeOfTransportCode.Maritime, "11", "SHIP1"),
-    withContainerData(Container("container", Seq(Seal("seal1"), Seal("seal2")))),
-    withPreviousDocuments(PreviousDocument("IF3", "101SHIP2", None)),
-    withExporterDetails(Some(request.body.eori)),
-    withDeclarantDetails(Some(request.body.eori)),
-    withDeclarantIsExporter(),
-    withConsigneeDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "Portugal, Including Azores and Madeira"))),
-    withConsignorDetails(Some("9GB1234567ABCDEG"), None),
-    withCarrierDetails(None, Some(Address("XYZ Carrier", "School Road", "London", "WS1 2AB", "United Kingdom, Great Britain, Northern Ireland"))),
-    withIsEntryIntoDeclarantsRecords(),
-    withPersonPresentingGoodsDetails(eori = Eori("GB1234567890")),
-    withRepresentativeDetails(Some(EntityDetails(Some("GB717572504502809"), None)), Some("3")),
-    withDeclarationHolders(DeclarationHolder(Some("AEOC"), Some("GB717572504502811"), Some(EoriSource.OtherEori))),
-    withOriginationCountry(),
-    withDestinationCountry(Country(Some("DE"))),
-    withRoutingCountries(Seq(Country(Some("FR")))),
-    withGoodsLocation(
-      GoodsLocation(country = "GB", typeOfLocation = "B", qualifierOfIdentification = "Y", identificationOfLocation = Some("FXTFXTFXT"))
-    ),
-    withWarehouseIdentification("RGBLBA001"),
-    withInlandModeOfTransport(ModeOfTransportCode.Maritime),
-    withSupervisingCustomsOffice("Belfast"),
-    withOfficeOfExit(Some("GB000054")),
-    withItems(request.body.itemCount),
-    withTotalNumberOfItems(),
-    withNatureOfTransaction("1"),
-    withBorderTransport(Some("40"), Some("1234567878ui")),
-    withTransportCountry(Some("Portugal")),
-    withReadyForSubmission(),
-    withUpdatedDateTime()
-  )
+  def createDeclaration()(implicit request: Request[CreateDraftDecDocumentsRequest]) = {
+
+    val consignmentRef = request.body.ducr
+      .map(ducr => withConsignmentReferences(lrn = request.body.lrn, ducr = ducr))
+      .getOrElse(withConsignmentReferences(lrn = request.body.lrn))
+
+    aDeclaration(
+      withEori(request.body.eori),
+      withStatus(DeclarationStatus.DRAFT),
+      withAdditionalDeclarationType(),
+      withDispatchLocation(),
+      consignmentRef,
+      withDepartureTransport(ModeOfTransportCode.Maritime, "11", "SHIP1"),
+      withContainerData(Container("container", Seq(Seal("seal1"), Seal("seal2")))),
+      withPreviousDocuments(PreviousDocument("IF3", "101SHIP2", None)),
+      withExporterDetails(Some(request.body.eori)),
+      withDeclarantDetails(Some(request.body.eori)),
+      withDeclarantIsExporter(),
+      withConsigneeDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "Portugal, Including Azores and Madeira"))),
+      withConsignorDetails(Some("9GB1234567ABCDEG"), None),
+      withCarrierDetails(None, Some(Address("XYZ Carrier", "School Road", "London", "WS1 2AB", "United Kingdom, Great Britain, Northern Ireland"))),
+      withIsEntryIntoDeclarantsRecords(),
+      withPersonPresentingGoodsDetails(eori = Eori("GB1234567890")),
+      withRepresentativeDetails(Some(EntityDetails(Some("GB717572504502809"), None)), Some("3")),
+      withDeclarationHolders(DeclarationHolder(Some("AEOC"), Some("GB717572504502811"), Some(EoriSource.OtherEori))),
+      withOriginationCountry(),
+      withDestinationCountry(Country(Some("DE"))),
+      withRoutingCountries(Seq(Country(Some("FR")))),
+      withGoodsLocation(
+        GoodsLocation(country = "GB", typeOfLocation = "B", qualifierOfIdentification = "Y", identificationOfLocation = Some("FXTFXTFXT"))
+      ),
+      withWarehouseIdentification("RGBLBA001"),
+      withInlandModeOfTransport(ModeOfTransportCode.Maritime),
+      withSupervisingCustomsOffice("Belfast"),
+      withOfficeOfExit(Some("GB000054")),
+      withItems(request.body.itemCount),
+      withTotalNumberOfItems(),
+      withNatureOfTransaction("1"),
+      withBorderTransport(Some("40"), Some("1234567878ui")),
+      withTransportCountry(Some("Portugal")),
+      withReadyForSubmission(),
+      withUpdatedDateTime()
+    )
+  }
 }

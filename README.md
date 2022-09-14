@@ -49,7 +49,7 @@ It will randomly (50/50 chance) also insert an extra notification of type DMSDOC
 
 You can call the endpoint like this:
 
-`curl --location --request POST 'http://localhost:6792/test-only/create-submitted-dec-record' --header 'Content-Type: application/json' --data-raw '{"eori": "GB1234567890"}'`
+`curl --location --request POST 'http://localhost:6792/test-only/create-submitted-dec-record' --header 'Content-Type: application/json' --data-raw '{"eori": "GB1234567890", "lrn" : "SOMELRN", "ducr" : "2GB123456789000-XXXABC456TIM"}'`
 
 You will receive back the following response (if successful):
 
@@ -61,7 +61,7 @@ to populate the declarations collection with many item (50+ item) draft declarat
 
 You can call the endpoint like this:
 
-`curl --location --request POST 'http://localhost:6792/test-only/create-draft-dec-record' --header 'Content-Type: application/json' --data-raw '{"eori": "GB7172755022922", "itemCount" : 3, "lrn" : "SOMELRN""}'`
+`curl --location --request POST 'http://localhost:6792/test-only/create-draft-dec-record' --header 'Content-Type: application/json' --data-raw '{"eori": "GB7172755022922", "itemCount" : 3, "lrn" : "SOMELRN", "ducr" : "2GB123456789000-123ABC456TIM"}'`
 
 You will receive back the following response (if successful):
 
