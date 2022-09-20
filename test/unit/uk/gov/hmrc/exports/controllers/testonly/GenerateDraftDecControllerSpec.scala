@@ -28,7 +28,7 @@ import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsJson, _}
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{ADDITIONAL_DOCUMENTS_REQUIRED, GOODS_ARRIVED}
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{ADDITIONAL_DOCUMENTS_REQUIRED, GOODS_ARRIVED, RECEIVED}
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
@@ -109,7 +109,7 @@ class GenerateDraftDecControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
         if (newSubmission.mrn.getOrElse("0000").take(2).toInt % 2 == 0)
           (2, ADDITIONAL_DOCUMENTS_REQUIRED)
         else
-          (1, GOODS_ARRIVED)
+          (1, RECEIVED)
 
       newSubmission.latestEnhancedStatus mustBe Some(expectedStatus)
       newSubmission.actions.head.notifications.get.size mustBe expectedNoOfNotifications
