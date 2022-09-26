@@ -78,7 +78,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
   def withoutAdditionalDeclarationType(): ExportsDeclarationModifier = _.copy(additionalDeclarationType = None)
 
-  def withAdditionalDeclarationType(decType: AdditionalDeclarationType = AdditionalDeclarationType.STANDARD_FRONTIER): ExportsDeclarationModifier =
+  def withAdditionalDeclarationType(decType: AdditionalDeclarationType = AdditionalDeclarationType.STANDARD_PRE_LODGED): ExportsDeclarationModifier =
     _.copy(additionalDeclarationType = Some(decType))
 
   def withoutDispatchLocation: ExportsDeclarationModifier = _.copy(dispatchLocation = None)

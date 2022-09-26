@@ -19,12 +19,10 @@ package uk.gov.hmrc.exports.controllers.testonly
 import play.api.libs.json.Json
 import play.api.mvc.{Action, ControllerComponents, Request}
 import uk.gov.hmrc.exports.controllers.RESTController
-import uk.gov.hmrc.exports.controllers.testonly.GenerateDraftDecController.withConsignmentReferences
-import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action => SubmissionAction, NotificationSummary, Submission, SubmissionRequest}
-import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.{ACCEPTED, ADDITIONAL_DOCUMENTS_REQUIRED, SubmissionStatus}
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.{ADDITIONAL_DOCUMENTS_REQUIRED, RECEIVED, SubmissionStatus}
 import uk.gov.hmrc.exports.models.declaration.AuthorisationProcedureCode.CodeOther
 import uk.gov.hmrc.exports.models.declaration.ModeOfTransportCode.Maritime
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
@@ -98,7 +96,7 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
     )
   }
 
-  def createNotification(declaration: ExportsDeclaration, status: SubmissionStatus = ACCEPTED, actionId: String = UUID.randomUUID().toString) =
+  def createNotification(declaration: ExportsDeclaration, status: SubmissionStatus = RECEIVED, actionId: String = UUID.randomUUID().toString) =
     ParsedNotification(
       unparsedNotificationId = UUID.randomUUID(),
       actionId = actionId,
