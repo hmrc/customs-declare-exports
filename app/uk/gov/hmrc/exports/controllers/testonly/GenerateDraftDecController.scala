@@ -20,7 +20,8 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, ControllerComponents, Request}
 import uk.gov.hmrc.exports.controllers.RESTController
 import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.models.Eori
+import uk.gov.hmrc.exports.models.declaration.AuthorisationProcedureCode.CodeOther
+import uk.gov.hmrc.exports.models.declaration.ModeOfTransportCode.Maritime
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
@@ -51,42 +52,70 @@ object GenerateDraftDecController extends ExportsDeclarationBuilder {
       .map(ducr => withConsignmentReferences(lrn = request.body.lrn, ducr = ducr))
       .getOrElse(withConsignmentReferences(lrn = request.body.lrn))
 
+    val kk = (1 to request.body.itemCount) map { _ =>
+      anItem(
+        withProcedureCodes(Some("1042"), Seq("000")),
+        withFiscalInformation(),
+        withAdditionalFiscalReferenceData(AdditionalFiscalReferences(Seq(AdditionalFiscalReference("GB", "NMUVXVDDL")))),
+        withStatisticalValue(statisticalValue = "858"),
+        withCommodityDetails(CommodityDetails(combinedNomenclatureCode = Some("5103109000"), descriptionOfGoods = Some("Straw for bottles"))),
+        withTaricCodes(Seq(TaricCode("9SLQ"))),
+        withNactCodes(Some(List(NactCode("X511")))),
+        withNactExemptionCode(Some("VATZ")),
+        withPackageInformation(Some("RT"), Some(11904), Some("cr6")),
+        withCommodityMeasure(CommodityMeasure(Some("6896"), Some(false), Some("687.29"), Some("1731.749"))),
+        withAdditionalInformation("26109", "EXPORTER"),
+        withAdditionalDocuments(
+          Some(YesNoAnswer.yes),
+          AdditionalDocument(
+            Some("4752"),
+            Some("FkbE74zufNMfMFm6wCj"),
+            Some("UN"),
+            Some("FDiLc"),
+            Some("N7UmNBZamQybAltAH5EZCujq270WDXv\r\nK1NAIwz8kHkf1bN5g"),
+            Some(Date(Some(28), Some(12), Some(2058))),
+            Some(DocumentWriteOff(Some("XQX"), Some(BigDecimal("214.877"))))
+          )
+        ),
+        withLicenseNotRequired()
+      )
+    }
+
     aDeclaration(
       withEori(request.body.eori),
       withStatus(DeclarationStatus.DRAFT),
-      withAdditionalDeclarationType(),
-      withDispatchLocation(),
+      withAdditionalDeclarationType(AdditionalDeclarationType.STANDARD_PRE_LODGED),
       consignmentRef,
-      withDepartureTransport(ModeOfTransportCode.Maritime, "11", "SHIP1"),
-      withContainerData(Container("container", Seq(Seal("seal1"), Seal("seal2")))),
-      withPreviousDocuments(PreviousDocument("IF3", "101SHIP2", None)),
-      withExporterDetails(Some(request.body.eori)),
+      withDepartureTransport(TransportLeavingTheBorder(Some(Maritime)), "10", "WhTGZVW"),
+      withContainerData(Container("container", Seq(Seal("seal1")))),
+      withPreviousDocuments(PreviousDocument("271", "zPoj 7Szx1K", None)),
+      withExporterDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "United States of America"))),
       withDeclarantDetails(Some(request.body.eori)),
-      withDeclarantIsExporter(),
-      withConsigneeDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "Portugal, Including Azores and Madeira"))),
-      withConsignorDetails(Some("9GB1234567ABCDEG"), None),
-      withCarrierDetails(None, Some(Address("XYZ Carrier", "School Road", "London", "WS1 2AB", "United Kingdom, Great Britain, Northern Ireland"))),
-      withIsEntryIntoDeclarantsRecords(),
-      withPersonPresentingGoodsDetails(eori = Eori("GB1234567890")),
-      withRepresentativeDetails(Some(EntityDetails(Some("GB717572504502809"), None)), Some("3")),
-      withDeclarationHolders(DeclarationHolder(Some("AEOC"), Some("GB717572504502811"), Some(EoriSource.OtherEori))),
+      withDeclarantIsExporter("No"),
+      withConsigneeDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "United States of America"))),
+      withCarrierDetails(None, Some(Address("XYZ Carrier", "School Road", "London", "WS1 2AB", "United Kingdom"))),
+      withRepresentativeDetails(Some(EntityDetails(Some("GB717572504502809"), None)), Some("3"), Some("No")),
+      withDeclarationAdditionalActors(DeclarationAdditionalActor(Some("AD166297284288300"), Some("WH"))),
+      withDeclarationHolders(DeclarationHolder(Some("EXEE"), Some("AD166297284288100"), Some(EoriSource.UserEori))),
+      withAuthorisationProcedureCodeChoice(Some(AuthorisationProcedureCodeChoice(CodeOther))),
       withOriginationCountry(),
-      withDestinationCountry(Country(Some("DE"))),
-      withRoutingCountries(Seq(Country(Some("FR")))),
+      withDestinationCountry(Country(Some("SE"))),
+      withRoutingCountries(Seq(Country(Some("AM")))),
       withGoodsLocation(
-        GoodsLocation(country = "GB", typeOfLocation = "B", qualifierOfIdentification = "Y", identificationOfLocation = Some("FXTFXTFXT"))
+        GoodsLocation(country = "LU", typeOfLocation = "A", qualifierOfIdentification = "U", identificationOfLocation = Some("SCZHVOYRB"))
       ),
-      withWarehouseIdentification("RGBLBA001"),
+      withMUCR("GBRSUOG-805833"),
+      withTransportPayment("Z"),
       withInlandModeOfTransport(ModeOfTransportCode.Maritime),
-      withSupervisingCustomsOffice("Belfast"),
-      withOfficeOfExit(Some("GB000054")),
-      withItems(request.body.itemCount),
-      withTotalNumberOfItems(),
+      withInlandOrBorder(Some(InlandOrBorder("Inland"))),
+      withSupervisingCustomsOffice("GBPRE005"),
+      withOfficeOfExit(Some("GB003140")),
+      withItems(kk.head, kk.tail: _*),
+      withTotalNumberOfItems(Some("805.4"), Some("GBP"), Some("No"), None, "62584234"),
       withNatureOfTransaction("1"),
-      withBorderTransport(Some("40"), Some("1234567878ui")),
-      withTransportCountry(Some("Portugal")),
-      withReadyForSubmission(),
-      withUpdatedDateTime()
+      withBorderTransport(Some("41"), Some("WZ9qi2ISJa")),
+      withTransportCountry(Some("Finland, Including the Aland Islands")),
+      withReadyForSubmission()
     )
   }
 }
