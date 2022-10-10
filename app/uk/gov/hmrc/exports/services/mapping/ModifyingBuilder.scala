@@ -19,5 +19,4 @@ package uk.gov.hmrc.exports.services.mapping
 trait ModifyingBuilder[X, Y] {
 
   def buildThenAdd(model: X, y: Y): Unit
-
 }

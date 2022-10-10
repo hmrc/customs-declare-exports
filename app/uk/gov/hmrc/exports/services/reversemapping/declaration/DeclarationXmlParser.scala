@@ -36,11 +36,12 @@ object DeclarationXmlParser {
 
     def toEitherOfList: XmlParserResult[Seq[T]] = {
       @tailrec
-      def insideOut(rest: Seq[XmlParserResult[T]], acc: Seq[T]): XmlParserResult[Seq[T]] = rest match {
-        case Nil                => Right(acc)
-        case Right(value) :: tl => insideOut(tl, acc :+ value)
-        case Left(e) :: _       => Left(e)
-      }
+      def insideOut(rest: Seq[XmlParserResult[T]], acc: Seq[T]): XmlParserResult[Seq[T]] =
+        rest match {
+          case Nil                => Right(acc)
+          case Right(value) :: tl => insideOut(tl, acc :+ value)
+          case Left(e) :: _       => Left(e)
+        }
 
       insideOut(list, Nil)
     }

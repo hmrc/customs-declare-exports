@@ -70,7 +70,8 @@ object EnhancedStatus extends Enumeration {
       case SubmissionStatus.RELEASED                        => RELEASED
       case SubmissionStatus.REQUESTED_CANCELLATION          => REQUESTED_CANCELLATION
       case SubmissionStatus.UNDERGOING_PHYSICAL_CHECK       => UNDERGOING_PHYSICAL_CHECK
-      case SubmissionStatus.UNKNOWN                         => UNKNOWN
+      //   SubmissionStatus.UNKNOWN
+      case _ => UNKNOWN
     }
   // scalastyle:on
 }

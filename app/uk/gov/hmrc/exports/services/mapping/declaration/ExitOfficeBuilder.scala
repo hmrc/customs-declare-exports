@@ -16,23 +16,21 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import javax.inject.Inject
-import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.ExitOffice
 import wco.datamodel.wco.declaration_ds.dms._2._
 
+import javax.inject.Inject
+
 class ExitOfficeBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration, Declaration] {
-  override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit = model.`type` match {
-    case DeclarationType.STANDARD | DeclarationType.SUPPLEMENTARY | DeclarationType.SIMPLIFIED | DeclarationType.OCCASIONAL |
-        DeclarationType.CLEARANCE =>
-      model.locations.officeOfExit
-        .flatMap(_.officeId)
-        .map(createExitOffice)
-        .foreach(declaration.setExitOffice)
-  }
+
+  override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
+    model.locations.officeOfExit
+      .flatMap(_.officeId)
+      .map(createExitOffice)
+      .foreach(declaration.setExitOffice)
 
   private def createExitOffice(value: String): Declaration.ExitOffice = {
     val officeIdentificationIDType = new ExitOfficeIdentificationIDType()
