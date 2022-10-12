@@ -48,11 +48,6 @@ object CommodityDetails {
   implicit val format: OFormat[CommodityDetails] = Json.format[CommodityDetails]
 }
 
-case class CatOrDogFurDetails(yesNo: String, purpose: Option[String])
-object CatOrDogFurDetails {
-  implicit val format: OFormat[CatOrDogFurDetails] = Json.format[CatOrDogFurDetails]
-}
-
 case class UNDangerousGoodsCode(dangerousGoodsCode: Option[String])
 object UNDangerousGoodsCode {
   implicit val format: OFormat[UNDangerousGoodsCode] = Json.format[UNDangerousGoodsCode]
@@ -172,7 +167,6 @@ case class ExportItem(
   additionalFiscalReferencesData: Option[AdditionalFiscalReferences] = None,
   statisticalValue: Option[StatisticalValue] = None,
   commodityDetails: Option[CommodityDetails] = None,
-  catOrDogFurDetails: Option[CatOrDogFurDetails] = None,
   dangerousGoodsCode: Option[UNDangerousGoodsCode] = None,
   cusCode: Option[CUSCode] = None,
   taricCodes: Option[List[TaricCode]] = None,

@@ -129,60 +129,6 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
       }
     }
 
-    "map document from 'containsCatOrDogFur'" when {
-      "yes" in {
-        val additionalDocumentsBuilder = new AdditionalDocumentsBuilder()
-        val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
-
-        val item =
-          ExportItem(
-            id = "id",
-            additionalDocuments = Some(AdditionalDocuments(None, Seq(additionalDocument))),
-            catOrDogFurDetails = Some(CatOrDogFurDetails("Yes", Some("educational-or-taxidermy-purpose")))
-          )
-
-        additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
-
-        governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 2
-        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getName.getValue mustBe "Education and taxidermy only"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getTypeCode.getValue mustBe "922"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getCategoryCode.getValue mustBe "Y"
-      }
-      "no" in {
-
-        val additionalDocumentsBuilder = new AdditionalDocumentsBuilder()
-        val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
-
-        val item =
-          ExportItem(
-            id = "id",
-            additionalDocuments = Some(AdditionalDocuments(None, Seq(additionalDocument))),
-            catOrDogFurDetails = Some(CatOrDogFurDetails("No", None))
-          )
-
-        additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
-
-        governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 2
-        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getName.getValue mustBe "No cat or dog fur"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getTypeCode.getValue mustBe "922"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getCategoryCode.getValue mustBe "Y"
-
-      }
-      "empty" in {
-
-        val additionalDocumentsBuilder = new AdditionalDocumentsBuilder()
-        val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
-
-        val item =
-          ExportItem(id = "id", additionalDocuments = Some(AdditionalDocuments(None, Seq(additionalDocument))), catOrDogFurDetails = None)
-
-        additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
-
-        governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 1
-
-      }
-    }
-
     "map AdditionalDocument to GovernmentAgencyGoodsItemAdditionalDocument" when {
       "all fields are present" in {
 
