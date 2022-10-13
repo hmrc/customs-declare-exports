@@ -39,10 +39,7 @@ class AdditionalDocumentsBuilder @Inject() () extends ModifyingBuilder[ExportIte
     val docsWithWaiver: Option[Seq[AdditionalDocument]] => Option[Seq[AdditionalDocument]] =
       addToDocs(_)(cdsWaiver(exportItem))
 
-    val docsWithLicenceForFur: Option[Seq[AdditionalDocument]] => Option[Seq[AdditionalDocument]] =
-      addToDocs(_)(docsReasonForContainingFur(exportItem))
-
-    (docs andThen docsWithWaiver andThen docsWithLicenceForFur)(exportItem.additionalDocuments) foreach {
+    (docs andThen docsWithWaiver)(exportItem.additionalDocuments) foreach {
       _ map AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument foreach { goodsItemAdditionalDocument =>
         wcoGovernmentAgencyGoodsItem.getAdditionalDocument
           .add(AdditionalDocumentsBuilder.createAdditionalDocument(goodsItemAdditionalDocument))
@@ -112,27 +109,6 @@ class AdditionalDocumentsBuilder @Inject() () extends ModifyingBuilder[ExportIte
         )
       )
   }
-  // scalastyle:on
-
-  private def docsReasonForContainingFur(exportItem: ExportItem): Option[Seq[AdditionalDocument]] =
-    exportItem.catOrDogFurDetails map {
-      case CatOrDogFurDetails("Yes", Some("educational-or-taxidermy-purpose")) => "Education and taxidermy only"
-      case CatOrDogFurDetails("No", _)                                         => "No cat or dog fur"
-      case _ => throw new IllegalStateException("No valid answer for cat or dog fur")
-    } map { reason =>
-      Seq(
-        AdditionalDocument(
-          documentTypeCode = Some("Y922"),
-          documentIdentifier = None,
-          documentStatus = None,
-          documentStatusReason = Some(reason),
-          issuingAuthorityName = None,
-          dateOfValidity = None,
-          documentWriteOff = None
-        )
-      )
-    }
-
 }
 
 object AdditionalDocumentsBuilder {
