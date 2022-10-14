@@ -28,7 +28,7 @@ import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsJson, _}
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{ADDITIONAL_DOCUMENTS_REQUIRED, GOODS_ARRIVED, RECEIVED}
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{ADDITIONAL_DOCUMENTS_REQUIRED, RECEIVED}
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder

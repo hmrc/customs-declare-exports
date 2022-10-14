@@ -39,10 +39,11 @@ case class ExportsDeclarationRequest(
   parties: Parties = Parties(),
   locations: Locations = Locations(),
   items: Seq[ExportItem] = Seq.empty,
-  readyForSubmission: Option[Boolean] = None,
   totalNumberOfItems: Option[TotalNumberOfItems] = None,
   previousDocuments: Option[PreviousDocuments] = None,
-  natureOfTransaction: Option[NatureOfTransaction] = None
+  natureOfTransaction: Option[NatureOfTransaction] = None,
+  summaryWasVisited: Option[Boolean] = None,
+  readyForSubmission: Option[Boolean] = None
 )
 
 object ExportsDeclarationRequest {

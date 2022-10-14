@@ -56,10 +56,11 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     parties = Parties(),
     locations = Locations(),
     items = Seq.empty,
-    readyForSubmission = None,
     totalNumberOfItems = None,
     previousDocuments = None,
-    natureOfTransaction = None
+    natureOfTransaction = None,
+    summaryWasVisited = None,
+    readyForSubmission = None
   )
 
   // ************************************************* Builders ********************************************************
@@ -354,7 +355,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     cache => cache.copy(linkDucrToMucr = Some(YesNoAnswer.yes), mucr = Some(MUCR(mucr)))
 
   def withReadyForSubmission(): ExportsDeclarationModifier =
-    declaration => declaration.copy(readyForSubmission = Some(true))
+    declaration => declaration.copy(summaryWasVisited = Some(true), readyForSubmission = Some(true))
 
   def withUpdatedDateTime(updatedDateTime: Instant = Instant.now()): ExportsDeclarationModifier =
     declaration => declaration.copy(updatedDateTime = updatedDateTime)

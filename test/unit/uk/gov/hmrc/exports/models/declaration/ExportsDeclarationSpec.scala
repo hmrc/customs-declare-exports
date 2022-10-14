@@ -98,10 +98,11 @@ object ExportsDeclarationSpec {
     parties = parties,
     locations = locations,
     items = Seq(item),
-    readyForSubmission = Some(true),
     totalNumberOfItems = Some(totalNumberOfItems),
     previousDocuments = Some(previousDocuments),
-    natureOfTransaction = Some(natureOfTransaction)
+    natureOfTransaction = Some(natureOfTransaction),
+    summaryWasVisited = Some(true),
+    readyForSubmission = Some(true)
   )
 
   val exportsDeclaration = ExportsDeclaration(
@@ -121,10 +122,11 @@ object ExportsDeclarationSpec {
     parties = parties,
     locations = locations,
     items = Seq(item),
-    readyForSubmission = Some(true),
     totalNumberOfItems = Some(totalNumberOfItems),
     previousDocuments = Some(previousDocuments),
-    natureOfTransaction = Some(natureOfTransaction)
+    natureOfTransaction = Some(natureOfTransaction),
+    summaryWasVisited = Some(true),
+    readyForSubmission = Some(true)
   )
 
   val exportsDeclarationRequestAsString: String =
@@ -333,6 +335,7 @@ object ExportsDeclarationSpec {
       |  "natureOfTransaction": {
       |    "natureType": "1"
       |  },
+      |  "summaryWasVisited": true,
       |  "readyForSubmission": true
       |}""".stripMargin
 }

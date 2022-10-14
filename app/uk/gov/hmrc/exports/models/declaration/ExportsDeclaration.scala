@@ -45,10 +45,11 @@ case class ExportsDeclaration(
   parties: Parties,
   locations: Locations,
   items: Seq[ExportItem],
-  readyForSubmission: Option[Boolean],
   totalNumberOfItems: Option[TotalNumberOfItems],
   previousDocuments: Option[PreviousDocuments],
-  natureOfTransaction: Option[NatureOfTransaction]
+  natureOfTransaction: Option[NatureOfTransaction],
+  summaryWasVisited: Option[Boolean],
+  readyForSubmission: Option[Boolean]
 ) {
   def isCompleted: Boolean = status == DeclarationStatus.COMPLETE
 }
@@ -83,9 +84,10 @@ object ExportsDeclaration {
       parties = declarationRequest.parties,
       locations = declarationRequest.locations,
       items = declarationRequest.items,
-      readyForSubmission = declarationRequest.readyForSubmission,
       totalNumberOfItems = declarationRequest.totalNumberOfItems,
       previousDocuments = declarationRequest.previousDocuments,
-      natureOfTransaction = declarationRequest.natureOfTransaction
+      natureOfTransaction = declarationRequest.natureOfTransaction,
+      summaryWasVisited = declarationRequest.summaryWasVisited,
+      readyForSubmission = declarationRequest.readyForSubmission
     )
 }

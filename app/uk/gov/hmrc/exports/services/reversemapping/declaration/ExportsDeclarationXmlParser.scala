@@ -74,10 +74,11 @@ class ExportsDeclarationXmlParser @Inject() (
       parties = parties,
       locations = locations,
       items = items,
-      readyForSubmission = Some(true),
       totalNumberOfItems = None,
       previousDocuments = None,
-      natureOfTransaction = None
+      natureOfTransaction = None,
+      summaryWasVisited = Some(true),
+      readyForSubmission = Some(true)
     )
 
     // infer other values not present in the xml
@@ -86,12 +87,13 @@ class ExportsDeclarationXmlParser @Inject() (
 
   private def deriveDeclarationType(additionalDeclarationType: Option[AdditionalDeclarationType]): XmlParserResult[DeclarationType] =
     additionalDeclarationType.map { adt =>
-      val declarationType: DeclarationType = adt match {
+      val declarationType = adt match {
         case STANDARD_FRONTIER | STANDARD_PRE_LODGED       => STANDARD
         case SIMPLIFIED_FRONTIER | SIMPLIFIED_PRE_LODGED   => SIMPLIFIED
         case SUPPLEMENTARY_SIMPLIFIED | SUPPLEMENTARY_EIDR => SUPPLEMENTARY
         case OCCASIONAL_FRONTIER | OCCASIONAL_PRE_LODGED   => OCCASIONAL
         case CLEARANCE_FRONTIER | CLEARANCE_PRE_LODGED     => CLEARANCE
+        case _                                             => STANDARD
       }
 
       Right(declarationType)
