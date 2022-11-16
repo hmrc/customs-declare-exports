@@ -19,10 +19,13 @@ package uk.gov.hmrc.exports.controllers
 import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action => SubAction, EnhancedStatus, Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.models.SubmissionPageData
+import uk.gov.hmrc.exports.models.SubmissionPageData.DEFAULT_LIMIT
+import uk.gov.hmrc.exports.models.declaration.submissions.{EnhancedStatus, EnhancedStatusGroup, Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions.Action.defaultDateTimeZone
 import uk.gov.hmrc.exports.services.SubmissionService
 
-import java.time.ZonedDateTime
+import java.time.{Instant, ZoneId, ZonedDateTime}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -45,7 +48,19 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
     }
   }
 
-  def findAll(): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+  val fetchPage: Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    val submissionPageData = genSubmissionPageData
+    submissionPageData.statusGroup.fold {
+      submissionService.fetchFirstPage(request.eori.value, submissionPageData.limit).map(Ok(_))
+    } { statusGroup =>
+      if (submissionPageData.page.exists(_ <= 1))
+        submissionService.fetchFirstPage(request.eori.value, statusGroup, submissionPageData.limit).map(Ok(_))
+      else
+        submissionService.fetchPage(request.eori.value, statusGroup, submissionPageData).map(Ok(_))
+    }
+  }
+
+  val findAll: Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     submissionService.findAllSubmissions(request.eori.value).map(Ok(_))
   }
 
@@ -59,7 +74,7 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
   }
 
   def isLrnAlreadyUsed(lrn: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    val now = ZonedDateTime.now(SubAction.defaultDateTimeZone)
+    val now = ZonedDateTime.now(defaultDateTimeZone)
 
     def isSubmissionYoungerThan48Hours(submission: Submission): Boolean =
       submission.latestEnhancedStatus match {
@@ -67,11 +82,24 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
         case _ =>
           submission.actions
             .filter(_.requestType == SubmissionRequest)
-            .exists(_.requestTimestamp.isAfter(now.minusHours(48)))
+            .exists(_.requestTimestamp.isAfter(now.minusDays(2))) // 48 hours
       }
 
     submissionService.findSubmissionsByLrn(request.eori.value, lrn).map { submissions =>
       Ok(submissions.exists(isSubmissionYoungerThan48Hours))
     }
+  }
+
+  private def genSubmissionPageData(implicit request: Request[_]): SubmissionPageData = {
+    def parse(datetime: String): ZonedDateTime =
+      Instant.parse(datetime).atZone(ZoneId.of("UTC"))
+
+    SubmissionPageData(
+      limit = request.getQueryString("limit").fold(DEFAULT_LIMIT)(_.toInt),
+      statusGroup = request.getQueryString("group").map(EnhancedStatusGroup.withName),
+      datetimeForPreviousPage = request.getQueryString("datetimeForPreviousPage").map(parse),
+      datetimeForNextPage = request.getQueryString("datetimeForNextPage").map(parse),
+      page = request.getQueryString("page").map(_.toInt)
+    )
   }
 }

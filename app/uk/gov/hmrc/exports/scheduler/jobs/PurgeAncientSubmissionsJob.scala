@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs
 
+import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters._
 import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
@@ -62,7 +63,7 @@ class PurgeAncientSubmissionsJob @Inject() (
       ): _*
     )
 
-  private def olderThanDate = lte(statusLastUpdated, Codecs.toBson(expiryDate))
+  private def olderThanDate: Bson = lte(statusLastUpdated, Codecs.toBson(expiryDate))
 
   override def execute(): Future[Unit] = {
     logger.info("Starting PurgeAncientSubmissionsJob execution...")

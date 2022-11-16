@@ -40,7 +40,7 @@ class DeclarationController @Inject() (
 )(implicit executionContext: ExecutionContext)
     extends RESTController(controllerComponents) with Logging {
 
-  def create(): Action[ExportsDeclarationRequest] =
+  val create: Action[ExportsDeclarationRequest] =
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
       logPayload("Create Declaration Request Received", request.body)
       declarationService

@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.models.declaration.submissions
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatusGroup.EnhancedStatusGroup
 
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -31,6 +32,7 @@ case class Submission(
   ducr: String,
   latestEnhancedStatus: Option[EnhancedStatus] = None,
   enhancedStatusLastUpdated: Option[ZonedDateTime] = None,
+  enhancedStatusGroup: Option[EnhancedStatusGroup] = None,
   actions: Seq[Action] = Seq.empty
 )
 

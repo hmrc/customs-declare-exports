@@ -30,6 +30,15 @@ object EnhancedStatus extends Enumeration {
     DECLARATION_HANDLED_EXTERNALLY, ERRORS, EXPIRED_NO_ARRIVAL, EXPIRED_NO_DEPARTURE, GOODS_ARRIVED, GOODS_ARRIVED_MESSAGE, GOODS_HAVE_EXITED,
     QUERY_NOTIFICATION_MESSAGE, RECEIVED, RELEASED, UNDERGOING_PHYSICAL_CHECK, WITHDRAWN, PENDING, REQUESTED_CANCELLATION, UNKNOWN = Value
 
+
+  lazy val actionRequiredStatuses = Set(ADDITIONAL_DOCUMENTS_REQUIRED, QUERY_NOTIFICATION_MESSAGE)
+
+  lazy val cancelledStatuses = Set(CANCELLED, EXPIRED_NO_ARRIVAL, WITHDRAWN, EXPIRED_NO_DEPARTURE)
+
+  lazy val rejectedStatuses = Set(ERRORS)
+
+  lazy val submittedStatuses = values &~ rejectedStatuses &~ cancelledStatuses &~ actionRequiredStatuses
+
   private val mappingForACCEPTED = (notificationSummaries: Seq[NotificationSummary]) =>
     if (notificationSummaries.exists(_.enhancedStatus == RECEIVED)) GOODS_ARRIVED_MESSAGE else GOODS_ARRIVED
 
@@ -74,4 +83,23 @@ object EnhancedStatus extends Enumeration {
       case _ => UNKNOWN
     }
   // scalastyle:on
+
+  def enhancedStatusGroup(status: EnhancedStatus): EnhancedStatusGroup.EnhancedStatusGroup =
+    if (actionRequiredStatuses.contains(status)) EnhancedStatusGroup.ActionRequiredStatuses
+    else if (cancelledStatuses.contains(status)) EnhancedStatusGroup.CancelledStatuses
+    else if (rejectedStatuses.contains(status)) EnhancedStatusGroup.RejectedStatuses
+    else EnhancedStatusGroup.SubmittedStatuses
+}
+
+object EnhancedStatusGroup extends Enumeration {
+  type EnhancedStatusGroup = Value
+  implicit val format: Format[EnhancedStatusGroup.Value] = EnumJson.format(EnhancedStatusGroup)
+
+  val ActionRequiredStatuses = Value("action")
+  val CancelledStatuses = Value("cancelled")
+  val RejectedStatuses = Value("rejected")
+  val SubmittedStatuses = Value("submitted")
+
+  // Order of the list's elements follows the Dashboard tabs' order
+  lazy val statusGroups = List(SubmittedStatuses, ActionRequiredStatuses, RejectedStatuses, CancelledStatuses)
 }
