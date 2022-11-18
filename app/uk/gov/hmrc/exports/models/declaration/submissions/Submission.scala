@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.exports.models.declaration.submissions
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json, Reads, Writes}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatusGroup.EnhancedStatusGroup
 
-import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.time.{ZoneId, ZonedDateTime}
 import java.util.UUID
 
 case class Submission(
@@ -32,14 +32,24 @@ case class Submission(
   ducr: String,
   latestEnhancedStatus: Option[EnhancedStatus] = None,
   enhancedStatusLastUpdated: Option[ZonedDateTime] = None,
-  enhancedStatusGroup: Option[EnhancedStatusGroup] = None,
   actions: Seq[Action] = Seq.empty
 )
 
 object Submission {
 
+  private val zonedDateTimeWriteFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
+
+  private val zonedDateTimeReads: Reads[ZonedDateTime] = Reads.StringReads.map(ZonedDateTime.parse)
+
+  private val zonedDateTimeWrites: Writes[ZonedDateTime] = Writes.StringWrites.contramap(zonedDateTimeToString)
+
+  implicit val zonedDateTimeFormat: Format[ZonedDateTime] = Format(zonedDateTimeReads, zonedDateTimeWrites)
+
   implicit val format = Json.format[Submission]
 
   def apply(declaration: ExportsDeclaration, lrn: String, ducr: String, action: Action): Submission =
     new Submission(declaration.id, declaration.eori, lrn, None, ducr, actions = List(action))
+
+  def zonedDateTimeToString(datetime: ZonedDateTime): String =
+    datetime.withZoneSameInstant(ZoneId.of("UTC")).format(zonedDateTimeWriteFormat) + "Z[UTC]"
 }

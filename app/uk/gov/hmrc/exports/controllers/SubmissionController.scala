@@ -19,9 +19,9 @@ package uk.gov.hmrc.exports.controllers
 import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
-import uk.gov.hmrc.exports.models.SubmissionPageData
-import uk.gov.hmrc.exports.models.SubmissionPageData.DEFAULT_LIMIT
-import uk.gov.hmrc.exports.models.declaration.submissions.{EnhancedStatus, EnhancedStatusGroup, Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.models.FetchSubmissionPageData
+import uk.gov.hmrc.exports.models.FetchSubmissionPageData.DEFAULT_LIMIT
+import uk.gov.hmrc.exports.models.declaration.submissions.{EnhancedStatus, StatusGroup, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.models.declaration.submissions.Action.defaultDateTimeZone
 import uk.gov.hmrc.exports.services.SubmissionService
 
@@ -49,7 +49,7 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
   }
 
   val fetchPage: Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    val submissionPageData = genSubmissionPageData
+    val submissionPageData = genFetchSubmissionPageData
     submissionPageData.statusGroup.fold {
       submissionService.fetchFirstPage(request.eori.value, submissionPageData.limit).map(Ok(_))
     } { statusGroup =>
@@ -90,13 +90,13 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
     }
   }
 
-  private def genSubmissionPageData(implicit request: Request[_]): SubmissionPageData = {
+  private def genFetchSubmissionPageData(implicit request: Request[_]): FetchSubmissionPageData = {
     def parse(datetime: String): ZonedDateTime =
       Instant.parse(datetime).atZone(ZoneId.of("UTC"))
 
-    SubmissionPageData(
+    FetchSubmissionPageData(
       limit = request.getQueryString("limit").fold(DEFAULT_LIMIT)(_.toInt),
-      statusGroup = request.getQueryString("group").map(EnhancedStatusGroup.withName),
+      statusGroup = request.getQueryString("group").map(StatusGroup.withName),
       datetimeForPreviousPage = request.getQueryString("datetimeForPreviousPage").map(parse),
       datetimeForNextPage = request.getQueryString("datetimeForNextPage").map(parse),
       page = request.getQueryString("page").map(_.toInt)

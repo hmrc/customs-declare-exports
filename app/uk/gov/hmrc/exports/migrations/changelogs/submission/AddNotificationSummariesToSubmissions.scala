@@ -24,7 +24,6 @@ import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.enhancedStatusGroup
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, NotificationSummary, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
 
@@ -64,7 +63,6 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
           submission.copy(
             latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
             enhancedStatusLastUpdated = Some(notificationSummary.dateTimeIssued),
-            enhancedStatusGroup = Some(enhancedStatusGroup(notificationSummary.enhancedStatus)),
             actions = actions
           )
         }

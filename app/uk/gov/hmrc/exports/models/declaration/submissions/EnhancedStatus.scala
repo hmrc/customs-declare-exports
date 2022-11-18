@@ -84,22 +84,44 @@ object EnhancedStatus extends Enumeration {
     }
   // scalastyle:on
 
-  def enhancedStatusGroup(status: EnhancedStatus): EnhancedStatusGroup.EnhancedStatusGroup =
-    if (actionRequiredStatuses.contains(status)) EnhancedStatusGroup.ActionRequiredStatuses
-    else if (cancelledStatuses.contains(status)) EnhancedStatusGroup.CancelledStatuses
-    else if (rejectedStatuses.contains(status)) EnhancedStatusGroup.RejectedStatuses
-    else EnhancedStatusGroup.SubmittedStatuses
+  import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
+
+  lazy val actionRequiredStatuses_text = actionRequiredStatuses.map(_.toString)
+  lazy val cancelledStatuses_text = cancelledStatuses.map(_.toString)
+  lazy val rejectedStatuses_text = rejectedStatuses.map(_.toString)
+  lazy val submittedStatuses_text = submittedStatuses.map(_.toString)
+
+  // Order of the list's elements follows the Dashboard tabs' order
+  lazy val statusGroups: List[Set[String]] =
+    List(submittedStatuses_text, actionRequiredStatuses_text, rejectedStatuses_text, cancelledStatuses_text)
+
+  def fromStatusGroup(group: StatusGroup): Set[String] =
+    group match {
+      case ActionRequiredStatuses => actionRequiredStatuses_text
+      case CancelledStatuses => cancelledStatuses_text
+      case RejectedStatuses => rejectedStatuses_text
+      case _ => submittedStatuses_text
+    }
+
+  def fromEnhancedStatus(status: EnhancedStatus): Set[String] =
+    if (actionRequiredStatuses.contains(status)) actionRequiredStatuses_text
+    else if (cancelledStatuses.contains(status)) cancelledStatuses_text
+    else if (rejectedStatuses.contains(status)) rejectedStatuses_text
+    else submittedStatuses_text
+
+  def toStatusGroup(status: EnhancedStatus): StatusGroup =
+    if (actionRequiredStatuses.contains(status)) ActionRequiredStatuses
+    else if (cancelledStatuses.contains(status)) CancelledStatuses
+    else if (rejectedStatuses.contains(status)) RejectedStatuses
+    else SubmittedStatuses
 }
 
-object EnhancedStatusGroup extends Enumeration {
-  type EnhancedStatusGroup = Value
-  implicit val format: Format[EnhancedStatusGroup.Value] = EnumJson.format(EnhancedStatusGroup)
+object StatusGroup extends Enumeration {
+  type StatusGroup = Value
+  implicit val format: Format[StatusGroup.Value] = EnumJson.format(StatusGroup)
 
   val ActionRequiredStatuses = Value("action")
   val CancelledStatuses = Value("cancelled")
   val RejectedStatuses = Value("rejected")
   val SubmittedStatuses = Value("submitted")
-
-  // Order of the list's elements follows the Dashboard tabs' order
-  lazy val statusGroups = List(SubmittedStatuses, ActionRequiredStatuses, RejectedStatuses, CancelledStatuses)
 }

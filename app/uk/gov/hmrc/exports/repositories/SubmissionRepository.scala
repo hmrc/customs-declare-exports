@@ -19,15 +19,15 @@ package uk.gov.hmrc.exports.repositories
 import com.mongodb.client.model.Indexes.{ascending, compoundIndex, descending}
 import org.bson.conversions.Bson
 import org.mongodb.scala.bson.BsonDocument
-import org.mongodb.scala.model.Filters.{and, equal, gt, lt}
+import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.libs.json.{JsBoolean, Json}
 import repositories.RepositoryOps
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatusGroup.EnhancedStatusGroup
+import uk.gov.hmrc.exports.models.declaration.submissions.Submission.zonedDateTimeToString
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository.dashBoardIndex
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.time.ZonedDateTime
 import javax.inject.{Inject, Singleton}
@@ -52,47 +52,94 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     findOneAndUpdate(filter, update)
   }
 
-  def countSubmissionsInGroup(eori: String, maybeStatusGroup: Option[EnhancedStatusGroup], limit: Int): Future[Int] =
-    maybeStatusGroup.fold(Future.successful(0)) { statusGroup =>
-      collection
-        .countDocuments(and(equal("eori", eori), equal("enhancedStatusGroup", statusGroup.toString)))
-        .toFuture()
-        //.map(n => Math.ceil(n.toDouble / limit).toInt)
-        .map(_.toInt)
-    }
+  def countSubmissionsInGroup(eori: String, statusGroup: Set[String]): Future[Int] =
+    if (statusGroup.isEmpty) Future.successful(0)
+    else collection
+      .countDocuments(fetchFilter(eori, statusGroup))
+      .toFuture()
+      .map(_.toInt)
 
-  def fetchFirstPage(eori: String, statusGroup: EnhancedStatusGroup, limit: Int): Future[Seq[Submission]] =
-    fetchPage(limit, and(equal("eori", eori), equal("enhancedStatusGroup", statusGroup.toString)))
+  private lazy val ascending = BsonDocument(Json.obj("enhancedStatusLastUpdated" -> 1).toString)
+  private lazy val descending = BsonDocument(Json.obj("enhancedStatusLastUpdated" -> -1).toString)
 
-  private val sort = BsonDocument(Json.obj("enhancedStatusLastUpdated" -> 1).toString)
-
-  def fetchLastPage(eori: String, statusGroup: EnhancedStatusGroup, limit: Int): Future[Seq[Submission]] =
+  def explainFetch(limit: Int, filter: Bson, sort: Bson): Future[String] =
     collection
-      .find(and(equal("eori", eori), equal("enhancedStatusGroup", statusGroup.toString)))
-      .sort(sort)
+      .find(filter)
+      .hintString(dashBoardIndex)
       .limit(limit)
+      .sort(sort)
+      .explain()
+      .toFuture()
+      .map {
+        _.toList.map { t =>
+          if (t._1 != "operationTime") s"\"${t._1}\" : ${t._2}"
+          else t._2.toString.replace("Timestamp", "\"Timestamp\" : ")
+        }.mkString("{", ",", "}")
+      }
+
+  def fetchFirstPage(eori: String, statusGroup: Set[String], limit: Int): Future[Seq[Submission]] =
+    collection
+      .find(fetchFilter(eori, statusGroup))
+      .hintString(dashBoardIndex)
+      .limit(limit)
+      .sort(descending)
+      .toFuture()
+
+  def fetchLastPage(eori: String, statusGroup: Set[String], limit: Int): Future[Seq[Submission]] =
+    collection
+      .find(fetchFilter(eori, statusGroup))
+      .hintString(dashBoardIndex)
+      .limit(limit)
+      .sort(ascending)
       .toFuture()
       .map(_.reverse)
 
-  def fetchLosePage(eori: String, statusGroup: EnhancedStatusGroup, page: Int, limit: Int): Future[Seq[Submission]] =
+  def fetchLosePage(eori: String, statusGroup: Set[String], page: Int, limit: Int): Future[Seq[Submission]] =
     collection
-      .find(and(equal("eori", eori), equal("enhancedStatusGroup", statusGroup.toString)))
+      .find(fetchFilter(eori, statusGroup))
       .hintString(dashBoardIndex)
-      .skip((page - 1).max(0) * limit)
       .limit(limit)
+      .skip((page - 1).max(0) * limit)
+      .sort(descending)
       .toFuture()
 
-  def fetchNextPage(eori: String, statusGroup: EnhancedStatusGroup, statusLastUpdated: ZonedDateTime, limit: Int): Future[Seq[Submission]] =
-    fetchPage(limit, and(
-      and(equal("eori", eori), equal("enhancedStatusGroup", statusGroup.toString)),
-      lt("enhancedStatusLastUpdated", Codecs.toBson(statusLastUpdated))
-    ))
+  def fetchNextPage(eori: String, statusGroup: Set[String], statusLastUpdated: ZonedDateTime, limit: Int): Future[Seq[Submission]] =
+    collection
+      .find(fetchFilter(eori, statusGroup, statusLastUpdated, "lt"))
+      .hintString(dashBoardIndex)
+      .limit(limit)
+      .sort(descending)
+      .toFuture()
 
-  def fetchPreviousPage(eori: String, statusGroup: EnhancedStatusGroup, statusLastUpdated: ZonedDateTime, limit: Int): Future[Seq[Submission]] =
-    fetchPage(limit, and(
-      and(equal("eori", eori), equal("enhancedStatusGroup", statusGroup.toString)),
-      gt("enhancedStatusLastUpdated", Codecs.toBson(statusLastUpdated))
-    ))
+  def fetchPreviousPage(eori: String, statusGroup: Set[String], statusLastUpdated: ZonedDateTime, limit: Int): Future[Seq[Submission]] =
+    collection
+      .find(fetchFilter(eori, statusGroup, statusLastUpdated, "gt"))
+      .hintString(dashBoardIndex)
+      .limit(limit)
+      .sort(ascending)
+      .toFuture()
+      .map(_.reverse)
+
+  private def fetchFilter(eori: String, statusGroup: Set[String]): Bson = {
+    val filter =
+      s"""
+         |{
+         |  "eori": "$eori",
+         |  "latestEnhancedStatus": { "$$in": [ ${statusGroup.map(s => s""""$s"""").mkString(",")} ] }
+         |}""".stripMargin
+    BsonDocument(filter)
+  }
+
+  private def fetchFilter(eori: String, statusGroup: Set[String], statusLastUpdated: ZonedDateTime, comp: String): Bson = {
+    val filter =
+      s"""
+         |{
+         |  "eori": "$eori",
+         |  "latestEnhancedStatus": { "$$in": [ ${statusGroup.map(s => s""""$s"""").mkString(",")} ] },
+         |  "enhancedStatusLastUpdated": { "$$$comp": "${zonedDateTimeToString(statusLastUpdated)}" }
+         |}""".stripMargin
+    BsonDocument(filter)
+  }
 
   def findAll(eori: String): Future[Seq[Submission]] =
     collection
@@ -109,14 +156,6 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
   def findByLrn(eori: String, lrn: String): Future[Seq[Submission]] =
     collection
       .find(and(equal("eori", eori), equal("lrn", lrn)))
-      .toFuture()
-
-
-  private def fetchPage(limit: Int, filter: Bson): Future[Seq[Submission]] =
-    collection
-      .find(filter)
-      .hintString(dashBoardIndex)
-      .limit(limit)
       .toFuture()
 }
 
@@ -137,7 +176,7 @@ object SubmissionRepository {
     IndexModel(compoundIndex(ascending("eori"), descending("action.requestTimestamp")), IndexOptions().name("actionOrderedEori")),
     IndexModel(compoundIndex(ascending("eori"), descending("lrn")), IndexOptions().name("lrnByEori")),
     IndexModel(compoundIndex(
-      ascending("eori"), ascending("enhancedStatusGroup"), descending("enhancedStatusLastUpdated")),
+      ascending("eori"), ascending("latestEnhancedStatus"), descending("enhancedStatusLastUpdated")),
       IndexOptions().name(dashBoardIndex)
     )
   )

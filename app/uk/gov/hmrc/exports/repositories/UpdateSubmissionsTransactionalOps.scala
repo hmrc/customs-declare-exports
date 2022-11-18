@@ -23,7 +23,6 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, NotificationSummary, Submission, SubmissionRequest}
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.enhancedStatusGroup
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.transaction.{TransactionConfiguration, Transactions}
@@ -107,7 +106,6 @@ class UpdateSubmissionsTransactionalOps @Inject() (
         "mrn" -> mrn,
         "latestEnhancedStatus" -> summary.enhancedStatus,
         "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
-        "enhancedStatusGroup" -> enhancedStatusGroup(summary.enhancedStatus),
         "actions" -> actions
       )
     )

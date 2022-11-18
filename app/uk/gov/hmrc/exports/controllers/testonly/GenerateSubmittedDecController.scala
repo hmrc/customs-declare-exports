@@ -23,8 +23,7 @@ import uk.gov.hmrc.exports.models.declaration.AuthorisationProcedureCode.CodeOth
 import uk.gov.hmrc.exports.models.declaration.ModeOfTransportCode.Maritime
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.enhancedStatusGroup
-import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.{ADDITIONAL_DOCUMENTS_REQUIRED, RECEIVED, SubmissionStatus}
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus._
 import uk.gov.hmrc.exports.models.declaration.submissions.{NotificationSummary, Submission, SubmissionRequest, Action => SubmissionAction}
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
@@ -65,7 +64,7 @@ class GenerateSubmittedDecController @Inject() (
 
   private def optionallySaveDmsDocNotification(declaration: ExportsDeclaration, notification: ParsedNotification): Future[ParsedNotification] =
     if (notification.details.mrn.take(2).toInt % 2 == 0)
-      saveNotification(createNotification(declaration, ADDITIONAL_DOCUMENTS_REQUIRED, notification.actionId))
+      saveNotification(createNotification(declaration, randomStatus(actionStatuses), notification.actionId))
     else
       Future.successful(notification)
 
@@ -94,12 +93,13 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
       ducr = declaration.consignmentReferences.map(_.ducr.ducr).getOrElse(""),
       latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
       enhancedStatusLastUpdated = Some(notificationSummary.dateTimeIssued),
-      enhancedStatusGroup = Some(enhancedStatusGroup(notificationSummary.enhancedStatus)),
       actions = List(action)
     )
   }
 
-  def createNotification(declaration: ExportsDeclaration, status: SubmissionStatus = RECEIVED, actionId: String = UUID.randomUUID().toString) =
+  def createNotification(
+    declaration: ExportsDeclaration, status: SubmissionStatus = randomStatus(), actionId: String = UUID.randomUUID().toString
+  ): ParsedNotification =
     ParsedNotification(
       unparsedNotificationId = UUID.randomUUID(),
       actionId = actionId,
@@ -189,4 +189,15 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
   private def randomLrn() = randomAlphanumericString(22)
   private def randomMRN() = s"${Random.nextInt(9)}${Random.nextInt(9)}GB${randomAlphanumericString(13)}"
   private def randomAlphanumericString(length: Int): String = Random.alphanumeric.take(length).mkString.toUpperCase
+
+  lazy val actionStatuses: List[SubmissionStatus] = List(ADDITIONAL_DOCUMENTS_REQUIRED, QUERY_NOTIFICATION_MESSAGE)
+
+  lazy val submittedStatuses: List[SubmissionStatus] = List(
+    ACCEPTED, AMENDED, AWAITING_EXIT_RESULTS, CLEARED, CUSTOMS_POSITION_DENIED,
+    CUSTOMS_POSITION_GRANTED, DECLARATION_HANDLED_EXTERNALLY, GOODS_HAVE_EXITED_THE_COMMUNITY,
+    PENDING, RECEIVED, RELEASED, REQUESTED_CANCELLATION, UNDERGOING_PHYSICAL_CHECK
+  )
+
+  private def randomStatus(statuses: List[SubmissionStatus] = submittedStatuses): SubmissionStatus =
+    statuses(Random.nextInt(statuses.length))
 }
