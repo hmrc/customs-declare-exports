@@ -17,6 +17,7 @@
 package uk.gov.hmrc.exports.controllers
 
 import org.mockito.ArgumentMatchers.{any, anyString}
+import org.mockito.ArgumentMatchersSugar.eqTo
 import org.mockito.Mockito._
 import play.api.libs.json.Json.toJson
 import play.api.mvc.{AnyContent, Request}
@@ -27,11 +28,15 @@ import uk.gov.hmrc.auth.core.InsufficientEnrolments
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
+import uk.gov.hmrc.exports.models.FetchSubmissionPageData.DEFAULT_LIMIT
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
+import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
 import uk.gov.hmrc.exports.models.declaration.submissions._
+import uk.gov.hmrc.exports.models.{FetchSubmissionPageData, PageOfSubmissions}
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
+import java.time.{ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -50,7 +55,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
     withAuthorizedUser()
   }
 
-  "SubmissionController on create" when {
+  "SubmissionController.create" when {
 
     val fakePostRequest: Request[AnyContent] = FakeRequest("POST", "/submission")
 
@@ -102,52 +107,53 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
     }
   }
 
-  "SubmissionController on findAll" should {
+  "SubmissionController.fetchPage" should {
 
-    val fakeGetRequest: Request[AnyContent] = FakeRequest("GET", "/submissions")
+    val pageOfSubmissions = PageOfSubmissions(SubmittedStatuses, 0, Seq.empty)
 
-    "return 401 (Unauthorised)" when {
-      "request is unauthorised" in {
-        withUnauthorizedUser(InsufficientEnrolments())
+    "call SubmissionService.fetchFirstPage for fetching the 1st page of the 1st StatusGroup containing submissions" in {
+      when(submissionService.fetchFirstPage(any(), any[Int])).thenReturn(Future.successful(pageOfSubmissions))
 
-        val result = controller.findAll()(fakeGetRequest)
+      val result = controller.fetchPage(FakeRequest("GET", "/submission-page"))
 
-        status(result) mustBe UNAUTHORIZED
-        verifyNoInteractions(submissionService)
-      }
+      status(result) mustBe OK
+      verify(submissionService).fetchFirstPage(any(), eqTo(DEFAULT_LIMIT))
+      verify(submissionService, never).fetchFirstPage(any(), any(), any())
+      verify(submissionService, never).fetchPage(any(), any(), any())
     }
 
-    "return 200 (Ok) with the value returned by SubmissionService" when {
+    "call SubmissionService.fetchFirstPage for fetching the first page of a specific StatusGroup" in {
+      when(submissionService.fetchFirstPage(any(), any[StatusGroup], any[Int])).thenReturn(Future.successful(pageOfSubmissions))
 
-      "SubmissionService returns empty Sequence" in {
-        when(submissionService.findAllSubmissions(any())).thenReturn(Future.successful(Seq.empty))
+      val result = controller.fetchPage(FakeRequest("GET", "/submission-page?group=rejected&page=1"))
 
-        val result = controller.findAll()(fakeGetRequest)
-
-        status(result) mustBe OK
-        contentAsJson(result) mustBe toJson(Seq.empty[Submission])
-      }
-
-      "SubmissionService returns non-empty Sequence" in {
-        when(submissionService.findAllSubmissions(any())).thenReturn(Future.successful(Seq(submission, submission_2)))
-
-        val result = controller.findAll()(fakeGetRequest)
-
-        status(result) mustBe OK
-        contentAsJson(result) mustBe toJson(Seq(submission, submission_2))
-      }
+      status(result) mustBe OK
+      verify(submissionService, never).fetchFirstPage(any(), any())
+      verify(submissionService).fetchFirstPage(any(), eqTo(RejectedStatuses), eqTo(DEFAULT_LIMIT))
+      verify(submissionService, never).fetchPage(any(), any(), any())
     }
 
-    "call SubmissionService, passing SubmissionQueryParameters provided" in {
-      when(submissionService.findAllSubmissions(any())).thenReturn(Future.successful(Seq.empty))
+    "call SubmissionService.fetchPage for fetching a page of a specific StatusGroup" in {
+      when(submissionService.fetchPage(any(), any[StatusGroup], any[FetchSubmissionPageData]))
+        .thenReturn(Future.successful(pageOfSubmissions))
 
-      controller.findAll()(fakeGetRequest).futureValue
+      val datetime = ZonedDateTime.now(ZoneId.of("UTC"))
+      val instant = datetime.toInstant
 
-      verify(submissionService).findAllSubmissions(any())
+      val query = s"/submission-page?group=action&page=2&datetimeForPreviousPage=${instant}&datetimeForNextPage=${instant}&limit=2"
+      val result = controller.fetchPage(FakeRequest("GET", query))
+
+      status(result) mustBe OK
+
+      verify(submissionService, never).fetchFirstPage(any(), any())
+      verify(submissionService, never).fetchFirstPage(any(), any(), any())
+
+      val submissionPageData = FetchSubmissionPageData(2, Some(ActionRequiredStatuses), Some(datetime), Some(datetime), Some(2))
+      verify(submissionService).fetchPage(any(), eqTo(ActionRequiredStatuses), eqTo(submissionPageData))
     }
   }
 
-  "SubmissionController on find" should {
+  "SubmissionController.find" should {
 
     val fakeGetRequest: Request[AnyContent] = FakeRequest("GET", "/submission")
 
@@ -180,7 +186,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
     }
   }
 
-  "SubmissionController on isLrnAlreadyUsed" should {
+  "SubmissionController.isLrnAlreadyUsed" should {
 
     val fakeGetRequest: Request[AnyContent] = FakeRequest("GET", "/lrn-already-used")
 

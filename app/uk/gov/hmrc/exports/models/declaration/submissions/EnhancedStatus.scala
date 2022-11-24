@@ -30,7 +30,6 @@ object EnhancedStatus extends Enumeration {
     DECLARATION_HANDLED_EXTERNALLY, ERRORS, EXPIRED_NO_ARRIVAL, EXPIRED_NO_DEPARTURE, GOODS_ARRIVED, GOODS_ARRIVED_MESSAGE, GOODS_HAVE_EXITED,
     QUERY_NOTIFICATION_MESSAGE, RECEIVED, RELEASED, UNDERGOING_PHYSICAL_CHECK, WITHDRAWN, PENDING, REQUESTED_CANCELLATION, UNKNOWN = Value
 
-
   lazy val actionRequiredStatuses = Set(ADDITIONAL_DOCUMENTS_REQUIRED, QUERY_NOTIFICATION_MESSAGE)
 
   lazy val cancelledStatuses = Set(CANCELLED, EXPIRED_NO_ARRIVAL, WITHDRAWN, EXPIRED_NO_DEPARTURE)
@@ -98,9 +97,9 @@ object EnhancedStatus extends Enumeration {
   def fromStatusGroup(group: StatusGroup): Set[String] =
     group match {
       case ActionRequiredStatuses => actionRequiredStatuses_text
-      case CancelledStatuses => cancelledStatuses_text
-      case RejectedStatuses => rejectedStatuses_text
-      case _ => submittedStatuses_text
+      case CancelledStatuses      => cancelledStatuses_text
+      case RejectedStatuses       => rejectedStatuses_text
+      case _                      => submittedStatuses_text
     }
 
   def fromEnhancedStatus(status: EnhancedStatus): Set[String] =
@@ -124,4 +123,14 @@ object StatusGroup extends Enumeration {
   val CancelledStatuses = Value("cancelled")
   val RejectedStatuses = Value("rejected")
   val SubmittedStatuses = Value("submitted")
+
+  import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
+
+  def toEnhancedStatus(group: StatusGroup): Set[EnhancedStatus] =
+    group match {
+      case ActionRequiredStatuses => actionRequiredStatuses
+      case CancelledStatuses      => cancelledStatuses
+      case RejectedStatuses       => rejectedStatuses
+      case _                      => submittedStatuses
+    }
 }

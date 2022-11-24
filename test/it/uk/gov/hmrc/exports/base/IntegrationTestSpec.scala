@@ -61,18 +61,18 @@ trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSui
   implicit val hc: HeaderCarrier = HeaderCarrier(authorization = Some(Authorization("Bearer some-token")))
 
   override protected def beforeAll(): Unit = {
-    super.beforeAll
-    startMockServer
+    super.beforeAll()
+    startMockServer()
   }
 
   override protected def afterEach(): Unit = {
-    resetMockServer
-    super.afterEach
+    resetMockServer()
+    super.afterEach()
   }
 
-  override protected def afterAll() {
-    stopMockServer
-    super.afterAll
+  override protected def afterAll(): Unit = {
+    stopMockServer()
+    super.afterAll()
   }
 
   val enrolments = Some(s"""{

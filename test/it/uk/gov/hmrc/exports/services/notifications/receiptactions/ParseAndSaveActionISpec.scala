@@ -197,7 +197,7 @@ object ParseAndSaveActionISpec {
   val mrn = "22GB6RSL62FN1IOAA8"
 
   val cancellationActionId = "7c7faf96-a65e-408d-a8f7-7cb181f696b6"
-  val cancellationDateTime = "2022-06-20T14:52:13Z[UTC]"
+  val cancellationDateTime = "2022-06-20T14:52:13.999Z[UTC]"
 
   val cancellationNotification = ParsedNotification(
     unparsedNotificationId = UUID.randomUUID,
@@ -211,7 +211,7 @@ object ParseAndSaveActionISpec {
   )
 
   val submissionActionId = "914083cb-6647-4476-aedb-6edf45616b3d"
-  val submissionDateTime = "2022-06-20T14:48:17Z[UTC]"
+  val submissionDateTime = "2022-06-20T14:48:17.999Z[UTC]"
 
   val submissionNotification = ParsedNotification(
     unparsedNotificationId = UUID.randomUUID,
@@ -236,7 +236,7 @@ object ParseAndSaveActionISpec {
       |    {
       |      "id": "7c7faf96-a65e-408d-a8f7-7cb181f696b6",
       |      "requestType": "CancellationRequest",
-      |      "requestTimestamp": "2022-06-20T14:52:13.06Z[UTC]"
+      |      "requestTimestamp": "2022-06-20T14:52:13.999Z[UTC]"
       |    }
       |  ],
       |  "mrn": "${mrn}"
@@ -268,7 +268,7 @@ object ParseAndSaveActionISpec {
       |    {
       |      "id": "${cancellationActionId}",
       |      "requestType": "CancellationRequest",
-      |      "requestTimestamp": "2022-06-20T14:52:13.06Z[UTC]",
+      |      "requestTimestamp": "2022-06-20T14:52:13.999Z[UTC]",
       |      "notifications": [
       |        {
       |          "notificationId": "${cancellationNotification.unparsedNotificationId}",

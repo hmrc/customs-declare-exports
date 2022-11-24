@@ -11,8 +11,7 @@ POST        /cancellations                     uk.gov.hmrc.exports.controllers.C
 
 GET         /lrn-already-used/:lrn             uk.gov.hmrc.exports.controllers.SubmissionController.isLrnAlreadyUsed(lrn: String)
 
-GET         /submission-page                   uk.gov.hmrc.exports.controllers.SubmissionController.fetchPage
-GET         /submissions                       uk.gov.hmrc.exports.controllers.SubmissionController.findAll
+GET         /paginated-submissions             uk.gov.hmrc.exports.controllers.SubmissionController.fetchPage
 
 GET         /submission/:id                    uk.gov.hmrc.exports.controllers.SubmissionController.find(id: String)
 POST        /submission/:id                    uk.gov.hmrc.exports.controllers.SubmissionController.create(id: String)

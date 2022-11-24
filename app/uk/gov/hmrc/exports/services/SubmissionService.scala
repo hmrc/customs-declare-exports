@@ -25,7 +25,7 @@ import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.{StatusGroup, SubmittedStatuses}
 import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.exports.models.{Eori, PageOfSubmissions, FetchSubmissionPageData}
+import uk.gov.hmrc.exports.models.{Eori, FetchSubmissionPageData, PageOfSubmissions}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
 import uk.gov.hmrc.http.HeaderCarrier
@@ -52,27 +52,25 @@ class SubmissionService @Inject() (
       case _                                                            => Future.successful(NotFound)
     }
 
-  // Fetch first page of submissions for the first EnhancedStatusGroup which has documents.
+  // Fetch first page of submissions for the first StatusGroup containing submissions.
   def fetchFirstPage(eori: String, limit: Int): Future[PageOfSubmissions] = {
-    def loopOnGroups(
-      f: Set[String] => Future[Seq[Submission]])(cond: Seq[Submission] => Boolean)(seq: List[Set[String]]
-    ): Future[Seq[Submission]] =
+    def loopOnGroups(f: Set[String] => Future[Seq[Submission]])(cond: Seq[Submission] => Boolean)(seq: List[Set[String]]): Future[Seq[Submission]] =
       seq match {
         case head :: tail => f(head).filter(cond).recoverWith { case _: Throwable => loopOnGroups(f)(cond)(tail) }
-        case Nil => Future.successful(Seq.empty)
+        case Nil          => Future.successful(Seq.empty)
       }
 
     for {
       submissions <- loopOnGroups(submissionRepository.fetchFirstPage(eori, _, limit))(_.nonEmpty)(statusGroups)
       setOfEnhancedStatuses = submissions.headOption.flatMap(_.latestEnhancedStatus.map(fromEnhancedStatus)).getOrElse(Set.empty)
       totalSubmissionsInGroup <- submissionRepository.countSubmissionsInGroup(eori, setOfEnhancedStatuses)
-    }
-    yield {
+    } yield {
       val statusGroup = submissions.headOption.flatMap(_.latestEnhancedStatus.map(toStatusGroup)).getOrElse(SubmittedStatuses)
       PageOfSubmissions(statusGroup, totalSubmissionsInGroup, submissions)
     }
   }
 
+  // Fetch first page of submissions for a specific StatusGroup
   def fetchFirstPage(eori: String, statusGroup: StatusGroup, limit: Int): Future[PageOfSubmissions] =
     fetchPage(eori, statusGroup, submissionRepository.fetchFirstPage(eori, _, limit))
 
@@ -83,7 +81,7 @@ class SubmissionService @Inject() (
           fetchPageData.page.fold {
             submissionRepository.fetchLastPage(eori, setOfEnhancedStatuses, fetchPageData.limit)
           } {
-            submissionRepository.fetchLosePage(eori, setOfEnhancedStatuses, _, fetchPageData.limit)
+            submissionRepository.fetchLoosePage(eori, setOfEnhancedStatuses, _, fetchPageData.limit)
           }
         } {
           submissionRepository.fetchNextPage(eori, setOfEnhancedStatuses, _, fetchPageData.limit)
@@ -95,18 +93,13 @@ class SubmissionService @Inject() (
     fetchPage(eori, statusGroup, fetchSubmissions)
   }
 
-
   private def fetchPage(eori: String, statusGroup: StatusGroup, f: Set[String] => Future[Seq[Submission]]): Future[PageOfSubmissions] = {
     val setOfEnhancedStatuses = fromStatusGroup(statusGroup)
     for {
       submissions <- f(setOfEnhancedStatuses)
       totalSubmissionsInGroup <- submissionRepository.countSubmissionsInGroup(eori, setOfEnhancedStatuses)
-    }
-    yield PageOfSubmissions(statusGroup, totalSubmissionsInGroup, submissions)
+    } yield PageOfSubmissions(statusGroup, totalSubmissionsInGroup, submissions)
   }
-
-  def findAllSubmissions(eori: String): Future[Seq[Submission]] =
-    submissionRepository.findAll(eori)
 
   def findSubmission(eori: String, id: String): Future[Option[Submission]] =
     submissionRepository.findById(eori, id)

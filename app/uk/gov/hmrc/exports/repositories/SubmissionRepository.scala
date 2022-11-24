@@ -23,7 +23,6 @@ import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.libs.json.{JsBoolean, Json}
 import repositories.RepositoryOps
-import uk.gov.hmrc.exports.models.declaration.submissions.Submission.zonedDateTimeToString
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository.dashBoardIndex
 import uk.gov.hmrc.mongo.MongoComponent
@@ -54,28 +53,14 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
 
   def countSubmissionsInGroup(eori: String, statusGroup: Set[String]): Future[Int] =
     if (statusGroup.isEmpty) Future.successful(0)
-    else collection
-      .countDocuments(fetchFilter(eori, statusGroup))
-      .toFuture()
-      .map(_.toInt)
+    else
+      collection
+        .countDocuments(fetchFilter(eori, statusGroup))
+        .toFuture()
+        .map(_.toInt)
 
   private lazy val ascending = BsonDocument(Json.obj("enhancedStatusLastUpdated" -> 1).toString)
   private lazy val descending = BsonDocument(Json.obj("enhancedStatusLastUpdated" -> -1).toString)
-
-  def explainFetch(limit: Int, filter: Bson, sort: Bson): Future[String] =
-    collection
-      .find(filter)
-      .hintString(dashBoardIndex)
-      .limit(limit)
-      .sort(sort)
-      .explain()
-      .toFuture()
-      .map {
-        _.toList.map { t =>
-          if (t._1 != "operationTime") s"\"${t._1}\" : ${t._2}"
-          else t._2.toString.replace("Timestamp", "\"Timestamp\" : ")
-        }.mkString("{", ",", "}")
-      }
 
   def fetchFirstPage(eori: String, statusGroup: Set[String], limit: Int): Future[Seq[Submission]] =
     collection
@@ -94,7 +79,7 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
       .toFuture()
       .map(_.reverse)
 
-  def fetchLosePage(eori: String, statusGroup: Set[String], page: Int, limit: Int): Future[Seq[Submission]] =
+  def fetchLoosePage(eori: String, statusGroup: Set[String], page: Int, limit: Int): Future[Seq[Submission]] =
     collection
       .find(fetchFilter(eori, statusGroup))
       .hintString(dashBoardIndex)
@@ -136,7 +121,7 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
          |{
          |  "eori": "$eori",
          |  "latestEnhancedStatus": { "$$in": [ ${statusGroup.map(s => s""""$s"""").mkString(",")} ] },
-         |  "enhancedStatusLastUpdated": { "$$$comp": "${zonedDateTimeToString(statusLastUpdated)}" }
+         |  "enhancedStatusLastUpdated": { "$$$comp": "${statusLastUpdated}" }
          |}""".stripMargin
     BsonDocument(filter)
   }
@@ -175,8 +160,8 @@ object SubmissionRepository {
     ),
     IndexModel(compoundIndex(ascending("eori"), descending("action.requestTimestamp")), IndexOptions().name("actionOrderedEori")),
     IndexModel(compoundIndex(ascending("eori"), descending("lrn")), IndexOptions().name("lrnByEori")),
-    IndexModel(compoundIndex(
-      ascending("eori"), ascending("latestEnhancedStatus"), descending("enhancedStatusLastUpdated")),
+    IndexModel(
+      compoundIndex(ascending("eori"), ascending("latestEnhancedStatus"), descending("enhancedStatusLastUpdated")),
       IndexOptions().name(dashBoardIndex)
     )
   )

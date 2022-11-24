@@ -17,6 +17,7 @@
 package repositories
 
 import com.mongodb.ErrorCategory.DUPLICATE_KEY
+import com.mongodb.ExplainVerbosity.QUERY_PLANNER
 import com.mongodb.client.model.{ReturnDocument, Updates}
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.bson.conversions.Bson
@@ -45,6 +46,18 @@ trait RepositoryOps[T] {
 
   def create(document: T): Future[T] =
     collection.insertOne(document).toFuture().map(_ => document)
+
+  def explain(filter: Bson): Future[String] =
+    collection
+      .find(filter)
+      .explain(QUERY_PLANNER)
+      .toFuture()
+      .map {
+        _.toList.map { t =>
+          if (t._1 != "operationTime") s"\"${t._1}\" : ${t._2}"
+          else t._2.toString.replace("Timestamp", "\"Timestamp\" : ")
+        }.mkString("{", ",", "}")
+      }
 
   def findAll(): Future[Seq[T]] =
     collection.find().toFuture()

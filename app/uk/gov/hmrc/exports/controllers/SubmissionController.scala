@@ -60,10 +60,6 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
     }
   }
 
-  val findAll: Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    submissionService.findAllSubmissions(request.eori.value).map(Ok(_))
-  }
-
   def find(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     submissionService.findSubmission(request.eori.value, id).map { maybeSub =>
       maybeSub match {

@@ -28,7 +28,7 @@ import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsJson, _}
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{ADDITIONAL_DOCUMENTS_REQUIRED, RECEIVED}
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{actionRequiredStatuses, submittedStatuses}
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
@@ -105,13 +105,13 @@ class GenerateDraftDecControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
       newDec.eori mustBe eoriSpecified
 
       val newSubmission = captorSubmission.getValue
-      val (expectedNoOfNotifications, expectedStatus) =
+      val (expectedNoOfNotifications, expectedStatusGroup) =
         if (newSubmission.mrn.getOrElse("0000").take(2).toInt % 2 == 0)
-          (2, ADDITIONAL_DOCUMENTS_REQUIRED)
+          (2, actionRequiredStatuses)
         else
-          (1, RECEIVED)
+          (1, submittedStatuses)
 
-      newSubmission.latestEnhancedStatus mustBe Some(expectedStatus)
+      assert(expectedStatusGroup.contains(newSubmission.latestEnhancedStatus.get))
       newSubmission.actions.head.notifications.get.size mustBe expectedNoOfNotifications
     }
   }
