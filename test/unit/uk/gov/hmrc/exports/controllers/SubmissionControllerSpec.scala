@@ -20,7 +20,6 @@ import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.ArgumentMatchersSugar.eqTo
 import org.mockito.Mockito._
 import play.api.libs.json.Json.toJson
-import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import testdata.SubmissionTestData.{submission, submission_2}
@@ -57,13 +56,13 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
 
   "SubmissionController.create" when {
 
-    val fakePostRequest: Request[AnyContent] = FakeRequest("POST", "/submission")
+    val postRequest = FakeRequest("POST", "/submission")
 
     "request is unauthorised" should {
       "return 401 (Unauthorised)" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result = controller.create("id")(fakePostRequest)
+        val result = controller.create("id")(postRequest)
 
         status(result) mustBe UNAUTHORIZED
         verifyNoInteractions(submissionService)
@@ -76,7 +75,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
         when(submissionService.markCompleted(any(), anyString())).thenReturn(Future.successful(Some(declaration)))
         when(submissionService.submit(any())(any())).thenReturn(Future.successful(submission))
 
-        val result = controller.create("id")(fakePostRequest)
+        val result = controller.create("id")(postRequest)
 
         status(result) mustBe CREATED
         contentAsJson(result) mustBe toJson(submission)
@@ -89,7 +88,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
         when(submissionService.markCompleted(any(), anyString())).thenReturn(Future.successful(Some(declaration)))
         when(submissionService.submit(any())(any())).thenReturn(Future.successful(submission))
 
-        val result = controller.create("id")(fakePostRequest)
+        val result = controller.create("id")(postRequest)
 
         status(result) mustBe CONFLICT
         contentAsJson(result) mustBe toJson(ErrorResponse("Declaration has already been submitted"))
@@ -100,7 +99,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
       "return 404 (NotFound)" in {
         when(submissionService.markCompleted(any(), anyString())).thenReturn(Future.successful(None))
 
-        val result = controller.create("id")(fakePostRequest)
+        val result = controller.create("id")(postRequest)
 
         status(result) mustBe NOT_FOUND
       }
@@ -155,13 +154,13 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
 
   "SubmissionController.find" should {
 
-    val fakeGetRequest: Request[AnyContent] = FakeRequest("GET", "/submission")
+    val getRequest = FakeRequest("GET", "/submission")
 
     "return 401 (Unauthorised)" when {
       "request is unauthorised" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result = controller.find("id")(fakeGetRequest)
+        val result = controller.find("id")(getRequest)
 
         status(result) mustBe UNAUTHORIZED
         verifyNoInteractions(submissionService)
@@ -171,7 +170,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
     "return 200 (Ok) with the specified submission if it exists" in {
       when(submissionService.findSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
 
-      val result = controller.find(submission.uuid)(fakeGetRequest)
+      val result = controller.find(submission.uuid)(getRequest)
 
       status(result) mustBe OK
       contentAsJson(result) mustBe toJson(submission)
@@ -180,7 +179,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
     "return 404 (NotFound) specified submission does not exists" in {
       when(submissionService.findSubmission(any(), any())).thenReturn(Future.successful(None))
 
-      val result = controller.find(submission.uuid)(fakeGetRequest)
+      val result = controller.find(submission.uuid)(getRequest)
 
       status(result) mustBe NOT_FOUND
     }
@@ -188,13 +187,13 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
 
   "SubmissionController.isLrnAlreadyUsed" should {
 
-    val fakeGetRequest: Request[AnyContent] = FakeRequest("GET", "/lrn-already-used")
+    val getRequest = FakeRequest("GET", "/lrn-already-used")
 
     "return 401 (Unauthorised)" when {
       "request is unauthorised" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result = controller.isLrnAlreadyUsed("lrn")(fakeGetRequest)
+        val result = controller.isLrnAlreadyUsed("lrn")(getRequest)
 
         status(result) mustBe UNAUTHORIZED
         verifyNoInteractions(submissionService)
@@ -205,7 +204,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
       "the specified LRN has been used within 48h" in {
         when(submissionService.findSubmissionsByLrn(any(), any())).thenReturn(Future.successful(Seq(submission)))
 
-        val result = controller.isLrnAlreadyUsed(submission.lrn)(fakeGetRequest)
+        val result = controller.isLrnAlreadyUsed(submission.lrn)(getRequest)
 
         status(result) mustBe OK
         contentAsJson(result) mustBe toJson(true)
@@ -216,7 +215,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
       "a submission with the specified LRN does not exists " in {
         when(submissionService.findSubmissionsByLrn(any(), any())).thenReturn(Future.successful(Seq()))
 
-        val result = controller.isLrnAlreadyUsed(submission.lrn)(fakeGetRequest)
+        val result = controller.isLrnAlreadyUsed(submission.lrn)(getRequest)
 
         status(result) mustBe OK
         contentAsJson(result) mustBe toJson(false)
@@ -225,7 +224,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
       "the specified LRN has not been used within 48hr" in {
         when(submissionService.findSubmissionsByLrn(any(), any())).thenReturn(Future.successful(Seq(submission_2)))
 
-        val result = controller.isLrnAlreadyUsed(submission.lrn)(fakeGetRequest)
+        val result = controller.isLrnAlreadyUsed(submission.lrn)(getRequest)
 
         status(result) mustBe OK
         contentAsJson(result) mustBe toJson(false)
@@ -235,7 +234,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
         when(submissionService.findSubmissionsByLrn(any(), any()))
           .thenReturn(Future.successful(Seq(submission.copy(latestEnhancedStatus = Some(EnhancedStatus.ERRORS)))))
 
-        val result = controller.isLrnAlreadyUsed(submission.lrn)(fakeGetRequest)
+        val result = controller.isLrnAlreadyUsed(submission.lrn)(getRequest)
 
         status(result) mustBe OK
         contentAsJson(result) mustBe toJson(false)

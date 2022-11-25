@@ -16,49 +16,45 @@
 
 package uk.gov.hmrc.exports.controllers.ead
 
-import scala.concurrent.Future
-
 import org.mockito.ArgumentMatchers.any
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.bind
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json.toJson
-import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
+import uk.gov.hmrc.auth.core.InsufficientEnrolments
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
+import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.models.ead.MrnStatusSpec
-import uk.gov.hmrc.http.HeaderCarrier
 
-class EADControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestSupport {
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-  override lazy val app: Application = GuiceApplicationBuilder()
-    .overrides(bind[AuthConnector].to(mockAuthConnector), bind[CustomsDeclarationsInformationConnector].to(connector), bind[HeaderCarrier].to(hc))
-    .build()
+class EADControllerSpec extends UnitSpec with AuthTestSupport {
 
-  private implicit val hc: HeaderCarrier = HeaderCarrier()
+  private val cc = stubControllerComponents()
+  private val authenticator = new Authenticator(mockAuthConnector, cc)
   private val connector: CustomsDeclarationsInformationConnector = mock[CustomsDeclarationsInformationConnector]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(mockAuthConnector, connector)
+    reset(connector, mockAuthConnector)
+    withAuthorizedUser()
   }
 
-  "Find By ID" should {
+  private val controller = new EADController(authenticator, connector, cc)
+
+  "EADController.findByMrn" should {
     val mrn = "18GB9JLC3CU1LFGVR2"
-    val get = FakeRequest("GET", s"/ead/$mrn")
+    val getRequest = FakeRequest("GET", s"/ead/$mrn")
 
     "return 200" when {
       "request is valid" in {
         withAuthorizedUser()
         given(connector.fetchMrnStatus(any())(any())).willReturn(Future.successful(Some(MrnStatusSpec.completeMrnStatus)))
 
-        val result: Future[Result] = route(app, get).get
+        val result = controller.findByMrn(mrn)(getRequest)
 
         status(result) mustBe OK
         contentAsJson(result) mustBe toJson(MrnStatusSpec.completeMrnStatus)
@@ -71,7 +67,7 @@ class EADControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestS
         withAuthorizedUser()
         given(connector.fetchMrnStatus(any())(any())).willReturn(Future.successful(None))
 
-        val result: Future[Result] = route(app, get).get
+        val result = controller.findByMrn(mrn)(getRequest)
 
         status(result) mustBe NOT_FOUND
         contentAsString(result) mustBe empty
@@ -83,7 +79,7 @@ class EADControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestS
       "unauthorized" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result: Future[Result] = route(app, get).get
+        val result = controller.findByMrn(mrn)(getRequest)
 
         status(result) mustBe UNAUTHORIZED
         verifyNoInteractions(connector)

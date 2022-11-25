@@ -53,7 +53,7 @@ trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSui
           "microservice.services.customs-declarations-information.api-version" -> "1.0",
           "microservice.services.hmrc-email.host" -> Host,
           "microservice.services.hmrc-email.port" -> Port,
-          "mongodb.uri" -> s"mongodb://localhost/$databaseName"
+          "mongodb.uri" -> s"mongodb://localhost:27017/$databaseName"
         )
       )
       .build()

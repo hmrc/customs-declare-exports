@@ -48,7 +48,7 @@ class GenerateSubmittedDecController @Inject() (
 
   implicit val format = Json.format[CreateSubmitDecDocumentsRequest]
 
-  def createSubmittedDecDocuments(): Action[CreateSubmitDecDocumentsRequest] = Action.async(parsingJson[CreateSubmitDecDocumentsRequest]) {
+  val createSubmittedDecDocuments: Action[CreateSubmitDecDocumentsRequest] = Action.async(parsingJson[CreateSubmitDecDocumentsRequest]) {
     implicit request =>
       for {
         declaration <- declarationRepository.create(createDeclaration())

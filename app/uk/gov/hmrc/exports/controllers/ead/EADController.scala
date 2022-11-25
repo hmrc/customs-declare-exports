@@ -16,23 +16,18 @@
 
 package uk.gov.hmrc.exports.controllers.ead
 
-import javax.inject.{Inject, Singleton}
 import play.api.mvc._
 import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
-import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.controllers.{JSONResponses, RESTController}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class EADController @Inject() (
-  authenticator: Authenticator,
-  connector: CustomsDeclarationsInformationConnector,
-  headerValidator: HeaderValidator,
-  cc: ControllerComponents
-)(implicit executionContext: ExecutionContext)
-    extends RESTController(cc) with JSONResponses {
+class EADController @Inject() (authenticator: Authenticator, connector: CustomsDeclarationsInformationConnector, cc: ControllerComponents)(
+  implicit executionContext: ExecutionContext
+) extends RESTController(cc) with JSONResponses {
 
   def findByMrn(mrn: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     connector.fetchMrnStatus(mrn).map {

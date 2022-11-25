@@ -16,12 +16,7 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentMatchers.{any, anyString}
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.bind
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.FakeRequest
@@ -29,10 +24,10 @@ import play.api.test.Helpers._
 import testdata.SubmissionTestData.submission
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
 import testdata.notifications.NotificationTestData._
-import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.base.UnitTestMockBuilder.buildNotificationServiceMock
-import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
-import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
+import uk.gov.hmrc.exports.base.{AuthTestSupport, MockMetrics, UnitSpec}
+import uk.gov.hmrc.exports.controllers.actions.Authenticator
+import uk.gov.hmrc.exports.controllers.util.{CustomsHeaderNames, HeaderValidator}
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification.REST
 import uk.gov.hmrc.exports.services.SubmissionService
@@ -41,31 +36,22 @@ import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Random
-import scala.xml.{Elem, NodeSeq}
+import scala.xml.NodeSeq
 
-class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestSupport {
+class NotificationControllerSpec extends UnitSpec with AuthTestSupport with MockMetrics {
 
   import NotificationControllerSpec._
 
-  val findSubmissionNotificationsUri = "/submission/notifications/1234"
-  val findLatestNotificationUri = "/submission/latest-notification/1234"
-  val findAllNotificationsForUserUri = "/notifications"
-  val saveNotificationUri = "/customs-declare-exports/notify"
-
-  SharedMetricRegistries.clear()
-
+  private val cc = stubControllerComponents()
+  private val authenticator = new Authenticator(mockAuthConnector, cc)
   private val notificationService: NotificationService = buildNotificationServiceMock
   private val submissionService: SubmissionService = mock[SubmissionService]
 
-  override lazy val app: Application = GuiceApplicationBuilder()
-    .overrides(
-      bind[AuthConnector].to(mockAuthConnector),
-      bind[NotificationService].to(notificationService),
-      bind[SubmissionService].to(submissionService)
-    )
-    .build()
+  private val controller =
+    new NotificationController(authenticator, new HeaderValidator(), exportsMetrics, notificationService, submissionService, cc)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -77,14 +63,16 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     super.afterEach()
   }
 
-  "Notification Controller on findAll" should {
+  "NotificationController.findAll" should {
+
+    def findAll: Future[Result] = controller.findAll("1234")(FakeRequest(GET, "/submission/notifications"))
 
     "return 200" when {
       "submission found" in {
         when(submissionService.findSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
         when(notificationService.findAllNotificationsSubmissionRelated(any())).thenReturn(Future.successful(Seq(notification)))
 
-        val result = routeGetFindAll
+        val result = findAll
 
         status(result) must be(OK)
         contentAsJson(result) must be(Json.toJson(Seq(notification))(REST.notificationsWrites))
@@ -96,7 +84,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
         when(submissionService.findSubmission(any(), any())).thenReturn(Future.successful(Some(submission)))
         when(notificationService.findAllNotificationsSubmissionRelated(any())).thenReturn(Future.successful(Seq.empty))
 
-        val result = routeGetFindAll
+        val result = findAll
 
         status(result) must be(OK)
         contentAsJson(result) must be(Json.toJson(Seq.empty[ParsedNotification])(REST.notificationsWrites))
@@ -107,7 +95,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       "submission not found" in {
         when(submissionService.findSubmission(any(), any())).thenReturn(Future.successful(None))
 
-        val result = routeGetFindAll
+        val result = findAll
 
         status(result) must be(NOT_FOUND)
       }
@@ -117,23 +105,28 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       "not authenticated" in {
         userWithoutEori()
 
-        val failedResult = routeGetFindAll
+        val failedResult = findAll
 
         status(failedResult) must be(UNAUTHORIZED)
       }
     }
-
-    def routeGetFindAll: Future[Result] = route(app, FakeRequest(GET, findSubmissionNotificationsUri)).get
   }
 
   "Notification Controller on saveNotification" when {
+
+    def saveNotification(headers: Map[String, String] = validHeaders): Future[Result] =
+      controller.saveNotification(
+        FakeRequest(POST, "/customs-declare-exports/notify")
+          .withHeaders(headers.toSeq: _*)
+          .withBody(exampleRejectNotification(mrn).asXml)
+      )
 
     "everything works correctly" should {
 
       "return Accepted status" in {
         when(notificationService.handleNewNotification(anyString(), any[NodeSeq])).thenReturn(Future.successful((): Unit))
 
-        val result = routePostSaveNotification()
+        val result = saveNotification()
 
         status(result) must be(ACCEPTED)
       }
@@ -141,7 +134,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
       "call NotificationService once" in {
         when(notificationService.handleNewNotification(anyString(), any[NodeSeq])).thenReturn(Future.successful((): Unit))
 
-        routePostSaveNotification().futureValue
+        saveNotification().futureValue
 
         verify(notificationService).handleNewNotification(anyString(), any[NodeSeq])
       }
@@ -150,7 +143,7 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
     "a mandatory header is missiing" should {
       "return 400" in {
         val invalidHeaders = validHeaders - CustomsHeaderNames.XConversationIdName
-        val result = routePostSaveNotification(invalidHeaders)
+        val result = saveNotification(invalidHeaders)
         status(result) must be(BAD_REQUEST)
         assert(contentAsString(result).contains("Invalid headers"))
       }
@@ -162,18 +155,10 @@ class NotificationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with 
           .thenReturn(Future.failed(new Exception("Test Exception")))
 
         an[Exception] mustBe thrownBy {
-          routePostSaveNotification().futureValue
+          saveNotification().futureValue
         }
       }
     }
-
-    def routePostSaveNotification(headers: Map[String, String] = validHeaders, xmlBody: Elem = exampleRejectNotification(mrn).asXml): Future[Result] =
-      route(
-        app,
-        FakeRequest(POST, saveNotificationUri)
-          .withHeaders(headers.toSeq: _*)
-          .withXmlBody(xmlBody)
-      ).get
   }
 }
 
