@@ -25,8 +25,8 @@ import play.api.libs.json.JsValue
 import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData.DEFAULT_LIMIT
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{cancelledStatuses_text, CUSTOMS_POSITION_GRANTED, WITHDRAWN}
-import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.CancelledStatuses
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{CUSTOMS_POSITION_GRANTED, WITHDRAWN}
+import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.{FetchSubmissionPageData, PageOfSubmissions}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
@@ -66,7 +66,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(submissionRepository.countSubmissionsInGroup(any(), any[Set[String]])).thenReturn(Future.successful(1))
+    when(submissionRepository.countSubmissionsInGroup(any(), any())).thenReturn(Future.successful(1))
   }
   private val eori = "eori"
   private val submission = Submission("id", eori, "lrn", None, "ducr")
@@ -121,10 +121,10 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
   "SubmissionService.fetchFirstPage" should {
 
     "fetch the 1st page of the 1st StatusGroup containing submissions" in {
-      val captor: ArgumentCaptor[Set[String]] = ArgumentCaptor.forClass(classOf[Set[String]])
+      val captor: ArgumentCaptor[StatusGroup] = ArgumentCaptor.forClass(classOf[StatusGroup])
 
       def isCancelledGroup(invocation: InvocationOnMock) =
-        invocation.getArgument(1).asInstanceOf[Set[String]].contains(WITHDRAWN.toString)
+        invocation.getArgument(1).asInstanceOf[StatusGroup] == CancelledStatuses
 
       when(submissionRepository.countSubmissionsInGroup(any(), captor.capture())).thenAnswer { invocation: InvocationOnMock =>
         Future.successful(if (isCancelledGroup(invocation)) 1 else 0)
@@ -134,14 +134,15 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         Future.successful(if (isCancelledGroup(invocation)) cancelledSubmissions else Seq.empty)
       }
 
-      verifPageOfSubmissions(submissionService.fetchFirstPage(eori, DEFAULT_LIMIT).futureValue)
+      val statuses = List(ActionRequiredStatuses, RejectedStatuses, SubmittedStatuses, CancelledStatuses)
+      verifPageOfSubmissions(submissionService.fetchFirstPage(eori, statuses, DEFAULT_LIMIT).futureValue)
 
       val numberOfInvocations = 4
       verify(submissionRepository, times(numberOfInvocations)).fetchFirstPage(any(), any(), any())
     }
 
     "fetch the first page of a specific StatusGroup" in {
-      when(submissionRepository.fetchFirstPage(any(), any[Set[String]], any[Int])).thenReturn(Future.successful(cancelledSubmissions))
+      when(submissionRepository.fetchFirstPage(any(), any[StatusGroup], any[Int])).thenReturn(Future.successful(cancelledSubmissions))
 
       verifPageOfSubmissions(submissionService.fetchFirstPage(eori, CancelledStatuses, DEFAULT_LIMIT).futureValue)
     }
@@ -156,17 +157,17 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       datetimeForNextPage: Option[ZonedDateTime] = Some(now.plusSeconds(1L)),
       page: Option[Int] = Some(2)
     ): FetchSubmissionPageData =
-      FetchSubmissionPageData(DEFAULT_LIMIT, Some(CancelledStatuses), datetimeForPreviousPage, datetimeForNextPage, page)
+      FetchSubmissionPageData(List(CancelledStatuses), datetimeForPreviousPage, datetimeForNextPage, page, DEFAULT_LIMIT)
 
     "call submissionRepository.fetchNextPage" when {
       "in FetchSubmissionPageData, statusGroup and datetimeForNextPage are provided and" when {
         "datetimeForPreviousPage is not provided" in {
-          when(submissionRepository.fetchNextPage(any(), any[Set[String]], any[ZonedDateTime], any[Int]))
+          when(submissionRepository.fetchNextPage(any(), any[StatusGroup], any[ZonedDateTime], any[Int]))
             .thenReturn(Future.successful(cancelledSubmissions))
 
           verifPageOfSubmissions(submissionService.fetchPage(eori, CancelledStatuses, fetchSubmissionPageData(None)).futureValue)
 
-          verify(submissionRepository).fetchNextPage(any(), eqTo(cancelledStatuses_text), eqTo(now.plusSeconds(1L)), eqTo(DEFAULT_LIMIT))
+          verify(submissionRepository).fetchNextPage(any(), eqTo(CancelledStatuses), eqTo(now.plusSeconds(1L)), eqTo(DEFAULT_LIMIT))
 
           verify(submissionRepository, never).fetchLastPage(any(), any(), any())
           verify(submissionRepository, never).fetchLoosePage(any(), any(), any(), any())
@@ -177,12 +178,12 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
     "call submissionRepository.fetchPreviousPage" when {
       "in FetchSubmissionPageData, statusGroup and datetimeForPreviousPage are provided" in {
-        when(submissionRepository.fetchPreviousPage(any(), any[Set[String]], any[ZonedDateTime], any[Int]))
+        when(submissionRepository.fetchPreviousPage(any(), any[StatusGroup], any[ZonedDateTime], any[Int]))
           .thenReturn(Future.successful(cancelledSubmissions))
 
         verifPageOfSubmissions(submissionService.fetchPage(eori, CancelledStatuses, fetchSubmissionPageData()).futureValue)
 
-        verify(submissionRepository).fetchPreviousPage(any(), eqTo(cancelledStatuses_text), eqTo(now), eqTo(DEFAULT_LIMIT))
+        verify(submissionRepository).fetchPreviousPage(any(), eqTo(CancelledStatuses), eqTo(now), eqTo(DEFAULT_LIMIT))
 
         verify(submissionRepository, never).fetchLastPage(any(), any(), any())
         verify(submissionRepository, never).fetchLoosePage(any(), any(), any(), any())
@@ -193,12 +194,12 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     "call submissionRepository.fetchLoosePage" when {
       "in FetchSubmissionPageData, statusGroup and page are provided and" when {
         "datetimeForNextPage and datetimeForPreviousPage are not provided" in {
-          when(submissionRepository.fetchLoosePage(any(), any[Set[String]], any[Int], any[Int]))
+          when(submissionRepository.fetchLoosePage(any(), any[StatusGroup], any[Int], any[Int]))
             .thenReturn(Future.successful(cancelledSubmissions))
 
           verifPageOfSubmissions(submissionService.fetchPage(eori, CancelledStatuses, fetchSubmissionPageData(None, None)).futureValue)
 
-          verify(submissionRepository).fetchLoosePage(any(), eqTo(cancelledStatuses_text), eqTo(2), eqTo(DEFAULT_LIMIT))
+          verify(submissionRepository).fetchLoosePage(any(), eqTo(CancelledStatuses), eqTo(2), eqTo(DEFAULT_LIMIT))
 
           verify(submissionRepository, never).fetchLastPage(any(), any(), any())
           verify(submissionRepository, never).fetchNextPage(any(), any(), any(), any())
@@ -209,12 +210,12 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
     "call submissionRepository.fetchLastPage" when {
       "in FetchSubmissionPageData, only the statusGroup is provided" in {
-        when(submissionRepository.fetchLastPage(any(), any[Set[String]], any[Int]))
+        when(submissionRepository.fetchLastPage(any(), any[StatusGroup], any[Int]))
           .thenReturn(Future.successful(cancelledSubmissions))
 
         verifPageOfSubmissions(submissionService.fetchPage(eori, CancelledStatuses, fetchSubmissionPageData(None, None, None)).futureValue)
 
-        verify(submissionRepository).fetchLastPage(any(), eqTo(cancelledStatuses_text), eqTo(DEFAULT_LIMIT))
+        verify(submissionRepository).fetchLastPage(any(), eqTo(CancelledStatuses), eqTo(DEFAULT_LIMIT))
 
         verify(submissionRepository, never).fetchLoosePage(any(), any(), any(), any())
         verify(submissionRepository, never).fetchNextPage(any(), any(), any(), any())

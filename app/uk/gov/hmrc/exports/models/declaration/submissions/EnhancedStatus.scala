@@ -90,10 +90,6 @@ object EnhancedStatus extends Enumeration {
   lazy val rejectedStatuses_text = rejectedStatuses.map(_.toString)
   lazy val submittedStatuses_text = submittedStatuses.map(_.toString)
 
-  // Order of the list's elements follows the Dashboard tabs' order
-  lazy val statusGroups: List[Set[String]] =
-    List(submittedStatuses_text, actionRequiredStatuses_text, rejectedStatuses_text, cancelledStatuses_text)
-
   def fromStatusGroup(group: StatusGroup): Set[String] =
     group match {
       case ActionRequiredStatuses => actionRequiredStatuses_text
@@ -101,12 +97,6 @@ object EnhancedStatus extends Enumeration {
       case RejectedStatuses       => rejectedStatuses_text
       case _                      => submittedStatuses_text
     }
-
-  def fromEnhancedStatus(status: EnhancedStatus): Set[String] =
-    if (actionRequiredStatuses.contains(status)) actionRequiredStatuses_text
-    else if (cancelledStatuses.contains(status)) cancelledStatuses_text
-    else if (rejectedStatuses.contains(status)) rejectedStatuses_text
-    else submittedStatuses_text
 
   def toStatusGroup(status: EnhancedStatus): StatusGroup =
     if (actionRequiredStatuses.contains(status)) ActionRequiredStatuses

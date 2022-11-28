@@ -22,27 +22,23 @@ import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.StatusGrou
 import java.time.ZonedDateTime
 
 case class FetchSubmissionPageData(
-  limit: Int,
+  // Specify what group of Submissions to fetch.
+  // The Submissions are grouped by categories of EnhancedStatus(es) (the 'latestEnhancedStatus' field).
+  statusGroups: Seq[StatusGroup],
 
-  /* When NOT None, select what StatusGroup documents to fetch according to
-      'datetimeForPreviousPage' or 'datetimeForNextPage' or 'page'.
-      When None, fetch the first page of the first StatusGroup which has documents.
-      When None, 'datetimeForPreviousPage' and 'datetimeForNextPage' and 'page' are ignored. */
-  statusGroup: Option[StatusGroup] = None,
-
-  // Only used when 'statusGroup' is NOT None and 'page' is NOT '0 or 1' (None or other values).
-  // When NOT None, fetch the previous page. Alternative to 'datetimeForNextPage'.
+  // 'enhancedStatusLastUpdated' of the first Submission in the last page/batch of Submissions returned.
+  // Used to fetch the previous page.
   datetimeForPreviousPage: Option[ZonedDateTime] = None,
 
-  // Only used when 'statusGroup' is NOT None and 'page' is NOT '0 or 1' (None or other values)
-  // and 'datetimeForPreviousPage' is None. When NOT None, fetch the next page.
+  // 'enhancedStatusLastUpdated' of the last Submission in the last page/batch of Submissions returned.
+  // Used to fetch the next page.
   datetimeForNextPage: Option[ZonedDateTime] = None,
 
-  /* Only used when 'statusGroup' is NOT None.
-      When '0 or 1', fetch the first page of StatusGroup documents.
-      When None and 'datetimeForPreviousPage' and 'datetimeForNextPage' are NONE, fetch the last page.
-      When NOT '0 and 1' and 'datetimeForPreviousPage' and 'datetimeForNextPage' are NONE, fetch a specific page. */
-  page: Option[Int] = None
+  // Specify what page of Submissions to fetch according to the 'dashboardIdx' index.
+  page: Option[Int] = None,
+
+  // Specify the max number of Submissions to include in the page/batch.
+  limit: Int
 )
 
 object FetchSubmissionPageData {

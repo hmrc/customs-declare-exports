@@ -112,15 +112,6 @@ class EnhancedStatusSpec extends UnitSpec {
     }
   }
 
-  "EnhancedStatus.fromEnhancedStatus" should {
-    "return a Set containing the corresponding EnhancedStatus values as text" in {
-      actionRequiredStatuses.forall(fromEnhancedStatus(_) == actionRequiredStatuses_text)
-      cancelledStatuses.forall(fromEnhancedStatus(_) == cancelledStatuses_text)
-      rejectedStatuses.forall(fromEnhancedStatus(_) == rejectedStatuses_text)
-      submittedStatuses.forall(fromEnhancedStatus(_) == submittedStatuses_text)
-    }
-  }
-
   "EnhancedStatus.toStatusGroup" should {
     "return a Set containing the corresponding EnhancedStatus values as text" in {
       actionRequiredStatuses.forall(toStatusGroup(_) == ActionRequiredStatuses)

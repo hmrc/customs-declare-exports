@@ -23,6 +23,8 @@ import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.libs.json.{JsBoolean, Json}
 import repositories.RepositoryOps
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.fromStatusGroup
+import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.StatusGroup
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission}
 import uk.gov.hmrc.exports.repositories.SubmissionRepository.dashBoardIndex
 import uk.gov.hmrc.mongo.MongoComponent
@@ -51,18 +53,16 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     findOneAndUpdate(filter, update)
   }
 
-  def countSubmissionsInGroup(eori: String, statusGroup: Set[String]): Future[Int] =
-    if (statusGroup.isEmpty) Future.successful(0)
-    else
-      collection
-        .countDocuments(fetchFilter(eori, statusGroup))
-        .toFuture()
-        .map(_.toInt)
+  def countSubmissionsInGroup(eori: String, statusGroup: StatusGroup): Future[Int] =
+    collection
+      .countDocuments(fetchFilter(eori, statusGroup))
+      .toFuture()
+      .map(_.toInt)
 
   private lazy val ascending = BsonDocument(Json.obj("enhancedStatusLastUpdated" -> 1).toString)
   private lazy val descending = BsonDocument(Json.obj("enhancedStatusLastUpdated" -> -1).toString)
 
-  def fetchFirstPage(eori: String, statusGroup: Set[String], limit: Int): Future[Seq[Submission]] =
+  def fetchFirstPage(eori: String, statusGroup: StatusGroup, limit: Int): Future[Seq[Submission]] =
     collection
       .find(fetchFilter(eori, statusGroup))
       .hintString(dashBoardIndex)
@@ -70,7 +70,7 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
       .sort(descending)
       .toFuture()
 
-  def fetchLastPage(eori: String, statusGroup: Set[String], limit: Int): Future[Seq[Submission]] =
+  def fetchLastPage(eori: String, statusGroup: StatusGroup, limit: Int): Future[Seq[Submission]] =
     collection
       .find(fetchFilter(eori, statusGroup))
       .hintString(dashBoardIndex)
@@ -79,7 +79,7 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
       .toFuture()
       .map(_.reverse)
 
-  def fetchLoosePage(eori: String, statusGroup: Set[String], page: Int, limit: Int): Future[Seq[Submission]] =
+  def fetchLoosePage(eori: String, statusGroup: StatusGroup, page: Int, limit: Int): Future[Seq[Submission]] =
     collection
       .find(fetchFilter(eori, statusGroup))
       .hintString(dashBoardIndex)
@@ -88,7 +88,7 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
       .sort(descending)
       .toFuture()
 
-  def fetchNextPage(eori: String, statusGroup: Set[String], statusLastUpdated: ZonedDateTime, limit: Int): Future[Seq[Submission]] =
+  def fetchNextPage(eori: String, statusGroup: StatusGroup, statusLastUpdated: ZonedDateTime, limit: Int): Future[Seq[Submission]] =
     collection
       .find(fetchFilter(eori, statusGroup, statusLastUpdated, "lt"))
       .hintString(dashBoardIndex)
@@ -96,7 +96,7 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
       .sort(descending)
       .toFuture()
 
-  def fetchPreviousPage(eori: String, statusGroup: Set[String], statusLastUpdated: ZonedDateTime, limit: Int): Future[Seq[Submission]] =
+  def fetchPreviousPage(eori: String, statusGroup: StatusGroup, statusLastUpdated: ZonedDateTime, limit: Int): Future[Seq[Submission]] =
     collection
       .find(fetchFilter(eori, statusGroup, statusLastUpdated, "gt"))
       .hintString(dashBoardIndex)
@@ -105,22 +105,22 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
       .toFuture()
       .map(_.reverse)
 
-  private def fetchFilter(eori: String, statusGroup: Set[String]): Bson = {
+  private def fetchFilter(eori: String, statusGroup: StatusGroup): Bson = {
     val filter =
       s"""
          |{
          |  "eori": "$eori",
-         |  "latestEnhancedStatus": { "$$in": [ ${statusGroup.map(s => s""""$s"""").mkString(",")} ] }
+         |  "latestEnhancedStatus": { "$$in": [ ${fromStatusGroup(statusGroup).map(s => s""""$s"""").mkString(",")} ] }
          |}""".stripMargin
     BsonDocument(filter)
   }
 
-  private def fetchFilter(eori: String, statusGroup: Set[String], statusLastUpdated: ZonedDateTime, comp: String): Bson = {
+  private def fetchFilter(eori: String, statusGroup: StatusGroup, statusLastUpdated: ZonedDateTime, comp: String): Bson = {
     val filter =
       s"""
          |{
          |  "eori": "$eori",
-         |  "latestEnhancedStatus": { "$$in": [ ${statusGroup.map(s => s""""$s"""").mkString(",")} ] },
+         |  "latestEnhancedStatus": { "$$in": [ ${fromStatusGroup(statusGroup).map(s => s""""$s"""").mkString(",")} ] },
          |  "enhancedStatusLastUpdated": { "$$$comp": "${statusLastUpdated}" }
          |}""".stripMargin
     BsonDocument(filter)

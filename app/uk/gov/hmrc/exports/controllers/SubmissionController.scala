@@ -21,8 +21,8 @@ import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData.DEFAULT_LIMIT
-import uk.gov.hmrc.exports.models.declaration.submissions.{EnhancedStatus, StatusGroup, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.models.declaration.submissions.Action.defaultDateTimeZone
+import uk.gov.hmrc.exports.models.declaration.submissions.{EnhancedStatus, StatusGroup, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.services.SubmissionService
 
 import java.time.{Instant, ZoneId, ZonedDateTime}
@@ -49,14 +49,17 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
   }
 
   val fetchPage: Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    val submissionPageData = genFetchSubmissionPageData
-    submissionPageData.statusGroup.fold {
-      submissionService.fetchFirstPage(request.eori.value, submissionPageData.limit).map(Ok(_))
+    val fetchData = genFetchSubmissionPageData
+
+    fetchData.statusGroups.headOption.fold {
+      Future.successful(BadRequest("'groups' parameter must be specified"))
     } { statusGroup =>
-      if (submissionPageData.page.exists(_ <= 1))
-        submissionService.fetchFirstPage(request.eori.value, statusGroup, submissionPageData.limit).map(Ok(_))
-      else
-        submissionService.fetchPage(request.eori.value, statusGroup, submissionPageData).map(Ok(_))
+      if (fetchData.statusGroups.size > 1)
+        submissionService.fetchFirstPage(request.eori.value, fetchData.statusGroups, fetchData.limit).map(Ok(_))
+      else if (fetchData.page.exists(_ == 1))
+        submissionService.fetchFirstPage(request.eori.value, statusGroup, fetchData.limit).map(Ok(_))
+      else if (fetchData.page.exists(_ < 1)) Future.successful(BadRequest("Illegal 'page' parameter. Must be >= 1"))
+      else submissionService.fetchPage(request.eori.value, statusGroup, fetchData).map(Ok(_))
     }
   }
 
@@ -90,12 +93,17 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
     def parse(datetime: String): ZonedDateTime =
       Instant.parse(datetime).atZone(ZoneId.of("UTC"))
 
+    val statusGroups = request
+      .getQueryString("groups")
+      .map(_.split(",").map(StatusGroup.withName).toList)
+      .getOrElse(Seq.empty)
+
     FetchSubmissionPageData(
-      limit = request.getQueryString("limit").fold(DEFAULT_LIMIT)(_.toInt),
-      statusGroup = request.getQueryString("group").map(StatusGroup.withName),
+      statusGroups = statusGroups,
       datetimeForPreviousPage = request.getQueryString("datetimeForPreviousPage").map(parse),
       datetimeForNextPage = request.getQueryString("datetimeForNextPage").map(parse),
-      page = request.getQueryString("page").map(_.toInt)
+      page = request.getQueryString("page").map(_.toInt),
+      limit = request.getQueryString("limit").fold(DEFAULT_LIMIT)(_.toInt)
     )
   }
 }

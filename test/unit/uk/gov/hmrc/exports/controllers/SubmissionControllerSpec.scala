@@ -111,23 +111,24 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
     val pageOfSubmissions = PageOfSubmissions(SubmittedStatuses, 0, Seq.empty)
 
     "call SubmissionService.fetchFirstPage for fetching the 1st page of the 1st StatusGroup containing submissions" in {
-      when(submissionService.fetchFirstPage(any(), any[Int])).thenReturn(Future.successful(pageOfSubmissions))
+      val statuses: Seq[Value] = List(ActionRequiredStatuses, CancelledStatuses)
+      when(submissionService.fetchFirstPage(any(), any[Seq[StatusGroup]], any[Int])).thenReturn(Future.successful(pageOfSubmissions))
 
-      val result = controller.fetchPage(FakeRequest("GET", "/submission-page"))
+      val result = controller.fetchPage(FakeRequest("GET", s"/submission-page?groups=${statuses.mkString(",")}"))
 
       status(result) mustBe OK
-      verify(submissionService).fetchFirstPage(any(), eqTo(DEFAULT_LIMIT))
-      verify(submissionService, never).fetchFirstPage(any(), any(), any())
+      verify(submissionService).fetchFirstPage(any(), eqTo(statuses), eqTo(DEFAULT_LIMIT))
+      verify(submissionService, never).fetchFirstPage(any(), any[StatusGroup], any())
       verify(submissionService, never).fetchPage(any(), any(), any())
     }
 
     "call SubmissionService.fetchFirstPage for fetching the first page of a specific StatusGroup" in {
       when(submissionService.fetchFirstPage(any(), any[StatusGroup], any[Int])).thenReturn(Future.successful(pageOfSubmissions))
 
-      val result = controller.fetchPage(FakeRequest("GET", "/submission-page?group=rejected&page=1"))
+      val result = controller.fetchPage(FakeRequest("GET", "/submission-page?groups=rejected&page=1"))
 
       status(result) mustBe OK
-      verify(submissionService, never).fetchFirstPage(any(), any())
+      verify(submissionService, never).fetchFirstPage(any(), any[Seq[StatusGroup]], any())
       verify(submissionService).fetchFirstPage(any(), eqTo(RejectedStatuses), eqTo(DEFAULT_LIMIT))
       verify(submissionService, never).fetchPage(any(), any(), any())
     }
@@ -139,15 +140,15 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
       val datetime = ZonedDateTime.now(ZoneId.of("UTC"))
       val instant = datetime.toInstant
 
-      val query = s"/submission-page?group=action&page=2&datetimeForPreviousPage=${instant}&datetimeForNextPage=${instant}&limit=2"
+      val query = s"/submission-page?groups=action&page=2&datetimeForPreviousPage=${instant}&datetimeForNextPage=${instant}&limit=2"
       val result = controller.fetchPage(FakeRequest("GET", query))
 
       status(result) mustBe OK
 
-      verify(submissionService, never).fetchFirstPage(any(), any())
-      verify(submissionService, never).fetchFirstPage(any(), any(), any())
+      verify(submissionService, never).fetchFirstPage(any(), any[Seq[StatusGroup]], any())
+      verify(submissionService, never).fetchFirstPage(any(), any[StatusGroup], any())
 
-      val submissionPageData = FetchSubmissionPageData(2, Some(ActionRequiredStatuses), Some(datetime), Some(datetime), Some(2))
+      val submissionPageData = FetchSubmissionPageData(List(ActionRequiredStatuses), Some(datetime), Some(datetime), Some(2), 2)
       verify(submissionService).fetchPage(any(), eqTo(ActionRequiredStatuses), eqTo(submissionPageData))
     }
   }
