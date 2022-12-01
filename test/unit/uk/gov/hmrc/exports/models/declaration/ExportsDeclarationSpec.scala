@@ -141,6 +141,14 @@ object ExportsDeclarationSpec {
       |  "updatedDateTime": "2019-12-10T15:53:13.697Z",
       |  "type": "STANDARD",
       |  "additionalDeclarationType": "D",
+      |  "intermediaryConsignmentReferences": {
+      |    "ducr": {
+      |      "ducr": "8GB123451068100-101SHIP1"
+      |    },
+      |    "traderReference": {
+      |      "value": "101SHIP1"
+      |    }
+      |  },
       |  "consignmentReferences": {
       |    "ducr": {
       |      "ducr": "8GB123451068100-101SHIP1"

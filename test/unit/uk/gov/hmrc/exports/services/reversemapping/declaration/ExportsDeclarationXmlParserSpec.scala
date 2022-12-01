@@ -108,6 +108,16 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec {
       }
     }
 
+    "set ExportsDeclaration.intermediaryConsignmentReferences to None" in {
+      val xml = ExportsDeclarationXmlParserSpec.inputXml
+
+      val result = exportsDeclarationXmlParser.fromXml(mappingContext, xml)
+
+      result.isRight mustBe true
+      result.toOption.get mustBe an[ExportsDeclaration]
+      result.toOption.get.intermediaryConsignmentReferences mustBe None
+    }
+
     "set ExportsDeclaration.linkDucrToMucr to 'yes'" when {
       "ExportsDeclaration.mucr is NOT None" in {
         when(mucrParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(MUCR("mucr"))))
