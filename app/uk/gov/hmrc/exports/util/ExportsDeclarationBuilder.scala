@@ -49,6 +49,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     `type` = DeclarationType.STANDARD,
     dispatchLocation = None,
     additionalDeclarationType = None,
+    intermediaryConsignmentReferences = None,
     consignmentReferences = None,
     linkDucrToMucr = None,
     mucr = None,
@@ -81,11 +82,6 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
   def withAdditionalDeclarationType(decType: AdditionalDeclarationType = AdditionalDeclarationType.STANDARD_PRE_LODGED): ExportsDeclarationModifier =
     _.copy(additionalDeclarationType = Some(decType))
-
-  def withoutDispatchLocation: ExportsDeclarationModifier = _.copy(dispatchLocation = None)
-
-  def withDispatchLocation(location: String = "GB"): ExportsDeclarationModifier =
-    _.copy(dispatchLocation = Some(DispatchLocation(location)))
 
   def withoutConsignmentReferences(): ExportsDeclarationModifier = _.copy(consignmentReferences = None)
 
