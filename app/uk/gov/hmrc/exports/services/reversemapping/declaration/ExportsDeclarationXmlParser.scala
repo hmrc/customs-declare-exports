@@ -65,7 +65,6 @@ class ExportsDeclarationXmlParser @Inject() (
       createdDateTime = Instant.now(),
       updatedDateTime = Instant.now(),
       `type` = declarationType,
-      dispatchLocation = None,
       additionalDeclarationType = additionalDeclarationType,
       consignmentReferences = consignmentReferences,
       linkDucrToMucr = mucr.map(_ => YesNoAnswer.yes),
