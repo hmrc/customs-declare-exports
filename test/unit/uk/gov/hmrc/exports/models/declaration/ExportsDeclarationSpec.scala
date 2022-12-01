@@ -75,6 +75,7 @@ object ExportsDeclarationSpec {
   private val updatedDate = Instant.MAX
   private val dispatchLocation = mock[DispatchLocation]
   private val additionalDeclarationType = mock[AdditionalDeclarationType]
+  private val intermediaryConsignmentReferences = mock[IntermediaryConsignmentReferences]
   private val consignmentReferences = mock[ConsignmentReferences]
   private val mucr = MUCR("CZYX123A")
   private val parties = mock[Parties]
@@ -91,6 +92,7 @@ object ExportsDeclarationSpec {
     `type` = `type`,
     dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),
+    intermediaryConsignmentReferences = Some(intermediaryConsignmentReferences),
     consignmentReferences = Some(consignmentReferences),
     linkDucrToMucr = Some(YesNoAnswer.yes),
     mucr = Some(mucr),
@@ -113,8 +115,8 @@ object ExportsDeclarationSpec {
     createdDateTime = createdDate,
     updatedDateTime = updatedDate,
     `type` = `type`,
-    dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),
+    intermediaryConsignmentReferences = Some(intermediaryConsignmentReferences),
     consignmentReferences = Some(consignmentReferences),
     linkDucrToMucr = Some(YesNoAnswer.yes),
     mucr = Some(mucr),
@@ -138,9 +140,6 @@ object ExportsDeclarationSpec {
       |  "createdDateTime": "2019-12-10T15:52:32.681Z",
       |  "updatedDateTime": "2019-12-10T15:53:13.697Z",
       |  "type": "STANDARD",
-      |  "dispatchLocation": {
-      |    "dispatchLocation": "EX"
-      |  },
       |  "additionalDeclarationType": "D",
       |  "consignmentReferences": {
       |    "ducr": {

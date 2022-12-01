@@ -18,8 +18,7 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 
-
-case class IntermediaryConsignmentReferences (ducr: Option[DUCR], traderReference: Option[TraderReference])
+case class IntermediaryConsignmentReferences(ducr: Option[DUCR], traderReference: Option[TraderReference])
 
 object IntermediaryConsignmentReferences {
   implicit val format: OFormat[IntermediaryConsignmentReferences] = Json.format[IntermediaryConsignmentReferences]

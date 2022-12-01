@@ -29,7 +29,6 @@ import scala.concurrent.duration.Duration
 object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
 
   val declaration = aDeclaration(
-    withDispatchLocation(),
     withAdditionalDeclarationType(),
     withConsignmentReferences(),
     withDepartureTransport(ModeOfTransportCode.Maritime, "11", "SHIP1"),
