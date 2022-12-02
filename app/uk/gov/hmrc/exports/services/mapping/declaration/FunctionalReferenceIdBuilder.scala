@@ -27,7 +27,7 @@ class FunctionalReferenceIdBuilder @Inject() () extends ModifyingBuilder[Exports
   override def buildThenAdd(exportsCacheModel: ExportsDeclaration, declaration: Declaration): Unit =
     exportsCacheModel.consignmentReferences.foreach { references =>
       if (references.lrn.nonEmpty) {
-        buildThenAdd(references.lrn, declaration)
+        buildThenAdd(references.lrn.get, declaration)
       }
     }
 
