@@ -129,7 +129,7 @@ class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
     verify(mockPreviousDocumentBuilder)
       .buildThenAdd(
-        refEq(ConsignmentReferences(DUCR(VALID_DUCR), VALID_LRN, Some(VALID_PERSONAL_UCR), None, Some(ExportsTestData.mrn))),
+        refEq(ConsignmentReferences(DUCR(VALID_DUCR), Some(VALID_LRN), Some(VALID_PERSONAL_UCR), None, Some(ExportsTestData.mrn))),
         any[DeclarationType],
         any[Declaration.GoodsShipment]
       )

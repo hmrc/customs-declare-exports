@@ -89,7 +89,7 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with GuiceOneAppPerSui
 
       newDec.eori mustBe eoriSpecified
       newSubmission.eori mustBe eoriSpecified
-      newSubmission.lrn mustBe newDec.consignmentReferences.get.lrn
+      newSubmission.lrn mustBe newDec.consignmentReferences.get.lrn.get
       newSubmission.mrn.get mustBe newParsedNotification.details.mrn
       newSubmission.ducr mustBe newDec.consignmentReferences.get.ducr.ducr
       newParsedNotification.details.mrn mustBe newDec.consignmentReferences.get.mrn.get
