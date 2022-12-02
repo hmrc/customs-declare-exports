@@ -18,13 +18,14 @@ package uk.gov.hmrc.exports.scheduler.jobs
 
 import org.mongodb.scala.bson.BsonDocument
 import play.api.Logging
+import play.api.libs.json.Json
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
-import uk.gov.hmrc.exports.repositories._
+import uk.gov.hmrc.exports.repositories.{PurgeSubmissionsTransactionalOps, SubmissionRepository}
 
-import java.time._
+import java.time.{LocalTime, ZoneId, ZonedDateTime}
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration._
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -41,7 +42,13 @@ class PurgeAncientSubmissionsJob @Inject() (
 
   override def firstRunTime: Option[LocalTime] = Some(appConfig.purgeAncientSubmissions.elapseTime)
 
-  val expiryDate = ZonedDateTime.now(appConfig.clock).minusDays(180)
+  lazy val expiryDate = {
+    val days = 180
+    val oneMilliSec = 1000000
+    ZonedDateTime.now(ZoneId.of("UTC")).minusDays(days).withNano(oneMilliSec)
+  }
+
+  private lazy val expiryDateAsString = Json.toJson(expiryDate).toString
 
   override def execute(): Future[Unit] = {
     logger.info(s"Starting PurgeAncientSubmissionsJob. Removing Submissions having 'enhancedStatusLastUpdated' older than $expiryDate")
@@ -55,10 +62,12 @@ class PurgeAncientSubmissionsJob @Inject() (
   private lazy val filter = {
     val statusesToRemove =
       List(CANCELLED, DECLARATION_HANDLED_EXTERNALLY, ERRORS, EXPIRED_NO_ARRIVAL, EXPIRED_NO_DEPARTURE, GOODS_HAVE_EXITED, WITHDRAWN)
-    BsonDocument(s"""
+    val jsonString =
+      s"""
          |{
          |  "latestEnhancedStatus": { "$$in": [ ${statusesToRemove.map(s => s""""$s"""").mkString(",")} ] },
-         |  "enhancedStatusLastUpdated": { "$$lte": "${expiryDate}" }
-         |}""".stripMargin)
+         |  "enhancedStatusLastUpdated": { "$$lte": ${expiryDateAsString} }
+         |}""".stripMargin
+    BsonDocument(jsonString)
   }
 }

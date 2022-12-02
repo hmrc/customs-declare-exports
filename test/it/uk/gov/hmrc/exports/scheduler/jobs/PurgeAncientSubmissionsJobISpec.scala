@@ -1,7 +1,6 @@
 package uk.gov.hmrc.exports.scheduler.jobs
 
 import uk.gov.hmrc.exports.base.IntegrationTestPurgeSubmissionsToolSpec
-import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
@@ -9,20 +8,18 @@ import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus
 
-import java.time.{Clock, ZonedDateTime}
+import java.time.{ZoneId, ZonedDateTime}
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsToolSpec with ExportsDeclarationBuilder {
+class PurgeAncientSubmissionsJobISpec extends IntegrationTestPurgeSubmissionsToolSpec with ExportsDeclarationBuilder {
 
-  import PurgeAncientSubmissionsJobSpec._
+  import PurgeAncientSubmissionsJobISpec._
 
   val testJob: PurgeAncientSubmissionsJob = instanceOf[PurgeAncientSubmissionsJob]
 
-  private val clock: Clock = instanceOf[AppConfig].clock
-
   val enhancedStatusLastUpdatedOlderThan = testJob.expiryDate
-  val enhancedStatusLastUpdatedRecent = ZonedDateTime.now(clock).minusDays(1)
+  val enhancedStatusLastUpdatedRecent = ZonedDateTime.now(ZoneId.of("UTC")).minusDays(1)
 
   "PurgeAncientSubmissionsJob" should {
 
@@ -305,7 +302,7 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
   }
 }
 
-object PurgeAncientSubmissionsJobSpec {
+object PurgeAncientSubmissionsJobISpec {
 
   val actionIds: Seq[String] = Seq(
     "1a5ef91c-a62a-4337-b51a-750b175fe6d1",
