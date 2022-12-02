@@ -21,16 +21,18 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.{Monitors, Timers}
-import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.CUSTOMS_POSITION_GRANTED
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
+import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.{StatusGroup, SubmittedStatuses}
 import uk.gov.hmrc.exports.models.declaration.submissions._
+import uk.gov.hmrc.exports.models.{Eori, FetchSubmissionPageData, PageOfSubmissions}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import javax.inject.{Inject, Singleton}
+import scala.annotation.nowarn
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -51,8 +53,65 @@ class SubmissionService @Inject() (
       case _                                                            => Future.successful(NotFound)
     }
 
-  def findAllSubmissions(eori: String): Future[Seq[Submission]] =
-    submissionRepository.findAll(eori)
+  def fetchFirstPage(eori: String, statusGroups: Seq[StatusGroup], limit: Int): Future[PageOfSubmissions] = {
+    // When multiple StatusGroup(s) are provided, the fetch proceeds in sequence group by group.
+    // When a page/batch of Submissions (the first page actually, 1 to limit) is found for a group,
+    // that page is the result of the fetch. The successive groups are ignored.
+
+    @nowarn("msg=match may not be exhaustive")
+    def loopOnGroups(f: StatusGroup => Future[Seq[Submission]])(cond: Seq[Submission] => Boolean)(seq: Seq[StatusGroup]): Future[Seq[Submission]] =
+      seq match {
+        case head :: tail => f(head).filter(cond).recoverWith { case _: Throwable => loopOnGroups(f)(cond)(tail) }
+        case Nil          => Future.successful(Seq.empty)
+      }
+
+    for {
+      submissions <- loopOnGroups(submissionRepository.fetchFirstPage(eori, _, limit))(_.nonEmpty)(statusGroups)
+      totalSubmissionsInGroup <- countSubmissionsInGroup(eori, submissions)
+    } yield {
+      val statusGroup = submissions.headOption.flatMap(_.latestEnhancedStatus.map(toStatusGroup)).getOrElse(SubmittedStatuses)
+      PageOfSubmissions(statusGroup, totalSubmissionsInGroup, submissions)
+    }
+  }
+
+  def fetchFirstPage(eori: String, statusGroup: StatusGroup, limit: Int): Future[PageOfSubmissions] =
+    // Fetch first page of submissions for the provided StatusGroup
+    fetchPage(eori, statusGroup, () => submissionRepository.fetchFirstPage(eori, statusGroup, limit))
+
+  def fetchPage(eori: String, statusGroup: StatusGroup, fetchPageData: FetchSubmissionPageData): Future[PageOfSubmissions] = {
+
+    val fetchFunction = (fetchPageData.datetimeForPreviousPage, fetchPageData.datetimeForNextPage, fetchPageData.page) match {
+      case (Some(datetimeForPreviousPage), _, _) =>
+        // datetimeForPreviousPage provided => fetching the page BEFORE the last one returned
+        () => submissionRepository.fetchPreviousPage(eori, statusGroup, datetimeForPreviousPage, fetchPageData.limit)
+
+      case (_, Some(datetimeForNextPage), _) =>
+        // datetimeForPreviousPage NOT provided and datetimeForNextPage provided => fetching the page AFTER the last one returned
+        () => submissionRepository.fetchNextPage(eori, statusGroup, datetimeForNextPage, fetchPageData.limit)
+
+      case (_, _, Some(page)) =>
+        // datetimeForPreviousPage and datetimeForNextPage NOT provided and page provided => fetching a specific page
+        () => submissionRepository.fetchLoosePage(eori, statusGroup, page, fetchPageData.limit)
+
+      case _ =>
+        // datetimeForPreviousPage, datetimeForNextPage and page NOT provided => fetching the last page
+        () => submissionRepository.fetchLastPage(eori, statusGroup, fetchPageData.limit)
+    }
+
+    fetchPage(eori, statusGroup, fetchFunction)
+  }
+
+  private def fetchPage(eori: String, statusGroup: StatusGroup, f: () => Future[Seq[Submission]]): Future[PageOfSubmissions] =
+    for {
+      submissions <- f()
+      totalSubmissionsInGroup <- countSubmissionsInGroup(eori, submissions)
+    } yield PageOfSubmissions(statusGroup, totalSubmissionsInGroup, submissions)
+
+  private def countSubmissionsInGroup(eori: String, submissions: Seq[Submission]): Future[Int] =
+    // When no submissions are found, there is no need to run an unnecessary 'count' query.
+    submissions.headOption
+      .flatMap(_.latestEnhancedStatus.map(toStatusGroup))
+      .fold(Future.successful(0))(submissionRepository.countSubmissionsInGroup(eori, _))
 
   def findSubmission(eori: String, id: String): Future[Option[Submission]] =
     submissionRepository.findById(eori, id)

@@ -36,7 +36,7 @@ class GenerateDraftDecController @Inject() (declarationRepository: DeclarationRe
 
   implicit val format = Json.format[CreateDraftDecDocumentsRequest]
 
-  def createDraftDec(): Action[CreateDraftDecDocumentsRequest] = Action.async(parsingJson[CreateDraftDecDocumentsRequest]) { implicit request =>
+  val createDraftDec: Action[CreateDraftDecDocumentsRequest] = Action.async(parsingJson[CreateDraftDecDocumentsRequest]) { implicit request =>
     for {
       declaration <- declarationRepository.create(createDeclaration())
     } yield Ok(Json.obj("declarationId" -> declaration.id))
@@ -44,8 +44,10 @@ class GenerateDraftDecController @Inject() (declarationRepository: DeclarationRe
 }
 
 object GenerateDraftDecController extends ExportsDeclarationBuilder {
+
   case class CreateDraftDecDocumentsRequest(eori: String, itemCount: Int = 1, lrn: String, ducr: Option[String])
 
+  // scalastyle:off
   def createDeclaration()(implicit request: Request[CreateDraftDecDocumentsRequest]) = {
 
     val consignmentRef = request.body.ducr
@@ -124,4 +126,5 @@ object GenerateDraftDecController extends ExportsDeclarationBuilder {
       withReadyForSubmission()
     )
   }
+  // scalastyle:on
 }

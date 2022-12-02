@@ -30,6 +30,14 @@ object EnhancedStatus extends Enumeration {
     DECLARATION_HANDLED_EXTERNALLY, ERRORS, EXPIRED_NO_ARRIVAL, EXPIRED_NO_DEPARTURE, GOODS_ARRIVED, GOODS_ARRIVED_MESSAGE, GOODS_HAVE_EXITED,
     QUERY_NOTIFICATION_MESSAGE, RECEIVED, RELEASED, UNDERGOING_PHYSICAL_CHECK, WITHDRAWN, PENDING, REQUESTED_CANCELLATION, UNKNOWN = Value
 
+  lazy val actionRequiredStatuses = Set(ADDITIONAL_DOCUMENTS_REQUIRED, QUERY_NOTIFICATION_MESSAGE)
+
+  lazy val cancelledStatuses = Set(CANCELLED, EXPIRED_NO_ARRIVAL, WITHDRAWN, EXPIRED_NO_DEPARTURE)
+
+  lazy val rejectedStatuses = Set(ERRORS)
+
+  lazy val submittedStatuses = values &~ rejectedStatuses &~ cancelledStatuses &~ actionRequiredStatuses
+
   private val mappingForACCEPTED = (notificationSummaries: Seq[NotificationSummary]) =>
     if (notificationSummaries.exists(_.enhancedStatus == RECEIVED)) GOODS_ARRIVED_MESSAGE else GOODS_ARRIVED
 
@@ -74,4 +82,45 @@ object EnhancedStatus extends Enumeration {
       case _ => UNKNOWN
     }
   // scalastyle:on
+
+  import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
+
+  lazy val actionRequiredStatuses_text = actionRequiredStatuses.map(_.toString)
+  lazy val cancelledStatuses_text = cancelledStatuses.map(_.toString)
+  lazy val rejectedStatuses_text = rejectedStatuses.map(_.toString)
+  lazy val submittedStatuses_text = submittedStatuses.map(_.toString)
+
+  def fromStatusGroup(group: StatusGroup): Set[String] =
+    group match {
+      case ActionRequiredStatuses => actionRequiredStatuses_text
+      case CancelledStatuses      => cancelledStatuses_text
+      case RejectedStatuses       => rejectedStatuses_text
+      case _                      => submittedStatuses_text
+    }
+
+  def toStatusGroup(status: EnhancedStatus): StatusGroup =
+    if (actionRequiredStatuses.contains(status)) ActionRequiredStatuses
+    else if (cancelledStatuses.contains(status)) CancelledStatuses
+    else if (rejectedStatuses.contains(status)) RejectedStatuses
+    else SubmittedStatuses
+}
+
+object StatusGroup extends Enumeration {
+  type StatusGroup = Value
+  implicit val format: Format[StatusGroup.Value] = EnumJson.format(StatusGroup)
+
+  val ActionRequiredStatuses = Value("action")
+  val CancelledStatuses = Value("cancelled")
+  val RejectedStatuses = Value("rejected")
+  val SubmittedStatuses = Value("submitted")
+
+  import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
+
+  def toEnhancedStatus(group: StatusGroup): Set[EnhancedStatus] =
+    group match {
+      case ActionRequiredStatuses => actionRequiredStatuses
+      case CancelledStatuses      => cancelledStatuses
+      case RejectedStatuses       => rejectedStatuses
+      case _                      => submittedStatuses
+    }
 }

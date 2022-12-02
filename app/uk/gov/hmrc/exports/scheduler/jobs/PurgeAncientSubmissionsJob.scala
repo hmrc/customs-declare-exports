@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs
 
-import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.bson.BsonDocument
 import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
 import uk.gov.hmrc.exports.repositories._
-import uk.gov.hmrc.mongo.play.json.Codecs
 
 import java.time._
 import javax.inject.{Inject, Singleton}
@@ -37,39 +37,28 @@ class PurgeAncientSubmissionsJob @Inject() (
 
   override val name: String = "PurgeAncientSubmissions"
 
-  override def interval: FiniteDuration = jobConfig.interval
-  override def firstRunTime: Option[LocalTime] = Some(jobConfig.elapseTime)
+  override def interval: FiniteDuration = appConfig.purgeAncientSubmissions.interval
 
-  private val jobConfig = appConfig.purgeAncientSubmissions
-  private val clock: Clock = appConfig.clock
+  override def firstRunTime: Option[LocalTime] = Some(appConfig.purgeAncientSubmissions.elapseTime)
 
-  private val latestStatus = "latestEnhancedStatus"
-  private val statusLastUpdated = "enhancedStatusLastUpdated"
-
-  val expiryDate = ZonedDateTime.now(clock).minusDays(180)
-
-  private val latestStatusLookup =
-    in(
-      latestStatus,
-      List(
-        "GOODS_HAVE_EXITED",
-        "DECLARATION_HANDLED_EXTERNALLY",
-        "CANCELLED",
-        "EXPIRED_NO_ARRIVAL",
-        "ERRORS",
-        "EXPIRED_NO_DEPARTURE",
-        "WITHDRAWN"
-      ): _*
-    )
-
-  private def olderThanDate = lte(statusLastUpdated, Codecs.toBson(expiryDate))
+  val expiryDate = ZonedDateTime.now(appConfig.clock).minusDays(180)
 
   override def execute(): Future[Unit] = {
-    logger.info("Starting PurgeAncientSubmissionsJob execution...")
-    submissionRepository.findAll(and(olderThanDate, latestStatusLookup)) flatMap { submissions =>
+    logger.info(s"Starting PurgeAncientSubmissionsJob. Removing Submissions having 'enhancedStatusLastUpdated' older than $expiryDate")
+    submissionRepository.findAll(filter) flatMap { submissions =>
       transactionalOps.removeSubmissionAndNotifications(submissions) map { removed =>
         logger.info(s"Finishing PurgeAncientSubmissionsJob - ${removed.sum} records removed linked to ancient submissions")
       }
     }
+  }
+
+  private lazy val filter = {
+    val statusesToRemove =
+      List(CANCELLED, DECLARATION_HANDLED_EXTERNALLY, ERRORS, EXPIRED_NO_ARRIVAL, EXPIRED_NO_DEPARTURE, GOODS_HAVE_EXITED, WITHDRAWN)
+    BsonDocument(s"""
+         |{
+         |  "latestEnhancedStatus": { "$$in": [ ${statusesToRemove.map(s => s""""$s"""").mkString(",")} ] },
+         |  "enhancedStatusLastUpdated": { "$$lte": "${expiryDate}" }
+         |}""".stripMargin)
   }
 }

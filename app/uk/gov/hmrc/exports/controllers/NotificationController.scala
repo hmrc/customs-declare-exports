@@ -18,7 +18,6 @@ package uk.gov.hmrc.exports.controllers
 
 import com.google.inject.Singleton
 import play.api.mvc._
-import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.util.HeaderValidator
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
@@ -33,17 +32,16 @@ import scala.xml.NodeSeq
 
 @Singleton
 class NotificationController @Inject() (
-  authConnector: AuthConnector,
+  authenticator: Authenticator,
   headerValidator: HeaderValidator,
   metrics: ExportsMetrics,
   notificationsService: NotificationService,
   submissionService: SubmissionService,
-  bodyParsers: PlayBodyParsers,
   cc: ControllerComponents
 )(implicit executionContext: ExecutionContext)
-    extends Authenticator(authConnector, cc) with JSONResponses {
+    extends RESTController(cc) with JSONResponses {
 
-  def findAll(submissionId: String): Action[AnyContent] = authorisedAction(bodyParsers.default) { implicit request =>
+  def findAll(submissionId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     submissionService.findSubmission(request.eori.value, submissionId) flatMap {
       case None             => Future.successful(NotFound)
       case Some(submission) => notificationsService.findAllNotificationsSubmissionRelated(submission).map(Ok(_))

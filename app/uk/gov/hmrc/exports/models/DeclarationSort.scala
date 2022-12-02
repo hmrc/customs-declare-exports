@@ -15,6 +15,7 @@
  */
 
 package uk.gov.hmrc.exports.models
+
 import play.api.libs.json.{Format, Json, OFormat}
 import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.exports.models.SortBy.SortBy
@@ -28,29 +29,29 @@ object DeclarationSort {
   val DEFAULT_DIRECTION = SortDirection.ASC
 
   implicit val format: OFormat[DeclarationSort] = Json.format[DeclarationSort]
-  implicit val bindable: QueryStringBindable[DeclarationSort] =
-    new QueryStringBindable[DeclarationSort] {
-      private val strBinder = implicitly[QueryStringBindable[String]]
-      private def queryParamBy(key: String) = key + "-by"
-      private def queryParamDirection(key: String) = key + "-direction"
 
-      def toSortBy: String => Option[SortBy] = value => SortBy.values.find(_.toString == value)
+  implicit val bindable: QueryStringBindable[DeclarationSort] = new QueryStringBindable[DeclarationSort] {
+    private val strBinder = implicitly[QueryStringBindable[String]]
+    private def queryParamBy(key: String) = key + "-by"
+    private def queryParamDirection(key: String) = key + "-direction"
 
-      def toSortDirection: String => Option[SortDirection] = value => SortDirection.values.find(_.toString == value)
+    def toSortBy: String => Option[SortBy] = value => SortBy.values.find(_.toString == value)
 
-      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, DeclarationSort]] = {
-        val by: SortBy = params.get(queryParamBy(key)).flatMap(_.headOption).flatMap(toSortBy).getOrElse(DEFAULT_BY)
-        val direction = params
-          .get(queryParamDirection(key))
-          .flatMap(_.headOption)
-          .flatMap(toSortDirection)
-          .getOrElse(DEFAULT_DIRECTION)
-        Some(Right(DeclarationSort(by, direction)))
-      }
+    def toSortDirection: String => Option[SortDirection] = value => SortDirection.values.find(_.toString == value)
 
-      override def unbind(key: String, sort: DeclarationSort): String =
-        strBinder.unbind(queryParamBy(key), sort.by.toString) + "&" + strBinder.unbind(queryParamDirection(key), sort.direction.toString)
+    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, DeclarationSort]] = {
+      val by: SortBy = params.get(queryParamBy(key)).flatMap(_.headOption).flatMap(toSortBy).getOrElse(DEFAULT_BY)
+      val direction = params
+        .get(queryParamDirection(key))
+        .flatMap(_.headOption)
+        .flatMap(toSortDirection)
+        .getOrElse(DEFAULT_DIRECTION)
+      Some(Right(DeclarationSort(by, direction)))
     }
+
+    override def unbind(key: String, sort: DeclarationSort): String =
+      strBinder.unbind(queryParamBy(key), sort.by.toString) + "&" + strBinder.unbind(queryParamDirection(key), sort.direction.toString)
+  }
 }
 
 object SortBy extends Enumeration {

@@ -28,7 +28,6 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
 
     "remove all records" when {
       "'submission.statusLastUpdated' is 180 days ago" in {
-
         val submissions: List[Submission] = List(
           submission(
             latestEnhancedStatus = EnhancedStatus.GOODS_HAVE_EXITED,
@@ -93,7 +92,6 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
         )
 
         whenReady {
-
           for {
             _ <- submissionRepository.bulkInsert(submissions)
             _ <- declarationRepository.bulkInsert(declarations)
@@ -105,218 +103,206 @@ class PurgeAncientSubmissionsJobSpec extends IntegrationTestPurgeSubmissionsTool
             dec <- declarationRepository.findAll()
             unt <- unparsedNotificationRepository.count(ProcessingStatus.ToDo)
           } yield (sub.size, not.size, dec.size, unt)
-
-        } { case (submission, declarations, notifications, unparsed) =>
-          submission mustBe 0
+        } { case (submissions, declarations, notifications, unparsed) =>
+          submissions mustBe 0
           declarations mustBe 0
           notifications mustBe 0
           unparsed mustBe 0
         }
-
       }
-
-      "remove zero records" when {
-
-        "'submission.statusLastUpdated' is less than than 180 days ago" in {
-
-          val submissions: List[Submission] = List(
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
-              latestEnhancedStatus = EnhancedStatus.GOODS_HAVE_EXITED,
-              actionIds = Seq(actionIds.head, actionIds(1), actionIds(2), actionIds(3)),
-              uuid = uuids.head
-            ),
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
-              latestEnhancedStatus = EnhancedStatus.DECLARATION_HANDLED_EXTERNALLY,
-              actionIds = Seq.empty,
-              uuid = uuids(1)
-            ),
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
-              latestEnhancedStatus = EnhancedStatus.CANCELLED,
-              actionIds = Seq.empty,
-              uuid = uuids(2)
-            ),
-            submission(
-              latestEnhancedStatus = EnhancedStatus.EXPIRED_NO_ARRIVAL,
-              actionIds = Seq.empty,
-              uuid = uuids(3),
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
-            ),
-            submission(
-              latestEnhancedStatus = EnhancedStatus.ERRORS,
-              actionIds = Seq.empty,
-              uuid = uuids(4),
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
-            ),
-            submission(
-              latestEnhancedStatus = EnhancedStatus.WITHDRAWN,
-              actionIds = Seq(actionIds(20), actionIds(21), actionIds(22), actionIds(23)),
-              uuid = uuids(5),
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
-            ),
-            submission(
-              latestEnhancedStatus = EnhancedStatus.EXPIRED_NO_DEPARTURE,
-              actionIds = Seq.empty,
-              uuid = uuids(6),
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
-            ),
-            submission(
-              latestEnhancedStatus = EnhancedStatus.PENDING,
-              actionIds = Seq.empty,
-              uuid = uuids.head,
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
-            )
-          )
-
-          val declarations: List[ExportsDeclaration] = List(aDeclaration(withId(uuids.head), withEori(eori)))
-          val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds.head, actionId = actionIds.head))
-          val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds.head, actionIds.head))
-
-          whenReady {
-
-            for {
-              _ <- submissionRepository.bulkInsert(submissions)
-              _ <- declarationRepository.bulkInsert(declarations)
-              _ <- notificationRepository.bulkInsert(notifications)
-              _ <- unparsedNotificationRepository.pushNewBatch(unparsedNotifications)
-              _ <- testJob.execute()
-              sub <- submissionRepository.findAll()
-              not <- notificationRepository.findAll()
-              dec <- declarationRepository.findAll()
-              unt <- unparsedNotificationRepository.count(ProcessingStatus.ToDo)
-            } yield (sub.size, not.size, dec.size, unt)
-          } { case (subCount, decCount, notCount, unCount) =>
-            subCount mustBe submissions.size
-            decCount mustBe declarations.size
-            notCount mustBe notifications.size
-            unCount mustBe unparsedNotifications.size
-          }
-
-        }
-
-        "'submission.latestEnhancedStatus' is other" in {
-
-          val submissions: List[Submission] = List(
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
-              latestEnhancedStatus = EnhancedStatus.ADDITIONAL_DOCUMENTS_REQUIRED,
-              actionIds = Seq(actionIds.head),
-              uuid = uuids.head
-            ),
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
-              latestEnhancedStatus = EnhancedStatus.AMENDED,
-              actionIds = Seq.empty,
-              uuid = uuids.tail.head
-            ),
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
-              latestEnhancedStatus = EnhancedStatus.AWAITING_EXIT_RESULTS,
-              actionIds = Seq.empty,
-              uuid = uuids(2)
-            ),
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
-              latestEnhancedStatus = EnhancedStatus.CLEARED,
-              actionIds = Seq.empty,
-              uuid = uuids(3)
-            ),
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
-              latestEnhancedStatus = EnhancedStatus.CUSTOMS_POSITION_DENIED,
-              actionIds = Seq.empty,
-              uuid = uuids(4)
-            ),
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
-              latestEnhancedStatus = EnhancedStatus.CUSTOMS_POSITION_GRANTED,
-              actionIds = Seq.empty,
-              uuid = uuids(5)
-            ),
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
-              latestEnhancedStatus = EnhancedStatus.GOODS_ARRIVED,
-              actionIds = Seq.empty,
-              uuid = uuids(6)
-            ),
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
-              latestEnhancedStatus = EnhancedStatus.GOODS_ARRIVED_MESSAGE,
-              actionIds = Seq.empty,
-              uuid = uuids(7)
-            ),
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
-              latestEnhancedStatus = EnhancedStatus.QUERY_NOTIFICATION_MESSAGE,
-              actionIds = Seq.empty,
-              uuid = uuids(8)
-            ),
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
-              latestEnhancedStatus = EnhancedStatus.RECEIVED,
-              actionIds = Seq.empty,
-              uuid = uuids(9)
-            ),
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
-              latestEnhancedStatus = EnhancedStatus.RELEASED,
-              actionIds = Seq.empty,
-              uuid = uuids(10)
-            ),
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
-              latestEnhancedStatus = EnhancedStatus.UNDERGOING_PHYSICAL_CHECK,
-              actionIds = Seq.empty,
-              uuid = uuids(11)
-            ),
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
-              latestEnhancedStatus = EnhancedStatus.PENDING,
-              actionIds = Seq.empty,
-              uuid = uuids(12)
-            ),
-            submission(
-              enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
-              latestEnhancedStatus = EnhancedStatus.REQUESTED_CANCELLATION,
-              actionIds = Seq.empty,
-              uuid = uuids(13)
-            )
-          )
-
-          val declarations: List[ExportsDeclaration] = List(aDeclaration(withId(uuids.head), withEori(eori)))
-          val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds.head, actionId = actionIds.head))
-          val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds.head, actionIds.head))
-
-          whenReady {
-
-            for {
-              _ <- submissionRepository.bulkInsert(submissions)
-              _ <- declarationRepository.bulkInsert(declarations)
-              _ <- notificationRepository.bulkInsert(notifications)
-              _ <- unparsedNotificationRepository.pushNewBatch(unparsedNotifications)
-              _ <- testJob.execute()
-              sub <- submissionRepository.findAll()
-              not <- notificationRepository.findAll()
-              dec <- declarationRepository.findAll()
-              unt <- unparsedNotificationRepository.count(ProcessingStatus.ToDo)
-            } yield (sub.size, not.size, dec.size, unt)
-          } { case (subCount, decCount, notCount, unCount) =>
-            subCount mustBe submissions.size
-            decCount mustBe declarations.size
-            notCount mustBe notifications.size
-            unCount mustBe unparsedNotifications.size
-          }
-
-        }
-
-      }
-
     }
 
-  }
+    "remove zero records" when {
 
+      "'submission.statusLastUpdated' is less than than 180 days ago" in {
+        val submissions: List[Submission] = List(
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
+            latestEnhancedStatus = EnhancedStatus.GOODS_HAVE_EXITED,
+            actionIds = Seq(actionIds.head, actionIds(1), actionIds(2), actionIds(3)),
+            uuid = uuids.head
+          ),
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
+            latestEnhancedStatus = EnhancedStatus.DECLARATION_HANDLED_EXTERNALLY,
+            actionIds = Seq.empty,
+            uuid = uuids(1)
+          ),
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
+            latestEnhancedStatus = EnhancedStatus.CANCELLED,
+            actionIds = Seq.empty,
+            uuid = uuids(2)
+          ),
+          submission(
+            latestEnhancedStatus = EnhancedStatus.EXPIRED_NO_ARRIVAL,
+            actionIds = Seq.empty,
+            uuid = uuids(3),
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
+          ),
+          submission(
+            latestEnhancedStatus = EnhancedStatus.ERRORS,
+            actionIds = Seq.empty,
+            uuid = uuids(4),
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
+          ),
+          submission(
+            latestEnhancedStatus = EnhancedStatus.WITHDRAWN,
+            actionIds = Seq(actionIds(20), actionIds(21), actionIds(22), actionIds(23)),
+            uuid = uuids(5),
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
+          ),
+          submission(
+            latestEnhancedStatus = EnhancedStatus.EXPIRED_NO_DEPARTURE,
+            actionIds = Seq.empty,
+            uuid = uuids(6),
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
+          ),
+          submission(
+            latestEnhancedStatus = EnhancedStatus.PENDING,
+            actionIds = Seq.empty,
+            uuid = uuids.head,
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
+          )
+        )
+
+        val declarations: List[ExportsDeclaration] = List(aDeclaration(withId(uuids.head), withEori(eori)))
+        val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds.head, actionId = actionIds.head))
+        val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds.head, actionIds.head))
+
+        whenReady {
+          for {
+            _ <- submissionRepository.bulkInsert(submissions)
+            _ <- declarationRepository.bulkInsert(declarations)
+            _ <- notificationRepository.bulkInsert(notifications)
+            _ <- unparsedNotificationRepository.pushNewBatch(unparsedNotifications)
+            _ <- testJob.execute()
+            sub <- submissionRepository.findAll()
+            not <- notificationRepository.findAll()
+            dec <- declarationRepository.findAll()
+            unt <- unparsedNotificationRepository.count(ProcessingStatus.ToDo)
+          } yield (sub.size, not.size, dec.size, unt)
+        } { case (subCount, decCount, notCount, unCount) =>
+          subCount mustBe submissions.size
+          decCount mustBe declarations.size
+          notCount mustBe notifications.size
+          unCount mustBe unparsedNotifications.size
+        }
+      }
+
+      "'submission.latestEnhancedStatus' is other" in {
+        val submissions: List[Submission] = List(
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
+            latestEnhancedStatus = EnhancedStatus.ADDITIONAL_DOCUMENTS_REQUIRED,
+            actionIds = Seq(actionIds.head),
+            uuid = uuids.head
+          ),
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+            latestEnhancedStatus = EnhancedStatus.AMENDED,
+            actionIds = Seq.empty,
+            uuid = uuids.tail.head
+          ),
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+            latestEnhancedStatus = EnhancedStatus.AWAITING_EXIT_RESULTS,
+            actionIds = Seq.empty,
+            uuid = uuids(2)
+          ),
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+            latestEnhancedStatus = EnhancedStatus.CLEARED,
+            actionIds = Seq.empty,
+            uuid = uuids(3)
+          ),
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+            latestEnhancedStatus = EnhancedStatus.CUSTOMS_POSITION_DENIED,
+            actionIds = Seq.empty,
+            uuid = uuids(4)
+          ),
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+            latestEnhancedStatus = EnhancedStatus.CUSTOMS_POSITION_GRANTED,
+            actionIds = Seq.empty,
+            uuid = uuids(5)
+          ),
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+            latestEnhancedStatus = EnhancedStatus.GOODS_ARRIVED,
+            actionIds = Seq.empty,
+            uuid = uuids(6)
+          ),
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+            latestEnhancedStatus = EnhancedStatus.GOODS_ARRIVED_MESSAGE,
+            actionIds = Seq.empty,
+            uuid = uuids(7)
+          ),
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+            latestEnhancedStatus = EnhancedStatus.QUERY_NOTIFICATION_MESSAGE,
+            actionIds = Seq.empty,
+            uuid = uuids(8)
+          ),
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+            latestEnhancedStatus = EnhancedStatus.RECEIVED,
+            actionIds = Seq.empty,
+            uuid = uuids(9)
+          ),
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+            latestEnhancedStatus = EnhancedStatus.RELEASED,
+            actionIds = Seq.empty,
+            uuid = uuids(10)
+          ),
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+            latestEnhancedStatus = EnhancedStatus.UNDERGOING_PHYSICAL_CHECK,
+            actionIds = Seq.empty,
+            uuid = uuids(11)
+          ),
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+            latestEnhancedStatus = EnhancedStatus.PENDING,
+            actionIds = Seq.empty,
+            uuid = uuids(12)
+          ),
+          submission(
+            enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
+            latestEnhancedStatus = EnhancedStatus.REQUESTED_CANCELLATION,
+            actionIds = Seq.empty,
+            uuid = uuids(13)
+          )
+        )
+
+        val declarations: List[ExportsDeclaration] = List(aDeclaration(withId(uuids.head), withEori(eori)))
+        val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds.head, actionId = actionIds.head))
+        val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds.head, actionIds.head))
+
+        whenReady {
+          for {
+            _ <- submissionRepository.bulkInsert(submissions)
+            _ <- declarationRepository.bulkInsert(declarations)
+            _ <- notificationRepository.bulkInsert(notifications)
+            _ <- unparsedNotificationRepository.pushNewBatch(unparsedNotifications)
+            _ <- testJob.execute()
+            sub <- submissionRepository.findAll()
+            not <- notificationRepository.findAll()
+            dec <- declarationRepository.findAll()
+            unt <- unparsedNotificationRepository.count(ProcessingStatus.ToDo)
+          } yield (sub.size, not.size, dec.size, unt)
+        } { case (subCount, decCount, notCount, unCount) =>
+          subCount mustBe submissions.size
+          decCount mustBe declarations.size
+          notCount mustBe notifications.size
+          unCount mustBe unparsedNotifications.size
+        }
+      }
+    }
+  }
 }
 
 object PurgeAncientSubmissionsJobSpec {
@@ -412,5 +398,4 @@ object PurgeAncientSubmissionsJobSpec {
 
   def unparsedNotification(unparsedNotificationId: String, actionId: String): UnparsedNotification =
     UnparsedNotification(id = UUID.fromString(unparsedNotificationId), actionId = actionId, payload = "payload")
-
 }

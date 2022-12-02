@@ -20,6 +20,7 @@ import testdata.notifications.NotificationTestData.notification
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationError, ParsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
+import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.SubmissionStatus
 
 import java.time.ZonedDateTime
@@ -99,6 +100,24 @@ class EnhancedStatusSpec extends UnitSpec {
         val notification = genNotification(SubmissionStatus.REJECTED, List(error))
         enhancedStatus(notification) mustBe EXPIRED_NO_ARRIVAL
       }
+    }
+  }
+
+  "EnhancedStatus.fromStatusGroup" should {
+    "return a Set containing the corresponding EnhancedStatus values as text" in {
+      fromStatusGroup(ActionRequiredStatuses) mustBe actionRequiredStatuses_text
+      fromStatusGroup(CancelledStatuses) mustBe cancelledStatuses_text
+      fromStatusGroup(RejectedStatuses) mustBe rejectedStatuses_text
+      fromStatusGroup(SubmittedStatuses) mustBe submittedStatuses_text
+    }
+  }
+
+  "EnhancedStatus.toStatusGroup" should {
+    "return a Set containing the corresponding EnhancedStatus values as text" in {
+      actionRequiredStatuses.forall(toStatusGroup(_) == ActionRequiredStatuses)
+      cancelledStatuses.forall(toStatusGroup(_) == CancelledStatuses)
+      rejectedStatuses.forall(toStatusGroup(_) == RejectedStatuses)
+      submittedStatuses.forall(toStatusGroup(_) == SubmittedStatuses)
     }
   }
 

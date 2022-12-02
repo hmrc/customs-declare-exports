@@ -139,7 +139,8 @@ class LockManagerSpec extends UnitSpec {
 
           val lockManager = new LockManager(lockRepository, lockRefreshChecker, timeUtils, config)
 
-          intercept[LockManagerException](lockManager.acquireLockDefault()).getMessage must include("Waiting time required")
+          val message = intercept[LockManagerException](lockManager.acquireLockDefault()).getMessage
+          message must include("Waiting time required")
         }
       }
     }
