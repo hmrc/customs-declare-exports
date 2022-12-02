@@ -121,7 +121,7 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
          |{
          |  "eori": "$eori",
          |  "latestEnhancedStatus": { "$$in": [ ${fromStatusGroup(statusGroup).map(s => s""""$s"""").mkString(",")} ] },
-         |  "enhancedStatusLastUpdated": { "$$$comp": "${statusLastUpdated}" }
+         |  "enhancedStatusLastUpdated": { "$$$comp": ${Json.toJson(statusLastUpdated)} }
          |}""".stripMargin
     BsonDocument(filter)
   }
