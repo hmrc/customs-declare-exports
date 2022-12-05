@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.config
 
 import com.google.inject.{Inject, Singleton}
-import play.api.{Configuration, Environment}
+import play.api.Configuration
 import uk.gov.hmrc.exports.config.AppConfig.JobConfig
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -25,7 +25,7 @@ import java.time.{Clock, LocalTime}
 import scala.concurrent.duration.FiniteDuration
 
 @Singleton
-class AppConfig @Inject() (val configuration: Configuration, val environment: Environment, servicesConfig: ServicesConfig) {
+class AppConfig @Inject() (val configuration: Configuration, servicesConfig: ServicesConfig) {
 
   lazy val clock: Clock = Clock.systemUTC()
 

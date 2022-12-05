@@ -53,7 +53,7 @@ trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSui
           "microservice.services.customs-declarations-information.api-version" -> "1.0",
           "microservice.services.hmrc-email.host" -> Host,
           "microservice.services.hmrc-email.port" -> Port,
-          "mongodb.uri" -> s"mongodb://localhost/$databaseName"
+          "mongodb.uri" -> s"mongodb://localhost:27017/$databaseName"
         )
       )
       .build()
@@ -61,18 +61,18 @@ trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSui
   implicit val hc: HeaderCarrier = HeaderCarrier(authorization = Some(Authorization("Bearer some-token")))
 
   override protected def beforeAll(): Unit = {
-    super.beforeAll
-    startMockServer
+    super.beforeAll()
+    startMockServer()
   }
 
   override protected def afterEach(): Unit = {
-    resetMockServer
-    super.afterEach
+    resetMockServer()
+    super.afterEach()
   }
 
-  override protected def afterAll() {
-    stopMockServer
-    super.afterAll
+  override protected def afterAll(): Unit = {
+    stopMockServer()
+    super.afterAll()
   }
 
   val enrolments = Some(s"""{

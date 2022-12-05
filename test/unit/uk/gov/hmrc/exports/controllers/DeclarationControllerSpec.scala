@@ -16,58 +16,55 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{eq => eqRef, _}
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.bind
-import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json
 import play.api.libs.json.Json.toJson
-import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{status, _}
-import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
+import uk.gov.hmrc.auth.core.InsufficientEnrolments
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
+import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
+import uk.gov.hmrc.exports.models.DeclarationType.STANDARD
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.DeclarationService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
-import java.time.Instant
+import java.time.Instant.now
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with AuthTestSupport with ExportsDeclarationBuilder {
+class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with ExportsDeclarationBuilder {
 
-  SharedMetricRegistries.clear()
-
-  override lazy val app: Application = GuiceApplicationBuilder()
-    .overrides(bind[AuthConnector].to(mockAuthConnector), bind[DeclarationService].to(declarationService))
-    .build()
-
+  private val cc = stubControllerComponents()
+  private val authenticator = new Authenticator(mockAuthConnector, cc)
   private val declarationService: DeclarationService = mock[DeclarationService]
+
+  private val controller = new DeclarationController(declarationService, authenticator, cc)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
     reset(mockAuthConnector, declarationService)
+    withAuthorizedUser()
   }
 
-  "POST /declarations" should {
-    val post = FakeRequest("POST", "/declarations")
+  private val body = ExportsDeclarationRequest(createdDateTime = now, updatedDateTime = now, `type` = STANDARD)
+
+  "DeclarationController.create" should {
+    val postRequest = FakeRequest("POST", "/declarations")
 
     "return 201" when {
       "request is valid" in {
-        withAuthorizedUser()
-        val request = aDeclarationRequest()
-        val declaration = aDeclaration(withType(DeclarationType.STANDARD), withId("id"), withEori(userEori))
+        val declaration = aDeclaration(withType(STANDARD), withId("id"), withEori(userEori))
         given(declarationService.create(any[ExportsDeclaration])).willReturn(Future.successful(declaration))
 
-        val result: Future[Result] = route(app, post.withJsonBody(toJson(request))).get
+        val result: Future[Result] = controller.create(postRequest.withBody(body))
 
         status(result) must be(CREATED)
         contentAsJson(result) mustBe toJson(declaration)
@@ -75,23 +72,11 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
       }
     }
 
-    "return 400" when {
-      "invalid json" in {
-        withAuthorizedUser()
-        val payload = Json.toJson(aDeclarationRequest()).as[JsObject] - "type"
-        val result: Future[Result] = route(app, post.withJsonBody(payload)).get
-
-        status(result) must be(BAD_REQUEST)
-        contentAsJson(result) mustBe Json.obj("message" -> "Bad Request", "errors" -> Json.arr("/type: error.path.missing"))
-        verifyNoInteractions(declarationService)
-      }
-    }
-
     "return 401" when {
       "unauthorized" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result: Future[Result] = route(app, post.withJsonBody(toJson(aDeclarationRequest()))).get
+        val result: Future[Result] = controller.create(postRequest.withBody(body))
 
         status(result) must be(UNAUTHORIZED)
         verifyNoInteractions(declarationService)
@@ -99,17 +84,16 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
     }
   }
 
-  "GET /" should {
-    val get = FakeRequest("GET", "/declarations")
+  "DeclarationController.findAll" should {
+    val getRequest = FakeRequest("GET", "/declarations")
 
     "return 200" when {
       "valid request" in {
-        withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val result: Future[Result] = route(app, get).get
+        val result = controller.findAll(None, Page(), DeclarationSort())(getRequest)
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(Paginated(declaration))
@@ -117,27 +101,24 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
       }
 
       "request has valid pagination" in {
-        withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val get = FakeRequest("GET", "/declarations?page-index=1&page-size=100")
-        val result: Future[Result] = route(app, get).get
+        val size = 100
+        val result = controller.findAll(None, Page(1, size), DeclarationSort())(getRequest)
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(Paginated(declaration))
-        thePagination mustBe Page(1, 100)
+        thePagination mustBe Page(1, size)
       }
 
       "request has valid search params" in {
-        withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val get = FakeRequest("GET", "/declarations?status=COMPLETE")
-        val result: Future[Result] = route(app, get).get
+        val result = controller.findAll(Some("COMPLETE"), Page(), DeclarationSort())(getRequest)
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(Paginated(declaration))
@@ -145,13 +126,11 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
       }
 
       "request has invalid search params" in {
-        withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val get = FakeRequest("GET", "/declarations?status=invalid")
-        val result: Future[Result] = route(app, get).get
+        val result = controller.findAll(Some("invalid"), Page(), DeclarationSort())(getRequest)
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(Paginated(declaration))
@@ -159,13 +138,11 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
       }
 
       "request has sorting ascending sort params" in {
-        withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val get = FakeRequest("GET", "/declarations?sort-by=updatedDateTime&sort-direction=asc")
-        val result: Future[Result] = route(app, get).get
+        val result = controller.findAll(None, Page(), DeclarationSort(SortBy.UPDATED, SortDirection.ASC))(getRequest)
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(Paginated(declaration))
@@ -173,13 +150,11 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
       }
 
       "request has sorting descending sort params" in {
-        withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val get = FakeRequest("GET", "/declarations?sort-by=createdDateTime&sort-direction=des")
-        val result: Future[Result] = route(app, get).get
+        val result = controller.findAll(None, Page(), DeclarationSort(SortBy.CREATED, SortDirection.DES))(getRequest)
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(Paginated(declaration))
@@ -191,7 +166,7 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
       "unauthorized" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result: Future[Result] = route(app, get).get
+        val result = controller.findAll(None, Page(), DeclarationSort())(getRequest)
 
         status(result) must be(UNAUTHORIZED)
         verifyNoInteractions(declarationService)
@@ -217,16 +192,15 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
     }
   }
 
-  "GET /declarations/:id" should {
-    val get = FakeRequest("GET", "/declarations/id")
+  "DeclarationController.findById" should {
+    val getRequest = FakeRequest("GET", "/declarations/id")
 
     "return 200" when {
       "request is valid" in {
-        withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori))
         given(declarationService.findOne(any[Eori](), anyString())).willReturn(Future.successful(Some(declaration)))
 
-        val result: Future[Result] = route(app, get).get
+        val result = controller.findById("id")(getRequest)
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(declaration)
@@ -236,10 +210,9 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
 
     "return 404" when {
       "id is not found" in {
-        withAuthorizedUser()
         given(declarationService.findOne(any(), anyString())).willReturn(Future.successful(None))
 
-        val result: Future[Result] = route(app, get).get
+        val result = controller.findById("id")(getRequest)
 
         status(result) must be(NOT_FOUND)
         contentAsString(result) mustBe empty
@@ -251,7 +224,7 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
       "unauthorized" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result: Future[Result] = route(app, get).get
+        val result = controller.findById("id")(getRequest)
 
         status(result) must be(UNAUTHORIZED)
         verifyNoInteractions(declarationService)
@@ -259,17 +232,16 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
     }
   }
 
-  "DELETE /declarations/:id" should {
-    val delete = FakeRequest("DELETE", "/declarations/id")
+  "DeclarationController.deleteById" should {
+    val deleteRequest = FakeRequest("DELETE", "/declarations/id")
 
     "return 204" when {
       "request is valid" in {
-        withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori), withStatus(DeclarationStatus.DRAFT))
         given(declarationService.findOne(any(), anyString())).willReturn(Future.successful(Some(declaration)))
         given(declarationService.deleteOne(any[ExportsDeclaration])).willReturn(Future.successful(true))
 
-        val result: Future[Result] = route(app, delete).get
+        val result = controller.deleteById("id")(deleteRequest)
 
         status(result) must be(NO_CONTENT)
         contentAsString(result) mustBe empty
@@ -280,11 +252,10 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
 
     "return 400" when {
       "declaration is COMPLETE" in {
-        withAuthorizedUser()
         val declaration = aDeclaration(withId("id"), withEori(userEori), withStatus(DeclarationStatus.COMPLETE))
         given(declarationService.findOne(any(), anyString())).willReturn(Future.successful(Some(declaration)))
 
-        val result: Future[Result] = route(app, delete).get
+        val result = controller.deleteById("id")(deleteRequest)
 
         status(result) must be(BAD_REQUEST)
         contentAsJson(result) mustBe Json.obj("message" -> "Cannot remove a declaration once it is COMPLETE")
@@ -295,10 +266,9 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
 
     "return 204" when {
       "id is not found" in {
-        withAuthorizedUser()
         given(declarationService.findOne(any(), anyString())).willReturn(Future.successful(None))
 
-        val result: Future[Result] = route(app, delete).get
+        val result = controller.deleteById("id")(deleteRequest)
 
         status(result) must be(NO_CONTENT)
         contentAsString(result) mustBe empty
@@ -310,7 +280,7 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
       "unauthorized" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result: Future[Result] = route(app, delete).get
+        val result = controller.deleteById("id")(deleteRequest)
 
         status(result) must be(UNAUTHORIZED)
         verifyNoInteractions(declarationService)
@@ -318,17 +288,15 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
     }
   }
 
-  "PUT /declarations/:id" should {
-    val put = FakeRequest("PUT", "/declarations/id")
+  "DeclarationController.update" should {
+    val putRequest = FakeRequest("PUT", "/declarations/id")
 
     "return 200" when {
       "request is valid" in {
-        withAuthorizedUser()
-        val request = aDeclarationRequest()
-        val declaration = aDeclaration(withStatus(DeclarationStatus.DRAFT), withType(DeclarationType.STANDARD), withId("id"), withEori(userEori))
+        val declaration = aDeclaration(withStatus(DeclarationStatus.DRAFT), withType(STANDARD), withId("id"), withEori(userEori))
         given(declarationService.update(any[ExportsDeclaration])).willReturn(Future.successful(Some(declaration)))
 
-        val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
+        val result = controller.update("id")(putRequest.withBody(body))
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(declaration)
@@ -339,39 +307,13 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
     }
 
     "return 404" when {
-      "declaration is not found - on find" in {
-        withAuthorizedUser()
-        val request = aDeclarationRequest()
-        given(declarationService.update(any[ExportsDeclaration])).willReturn(Future.successful(None))
-
-        val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
-
-        status(result) must be(NOT_FOUND)
-        contentAsString(result) mustBe empty
-      }
-
       "declaration is not found - on update" in {
-        withAuthorizedUser()
-        val request = aDeclarationRequest()
         given(declarationService.update(any[ExportsDeclaration])).willReturn(Future.successful(None))
 
-        val result: Future[Result] = route(app, put.withJsonBody(toJson(request))).get
+        val result = controller.update("id")(putRequest.withBody(body))
 
         status(result) must be(NOT_FOUND)
         contentAsString(result) mustBe empty
-      }
-    }
-
-    "return 400" when {
-
-      "invalid json" in {
-        withAuthorizedUser()
-        val payload = Json.toJson(aDeclarationRequest()).as[JsObject] - "type"
-        val result: Future[Result] = route(app, put.withJsonBody(payload)).get
-
-        status(result) must be(BAD_REQUEST)
-        contentAsJson(result) mustBe Json.obj("message" -> "Bad Request", "errors" -> Json.arr("/type: error.path.missing"))
-        verifyNoInteractions(declarationService)
       }
     }
 
@@ -379,7 +321,7 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
       "unauthorized" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result: Future[Result] = route(app, put.withJsonBody(toJson(aDeclarationRequest()))).get
+        val result = controller.update("id")(putRequest.withBody(body))
 
         status(result) must be(UNAUTHORIZED)
         verifyNoInteractions(declarationService)
@@ -387,18 +329,17 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
     }
   }
 
-  "GET /draft-declaration/:parentId" should {
+  "DeclarationController.findOrCreateDraftFromParent" should {
     val newId = "newId"
     val parentId = "parentId"
-    val get = FakeRequest("GET", "/draft-declaration/parentId")
+    val getRequest = FakeRequest("GET", "/draft-declaration/parentId")
 
     "return 200" when {
       "a draft declaration with 'parentDeclarationId' equal to the given parentId is found" in {
-        withAuthorizedUser()
         when(declarationService.findOrCreateDraftFromParent(any[Eori](), refEq(parentId))(any()))
           .thenReturn(Future.successful((DeclarationService.FOUND, newId)))
 
-        val result: Future[Result] = route(app, get).get
+        val result = controller.findOrCreateDraftFromParent(parentId)(getRequest)
 
         status(result) must be(OK)
         contentAsJson(result).as[String] mustBe newId
@@ -407,20 +348,16 @@ class DeclarationControllerSpec extends UnitSpec with GuiceOneAppPerSuite with A
 
     "return 201" when {
       "a draft declaration with 'parentDeclarationId' equal to the given parentId is created" in {
-        withAuthorizedUser()
         when(declarationService.findOrCreateDraftFromParent(any[Eori](), refEq(parentId))(any()))
           .thenReturn(Future.successful((DeclarationService.CREATED, newId)))
 
-        val result: Future[Result] = route(app, get).get
+        val result = controller.findOrCreateDraftFromParent(parentId)(getRequest)
 
         status(result) must be(CREATED)
         contentAsJson(result).as[String] mustBe newId
       }
     }
   }
-
-  def aDeclarationRequest() =
-    ExportsDeclarationRequest(createdDateTime = Instant.now, updatedDateTime = Instant.now, `type` = DeclarationType.STANDARD)
 
   def theDeclarationCreated: ExportsDeclaration = {
     val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])

@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs
 
-import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.bson.BsonDocument
 import play.api.Logging
+import play.api.libs.json.Json
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.repositories._
-import uk.gov.hmrc.mongo.play.json.Codecs
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
+import uk.gov.hmrc.exports.repositories.{PurgeSubmissionsTransactionalOps, SubmissionRepository}
 
-import java.time._
+import java.time.{LocalTime, ZoneId, ZonedDateTime}
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration._
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -37,39 +38,36 @@ class PurgeAncientSubmissionsJob @Inject() (
 
   override val name: String = "PurgeAncientSubmissions"
 
-  override def interval: FiniteDuration = jobConfig.interval
-  override def firstRunTime: Option[LocalTime] = Some(jobConfig.elapseTime)
+  override def interval: FiniteDuration = appConfig.purgeAncientSubmissions.interval
 
-  private val jobConfig = appConfig.purgeAncientSubmissions
-  private val clock: Clock = appConfig.clock
+  override def firstRunTime: Option[LocalTime] = Some(appConfig.purgeAncientSubmissions.elapseTime)
 
-  private val latestStatus = "latestEnhancedStatus"
-  private val statusLastUpdated = "enhancedStatusLastUpdated"
+  lazy val expiryDate = {
+    val days = 180
+    val oneMilliSec = 1000000
+    ZonedDateTime.now(ZoneId.of("UTC")).minusDays(days).withNano(oneMilliSec)
+  }
 
-  val expiryDate = ZonedDateTime.now(clock).minusDays(180)
-
-  private val latestStatusLookup =
-    in(
-      latestStatus,
-      List(
-        "GOODS_HAVE_EXITED",
-        "DECLARATION_HANDLED_EXTERNALLY",
-        "CANCELLED",
-        "EXPIRED_NO_ARRIVAL",
-        "ERRORS",
-        "EXPIRED_NO_DEPARTURE",
-        "WITHDRAWN"
-      ): _*
-    )
-
-  private def olderThanDate = lte(statusLastUpdated, Codecs.toBson(expiryDate))
+  private lazy val expiryDateAsString = Json.toJson(expiryDate).toString
 
   override def execute(): Future[Unit] = {
-    logger.info("Starting PurgeAncientSubmissionsJob execution...")
-    submissionRepository.findAll(and(olderThanDate, latestStatusLookup)) flatMap { submissions =>
+    logger.info(s"Starting PurgeAncientSubmissionsJob. Removing Submissions having 'enhancedStatusLastUpdated' older than $expiryDate")
+    submissionRepository.findAll(filter) flatMap { submissions =>
       transactionalOps.removeSubmissionAndNotifications(submissions) map { removed =>
         logger.info(s"Finishing PurgeAncientSubmissionsJob - ${removed.sum} records removed linked to ancient submissions")
       }
     }
+  }
+
+  private lazy val filter = {
+    val statusesToRemove =
+      List(CANCELLED, DECLARATION_HANDLED_EXTERNALLY, ERRORS, EXPIRED_NO_ARRIVAL, EXPIRED_NO_DEPARTURE, GOODS_HAVE_EXITED, WITHDRAWN)
+    val jsonString =
+      s"""
+         |{
+         |  "latestEnhancedStatus": { "$$in": [ ${statusesToRemove.map(s => s""""$s"""").mkString(",")} ] },
+         |  "enhancedStatusLastUpdated": { "$$lte": ${expiryDateAsString} }
+         |}""".stripMargin
+    BsonDocument(jsonString)
   }
 }

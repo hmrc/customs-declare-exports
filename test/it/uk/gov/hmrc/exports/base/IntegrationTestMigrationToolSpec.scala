@@ -15,13 +15,13 @@ trait IntegrationTestMigrationToolSpec extends IntegrationTestBaseSpec with Guic
   val collectionUnderTest: String
   val changeLog: MigrationDefinition
 
-  override implicit lazy val app: Application = GuiceApplicationBuilder().disable[PlayModule].build
+  override implicit lazy val app: Application = GuiceApplicationBuilder().disable[PlayModule].build()
 
   private val mongoClient = MongoClients.create()
 
   val database: MongoDatabase = mongoClient.getDatabase("test-customs-declare-exports")
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     mongoClient.close
     super.afterAll()
   }

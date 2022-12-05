@@ -20,46 +20,36 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.BDDMockito.`given`
 import org.mockito.invocation.InvocationOnMock
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.bind
-import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
-import play.api.mvc.Result
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsJson, _}
+import play.api.test.Helpers.{status, _}
 import testdata.notifications.NotificationTestData.notification
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.controllers.testonly.GenerateSubmittedDecController.CreateSubmitDecDocumentsRequest
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class GenerateSubmittedDecControllerSpec extends UnitSpec with GuiceOneAppPerSuite with ExportsDeclarationBuilder {
+class GenerateSubmittedDecControllerSpec extends UnitSpec with ExportsDeclarationBuilder {
 
+  private val cc = stubControllerComponents()
   private val declarationRepository: DeclarationRepository = mock[DeclarationRepository]
   private val submissionRepository: SubmissionRepository = mock[SubmissionRepository]
   private val parsedNotificationRepository: ParsedNotificationRepository = mock[ParsedNotificationRepository]
-
-  override lazy val app: Application = GuiceApplicationBuilder()
-    .configure(("play.http.router", "testOnlyDoNotUseInAppConf.Routes"))
-    .overrides(
-      bind[DeclarationRepository].to(declarationRepository),
-      bind[ParsedNotificationRepository].to(parsedNotificationRepository),
-      bind[SubmissionRepository].to(submissionRepository)
-    )
-    .build()
 
   override def beforeEach(): Unit = {
     super.beforeEach()
     reset(parsedNotificationRepository, submissionRepository, declarationRepository)
   }
 
-  "GenerateSubmittedDecController" should {
-    val post = FakeRequest("POST", "/test-only/create-submitted-dec-record")
+  private val controller = new GenerateSubmittedDecController(declarationRepository, submissionRepository, parsedNotificationRepository, cc)
+
+  "GenerateSubmittedDecController.createSubmittedDecDocuments" should {
+    val postRequest = FakeRequest("POST", "/test-only/create-submitted-dec-record")
     val eoriSpecified = "asdasd"
 
     "insert all required entities with correct correlating values" in {
@@ -78,8 +68,8 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with GuiceOneAppPerSui
         Future.successful(invocation.getArguments.head.asInstanceOf[ParsedNotification])
       }
 
-      val request = Json.obj("eori" -> eoriSpecified)
-      val result: Future[Result] = route(app, post.withJsonBody(request)).get
+      val body = CreateSubmitDecDocumentsRequest(eoriSpecified, None, None, None)
+      val result = controller.createSubmittedDecDocuments(postRequest.withBody(body))
 
       status(result) must be(OK)
 
@@ -102,8 +92,8 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with GuiceOneAppPerSui
       given(submissionRepository.create(any())).willReturn(Future.successful(submission))
       given(parsedNotificationRepository.create(any())).willReturn(Future.successful(notification))
 
-      val request = Json.obj("eori" -> eoriSpecified)
-      val result: Future[Result] = route(app, post.withJsonBody(request)).get
+      val body = CreateSubmitDecDocumentsRequest(eoriSpecified, None, None, None)
+      val result = controller.createSubmittedDecDocuments(postRequest.withBody(body))
 
       status(result) must be(OK)
 
@@ -115,8 +105,8 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with GuiceOneAppPerSui
       given(submissionRepository.create(any())).willReturn(Future.successful(submission))
       given(parsedNotificationRepository.create(any())).willReturn(Future.successful(notification))
 
-      val request = Json.obj("eori" -> eoriSpecified)
-      val result: Future[Result] = route(app, post.withJsonBody(request)).get
+      val body = CreateSubmitDecDocumentsRequest(eoriSpecified, None, None, None)
+      val result = controller.createSubmittedDecDocuments(postRequest.withBody(body))
 
       status(result) must be(OK)
 

@@ -24,7 +24,7 @@ import org.mongodb.scala.model.{IndexOptions, Indexes}
 import uk.gov.hmrc.exports.base.IntegrationTestMigrationToolSpec
 import uk.gov.hmrc.exports.migrations.changelogs.notification.SplitTheNotificationsCollectionISpec._
 
-import scala.collection.JavaConverters.iterableAsScalaIterableConverter
+import scala.jdk.CollectionConverters._
 
 class SplitTheNotificationsCollectionISpec extends IntegrationTestMigrationToolSpec {
 

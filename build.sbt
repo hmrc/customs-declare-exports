@@ -1,3 +1,4 @@
+import play.sbt.routes.RoutesKeys
 import sbt._
 import uk.gov.hmrc.{ForkedJvmPerTestSettings, SbtAutoBuildPlugin}
 import uk.gov.hmrc.DefaultBuildSettings._
@@ -7,6 +8,11 @@ import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 val appName = "customs-declare-exports"
 
 PlayKeys.devSettings := Seq("play.server.http.port" -> "6792")
+
+RoutesKeys.routesImport ++= Seq(
+  "uk.gov.hmrc.exports.models.DeclarationSort",
+  "uk.gov.hmrc.exports.models.Page"
+)
 
 lazy val IntegrationTest = config("it") extend Test
 

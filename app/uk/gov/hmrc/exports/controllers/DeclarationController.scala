@@ -40,14 +40,13 @@ class DeclarationController @Inject() (
 )(implicit executionContext: ExecutionContext)
     extends RESTController(controllerComponents) with Logging {
 
-  def create(): Action[ExportsDeclarationRequest] =
-    authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
-      logPayload("Create Declaration Request Received", request.body)
-      declarationService
-        .create(ExportsDeclaration(UUID.randomUUID.toString, request.eori, request.body))
-        .map(logPayload("Create Declaration Response", _))
-        .map(declaration => Created(declaration))
-    }
+  val create: Action[ExportsDeclarationRequest] = authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
+    logPayload("Create Declaration Request Received", request.body)
+    declarationService
+      .create(ExportsDeclaration(UUID.randomUUID.toString, request.eori, request.body))
+      .map(logPayload("Create Declaration Response", _))
+      .map(declaration => Created(declaration))
+  }
 
   def findOrCreateDraftFromParent(parentId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     declarationService.findOrCreateDraftFromParent(request.eori, parentId).map { result =>
