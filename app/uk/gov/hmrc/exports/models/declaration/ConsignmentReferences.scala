@@ -20,7 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 
 case class ConsignmentReferences(
   ducr: DUCR,
-  lrn: String,
+  lrn: Option[String],
   personalUcr: Option[String] = None,
   eidrDateStamp: Option[String] = None,
   mrn: Option[String] = None

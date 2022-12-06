@@ -51,7 +51,7 @@ class ConsignmentReferencesParser @Inject() (additionalDeclarationTypeParser: Ad
       Right(for {
         ducr <- ducrOpt
         lrn <- lrnOpt
-      } yield ConsignmentReferences(ducr, lrn, personalUcrOpt, eidrDateStamp, mrn))
+      } yield ConsignmentReferences(ducr, Some(lrn), personalUcrOpt, eidrDateStamp, mrn))
     } else if (areAllFieldsEmpty) {
       Right(None)
     } else {

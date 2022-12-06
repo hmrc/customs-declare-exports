@@ -54,13 +54,13 @@ class UCRBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
 object UCRBuilderSpec extends ExportsDeclarationBuilder {
   val correctConsignmentReferences =
-    ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = VALID_LRN, personalUcr = Some(VALID_PERSONAL_UCR), mrn = Some(mrn))
+    ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = Some(VALID_LRN), personalUcr = Some(VALID_PERSONAL_UCR), mrn = Some(mrn))
   val correctConsignmentReferencesWithPersonalUcr =
-    ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = VALID_LRN, personalUcr = Some(VALID_PERSONAL_UCR))
+    ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = Some(VALID_LRN), personalUcr = Some(VALID_PERSONAL_UCR))
   val correctConsignmentReferencesWithoutPersonalUcr =
-    ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = VALID_LRN)
+    ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = Some(VALID_LRN))
   val correctConsignmentReferencesWithEidr =
-    ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = VALID_LRN, eidrDateStamp = Some(eidrDateStamp))
+    ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = Some(VALID_LRN), eidrDateStamp = Some(eidrDateStamp))
   val correctConsignmentReferencesWithMrn =
-    ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = VALID_LRN, mrn = Some(mrn))
+    ConsignmentReferences(ducr = DUCR(VALID_DUCR), lrn = Some(VALID_LRN), mrn = Some(mrn))
 }
