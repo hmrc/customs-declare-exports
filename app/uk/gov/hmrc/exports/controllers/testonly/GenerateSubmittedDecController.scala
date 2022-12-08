@@ -90,7 +90,7 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
       eori = declaration.eori,
       lrn = declaration.consignmentReferences.flatMap(_.lrn).getOrElse(""),
       mrn = declaration.consignmentReferences.flatMap(_.mrn),
-      ducr = declaration.consignmentReferences.map(_.ducr.ducr).getOrElse(""),
+      ducr = declaration.consignmentReferences.flatMap(_.ducr).map(_.ducr).getOrElse(""),
       latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
       enhancedStatusLastUpdated = Some(notificationSummary.dateTimeIssued),
       actions = List(action)

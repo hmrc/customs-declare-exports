@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.models.declaration
 import play.api.libs.json.{Json, OFormat}
 
 case class ConsignmentReferences(
-  ducr: DUCR,
+  ducr: Option[DUCR],
   lrn: Option[String],
   personalUcr: Option[String] = None,
   eidrDateStamp: Option[String] = None,

@@ -96,7 +96,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     eidrDateStamp: Option[String] = None,
     mrn: Option[String] = None
   ): ExportsDeclarationModifier =
-    _.copy(consignmentReferences = Some(ConsignmentReferences(DUCR(ducr), Some(lrn), personalUcr, eidrDateStamp, mrn)))
+    _.copy(consignmentReferences = Some(ConsignmentReferences(Some(DUCR(ducr)), Some(lrn), personalUcr, eidrDateStamp, mrn)))
 
   def withoutDepartureTransport(borderModeOfTransportCode: Option[TransportLeavingTheBorder] = None): ExportsDeclarationModifier =
     declaration =>

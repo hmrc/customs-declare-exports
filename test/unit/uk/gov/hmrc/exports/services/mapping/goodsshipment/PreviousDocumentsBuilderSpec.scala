@@ -37,7 +37,7 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
 
           val previousDocs = goodsShipment.getPreviousDocument
           previousDocs.size must be(1)
-          previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
+          previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.get.ducr)
           previousDocs.get(0).getCategoryCode.getValue must be(categoryCodeZ)
           previousDocs.get(0).getTypeCode.getValue must be("DCR")
           previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
@@ -51,7 +51,7 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
 
         val previousDocs = goodsShipment.getPreviousDocument
         previousDocs.size must be(1)
-        previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
+        previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.get.ducr)
         previousDocs.get(0).getCategoryCode.getValue must be(categoryCodeY)
         previousDocs.get(0).getTypeCode.getValue must be("DCR")
         previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
@@ -64,7 +64,7 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
 
         val previousDocs = goodsShipment.getPreviousDocument
         previousDocs.size must be(2)
-        previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
+        previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.get.ducr)
         previousDocs.get(0).getCategoryCode.getValue must be(categoryCodeZ)
         previousDocs.get(0).getTypeCode.getValue must be("DCR")
         previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
@@ -82,7 +82,7 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
 
         val previousDocs = goodsShipment.getPreviousDocument
         previousDocs.size must be(2)
-        previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
+        previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.get.ducr)
         previousDocs.get(0).getCategoryCode.getValue must be(categoryCodeZ)
         previousDocs.get(0).getTypeCode.getValue must be("DCR")
         previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)
@@ -102,7 +102,7 @@ class PreviousDocumentsBuilderSpec extends UnitSpec with ExportsDeclarationBuild
 
         val previousDocs = goodsShipment.getPreviousDocument
         previousDocs.size must be(2)
-        previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.ducr)
+        previousDocs.get(0).getID.getValue must be(UCRBuilderSpec.correctConsignmentReferences.ducr.get.ducr)
         previousDocs.get(0).getCategoryCode.getValue must be(categoryCodeZ)
         previousDocs.get(0).getTypeCode.getValue must be("DCR")
         previousDocs.get(0).getLineNumeric must be(BigDecimal(1).bigDecimal)

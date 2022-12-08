@@ -47,7 +47,7 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
 
         val result = parser.parse(input)
 
-        val expectedResult = Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = Some("referenceId")))
+        val expectedResult = Some(ConsignmentReferences(ducr = Some(DUCR("ducr")), lrn = Some("referenceId")))
 
         result mustBe Right(expectedResult)
       }
@@ -62,7 +62,7 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
         val result = parser.parse(input)
 
         val expectedResult =
-          Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = Some("referenceId"), personalUcr = Some("traderReferenceID")))
+          Some(ConsignmentReferences(ducr = Some(DUCR("ducr")), lrn = Some("referenceId"), personalUcr = Some("traderReferenceID")))
 
         result mustBe Right(expectedResult)
       }
@@ -77,7 +77,7 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
         val result = parser.parse(input)
 
         val expectedResult =
-          Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = Some("referenceId"), eidrDateStamp = Some("someDateStamp")))
+          Some(ConsignmentReferences(ducr = Some(DUCR("ducr")), lrn = Some("referenceId"), eidrDateStamp = Some("someDateStamp")))
 
         result mustBe Right(expectedResult)
       }
@@ -92,7 +92,7 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
         val result = parser.parse(input)
 
         val expectedResult =
-          Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = Some("referenceId"), mrn = Some("someMrn")))
+          Some(ConsignmentReferences(ducr = Some(DUCR("ducr")), lrn = Some("referenceId"), mrn = Some("someMrn")))
 
         result mustBe Right(expectedResult)
       }
@@ -106,7 +106,7 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
         val result = parser.parse(input)
 
         val expectedResult =
-          Some(ConsignmentReferences(ducr = DUCR("ducr"), lrn = Some("referenceId"), personalUcr = None, eidrDateStamp = None, mrn = None))
+          Some(ConsignmentReferences(ducr = Some(DUCR("ducr")), lrn = Some("referenceId"), personalUcr = None, eidrDateStamp = None, mrn = None))
 
         result mustBe Right(expectedResult)
       }
