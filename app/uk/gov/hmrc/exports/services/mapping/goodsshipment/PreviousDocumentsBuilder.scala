@@ -69,7 +69,7 @@ class PreviousDocumentsBuilder @Inject() () extends ModifyingBuilder[PreviousDoc
 
   def buildThenAdd(consignmentReferences: ConsignmentReferences, `type`: DeclarationType, goodsShipment: GoodsShipment): Unit = {
     if (isDefined(consignmentReferences)) {
-      goodsShipment.getPreviousDocument.add(createDucrDocument(consignmentReferences.ducr, `type`))
+      goodsShipment.getPreviousDocument.add(createDucrDocument(consignmentReferences.ducr.get, `type`))
     }
 
     consignmentReferences.eidrDateStamp.map(eidr => goodsShipment.getPreviousDocument.add(createEidrDateStampDocument(eidr)))

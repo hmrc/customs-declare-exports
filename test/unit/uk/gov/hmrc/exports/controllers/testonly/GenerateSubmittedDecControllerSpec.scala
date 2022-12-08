@@ -81,7 +81,7 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with ExportsDeclaratio
       newSubmission.eori mustBe eoriSpecified
       newSubmission.lrn mustBe newDec.consignmentReferences.get.lrn.get
       newSubmission.mrn.get mustBe newParsedNotification.details.mrn
-      newSubmission.ducr mustBe newDec.consignmentReferences.get.ducr.ducr
+      newSubmission.ducr mustBe newDec.consignmentReferences.get.ducr.get.ducr
       newParsedNotification.details.mrn mustBe newDec.consignmentReferences.get.mrn.get
     }
 
