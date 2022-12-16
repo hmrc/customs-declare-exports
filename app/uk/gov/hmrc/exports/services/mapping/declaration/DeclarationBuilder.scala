@@ -21,6 +21,12 @@ import uk.gov.hmrc.exports.services.mapping.AuthorisationHoldersBuilder
 import uk.gov.hmrc.exports.services.mapping.declaration.consignment.DeclarationConsignmentBuilder
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.GoodsShipmentBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
+import wco.datamodel.wco.dec_dms._2.Declaration.AdditionalInformation.Pointer
+import wco.datamodel.wco.declaration_ds.dms._2.{
+  AdditionalInformationStatementDescriptionTextType,
+  AdditionalInformationStatementTypeCodeType,
+  PointerDocumentSectionCodeType
+}
 
 import javax.inject.Inject
 
@@ -44,8 +50,7 @@ class DeclarationBuilder @Inject() (
   goodsShipmentBuilder: GoodsShipmentBuilder,
   identificationBuilder: IdentificationBuilder,
   submitterBuilder: SubmitterBuilder,
-  amendmentBuilder: AmendmentBuilder,
-  additionalInformationBuilder: AdditionalInformationBuilder
+  amendmentBuilder: AmendmentBuilder
 ) {
 
   def buildDeclaration(model: ExportsDeclaration): Declaration = {
@@ -69,7 +74,6 @@ class DeclarationBuilder @Inject() (
     declarationConsignmentBuilder.buildThenAdd(model, declaration)
     authorisationHoldersBuilder.buildThenAdd(model, declaration)
     currencyExchangeBuilder.buildThenAdd(model, declaration)
-    additionalInformationBuilder.buildThenAdd(model, declaration)
 
     declaration
   }
@@ -89,8 +93,35 @@ class DeclarationBuilder @Inject() (
     identificationBuilder.buildThenAdd(declarationId, declaration)
     submitterBuilder.buildThenAdd(eori, declaration)
     amendmentBuilder.buildThenAdd(changeReason, declaration)
-    additionalInformationBuilder.buildThenAdd(statementDescription, declaration)
+    buildThenAddAdditionalInformation(statementDescription, declaration)
 
     declaration
+  }
+
+  private def buildThenAddAdditionalInformation(statementDescription: String, declaration: Declaration): Unit = {
+    val additionalInformation = new Declaration.AdditionalInformation()
+    val statementDescriptionTextType = new AdditionalInformationStatementDescriptionTextType()
+    statementDescriptionTextType.setValue(statementDescription)
+
+    val statementTypeCode = new AdditionalInformationStatementTypeCodeType()
+    statementTypeCode.setValue("AES")
+
+    val pointer1 = new Pointer()
+    pointer1.setSequenceNumeric(new java.math.BigDecimal(1))
+    val pointerDocumentSectionCodeType1 = new PointerDocumentSectionCodeType()
+    pointerDocumentSectionCodeType1.setValue("42A")
+    pointer1.setDocumentSectionCode(pointerDocumentSectionCodeType1)
+
+    val pointer2 = new Pointer()
+    val pointerDocumentSectionCodeType2 = new PointerDocumentSectionCodeType()
+    pointerDocumentSectionCodeType2.setValue("06A")
+    pointer2.setDocumentSectionCode(pointerDocumentSectionCodeType2)
+
+    additionalInformation.getPointer.add(pointer1)
+    additionalInformation.getPointer.add(pointer2)
+
+    additionalInformation.setStatementDescription(statementDescriptionTextType)
+    additionalInformation.setStatementTypeCode(statementTypeCode)
+    declaration.getAdditionalInformation.add(additionalInformation)
   }
 }

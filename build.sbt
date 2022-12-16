@@ -1,6 +1,6 @@
 import play.sbt.routes.RoutesKeys
 import sbt._
-import uk.gov.hmrc.{ForkedJvmPerTestSettings, SbtAutoBuildPlugin}
+import uk.gov.hmrc.SbtAutoBuildPlugin
 import uk.gov.hmrc.DefaultBuildSettings._
 import uk.gov.hmrc.gitstamp.GitStampPlugin._
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
@@ -43,7 +43,7 @@ lazy val microservice = Project(appName, file("."))
       (Test / baseDirectory).value / "test/util"
     ),
     addTestReportOption(IntegrationTest, "int-test-reports"),
-    IntegrationTest / testGrouping := ForkedJvmPerTestSettings.oneForkedJvmPerTest((IntegrationTest / definedTests).value),
+    IntegrationTest / testGrouping := oneForkedJvmPerTest((IntegrationTest / definedTests).value),
     IntegrationTest / parallelExecution := false
   )
   .settings(silencerSettings)
