@@ -46,6 +46,7 @@ class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
   private val identificationBuilder: IdentificationBuilder = mock[IdentificationBuilder]
   private val submitterBuilder: SubmitterBuilder = mock[SubmitterBuilder]
   private val amendmentBuilder: AmendmentBuilder = mock[AmendmentBuilder]
+  private val additionalInformationBuilder: AdditionalInformationBuilder = mock[AdditionalInformationBuilder]
 
   private val builder = new DeclarationBuilder(
     functionCodeBuilder,
@@ -67,11 +68,11 @@ class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
     goodsShipmentBuilder,
     identificationBuilder,
     submitterBuilder,
-    amendmentBuilder
+    amendmentBuilder,
+    additionalInformationBuilder
   )
 
   "DeclarationBuilder on buildDeclaration" should {
-
     "call all builders" in {
       val inputDeclaration = aDeclaration()
       builder.buildDeclaration(inputDeclaration)
@@ -97,7 +98,6 @@ class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
   }
 
   "Build Cancellation" should {
-
     "build and append to Declaration" in {
       val declaration = builder.buildCancellation("ref", "id", "description", "reason", "eori")
 
@@ -107,18 +107,7 @@ class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
       verify(identificationBuilder).buildThenAdd("id", declaration)
       verify(submitterBuilder).buildThenAdd("eori", declaration)
       verify(amendmentBuilder).buildThenAdd("reason", declaration)
-
-      // Checking behaviour of buildThenAddAdditionalInformation
-      declaration.getAdditionalInformation must have(size(1))
-      val additionalInfo = declaration.getAdditionalInformation.get(0)
-      additionalInfo.getStatementTypeCode.getValue mustBe "AES"
-      additionalInfo.getStatementDescription.getValue mustBe "description"
-      additionalInfo.getPointer must have(size(2))
-      val pointer1 = additionalInfo.getPointer.get(0)
-      val pointer2 = additionalInfo.getPointer.get(1)
-      pointer1.getSequenceNumeric.intValue mustBe 1
-      pointer1.getDocumentSectionCode.getValue mustBe "42A"
-      pointer2.getDocumentSectionCode.getValue mustBe "06A"
+      verify(additionalInformationBuilder).buildThenAdd("description", declaration)
     }
   }
 }
