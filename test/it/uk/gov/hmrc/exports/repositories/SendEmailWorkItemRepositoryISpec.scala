@@ -36,7 +36,7 @@ class SendEmailWorkItemRepositoryISpec extends IntegrationTestSpec {
   }
 
   def now: Instant = Instant.now
-  val seconds = 2 * 60
+  val seconds = 2 * 60L
 
   "SendEmailWorkItemRepository on pushNew" should {
 

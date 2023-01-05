@@ -62,7 +62,7 @@ class NotificationReceiptActionsRunnerSpec extends UnitSpec {
         val captor: ArgumentCaptor[Instant] = ArgumentCaptor.forClass(classOf[Instant])
         verify(unparsedNotificationWorkItemRepository).pullOutstanding(captor.capture(), any[Instant])
 
-        val minimumYearsDifference = 10
+        val minimumYearsDifference = 10L
         val now = LocalDateTime.ofInstant(Instant.now, ZoneOffset.UTC)
         val maximumFailedBeforeDate = now.minusYears(minimumYearsDifference).toInstant(ZoneOffset.UTC)
 

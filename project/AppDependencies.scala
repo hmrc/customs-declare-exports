@@ -2,8 +2,9 @@ import sbt._
 
 object AppDependencies {
 
-  val bootstrapPlayVersion = "7.1.0"
-  val hmrcMongoVersion = "0.73.0"
+  val bootstrapPlayVersion = "7.12.0"
+  val hmrcMongoVersion = "0.74.0"
+  val jacksonVersion = "2.14.1"
   val testScope = "test,it"
 
   val compile = Seq(
@@ -11,18 +12,19 @@ object AppDependencies {
     "uk.gov.hmrc.mongo"              %% "hmrc-mongo-work-item-repo-play-28" % hmrcMongoVersion,
     "uk.gov.hmrc"                    %% "wco-dec"                           % "0.37.0",
     "com.github.tototoshi"           %% "scala-csv"                         % "1.3.10",
-    "com.fasterxml.jackson.module"   %% "jackson-module-scala"              % "2.13.3",
+    "com.fasterxml.jackson.module"   %% "jackson-module-scala"              % jacksonVersion,
     // Used by the Migration tool. Keep this library's version to the same major.minor version as the mongo-scala-driver.
-    "org.mongodb"                    %  "mongodb-driver-sync"               % "4.6.0",
+    "org.mongodb"                    %  "mongodb-driver-sync"               % "4.6.1",
     // Added to replace javax.xml.bind (removed in Java 11)
-    "org.glassfish.jaxb" % "jaxb-runtime" % "2.3.6"
+    "org.glassfish.jaxb"             % "jaxb-runtime"                       % "2.3.7"
   )
 
   val test = Seq(
     "uk.gov.hmrc"            %% "bootstrap-test-play-28"  % bootstrapPlayVersion % testScope,
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28" % hmrcMongoVersion     % testScope,
-    "com.vladsch.flexmark"   %  "flexmark-all"            % "0.36.8"             % testScope,
-    "com.github.tomakehurst" %  "wiremock-jre8"           % "2.33.2"             % testScope,
-    "org.mockito"            %% "mockito-scala"           % "1.17.7"             % testScope
+    "com.vladsch.flexmark"   %  "flexmark-all"            % "0.64.0"             % testScope,
+    "org.mockito"            %% "mockito-scala-scalatest" % "1.17.12"            % "test",
+    "org.scalatest"          %% "scalatest"               % "3.2.14"             % testScope,
+    "com.github.tomakehurst" %  "wiremock-jre8"           % "2.35.0"             % testScope,
   )
 }

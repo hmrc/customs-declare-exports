@@ -145,7 +145,7 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
     val statuses = toEnhancedStatus(statusGroup).toList
 
     val submissions = (0 until size).map { seconds =>
-      submission(lastStatusUpdate.minusSeconds(seconds), statuses(Random.nextInt(statuses.length)))
+      submission(lastStatusUpdate.minusSeconds(seconds.toLong), statuses(Random.nextInt(statuses.length)))
     }.toList
 
     repository.bulkInsert(submissions).futureValue mustBe size

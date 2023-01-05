@@ -42,5 +42,4 @@ private[metrics] object MetricIdentifiers {
     val addSubmissionAction = "submission.declaration.addSubmissionAction"
     val appendMrnToSubmission = "submission.declaration.appendMrnToSubmission"
   }
-
 }
