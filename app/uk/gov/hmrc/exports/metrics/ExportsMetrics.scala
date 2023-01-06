@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,19 +108,18 @@ class ExportsMetrics @Inject() (metrics: Metrics) {
 
 object ExportsMetrics {
 
-  case class Meter(name: String) { val path = s"$name.rate" }
   case class Timer(name: String) { val path = s"$name.timer" }
   case class Counter(name: String) { val path = s"$name.counter" }
 
-  trait Monitor {
-    val name: String
-
+  case class Monitor(name: String) {
     val path: String = s"$name.monitor"
     val timer: Timer = Timer(path)
     val callCounter: Counter = Counter(path)
     val completionCounter: Counter = Counter(s"$path.success")
     val failureCounter: Counter = Counter(s"$path.failed")
   }
+
+  val submissionMonitor = Monitor(SubmissionMetric.wholeSubmission)
 
   object Timers {
     val notificationTimer: Timer = Timer(NotificationMetric.notificationReceiptHandling)
@@ -129,22 +128,14 @@ object ExportsMetrics {
 
     val declarationFindAllTimer: Timer = Timer(DeclarationMetric.findAll)
     val declarationFindSingleTimer: Timer = Timer(DeclarationMetric.findSingle)
-    val declarationUpdateTimer: Timer = Timer(DeclarationMetric.update)
 
     val submissionProduceMetaDataTimer: Timer = Timer(SubmissionMetric.produceMetaData)
     val submissionConvertToXmlTimer: Timer = Timer(SubmissionMetric.convertToXml)
-    val submissionUpdateDeclarationTimer: Timer = Timer(SubmissionMetric.updateDeclaration)
     val submissionFindOrCreateSubmissionTimer: Timer = Timer(SubmissionMetric.findOrCreateSubmission)
     val submissionSendToDecApiTimer: Timer = Timer(SubmissionMetric.sendToDecApi)
-    val submissionAddSubmissionActionTimer: Timer = Timer(SubmissionMetric.addSubmissionAction)
-    val submissionAppendMrnToSubmissionTimer: Timer = Timer(SubmissionMetric.appendMrnToSubmission)
   }
 
   object Counters {
     val notificationCounter: Counter = Counter(NotificationMetric.notificationReceiptHandling)
-  }
-
-  object Monitors {
-    val submissionMonitor: Monitor = new Monitor { override val name: String = SubmissionMetric.wholeSubmission }
   }
 }

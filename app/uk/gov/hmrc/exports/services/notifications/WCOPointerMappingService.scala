@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,11 @@ object WCOPointerMappingService extends Logging {
 
     val errors: List[List[String]] = reader.all()
 
-    errors.map { case List(wcoPattern, exportsPattern) =>
-      PointerMapping(PointerPattern(wcoPattern.trim), PointerPattern(exportsPattern.trim))
+    errors.map { error =>
+      (error: @unchecked) match {
+        case List(wcoPattern, exportsPattern) =>
+          PointerMapping(PointerPattern(wcoPattern.trim), PointerPattern(exportsPattern.trim))
+      }
     }.toSet
   }
 

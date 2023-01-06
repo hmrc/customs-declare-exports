@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,25 +23,20 @@ class TimeUtilsSpec extends UnitSpec {
   private val timeUtils = new TimeUtils
 
   "TimeUtils on minutesToMillis" should {
-
     "correctly convert to milliseconds" in {
-
-      val minutes = 13
-      val expectedOutput = 780000
+      val minutes = 13L
+      val expectedOutput = 780000L
 
       timeUtils.minutesToMillis(minutes) mustBe expectedOutput
     }
   }
 
   "TimeUtils on millisToMinutes" should {
-
     "correctly convert to minutes" in {
-
-      val millis = 120000
-      val expectedOutput = 2
+      val millis = 120000L
+      val expectedOutput = 2L
 
       timeUtils.millisToMinutes(millis) mustBe expectedOutput
     }
   }
-
 }

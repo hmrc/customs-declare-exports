@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
         val declaration5 = aDeclaration(withEori(eori.value))
         givenADeclarationExists(declaration1, declaration2, declaration3, declaration4, declaration5)
 
-        val expectedTotal = 5
+        val expectedTotal = 5L
 
         val page1 = Page(index = 1, size = 2)
         repository.find(DeclarationSearch(eori), page1, DeclarationSort()).futureValue mustBe Paginated(

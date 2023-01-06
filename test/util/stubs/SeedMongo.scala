@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,7 +78,7 @@ object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
   def randomStatus: DeclarationStatus.Value = if (random.nextDouble() > 0.1) COMPLETE else DRAFT
 
   def job(collection: MongoCollection[ExportsDeclaration]): Unit =
-    (1 to Math.ceil(target / batchSize).toInt).foreach { batchNumber =>
+    (1 to Math.ceil((target / batchSize).toDouble).toInt).foreach { batchNumber =>
       val declarations = (1 to batchSize).map { _ =>
         InsertOneModel(declaration.copy(id = UUID.randomUUID.toString, eori = generateEori, status = randomStatus))
       }.toList

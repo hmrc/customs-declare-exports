@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ class NotificationReceiptActionsRunnerSpec extends UnitSpec {
         val captor: ArgumentCaptor[Instant] = ArgumentCaptor.forClass(classOf[Instant])
         verify(unparsedNotificationWorkItemRepository).pullOutstanding(captor.capture(), any[Instant])
 
-        val minimumYearsDifference = 10
+        val minimumYearsDifference = 10L
         val now = LocalDateTime.ofInstant(Instant.now, ZoneOffset.UTC)
         val maximumFailedBeforeDate = now.minusYears(minimumYearsDifference).toInstant(ZoneOffset.UTC)
 

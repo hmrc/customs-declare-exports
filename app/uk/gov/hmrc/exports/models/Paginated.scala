@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,12 @@ package uk.gov.hmrc.exports.models
 import play.api.libs.json._
 
 case class Paginated[T](currentPageElements: Seq[T], page: Page, total: Long)
+
 object Paginated {
-  def apply[T](results: T*): Paginated[T] = Paginated[T](results, Page(), results.size)
-  def empty[T](page: Page) = Paginated(Seq.empty[T], page, 0)
+
+  def apply[T](results: T*): Paginated[T] = Paginated[T](results, Page(), results.size.toLong)
+
+  def empty[T](page: Page): Paginated[T] = Paginated(Seq.empty[T], page, 0L)
 
   implicit def writes[T](implicit fmt: Writes[T]): Writes[Paginated[T]] = new Writes[Paginated[T]] {
     override def writes(paged: Paginated[T]): JsValue =
