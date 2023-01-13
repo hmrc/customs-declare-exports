@@ -18,8 +18,10 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 
-case class MUCR(mucr: String) {
+case class MUCR(mucr: String) extends Ordered[MUCR] {
   def nonEmpty: Boolean = this.mucr.nonEmpty
+
+  override def compare(y: MUCR): Int = mucr.compareTo(y.mucr)
 }
 
 object MUCR {

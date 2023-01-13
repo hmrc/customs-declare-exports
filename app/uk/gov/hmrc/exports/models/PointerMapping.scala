@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.exports.models
 
+import uk.gov.hmrc.exports.services.diff.AlteredField
+
 case class PointerMapping(wcoPattern: PointerPattern, exportsPattern: PointerPattern) {
 
   def applyToWCOPointer(pointer: Pointer): Pointer = {
@@ -50,4 +52,28 @@ case class PointerMapping(wcoPattern: PointerPattern, exportsPattern: PointerPat
         None
       }
     }.filter(_.isDefined).flatten.toMap
+}
+
+object PointerMapping {
+
+  type ExportsFieldPointer = String
+  type ExportsDeclarationDiff = Seq[AlteredField]
+
+  def convertFromExportsToWCO(pointerString: String): Seq[String] = {
+    val pointerStringParts = pointerString.split("""\.""")
+
+    pointerStringParts match {
+      case Array("declaration", "mucr") =>
+        Seq( // associated MUCR if present is set as the first PreviousDocument in seq
+          "42A.67A.99A.$1.D018", // ID
+          "42A.67A.99A.$1.D031", // CategoryCode
+          "42A.67A.99A.$1.D019", // TypeCode
+          "42A.67A.99A.$1.171"
+        ) // LineNumeric
+      case Array("declaration", "transport", "expressConsignment")                      => Seq("42A.504")
+      case Array("declaration", "transport", "transportPayment", "paymentMethod")       => Seq("42A.28A.62A.098")
+      case Array("declaration", "items", a, "packageInformation", b, "typesOfPackages") => Seq(s"42A.67A.68A.$a.23A.93A.$b.141")
+      case _                                                                            => Seq()
+    }
+  }
 }

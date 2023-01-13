@@ -45,7 +45,7 @@ class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
   private val goodsShipmentBuilder: GoodsShipmentBuilder = mock[GoodsShipmentBuilder]
   private val identificationBuilder: IdentificationBuilder = mock[IdentificationBuilder]
   private val submitterBuilder: SubmitterBuilder = mock[SubmitterBuilder]
-  private val amendmentBuilder: AmendmentBuilder = mock[AmendmentBuilder]
+  private val amendmentBuilder: InvalidationAmendmentBuilder = mock[InvalidationAmendmentBuilder]
   private val additionalInformationBuilder: AdditionalInformationBuilder = mock[AdditionalInformationBuilder]
 
   private val builder = new DeclarationBuilder(

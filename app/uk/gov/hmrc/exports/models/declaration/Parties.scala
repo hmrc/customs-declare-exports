@@ -99,7 +99,9 @@ object CarrierDetails {
   implicit val format: OFormat[CarrierDetails] = Json.format[CarrierDetails]
 }
 
-case class YesNoAnswer(answer: String)
+case class YesNoAnswer(answer: String) extends Ordered[YesNoAnswer] {
+  override def compare(that: YesNoAnswer): Int = answer.compare(that.answer)
+}
 object YesNoAnswer {
   implicit val format: OFormat[YesNoAnswer] = Json.format[YesNoAnswer]
 

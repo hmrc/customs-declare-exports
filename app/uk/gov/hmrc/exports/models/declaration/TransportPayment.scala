@@ -17,7 +17,9 @@
 package uk.gov.hmrc.exports.models.declaration
 import play.api.libs.json.{Json, OFormat}
 
-case class TransportPayment(paymentMethod: String)
+case class TransportPayment(paymentMethod: String) extends Ordered[TransportPayment] {
+  override def compare(that: TransportPayment): Int = paymentMethod.compare(that.paymentMethod)
+}
 
 object TransportPayment {
 

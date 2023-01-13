@@ -17,6 +17,8 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.exports.services.diff.DiffTools
+import uk.gov.hmrc.exports.services.diff.DiffTools._
 
 case class TransportLeavingTheBorder(code: Option[ModeOfTransportCode] = None)
 
@@ -34,7 +36,7 @@ case class Transport(
   transportCrossingTheBorderNationality: Option[TransportCountry] = None,
   meansOfTransportCrossingTheBorderType: Option[String] = None,
   meansOfTransportCrossingTheBorderIDNumber: Option[String] = None
-) {
+) extends DiffTools[Transport] {
   def hasBorderTransportDetails: Boolean =
     meansOfTransportCrossingTheBorderIDNumber.exists(_.nonEmpty) &&
       meansOfTransportCrossingTheBorderType.exists(_.nonEmpty)
@@ -47,6 +49,12 @@ case class Transport(
   def hasTransportLeavingTheBorder: Boolean = borderModeOfTransportCode.nonEmpty
 
   def isMeansOfTransportOnDepartureDefined: Boolean = meansOfTransportOnDepartureType.exists(_ != Transport.optionNone)
+
+  def createDiff(original: Transport): ExportsDeclarationDiff =
+    Seq(
+      compareDifference(original.expressConsignment, expressConsignment, "transport.expressConsignment"),
+      compareDifference(original.transportPayment, transportPayment, "transport.transportPayment.paymentMethod")
+    ).flatten
 }
 
 object Transport {

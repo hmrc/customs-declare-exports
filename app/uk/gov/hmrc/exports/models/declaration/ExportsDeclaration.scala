@@ -23,6 +23,8 @@ import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
+import uk.gov.hmrc.exports.services.diff.DiffTools
+import uk.gov.hmrc.exports.services.diff.DiffTools.{compareDifference, ExportsDeclarationDiff}
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time.Instant
@@ -36,10 +38,10 @@ case class ExportsDeclaration(
   createdDateTime: Instant,
   updatedDateTime: Instant,
   `type`: DeclarationType,
-  dispatchLocation: Option[DispatchLocation],
-  additionalDeclarationType: Option[AdditionalDeclarationType],
-  consignmentReferences: Option[ConsignmentReferences],
-  linkDucrToMucr: Option[YesNoAnswer],
+  dispatchLocation: Option[DispatchLocation], // Forms part of the Declaration\TypeCode element that is not editable
+  additionalDeclarationType: Option[AdditionalDeclarationType], // Element is not editable
+  consignmentReferences: Option[ConsignmentReferences], // Element is not editable
+  linkDucrToMucr: Option[YesNoAnswer], // Element is not part of WCO Dec XML
   mucr: Option[MUCR],
   transport: Transport,
   parties: Parties,
@@ -50,8 +52,15 @@ case class ExportsDeclaration(
   natureOfTransaction: Option[NatureOfTransaction],
   summaryWasVisited: Option[Boolean],
   readyForSubmission: Option[Boolean]
-) {
+) extends DiffTools[ExportsDeclaration] {
   def isCompleted: Boolean = status == DeclarationStatus.COMPLETE
+
+  /*
+  This diff only compares the fields that are used when generating a WCO XML declaration.
+  It does not include those fields that are purely for our own UI's operation e.g. linkDucrToMucr
+   */
+  def createDiff(original: ExportsDeclaration): ExportsDeclarationDiff =
+    Seq(compareDifference(original.mucr, mucr, "declaration.mucr")).flatten ++ transport.createDiff(original.transport)
 }
 
 object ExportsDeclaration {

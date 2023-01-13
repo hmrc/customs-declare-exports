@@ -17,6 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.PointerMapping.ExportsFieldPointer
 import uk.gov.hmrc.exports.services.mapping.AuthorisationHoldersBuilder
 import uk.gov.hmrc.exports.services.mapping.declaration.consignment.DeclarationConsignmentBuilder
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.GoodsShipmentBuilder
@@ -44,7 +45,7 @@ class DeclarationBuilder @Inject() (
   goodsShipmentBuilder: GoodsShipmentBuilder,
   identificationBuilder: IdentificationBuilder,
   submitterBuilder: SubmitterBuilder,
-  amendmentBuilder: AmendmentBuilder,
+  invalidationAmendmentBuilder: InvalidationAmendmentBuilder,
   additionalInformationBuilder: AdditionalInformationBuilder
 ) {
 
@@ -74,6 +75,32 @@ class DeclarationBuilder @Inject() (
     declaration
   }
 
+  def buildAmendment(model: ExportsDeclaration, mrn: String, statementDescription: String, alteredFields: Seq[ExportsFieldPointer]): Declaration = {
+    val declaration = new Declaration()
+
+    functionCodeBuilder.buildThenAdd("13", declaration)
+    functionalReferenceIdBuilder.buildThenAdd(model, declaration)
+    identificationBuilder.buildThenAdd(mrn, declaration)
+    typeCodeBuilder.buildThenAdd("COR", declaration)
+    additionalInformationBuilder.buildThenAdd("statementDescription", declaration)
+    // amendmentBuilder.buildThenAdd(alteredFields, declaration) // TODO: this needs to generate all the pointers of the fields that have changed
+
+    borderTransportMeansBuilder.buildThenAdd(model, declaration)
+    exporterBuilder.buildThenAdd(model, declaration)
+    declarantBuilder.buildThenAdd(model, declaration)
+    invoiceAmountBuilder.buildThenAdd(model, declaration)
+    specificCircumstancesCodeBuilder.buildThenAdd(model, declaration)
+    supervisingOfficeBuilder.buildThenAdd(model, declaration)
+    totalPackageQuantityBuilder.buildThenAdd(model, declaration)
+    declarationConsignmentBuilder.buildThenAdd(model, declaration)
+    authorisationHoldersBuilder.buildThenAdd(model, declaration)
+    currencyExchangeBuilder.buildThenAdd(model, declaration)
+    additionalInformationBuilder.buildThenAdd(model, declaration)
+
+    declaration
+
+  }
+
   def buildCancellation(
     functionalReferenceId: String,
     declarationId: String,
@@ -88,7 +115,7 @@ class DeclarationBuilder @Inject() (
     functionalReferenceIdBuilder.buildThenAdd(functionalReferenceId, declaration)
     identificationBuilder.buildThenAdd(declarationId, declaration)
     submitterBuilder.buildThenAdd(eori, declaration)
-    amendmentBuilder.buildThenAdd(changeReason, declaration)
+    invalidationAmendmentBuilder.buildThenAdd(changeReason, declaration)
     additionalInformationBuilder.buildThenAdd(statementDescription, declaration)
 
     declaration
