@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.models.declaration
 import org.mockito.MockitoSugar.mock
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
+import uk.gov.hmrc.exports.controllers.request.{ExportsDeclarationRequest, ExportsDeclarationRequestMeta}
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 
@@ -85,9 +85,13 @@ object ExportsDeclarationSpec {
   private val natureOfTransaction = mock[NatureOfTransaction]
 
   val exportsDeclarationRequest = ExportsDeclarationRequest(
-    parentDeclarationId = Some("parentDeclarationId"),
-    createdDateTime = createdDate,
-    updatedDateTime = updatedDate,
+    declarationMeta = ExportsDeclarationRequestMeta(
+      parentDeclarationId = Some("parentDeclarationId"),
+      createdDateTime = createdDate,
+      updatedDateTime = updatedDate,
+      summaryWasVisited = Some(true),
+      readyForSubmission = Some(true)
+    ),
     `type` = `type`,
     dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),
@@ -100,18 +104,20 @@ object ExportsDeclarationSpec {
     items = Seq(item),
     totalNumberOfItems = Some(totalNumberOfItems),
     previousDocuments = Some(previousDocuments),
-    natureOfTransaction = Some(natureOfTransaction),
-    summaryWasVisited = Some(true),
-    readyForSubmission = Some(true)
+    natureOfTransaction = Some(natureOfTransaction)
   )
 
   val exportsDeclaration = ExportsDeclaration(
     id = id,
-    parentDeclarationId = Some("parentDeclarationId"),
+    declarationMeta = DeclarationMeta(
+      status = DeclarationStatus.DRAFT,
+      createdDateTime = createdDate,
+      updatedDateTime = updatedDate,
+      parentDeclarationId = Some("parentDeclarationId"),
+      summaryWasVisited = Some(true),
+      readyForSubmission = Some(true)
+    ),
     eori = eori,
-    status = DeclarationStatus.DRAFT,
-    createdDateTime = createdDate,
-    updatedDateTime = updatedDate,
     `type` = `type`,
     dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),
@@ -124,19 +130,21 @@ object ExportsDeclarationSpec {
     items = Seq(item),
     totalNumberOfItems = Some(totalNumberOfItems),
     previousDocuments = Some(previousDocuments),
-    natureOfTransaction = Some(natureOfTransaction),
-    summaryWasVisited = Some(true),
-    readyForSubmission = Some(true)
+    natureOfTransaction = Some(natureOfTransaction)
   )
 
   val exportsDeclarationRequestAsString: String =
     """{
       |  "id": "6f31582e-bfd5-4b27-90be-2dca6e236b20",
-      |  "parentDeclarationId": "parentDeclarationId",
-      |  "eori": "GB7172755078551",
+      |  "declarationMeta": {
+      |   "createdDateTime": "2019-12-10T15:52:32.681Z",
+      |   "updatedDateTime": "2019-12-10T15:53:13.697Z",
+      |   "parentDeclarationId": "parentDeclarationId",
+      |   "summaryWasVisited": true,
+      |   "readyForSubmission": true
+      |  },
       |  "status": "DRAFT",
-      |  "createdDateTime": "2019-12-10T15:52:32.681Z",
-      |  "updatedDateTime": "2019-12-10T15:53:13.697Z",
+      |  "eori": "GB7172755078551",
       |  "type": "STANDARD",
       |  "dispatchLocation": {
       |    "dispatchLocation": "EX"
@@ -334,8 +342,6 @@ object ExportsDeclarationSpec {
       |  },
       |  "natureOfTransaction": {
       |    "natureType": "1"
-      |  },
-      |  "summaryWasVisited": true,
-      |  "readyForSubmission": true
+      |  }
       |}""".stripMargin
 }

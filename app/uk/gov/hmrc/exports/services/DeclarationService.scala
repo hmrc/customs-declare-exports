@@ -45,9 +45,11 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
             .create(
               declaration.copy(
                 id = UUID.randomUUID.toString,
-                parentDeclarationId = Some(parentId),
-                parentDeclarationEnhancedStatus = submission.flatMap(_.latestEnhancedStatus),
-                status = DRAFT
+                declarationMeta = declaration.declarationMeta.copy(
+                  parentDeclarationId = Some(parentId),
+                  parentDeclarationEnhancedStatus = submission.flatMap(_.latestEnhancedStatus),
+                  status = DRAFT
+                )
               )
             )
             .map(declaration => (CREATED, declaration.id))
