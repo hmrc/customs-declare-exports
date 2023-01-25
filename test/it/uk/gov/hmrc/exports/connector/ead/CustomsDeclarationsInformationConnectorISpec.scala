@@ -28,35 +28,75 @@ import uk.gov.hmrc.http.InternalServerException
 
 class CustomsDeclarationsInformationConnectorISpec extends IntegrationTestSpec {
 
+  override def beforeEach(): Unit = {
+    WireMock.reset()
+    super.beforeEach()
+  }
+
   private lazy val connector = instanceOf[CustomsDeclarationsInformationConnector]
 
   val id = "ID"
-  val fetchMrnDeclarationUrl = "/mrn/" + id + "/full"
   val fetchMrnStatusUrl = "/mrn/" + id + "/status"
+  val fetchMrnDeclarationUrl = "/mrn/" + id + "/full"
 
   val mrn = "18GB9JLC3CU1LFGVR2"
   val mrnStatusUrl = fetchMrnStatusUrl.replace(id, mrn)
+  val mrnDeclarationUrl = fetchMrnDeclarationUrl.replace(id, mrn)
 
   "Customs Declarations Information Connector" should {
     "return response with full declaration" when {
-      "request is processed successfully - 200" in {
-        getFromDownstreamService(fetchMrnDeclarationUrl, OK, Some(MrnDeclarationParserTestData.mrnDeclarationTestSample(mrn).toString))
+      "request is processed successfully - 200" when {
+        "no specific version is requested" in {
+          getFromDownstreamService(mrnDeclarationUrl, OK, Some(MrnDeclarationParserTestData.mrnDeclarationTestSample(mrn, None).toString))
 
-        val declaration = connector.fetchMrnFullDeclaration(mrn).futureValue
-        (declaration \\ "MRN") mustBe mrn
+          val declaration = connector.fetchMrnFullDeclaration(mrn, None).futureValue
+          (declaration \\ "MRN").text mustBe mrn
+          (declaration \\ "VersionID").text mustBe "2"
 
-        verifyDecServiceWasCalledCorrectly()
+          verifyDecServiceWasCalledCorrectly(None)
+        }
+        "a version is requested" in {
+          getFromDownstreamService(
+            url = urlPathEqualTo(mrnDeclarationUrl),
+            status = OK,
+            body = Some(MrnDeclarationParserTestData.mrnDeclarationTestSample(mrn, Some(1)).toString),
+            headers = Map.empty,
+            delay = 0
+          )
+
+          val declaration = connector.fetchMrnFullDeclaration(mrn, Some("1")).futureValue
+          (declaration \\ "MRN").text mustBe mrn
+          (declaration \\ "VersionID").text mustBe "1"
+
+          verifyDecServiceWasCalledCorrectly(Some("1"))
+        }
       }
 
       "request is not processed - 500" in {
-        getFromDownstreamService(fetchMrnDeclarationUrl, INTERNAL_SERVER_ERROR)
+        getFromDownstreamService(mrnDeclarationUrl, INTERNAL_SERVER_ERROR)
 
         intercept[InternalServerException] {
-          await(connector.fetchMrnStatus(mrn))
+          await(connector.fetchMrnFullDeclaration(mrn, None))
         }
       }
+
+      def verifyDecServiceWasCalledCorrectly(queryParam: Option[String], expectedApiVersion: String = "1.0"): Unit = {
+
+        val url = getRequestedFor(urlPathEqualTo(mrnDeclarationUrl))
+          .withHeader(CONTENT_TYPE, equalTo(ContentTypes.XML(Codec.utf_8)))
+          .withHeader(ACCEPT, equalTo(s"application/vnd.hmrc.${expectedApiVersion}+xml"))
+
+        WireMock.verify(
+          1,
+          queryParam.fold(url) { param =>
+            url.withQueryParam("declarationVersion", equalTo(param))
+          }
+        )
+      }
+
     }
     "return response with specific status" when {
+
       "request is processed successfully - 200" in {
         val expectedMrnStatus = MrnStatusParserTestData.mrnStatusWithAllData(mrn).toString
         getFromDownstreamService(mrnStatusUrl, OK, Some(expectedMrnStatus))
@@ -75,15 +115,16 @@ class CustomsDeclarationsInformationConnectorISpec extends IntegrationTestSpec {
           await(connector.fetchMrnStatus(mrn))
         }
       }
+
+      def verifyDecServiceWasCalledCorrectly(expectedApiVersion: String = "1.0"): Unit =
+        WireMock.verify(
+          1,
+          getRequestedFor(urlMatching(mrnStatusUrl))
+            .withHeader(CONTENT_TYPE, equalTo(ContentTypes.XML(Codec.utf_8)))
+            .withHeader(ACCEPT, equalTo(s"application/vnd.hmrc.$expectedApiVersion+xml"))
+        )
+
     }
   }
-
-  private def verifyDecServiceWasCalledCorrectly(expectedApiVersion: String = "1.0"): Unit =
-    WireMock.verify(
-      1,
-      getRequestedFor(urlMatching(mrnStatusUrl))
-        .withHeader(CONTENT_TYPE, equalTo(ContentTypes.XML(Codec.utf_8)))
-        .withHeader(ACCEPT, equalTo(s"application/vnd.hmrc.$expectedApiVersion+xml"))
-    )
 
 }

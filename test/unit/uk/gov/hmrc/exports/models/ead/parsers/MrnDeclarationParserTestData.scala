@@ -20,7 +20,7 @@ import scala.xml.Elem
 
 object MrnDeclarationParserTestData {
 
-  def mrnDeclarationTestSample(mrn: String): Elem =
+  def mrnDeclarationTestSample(mrn: String, version: Option[Int]): Elem =
     <p:DeclarationFullResponse xsi:schemaLocation="http://gov.uk/customs/FullDeclarationDataRetrievalService"
                                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                xmlns:p4="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:6"
@@ -29,9 +29,8 @@ object MrnDeclarationParserTestData {
                                xmlns:p="http://gov.uk/customs/FullDeclarationDataRetrievalService">
       <p:FullDeclarationDataDetails>
         <p:HighLevelSummaryDetails>
-          <p:MRN>
-            {mrn}
-          </p:MRN>
+          <p:MRN>{mrn}</p:MRN>
+          <p:VersionID>{version getOrElse 2}</p:VersionID>
         </p:HighLevelSummaryDetails>
       </p:FullDeclarationDataDetails>
     </p:DeclarationFullResponse>

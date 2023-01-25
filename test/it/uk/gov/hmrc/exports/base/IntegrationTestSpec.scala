@@ -50,6 +50,7 @@ trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSui
           "microservice.services.customs-declarations-information.host" -> Host,
           "microservice.services.customs-declarations-information.port" -> Port,
           "microservice.services.customs-declarations-information.fetch-mrn-status" -> "/mrn/ID/status",
+          "microservice.services.customs-declarations-information.fetch-mrn-declaration" -> "/mrn/ID/full",
           "microservice.services.customs-declarations-information.api-version" -> "1.0",
           "microservice.services.hmrc-email.host" -> Host,
           "microservice.services.hmrc-email.port" -> Port,

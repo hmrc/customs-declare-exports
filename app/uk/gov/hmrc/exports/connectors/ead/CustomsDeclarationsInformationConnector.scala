@@ -35,21 +35,22 @@ class CustomsDeclarationsInformationConnector @Inject() (mrnStatusParser: MrnSta
   implicit ec: ExecutionContext
 ) extends Logging {
 
-  def fetchMrnFullDeclaration(mrn: String)(implicit hc: HeaderCarrier): Future[Elem] =
+  def fetchMrnFullDeclaration(mrn: String, declarationVersion: Option[String])(implicit hc: HeaderCarrier): Future[Elem] =
     httpClient
-      .doGet(
+      .GET(
         url = s"${appConfig.customsDeclarationsInformationBaseUrl}${appConfig.fetchMrnFullDeclaration.replace(XmlTags.id, mrn)}",
-        headers = headers
+        headers = headers,
+        queryParams = declarationVersion.fold(Seq.empty[(String, String)])(version => Seq(("declarationVersion", version)))
       )
       .map { response =>
         response.status match {
           case OK =>
             logger.debug(s"CUSTOMS_DECLARATIONS_INFORMATION fetch MRN full declaration response ${response.body}")
             xml.XML.loadString(response.body)
-          case status =>
-            logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION fetch MRN full declaration response ${response.body}")
-            throw new InternalServerException(s"Customs Declarations Service returned [$status]")
         }
+      }
+      .recover { case status =>
+        throw new InternalServerException(s"Customs Declarations Service returned [$status]")
       }
 
   def fetchMrnStatus(mrn: String)(implicit hc: HeaderCarrier): Future[Option[MrnStatus]] =
