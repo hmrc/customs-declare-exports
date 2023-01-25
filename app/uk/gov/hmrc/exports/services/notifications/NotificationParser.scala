@@ -67,14 +67,14 @@ class NotificationParser extends Logging {
     val pointersXml = singleErrorXml \ "Pointer"
 
     val pointerSections = pointersXml.flatMap { singlePointerXml =>
-      /**
+      /*
        * Document Section Code contains section code e.g. 42A, 67A.
        * One section is one element in the declaration tree e.g. Declaration, GoodsShipment etc. - non optional
        */
       val documentSectionCode: Option[PointerSection] =
         Some(PointerSection((singlePointerXml \ "DocumentSectionCode").text, PointerSectionType.FIELD))
 
-      /**
+      /*
        * Sequence Numeric define what item is related with error, this is for future implementation - optional
        * Additional filter to ignore any sequence numbers for section 67A (CEDS-3527)
        */
@@ -83,7 +83,7 @@ class NotificationParser extends Logging {
           Some(PointerSection((singlePointerXml \ "SequenceNumeric").text, PointerSectionType.SEQUENCE))
         else None
 
-      /**
+      /*
        * Probably the last element in pointers, is it Important for us? - optional
        */
       val tagId: Option[PointerSection] =

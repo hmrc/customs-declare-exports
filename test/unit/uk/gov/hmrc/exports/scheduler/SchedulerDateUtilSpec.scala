@@ -27,7 +27,7 @@ import uk.gov.hmrc.exports.config.AppConfig
 class SchedulerDateUtilSpec extends UnitSpec {
 
   private val zone = ZoneOffset.UTC
-  private val clock: Clock = Clock.fixed(instant("2019-01-01T12:00:00").plusNanos((Math.random() * 1000).toInt), zone)
+  private val clock: Clock = Clock.fixed(instant("2019-01-01T12:00:00").plusNanos((Math.random() * 1000).toLong), zone)
   private val config: AppConfig = mock[AppConfig]
   private val util = new SchedulerDateUtil(config)
 

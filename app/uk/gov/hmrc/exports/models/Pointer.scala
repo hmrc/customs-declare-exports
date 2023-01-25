@@ -27,15 +27,18 @@ object PointerSectionType extends Enumeration {
 }
 
 case class PointerSection(value: String, `type`: PointerSectionType) {
-  lazy val pattern: String = `type` match {
-    case PointerSectionType.FIELD    => value
-    case PointerSectionType.SEQUENCE => "$"
-  }
 
-  override def toString: String = `type` match {
-    case PointerSectionType.FIELD    => value
-    case PointerSectionType.SEQUENCE => "#" + value
-  }
+  lazy val pattern: String =
+    (`type`: @unchecked) match {
+      case PointerSectionType.FIELD    => value
+      case PointerSectionType.SEQUENCE => "$"
+    }
+
+  override def toString: String =
+    (`type`: @unchecked) match {
+      case PointerSectionType.FIELD    => value
+      case PointerSectionType.SEQUENCE => "#" + value
+    }
 }
 
 object PointerSection {

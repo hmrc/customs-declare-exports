@@ -33,7 +33,7 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
     declarationRepository.create(declaration)
 
   def findOrCreateDraftFromParent(eori: Eori, parentId: String)(implicit ec: ExecutionContext): Future[(Boolean, String)] = {
-    val filter = Json.obj("eori" -> eori, "parentDeclarationId" -> parentId, "status" -> DRAFT.toString)
+    val filter = Json.obj("eori" -> eori, "declarationMeta.parentDeclarationId" -> parentId, "declarationMeta.status" -> DRAFT.toString)
     declarationRepository.findOne(filter).flatMap {
       case Some(declaration) => Future.successful((FOUND, declaration.id))
 
@@ -45,9 +45,11 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
             .create(
               declaration.copy(
                 id = UUID.randomUUID.toString,
-                parentDeclarationId = Some(parentId),
-                parentDeclarationEnhancedStatus = submission.flatMap(_.latestEnhancedStatus),
-                status = DRAFT
+                declarationMeta = declaration.declarationMeta.copy(
+                  parentDeclarationId = Some(parentId),
+                  parentDeclarationEnhancedStatus = submission.flatMap(_.latestEnhancedStatus),
+                  status = DRAFT
+                )
               )
             )
             .map(declaration => (CREATED, declaration.id))

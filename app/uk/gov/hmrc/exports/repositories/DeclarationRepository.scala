@@ -28,6 +28,7 @@ import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timers
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
+import uk.gov.hmrc.exports.repositories.DeclarationRepository.meta
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
@@ -50,8 +51,8 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
   override val executionContext = ec
 
   def deleteExpiredDraft(expiryDate: Instant): Future[Long] = {
-    import ExportsDeclaration.Mongo.formatInstant
-    removeEvery(Json.obj("status" -> DeclarationStatus.DRAFT.toString, "updatedDateTime" -> Json.obj("$lte" -> expiryDate)))
+    import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.Mongo.formatInstant
+    removeEvery(Json.obj(s"$meta.status" -> DeclarationStatus.DRAFT.toString, s"$meta.updatedDateTime" -> Json.obj("$lte" -> expiryDate)))
   }
 
   def find(search: DeclarationSearch, page: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] = {
@@ -75,7 +76,7 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
     collection
       .findOneAndUpdate(
         filter = BsonDocument(Json.obj("eori" -> eori.value, "id" -> id).toString),
-        update = set("status", DeclarationStatus.COMPLETE.toString),
+        update = set(s"$meta.status", DeclarationStatus.COMPLETE.toString),
         options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.BEFORE)
       )
       .toFutureOption()
@@ -88,22 +89,24 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
   def revertStatusToDraft(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
     findOneAndUpdate(
       filter = BsonDocument(Json.obj("eori" -> declaration.eori, "id" -> declaration.id).toString),
-      update = set("status", DeclarationStatus.DRAFT.toString)
+      update = set(s"$meta.status", DeclarationStatus.DRAFT.toString)
     )
 }
 
 object DeclarationRepository {
 
+  val meta = "declarationMeta"
+
   val indexes: Seq[IndexModel] = List(
     // Used for getting a declaration owned by a given user
     IndexModel(ascending("eori", "id"), IndexOptions().name("eoriAndIdIdx").unique(true)),
     // Used for getting a draft declaration that was copy of another owned by a given user
-    IndexModel(ascending("eori", "parentDeclarationId", "status"), IndexOptions().name("eoriAndParentDecIdIdx")),
+    IndexModel(ascending("eori", s"$meta.parentDeclarationId", s"$meta.status"), IndexOptions().name("eoriAndParentDecIdIdx")),
     // ?? Used for dashboard ??
-    IndexModel(ascending("eori", "updatedDateTime", "status"), IndexOptions().name("eoriAndUpdateTimeAndStatusIdx")),
+    IndexModel(ascending("eori", s"$meta.updatedDateTime", s"$meta.status"), IndexOptions().name("eoriAndUpdateTimeAndStatusIdx")),
     // Used for pulling draft declarations for user in date order
-    IndexModel(ascending("eori", "createdDateTime", "status"), IndexOptions().name("eoriAndCreateTimeAndStatusIdx")),
+    IndexModel(ascending("eori", s"$meta.createdDateTime", s"$meta.status"), IndexOptions().name("eoriAndCreateTimeAndStatusIdx")),
     // Use for deleting draft decs older than X
-    IndexModel(compoundIndex(descending("updatedDateTime"), ascending("status")), IndexOptions().name("statusAndUpdateIdx"))
+    IndexModel(compoundIndex(descending(s"$meta.updatedDateTime"), ascending(s"$meta.status")), IndexOptions().name("statusAndUpdateIdx"))
   )
 }

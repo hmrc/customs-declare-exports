@@ -20,7 +20,7 @@ import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
-import uk.gov.hmrc.exports.metrics.ExportsMetrics.{Monitors, Timers}
+import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timers
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.{StatusGroup, SubmittedStatuses}
@@ -123,7 +123,7 @@ class SubmissionService @Inject() (
     declarationRepository.markStatusAsComplete(eori, id)
 
   def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] =
-    metrics.timeAsyncCall(Monitors.submissionMonitor) {
+    metrics.timeAsyncCall(ExportsMetrics.submissionMonitor) {
       logProgress(declaration, "Beginning Submission")
 
       val metaData = metrics.timeCall(Timers.submissionProduceMetaDataTimer)(wcoMapperService.produceMetaData(declaration))

@@ -40,7 +40,7 @@ object CancellationStatus {
   }
 
   def apply(`class`: String, data: JsValue): CancellationStatus =
-    `class` match {
+    (`class`: @unchecked) match {
       case CancellationAlreadyRequestedName => CancellationAlreadyRequested
       case CancellationRequestSentName      => CancellationRequestSent
       case MrnNotFoundName                  => NotFound

@@ -78,9 +78,12 @@ object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
   def randomStatus: DeclarationStatus.Value = if (random.nextDouble() > 0.1) COMPLETE else DRAFT
 
   def job(collection: MongoCollection[ExportsDeclaration]): Unit =
-    (1 to Math.ceil(target / batchSize).toInt).foreach { batchNumber =>
+    (1 to Math.ceil((target / batchSize).toDouble).toInt).foreach { batchNumber =>
       val declarations = (1 to batchSize).map { _ =>
-        InsertOneModel(declaration.copy(id = UUID.randomUUID.toString, eori = generateEori, status = randomStatus))
+        InsertOneModel(
+          declaration
+            .copy(id = UUID.randomUUID.toString, eori = generateEori, declarationMeta = declaration.declarationMeta.copy(status = randomStatus))
+        )
       }.toList
       Await.ready(collection.bulkWrite(declarations).toFuture(), Duration.Inf)
       print(s"Inserted ${batchSize * batchNumber} out of ${target} declarations\n")

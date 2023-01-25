@@ -21,6 +21,7 @@ import com.mongodb.client.{MongoClient, MongoClients}
 import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.migrations.changelogs.cache.{
+  AddDeclarationMetaEntity,
   MakeTransportPaymentMethodNotOptional,
   RemoveMeansOfTransportCrossingTheBorderNationality,
   RenameToAdditionalDocuments
@@ -54,6 +55,7 @@ class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
     .register(new RenameSendEmailDetailsToItem())
     .register(new AddNotificationSummariesToSubmissions())
     .register(new RemoveMeansOfTransportCrossingTheBorderNationality())
+    .register(new AddDeclarationMetaEntity())
 
   ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute()
 

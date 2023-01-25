@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -145,7 +145,7 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
     val statuses = toEnhancedStatus(statusGroup).toList
 
     val submissions = (0 until size).map { seconds =>
-      submission(lastStatusUpdate.minusSeconds(seconds), statuses(Random.nextInt(statuses.length)))
+      submission(lastStatusUpdate.minusSeconds(seconds.toLong), statuses(Random.nextInt(statuses.length)))
     }.toList
 
     repository.bulkInsert(submissions).futureValue mustBe size

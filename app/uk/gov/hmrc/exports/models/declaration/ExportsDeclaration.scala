@@ -22,19 +22,11 @@ import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
-import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
-
-import java.time.Instant
 
 case class ExportsDeclaration(
   id: String,
-  parentDeclarationId: Option[String] = None,
-  parentDeclarationEnhancedStatus: Option[EnhancedStatus] = None,
+  declarationMeta: DeclarationMeta,
   eori: String,
-  status: DeclarationStatus,
-  createdDateTime: Instant,
-  updatedDateTime: Instant,
   `type`: DeclarationType,
   dispatchLocation: Option[DispatchLocation],
   additionalDeclarationType: Option[AdditionalDeclarationType],
@@ -47,10 +39,9 @@ case class ExportsDeclaration(
   items: Seq[ExportItem],
   totalNumberOfItems: Option[TotalNumberOfItems],
   previousDocuments: Option[PreviousDocuments],
-  natureOfTransaction: Option[NatureOfTransaction],
-  summaryWasVisited: Option[Boolean],
-  readyForSubmission: Option[Boolean]
+  natureOfTransaction: Option[NatureOfTransaction]
 ) {
+  def status: DeclarationStatus = declarationMeta.status
   def isCompleted: Boolean = status == DeclarationStatus.COMPLETE
 }
 
@@ -61,19 +52,23 @@ object ExportsDeclaration {
   }
 
   object Mongo {
-    implicit val formatInstant: Format[Instant] = MongoJavatimeFormats.instantFormat
+    implicit val declarationMetaFormat: OFormat[DeclarationMeta] = DeclarationMeta.Mongo.format
     implicit val format: OFormat[ExportsDeclaration] = Json.format[ExportsDeclaration]
   }
 
   def apply(id: String, eori: Eori, declarationRequest: ExportsDeclarationRequest): ExportsDeclaration =
     ExportsDeclaration(
       id = id,
-      parentDeclarationId = declarationRequest.parentDeclarationId,
-      parentDeclarationEnhancedStatus = declarationRequest.parentDeclarationEnhancedStatus,
+      declarationMeta = DeclarationMeta(
+        parentDeclarationId = declarationRequest.declarationMeta.parentDeclarationId,
+        parentDeclarationEnhancedStatus = declarationRequest.declarationMeta.parentDeclarationEnhancedStatus,
+        status = declarationRequest.consignmentReferences.map(_ => DeclarationStatus.DRAFT).getOrElse(DeclarationStatus.INITIAL),
+        createdDateTime = declarationRequest.declarationMeta.createdDateTime,
+        updatedDateTime = declarationRequest.declarationMeta.updatedDateTime,
+        summaryWasVisited = declarationRequest.declarationMeta.summaryWasVisited,
+        readyForSubmission = declarationRequest.declarationMeta.readyForSubmission
+      ),
       eori = eori.value,
-      status = declarationRequest.consignmentReferences.map(_ => DeclarationStatus.DRAFT).getOrElse(DeclarationStatus.INITIAL),
-      createdDateTime = declarationRequest.createdDateTime,
-      updatedDateTime = declarationRequest.updatedDateTime,
       `type` = declarationRequest.`type`,
       dispatchLocation = declarationRequest.dispatchLocation,
       additionalDeclarationType = declarationRequest.additionalDeclarationType,
@@ -86,8 +81,6 @@ object ExportsDeclaration {
       items = declarationRequest.items,
       totalNumberOfItems = declarationRequest.totalNumberOfItems,
       previousDocuments = declarationRequest.previousDocuments,
-      natureOfTransaction = declarationRequest.natureOfTransaction,
-      summaryWasVisited = declarationRequest.summaryWasVisited,
-      readyForSubmission = declarationRequest.readyForSubmission
+      natureOfTransaction = declarationRequest.natureOfTransaction
     )
 }

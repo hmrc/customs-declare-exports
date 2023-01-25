@@ -24,13 +24,15 @@ class DeclarationSortTest extends UnitSpec {
     "bind" when {
       "both params populated" in {
         DeclarationSort.bindable
-          .bind("sort", Map("sort-by" -> Seq("createdDateTime"), "sort-direction" -> Seq("asc"))) mustBe Some(
+          .bind("sort", Map("sort-by" -> Seq("declarationMeta.createdDateTime"), "sort-direction" -> Seq("asc"))) mustBe Some(
           Right(DeclarationSort(SortBy.CREATED, SortDirection.ASC))
         )
       }
 
       "sort-by only populated" in {
-        DeclarationSort.bindable.bind("sort", Map("sort-by" -> Seq("updatedDateTime"))) mustBe Some(Right(DeclarationSort(by = SortBy.UPDATED)))
+        DeclarationSort.bindable.bind("sort", Map("sort-by" -> Seq("declarationMeta.updatedDateTime"))) mustBe Some(
+          Right(DeclarationSort(by = SortBy.UPDATED))
+        )
       }
 
       "sort-direction only populated" in {
@@ -49,7 +51,7 @@ class DeclarationSortTest extends UnitSpec {
 
     "unbind" in {
       DeclarationSort.bindable
-        .unbind("sort", DeclarationSort(SortBy.CREATED, SortDirection.DES)) mustBe "sort-by=createdDateTime&sort-direction=des"
+        .unbind("sort", DeclarationSort(SortBy.CREATED, SortDirection.DES)) mustBe "sort-by=declarationMeta.createdDateTime&sort-direction=des"
     }
   }
 }

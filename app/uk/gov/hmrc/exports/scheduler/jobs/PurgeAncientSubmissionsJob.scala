@@ -43,7 +43,7 @@ class PurgeAncientSubmissionsJob @Inject() (
   override def firstRunTime: Option[LocalTime] = Some(appConfig.purgeAncientSubmissions.elapseTime)
 
   lazy val expiryDate = {
-    val days = 180
+    val days = 180L
     val oneMilliSec = 1000000
     ZonedDateTime.now(ZoneId.of("UTC")).minusDays(days).withNano(oneMilliSec)
   }

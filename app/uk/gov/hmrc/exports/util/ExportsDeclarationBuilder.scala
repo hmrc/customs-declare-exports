@@ -43,9 +43,13 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
   private def modelWithDefaults: ExportsDeclaration = ExportsDeclaration(
     id = uuid,
     eori = "eori",
-    status = DeclarationStatus.COMPLETE,
-    createdDateTime = ZonedDateTime.of(2019, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC).toInstant,
-    updatedDateTime = ZonedDateTime.of(2019, 2, 2, 0, 0, 0, 0, ZoneOffset.UTC).toInstant,
+    declarationMeta = DeclarationMeta(
+      status = DeclarationStatus.COMPLETE,
+      createdDateTime = ZonedDateTime.of(2019, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC).toInstant,
+      updatedDateTime = ZonedDateTime.of(2019, 2, 2, 0, 0, 0, 0, ZoneOffset.UTC).toInstant,
+      summaryWasVisited = None,
+      readyForSubmission = None
+    ),
     `type` = DeclarationType.STANDARD,
     dispatchLocation = None,
     additionalDeclarationType = None,
@@ -58,22 +62,22 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     items = Seq.empty,
     totalNumberOfItems = None,
     previousDocuments = None,
-    natureOfTransaction = None,
-    summaryWasVisited = None,
-    readyForSubmission = None
+    natureOfTransaction = None
   )
 
   // ************************************************* Builders ********************************************************
 
   def withId(id: String): ExportsDeclarationModifier = _.copy(id = id)
 
-  def withParentDeclarationId(parentId: String): ExportsDeclarationModifier = _.copy(parentDeclarationId = Some(parentId))
+  def withParentDeclarationId(parentId: String): ExportsDeclarationModifier = declaration =>
+    declaration.copy(declarationMeta = declaration.declarationMeta.copy(parentDeclarationId = Some(parentId)))
 
   def withEori(eori: String): ExportsDeclarationModifier = _.copy(eori = eori)
 
   def withEori(eori: Eori): ExportsDeclarationModifier = _.copy(eori = eori.value)
 
-  def withStatus(status: DeclarationStatus): ExportsDeclarationModifier = _.copy(status = status)
+  def withStatus(status: DeclarationStatus): ExportsDeclarationModifier = declaration =>
+    declaration.copy(declarationMeta = declaration.declarationMeta.copy(status = status))
 
   def withType(`type`: DeclarationType): ExportsDeclarationModifier = _.copy(`type` = `type`)
 
@@ -349,14 +353,18 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
       )
 
   def withUpdateDate(year: Int, month: Int, dayOfMonth: Int): ExportsDeclarationModifier =
-    _.copy(updatedDateTime = ZonedDateTime.of(year, month, dayOfMonth, 10, 0, 0, 0, ZoneOffset.UTC).toInstant)
+    declaration =>
+      declaration.copy(declarationMeta =
+        declaration.declarationMeta.copy(updatedDateTime = ZonedDateTime.of(year, month, dayOfMonth, 10, 0, 0, 0, ZoneOffset.UTC).toInstant)
+      )
 
   def withMUCR(mucr: String): ExportsDeclarationModifier =
     cache => cache.copy(linkDucrToMucr = Some(YesNoAnswer.yes), mucr = Some(MUCR(mucr)))
 
   def withReadyForSubmission(): ExportsDeclarationModifier =
-    declaration => declaration.copy(summaryWasVisited = Some(true), readyForSubmission = Some(true))
+    declaration =>
+      declaration.copy(declarationMeta = declaration.declarationMeta.copy(summaryWasVisited = Some(true), readyForSubmission = Some(true)))
 
   def withUpdatedDateTime(updatedDateTime: Instant = Instant.now()): ExportsDeclarationModifier =
-    declaration => declaration.copy(updatedDateTime = updatedDateTime)
+    declaration => declaration.copy(declarationMeta = declaration.declarationMeta.copy(updatedDateTime = updatedDateTime))
 }
