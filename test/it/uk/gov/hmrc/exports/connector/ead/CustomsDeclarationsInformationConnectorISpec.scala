@@ -23,7 +23,7 @@ import play.api.mvc.Codec
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
-import uk.gov.hmrc.exports.models.ead.parsers.MrnStatusParserTestData
+import uk.gov.hmrc.exports.models.ead.parsers.{MrnDeclarationParserTestData, MrnStatusParserTestData}
 import uk.gov.hmrc.http.InternalServerException
 
 class CustomsDeclarationsInformationConnectorISpec extends IntegrationTestSpec {
@@ -31,12 +31,31 @@ class CustomsDeclarationsInformationConnectorISpec extends IntegrationTestSpec {
   private lazy val connector = instanceOf[CustomsDeclarationsInformationConnector]
 
   val id = "ID"
+  val fetchMrnDeclarationUrl = "/mrn/" + id + "/full"
   val fetchMrnStatusUrl = "/mrn/" + id + "/status"
 
   val mrn = "18GB9JLC3CU1LFGVR2"
   val mrnStatusUrl = fetchMrnStatusUrl.replace(id, mrn)
 
   "Customs Declarations Information Connector" should {
+    "return response with full declaration" when {
+      "request is processed successfully - 200" in {
+        getFromDownstreamService(fetchMrnDeclarationUrl, OK, Some(MrnDeclarationParserTestData.mrnDeclarationTestSample(mrn).toString))
+
+        val declaration = connector.fetchMrnFullDeclaration(mrn).futureValue
+        (declaration \\ "MRN") mustBe mrn
+
+        verifyDecServiceWasCalledCorrectly()
+      }
+
+      "request is not processed - 500" in {
+        getFromDownstreamService(fetchMrnDeclarationUrl, INTERNAL_SERVER_ERROR)
+
+        intercept[InternalServerException] {
+          await(connector.fetchMrnStatus(mrn))
+        }
+      }
+    }
     "return response with specific status" when {
       "request is processed successfully - 200" in {
         val expectedMrnStatus = MrnStatusParserTestData.mrnStatusWithAllData(mrn).toString
@@ -66,4 +85,5 @@ class CustomsDeclarationsInformationConnectorISpec extends IntegrationTestSpec {
         .withHeader(CONTENT_TYPE, equalTo(ContentTypes.XML(Codec.utf_8)))
         .withHeader(ACCEPT, equalTo(s"application/vnd.hmrc.$expectedApiVersion+xml"))
     )
+
 }
