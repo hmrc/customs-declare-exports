@@ -20,15 +20,9 @@ import play.api.libs.json._
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
-
-import java.time.Instant
 
 case class ExportsDeclarationRequest(
-  parentDeclarationId: Option[String] = None,
-  parentDeclarationEnhancedStatus: Option[EnhancedStatus] = None,
-  createdDateTime: Instant,
-  updatedDateTime: Instant,
+  declarationMeta: ExportsDeclarationRequestMeta,
   `type`: DeclarationType,
   dispatchLocation: Option[DispatchLocation] = None,
   additionalDeclarationType: Option[AdditionalDeclarationType] = None,
@@ -41,9 +35,7 @@ case class ExportsDeclarationRequest(
   items: Seq[ExportItem] = Seq.empty,
   totalNumberOfItems: Option[TotalNumberOfItems] = None,
   previousDocuments: Option[PreviousDocuments] = None,
-  natureOfTransaction: Option[NatureOfTransaction] = None,
-  summaryWasVisited: Option[Boolean] = None,
-  readyForSubmission: Option[Boolean] = None
+  natureOfTransaction: Option[NatureOfTransaction] = None
 )
 
 object ExportsDeclarationRequest {

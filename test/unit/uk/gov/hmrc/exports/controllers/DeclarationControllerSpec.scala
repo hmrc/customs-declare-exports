@@ -28,7 +28,7 @@ import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.auth.core.InsufficientEnrolments
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
-import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
+import uk.gov.hmrc.exports.controllers.request.{ExportsDeclarationRequest, ExportsDeclarationRequestMeta}
 import uk.gov.hmrc.exports.models.DeclarationType.STANDARD
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
@@ -54,7 +54,8 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
     withAuthorizedUser()
   }
 
-  private val body = ExportsDeclarationRequest(createdDateTime = now, updatedDateTime = now, `type` = STANDARD)
+  private val body =
+    ExportsDeclarationRequest(declarationMeta = ExportsDeclarationRequestMeta(createdDateTime = now, updatedDateTime = now), `type` = STANDARD)
 
   "DeclarationController.create" should {
     val postRequest = FakeRequest("POST", "/declarations")

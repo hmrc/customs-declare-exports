@@ -154,7 +154,7 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
     }
 
     "mark as completed a declaration" in {
-      val declaration = aDeclaration().copy(status = DeclarationStatus.DRAFT)
+      val declaration = aDeclaration(withStatus(DeclarationStatus.DRAFT))
       repository.create(declaration).futureValue.status mustBe DeclarationStatus.DRAFT
 
       val eori = Eori(declaration.eori)

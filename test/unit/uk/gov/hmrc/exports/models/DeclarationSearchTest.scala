@@ -25,7 +25,7 @@ class DeclarationSearchTest extends UnitSpec {
   "Search" should {
     "build Mongo Query" in {
       val search = DeclarationSearch(eori = Eori("123"), status = Some(DeclarationStatus.COMPLETE))
-      Json.toJson(search) mustBe Json.obj("eori" -> "123", "status" -> "COMPLETE")
+      Json.toJson(search) mustBe Json.obj("eori" -> "123", "declarationMeta.status" -> "COMPLETE")
     }
   }
 

@@ -61,9 +61,13 @@ class ExportsDeclarationXmlParser @Inject() (
     } yield ExportsDeclaration(
       id = UUID.randomUUID().toString,
       eori = context.eori,
-      status = DeclarationStatus.COMPLETE,
-      createdDateTime = Instant.now(),
-      updatedDateTime = Instant.now(),
+      declarationMeta = DeclarationMeta(
+        status = DeclarationStatus.COMPLETE,
+        createdDateTime = Instant.now(),
+        updatedDateTime = Instant.now(),
+        summaryWasVisited = Some(true),
+        readyForSubmission = Some(true)
+      ),
       `type` = declarationType,
       dispatchLocation = None,
       additionalDeclarationType = additionalDeclarationType,
@@ -76,9 +80,7 @@ class ExportsDeclarationXmlParser @Inject() (
       items = items,
       totalNumberOfItems = None,
       previousDocuments = None,
-      natureOfTransaction = None,
-      summaryWasVisited = Some(true),
-      readyForSubmission = Some(true)
+      natureOfTransaction = None
     )
 
     // infer other values not present in the xml
