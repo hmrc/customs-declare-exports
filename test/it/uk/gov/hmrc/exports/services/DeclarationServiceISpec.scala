@@ -1,14 +1,13 @@
 package uk.gov.hmrc.exports.services
 
 import org.scalatest.exceptions.TestFailedException
-import play.api.Logging
 import uk.gov.hmrc.exports.base.{IntegrationTestSpec, MockMetrics}
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 
 import scala.concurrent.ExecutionContext.global
 
-class DeclarationServiceISpec extends IntegrationTestSpec with MockMetrics with Logging {
+class DeclarationServiceISpec extends IntegrationTestSpec with MockMetrics {
 
   private val declarationRepository = instanceOf[DeclarationRepository]
   private val submissionRepository = instanceOf[SubmissionRepository]
