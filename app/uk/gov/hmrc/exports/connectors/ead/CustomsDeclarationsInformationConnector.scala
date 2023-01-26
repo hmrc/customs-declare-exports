@@ -21,7 +21,6 @@ import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
 import play.mvc.Http.Status.OK
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.ead.parsers.MrnStatusParser
 import uk.gov.hmrc.exports.models.ead.{MrnStatus, XmlTags}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, InternalServerException}
@@ -41,16 +40,16 @@ class CustomsDeclarationsInformationConnector @Inject() (mrnStatusParser: MrnSta
         url = s"${appConfig.customsDeclarationsInformationBaseUrl}${appConfig.fetchMrnFullDeclaration.replace(XmlTags.id, mrn)}",
         headers = headers,
         queryParams = declarationVersion.fold(Seq.empty[(String, String)])(version => Seq(("declarationVersion", version)))
-      )
+      )(uk.gov.hmrc.http.HttpReads.Implicits.readRaw, hc, ec)
       .map { response =>
         response.status match {
           case OK =>
             logger.debug(s"CUSTOMS_DECLARATIONS_INFORMATION fetch MRN full declaration response ${response.body}")
             xml.XML.loadString(response.body)
+          case status =>
+            logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION fetch MRN status response ${response.body}")
+            throw new InternalServerException(s"Customs Declarations Service returned [$status]")
         }
-      }
-      .recover { case status =>
-        throw new InternalServerException(s"Customs Declarations Service returned [$status]")
       }
 
   def fetchMrnStatus(mrn: String)(implicit hc: HeaderCarrier): Future[Option[MrnStatus]] =
