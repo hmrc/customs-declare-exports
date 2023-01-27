@@ -26,6 +26,7 @@ trait Action {
   val id: String
   val notifications: Option[Seq[NotificationSummary]]
   val requestTimestamp: ZonedDateTime
+  val versionNo: Int
 
   val latestNotificationSummary: Option[NotificationSummary] =
     notifications.flatMap(_.lastOption)
@@ -35,13 +36,33 @@ trait Action {
 case class SubmissionAction(
   id: String,
   requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")),
-  notifications: Option[Seq[NotificationSummary]] = None
-) extends Action
+  notifications: Option[Seq[NotificationSummary]] = None,
+  decId: String
+) extends Action {
+  val versionNo = 1
+}
 
 case class CancellationAction(
   id: String,
   requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")),
-  notifications: Option[Seq[NotificationSummary]] = None
+  notifications: Option[Seq[NotificationSummary]] = None,
+  versionNo: Int,
+  decId: String
+) extends Action
+
+case class AmendmentAction(
+  id: String,
+  requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")),
+  notifications: Option[Seq[NotificationSummary]] = None,
+  versionNo: Int,
+  decId: String
+) extends Action
+
+case class ExternalAmendmentAction(
+  id: String,
+  requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")),
+  notifications: Option[Seq[NotificationSummary]] = None,
+  versionNo: Int
 ) extends Action
 
 object Action {
@@ -57,19 +78,23 @@ object Action {
   implicit val writes: Writes[Action] = Writes[Action] {
     case submission: SubmissionAction     => submissionActionWrites.writes(submission)
     case cancellation: CancellationAction => cancellationActionWrites.writes(cancellation)
-    case _ => ???
+    case _                                => ???
   }
 
-  private val actionReads = (__ \ "id").read[String] and
+  private val allActionReads = (__ \ "id").read[String] and
     ((__ \ "requestTimestamp").read[ZonedDateTime] or (__ \ "requestTimestamp").read[ZonedDateTime](readLocalDateTimeFromString)) and
     (__ \ "notifications").readNullable[Seq[NotificationSummary]]
 
   implicit val reads: Reads[Action] =
     (__ \ "requestType").read[RequestType].flatMap {
       case SubmissionRequest =>
-        actionReads(SubmissionAction.apply _)
+        (allActionReads and (__ \ "decId").read[String])(SubmissionAction.apply _)
       case CancellationRequest =>
-        actionReads(CancellationAction.apply _)
+        (allActionReads and (__ \ "versionNo").read[Int] and (__ \ "decId").read[String])(CancellationAction.apply _)
+      case AmendmentRequest =>
+        (allActionReads and (__ \ "versionNo").read[Int] and (__ \ "decId").read[String])(AmendmentAction.apply _)
+      case ExternalAmendmentRequest =>
+        (allActionReads and (__ \ "versionNo").read[Int])(ExternalAmendmentAction.apply _)
     }
 
 }

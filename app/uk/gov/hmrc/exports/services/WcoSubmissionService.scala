@@ -37,7 +37,13 @@ class WcoSubmissionService @Inject() (wcoMapperService: WcoMapperService, custom
     val payload = wcoMapperService.toXml(metaData)
 
     customsDeclarationsConnector.submitDeclaration(declaration.eori, payload) map { conversationId =>
-      Submission(uuid = declaration.id, eori = declaration.eori, lrn = lrn, ducr = ducr, actions = Seq(SubmissionAction(id = conversationId)))
+      Submission(
+        uuid = declaration.id,
+        eori = declaration.eori,
+        lrn = lrn,
+        ducr = ducr,
+        actions = Seq(SubmissionAction(id = conversationId, decId = declaration.id))
+      )
     }
   }
 }

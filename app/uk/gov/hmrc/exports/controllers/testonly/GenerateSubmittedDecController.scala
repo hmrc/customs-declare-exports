@@ -91,7 +91,8 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
   )
 
   def createSubmission(declaration: ExportsDeclaration, parsedNotifications: Seq[ParsedNotification]) = {
-    val tempAction = SubmissionAction(id = parsedNotifications.head.actionId, requestTimestamp = ZonedDateTime.now(ZoneId.of("UTC")))
+    val tempAction =
+      SubmissionAction(id = parsedNotifications.head.actionId, requestTimestamp = ZonedDateTime.now(ZoneId.of("UTC")), decId = declaration.id)
 
     val (action, notificationSummaries) =
       updateActionWithNotificationSummaries(tempAction, Seq.empty[submissions.Action], parsedNotifications, Seq.empty[NotificationSummary])
