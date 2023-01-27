@@ -21,15 +21,28 @@ import play.api.libs.json._
 
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
-case class Action(
-  id: String,
-  requestType: RequestType,
-  requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")),
-  notifications: Option[Seq[NotificationSummary]] = None
-) {
+trait Action {
+
+  val id: String
+  val notifications: Option[Seq[NotificationSummary]]
+  val requestTimestamp: ZonedDateTime
+
   val latestNotificationSummary: Option[NotificationSummary] =
     notifications.flatMap(_.lastOption)
+
 }
+
+case class SubmissionAction(
+  id: String,
+  requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")),
+  notifications: Option[Seq[NotificationSummary]] = None
+) extends Action
+
+case class CancellationAction(
+  id: String,
+  requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")),
+  notifications: Option[Seq[NotificationSummary]] = None
+) extends Action
 
 object Action {
 
@@ -38,10 +51,25 @@ object Action {
   implicit val readLocalDateTimeFromString: Reads[ZonedDateTime] = implicitly[Reads[LocalDateTime]]
     .map(ZonedDateTime.of(_, ZoneId.of("UTC")))
 
-  implicit val writes = Json.writes[Action]
+  implicit val submissionActionWrites: Writes[SubmissionAction] = Json.writes[SubmissionAction]
+  implicit val cancellationActionWrites: Writes[CancellationAction] = Json.writes[CancellationAction]
+
+  implicit val writes: Writes[Action] = Writes[Action] {
+    case submission: SubmissionAction     => submissionActionWrites.writes(submission)
+    case cancellation: CancellationAction => cancellationActionWrites.writes(cancellation)
+    case _ => ???
+  }
+
+  private val actionReads = (__ \ "id").read[String] and
+    ((__ \ "requestTimestamp").read[ZonedDateTime] or (__ \ "requestTimestamp").read[ZonedDateTime](readLocalDateTimeFromString)) and
+    (__ \ "notifications").readNullable[Seq[NotificationSummary]]
+
   implicit val reads: Reads[Action] =
-    ((__ \ "id").read[String] and
-      (__ \ "requestType").read[RequestType] and
-      ((__ \ "requestTimestamp").read[ZonedDateTime] or (__ \ "requestTimestamp").read[ZonedDateTime](readLocalDateTimeFromString)) and
-      (__ \ "notifications").readNullable[Seq[NotificationSummary]])(Action.apply _)
+    (__ \ "requestType").read[RequestType].flatMap {
+      case SubmissionRequest =>
+        actionReads(SubmissionAction.apply _)
+      case CancellationRequest =>
+        actionReads(CancellationAction.apply _)
+    }
+
 }

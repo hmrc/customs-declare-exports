@@ -73,16 +73,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
   "SubmissionService.cancel" should {
     val notification = Some(Seq(new NotificationSummary(UUID.randomUUID(), ZonedDateTime.now(), CUSTOMS_POSITION_GRANTED)))
-    val submissionCancelled = Submission(
-      "id",
-      eori,
-      "lrn",
-      None,
-      "ducr",
-      None,
-      None,
-      List(Action(id = "conv-id", requestType = CancellationRequest, notifications = notification))
-    )
+    val submissionCancelled =
+      Submission("id", eori, "lrn", None, "ducr", None, None, List(CancellationAction(id = "conv-id", notifications = notification)))
     val cancellation = SubmissionCancellation("id", "ref-id", "mrn", "description", "reason")
 
     "submit and delegate to repository" when {
@@ -243,7 +235,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
       val dateTimeIssued = ZonedDateTime.now(ZoneOffset.UTC)
 
-      val newAction = Action(id = "conv-id", requestType = SubmissionRequest, requestTimestamp = dateTimeIssued)
+      val newAction = SubmissionAction(id = "conv-id", requestTimestamp = dateTimeIssued)
 
       val submission = Submission(declaration, "lrn", "mrn", newAction)
 
@@ -265,7 +257,6 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         submissionCreated mustBe Submission(declaration, "lrn", "ducr", newAction.copy(requestTimestamp = actionGenerated.requestTimestamp))
 
         actionGenerated.id mustBe "conv-id"
-        actionGenerated.requestType mustBe SubmissionRequest
 
         verify(submissionRepository, never).findOne(any[String], any[String])
         verify(sendEmailForDmsDocAction, never).execute(any[String])

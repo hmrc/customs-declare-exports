@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.exports.services
 
-import javax.inject.Inject
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionAction}
 import uk.gov.hmrc.http.HeaderCarrier
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class WcoSubmissionService @Inject() (wcoMapperService: WcoMapperService, customsDeclarationsConnector: CustomsDeclarationsConnector) {
@@ -37,13 +37,7 @@ class WcoSubmissionService @Inject() (wcoMapperService: WcoMapperService, custom
     val payload = wcoMapperService.toXml(metaData)
 
     customsDeclarationsConnector.submitDeclaration(declaration.eori, payload) map { conversationId =>
-      Submission(
-        uuid = declaration.id,
-        eori = declaration.eori,
-        lrn = lrn,
-        ducr = ducr,
-        actions = Seq(Action(requestType = SubmissionRequest, id = conversationId))
-      )
+      Submission(uuid = declaration.id, eori = declaration.eori, lrn = lrn, ducr = ducr, actions = Seq(SubmissionAction(id = conversationId)))
     }
   }
 }

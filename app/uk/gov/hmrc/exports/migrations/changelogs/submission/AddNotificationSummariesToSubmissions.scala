@@ -24,7 +24,7 @@ import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, NotificationSummary, Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, NotificationSummary, Submission, SubmissionAction}
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
 
 import scala.jdk.CollectionConverters._
@@ -57,8 +57,9 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
           if (action.notifications.isEmpty) updateSubmission(notificationCollection, action, submission) else action
         }
 
-        val updatedSubmission = actions.collect { case action =>
-          if (action.requestType == SubmissionRequest) action.notifications.flatMap(_.headOption) else None
+        val updatedSubmission = actions.collect {
+          case SubmissionAction(_, _, notifications) => notifications.flatMap(_.headOption)
+          case _                                     => None
         }.flatten.headOption.fold(submission.copy(actions = actions)) { notificationSummary =>
           submission.copy(
             latestEnhancedStatus = Some(notificationSummary.enhancedStatus),

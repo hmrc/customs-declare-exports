@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.models.declaration.ModeOfTransportCode.Maritime
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus._
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action => SubmissionAction, NotificationSummary, Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions.{NotificationSummary, Submission, SubmissionAction}
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
@@ -73,14 +73,25 @@ class GenerateSubmittedDecController @Inject() (
 }
 
 object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
-  case class CreateSubmitDecDocumentsRequest(eori: String, lrn: Option[String], ducr: Option[String], receivedOnly: Option[Int])
+  lazy val actionStatuses: List[SubmissionStatus] = List(ADDITIONAL_DOCUMENTS_REQUIRED, QUERY_NOTIFICATION_MESSAGE)
+  lazy val submittedStatuses: List[SubmissionStatus] = List(
+    ACCEPTED,
+    AMENDED,
+    AWAITING_EXIT_RESULTS,
+    CLEARED,
+    CUSTOMS_POSITION_DENIED,
+    CUSTOMS_POSITION_GRANTED,
+    DECLARATION_HANDLED_EXTERNALLY,
+    GOODS_HAVE_EXITED_THE_COMMUNITY,
+    PENDING,
+    RECEIVED,
+    RELEASED,
+    REQUESTED_CANCELLATION,
+    UNDERGOING_PHYSICAL_CHECK
+  )
 
   def createSubmission(declaration: ExportsDeclaration, parsedNotifications: Seq[ParsedNotification]) = {
-    val tempAction = SubmissionAction(
-      id = parsedNotifications.head.actionId,
-      requestType = SubmissionRequest,
-      requestTimestamp = ZonedDateTime.now(ZoneId.of("UTC"))
-    )
+    val tempAction = SubmissionAction(id = parsedNotifications.head.actionId, requestTimestamp = ZonedDateTime.now(ZoneId.of("UTC")))
 
     val (action, notificationSummaries) =
       updateActionWithNotificationSummaries(tempAction, Seq.empty[submissions.Action], parsedNotifications, Seq.empty[NotificationSummary])
@@ -108,6 +119,7 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
       details =
         NotificationDetails(declaration.consignmentReferences.flatMap(_.mrn).getOrElse(""), ZonedDateTime.now(ZoneId.of("UTC")), status, Seq.empty)
     )
+  // scalastyle:on
 
   // scalastyle:off
   def createDeclaration()(implicit request: Request[CreateSubmitDecDocumentsRequest]) = {
@@ -184,30 +196,15 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
       withReadyForSubmission()
     )
   }
-  // scalastyle:on
 
   private def randomLrn() = randomAlphanumericString(22)
+
   private def randomMRN() = s"${Random.nextInt(9)}${Random.nextInt(9)}GB${randomAlphanumericString(13)}"
+
   private def randomAlphanumericString(length: Int): String = Random.alphanumeric.take(length).mkString.toUpperCase
-
-  lazy val actionStatuses: List[SubmissionStatus] = List(ADDITIONAL_DOCUMENTS_REQUIRED, QUERY_NOTIFICATION_MESSAGE)
-
-  lazy val submittedStatuses: List[SubmissionStatus] = List(
-    ACCEPTED,
-    AMENDED,
-    AWAITING_EXIT_RESULTS,
-    CLEARED,
-    CUSTOMS_POSITION_DENIED,
-    CUSTOMS_POSITION_GRANTED,
-    DECLARATION_HANDLED_EXTERNALLY,
-    GOODS_HAVE_EXITED_THE_COMMUNITY,
-    PENDING,
-    RECEIVED,
-    RELEASED,
-    REQUESTED_CANCELLATION,
-    UNDERGOING_PHYSICAL_CHECK
-  )
 
   private def randomStatus(statuses: List[SubmissionStatus] = submittedStatuses): SubmissionStatus =
     statuses(Random.nextInt(statuses.length))
+
+  case class CreateSubmitDecDocumentsRequest(eori: String, lrn: Option[String], ducr: Option[String], receivedOnly: Option[Int])
 }

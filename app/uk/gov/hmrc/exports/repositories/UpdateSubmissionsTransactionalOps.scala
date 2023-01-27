@@ -22,7 +22,7 @@ import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, NotificationSummary, Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.transaction.{TransactionConfiguration, Transactions}
@@ -75,16 +75,18 @@ class UpdateSubmissionsTransactionalOps @Inject() (
     val (actionWithAllNotificationSummaries, notificationSummaries) =
       updateActionWithNotificationSummaries(action, submission.actions, notifications, seed)
 
-    if (action.requestType == SubmissionRequest)
-      updateSubmissionRequest(
-        session,
-        actionId,
-        notifications.head.details.mrn,
-        notificationSummaries.head,
-        submission.actions.updated(index, actionWithAllNotificationSummaries)
-      )
-    else
-      updateCancellationRequest(session, actionId, submission.actions.updated(index, actionWithAllNotificationSummaries))
+    action match {
+      case _: SubmissionAction =>
+        updateSubmissionRequest(
+          session,
+          actionId,
+          notifications.head.details.mrn,
+          notificationSummaries.head,
+          submission.actions.updated(index, actionWithAllNotificationSummaries)
+        )
+      case _ => updateCancellationRequest(session, actionId, submission.actions.updated(index, actionWithAllNotificationSummaries))
+    }
+
   }
 
   private def updateCancellationRequest(session: ClientSession, actionId: String, actions: Seq[Action]): Future[Option[Submission]] = {
@@ -130,7 +132,13 @@ object ActionWithNotificationSummariesHelper {
 
     // The resulting notificationSummaries are sorted again, this time (dsc), since it's not sure
     // if they are more recent or not of the (maybe) existing notificationSummaries of the action.
-    val actionWithAllNotificationSummaries = action.copy(notifications = Some(notificationSummaries.sorted.reverse))
+    val actionWithAllNotificationSummaries = {
+      action match {
+        case s: SubmissionAction   => s.copy(notifications = Some(notificationSummaries.sorted.reverse))
+        case c: CancellationAction => c.copy(notifications = Some(notificationSummaries.sorted.reverse))
+        case _ => ???
+      }
+    }
     (actionWithAllNotificationSummaries, notificationSummaries)
   }
 }

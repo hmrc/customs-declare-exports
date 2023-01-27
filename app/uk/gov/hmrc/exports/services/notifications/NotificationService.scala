@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.notifications
 
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
-import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionAction}
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, UnparsedNotificationWorkItemRepository}
 import uk.gov.hmrc.exports.services.notifications.receiptactions._
 
@@ -36,6 +36,12 @@ class NotificationService @Inject() (
   def findAllNotificationsSubmissionRelated(submission: Submission): Future[Seq[ParsedNotification]] =
     notificationRepository.findNotifications(actionIdsSubmissionRelated(submission))
 
+  private def actionIdsSubmissionRelated(submission: Submission): Seq[String] =
+    submission.actions.filter {
+      case _: SubmissionAction => true
+      case _                   => false
+    }.map(_.id)
+
   def handleNewNotification(actionId: String, notificationXml: NodeSeq): Future[Unit] = {
     val notification: UnparsedNotification = UnparsedNotification(actionId = actionId, payload = notificationXml.toString)
 
@@ -43,7 +49,4 @@ class NotificationService @Inject() (
       notificationReceiptActionsScheduler.scheduleActionsExecution()
     }
   }
-
-  private def actionIdsSubmissionRelated(submission: Submission): Seq[String] =
-    submission.actions.filter(_.requestType == SubmissionRequest).map(_.id)
 }
