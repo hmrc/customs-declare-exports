@@ -85,7 +85,10 @@ class AppConfig @Inject() (val configuration: Configuration, servicesConfig: Ser
     servicesConfig.getDuration("workItem.sendEmail.pagerDutyAlertTriggerDelay").asInstanceOf[FiniteDuration]
 
   lazy val customsDeclarationsInformationBaseUrl = servicesConfig.baseUrl("customs-declarations-information")
+
   lazy val fetchMrnStatus = servicesConfig.getString("microservice.services.customs-declarations-information.fetch-mrn-status")
+
+  lazy val fetchMrnFullDeclaration = servicesConfig.getString("microservice.services.customs-declarations-information.fetch-mrn-declaration")
 
   lazy val cdiApiVersion = servicesConfig.getString("microservice.services.customs-declarations-information.api-version")
 

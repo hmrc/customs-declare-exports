@@ -27,11 +27,30 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, InternalServerException}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.xml.Elem
 
 @Singleton
 class CustomsDeclarationsInformationConnector @Inject() (mrnStatusParser: MrnStatusParser, appConfig: AppConfig, httpClient: HttpClient)(
   implicit ec: ExecutionContext
 ) extends Logging {
+
+  def fetchMrnFullDeclaration(mrn: String, declarationVersion: Option[String])(implicit hc: HeaderCarrier): Future[Elem] =
+    httpClient
+      .GET(
+        url = s"${appConfig.customsDeclarationsInformationBaseUrl}${appConfig.fetchMrnFullDeclaration.replace(XmlTags.id, mrn)}",
+        headers = headers,
+        queryParams = declarationVersion.fold(Seq.empty[(String, String)])(version => Seq(("declarationVersion", version)))
+      )(uk.gov.hmrc.http.HttpReads.Implicits.readRaw, hc, ec)
+      .map { response =>
+        response.status match {
+          case OK =>
+            logger.debug(s"CUSTOMS_DECLARATIONS_INFORMATION fetch MRN full declaration response ${response.body}")
+            xml.XML.loadString(response.body)
+          case status =>
+            logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION fetch MRN status response ${response.body}")
+            throw new InternalServerException(s"Customs Declarations Service returned [$status]")
+        }
+      }
 
   def fetchMrnStatus(mrn: String)(implicit hc: HeaderCarrier): Future[Option[MrnStatus]] =
     httpClient

@@ -17,12 +17,15 @@
 package stubs
 
 import scala.annotation.tailrec
-
 import com.github.tomakehurst.wiremock.client.{MappingBuilder, ResponseDefinitionBuilder}
 import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.matching.UrlPathPattern
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
 trait MockGenericDownstreamService extends WireMockRunner {
+
+  def getFromDownstreamService(url: UrlPathPattern, status: Int, body: Option[String], headers: Map[String, String], delay: Int): StubMapping =
+    stubForDownstreamService(get(url), status, body, headers, delay)
 
   def getFromDownstreamService(
     url: String,
