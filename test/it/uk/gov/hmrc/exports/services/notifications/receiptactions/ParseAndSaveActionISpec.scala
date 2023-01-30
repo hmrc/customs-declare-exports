@@ -239,6 +239,9 @@ object ParseAndSaveActionISpec {
       |      "requestTimestamp": "2022-06-20T14:52:13.999Z[UTC]"
       |    }
       |  ],
+      |  "latestDecId" : "62b088b16a76c36b550804ab",
+      |  "latestVersionNo" : 1,
+      |  "blockAmendments" : false,
       |  "mrn": "${mrn}"
       |}
       |""".stripMargin
@@ -277,7 +280,10 @@ object ParseAndSaveActionISpec {
       |        }
       |      ]
       |    }
-      |  ]
+      |  ],
+      |  "latestDecId" : "62b088b16a76c36b550804ab",
+      |  "latestVersionNo" : 1,
+      |  "blockAmendments" : false
       |}
       |""".stripMargin
 }

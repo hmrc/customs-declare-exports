@@ -251,7 +251,8 @@ object SubmissionRepositoryISpecHelper {
       ducr = ducr,
       latestEnhancedStatus = Some(status),
       enhancedStatusLastUpdated = Some(lastStatusUpdate),
-      actions = List(Action(uuid, SubmissionRequest, dateTime, None))
+      actions = List(Action(uuid, SubmissionRequest, dateTime, None)),
+      latestDecId = uuid
     )
   }
 }

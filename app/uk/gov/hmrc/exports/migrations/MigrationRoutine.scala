@@ -28,7 +28,11 @@ import uk.gov.hmrc.exports.migrations.changelogs.cache.{
 }
 import uk.gov.hmrc.exports.migrations.changelogs.emaildetails.RenameSendEmailDetailsToItem
 import uk.gov.hmrc.exports.migrations.changelogs.notification.{MakeParsedDetailsOptional, SplitTheNotificationsCollection}
-import uk.gov.hmrc.exports.migrations.changelogs.submission.{AddNotificationSummariesToSubmissions, RemoveRedundantIndexes}
+import uk.gov.hmrc.exports.migrations.changelogs.submission.{
+  AddNotificationSummariesToSubmissions,
+  AddSubmissionFieldsForAmend,
+  RemoveRedundantIndexes
+}
 
 import javax.inject.Inject
 
@@ -56,6 +60,7 @@ class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
     .register(new AddNotificationSummariesToSubmissions())
     .register(new RemoveMeansOfTransportCrossingTheBorderNationality())
     .register(new AddDeclarationMetaEntity())
+    .register(new AddSubmissionFieldsForAmend())
 
   ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute()
 

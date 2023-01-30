@@ -69,7 +69,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     when(submissionRepository.countSubmissionsInGroup(any(), any())).thenReturn(Future.successful(1))
   }
   private val eori = "eori"
-  private val submission = Submission("id", eori, "lrn", None, "ducr")
+  private val submission = Submission("id", eori, "lrn", None, "ducr", latestDecId = "id")
 
   "SubmissionService.cancel" should {
     val notification = Some(Seq(new NotificationSummary(UUID.randomUUID(), ZonedDateTime.now(), CUSTOMS_POSITION_GRANTED)))
@@ -81,7 +81,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       "ducr",
       None,
       None,
-      List(Action(id = "conv-id", requestType = CancellationRequest, notifications = notification))
+      List(Action(id = "conv-id", requestType = CancellationRequest, notifications = notification)),
+      latestDecId = "id"
     )
     val cancellation = SubmissionCancellation("id", "ref-id", "mrn", "description", "reason")
 
