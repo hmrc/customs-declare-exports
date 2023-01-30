@@ -62,7 +62,8 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     items = Seq.empty,
     totalNumberOfItems = None,
     previousDocuments = None,
-    natureOfTransaction = None
+    natureOfTransaction = None,
+    statementDescription = None
   )
 
   // ************************************************* Builders ********************************************************

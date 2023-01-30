@@ -80,7 +80,8 @@ class ExportsDeclarationXmlParser @Inject() (
       items = items,
       totalNumberOfItems = None,
       previousDocuments = None,
-      natureOfTransaction = None
+      natureOfTransaction = None,
+      statementDescription = None
     )
 
     // infer other values not present in the xml
