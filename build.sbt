@@ -3,7 +3,6 @@ import sbt._
 import uk.gov.hmrc.DefaultBuildSettings._
 import uk.gov.hmrc.SbtAutoBuildPlugin
 import uk.gov.hmrc.gitstamp.GitStampPlugin._
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
 val appName = "customs-declare-exports"
 
@@ -14,12 +13,14 @@ RoutesKeys.routesImport ++= Seq(
   "uk.gov.hmrc.exports.models.Page"
 )
 
+Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-h", "target/test-reports/html-report")
+Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oD")
+
 lazy val IntegrationTest = config("it") extend Test
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(PlayScala, SbtAutoBuildPlugin, SbtDistributablesPlugin)
   .settings(commonSettings: _*)
-  .settings(publishingSettings: _*)
   .settings(gitStampSettings: _*)
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
