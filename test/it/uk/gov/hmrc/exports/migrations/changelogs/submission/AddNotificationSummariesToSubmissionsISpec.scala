@@ -95,7 +95,10 @@ object AddNotificationSummariesToSubmissionsISpec {
       |        "requestType": "CancellationRequest",
       |        "requestTimestamp": "2022-06-20T14:52:13.06Z[UTC]"
       |      }
-      |  ]
+      |  ],
+      |  "latestDecId" : "62a719953e0e9418e3a638b9",
+      |  "latestVersionNo" : 1,
+      |  "blockAmendments" : false
       |}""".stripMargin
 
   val submission1AfterMigration =
@@ -142,6 +145,9 @@ object AddNotificationSummariesToSubmissionsISpec {
       |          ]
       |      }
       |  ],
+      |  "latestDecId" : "62a719953e0e9418e3a638b9",
+      |  "latestVersionNo" : 1,
+      |  "blockAmendments" : false,
       |  "enhancedStatusLastUpdated" : "2022-06-13T09:11:09Z[UTC]",
       |  "latestEnhancedStatus" : "GOODS_ARRIVED"
       }""".stripMargin
@@ -165,7 +171,10 @@ object AddNotificationSummariesToSubmissionsISpec {
       |          "requestType" : "SubmissionRequest",
       |          "requestTimestamp" : "2022-06-13T11:03:49.488Z[UTC]"
       |      }
-      |  ]
+      |  ],
+      |  "latestDecId" : "62a719953e0e9418e3a638b9",
+      |  "latestVersionNo" : 1,
+      |  "blockAmendments" : false
       |}""".stripMargin
 
   val submission2AfterMigration =
@@ -206,7 +215,10 @@ object AddNotificationSummariesToSubmissionsISpec {
       |              }
       |          ]
       |      }
-      |  ]
+      |  ],
+      |  "latestDecId" : "62a719953e0e9418e3a638b9",
+      |  "latestVersionNo" : 1,
+      |  "blockAmendments" : false
       }""".stripMargin
 
   val submissionOutOfScope1 =
@@ -231,7 +243,10 @@ object AddNotificationSummariesToSubmissionsISpec {
       |      }
       |  ],
       |  "enhancedStatusLastUpdated" : "2022-06-13T09:11:09Z[UTC]",
-      |  "latestEnhancedStatus" : "GOODS_ARRIVED"
+      |  "latestEnhancedStatus" : "GOODS_ARRIVED",
+      |  "latestDecId" : "62a719953e0e9418e3a638b9",
+      |  "latestVersionNo" : 1,
+      |  "blockAmendments" : false
       |}""".stripMargin
 
   val submissionOutOfScope2 =
@@ -257,7 +272,10 @@ object AddNotificationSummariesToSubmissionsISpec {
       |      }
       |  ],
       |  "enhancedStatusLastUpdated" : "2022-06-13T09:11:09Z[UTC]",
-      |  "latestEnhancedStatus" : "GOODS_ARRIVED"
+      |  "latestEnhancedStatus" : "GOODS_ARRIVED",
+      |  "latestDecId" : "62a719953e0e9418e3a638b9",
+      |  "latestVersionNo" : 1,
+      |  "blockAmendments" : false
       |}""".stripMargin
 
   val submissionOutOfScope3 =
@@ -275,7 +293,10 @@ object AddNotificationSummariesToSubmissionsISpec {
       |          "requestTimestamp" : "2022-06-13T11:03:49.488Z[UTC]",
       |          "notifications" : []
       |      }
-      |  ]
+      |  ],
+      |  "latestDecId" : "62a719953e0e9418e3a638b9",
+      |  "latestVersionNo" : 1,
+      |  "blockAmendments" : false
       |}""".stripMargin
 
   val parsedNotifications = List(

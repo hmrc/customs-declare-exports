@@ -31,7 +31,10 @@ case class Submission(
   ducr: String,
   latestEnhancedStatus: Option[EnhancedStatus] = None,
   enhancedStatusLastUpdated: Option[ZonedDateTime] = None,
-  actions: Seq[Action] = Seq.empty
+  actions: Seq[Action] = Seq.empty,
+  latestDecId: String, // Initial value => always as 'uuid' field
+  latestVersionNo: Int = 1,
+  blockAmendments: Boolean = false
 )
 
 object Submission {
@@ -39,5 +42,5 @@ object Submission {
   implicit val format = Json.format[Submission]
 
   def apply(declaration: ExportsDeclaration, lrn: String, ducr: String, action: Action): Submission =
-    new Submission(declaration.id, declaration.eori, lrn, None, ducr, actions = List(action))
+    new Submission(declaration.id, declaration.eori, lrn, None, ducr, actions = List(action), latestDecId = declaration.id)
 }

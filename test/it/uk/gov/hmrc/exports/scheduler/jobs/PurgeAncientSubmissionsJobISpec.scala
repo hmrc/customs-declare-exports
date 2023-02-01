@@ -374,11 +374,11 @@ object PurgeAncientSubmissionsJobISpec {
   val eori = "XL165944621471200"
 
   def submission(latestEnhancedStatus: EnhancedStatus, enhancedStatusLastUpdated: ZonedDateTime, actionIds: Seq[String], uuid: String): Submission =
-    Submission(eori = eori, lrn = "XzmBvLMY6ZfrZL9lxu", ducr = "6TS321341891866-112L6H21L").copy(
+    Submission(eori = eori, lrn = "XzmBvLMY6ZfrZL9lxu", ducr = "6TS321341891866-112L6H21L", latestDecId = uuid).copy(
       uuid = uuid,
       latestEnhancedStatus = Some(latestEnhancedStatus),
       enhancedStatusLastUpdated = Some(enhancedStatusLastUpdated),
-      actions = actionIds.map(id => Action(id = id, SubmissionRequest))
+      actions = actionIds.map(id => SubmissionAction(id = id))
     )
 
   def notification(unparsedNotificationId: String, actionId: String): ParsedNotification =
