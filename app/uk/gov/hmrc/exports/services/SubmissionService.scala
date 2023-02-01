@@ -80,7 +80,7 @@ class SubmissionService @Inject() (
   }
 
   private def updateSubmissionInDB(mrn: String, actionId: String): Future[CancellationStatus] = {
-    val newAction = CancellationAction(id = actionId)
+    val newAction = CancellationAction(id = actionId, decId = "", versionNo = 0)
     submissionRepository.addAction(mrn, newAction).map {
       case Some(_) => CancellationRequestSent
       case None    => NotFound
@@ -180,7 +180,7 @@ class SubmissionService @Inject() (
         _ = logProgress(declaration, "Submitted to the Declaration API Successfully")
 
         // Create the Submission with action
-        action = SubmissionAction(id = actionId)
+        action = SubmissionAction(id = actionId, decId = "")
 
         submission <- metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer)(
           submissionRepository.create(Submission(declaration, lrn, ducr, action))

@@ -42,7 +42,7 @@ class WcoSubmissionService @Inject() (wcoMapperService: WcoMapperService, custom
         eori = declaration.eori,
         lrn = lrn,
         ducr = ducr,
-        actions = Seq(SubmissionAction(id = conversationId)),
+        actions = Seq(SubmissionAction(id = conversationId, decId = "")),
         latestDecId = declaration.id
       )
     }

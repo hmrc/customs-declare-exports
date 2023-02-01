@@ -53,13 +53,23 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
       .asScala
       .map { document =>
         val submission = Json.parse(document.toJson).as[Submission]
-        val actions = submission.actions.map { action =>
-          if (action.notifications.isEmpty) updateSubmission(notificationCollection, action, submission) else action
+
+        val actions = submission.actions.flatMap {
+          case s @ SubmissionAction(_, _, None, _) =>
+            val notifications = parsedNotifications(notificationCollection, s, submission)
+
+            if (s.notifications.isEmpty && notifications.nonEmpty)
+              updateActionWithNotificationSummaries(submission.actions, notifications, Seq.empty[NotificationSummary])
+
+            Some(
+              s.copy(notifications = Some(updateActionWithNotificationSummaries(submission.actions, notifications, Seq.empty[NotificationSummary])))
+            )
+          case _ => None
         }
 
         val updatedSubmission = actions.collect {
-          case SubmissionAction(_, _, notifications) => notifications.flatMap(_.headOption)
-          case _                                     => None
+          case SubmissionAction(_, _, notifications, _) => notifications.flatMap(_.headOption)
+          case _                                        => None
         }.flatten.headOption.fold(submission.copy(actions = actions)) { notificationSummary =>
           submission.copy(
             latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
@@ -76,15 +86,17 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
     logger.info(s"Applying '${migrationInformation.id}' db migration... Done.")
   }
 
-  private def updateSubmission(notificationCollection: MongoCollection[Document], action: Action, submission: Submission): Action = {
+  private def parsedNotifications(
+    notificationCollection: MongoCollection[Document],
+    action: Action,
+    submission: Submission
+  ): List[ParsedNotification] = {
     implicit val format = ParsedNotification.format
-    val notifications = notificationCollection
+    notificationCollection
       .find(equal("actionId", action.id))
       .asScala
       .map(document => Json.parse(document.toJson).as[ParsedNotification])
       .toList
-
-    if (notifications.isEmpty) action
-    else updateActionWithNotificationSummaries(action, submission.actions, notifications, Seq.empty[NotificationSummary])._1
   }
+
 }

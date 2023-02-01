@@ -378,7 +378,7 @@ object PurgeAncientSubmissionsJobISpec {
       uuid = uuid,
       latestEnhancedStatus = Some(latestEnhancedStatus),
       enhancedStatusLastUpdated = Some(enhancedStatusLastUpdated),
-      actions = actionIds.map(id => SubmissionAction(id = id))
+      actions = actionIds.map(id => SubmissionAction(id = id, decId = ""))
     )
 
   def notification(unparsedNotificationId: String, actionId: String): ParsedNotification =

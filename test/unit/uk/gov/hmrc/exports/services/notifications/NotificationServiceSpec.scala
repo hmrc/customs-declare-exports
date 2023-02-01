@@ -70,7 +70,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
   "NotificationService on findAllNotificationsSubmissionRelated" should {
 
     "retrieve by conversation IDs" in {
-      val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", None, None, Seq(SubmissionAction("id1")), latestDecId = "id")
+      val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", None, None, Seq(SubmissionAction("id1", decId = "")), latestDecId = "id")
       val notifications = Seq(
         ParsedNotification(
           unparsedNotificationId = UUID.randomUUID(),
