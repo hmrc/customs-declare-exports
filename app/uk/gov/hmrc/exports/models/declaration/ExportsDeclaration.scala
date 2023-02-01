@@ -39,7 +39,8 @@ case class ExportsDeclaration(
   items: Seq[ExportItem],
   totalNumberOfItems: Option[TotalNumberOfItems],
   previousDocuments: Option[PreviousDocuments],
-  natureOfTransaction: Option[NatureOfTransaction]
+  natureOfTransaction: Option[NatureOfTransaction],
+  statementDescription: Option[String]
 ) {
   def status: DeclarationStatus = declarationMeta.status
   def isCompleted: Boolean = status == DeclarationStatus.COMPLETE
@@ -81,6 +82,7 @@ object ExportsDeclaration {
       items = declarationRequest.items,
       totalNumberOfItems = declarationRequest.totalNumberOfItems,
       previousDocuments = declarationRequest.previousDocuments,
-      natureOfTransaction = declarationRequest.natureOfTransaction
+      natureOfTransaction = declarationRequest.natureOfTransaction,
+      statementDescription = declarationRequest.statementDescription
     )
 }
