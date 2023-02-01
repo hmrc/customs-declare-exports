@@ -35,7 +35,8 @@ case class ExportsDeclarationRequest(
   items: Seq[ExportItem] = Seq.empty,
   totalNumberOfItems: Option[TotalNumberOfItems] = None,
   previousDocuments: Option[PreviousDocuments] = None,
-  natureOfTransaction: Option[NatureOfTransaction] = None
+  natureOfTransaction: Option[NatureOfTransaction] = None,
+  statementDescription: Option[String] = None
 )
 
 object ExportsDeclarationRequest {

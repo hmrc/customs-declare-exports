@@ -130,7 +130,8 @@ object ExportsDeclarationSpec {
     items = Seq(item),
     totalNumberOfItems = Some(totalNumberOfItems),
     previousDocuments = Some(previousDocuments),
-    natureOfTransaction = Some(natureOfTransaction)
+    natureOfTransaction = Some(natureOfTransaction),
+    statementDescription = None
   )
 
   val exportsDeclarationRequestAsString: String =
