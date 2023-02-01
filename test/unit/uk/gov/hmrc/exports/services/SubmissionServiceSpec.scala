@@ -244,9 +244,11 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
       val dateTimeIssued = ZonedDateTime.now(ZoneOffset.UTC)
 
-      val newAction = SubmissionAction(id = "conv-id", requestTimestamp = dateTimeIssued, decId = "")
+      val newAction = { decId: String =>
+        SubmissionAction(id = "conv-id", requestTimestamp = dateTimeIssued, decId = decId)
+      }
 
-      val submission = Submission(declaration, "lrn", "mrn", newAction)
+      val submission = Submission(declaration, "lrn", "mrn", List(newAction))
 
       "declaration is valid" in {
         // Given
@@ -263,7 +265,12 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         // Then
         val submissionCreated = theSubmissionCreated()
         val actionGenerated = submissionCreated.actions.head
-        submissionCreated mustBe Submission(declaration, "lrn", "ducr", newAction.copy(requestTimestamp = actionGenerated.requestTimestamp))
+
+        val submittedAction = { decId: String =>
+          SubmissionAction(id = "conv-id", requestTimestamp = actionGenerated.requestTimestamp, decId = decId)
+        }
+
+        submissionCreated mustBe Submission(declaration, "lrn", "ducr", List(submittedAction))
 
         actionGenerated.id mustBe "conv-id"
 

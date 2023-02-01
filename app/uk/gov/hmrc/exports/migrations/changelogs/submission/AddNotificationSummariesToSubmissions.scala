@@ -24,7 +24,15 @@ import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, NotificationSummary, Submission, SubmissionAction}
+import uk.gov.hmrc.exports.models.declaration.submissions.{
+  Action,
+  AmendmentAction,
+  CancellationAction,
+  ExternalAmendmentAction,
+  NotificationSummary,
+  Submission,
+  SubmissionAction
+}
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
 
 import scala.jdk.CollectionConverters._
@@ -53,13 +61,14 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
       .asScala
       .map { document =>
         val submission = Json.parse(document.toJson).as[Submission]
+
         val actions = submission.actions.map { action =>
-          if (action.notifications.isEmpty) updateSubmission(notificationCollection, action, submission) else action
+          updateSubmission(notificationCollection, action, submission)
         }
 
         val updatedSubmission = actions.collect {
           case SubmissionAction(_, _, notifications, _) => notifications.flatMap(_.headOption)
-          case _                                     => None
+          case _                                        => None
         }.flatten.headOption.fold(submission.copy(actions = actions)) { notificationSummary =>
           submission.copy(
             latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
@@ -84,7 +93,21 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
       .map(document => Json.parse(document.toJson).as[ParsedNotification])
       .toList
 
-    if (notifications.isEmpty) action
-    else updateActionWithNotificationSummaries(action, submission.actions, notifications, Seq.empty[NotificationSummary])._1
+    if (notifications.isEmpty || action.notifications.isDefined) action
+    else {
+      val notificationSummaries = updateActionWithNotificationSummaries(submission.actions, notifications, Seq.empty[NotificationSummary])
+
+      action match {
+        case s: SubmissionAction =>
+          s.copy(notifications = Some(notificationSummaries))
+        case s: CancellationAction =>
+          s.copy(notifications = Some(notificationSummaries))
+        case s: AmendmentAction =>
+          s.copy(notifications = Some(notificationSummaries))
+        case s: ExternalAmendmentAction =>
+          s.copy(notifications = Some(notificationSummaries))
+      }
+
+    }
   }
 }

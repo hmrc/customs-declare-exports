@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.models.declaration.submissions
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.RequestType.RequestTypeFormat
 
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
@@ -32,6 +33,21 @@ sealed trait Action {
     notifications.flatMap(_.lastOption)
 
   val versionNo: Int
+
+  def updateActionWithNotificationSummaries(
+                                             existingActions: Seq[Action],
+                                             notifications: Seq[ParsedNotification],
+                                             seed: Seq[NotificationSummary]
+                                           ): Seq[NotificationSummary] = {
+
+    def prependNotificationSummary(accumulator: Seq[NotificationSummary], notification: ParsedNotification): Seq[NotificationSummary] =
+      NotificationSummary(notification, existingActions, accumulator) +: accumulator
+
+    // Parsed notifications need to be sorted (asc), by dateTimeIssued, due to the (ACCEPTED => GOODS_ARRIVED_MESSAGE) condition
+    val notificationSummaries = notifications.sorted.foldLeft(seed)(prependNotificationSummary)
+
+    notificationSummaries
+  }
 
 }
 
