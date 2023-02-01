@@ -105,7 +105,7 @@ object DeclarationRepository {
     // ?? Used for dashboard ??
     IndexModel(ascending("eori", s"$meta.updatedDateTime", s"$meta.status"), IndexOptions().name("eoriAndUpdateTimeAndStatusIdx")),
     // Used for pulling draft declarations for user in date order
-    IndexModel(ascending("eori", s"$meta.createdDateTime", s"$meta.status"), IndexOptions().name("eoriAndCreateTimeAndStatusIdx")),
+    IndexModel(ascending("eori", s"$meta.createdDateTime", s"$meta.status"), IndexOptions().name("eoriAndCreateTimeAndStatusIdxx")),
     // Use for deleting draft decs older than X
     IndexModel(compoundIndex(descending(s"$meta.updatedDateTime"), ascending(s"$meta.status")), IndexOptions().name("statusAndUpdateIdx"))
   )

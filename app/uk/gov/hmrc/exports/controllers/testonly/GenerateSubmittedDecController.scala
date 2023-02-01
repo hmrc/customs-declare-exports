@@ -91,9 +91,11 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
   )
 
   def createSubmission(declaration: ExportsDeclaration, parsedNotifications: Seq[ParsedNotification]) = {
+    val tempAction =
+      SubmissionAction(id = parsedNotifications.head.actionId, requestTimestamp = ZonedDateTime.now(ZoneId.of("UTC")), decId = "id")
 
-    val notificationSummaries =
-      updateActionWithNotificationSummaries(Seq.empty[submissions.Action], parsedNotifications, Seq.empty[NotificationSummary])
+    val (action, notificationSummaries) =
+      updateActionWithNotificationSummaries(tempAction, Seq.empty[submissions.Action], parsedNotifications, Seq.empty[NotificationSummary])
     val notificationSummary = notificationSummaries.head
 
     val uuid: String = UUID.randomUUID.toString
@@ -105,14 +107,7 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
       ducr = declaration.consignmentReferences.flatMap(_.ducr).map(_.ducr).getOrElse(""),
       latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
       enhancedStatusLastUpdated = Some(notificationSummary.dateTimeIssued),
-      actions = List(
-        SubmissionAction(
-          id = parsedNotifications.head.actionId,
-          requestTimestamp = ZonedDateTime.now(ZoneId.of("UTC")),
-          notifications = Some(notificationSummaries.sorted.reverse),
-          decId = ""
-        )
-      ),
+      actions = List(action),
       latestDecId = uuid
     )
   }

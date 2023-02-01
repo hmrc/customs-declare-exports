@@ -72,37 +72,19 @@ class UpdateSubmissionsTransactionalOps @Inject() (
     val action = submission.actions(index)
     val seed = action.notifications.fold(Seq.empty[NotificationSummary])(identity)
 
-    val notificationSummaries =
-      updateActionWithNotificationSummaries(submission.actions, notifications, seed)
+    val (actionWithAllNotificationSummaries, notificationSummaries) =
+      updateActionWithNotificationSummaries(action, submission.actions, notifications, seed)
 
     action match {
-      case s: SubmissionAction =>
+      case _: SubmissionAction =>
         updateSubmissionRequest(
           session,
           actionId,
           notifications.head.details.mrn,
           notificationSummaries.head,
-          submission.actions.updated(index, s.copy(notifications = Some(notificationSummaries.sorted.reverse)))
+          submission.actions.updated(index, actionWithAllNotificationSummaries)
         )
-      case c: CancellationAction =>
-        updateCancellationRequest(
-          session,
-          actionId,
-          submission.actions.updated(index, c.copy(notifications = Some(notificationSummaries.sorted.reverse)))
-        )
-      // TODO
-      case c: ExternalAmendmentAction =>
-        updateCancellationRequest(
-          session,
-          actionId,
-          submission.actions.updated(index, c.copy(notifications = Some(notificationSummaries.sorted.reverse)))
-        )
-      case c: AmendmentAction =>
-        updateCancellationRequest(
-          session,
-          actionId,
-          submission.actions.updated(index, c.copy(notifications = Some(notificationSummaries.sorted.reverse)))
-        )
+      case _ => updateCancellationRequest(session, actionId, submission.actions.updated(index, actionWithAllNotificationSummaries))
     }
 
   }
@@ -136,10 +118,11 @@ class UpdateSubmissionsTransactionalOps @Inject() (
 object ActionWithNotificationSummariesHelper {
 
   def updateActionWithNotificationSummaries(
+    action: Action,
     existingActions: Seq[Action],
     notifications: Seq[ParsedNotification],
     seed: Seq[NotificationSummary]
-  ): Seq[NotificationSummary] = {
+  ): (Action, Seq[NotificationSummary]) = {
 
     def prependNotificationSummary(accumulator: Seq[NotificationSummary], notification: ParsedNotification): Seq[NotificationSummary] =
       NotificationSummary(notification, existingActions, accumulator) +: accumulator
@@ -147,15 +130,15 @@ object ActionWithNotificationSummariesHelper {
     // Parsed notifications need to be sorted (asc), by dateTimeIssued, due to the (ACCEPTED => GOODS_ARRIVED_MESSAGE) condition
     val notificationSummaries = notifications.sorted.foldLeft(seed)(prependNotificationSummary)
 
-//    // The resulting notificationSummaries are sorted again, this time (dsc), since it's not sure
-//    // if they are more recent or not of the (maybe) existing notificationSummaries of the action.
-//    val actionWithAllNotificationSummaries = {
-//      action match {
-//        case s: SubmissionAction   => s.copy(notifications = Some(notificationSummaries.sorted.reverse))
-//        case c: CancellationAction => c.copy(notifications = Some(notificationSummaries.sorted.reverse))
-//        case _ => ???
-//      }
-//    }
-    notificationSummaries
+    // The resulting notificationSummaries are sorted again, this time (dsc), since it's not sure
+    // if they are more recent or not of the (maybe) existing notificationSummaries of the action.
+    val actionWithAllNotificationSummaries = {
+      action match {
+        case s: SubmissionAction   => s.copy(notifications = Some(notificationSummaries.sorted.reverse))
+        case c: CancellationAction => c.copy(notifications = Some(notificationSummaries.sorted.reverse))
+        case _ => ???
+      }
+    }
+    (actionWithAllNotificationSummaries, notificationSummaries)
   }
 }

@@ -74,22 +74,27 @@ object Action {
   implicit val readLocalDateTimeFromString: Reads[ZonedDateTime] = implicitly[Reads[LocalDateTime]]
     .map(ZonedDateTime.of(_, ZoneId.of("UTC")))
 
-  implicit val writes: Writes[Action] =
-    Writes[Action] { action =>
-      Json.obj(
-        "id" -> action.id,
-        "notifications" -> action.notifications,
-        "requestTimestamp" -> action.requestTimestamp,
-        "requestType" -> RequestTypeFormat.writes {
-          action match {
-            case _: SubmissionAction        => SubmissionRequest
-            case _: CancellationAction      => CancellationRequest
-            case _: AmendmentAction         => AmendmentRequest
-            case _: ExternalAmendmentAction => ExternalAmendmentRequest
-          }
-        }
+  private val allWrites = (JsPath \ "id").write[String] and
+    (JsPath \ "requestTimestamp").write[ZonedDateTime] and
+    (JsPath \ "notifications").writeNullable[Seq[NotificationSummary]]
+
+  implicit val writes = Writes[Action] {
+    case s: SubmissionAction =>
+      (allWrites and (JsPath \ "decId").write[String])(unlift(SubmissionAction.unapply)).writes(s) ++ Json.obj(
+        "requestType" -> RequestTypeFormat.writes(SubmissionRequest)
       )
-    }
+    case c: CancellationAction =>
+      (allWrites and (JsPath \ "decId").write[String] and (JsPath \ "versionNo").write[Int])(unlift(CancellationAction.unapply)).writes(c) ++ Json
+        .obj("requestType" -> RequestTypeFormat.writes(CancellationRequest))
+    case a: AmendmentAction =>
+      (allWrites and (JsPath \ "decId").write[String] and (JsPath \ "versionNo").write[Int])(unlift(AmendmentAction.unapply)).writes(a) ++ Json.obj(
+        "requestType" -> RequestTypeFormat.writes(AmendmentRequest)
+      )
+    case e: ExternalAmendmentAction =>
+      (allWrites and (JsPath \ "versionNo").write[Int])(unlift(ExternalAmendmentAction.unapply)).writes(e) ++ Json.obj(
+        "requestType" -> RequestTypeFormat.writes(ExternalAmendmentRequest)
+      )
+  }
 
   private val allActionReads = (__ \ "id").read[String] and
     ((__ \ "requestTimestamp").read[ZonedDateTime] or (__ \ "requestTimestamp").read[ZonedDateTime](readLocalDateTimeFromString)) and
