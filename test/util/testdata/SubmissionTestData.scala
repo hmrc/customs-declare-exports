@@ -43,20 +43,22 @@ object SubmissionTestData {
   lazy val uuid_2: String = UUID.randomUUID.toString
   lazy val uuid_3: String = UUID.randomUUID.toString
 
-  lazy val submission: Submission = Submission(uuid, eori, lrn, Some(mrn), ducr, actions = Seq(action))
+  lazy val submission: Submission = Submission(uuid, eori, lrn, Some(mrn), ducr, actions = Seq(action), latestDecId = uuid)
 
-  lazy val submission_2: Submission = Submission(uuid_2, eori, lrn, Some(mrn_2), ducr, actions = Seq(action_2))
+  lazy val submission_2: Submission = Submission(uuid_2, eori, lrn, Some(mrn_2), ducr, actions = Seq(action_2), latestDecId = uuid_2)
 
-  lazy val submission_3: Submission = Submission(uuid_3, eori, lrn, Some(mrn_2), ducr, actions = Seq(action_3))
+  lazy val submission_3: Submission = Submission(uuid_3, eori, lrn, Some(mrn_2), ducr, actions = Seq(action_3), latestDecId = uuid_3)
 
-  lazy val pendingSubmissionWithoutMrn = Submission(uuid, eori, lrn, None, ducr, actions = Seq(action))
+  lazy val pendingSubmissionWithoutMrn = Submission(uuid, eori, lrn, None, ducr, actions = Seq(action), latestDecId = uuid)
 
-  lazy val cancelledSubmission: Submission = Submission(uuid, eori, lrn, Some(mrn), ducr, actions = Seq(action, actionCancellation))
+  lazy val cancelledSubmission: Submission =
+    Submission(uuid, eori, lrn, Some(mrn), ducr, actions = Seq(action, actionCancellation), latestDecId = uuid)
 
   lazy val notificationSummary_1 = NotificationSummary(notification.unparsedNotificationId, instant1971, RECEIVED)
   lazy val notificationSummary_2 = NotificationSummary(notification_2.unparsedNotificationId, instant1972, GOODS_HAVE_EXITED)
 
-  val emptySubmission_1 = Submission(uuid = uuid, eori = eori, lrn = lrn, mrn = Some(mrn), ducr = ducr, actions = List.empty)
+  val emptySubmission_1 = Submission(uuid = uuid, eori = eori, lrn = lrn, mrn = Some(mrn), ducr = ducr, actions = List.empty, latestDecId = uuid)
 
-  val emptySubmission_2 = Submission(uuid = uuid_2, eori = eori, lrn = lrn, mrn = Some(mrn_2), ducr = ducr, actions = List.empty)
+  val emptySubmission_2 =
+    Submission(uuid = uuid_2, eori = eori, lrn = lrn, mrn = Some(mrn_2), ducr = ducr, actions = List.empty, latestDecId = uuid_2)
 }

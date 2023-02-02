@@ -121,7 +121,10 @@ object SubmissionControllerISpec extends IntegrationTestSpec {
        |  ],
        |  "enhancedStatusLastUpdated" : "2020-12-01T17:33:31Z[UTC]",
        |  "latestEnhancedStatus" : "AMENDED",
-       |  "mrn" : "22GB9515JH78573779"
+       |  "mrn" : "22GB9515JH78573779",
+       |  "latestDecId" : "$id",
+       |  "latestVersionNo" : 1,
+       |  "blockAmendments" : false
        |}
       |""".stripMargin)
     .as[Submission]
