@@ -73,22 +73,7 @@ class GenerateSubmittedDecController @Inject() (
 }
 
 object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
-  lazy val actionStatuses: List[SubmissionStatus] = List(ADDITIONAL_DOCUMENTS_REQUIRED, QUERY_NOTIFICATION_MESSAGE)
-  lazy val submittedStatuses: List[SubmissionStatus] = List(
-    ACCEPTED,
-    AMENDED,
-    AWAITING_EXIT_RESULTS,
-    CLEARED,
-    CUSTOMS_POSITION_DENIED,
-    CUSTOMS_POSITION_GRANTED,
-    DECLARATION_HANDLED_EXTERNALLY,
-    GOODS_HAVE_EXITED_THE_COMMUNITY,
-    PENDING,
-    RECEIVED,
-    RELEASED,
-    REQUESTED_CANCELLATION,
-    UNDERGOING_PHYSICAL_CHECK
-  )
+  case class CreateSubmitDecDocumentsRequest(eori: String, lrn: Option[String], ducr: Option[String], receivedOnly: Option[Int])
 
   def createSubmission(declaration: ExportsDeclaration, parsedNotifications: Seq[ParsedNotification]) = {
 
@@ -121,7 +106,6 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
       details =
         NotificationDetails(declaration.consignmentReferences.flatMap(_.mrn).getOrElse(""), ZonedDateTime.now(ZoneId.of("UTC")), status, Seq.empty)
     )
-  // scalastyle:on
 
   // scalastyle:off
   def createDeclaration()(implicit request: Request[CreateSubmitDecDocumentsRequest]) = {
@@ -200,13 +184,28 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
   }
 
   private def randomLrn() = randomAlphanumericString(22)
-
   private def randomMRN() = s"${Random.nextInt(9)}${Random.nextInt(9)}GB${randomAlphanumericString(13)}"
-
   private def randomAlphanumericString(length: Int): String = Random.alphanumeric.take(length).mkString.toUpperCase
+
+  lazy val actionStatuses: List[SubmissionStatus] = List(ADDITIONAL_DOCUMENTS_REQUIRED, QUERY_NOTIFICATION_MESSAGE)
+
+  lazy val submittedStatuses: List[SubmissionStatus] = List(
+    ACCEPTED,
+    AMENDED,
+    AWAITING_EXIT_RESULTS,
+    CLEARED,
+    CUSTOMS_POSITION_DENIED,
+    CUSTOMS_POSITION_GRANTED,
+    DECLARATION_HANDLED_EXTERNALLY,
+    GOODS_HAVE_EXITED_THE_COMMUNITY,
+    PENDING,
+    RECEIVED,
+    RELEASED,
+    REQUESTED_CANCELLATION,
+    UNDERGOING_PHYSICAL_CHECK
+  )
 
   private def randomStatus(statuses: List[SubmissionStatus] = submittedStatuses): SubmissionStatus =
     statuses(Random.nextInt(statuses.length))
 
-  case class CreateSubmitDecDocumentsRequest(eori: String, lrn: Option[String], ducr: Option[String], receivedOnly: Option[Int])
 }
