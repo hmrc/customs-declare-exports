@@ -49,7 +49,7 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
     "there is a Submission with the given MRN" should {
       "return the Submission updated" in {
         repository.insertOne(submission).futureValue.isRight mustBe true
-        val newAction = CancellationAction(actionId_2, decId = "", versionNo = 0)
+        val newAction = CancellationAction(actionId_2, decId = submission.latestDecId, versionNo = submission.latestVersionNo + 1)
         val expectedUpdatedSubmission = submission.copy(actions = submission.actions :+ newAction)
 
         val updatedSubmission = repository.addAction(mrn, newAction).futureValue

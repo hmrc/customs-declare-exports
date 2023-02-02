@@ -35,15 +35,42 @@ case class Submission(
   latestDecId: String, // Initial value => always as 'uuid' field
   latestVersionNo: Int = 1,
   blockAmendments: Boolean = false
-)
+) {
+  actions.foreach {
+    case s: CancellationAction      => require(s.versionNo == latestVersionNo + 1)
+    case s: ExternalAmendmentAction => require(s.versionNo == latestVersionNo + 1)
+    case s: AmendmentAction         => require(s.versionNo == latestVersionNo + 1)
+    case _                          => true
+  }
+
+}
 
 object Submission {
 
   implicit val format = Json.format[Submission]
 
-  def apply(declaration: ExportsDeclaration, lrn: String, ducr: String, actions: List[String => Action]): Submission =
-    new Submission(declaration.id, declaration.eori, lrn, None, ducr, actions = actions.map(_(declaration.id)), latestDecId = declaration.id)
-  def apply(uuid: String, declaration: ExportsDeclaration, notificationSummary: NotificationSummary, actions: List[String => Action]): Submission =
+  def apply(declaration: ExportsDeclaration, lrn: String, ducr: String, actions: List[Action]): Submission =
+    new Submission(
+      declaration.id,
+      declaration.eori,
+      lrn,
+      None,
+      ducr,
+      actions = actions.map {
+        case submissionAction: SubmissionAction =>
+          require(submissionAction.decId == declaration.id)
+          submissionAction
+        case cancellationAction: CancellationAction =>
+          require(cancellationAction.decId == declaration.id)
+          cancellationAction
+        case amendmentAction: AmendmentAction =>
+          require(amendmentAction.decId == declaration.id)
+          amendmentAction
+        case action => action
+      },
+      latestDecId = declaration.id
+    )
+  def apply(uuid: String, declaration: ExportsDeclaration, notificationSummary: NotificationSummary, actions: List[Action]): Submission =
     new Submission(
       uuid,
       eori = declaration.eori,
@@ -52,7 +79,18 @@ object Submission {
       ducr = declaration.consignmentReferences.flatMap(_.ducr).map(_.ducr).getOrElse(""),
       latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
       enhancedStatusLastUpdated = Some(notificationSummary.dateTimeIssued),
-      actions = actions.map(fn => fn(uuid)),
+      actions = actions.map {
+        case submissionAction: SubmissionAction =>
+          require(submissionAction.decId == uuid)
+          submissionAction
+        case cancellationAction: CancellationAction =>
+          require(cancellationAction.decId == uuid)
+          cancellationAction
+        case amendmentAction: AmendmentAction =>
+          require(amendmentAction.decId == declaration.id)
+          amendmentAction
+        case action => action
+      },
       latestDecId = uuid
     )
 

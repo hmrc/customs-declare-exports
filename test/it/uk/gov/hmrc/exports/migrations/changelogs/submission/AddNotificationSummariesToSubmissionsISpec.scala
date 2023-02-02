@@ -89,14 +89,14 @@ object AddNotificationSummariesToSubmissionsISpec {
       |          "id" : "85ece9c1-acf9-45ba-b5e6-b9692c6f7882",
       |          "requestType" : "SubmissionRequest",
       |          "requestTimestamp" : "2022-06-13T11:03:49.488Z[UTC]",
-      |          "decId" : "id"
+      |          "decId" : "TEST-I6Zjj-RXX0VYH2"
       |      },
       |      {
       |        "id": "7c7faf96-a65e-408d-a8f7-7cb181f696b6",
       |        "requestType": "CancellationRequest",
       |        "requestTimestamp": "2022-06-20T14:52:13.06Z[UTC]",
-      |        "decId" : "id",
-      |        "versionNo" : 0
+      |        "decId" : "62a719953e0e9418e3a638b9",
+      |        "versionNo" : 2
       |      }
       |  ],
       |  "latestDecId" : "62a719953e0e9418e3a638b9",
@@ -134,7 +134,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |                  "enhancedStatus" : "GOODS_HAVE_EXITED"
       |              }
       |          ],
-      |          "decId" : "id"
+      |          "decId" : "TEST-I6Zjj-RXX0VYH2"
       |      },
       |      {
       |          "id": "7c7faf96-a65e-408d-a8f7-7cb181f696b6",
@@ -147,8 +147,8 @@ object AddNotificationSummariesToSubmissionsISpec {
       |                "enhancedStatus": "EXPIRED_NO_DEPARTURE"
       |            }
       |          ],
-      |          "decId" : "id",
-      |          "versionNo" : 0
+      |          "decId" : "62a719953e0e9418e3a638b9",
+      |          "versionNo" : 2
       |      }
       |  ],
       |  "latestDecId" : "62a719953e0e9418e3a638b9",
@@ -171,14 +171,14 @@ object AddNotificationSummariesToSubmissionsISpec {
       |          "id" : "90ece9c1-acf9-45ba-b5e6-b9692c6f7875",
       |          "requestType" : "CancellationRequest",
       |          "requestTimestamp" : "2022-06-20T11:04:50.3Z[UTC]",
-      |          "decId" : "id",
-      |          "versionNo" : 0
+      |          "decId" : "62a719953e0e9418e3a638b9",
+      |          "versionNo" : 2
       |      },
       |      {
       |          "id" : "85ece9c1-acf9-45ba-b5e6-b9692c6f7882",
       |          "requestType" : "SubmissionRequest",
       |          "requestTimestamp" : "2022-06-13T11:03:49.488Z[UTC]",
-      |          "decId" : "id"
+      |          "decId" : "TEST-I6Zjj-RXX0VYH2"
       |      }
       |  ],
       |  "latestDecId" : "62a719953e0e9418e3a638b9",
@@ -201,8 +201,8 @@ object AddNotificationSummariesToSubmissionsISpec {
       |          "id" : "90ece9c1-acf9-45ba-b5e6-b9692c6f7875",
       |          "requestType" : "CancellationRequest",
       |          "requestTimestamp" : "2022-06-20T11:04:50.3Z[UTC]",
-      |          "decId" : "id",
-      |          "versionNo" : 0
+      |          "decId" : "62a719953e0e9418e3a638b9",
+      |          "versionNo" : 2
       |      },
       |      {
       |          "id" : "85ece9c1-acf9-45ba-b5e6-b9692c6f7882",
@@ -225,7 +225,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |                  "enhancedStatus" : "GOODS_HAVE_EXITED"
       |              }
       |          ],
-      |          "decId" : "id"
+      |          "decId" : "TEST-I6Zjj-RXX0VYH2"
       |      }
       |  ],
       |  "latestDecId" : "62a719953e0e9418e3a638b9",

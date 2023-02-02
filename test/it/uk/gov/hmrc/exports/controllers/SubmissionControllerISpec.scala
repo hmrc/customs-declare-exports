@@ -116,7 +116,8 @@ object SubmissionControllerISpec extends IntegrationTestSpec {
        |          "dateTimeIssued" : "2020-12-01T17:32:31Z[UTC]",
        |          "enhancedStatus" : "GOODS_ARRIVED"
        |        }
-       |      ]
+       |      ],
+       |      "decId" : "$id"
        |    }
        |  ],
        |  "enhancedStatusLastUpdated" : "2020-12-01T17:33:31Z[UTC]",

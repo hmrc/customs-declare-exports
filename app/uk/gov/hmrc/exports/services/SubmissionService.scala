@@ -180,9 +180,7 @@ class SubmissionService @Inject() (
         _ = logProgress(declaration, "Submitted to the Declaration API Successfully")
 
         // Create the Submission with action
-        action = { decId: String =>
-          SubmissionAction(id = actionId, decId = decId)
-        }
+        action = SubmissionAction(id = actionId, decId = declaration.id)
 
         submission <- metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer)(
           submissionRepository.create(Submission(declaration, lrn, ducr, List(action)))

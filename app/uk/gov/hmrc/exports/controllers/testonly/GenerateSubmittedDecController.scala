@@ -96,16 +96,18 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
       updateActionWithNotificationSummaries(Seq.empty[submissions.Action], parsedNotifications, Seq.empty[NotificationSummary])
     val notificationSummary = notificationSummaries.head
 
-    val action: String => SubmissionAction =
+    val uuid: String = UUID.randomUUID.toString
+
+    val action: SubmissionAction =
       SubmissionAction(
         id = parsedNotifications.head.actionId,
         requestTimestamp = ZonedDateTime.now(ZoneId.of("UTC")),
         notifications = Some(notificationSummaries.sorted.reverse),
-        _
+        uuid
       )
 
-    val uuid: String = UUID.randomUUID.toString
     Submission(uuid, declaration, notificationSummary, actions = List(action))
+
   }
 
   def createNotification(

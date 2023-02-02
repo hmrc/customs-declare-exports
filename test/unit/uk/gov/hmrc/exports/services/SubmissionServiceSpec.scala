@@ -81,7 +81,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       "ducr",
       None,
       None,
-      List(CancellationAction(id = "conv-id", notifications = notification, decId = "", versionNo = 0)),
+      List(CancellationAction(id = "conv-id", notifications = notification, decId = "id", versionNo = 2)),
       latestDecId = "id"
     )
     val cancellation = SubmissionCancellation("id", "ref-id", "mrn", "description", "reason")
@@ -244,9 +244,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
       val dateTimeIssued = ZonedDateTime.now(ZoneOffset.UTC)
 
-      val newAction = { decId: String =>
-        SubmissionAction(id = "conv-id", requestTimestamp = dateTimeIssued, decId = decId)
-      }
+      val newAction = SubmissionAction(id = "conv-id", requestTimestamp = dateTimeIssued, decId = declaration.id)
 
       val submission = Submission(declaration, "lrn", "mrn", List(newAction))
 
@@ -266,9 +264,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         val submissionCreated = theSubmissionCreated()
         val actionGenerated = submissionCreated.actions.head
 
-        val submittedAction = { decId: String =>
-          SubmissionAction(id = "conv-id", requestTimestamp = actionGenerated.requestTimestamp, decId = decId)
-        }
+        val submittedAction = SubmissionAction(id = "conv-id", requestTimestamp = actionGenerated.requestTimestamp, decId = declaration.id)
 
         submissionCreated mustBe Submission(declaration, "lrn", "ducr", List(submittedAction))
 

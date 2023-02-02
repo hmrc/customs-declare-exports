@@ -45,7 +45,7 @@ object EnhancedStatus extends Enumeration {
     def isCancellationWithCustomsPositionGranted(action: Action): Boolean =
       action match {
         case CancellationAction(_, _, notifications, _, _) => notifications.exists(_.exists(_.enhancedStatus == CUSTOMS_POSITION_GRANTED))
-        case _                                       => false
+        case _                                             => false
       }
     if (actions.exists(isCancellationWithCustomsPositionGranted)) WITHDRAWN else EXPIRED_NO_DEPARTURE
   }

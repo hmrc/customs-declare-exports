@@ -35,10 +35,10 @@ sealed trait Action {
   val versionNo: Int
 
   def updateActionWithNotificationSummaries(
-                                             existingActions: Seq[Action],
-                                             notifications: Seq[ParsedNotification],
-                                             seed: Seq[NotificationSummary]
-                                           ): Seq[NotificationSummary] = {
+    existingActions: Seq[Action],
+    notifications: Seq[ParsedNotification],
+    seed: Seq[NotificationSummary]
+  ): Seq[NotificationSummary] = {
 
     def prependNotificationSummary(accumulator: Seq[NotificationSummary], notification: ParsedNotification): Seq[NotificationSummary] =
       NotificationSummary(notification, existingActions, accumulator) +: accumulator
@@ -58,6 +58,15 @@ case class SubmissionAction(
   decId: String
 ) extends Action {
   val versionNo: Int = 1
+}
+
+object SubmissionAction {
+  def apply(
+    id: String,
+    requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")),
+    notifications: Option[Seq[NotificationSummary]] = None,
+    decId: String
+  ) = new SubmissionAction(id, requestTimestamp, notifications, decId)
 }
 
 case class CancellationAction(
