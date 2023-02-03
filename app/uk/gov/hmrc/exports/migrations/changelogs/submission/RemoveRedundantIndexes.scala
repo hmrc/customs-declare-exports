@@ -37,7 +37,7 @@ class RemoveRedundantIndexes extends MigrationDefinition with Logging {
   private val item = "item"
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(id = "CEDS-3784 Drop unused indexes or those we are modifying", order = 10, author = "Tim Wilkins", runAlways = true)
+    MigrationInformation(id = "CEDS-3784 Drop unused indexes or those we are modifying", order = 10, author = "Tim Wilkins", runAlways = false)
 
   override def migrationFunction(db: MongoDatabase): Unit = {
     logger.info(s"Applying '${migrationInformation.id}' db migration...  ")

@@ -22,7 +22,7 @@ import org.mongodb.scala.model.Filters.{exists, not}
 import play.api.Logging
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 
-import scala.jdk.CollectionConverters.SeqHasAsJava
+import scala.jdk.CollectionConverters._
 
 class AddSubmissionFieldsForAmend extends MigrationDefinition with Logging {
 

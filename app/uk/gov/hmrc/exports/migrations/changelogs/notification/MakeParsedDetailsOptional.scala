@@ -44,7 +44,7 @@ class MakeParsedDetailsOptional extends MigrationDefinition with Logging {
       id = "CEDS-2800 Make the parsed detail fields mrn, dateTimeIssued, status & error optional",
       order = 1,
       author = "Tim Wilkins",
-      runAlways = true
+      runAlways = false
     )
 
   override def migrationFunction(db: MongoDatabase): Unit = {
