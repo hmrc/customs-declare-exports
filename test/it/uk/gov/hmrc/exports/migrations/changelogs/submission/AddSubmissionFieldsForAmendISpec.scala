@@ -24,7 +24,7 @@ class AddSubmissionFieldsForAmendISpec extends IntegrationTestMigrationToolSpec 
   override val collectionUnderTest = "submissions"
   override val changeLog = new AddSubmissionFieldsForAmend()
 
-  "AddNotificationSummariesToSubmissions" should {
+  "AddSubmissionFieldsForAmend" should {
 
     "not update a Submission document" when {
       "the document already has a 'latestDecId' field" in {

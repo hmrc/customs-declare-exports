@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.exports.migrations.changelogs.submission
 
+import com.mongodb.BasicDBObject
 import com.mongodb.client.MongoDatabase
+import org.bson.Document
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.Filters.{exists, not}
 import play.api.Logging
@@ -44,6 +46,8 @@ class AddSubmissionFieldsForAmend extends MigrationDefinition with Logging {
 
     val submissionCollection = db.getCollection("submissions")
 
+    val batchSize = 100
+
     val filter = not(exists(latestDecId))
     val update =
       s"""{ "$$set": {
@@ -52,7 +56,13 @@ class AddSubmissionFieldsForAmend extends MigrationDefinition with Logging {
          | "$blockAmendments": false
          |} }""".stripMargin
 
-    submissionCollection.updateMany(filter, List(BsonDocument(update)).asJava)
+    submissionCollection
+      .find(filter)
+      .batchSize(batchSize)
+      .asScala
+      .map { document: Document =>
+        submissionCollection.updateOne(new BasicDBObject("_id", document.get("_id")), List(BsonDocument(update)).asJava)
+      }
   }
 
   logger.info(s"Finished applying '${migrationInformation.id}' db migration.")
