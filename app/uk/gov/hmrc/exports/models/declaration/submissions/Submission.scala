@@ -49,15 +49,15 @@ object Submission {
       None,
       ducr,
       actions = actions.map {
-        case submissionAction: SubmissionAction =>
-          require(submissionAction.decId == declaration.id)
-          submissionAction
-        case cancellationAction: CancellationAction =>
-          require(cancellationAction.decId == declaration.id)
-          cancellationAction
-        case amendmentAction: AmendmentAction =>
-          require(amendmentAction.decId == declaration.id)
-          amendmentAction
+        case action: SubmissionAction =>
+          require(action.decId == declaration.id)
+          action
+        case action: CancellationAction =>
+          require(action.decId == declaration.id)
+          action
+        case action: AmendmentAction =>
+          require(action.decId == declaration.id)
+          action
         case action => action
       },
       latestDecId = declaration.id
@@ -72,15 +72,15 @@ object Submission {
       latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
       enhancedStatusLastUpdated = Some(notificationSummary.dateTimeIssued),
       actions = actions.map {
-        case submissionAction: SubmissionAction =>
-          require(submissionAction.decId == uuid)
-          submissionAction
-        case cancellationAction: CancellationAction =>
-          require(cancellationAction.decId == uuid)
-          cancellationAction
-        case amendmentAction: AmendmentAction =>
-          require(amendmentAction.decId == declaration.id)
-          amendmentAction
+        case action: SubmissionAction =>
+          require(action.decId == uuid)
+          action
+        case action: CancellationAction =>
+          require(action.decId == uuid)
+          action
+        case action: AmendmentAction =>
+          require(action.decId == declaration.id)
+          action
         case action => action
       },
       latestDecId = uuid

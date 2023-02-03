@@ -181,7 +181,7 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
             parseAndSaveAction.save(List(submissionNotification)).futureValue
             val submissions = parseAndSaveAction.save(List(cancellationNotification)).futureValue
             submissions.size mustBe 1
-            // 2 saves = 2 iterations of lastVersionNo? iterate on every update/save of a notification?
+
             val actualSubmission = Json.toJson(submissions.head)
             actualSubmission mustBe Json.parse(submissionWithNotificationSummaries)
           }
@@ -239,12 +239,12 @@ object ParseAndSaveActionISpec {
       |      "id": "7c7faf96-a65e-408d-a8f7-7cb181f696b6",
       |      "requestType": "CancellationRequest",
       |      "requestTimestamp": "2022-06-20T14:52:13.999Z[UTC]",
-      |      "decId" : "$id",
+      |      "decId" : "62b088b16a76c36b550804ab",
       |      "versionNo" : 2
       |    }
       |  ],
       |  "latestDecId" : "62b088b16a76c36b550804ab",
-      |  "latestVersionNo" : 2,
+      |  "latestVersionNo" : 1,
       |  "blockAmendments" : false,
       |  "mrn": "${mrn}"
       |}
@@ -284,12 +284,12 @@ object ParseAndSaveActionISpec {
       |          "enhancedStatus": "EXPIRED_NO_DEPARTURE"
       |        }
       |      ],
-      |      "decId" : "$id",
+      |      "decId" : "62b088b16a76c36b550804ab",
       |      "versionNo" : 2
       |    }
       |  ],
       |  "latestDecId" : "62b088b16a76c36b550804ab",
-      |  "latestVersionNo" : 2,
+      |  "latestVersionNo" : 1,
       |  "blockAmendments" : false
       |}
       |""".stripMargin
