@@ -53,37 +53,6 @@ class SubmissionService @Inject() (
       case _                                                            => Future.successful(NotFound)
     }
 
-  private def isSubmissionAlreadyCancelled(submission: Submission): Boolean =
-    submission.actions.exists {
-      case c: CancellationAction => c.latestNotificationSummary.fold(false)(_.enhancedStatus == CUSTOMS_POSITION_GRANTED)
-      case _                     => false
-    }
-
-  private def sendCancellationRequest(submission: Submission, cancellation: SubmissionCancellation)(
-    implicit hc: HeaderCarrier
-  ): Future[CancellationStatus] = {
-    val metadata: MetaData = metaDataBuilder.buildRequest(
-      cancellation.functionalReferenceId,
-      cancellation.mrn,
-      cancellation.statementDescription,
-      cancellation.changeReason,
-      submission.eori
-    )
-
-    val xml: String = wcoMapperService.toXml(metadata)
-    customsDeclarationsConnector.submitCancellation(submission, xml).flatMap { actionId =>
-      updateSubmissionInDB(cancellation.mrn, actionId, submission)
-    }
-  }
-
-  private def updateSubmissionInDB(mrn: String, actionId: String, submission: Submission): Future[CancellationStatus] = {
-    val newAction = CancellationAction(id = actionId, submission)
-    submissionRepository.addAction(mrn, newAction).map {
-      case Some(_) => CancellationRequestSent
-      case None    => NotFound
-    }
-  }
-
   def fetchFirstPage(eori: String, statusGroups: Seq[StatusGroup], limit: Int): Future[PageOfSubmissions] = {
     // When multiple StatusGroup(s) are provided, the fetch proceeds in sequence group by group.
     // When a page/batch of Submissions (the first page actually, 1 to limit) is found for a group,
@@ -186,6 +155,15 @@ class SubmissionService @Inject() (
       } yield submission
     }
 
+  private def isSubmissionAlreadyCancelled(submission: Submission): Boolean =
+    submission.actions.exists {
+      case c: CancellationAction => c.latestNotificationSummary.fold(false)(_.enhancedStatus == CUSTOMS_POSITION_GRANTED)
+      case _ => false
+    }
+
+  private def logProgress(declaration: ExportsDeclaration, message: String): Unit =
+    logger.info(s"Declaration [${declaration.id}]: $message")
+
   private def submit(declaration: ExportsDeclaration, payload: String)(implicit hc: HeaderCarrier): Future[String] =
     customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).recoverWith { case throwable: Throwable =>
       logProgress(declaration, "Submission failed")
@@ -195,6 +173,28 @@ class SubmissionService @Inject() (
       }
     }
 
-  private def logProgress(declaration: ExportsDeclaration, message: String): Unit =
-    logger.info(s"Declaration [${declaration.id}]: $message")
+  private def sendCancellationRequest(submission: Submission, cancellation: SubmissionCancellation)(
+    implicit hc: HeaderCarrier
+  ): Future[CancellationStatus] = {
+    val metadata: MetaData = metaDataBuilder.buildRequest(
+      cancellation.functionalReferenceId,
+      cancellation.mrn,
+      cancellation.statementDescription,
+      cancellation.changeReason,
+      submission.eori
+    )
+
+    val xml: String = wcoMapperService.toXml(metadata)
+    customsDeclarationsConnector.submitCancellation(submission, xml).flatMap { actionId =>
+      updateSubmissionInDB(cancellation.mrn, actionId, submission)
+    }
+  }
+
+  private def updateSubmissionInDB(mrn: String, actionId: String, submission: Submission): Future[CancellationStatus] = {
+    val newAction = CancellationAction(id = actionId, submission)
+    submissionRepository.addAction(mrn, newAction).map {
+      case Some(_) => CancellationRequestSent
+      case None => NotFound
+    }
+  }
 }
