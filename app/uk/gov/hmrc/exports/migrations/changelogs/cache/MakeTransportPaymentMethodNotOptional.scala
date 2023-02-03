@@ -34,7 +34,7 @@ class MakeTransportPaymentMethodNotOptional extends MigrationDefinition with Log
   private val TRANSPORT_PAYMENT = "transportPayment"
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(id = "CEDS-3477 Change /transport/transportPayment/paymentMethod", order = 9, author = "Tim Wilkins", runAlways = true)
+    MigrationInformation(id = "CEDS-3477 Change /transport/transportPayment/paymentMethod", order = 9, author = "Tim Wilkins", runAlways = false)
 
   override def migrationFunction(db: MongoDatabase): Unit = {
     logger.info(s"Applying '${migrationInformation.id}' db migration...")

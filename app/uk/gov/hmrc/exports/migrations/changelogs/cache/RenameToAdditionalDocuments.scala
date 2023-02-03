@@ -39,7 +39,7 @@ class RenameToAdditionalDocuments extends MigrationDefinition with Logging {
       id = "CEDS-3254 Rename items.documentsProducedData to items.additionalDocuments",
       order = 3,
       author = "Lucio Biondi",
-      runAlways = true
+      runAlways = false
     )
 
   override def migrationFunction(db: MongoDatabase): Unit = {
