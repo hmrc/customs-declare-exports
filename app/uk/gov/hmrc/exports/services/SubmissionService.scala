@@ -54,12 +54,9 @@ class SubmissionService @Inject() (
     }
 
   private def isSubmissionAlreadyCancelled(submission: Submission): Boolean =
-    submission.actions.find {
-      case _: CancellationAction => true
+    submission.actions.exists {
+      case c: CancellationAction => c.latestNotificationSummary.fold(false)(_.enhancedStatus == CUSTOMS_POSITION_GRANTED)
       case _                     => false
-    } match {
-      case Some(action) => action.latestNotificationSummary.fold(false)(_.enhancedStatus == CUSTOMS_POSITION_GRANTED)
-      case _            => false
     }
 
   private def sendCancellationRequest(submission: Submission, cancellation: SubmissionCancellation)(
@@ -75,12 +72,12 @@ class SubmissionService @Inject() (
 
     val xml: String = wcoMapperService.toXml(metadata)
     customsDeclarationsConnector.submitCancellation(submission, xml).flatMap { actionId =>
-      updateSubmissionInDB(cancellation.mrn, actionId)
+      updateSubmissionInDB(cancellation.mrn, actionId, submission)
     }
   }
 
-  private def updateSubmissionInDB(mrn: String, actionId: String): Future[CancellationStatus] = {
-    val newAction = CancellationAction(id = actionId, decId = "", versionNo = 0)
+  private def updateSubmissionInDB(mrn: String, actionId: String, submission: Submission): Future[CancellationStatus] = {
+    val newAction = CancellationAction(id = actionId, submission)
     submissionRepository.addAction(mrn, newAction).map {
       case Some(_) => CancellationRequestSent
       case None    => NotFound

@@ -30,7 +30,7 @@ import uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.ACCEPTED
 import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, UnparsedNotificationWorkItemRepository}
+import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, UnparsedNotificationWorkItemRepository}
 import uk.gov.hmrc.exports.services.notifications.receiptactions.NotificationReceiptActionsScheduler
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.ToDo
 import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem}
@@ -42,13 +42,12 @@ import scala.concurrent.Future
 
 class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
 
-  private val submissionRepository: SubmissionRepository = buildSubmissionRepositoryMock
   private val unparsedNotificationWorkItemRepository: UnparsedNotificationWorkItemRepository = mock[UnparsedNotificationWorkItemRepository]
   private val notificationRepository: ParsedNotificationRepository = buildNotificationRepositoryMock
   private val notificationReceiptActionsScheduler: NotificationReceiptActionsScheduler = mock[NotificationReceiptActionsScheduler]
 
   private val notificationService =
-    new NotificationService(submissionRepository, unparsedNotificationWorkItemRepository, notificationRepository, notificationReceiptActionsScheduler)
+    new NotificationService(unparsedNotificationWorkItemRepository, notificationRepository, notificationReceiptActionsScheduler)
 
   val PositionFunctionCode = "11"
   val NameCodeGranted = "39"
@@ -58,12 +57,12 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(submissionRepository, unparsedNotificationWorkItemRepository, notificationRepository, notificationReceiptActionsScheduler)
+    reset(unparsedNotificationWorkItemRepository, notificationRepository, notificationReceiptActionsScheduler)
     when(notificationReceiptActionsScheduler.scheduleActionsExecution()).thenReturn(Cancellable.alreadyCancelled)
   }
 
   override def afterEach(): Unit = {
-    reset(submissionRepository, unparsedNotificationWorkItemRepository, notificationRepository, notificationReceiptActionsScheduler)
+    reset(unparsedNotificationWorkItemRepository, notificationRepository, notificationReceiptActionsScheduler)
     super.afterEach()
   }
 

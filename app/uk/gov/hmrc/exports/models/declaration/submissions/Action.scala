@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.models.declaration.submissions
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.RequestType.RequestTypeFormat
 
@@ -60,15 +61,6 @@ case class SubmissionAction(
   val versionNo: Int = 1
 }
 
-object SubmissionAction {
-  def apply(
-    id: String,
-    requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")),
-    notifications: Option[Seq[NotificationSummary]] = None,
-    decId: String
-  ) = new SubmissionAction(id, requestTimestamp, notifications, decId)
-}
-
 case class CancellationAction(
   id: String,
   requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")),
@@ -76,6 +68,11 @@ case class CancellationAction(
   decId: String,
   versionNo: Int
 ) extends Action
+
+object CancellationAction {
+  def apply(id: String, submission: Submission) =
+    new CancellationAction(id, decId = submission.latestDecId, versionNo = submission.latestVersionNo + 1)
+}
 
 case class AmendmentAction(
   id: String,
@@ -85,12 +82,22 @@ case class AmendmentAction(
   versionNo: Int
 ) extends Action
 
+object AmendmentAction {
+  def apply(id: String, declaration: ExportsDeclaration, submission: Submission) =
+    new AmendmentAction(id, decId = declaration.id, versionNo = submission.latestVersionNo + 1)
+}
+
 case class ExternalAmendmentAction private (
   id: String,
   requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")),
   notifications: Option[Seq[NotificationSummary]] = None,
   versionNo: Int
 ) extends Action
+
+object ExternalAmendmentAction {
+  def apply(id: String, submission: Submission) =
+    new ExternalAmendmentAction(id, versionNo = submission.latestVersionNo + 1)
+}
 
 object Action {
 

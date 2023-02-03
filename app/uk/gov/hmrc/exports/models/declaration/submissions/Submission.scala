@@ -35,15 +35,7 @@ case class Submission(
   latestDecId: String, // Initial value => always as 'uuid' field
   latestVersionNo: Int = 1,
   blockAmendments: Boolean = false
-) {
-  actions.foreach {
-    case s: CancellationAction      => require(s.versionNo == latestVersionNo + 1)
-    case s: ExternalAmendmentAction => require(s.versionNo == latestVersionNo + 1)
-    case s: AmendmentAction         => require(s.versionNo == latestVersionNo + 1)
-    case _                          => true
-  }
-
-}
+)
 
 object Submission {
 

@@ -82,7 +82,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       None,
       None,
       List(CancellationAction(id = "conv-id", notifications = notification, decId = "id", versionNo = 2)),
-      latestDecId = "id"
+      latestDecId = "id",
+      latestVersionNo = 2
     )
     val cancellation = SubmissionCancellation("id", "ref-id", "mrn", "description", "reason")
 

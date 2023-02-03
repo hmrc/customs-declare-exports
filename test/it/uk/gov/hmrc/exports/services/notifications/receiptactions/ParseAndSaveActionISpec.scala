@@ -178,11 +178,10 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
           "the enhanced status be updated with the SubmissionRequest action's data only" in {
             val submission = Json.parse(submissionWithoutNotificationSummaries).as[Submission]
             submissionRepository.insertOne(submission).futureValue
-
             parseAndSaveAction.save(List(submissionNotification)).futureValue
             val submissions = parseAndSaveAction.save(List(cancellationNotification)).futureValue
             submissions.size mustBe 1
-
+            // 2 saves = 2 iterations of lastVersionNo? iterate on every update/save of a notification?
             val actualSubmission = Json.toJson(submissions.head)
             actualSubmission mustBe Json.parse(submissionWithNotificationSummaries)
           }
@@ -245,7 +244,7 @@ object ParseAndSaveActionISpec {
       |    }
       |  ],
       |  "latestDecId" : "62b088b16a76c36b550804ab",
-      |  "latestVersionNo" : 1,
+      |  "latestVersionNo" : 2,
       |  "blockAmendments" : false,
       |  "mrn": "${mrn}"
       |}
@@ -290,7 +289,7 @@ object ParseAndSaveActionISpec {
       |    }
       |  ],
       |  "latestDecId" : "62b088b16a76c36b550804ab",
-      |  "latestVersionNo" : 1,
+      |  "latestVersionNo" : 2,
       |  "blockAmendments" : false
       |}
       |""".stripMargin

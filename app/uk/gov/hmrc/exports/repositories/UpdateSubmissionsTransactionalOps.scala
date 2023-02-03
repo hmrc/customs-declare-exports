@@ -68,6 +68,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
     notifications: Seq[ParsedNotification],
     submission: Submission
   ): Future[Option[Submission]] = {
+
     val index = submission.actions.indexWhere(_.id == actionId)
     val action = submission.actions(index)
     val seed = action.notifications.fold(Seq.empty[NotificationSummary])(identity)
@@ -90,18 +91,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
           actionId,
           submission.actions.updated(index, c.copy(notifications = Some(notificationSummaries.sorted.reverse)))
         )
-      case c: AmendmentAction =>
-        updateCancellationRequest(
-          session,
-          actionId,
-          submission.actions.updated(index, c.copy(notifications = Some(notificationSummaries.sorted.reverse)))
-        )
-      case c: ExternalAmendmentAction =>
-        updateCancellationRequest(
-          session,
-          actionId,
-          submission.actions.updated(index, c.copy(notifications = Some(notificationSummaries.sorted.reverse)))
-        )
+      case _ => Future.successful(None)
     }
 
   }
