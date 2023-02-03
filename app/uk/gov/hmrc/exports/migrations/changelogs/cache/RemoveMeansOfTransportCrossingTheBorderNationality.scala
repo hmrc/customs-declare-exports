@@ -38,7 +38,7 @@ class RemoveMeansOfTransportCrossingTheBorderNationality extends MigrationDefini
       id = s"CEDS-3836 Remove $oldField field. Transfer values to transportCrossingTheBorderNationality field if empty.",
       order = 15,
       author = "Tom Robinson",
-      runAlways = true
+      runAlways = false
     )
 
   override def migrationFunction(db: MongoDatabase): Unit = {

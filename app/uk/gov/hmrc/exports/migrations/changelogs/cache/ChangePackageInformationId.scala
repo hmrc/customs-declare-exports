@@ -34,7 +34,7 @@ class ChangePackageInformationId extends MigrationDefinition with Logging {
   private val INDEX_EORI = "eori"
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(id = "CEDS-2557 Change /items/packageInformation/id", order = 8, author = "Maciej Rewera", runAlways = true)
+    MigrationInformation(id = "CEDS-2557 Change /items/packageInformation/id", order = 8, author = "Maciej Rewera", runAlways = false)
 
   override def migrationFunction(db: MongoDatabase): Unit = {
     logger.info(s"Applying '${migrationInformation.id}' db migration...")

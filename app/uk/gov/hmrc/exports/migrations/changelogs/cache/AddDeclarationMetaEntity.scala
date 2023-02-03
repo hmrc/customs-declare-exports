@@ -44,7 +44,7 @@ class AddDeclarationMetaEntity extends MigrationDefinition with Logging {
       id = s"CEDS-4371 Add DeclarationMeta entity. Move several declaration metadata fields inside it.",
       order = 16,
       author = "Tom Robinson",
-      runAlways = true
+      runAlways = false
     )
 
   override def migrationFunction(db: MongoDatabase): Unit = {
