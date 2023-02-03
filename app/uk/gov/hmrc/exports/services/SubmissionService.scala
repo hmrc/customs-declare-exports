@@ -149,7 +149,7 @@ class SubmissionService @Inject() (
         action = SubmissionAction(id = actionId, decId = declaration.id)
 
         submission <- metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer)(
-          submissionRepository.create(Submission(declaration, lrn, ducr, List(action)))
+          submissionRepository.create(Submission(declaration, lrn, ducr, action))
         )
         _ = logProgress(declaration, "New submission creation completed")
       } yield submission
@@ -158,7 +158,7 @@ class SubmissionService @Inject() (
   private def isSubmissionAlreadyCancelled(submission: Submission): Boolean =
     submission.actions.exists {
       case c: CancellationAction => c.latestNotificationSummary.fold(false)(_.enhancedStatus == CUSTOMS_POSITION_GRANTED)
-      case _ => false
+      case _                     => false
     }
 
   private def logProgress(declaration: ExportsDeclaration, message: String): Unit =
@@ -192,9 +192,10 @@ class SubmissionService @Inject() (
 
   private def updateSubmissionInDB(mrn: String, actionId: String, submission: Submission): Future[CancellationStatus] = {
     val newAction = CancellationAction(id = actionId, submission)
+
     submissionRepository.addAction(mrn, newAction).map {
       case Some(_) => CancellationRequestSent
-      case None => NotFound
+      case None    => NotFound
     }
   }
 }

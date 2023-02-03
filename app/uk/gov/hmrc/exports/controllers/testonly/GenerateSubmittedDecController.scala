@@ -91,7 +91,7 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
         uuid
       )
 
-    Submission(uuid, declaration, notificationSummary, actions = List(action))
+    Submission(uuid, declaration, notificationSummary, action = action)
 
   }
 

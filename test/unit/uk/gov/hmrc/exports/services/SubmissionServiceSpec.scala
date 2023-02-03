@@ -87,15 +87,26 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     )
     val cancellation = SubmissionCancellation("id", "ref-id", "mrn", "description", "reason")
 
-    "submit and delegate to repository" when {
-      "submission exists" in {
-        when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
-        when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
-        when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
-        when(submissionRepository.addAction(any[String](), any())).thenReturn(Future.successful(Some(submission)))
+    "submit and delegate to repository and iterates version number in cancel action from submission" when {
+      "submission exists" which {
+        "iterates version number in cancel action from submission" in {
+          when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
+          when(wcoMapperService.toXml(any())).thenReturn("xml")
+          when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
+          when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
 
-        submissionService.cancel(eori, cancellation).futureValue mustBe CancellationRequestSent
+          val captor: ArgumentCaptor[CancellationAction] = ArgumentCaptor.forClass(classOf[CancellationAction])
+
+          when(submissionRepository.addAction(any[String](), any[CancellationAction]())).thenReturn(Future.successful(Some(submission)))
+
+          submissionService.cancel(eori, cancellation).futureValue mustBe CancellationRequestSent
+
+          verify(submissionRepository)
+            .addAction(any[String](), captor.capture())
+
+          captor.getValue.decId mustBe submission.latestDecId
+          captor.getValue.versionNo mustBe submission.latestVersionNo + 1
+        }
       }
 
       "submission is missing" in {
@@ -247,7 +258,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
       val newAction = SubmissionAction(id = "conv-id", requestTimestamp = dateTimeIssued, decId = declaration.id)
 
-      val submission = Submission(declaration, "lrn", "mrn", List(newAction))
+      val submission = Submission(declaration, "lrn", "mrn", newAction)
 
       "declaration is valid" in {
         // Given
@@ -258,6 +269,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(submissionRepository.create(any())).thenReturn(Future.successful(submission))
         when(customsDeclarationsConnector.submitDeclaration(any(), any())(any())).thenReturn(Future.successful("conv-id"))
 
+        val captor: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
+
         // When
         submissionService.submit(declaration).futureValue mustBe submission
 
@@ -267,9 +280,12 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
         val submittedAction = SubmissionAction(id = "conv-id", requestTimestamp = actionGenerated.requestTimestamp, decId = declaration.id)
 
-        submissionCreated mustBe Submission(declaration, "lrn", "ducr", List(submittedAction))
+        submissionCreated mustBe Submission(declaration, "lrn", "ducr", submittedAction)
 
-        actionGenerated.id mustBe "conv-id"
+        verify(submissionRepository)
+          .create(captor.capture())
+
+        captor.getValue.actions.head mustBe SubmissionAction("conv-id", actionGenerated.requestTimestamp, None, declaration.id)
 
         verify(submissionRepository, never).findOne(any[String], any[String])
         verify(sendEmailForDmsDocAction, never).execute(any[String])

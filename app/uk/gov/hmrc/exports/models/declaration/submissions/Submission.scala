@@ -41,28 +41,9 @@ object Submission {
 
   implicit val format = Json.format[Submission]
 
-  def apply(declaration: ExportsDeclaration, lrn: String, ducr: String, actions: List[Action]): Submission =
-    new Submission(
-      declaration.id,
-      declaration.eori,
-      lrn,
-      None,
-      ducr,
-      actions = actions.map {
-        case action: SubmissionAction =>
-          require(action.decId == declaration.id)
-          action
-        case action: CancellationAction =>
-          require(action.decId == declaration.id)
-          action
-        case action: AmendmentAction =>
-          require(action.decId == declaration.id)
-          action
-        case action => action
-      },
-      latestDecId = declaration.id
-    )
-  def apply(uuid: String, declaration: ExportsDeclaration, notificationSummary: NotificationSummary, actions: List[Action]): Submission =
+  def apply(declaration: ExportsDeclaration, lrn: String, ducr: String, action: SubmissionAction): Submission =
+    new Submission(declaration.id, declaration.eori, lrn, None, ducr, actions = List(action), latestDecId = declaration.id)
+  def apply(uuid: String, declaration: ExportsDeclaration, notificationSummary: NotificationSummary, action: SubmissionAction): Submission =
     new Submission(
       uuid,
       eori = declaration.eori,
@@ -71,18 +52,7 @@ object Submission {
       ducr = declaration.consignmentReferences.flatMap(_.ducr).map(_.ducr).getOrElse(""),
       latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
       enhancedStatusLastUpdated = Some(notificationSummary.dateTimeIssued),
-      actions = actions.map {
-        case action: SubmissionAction =>
-          require(action.decId == uuid)
-          action
-        case action: CancellationAction =>
-          require(action.decId == uuid)
-          action
-        case action: AmendmentAction =>
-          require(action.decId == declaration.id)
-          action
-        case action => action
-      },
+      actions = List(action),
       latestDecId = uuid
     )
 
