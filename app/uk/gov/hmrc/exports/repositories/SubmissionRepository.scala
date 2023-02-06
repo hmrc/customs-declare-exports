@@ -134,7 +134,7 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
 
   def findById(eori: String, id: String): Future[Option[Submission]] =
     collection
-      .find(and(equal("uuid", id), equal("eori", eori)))
+      .find(and(equal("eori", eori), equal("uuid", id)))
       .toFuture()
       .map(_.headOption)
 
