@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.exports.migrations.changelogs.submission
 
-import com.mongodb.BasicDBObject
 import com.mongodb.client.MongoDatabase
-import org.bson.Document
-import org.mongodb.scala.bson.BsonDocument
-import org.mongodb.scala.model.Filters.{exists, not}
+import org.mongodb.scala.model.Filters.{and, equal, exists, not}
 import play.api.Logging
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 
@@ -28,7 +25,6 @@ import scala.jdk.CollectionConverters._
 
 class AddSubmissionFieldsForAmend extends MigrationDefinition with Logging {
 
-  private val uuid = "uuid"
   private val latestDecId = "latestDecId"
   private val latestVersionNo = "latestVersionNo"
   private val blockAmendments = "blockAmendments"
@@ -48,20 +44,21 @@ class AddSubmissionFieldsForAmend extends MigrationDefinition with Logging {
 
     val batchSize = 100
 
-    val filter = not(exists(latestDecId))
-    val update =
-      s"""{ "$$set": {
-         | "$latestDecId": "$$$uuid",
-         | "$latestVersionNo": NumberInt(1),
-         | "$blockAmendments": false
-         |} }""".stripMargin
-
     submissionCollection
-      .find(filter)
+      .find(not(exists(latestDecId)))
       .batchSize(batchSize)
       .asScala
-      .map { document: Document =>
-        submissionCollection.updateOne(new BasicDBObject("_id", document.get("_id")), List(BsonDocument(update)).asJava)
+      .map { document =>
+        val uuid = document.get("uuid")
+        document
+          .append(latestDecId, uuid)
+          .append(latestVersionNo, 1)
+          .append(blockAmendments, false)
+
+        val eori = document.get("eori")
+        val filter = and(equal("eori", eori), equal("uuid", uuid))
+
+        submissionCollection.replaceOne(filter, document)
       }
   }
 
