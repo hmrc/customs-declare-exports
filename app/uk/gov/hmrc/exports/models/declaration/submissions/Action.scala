@@ -71,7 +71,7 @@ object AmendmentAction {
     new AmendmentAction(id, decId = declaration.id, versionNo = submission.latestVersionNo + 1)
 }
 
-case class ExternalAmendmentAction private (
+case class ExternalAmendmentAction(
   id: String,
   requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")),
   notifications: Option[Seq[NotificationSummary]] = None,
