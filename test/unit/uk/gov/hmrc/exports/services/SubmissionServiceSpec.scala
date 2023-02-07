@@ -89,7 +89,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
     "submit and delegate to repository and iterates version number in cancel action from submission" when {
       "submission exists" which {
-        "iterates version number in cancel action from submission" in {
+        "copies version number to cancel action from submission" in {
           when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
           when(wcoMapperService.toXml(any())).thenReturn("xml")
           when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
@@ -105,7 +105,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
             .addAction(any[String](), captor.capture())
 
           captor.getValue.decId mustBe submission.latestDecId
-          captor.getValue.versionNo mustBe submission.latestVersionNo + 1
+          captor.getValue.versionNo mustBe submission.latestVersionNo
         }
       }
 
