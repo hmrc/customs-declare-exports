@@ -17,6 +17,7 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.sequenceIdPlaceholder
 import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
 import uk.gov.hmrc.exports.models.FieldMapping
 import uk.gov.hmrc.exports.services.DiffTools
@@ -31,6 +32,15 @@ object Country extends FieldMapping {
   implicit val format = Json.format[Country]
 
   val pointer: ExportsFieldPointer = "code"
+}
+
+case class RoutingCountry(
+  sequenceId: Int = sequenceIdPlaceholder,  // Initialised to enable migration of existing documents
+  country: Country
+)
+
+object RoutingCountry {
+  implicit val format: OFormat[RoutingCountry] = Json.format[RoutingCountry]
 }
 
 case class GoodsLocation(country: String, typeOfLocation: String, qualifierOfIdentification: String, identificationOfLocation: Option[String])
@@ -123,7 +133,7 @@ case class Locations(
   originationCountry: Option[Country] = None,
   destinationCountry: Option[Country] = None,
   hasRoutingCountries: Option[Boolean] = None,
-  routingCountries: Seq[Country] = Seq.empty,
+  routingCountries: Seq[RoutingCountry] = Seq.empty,
   goodsLocation: Option[GoodsLocation] = None,
   officeOfExit: Option[OfficeOfExit] = None,
   supervisingCustomsOffice: Option[SupervisingCustomsOffice] = None,

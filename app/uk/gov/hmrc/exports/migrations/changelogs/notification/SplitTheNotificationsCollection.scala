@@ -51,7 +51,7 @@ import scala.jdk.CollectionConverters._
 class SplitTheNotificationsCollection extends MigrationDefinition with Logging {
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(id = "CEDS-3081 Split 'notifications' collection", order = 2, author = "Maciej Rewera", runAlways = true)
+    MigrationInformation(id = "CEDS-3081 Split 'notifications' collection", order = 2, author = "Maciej Rewera")
 
   private val NotificationsCollectionName = "notifications"
   private val UnparsedNotificationsCollectionName = "unparsedNotifications"

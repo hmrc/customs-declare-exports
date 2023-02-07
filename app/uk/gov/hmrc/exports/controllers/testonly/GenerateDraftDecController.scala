@@ -19,9 +19,9 @@ package uk.gov.hmrc.exports.controllers.testonly
 import play.api.libs.json.Json
 import play.api.mvc.{Action, ControllerComponents, Request}
 import uk.gov.hmrc.exports.controllers.RESTController
-import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.declaration.AuthorisationProcedureCode.CodeOther
 import uk.gov.hmrc.exports.models.declaration.ModeOfTransportCode.Maritime
+import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
@@ -54,7 +54,7 @@ object GenerateDraftDecController extends ExportsDeclarationBuilder {
       .map(ducr => withConsignmentReferences(lrn = request.body.lrn, ducr = ducr))
       .getOrElse(withConsignmentReferences(lrn = request.body.lrn))
 
-    val kk = (1 to request.body.itemCount) map { _ =>
+    val items = (1 to request.body.itemCount) map { _ =>
       anItem(
         withProcedureCodes(Some("1042"), Seq("000")),
         withFiscalInformation(),
@@ -89,7 +89,7 @@ object GenerateDraftDecController extends ExportsDeclarationBuilder {
       withAdditionalDeclarationType(AdditionalDeclarationType.STANDARD_PRE_LODGED),
       consignmentRef,
       withDepartureTransport(TransportLeavingTheBorder(Some(Maritime)), "10", "WhTGZVW"),
-      withContainerData(Container("container", Seq(Seal("seal1")))),
+      withContainerData(Container(1, "container", Seq(Seal(1, "seal1")))),
       withPreviousDocuments(PreviousDocument("271", "zPoj 7Szx1K", None)),
       withExporterDetails(
         None,
@@ -118,7 +118,7 @@ object GenerateDraftDecController extends ExportsDeclarationBuilder {
       withInlandOrBorder(Some(InlandOrBorder("Inland"))),
       withSupervisingCustomsOffice("GBPRE005"),
       withOfficeOfExit(Some("GB003140")),
-      withItems(kk.head, kk.tail: _*),
+      withItems(items.head, items.tail: _*),
       withTotalNumberOfItems(Some("805.4"), Some("GBP"), Some("No"), None, "62584234"),
       withNatureOfTransaction("1"),
       withBorderTransport(Some("41"), Some("WZ9qi2ISJa")),

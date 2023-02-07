@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
-import javax.inject.Inject
+import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.sequenceIdPlaceholder
 import uk.gov.hmrc.exports.models.declaration.{Container, Seal}
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment
 import wco.datamodel.wco.declaration_ds.dms._2.{SealIdentificationIDType, TransportEquipmentIdentificationIDType}
 
+import javax.inject.Inject
 import scala.jdk.CollectionConverters._
 
 class TransportEquipmentBuilder @Inject() () extends ModifyingBuilder[Seq[Container], GoodsShipment.Consignment] {
@@ -71,7 +72,7 @@ class TransportEquipmentBuilder @Inject() () extends ModifyingBuilder[Seq[Contai
     seal
   }
 
-  private val emptySeal: (Seal, Int) = (Seal(nosealsId), 0)
+  private val emptySeal: (Seal, Int) = (Seal(sequenceIdPlaceholder, nosealsId), 0)
 }
 
 object TransportEquipmentBuilder {

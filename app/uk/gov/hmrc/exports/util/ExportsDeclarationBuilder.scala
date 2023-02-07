@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.exports.util
 
-import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
-import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
-import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
+import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
+import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.{ContainerKey, RoutingCountryKey}
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration._
+import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 
 import java.time.{Instant, ZoneOffset, ZonedDateTime}
 
@@ -70,15 +71,15 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
   def withId(id: String): ExportsDeclarationModifier = _.copy(id = id)
 
-  def withParentDeclarationId(parentId: String): ExportsDeclarationModifier = declaration =>
-    declaration.copy(declarationMeta = declaration.declarationMeta.copy(parentDeclarationId = Some(parentId)))
+  def withParentDeclarationId(parentId: String): ExportsDeclarationModifier =
+    cache => cache.copy(declarationMeta = cache.declarationMeta.copy(parentDeclarationId = Some(parentId)))
 
   def withEori(eori: String): ExportsDeclarationModifier = _.copy(eori = eori)
 
   def withEori(eori: Eori): ExportsDeclarationModifier = _.copy(eori = eori.value)
 
-  def withStatus(status: DeclarationStatus): ExportsDeclarationModifier = declaration =>
-    declaration.copy(declarationMeta = declaration.declarationMeta.copy(status = status))
+  def withStatus(status: DeclarationStatus): ExportsDeclarationModifier =
+    cache => cache.copy(declarationMeta = cache.declarationMeta.copy(status = status))
 
   def withType(`type`: DeclarationType): ExportsDeclarationModifier = _.copy(`type` = `type`)
 
@@ -95,24 +96,20 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
   def withoutConsignmentReferences(): ExportsDeclarationModifier = _.copy(consignmentReferences = None)
 
   def withConsignmentReferences(
-    ducr: String = VALID_DUCR,
-    lrn: String = VALID_LRN,
-    personalUcr: Option[String] = Some(VALID_DUCR),
-    eidrDateStamp: Option[String] = None,
-    mrn: Option[String] = None
-  ): ExportsDeclarationModifier =
+   ducr: String = VALID_DUCR,
+   lrn: String = VALID_LRN,
+   personalUcr: Option[String] = Some(VALID_DUCR),
+   eidrDateStamp: Option[String] = None,
+   mrn: Option[String] = None
+ ): ExportsDeclarationModifier =
     _.copy(consignmentReferences = Some(ConsignmentReferences(Some(DUCR(ducr)), Some(lrn), personalUcr, eidrDateStamp, mrn)))
 
   def withoutDepartureTransport(borderModeOfTransportCode: Option[TransportLeavingTheBorder] = None): ExportsDeclarationModifier =
-    declaration =>
-      declaration.copy(transport =
-        declaration.transport
-          .copy(
-            borderModeOfTransportCode = borderModeOfTransportCode,
-            meansOfTransportOnDepartureType = None,
-            meansOfTransportOnDepartureIDNumber = None
-          )
-      )
+    cache => cache.copy(transport = cache.transport.copy(
+      borderModeOfTransportCode = borderModeOfTransportCode,
+      meansOfTransportOnDepartureType = None,
+      meansOfTransportOnDepartureIDNumber = None
+    ))
 
   def withDepartureTransport(
     borderModeOfTransportCode: ModeOfTransportCode = ModeOfTransportCode.Empty,
@@ -130,20 +127,31 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     meansOfTransportOnDepartureType: String,
     meansOfTransportOnDepartureIDNumber: String
   ): ExportsDeclarationModifier =
-    declaration =>
-      declaration.copy(transport =
-        declaration.transport.copy(
-          borderModeOfTransportCode = Some(borderModeOfTransportCode),
-          meansOfTransportOnDepartureType = Some(meansOfTransportOnDepartureType),
-          meansOfTransportOnDepartureIDNumber = Some(meansOfTransportOnDepartureIDNumber)
-        )
-      )
+    cache => cache.copy(transport = cache.transport.copy(
+      borderModeOfTransportCode = Some(borderModeOfTransportCode),
+      meansOfTransportOnDepartureType = Some(meansOfTransportOnDepartureType),
+      meansOfTransportOnDepartureIDNumber = Some(meansOfTransportOnDepartureIDNumber)
+    ))
 
   def withoutContainerData(): ExportsDeclarationModifier =
-    declaration => declaration.copy(transport = declaration.transport.copy(containers = None))
+    cache => {
+      val meta = cache.declarationMeta
+      cache.copy(
+        declarationMeta = meta.copy(maxSequenceIds = meta.maxSequenceIds + (ContainerKey -> 0)),
+        transport = cache.transport.copy(containers = None)
+      )
+    }
 
-  def withContainerData(data: Container*): ExportsDeclarationModifier =
-    declaration => declaration.copy(transport = declaration.transport.copy(containers = Some(data)))
+  def withContainerData(containers: Container*): ExportsDeclarationModifier = {
+    require(containers.nonEmpty)
+    cache => {
+      val meta = cache.declarationMeta
+      cache.copy(
+        declarationMeta = meta.copy(maxSequenceIds = meta.maxSequenceIds + (ContainerKey -> containers.last.sequenceId)),
+        transport = cache.transport.copy(containers = Some(containers))
+      )
+    }
+  }
 
   def withPreviousDocuments(previousDocuments: PreviousDocument*): ExportsDeclarationModifier =
     _.copy(previousDocuments = Some(PreviousDocuments(previousDocuments)))
@@ -192,11 +200,9 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     statusCode: Option[String],
     representingAnotherAgent: Option[String] = Some("Yes")
   ): ExportsDeclarationModifier =
-    cache =>
-      cache.copy(parties =
-        cache.parties
-          .copy(representativeDetails = Some(RepresentativeDetails(details, statusCode, representingAnotherAgent)))
-      )
+    cache => cache.copy(parties = cache.parties.copy(
+      representativeDetails = Some(RepresentativeDetails(details, statusCode, representingAnotherAgent))
+    ))
 
   def withDeclarationAdditionalActors(data: DeclarationAdditionalActor*): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(declarationAdditionalActorsData = Some(DeclarationAdditionalActors(data))))
@@ -236,10 +242,25 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     cache => cache.copy(locations = cache.locations.copy(destinationCountry = Some(country)))
 
   def withoutRoutingCountries(): ExportsDeclarationModifier =
-    cache => cache.copy(locations = cache.locations.copy(routingCountries = Seq.empty))
+    cache => {
+      val meta = cache.declarationMeta
+      cache.copy(
+        declarationMeta = meta.copy(maxSequenceIds = meta.maxSequenceIds + (RoutingCountryKey -> 0)),
+        locations = cache.locations.copy(routingCountries = Seq.empty)
+      )
+    }
 
-  def withRoutingCountries(countries: Seq[Country] = Seq(Country(Some("GB")), Country(Some("PL")))): ExportsDeclarationModifier =
-    cache => cache.copy(locations = cache.locations.copy(routingCountries = countries, hasRoutingCountries = Some(!countries.isEmpty)))
+  def withRoutingCountries(countries: Seq[Country] = Seq(Country(Some("GB")), Country(Some("PL")))): ExportsDeclarationModifier = {
+    require(countries.nonEmpty)
+    cache => {
+      val meta = cache.declarationMeta
+      val routingCountries = countries.zipWithIndex.map { case (country, ix) => RoutingCountry(ix + 1, country) }
+      cache.copy(
+        declarationMeta = meta.copy(maxSequenceIds = meta.maxSequenceIds + (RoutingCountryKey -> routingCountries.last.sequenceId)),
+        locations = cache.locations.copy(routingCountries = routingCountries, hasRoutingCountries = Some(true))
+      )
+    }
+  }
 
   def withInlandOrBorder(inlandOrBorder: Option[InlandOrBorder] = None): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(inlandOrBorder = inlandOrBorder))
@@ -322,50 +343,51 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     _.copy(natureOfTransaction = Some(NatureOfTransaction(natureType)))
 
   val withoutBorderTransport: ExportsDeclarationModifier =
-    declaration =>
-      declaration.copy(transport =
-        declaration.transport.copy(meansOfTransportCrossingTheBorderType = None, meansOfTransportCrossingTheBorderIDNumber = None)
-      )
+    cache =>  cache.copy(transport = cache.transport.copy(
+      meansOfTransportCrossingTheBorderType = None,
+      meansOfTransportCrossingTheBorderIDNumber = None
+    ))
 
   def withBorderTransport(
     meansOfTransportCrossingTheBorderType: Option[String] = None,
     meansOfTransportCrossingTheBorderIDNumber: Option[String] = None
   ): ExportsDeclarationModifier =
-    declaration =>
-      declaration.copy(transport =
-        declaration.transport.copy(
-          meansOfTransportCrossingTheBorderType = meansOfTransportCrossingTheBorderType,
-          meansOfTransportCrossingTheBorderIDNumber = meansOfTransportCrossingTheBorderIDNumber
-        )
-      )
+    cache => cache.copy(transport = cache.transport.copy(
+      meansOfTransportCrossingTheBorderType = meansOfTransportCrossingTheBorderType,
+      meansOfTransportCrossingTheBorderIDNumber = meansOfTransportCrossingTheBorderIDNumber
+    ))
 
   val withoutTransportCountry: ExportsDeclarationModifier =
-    declaration => declaration.copy(transport = declaration.transport.copy(transportCrossingTheBorderNationality = None))
+    cache => cache.copy(transport = cache.transport.copy(transportCrossingTheBorderNationality = None))
 
   def withTransportCountry(transportCountry: Option[String]): ExportsDeclarationModifier =
-    declaration =>
-      declaration.copy(transport = declaration.transport.copy(transportCrossingTheBorderNationality = Some(TransportCountry(transportCountry))))
+    cache => cache.copy(transport = cache.transport.copy(
+      transportCrossingTheBorderNationality = Some(TransportCountry(transportCountry))
+    ))
 
   def withTransportPayment(payment: String): ExportsDeclarationModifier =
-    declaration =>
-      declaration.copy(transport =
-        declaration.transport
-          .copy(expressConsignment = Some(YesNoAnswer.yes), transportPayment = Some(TransportPayment(payment)))
-      )
+    cache => cache.copy(transport = cache.transport.copy(
+      expressConsignment = Some(YesNoAnswer.yes), transportPayment = Some(TransportPayment(payment))
+    ))
 
   def withUpdateDate(year: Int, month: Int, dayOfMonth: Int): ExportsDeclarationModifier =
-    declaration =>
-      declaration.copy(declarationMeta =
-        declaration.declarationMeta.copy(updatedDateTime = ZonedDateTime.of(year, month, dayOfMonth, 10, 0, 0, 0, ZoneOffset.UTC).toInstant)
-      )
+    cache => {
+      val updatedDateTime = ZonedDateTime.of(year, month, dayOfMonth, 10, 0, 0, 0, ZoneOffset.UTC).toInstant
+      cache.copy(declarationMeta = cache.declarationMeta.copy(updatedDateTime = updatedDateTime))
+    }
 
   def withMUCR(mucr: String): ExportsDeclarationModifier =
     cache => cache.copy(linkDucrToMucr = Some(YesNoAnswer.yes), mucr = Some(MUCR(mucr)))
 
   def withReadyForSubmission(): ExportsDeclarationModifier =
-    declaration =>
-      declaration.copy(declarationMeta = declaration.declarationMeta.copy(summaryWasVisited = Some(true), readyForSubmission = Some(true)))
+    cache => cache.copy(declarationMeta = cache.declarationMeta.copy(summaryWasVisited = Some(true), readyForSubmission = Some(true)))
 
   def withUpdatedDateTime(updatedDateTime: Instant = Instant.now()): ExportsDeclarationModifier =
-    declaration => declaration.copy(declarationMeta = declaration.declarationMeta.copy(updatedDateTime = updatedDateTime))
+    cache => cache.copy(declarationMeta = cache.declarationMeta.copy(updatedDateTime = updatedDateTime))
+
+  def withMaxSequenceIdFor(key: String, value: Int): ExportsDeclarationModifier =
+    cache => {
+      val meta = cache.declarationMeta
+      cache.copy(declarationMeta = meta.copy(maxSequenceIds = meta.maxSequenceIds + (key -> value)))
+    }
 }

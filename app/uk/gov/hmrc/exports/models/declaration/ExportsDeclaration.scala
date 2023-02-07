@@ -82,17 +82,19 @@ object ExportsDeclaration extends FieldMapping {
     implicit val format: OFormat[ExportsDeclaration] = Json.format[ExportsDeclaration]
   }
 
-  def apply(id: String, eori: Eori, declarationRequest: ExportsDeclarationRequest): ExportsDeclaration =
+  def init(id: String, eori: Eori, declarationRequest: ExportsDeclarationRequest): ExportsDeclaration = {
+    val meta = declarationRequest.declarationMeta
     ExportsDeclaration(
       id = id,
       declarationMeta = DeclarationMeta(
-        parentDeclarationId = declarationRequest.declarationMeta.parentDeclarationId,
-        parentDeclarationEnhancedStatus = declarationRequest.declarationMeta.parentDeclarationEnhancedStatus,
+        parentDeclarationId = meta.parentDeclarationId,
+        parentDeclarationEnhancedStatus = meta.parentDeclarationEnhancedStatus,
         status = declarationRequest.consignmentReferences.map(_ => DeclarationStatus.DRAFT).getOrElse(DeclarationStatus.INITIAL),
-        createdDateTime = declarationRequest.declarationMeta.createdDateTime,
-        updatedDateTime = declarationRequest.declarationMeta.updatedDateTime,
-        summaryWasVisited = declarationRequest.declarationMeta.summaryWasVisited,
-        readyForSubmission = declarationRequest.declarationMeta.readyForSubmission
+        createdDateTime = meta.createdDateTime,
+        updatedDateTime = meta.updatedDateTime,
+        summaryWasVisited = meta.summaryWasVisited,
+        readyForSubmission = meta.readyForSubmission,
+        maxSequenceIds = meta.maxSequenceIds
       ),
       eori = eori.value,
       `type` = declarationRequest.`type`,
@@ -110,6 +112,7 @@ object ExportsDeclaration extends FieldMapping {
       natureOfTransaction = declarationRequest.natureOfTransaction,
       statementDescription = declarationRequest.statementDescription
     )
+  }
 
   val pointer: ExportsFieldPointer = "declaration"
 }

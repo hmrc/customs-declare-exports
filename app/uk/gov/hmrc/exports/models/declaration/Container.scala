@@ -17,18 +17,23 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.sequenceIdPlaceholder
 import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
 import uk.gov.hmrc.exports.models.FieldMapping
 import uk.gov.hmrc.exports.services.DiffTools
 import uk.gov.hmrc.exports.services.DiffTools.{combinePointers, compareStringDifference, ExportsDeclarationDiff}
 
-case class Container(id: String, seals: Seq[Seal]) extends DiffTools[Container] {
+case class Container(
+  sequenceId: Int = sequenceIdPlaceholder,  // Initialised to enable migration of existing documents
+  id: String,
+  seals: Seq[Seal]
+) extends DiffTools[Container] {
 
-  override def createDiff(original: Container, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int]): ExportsDeclarationDiff =
-    Seq(compareStringDifference(original.id, id, combinePointers(pointerString, Container.idPointer, sequenceNbr))).flatten ++ createDiff(
+  override def createDiff(original: Container, pointerString: ExportsFieldPointer, sequenceId: Option[Int]): ExportsDeclarationDiff =
+    Seq(compareStringDifference(original.id, id, combinePointers(pointerString, Container.idPointer, sequenceId))).flatten ++ createDiff(
       original.seals,
       seals,
-      combinePointers(pointerString, Seal.pointer, sequenceNbr)
+      combinePointers(pointerString, Seal.pointer, sequenceId)
     )
 }
 

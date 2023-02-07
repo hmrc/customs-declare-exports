@@ -20,11 +20,12 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, ControllerComponents, Request}
 import uk.gov.hmrc.exports.controllers.RESTController
 import uk.gov.hmrc.exports.models.declaration.AuthorisationProcedureCode.CodeOther
+import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.{ContainerKey, SealKey}
 import uk.gov.hmrc.exports.models.declaration.ModeOfTransportCode.Maritime
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus._
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action => SubmissionAction, NotificationSummary, Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions.{NotificationSummary, Submission, SubmissionRequest, Action => SubmissionAction}
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
@@ -129,7 +130,7 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
       withAdditionalDeclarationType(AdditionalDeclarationType.STANDARD_PRE_LODGED),
       withConsignmentReferences(mrn = Some(mrn), lrn = lrn, ducr = ducr, personalUcr = None),
       withDepartureTransport(TransportLeavingTheBorder(Some(Maritime)), "10", "WhTGZVW"),
-      withContainerData(Container("container", Seq(Seal("seal1")))),
+      withContainerData(Container(1, "container", Seq(Seal(1, "seal1")))),
       withPreviousDocuments(PreviousDocument("271", "zPoj 7Szx1K", None)),
       withExporterDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "United States of America"))),
       withDeclarantDetails(Some(request.body.eori)),

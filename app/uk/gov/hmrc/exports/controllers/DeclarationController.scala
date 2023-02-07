@@ -43,7 +43,7 @@ class DeclarationController @Inject() (
   val create: Action[ExportsDeclarationRequest] = authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
     logPayload("Create Declaration Request Received", request.body)
     declarationService
-      .create(ExportsDeclaration(UUID.randomUUID.toString, request.eori, request.body))
+      .create(ExportsDeclaration.init(UUID.randomUUID.toString, request.eori, request.body))
       .map(logPayload("Create Declaration Response", _))
       .map(declaration => Created(declaration))
   }
@@ -85,7 +85,7 @@ class DeclarationController @Inject() (
     authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { implicit request =>
       logPayload("Update Declaration Request Received", request.body)
       declarationService
-        .update(ExportsDeclaration(id, request.eori, request.body))
+        .update(ExportsDeclaration.init(id, request.eori, request.body))
         .map(logPayload("Update Declaration Response", _))
         .map {
           case Some(declaration) => Ok(declaration)

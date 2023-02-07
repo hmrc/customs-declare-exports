@@ -28,14 +28,14 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 class DeclarationConsignmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   private val freightBuilder = mock[FreightBuilder]
-  private val iteneraryBuilder = mock[IteneraryBuilder]
+  private val itineraryBuilder = mock[ItineraryBuilder]
   private val consignmentCarrierBuilder = mock[ConsignmentCarrierBuilder]
   private val consignorBuilder = mock[ConsignmentConsignorBuilder]
 
   override def afterEach(): Unit =
-    reset(freightBuilder, iteneraryBuilder, consignmentCarrierBuilder)
+    reset(freightBuilder, itineraryBuilder, consignmentCarrierBuilder)
 
-  private def builder = new DeclarationConsignmentBuilder(freightBuilder, iteneraryBuilder, consignmentCarrierBuilder, consignorBuilder)
+  private def builder = new DeclarationConsignmentBuilder(freightBuilder, itineraryBuilder, consignmentCarrierBuilder, consignorBuilder)
 
   "DeclarationConsignmentBuilder" should {
 
@@ -60,7 +60,7 @@ class DeclarationConsignmentBuilderSpec extends UnitSpec with ExportsDeclaration
           // Then
           declaration.getConsignment must not be null
           verify(freightBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
-          verify(iteneraryBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
+          verify(itineraryBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
           verify(consignmentCarrierBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
           verify(consignorBuilder).buildThenAdd(refEq(model), any[Declaration.Consignment])
         }
@@ -76,7 +76,7 @@ class DeclarationConsignmentBuilderSpec extends UnitSpec with ExportsDeclaration
         // Then
         declaration.getConsignment mustBe null
         verify(freightBuilder, never).buildThenAdd(refEq(model), any[Declaration.Consignment])
-        verify(iteneraryBuilder, never).buildThenAdd(refEq(model), any[Declaration.Consignment])
+        verify(itineraryBuilder, never).buildThenAdd(refEq(model), any[Declaration.Consignment])
         verify(consignmentCarrierBuilder, never).buildThenAdd(refEq(model), any[Declaration.Consignment])
         verify(consignorBuilder, never).buildThenAdd(refEq(model), any[Declaration.Consignment])
       }

@@ -31,8 +31,7 @@ class RenameSendEmailDetailsToItem extends MigrationDefinition with Logging {
     MigrationInformation(
       id = "CEDS-3825 Rename sendEmailWorkItems.sendEmailDetails to sendEmailWorkItems.item",
       order = 12,
-      author = "Lucio Biondi",
-      runAlways = false
+      author = "Lucio Biondi"
     )
 
   override def migrationFunction(db: MongoDatabase): Unit = {

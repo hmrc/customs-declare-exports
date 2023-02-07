@@ -34,12 +34,12 @@ class ExportsDeclarationSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "ExportsDeclaration" should {
     "be correctly derived from ExportsDeclarationRequest" in {
-      ExportsDeclaration(id, Eori(eori), exportsDeclarationRequest) mustBe exportsDeclaration
+      ExportsDeclaration.init(id, Eori(eori), exportsDeclarationRequest) mustBe exportsDeclaration
     }
 
     "be set to initial state when without references" in {
       val declarationRequest = exportsDeclarationRequest.copy(consignmentReferences = None)
-      ExportsDeclaration(id, Eori(eori), declarationRequest).status mustBe DeclarationStatus.INITIAL
+      ExportsDeclaration.init(id, Eori(eori), declarationRequest).status mustBe DeclarationStatus.INITIAL
     }
   }
 
@@ -49,7 +49,7 @@ class ExportsDeclarationSpec extends UnitSpec with ExportsDeclarationBuilder {
         .parse(exportsDeclarationRequestAsString)
         .as(ExportsDeclarationRequest.format)
 
-      val declaration = ExportsDeclaration("1", Eori("GB12345678"), exportsDeclarationRequest)
+      val declaration = ExportsDeclaration.init("1", Eori("GB12345678"), exportsDeclarationRequest)
 
       val json = Json.toJson(declaration)(ExportsDeclaration.REST.writes)
 

@@ -21,9 +21,9 @@ import uk.gov.hmrc.exports.models.declaration.Country
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class IteneraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
+class ItineraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
-  "IteneraryBuilder" should {
+  "ItineraryBuilder" should {
 
     "build then add" when {
 
@@ -34,7 +34,7 @@ class IteneraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         val consignment = new Declaration.Consignment()
 
         // When
-        new IteneraryBuilder().buildThenAdd(model, consignment)
+        new ItineraryBuilder().buildThenAdd(model, consignment)
 
         // Then
         consignment.getItinerary mustBe empty
@@ -47,7 +47,7 @@ class IteneraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         val consignment = new Declaration.Consignment()
 
         // When
-        new IteneraryBuilder().buildThenAdd(model, consignment)
+        new ItineraryBuilder().buildThenAdd(model, consignment)
 
         // Then
         consignment.getItinerary mustBe empty
@@ -60,7 +60,7 @@ class IteneraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         val consignment = new Declaration.Consignment()
 
         // When
-        new IteneraryBuilder().buildThenAdd(model, consignment)
+        new ItineraryBuilder().buildThenAdd(model, consignment)
 
         // Then
         consignment.getItinerary must have(size(2))
@@ -76,7 +76,7 @@ class IteneraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         val consignment = new Declaration.Consignment()
 
         // When
-        new IteneraryBuilder().buildThenAdd(model, consignment)
+        new ItineraryBuilder().buildThenAdd(model, consignment)
 
         // Then
         consignment.getItinerary must have(size(1))
@@ -90,7 +90,7 @@ class IteneraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         val consignment = new Declaration.Consignment()
 
         // When
-        new IteneraryBuilder().buildThenAdd(model, consignment)
+        new ItineraryBuilder().buildThenAdd(model, consignment)
 
         // Then
         consignment.getItinerary must have(size(0))
