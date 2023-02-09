@@ -24,16 +24,8 @@ import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions.{
-  Action,
-  AmendmentAction,
-  CancellationAction,
-  ExternalAmendmentAction,
-  NotificationSummary,
-  Submission,
-  SubmissionAction
-}
-import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
+import uk.gov.hmrc.exports.models.declaration.submissions._
+import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper._
 
 import scala.jdk.CollectionConverters._
 
@@ -95,20 +87,7 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
 
     if (notifications.isEmpty || action.notifications.isDefined) action
     else {
-      val notificationSummaries =
-        updateActionWithNotificationSummaries(submission.actions, notifications, Seq.empty[NotificationSummary]).sorted.reverse
-
-      action match {
-        case s: SubmissionAction =>
-          s.copy(notifications = Some(notificationSummaries))
-        case s: CancellationAction =>
-          s.copy(notifications = Some(notificationSummaries))
-        case s: AmendmentAction =>
-          s.copy(notifications = Some(notificationSummaries))
-        case s: ExternalAmendmentAction =>
-          s.copy(notifications = Some(notificationSummaries))
-      }
-
+      updateActionWithNotificationSummaries(notificationsToAction(action), submission.actions, notifications, Seq.empty[NotificationSummary])._1
     }
   }
 }

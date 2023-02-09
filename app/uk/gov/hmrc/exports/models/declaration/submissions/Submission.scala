@@ -43,7 +43,7 @@ object Submission {
 
   def apply(declaration: ExportsDeclaration, lrn: String, ducr: String, action: SubmissionAction): Submission =
     new Submission(declaration.id, declaration.eori, lrn, None, ducr, actions = List(action), latestDecId = declaration.id)
-  def apply(uuid: String, declaration: ExportsDeclaration, notificationSummary: NotificationSummary, action: SubmissionAction): Submission =
+  def apply(uuid: String, declaration: ExportsDeclaration, notificationSummary: NotificationSummary, action: Action): Submission =
     new Submission(
       uuid,
       eori = declaration.eori,
