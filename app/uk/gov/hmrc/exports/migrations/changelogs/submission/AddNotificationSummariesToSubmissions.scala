@@ -95,7 +95,8 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
 
     if (notifications.isEmpty || action.notifications.isDefined) action
     else {
-      val notificationSummaries = updateActionWithNotificationSummaries(submission.actions, notifications, Seq.empty[NotificationSummary])
+      val notificationSummaries =
+        updateActionWithNotificationSummaries(submission.actions, notifications, Seq.empty[NotificationSummary]).sorted.reverse
 
       action match {
         case s: SubmissionAction =>
