@@ -54,8 +54,9 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
       .map { document =>
         val submission = Json.parse(document.toJson).as[Submission]
 
-        val actions = submission.actions.map { action =>
-          updateSubmission(notificationCollection, action, submission)
+        val actions = submission.actions.map {
+          case action if action.notifications.isDefined => action
+          case action                                   => updateSubmission(notificationCollection, action, submission)
         }
 
         val updatedSubmission = actions.collect {
@@ -85,7 +86,7 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
       .map(document => Json.parse(document.toJson).as[ParsedNotification])
       .toList
 
-    if (notifications.isEmpty || action.notifications.isDefined) action
+    if (notifications.isEmpty) action
     else {
       updateActionWithNotificationSummaries(notificationsToAction(action), submission.actions, notifications, Seq.empty[NotificationSummary])._1
     }
