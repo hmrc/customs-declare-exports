@@ -17,9 +17,24 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
+import uk.gov.hmrc.exports.models.FieldMapping
+import uk.gov.hmrc.exports.services.DiffTools
+import uk.gov.hmrc.exports.services.DiffTools.{combinePointers, compareStringDifference, ExportsDeclarationDiff}
 
-case class Container(id: String, seals: Seq[Seal])
+case class Container(id: String, seals: Seq[Seal]) extends DiffTools[Container] {
 
-object Container {
+  override def createDiff(original: Container, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int]): ExportsDeclarationDiff =
+    Seq(compareStringDifference(original.id, id, combinePointers(pointerString, Container.idPointer, sequenceNbr))).flatten ++ createDiff(
+      original.seals,
+      seals,
+      combinePointers(pointerString, Seal.pointer, sequenceNbr)
+    )
+}
+
+object Container extends FieldMapping {
   implicit val format: OFormat[Container] = Json.format[Container]
+
+  override val pointer: ExportsFieldPointer = "containers"
+  val idPointer: ExportsFieldPointer = "id"
 }

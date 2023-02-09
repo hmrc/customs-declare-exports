@@ -18,10 +18,13 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json._
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
+import uk.gov.hmrc.exports.models.{Eori, FieldMapping}
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
-import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
+import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
+import uk.gov.hmrc.exports.services.DiffTools
+import uk.gov.hmrc.exports.services.DiffTools.{combinePointers, compareDifference, ExportsDeclarationDiff}
 
 case class ExportsDeclaration(
   id: String,
@@ -41,12 +44,34 @@ case class ExportsDeclaration(
   previousDocuments: Option[PreviousDocuments],
   natureOfTransaction: Option[NatureOfTransaction],
   statementDescription: Option[String]
-) {
+) extends DiffTools[ExportsDeclaration] {
+
   def status: DeclarationStatus = declarationMeta.status
+
   def isCompleted: Boolean = status == DeclarationStatus.COMPLETE
+
+  /*
+   This diff only compares the fields that are used when generating a WCO XML declaration.
+   It does not include those fields that are purely for our own UI's operation e.g. linkDucrToMucr & DeclarationMeta
+   */
+  def createDiff(
+    original: ExportsDeclaration,
+    pointerString: ExportsFieldPointer = ExportsDeclaration.pointer,
+    sequenceNbr: Option[Int] = None
+  ): ExportsDeclarationDiff =
+    Seq(
+      compareDifference(original.mucr, mucr, combinePointers(pointerString, MUCR.pointer, sequenceNbr)),
+      compareDifference(original.natureOfTransaction, natureOfTransaction, combinePointers(pointerString, NatureOfTransaction.pointer, sequenceNbr)),
+      createDiff(original.items, items, combinePointers(pointerString, ExportItem.pointer, sequenceNbr))
+    ).flatten ++
+      transport.createDiff(original.transport, combinePointers(pointerString, Transport.pointer, sequenceNbr)) ++
+      parties.createDiff(original.parties, combinePointers(pointerString, Parties.pointer, sequenceNbr)) ++
+      locations.createDiff(original.locations, combinePointers(pointerString, Locations.pointer, sequenceNbr)) ++
+      createDiffOfOptions(original.totalNumberOfItems, totalNumberOfItems, combinePointers(pointerString, TotalNumberOfItems.pointer, sequenceNbr)) ++
+      createDiffOfOptions(original.previousDocuments, previousDocuments, combinePointers(pointerString, PreviousDocuments.pointer, sequenceNbr))
 }
 
-object ExportsDeclaration {
+object ExportsDeclaration extends FieldMapping {
 
   object REST {
     implicit val writes: OWrites[ExportsDeclaration] = Json.writes[ExportsDeclaration]
@@ -85,4 +110,6 @@ object ExportsDeclaration {
       natureOfTransaction = declarationRequest.natureOfTransaction,
       statementDescription = declarationRequest.statementDescription
     )
+
+  val pointer: ExportsFieldPointer = "declaration"
 }

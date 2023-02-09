@@ -17,15 +17,50 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
+import uk.gov.hmrc.exports.models.FieldMapping
+import uk.gov.hmrc.exports.services.DiffTools
+import uk.gov.hmrc.exports.services.DiffTools.{combinePointers, compareStringDifference, ExportsDeclarationDiff}
 
 case class TotalNumberOfItems(
-  totalAmountInvoiced: Option[String],
-  totalAmountInvoicedCurrency: Option[String],
-  agreedExchangeRate: Option[String],
-  exchangeRate: Option[String],
-  totalPackage: Option[String]
-)
+  totalAmountInvoiced: Option[String] = None,
+  totalAmountInvoicedCurrency: Option[String] = None,
+  agreedExchangeRate: Option[String] = None,
+  exchangeRate: Option[String] = None,
+  totalPackage: Option[String] = None
+) extends DiffTools[TotalNumberOfItems] {
+  def createDiff(original: TotalNumberOfItems, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
+    Seq(
+      compareStringDifference(
+        original.totalAmountInvoiced,
+        totalAmountInvoiced,
+        combinePointers(pointerString, TotalNumberOfItems.totalAmountInvoicedPointer, sequenceNbr)
+      ),
+      compareStringDifference(
+        original.totalAmountInvoicedCurrency,
+        totalAmountInvoicedCurrency,
+        combinePointers(pointerString, TotalNumberOfItems.totalAmountInvoicedCurrencyPointer, sequenceNbr)
+      ),
+      compareStringDifference(
+        original.exchangeRate,
+        exchangeRate,
+        combinePointers(pointerString, TotalNumberOfItems.exchangeRatePointer, sequenceNbr)
+      ),
+      compareStringDifference(
+        original.totalPackage,
+        totalPackage,
+        combinePointers(pointerString, TotalNumberOfItems.totalPackagePointer, sequenceNbr)
+      )
+    ).flatten
+}
 
-object TotalNumberOfItems {
+object TotalNumberOfItems extends FieldMapping {
   implicit val format: OFormat[TotalNumberOfItems] = Json.format[TotalNumberOfItems]
+
+  val pointer: ExportsFieldPointer = "totalNumberOfItems"
+
+  val totalAmountInvoicedPointer: ExportsFieldPointer = "totalAmountInvoiced"
+  val totalAmountInvoicedCurrencyPointer: ExportsFieldPointer = "totalAmountInvoicedCurrency"
+  val exchangeRatePointer: ExportsFieldPointer = "exchangeRate"
+  val totalPackagePointer: ExportsFieldPointer = "totalPackage"
 }
