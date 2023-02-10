@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.exports.models.declaration.submissions
 
-import play.api.libs.json.Json
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
-import java.time.{ZoneId, ZonedDateTime}
+import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
 case class Action(
   id: String,
@@ -36,9 +37,16 @@ object Action {
 
   val defaultDateTimeZone: ZoneId = ZoneId.of("UTC")
 
-  implicit val format = Json.format[Action]
+  implicit val readLocalDateTimeFromString: Reads[ZonedDateTime] = implicitly[Reads[LocalDateTime]]
+    .map(ZonedDateTime.of(_, ZoneId.of("UTC")))
 
-  def apply(id: String, submission: Submission) =
-    new Action(id, CancellationRequest, decId = Some(submission.latestDecId), versionNo = submission.latestVersionNo)
+  implicit val writes = Json.writes[Action]
+  implicit val reads: Reads[Action] =
+    ((__ \ "id").read[String] and
+      (__ \ "requestType").read[RequestType] and
+      ((__ \ "requestTimestamp").read[ZonedDateTime] or (__ \ "requestTimestamp").read[ZonedDateTime](readLocalDateTimeFromString)) and
+      (__ \ "notifications").readNullable[Seq[NotificationSummary]] and
+      (__ \ "decId").readNullable[String] and
+      (__ \ "versionNo").read[Int])(Action.apply _)
 
 }
