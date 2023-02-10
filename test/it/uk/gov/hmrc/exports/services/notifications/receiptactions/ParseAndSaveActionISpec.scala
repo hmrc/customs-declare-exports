@@ -233,14 +233,15 @@ object ParseAndSaveActionISpec {
       |      "id": "914083cb-6647-4476-aedb-6edf45616b3d",
       |      "requestType": "SubmissionRequest",
       |      "requestTimestamp": "2022-06-20T14:48:17.545Z[UTC]",
-      |      "decId" : "$id"
+      |      "decId" : "$id",
+      |      "versionNo" : 1
       |    },
       |    {
       |      "id": "7c7faf96-a65e-408d-a8f7-7cb181f696b6",
       |      "requestType": "CancellationRequest",
       |      "requestTimestamp": "2022-06-20T14:52:13.999Z[UTC]",
       |      "decId" : "62b088b16a76c36b550804ab",
-      |      "versionNo" : 2
+      |      "versionNo" : 1
       |    }
       |  ],
       |  "latestDecId" : "62b088b16a76c36b550804ab",
@@ -271,7 +272,8 @@ object ParseAndSaveActionISpec {
       |          "enhancedStatus": "ERRORS"
       |        }
       |      ],
-      |      "decId" : "$id"
+      |      "decId" : "$id",
+      |      "versionNo" : 1
       |    },
       |    {
       |      "id": "${cancellationActionId}",
@@ -285,7 +287,7 @@ object ParseAndSaveActionISpec {
       |        }
       |      ],
       |      "decId" : "62b088b16a76c36b550804ab",
-      |      "versionNo" : 2
+      |      "versionNo" : 1
       |    }
       |  ],
       |  "latestDecId" : "62b088b16a76c36b550804ab",

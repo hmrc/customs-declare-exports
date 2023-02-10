@@ -59,9 +59,8 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
           case action                                   => updateSubmission(notificationCollection, action, submission)
         }
 
-        val updatedSubmission = actions.collect {
-          case SubmissionAction(_, _, notifications, _) => notifications.flatMap(_.headOption)
-          case _                                        => None
+        val updatedSubmission = actions.collect { case action =>
+          if (action.requestType == SubmissionRequest) action.notifications.flatMap(_.headOption) else None
         }.flatten.headOption.fold(submission.copy(actions = actions)) { notificationSummary =>
           submission.copy(
             latestEnhancedStatus = Some(notificationSummary.enhancedStatus),

@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.models.declaration.ModeOfTransportCode.Maritime
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus._
-import uk.gov.hmrc.exports.models.declaration.submissions.{NotificationSummary, Submission, SubmissionAction}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action => SubmissionAction, NotificationSummary, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
@@ -82,9 +82,11 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
     val notificationsToAction: Seq[NotificationSummary] => SubmissionAction = { notifications =>
       SubmissionAction(
         id = parsedNotifications.head.actionId,
+        requestType = SubmissionRequest,
         requestTimestamp = ZonedDateTime.now(ZoneId.of("UTC")),
         notifications = Some(notifications),
-        uuid
+        decId = Some(uuid),
+        versionNo = 1
       )
     }
 

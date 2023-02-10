@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData.DEFAULT_LIMIT
 import uk.gov.hmrc.exports.models.declaration.submissions.Action.defaultDateTimeZone
-import uk.gov.hmrc.exports.models.declaration.submissions.{EnhancedStatus, StatusGroup, Submission, SubmissionAction}
+import uk.gov.hmrc.exports.models.declaration.submissions.{EnhancedStatus, StatusGroup, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.services.SubmissionService
 
 import java.time.{Instant, ZoneId, ZonedDateTime}
@@ -33,6 +33,20 @@ import scala.concurrent.{ExecutionContext, Future}
 class SubmissionController @Inject() (authenticator: Authenticator, submissionService: SubmissionService, cc: ControllerComponents)(
   implicit executionContext: ExecutionContext
 ) extends RESTController(cc) with JSONResponses {
+
+  def create(declarationId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    submissionService.markCompleted(request.eori, declarationId).flatMap {
+
+      case Some(declarationBeforeUpdate) =>
+        if (declarationBeforeUpdate.isCompleted) {
+          Future.successful(Conflict(ErrorResponse("Declaration has already been submitted")))
+        } else {
+          submissionService.submit(declarationBeforeUpdate).map(Created(_))
+        }
+
+      case None => Future.successful(NotFound)
+    }
+  }
 
   val fetchPage: Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     val fetchData = genFetchSubmissionPageData
@@ -46,20 +60,6 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
         submissionService.fetchFirstPage(request.eori.value, statusGroup, fetchData.limit).map(Ok(_))
       else if (fetchData.page.exists(_ < 1)) Future.successful(BadRequest("Illegal 'page' parameter. Must be >= 1"))
       else submissionService.fetchPage(request.eori.value, statusGroup, fetchData).map(Ok(_))
-    }
-  }
-
-  def create(declarationId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    submissionService.markCompleted(request.eori, declarationId).flatMap {
-
-      case Some(declarationBeforeUpdate) =>
-        if (declarationBeforeUpdate.isCompleted) {
-          Future.successful(Conflict(ErrorResponse("Declaration has already been submitted")))
-        } else {
-          submissionService.submit(declarationBeforeUpdate).map(Created(_))
-        }
-
-      case None => Future.successful(NotFound)
     }
   }
 
@@ -77,10 +77,8 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
       submission.latestEnhancedStatus match {
         case Some(EnhancedStatus.ERRORS) => false // If the submission failed then don't block reuse of LRN
         case _ =>
-          submission.actions.filter {
-            case _: SubmissionAction => true
-            case _                   => false
-          }
+          submission.actions
+            .filter(_.requestType == SubmissionRequest)
             .exists(_.requestTimestamp.isAfter(now.minusDays(2))) // 48 hours
       }
 

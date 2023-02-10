@@ -27,7 +27,7 @@ import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames.SubmissionConvers
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timers
 import uk.gov.hmrc.exports.models.CustomsDeclarationsResponse
-import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionAction}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionRequest}
 import uk.gov.hmrc.http.HttpReads.is4xx
 import uk.gov.hmrc.http.{HttpClient, _}
 
@@ -37,8 +37,6 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: HttpClient, metrics: ExportsMetrics)(implicit ec: ExecutionContext)
     extends Logging {
-  private val ApplicationErrorStatus = 4
-  private val ServerErrorStatus = 5
 
   def submitDeclaration(eori: String, xml: String)(implicit hc: HeaderCarrier): Future[String] =
     postMetaData(eori, appConfig.submitDeclarationUri, xml).map { res =>
@@ -53,10 +51,7 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: 
     }
 
   def submitCancellation(submission: Submission, xml: String)(implicit hc: HeaderCarrier): Future[String] = {
-    def actionId: String = submission.actions.find {
-      case _: SubmissionAction => true
-      case _                   => false
-    }.fold("Not a SubmissionRequest?")(_.id)
+    def actionId: String = submission.actions.find(_.requestType == SubmissionRequest).fold("Not a SubmissionRequest?")(_.id)
 
     val headerCarrier = if (appConfig.isUpstreamStubbed) hc.withExtraHeaders(SubmissionConversationId -> actionId) else hc
 
@@ -102,6 +97,9 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: 
     HeaderNames.CONTENT_TYPE -> ContentTypes.XML(Codec.utf_8),
     CustomsHeaderNames.XEoriIdentifierHeaderName -> eori
   )
+
+  private val ApplicationErrorStatus = 4
+  private val ServerErrorStatus = 5
 
   // noinspection ConvertExpressionToSAM
   private implicit val responseReader: HttpReads[CustomsDeclarationsResponse] =

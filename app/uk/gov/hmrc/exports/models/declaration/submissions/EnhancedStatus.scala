@@ -43,10 +43,9 @@ object EnhancedStatus extends Enumeration {
 
   private val mappingForCANCELLED = (actions: Seq[Action]) => {
     def isCancellationWithCustomsPositionGranted(action: Action): Boolean =
-      action match {
-        case CancellationAction(_, _, notifications, _, _) => notifications.exists(_.exists(_.enhancedStatus == CUSTOMS_POSITION_GRANTED))
-        case _                                             => false
-      }
+      action.requestType == CancellationRequest &&
+        action.notifications.exists(_.exists(_.enhancedStatus == CUSTOMS_POSITION_GRANTED))
+
     if (actions.exists(isCancellationWithCustomsPositionGranted)) WITHDRAWN else EXPIRED_NO_DEPARTURE
   }
 

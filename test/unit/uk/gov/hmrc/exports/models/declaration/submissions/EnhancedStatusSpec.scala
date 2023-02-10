@@ -68,12 +68,12 @@ class EnhancedStatusSpec extends UnitSpec {
         // A cancellation request is successful when a CancellationRequest Action
         // contains a NotificationSummary with CUSTOMS_POSITION_GRANTED status.
         val notification = genNotification(SubmissionStatus.CANCELLED)
-        enhancedStatus(notification, List(CancellationAction("Some Id", decId = "id", versionNo = 2))) mustBe EXPIRED_NO_DEPARTURE
+        enhancedStatus(notification, List(Action("Some Id", CancellationRequest, decId = Some("id"), versionNo = 1))) mustBe EXPIRED_NO_DEPARTURE
       }
 
       "the notification's status is CANCELLED and a successful cancellation request has been already made" in {
         val notificationSumaries = Some(List(NotificationSummary(UUID.randomUUID, ZonedDateTime.now, CUSTOMS_POSITION_GRANTED)))
-        val action = CancellationAction("Some Id", notifications = notificationSumaries, decId = "id", versionNo = 2)
+        val action = Action("Some Id", CancellationRequest, notifications = notificationSumaries, decId = Some("id"), versionNo = 1)
 
         val notification = genNotification(SubmissionStatus.CANCELLED)
         enhancedStatus(notification, List(action)) mustBe WITHDRAWN

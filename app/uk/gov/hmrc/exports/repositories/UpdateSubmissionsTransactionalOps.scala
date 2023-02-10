@@ -76,19 +76,17 @@ class UpdateSubmissionsTransactionalOps @Inject() (
     val (actionWithAllNotificationSummaries, notificationSummaries) =
       updateActionWithNotificationSummaries(notificationsToAction(action), submission.actions, notifications, seed)
 
-    action match {
-      case _: SubmissionAction =>
-        updateSubmissionRequest(
-          session,
-          actionId,
-          notifications.head.details.mrn,
-          notificationSummaries.head,
-          submission.actions.updated(index, actionWithAllNotificationSummaries)
-        )
-      case _: CancellationAction =>
-        updateCancellationRequest(session, actionId, submission.actions.updated(index, actionWithAllNotificationSummaries))
-      case _ => Future.successful(None)
-    }
+    if (action.requestType == SubmissionRequest)
+      updateSubmissionRequest(
+        session,
+        actionId,
+        notifications.head.details.mrn,
+        notificationSummaries.head,
+        submission.actions.updated(index, actionWithAllNotificationSummaries)
+      )
+    else if (action.requestType == CancellationRequest)
+      updateCancellationRequest(session, actionId, submission.actions.updated(index, actionWithAllNotificationSummaries))
+    else Future.successful(None)
 
   }
 
@@ -137,15 +135,7 @@ object ActionWithNotificationSummariesHelper {
   }
 
   def notificationsToAction(action: Action): Seq[NotificationSummary] => Action = { notificationSummaries =>
-    action match {
-      case s: SubmissionAction =>
-        s.copy(notifications = Some(notificationSummaries))
-      case s: CancellationAction =>
-        s.copy(notifications = Some(notificationSummaries))
-      case s: AmendmentAction =>
-        s.copy(notifications = Some(notificationSummaries))
-      case s: ExternalAmendmentAction =>
-        s.copy(notifications = Some(notificationSummaries))
-    }
+    action.copy(notifications = Some(notificationSummaries))
   }
+
 }

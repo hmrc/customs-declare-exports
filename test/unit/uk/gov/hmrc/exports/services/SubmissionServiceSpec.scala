@@ -81,9 +81,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       "ducr",
       None,
       None,
-      List(CancellationAction(id = "conv-id", notifications = notification, decId = "id", versionNo = 2)),
-      latestDecId = "id",
-      latestVersionNo = 2
+      List(Action(id = "conv-id", requestType = CancellationRequest, notifications = notification, decId = Some("id"), versionNo = 1)),
+      latestDecId = "id"
     )
     val cancellation = SubmissionCancellation("id", "ref-id", "mrn", "description", "reason")
 
@@ -95,16 +94,16 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
           when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
           when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
 
-          val captor: ArgumentCaptor[CancellationAction] = ArgumentCaptor.forClass(classOf[CancellationAction])
+          val captor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])
 
-          when(submissionRepository.addAction(any[String](), any[CancellationAction]())).thenReturn(Future.successful(Some(submission)))
+          when(submissionRepository.addAction(any[String](), any[Action]())).thenReturn(Future.successful(Some(submission)))
 
           submissionService.cancel(eori, cancellation).futureValue mustBe CancellationRequestSent
 
           verify(submissionRepository)
             .addAction(any[String](), captor.capture())
 
-          captor.getValue.decId mustBe submission.latestDecId
+          captor.getValue.decId mustBe Some(submission.latestDecId)
           captor.getValue.versionNo mustBe submission.latestVersionNo
         }
       }
@@ -256,7 +255,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
       val dateTimeIssued = ZonedDateTime.now(ZoneOffset.UTC)
 
-      val newAction = SubmissionAction(id = "conv-id", requestTimestamp = dateTimeIssued, decId = declaration.id)
+      val newAction =
+        Action(id = "conv-id", requestType = SubmissionRequest, requestTimestamp = dateTimeIssued, decId = Some(declaration.id), versionNo = 1)
 
       val submission = Submission(declaration, "lrn", "mrn", newAction)
 
@@ -269,23 +269,16 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(submissionRepository.create(any())).thenReturn(Future.successful(submission))
         when(customsDeclarationsConnector.submitDeclaration(any(), any())(any())).thenReturn(Future.successful("conv-id"))
 
-        val captor: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
-
         // When
         submissionService.submit(declaration).futureValue mustBe submission
 
         // Then
         val submissionCreated = theSubmissionCreated()
         val actionGenerated = submissionCreated.actions.head
+        submissionCreated mustBe Submission(declaration, "lrn", "ducr", newAction.copy(requestTimestamp = actionGenerated.requestTimestamp))
 
-        val submittedAction = SubmissionAction(id = "conv-id", requestTimestamp = actionGenerated.requestTimestamp, decId = declaration.id)
-
-        submissionCreated mustBe Submission(declaration, "lrn", "ducr", submittedAction)
-
-        verify(submissionRepository)
-          .create(captor.capture())
-
-        captor.getValue.actions.head mustBe SubmissionAction("conv-id", actionGenerated.requestTimestamp, None, declaration.id)
+        actionGenerated.id mustBe "conv-id"
+        actionGenerated.requestType mustBe SubmissionRequest
 
         verify(submissionRepository, never).findOne(any[String], any[String])
         verify(sendEmailForDmsDocAction, never).execute(any[String])

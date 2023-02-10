@@ -41,7 +41,7 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
 
     "there is no Submission with the given MRN" should {
       "return an empty Option" in {
-        val newAction = CancellationAction(actionId_2, decId = "", versionNo = 0)
+        val newAction = Action(actionId_2, CancellationRequest, decId = Some(""), versionNo = 0)
         repository.addAction(mrn, newAction).futureValue mustNot be(defined)
       }
     }
@@ -49,7 +49,7 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
     "there is a Submission with the given MRN" should {
       "return the Submission updated" in {
         repository.insertOne(submission).futureValue.isRight mustBe true
-        val newAction = CancellationAction(actionId_2, decId = submission.latestDecId, versionNo = submission.latestVersionNo + 1)
+        val newAction = Action(actionId_2, CancellationRequest, decId = Some(submission.latestDecId), versionNo = submission.latestVersionNo + 1)
         val expectedUpdatedSubmission = submission.copy(actions = submission.actions :+ newAction)
 
         val updatedSubmission = repository.addAction(mrn, newAction).futureValue
@@ -251,7 +251,7 @@ object SubmissionRepositoryISpecHelper {
       ducr = ducr,
       latestEnhancedStatus = Some(status),
       enhancedStatusLastUpdated = Some(lastStatusUpdate),
-      actions = List(SubmissionAction(uuid, dateTime, None, decId = "")),
+      actions = List(Action(uuid, SubmissionRequest, dateTime, None, decId = Some(""), versionNo = 1)),
       latestDecId = uuid
     )
   }
