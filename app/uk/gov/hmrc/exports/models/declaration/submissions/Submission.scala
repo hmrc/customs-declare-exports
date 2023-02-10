@@ -39,7 +39,7 @@ case class Submission(
 
 object Submission {
 
-  implicit def format = Json.format[Submission]
+  implicit val format = Json.format[Submission]
 
   def apply(declaration: ExportsDeclaration, lrn: String, ducr: String, action: SubmissionAction): Submission =
     new Submission(declaration.id, declaration.eori, lrn, None, ducr, actions = List(action), latestDecId = declaration.id)
