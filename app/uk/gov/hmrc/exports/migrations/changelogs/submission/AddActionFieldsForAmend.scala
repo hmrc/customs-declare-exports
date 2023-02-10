@@ -57,14 +57,17 @@ class AddActionFieldsForAmend extends MigrationDefinition with Logging {
         submissionCollection.updateOne(
           Filters.eq(uuid, submissionId),
           combine(
-            set("actions.$[elem1].decId", submissionId),
-            set("actions.$[elem2].decId", submissionLatestDecId),
-            set("actions.$[elem2].versionNo", submissionLatestVersionNo)
+            set("actions.$[submissionItem].decId", submissionId),
+            set("actions.$[cancellationItem].decId", submissionLatestDecId),
+            set("actions.$[cancellationItem].versionNo", submissionLatestVersionNo)
           ),
           UpdateOptions()
             .arrayFilters(
               util.Arrays
-                .asList(Filters.eq("elem1.requestType", SubmissionRequest.toString), Filters.eq("elem2.requestType", CancellationRequest.toString))
+                .asList(
+                  Filters.eq("submissionItem.requestType", SubmissionRequest.toString),
+                  Filters.eq("cancellationItem.requestType", CancellationRequest.toString)
+                )
             )
         )
 
