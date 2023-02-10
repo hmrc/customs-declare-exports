@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.services.DiffTools
 import uk.gov.hmrc.exports.services.DiffTools.{combinePointers, compareStringDifference, ExportsDeclarationDiff}
 
 case class Seal(
-  sequenceId: Int = sequenceIdPlaceholder,  // Initialised to enable migration of existing documents
+  sequenceId: Int = sequenceIdPlaceholder, // Initialised to enable migration of existing documents
   id: String
 ) extends DiffTools[Seal] {
   override def createDiff(original: Seal, pointerString: ExportsFieldPointer, sequenceId: Option[Int]): ExportsDeclarationDiff =

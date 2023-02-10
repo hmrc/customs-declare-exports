@@ -1,13 +1,7 @@
 package uk.gov.hmrc.exports.migrations.changelogs.cache
 
 import uk.gov.hmrc.exports.base.IntegrationTestMigrationToolSpec
-import uk.gov.hmrc.exports.migrations.changelogs.cache.AddDeclarationMetaEntityISpec.{
-  declarationAfterMigrationWithAllFields,
-  declarationAfterMigrationWithNoOptionalFields,
-  declarationBeforeMigrationWithAllFields,
-  declarationBeforeMigrationWithNoOptionalFields
-}
-
+import uk.gov.hmrc.exports.migrations.changelogs.cache.AddDeclarationMetaEntityISpec._
 class AddDeclarationMetaEntityISpec extends IntegrationTestMigrationToolSpec {
 
   override val collectionUnderTest = "declarations"

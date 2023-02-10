@@ -107,15 +107,11 @@ class ExportsDeclarationXmlParser @Inject() (
   private def deriveSequenceIds(locations: Locations, transport: Transport): Map[String, Int] = {
     val routingCountries = locations.routingCountries.size
     val (containers, seals) = transport.containers.fold((0, 0)) {
-      _.foldLeft((0, 0)) {
-        case ((containers, seals), container) => (containers + 1, seals + container.seals.size)
+      _.foldLeft((0, 0)) { case ((containers, seals), container) =>
+        (containers + 1, seals + container.seals.size)
       }
     }
 
-    Map(
-      RoutingCountryKey -> routingCountries,
-      ContainerKey -> containers,
-      SealKey -> seals
-    )
+    Map(RoutingCountryKey -> routingCountries, ContainerKey -> containers, SealKey -> seals)
   }
 }

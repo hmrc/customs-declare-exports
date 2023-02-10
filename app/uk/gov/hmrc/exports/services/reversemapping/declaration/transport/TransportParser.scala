@@ -48,10 +48,9 @@ class TransportParser @Inject() (containersParser: ContainersParser) extends Dec
   private def maybeContainers(containers: Seq[Container]): Option[Seq[Container]] =
     if (containers.isEmpty) None
     else {
-      val (indexedContainers, _, _) = containers.foldLeft((List.empty[Container], 0, 0)) {
-        case ((containers, containerIx, sealsIx), container) =>
-          val seals = container.seals.zipWithIndex.map { case (seal, ix) => SealInContainer(sealsIx + ix + 1, seal.id) }
-          (containers :+ Container(containerIx + 1, container.id, seals), containerIx + 1, sealsIx + container.seals.size)
+      val (indexedContainers, _, _) = containers.foldLeft((List.empty[Container], 0, 0)) { case ((containers, containerIx, sealsIx), container) =>
+        val seals = container.seals.zipWithIndex.map { case (seal, ix) => SealInContainer(sealsIx + ix + 1, seal.id) }
+        (containers :+ Container(containerIx + 1, container.id, seals), containerIx + 1, sealsIx + container.seals.size)
       }
 
       Some(indexedContainers)

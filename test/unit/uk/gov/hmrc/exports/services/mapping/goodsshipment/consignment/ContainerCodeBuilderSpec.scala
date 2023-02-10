@@ -23,13 +23,13 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 class ContainerCodeBuilderSpec extends UnitSpec {
 
   "ContainerCodeBuilder" should {
-
     "correctly map ContainerCode instance from new model" when {
+
       "there are containers" in {
         val builder = new ContainerCodeBuilder
         val consignment = new GoodsShipment.Consignment
 
-        builder.buildThenAdd(Seq(Container("id", Seq.empty)), consignment)
+        builder.buildThenAdd(Seq(Container(1, "id", Seq.empty)), consignment)
 
         consignment.getContainerCode.getValue must be("1")
       }

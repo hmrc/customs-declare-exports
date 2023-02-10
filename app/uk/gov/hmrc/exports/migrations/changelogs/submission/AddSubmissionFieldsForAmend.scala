@@ -34,7 +34,7 @@ class AddSubmissionFieldsForAmend extends MigrationDefinition with Logging {
       id = s"CEDS-4364 Add new fields to the Submission model for amended Declarations.",
       order = 17,
       author = "Lucio Biondi",
-      runAlways = true  // Can be removed (default is false) once this migration is deployed to production
+      runAlways = true // Can be removed (default is false) once this migration is deployed to production
     )
 
   override def migrationFunction(db: MongoDatabase): Unit = {

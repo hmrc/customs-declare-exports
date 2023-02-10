@@ -43,7 +43,7 @@ class AddSequencingOfMultipleItems extends MigrationDefinition with Logging {
       id = s"CEDS-4370 Add sequencing for RoutingCountry, Container and Seal fields",
       order = 18,
       author = "Lucio Biondi",
-      runAlways = true  // Can be removed (default is false) once this migration is deployed to production
+      runAlways = true // Can be removed (default is false) once this migration is deployed to production
     )
 
   override def migrationFunction(db: MongoDatabase): Unit = {
@@ -62,7 +62,7 @@ class AddSequencingOfMultipleItems extends MigrationDefinition with Logging {
         val maxSequenceIds = Map(
           ContainerKey -> declaration.transport.containers.fold(0)(_.size),
           RoutingCountryKey -> declaration.locations.routingCountries.size,
-          SealKey -> declaration.transport.containers.fold(0)(_.foldLeft(0)(_ + _.seals.size)),
+          SealKey -> declaration.transport.containers.fold(0)(_.foldLeft(0)(_ + _.seals.size))
         )
         val meta = declaration.declarationMeta
         val declarationWithSequenceIds = declaration.copy(declarationMeta = meta.copy(maxSequenceIds = maxSequenceIds))
@@ -88,11 +88,8 @@ object AddSequencingOfMultipleItems {
       (__ \ "summaryWasVisited").readNullable[Boolean] and
       (__ \ "readyForSubmission").readNullable[Boolean]) {
 
-        (parentDeclarationId, parentEnhancedStatus, status, createdDateTime, updatedDateTime, summaryWasVisited, readyForSubmission) =>
-
-        DeclarationMeta(
-          parentDeclarationId, parentEnhancedStatus, status, createdDateTime, updatedDateTime, summaryWasVisited, readyForSubmission
-        )
+      (parentDeclarationId, parentEnhancedStatus, status, createdDateTime, updatedDateTime, summaryWasVisited, readyForSubmission) =>
+        DeclarationMeta(parentDeclarationId, parentEnhancedStatus, status, createdDateTime, updatedDateTime, summaryWasVisited, readyForSubmission)
     }
 
   implicit val readsForLocations: Reads[Locations] =
@@ -107,22 +104,39 @@ object AddSequencingOfMultipleItems {
       (__ \ "inlandOrBorder").readNullable[InlandOrBorder] and
       (__ \ "inlandModeOfTransportCode").readNullable[InlandModeOfTransportCode]) {
 
-      (originationCountry, destinationCountry, hasRoutingCountries, countries, goodsLocation,
-       officeOfExit, supervisingCustomsOffice, warehouseIdentification, inlandOrBorder, inlandModeOfTransportCode) =>
+      (
+        originationCountry,
+        destinationCountry,
+        hasRoutingCountries,
+        countries,
+        goodsLocation,
+        officeOfExit,
+        supervisingCustomsOffice,
+        warehouseIdentification,
+        inlandOrBorder,
+        inlandModeOfTransportCode
+      ) =>
+        val routingCountries = countries.zipWithIndex.map { case (country, ix) => RoutingCountry(ix + 1, country) }
 
-      val routingCountries = countries.zipWithIndex.map { case (country, ix) => RoutingCountry(ix + 1, country) }
-
-      Locations(
-        originationCountry, destinationCountry, hasRoutingCountries, routingCountries, goodsLocation,
-        officeOfExit, supervisingCustomsOffice, warehouseIdentification, inlandOrBorder, inlandModeOfTransportCode
-      )
+        Locations(
+          originationCountry,
+          destinationCountry,
+          hasRoutingCountries,
+          routingCountries,
+          goodsLocation,
+          officeOfExit,
+          supervisingCustomsOffice,
+          warehouseIdentification,
+          inlandOrBorder,
+          inlandModeOfTransportCode
+        )
     }
 
   case class FormerSeal(id: String)
-  implicit val sealReads =  Json.reads[FormerSeal]
+  implicit val sealReads = Json.reads[FormerSeal]
 
   case class FormerContainer(id: String, seals: Seq[FormerSeal])
-  implicit val containerReads =  Json.reads[FormerContainer]
+  implicit val containerReads = Json.reads[FormerContainer]
 
   implicit val readsForTransport: Reads[Transport] =
     ((__ \ "expressConsignment").readNullable[YesNoAnswer] and
@@ -135,40 +149,51 @@ object AddSequencingOfMultipleItems {
       (__ \ "meansOfTransportCrossingTheBorderType").readNullable[String] and
       (__ \ "meansOfTransportCrossingTheBorderIDNumber").readNullable[String]) {
 
-      (expressConsignment, transportPayment, maybeContainers, borderModeOfTransportCode,
-       meansOfTransportOnDepartureType, meansOfTransportOnDepartureIDNumber, transportCrossingTheBorderNationality,
-       meansOfTransportCrossingTheBorderType, meansOfTransportCrossingTheBorderIDNumber) =>
-
-      val containers = maybeContainers.map(_.foldLeft((List.empty[Container], 0, 0)) {
-        case ((containers, containerIx, sealsIx), container) =>
+      (
+        expressConsignment,
+        transportPayment,
+        maybeContainers,
+        borderModeOfTransportCode,
+        meansOfTransportOnDepartureType,
+        meansOfTransportOnDepartureIDNumber,
+        transportCrossingTheBorderNationality,
+        meansOfTransportCrossingTheBorderType,
+        meansOfTransportCrossingTheBorderIDNumber
+      ) =>
+        val containers = maybeContainers.map(_.foldLeft((List.empty[Container], 0, 0)) { case ((containers, containerIx, sealsIx), container) =>
           val seals = container.seals.zipWithIndex.map { case (seal, ix) => Seal(sealsIx + ix + 1, seal.id) }
           (containers :+ Container(containerIx + 1, container.id, seals), containerIx + 1, sealsIx + container.seals.size)
-      }._1)
+        }._1)
 
-      Transport(
-        expressConsignment, transportPayment, containers, borderModeOfTransportCode,
-        meansOfTransportOnDepartureType, meansOfTransportOnDepartureIDNumber,
-        transportCrossingTheBorderNationality, meansOfTransportCrossingTheBorderType,
-        meansOfTransportCrossingTheBorderIDNumber
-      )
+        Transport(
+          expressConsignment,
+          transportPayment,
+          containers,
+          borderModeOfTransportCode,
+          meansOfTransportOnDepartureType,
+          meansOfTransportOnDepartureIDNumber,
+          transportCrossingTheBorderNationality,
+          meansOfTransportCrossingTheBorderType,
+          meansOfTransportCrossingTheBorderIDNumber
+        )
     }
 
   implicit val reads: Reads[ExportsDeclaration] =
     ((__ \ "id").read[String] and
-     (__ \ "declarationMeta").read[DeclarationMeta] and
-     (__ \ "eori").read[String] and
-     (__ \ "type").read[DeclarationType] and
-     (__ \ "dispatchLocation").readNullable[DispatchLocation] and
-     (__ \ "additionalDeclarationType").readNullable[AdditionalDeclarationType] and
-     (__ \ "consignmentReferences").readNullable[ConsignmentReferences] and
-     (__ \ "linkDucrToMucr").readNullable[YesNoAnswer] and
-     (__ \ "mucr").readNullable[MUCR] and
-     (__ \ "transport").read[Transport] and
-     (__ \ "parties").read[Parties] and
-     (__ \ "locations").read[Locations] and
-     (__ \ "items").read[Seq[ExportItem]] and
-     (__ \ "totalNumberOfItems").readNullable[TotalNumberOfItems] and
-     (__ \ "previousDocuments").readNullable[PreviousDocuments] and
-     (__ \ "natureOfTransaction").readNullable[NatureOfTransaction] and
-     (__ \ "statementDescription").readNullable[String])(ExportsDeclaration.apply _)
+      (__ \ "declarationMeta").read[DeclarationMeta] and
+      (__ \ "eori").read[String] and
+      (__ \ "type").read[DeclarationType] and
+      (__ \ "dispatchLocation").readNullable[DispatchLocation] and
+      (__ \ "additionalDeclarationType").readNullable[AdditionalDeclarationType] and
+      (__ \ "consignmentReferences").readNullable[ConsignmentReferences] and
+      (__ \ "linkDucrToMucr").readNullable[YesNoAnswer] and
+      (__ \ "mucr").readNullable[MUCR] and
+      (__ \ "transport").read[Transport] and
+      (__ \ "parties").read[Parties] and
+      (__ \ "locations").read[Locations] and
+      (__ \ "items").read[Seq[ExportItem]] and
+      (__ \ "totalNumberOfItems").readNullable[TotalNumberOfItems] and
+      (__ \ "previousDocuments").readNullable[PreviousDocuments] and
+      (__ \ "natureOfTransaction").readNullable[NatureOfTransaction] and
+      (__ \ "statementDescription").readNullable[String])(ExportsDeclaration.apply _)
 }

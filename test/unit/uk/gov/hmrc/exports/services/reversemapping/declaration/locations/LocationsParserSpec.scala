@@ -169,15 +169,17 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
       }
 
       "has routingCountries set to value returned by RoutingCountriesParser" in {
-        val routingCountries = Seq(Country(Some("GB")), Country(Some("FR")))
         when(countryParser.parse(any[NodeSeq])(any[MappingContext]))
           .thenReturn(Right(None), Right(None), Right(Some(Country(Some("GB")))), Right(Some(Country(Some("FR")))))
 
         val result = parser.parse(xml)
-
         result.isRight mustBe true
-        result.toOption.get.routingCountries mustNot be(empty)
-        result.toOption.get.routingCountries mustBe routingCountries
+
+        val actualRoutingCountries = result.toOption.get.routingCountries
+        actualRoutingCountries mustNot be(empty)
+
+        val expectedRoutingCountries = List(RoutingCountry(1, Country(Some("GB"))), RoutingCountry(2, Country(Some("FR"))))
+        actualRoutingCountries mustBe expectedRoutingCountries
       }
 
       "has goodsLocation set to value returned by GoodsLocationParser" in {

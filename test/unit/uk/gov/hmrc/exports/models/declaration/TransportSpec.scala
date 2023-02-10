@@ -30,7 +30,9 @@ class TransportSpec extends UnitSpec {
     val json = Json.obj(
       "expressConsignment" -> Json.obj("answer" -> "Yes"),
       "transportPayment" -> Json.obj("paymentMethod" -> "payment-method"),
-      "containers" -> Json.arr(Json.obj("id" -> "container-id", "seals" -> Json.arr(Json.obj("id" -> "seal-id")))),
+      "containers" -> Json.arr(
+        Json.obj("sequenceId" -> 1, "id" -> "container-id", "seals" -> Json.arr(Json.obj("sequenceId" -> 1, "id" -> "seal-id")))
+      ),
       "borderModeOfTransportCode" -> Json.obj("code" -> "3"),
       "meansOfTransportOnDepartureType" -> "means-of-transport-on-departure",
       "meansOfTransportOnDepartureIDNumber" -> "means-of-transport-on-departure-id-number",
@@ -42,7 +44,7 @@ class TransportSpec extends UnitSpec {
     val transport = Transport(
       expressConsignment = Some(YesNoAnswer.yes),
       transportPayment = Some(TransportPayment(paymentMethod = "payment-method")),
-      containers = Some(Seq(Container(id = "container-id", seals = Seq(Seal(id = "seal-id"))))),
+      containers = Some(Seq(Container(1, "container-id", Seq(Seal(1, "seal-id"))))),
       borderModeOfTransportCode = Some(TransportLeavingTheBorder(Some(ModeOfTransportCode.Road))),
       meansOfTransportOnDepartureType = Some("means-of-transport-on-departure"),
       meansOfTransportOnDepartureIDNumber = Some("means-of-transport-on-departure-id-number"),
@@ -52,16 +54,12 @@ class TransportSpec extends UnitSpec {
     )
 
     "convert Transport object to JSON" in {
-
       val resultJson = Transport.format.writes(transport)
-
       resultJson mustBe json
     }
 
     "convert JSON to Transport object" in {
-
       val resultTransport = Transport.format.reads(json)
-
       resultTransport mustBe JsSuccess(transport)
     }
   }

@@ -35,7 +35,7 @@ object Country extends FieldMapping {
 }
 
 case class RoutingCountry(
-  sequenceId: Int = sequenceIdPlaceholder,  // Initialised to enable migration of existing documents
+  sequenceId: Int = sequenceIdPlaceholder, // Initialised to enable migration of existing documents
   country: Country
 )
 

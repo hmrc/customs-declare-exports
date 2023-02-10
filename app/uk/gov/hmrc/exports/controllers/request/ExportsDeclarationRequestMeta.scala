@@ -29,12 +29,8 @@ case class ExportsDeclarationRequestMeta(
   updatedDateTime: Instant,
   summaryWasVisited: Option[Boolean] = None,
   readyForSubmission: Option[Boolean] = None,
-  maxSequenceIds: Map[String, Int] = Map(
-    ContainerKey -> 0,
-    RoutingCountryKey -> 0,
-    SealKey -> 0
-  ),
-                                        )
+  maxSequenceIds: Map[String, Int] = Map(ContainerKey -> 0, RoutingCountryKey -> 0, SealKey -> 0)
+)
 
 object ExportsDeclarationRequestMeta {
   implicit val format: OFormat[ExportsDeclarationRequestMeta] = Json.format[ExportsDeclarationRequestMeta]

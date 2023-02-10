@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.services.DiffTools
 import uk.gov.hmrc.exports.services.DiffTools.{combinePointers, compareStringDifference, ExportsDeclarationDiff}
 
 case class Container(
-  sequenceId: Int = sequenceIdPlaceholder,  // Initialised to enable migration of existing documents
+  sequenceId: Int = sequenceIdPlaceholder, // Initialised to enable migration of existing documents
   id: String,
   seals: Seq[Seal]
 ) extends DiffTools[Container] {

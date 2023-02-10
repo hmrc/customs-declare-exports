@@ -28,11 +28,7 @@ class RenameSendEmailDetailsToItem extends MigrationDefinition with Logging {
   private val collectionName = "sendEmailWorkItems"
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(
-      id = "CEDS-3825 Rename sendEmailWorkItems.sendEmailDetails to sendEmailWorkItems.item",
-      order = 12,
-      author = "Lucio Biondi"
-    )
+    MigrationInformation(id = "CEDS-3825 Rename sendEmailWorkItems.sendEmailDetails to sendEmailWorkItems.item", order = 12, author = "Lucio Biondi")
 
   override def migrationFunction(db: MongoDatabase): Unit = {
     logger.info(s"Applying '${migrationInformation.id}' db migration...")
