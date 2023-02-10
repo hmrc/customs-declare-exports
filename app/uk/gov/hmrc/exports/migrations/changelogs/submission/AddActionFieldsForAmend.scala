@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.migrations.changelogs.submission
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Updates.{combine, set}
 import org.mongodb.scala.model.{Filters, UpdateOptions}
+import org.mongodb.scala.model.Filters._
 import play.api.Logging
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.declaration.submissions._
@@ -45,7 +46,7 @@ class AddActionFieldsForAmend extends MigrationDefinition with Logging {
 
     val submissionCollection = db.getCollection("submissions")
 
-    submissionCollection.find.asScala.map { document =>
+    submissionCollection.find(Filters.and(exists("versionNo", false), exists("decId", false))).asScala.map { document =>
       val submissionId = document.getString(uuid)
       val submissionLatestDecId = document.getString(latestDecId)
       val submissionLatestVersionNo = document.getInteger(latestVersionNo)
@@ -54,6 +55,7 @@ class AddActionFieldsForAmend extends MigrationDefinition with Logging {
         Filters.eq(uuid, submissionId),
         combine(
           set("actions.$[submissionItem].decId", submissionId),
+          set("actions.$[submissionItem].versionNo", 1),
           set("actions.$[cancellationItem].decId", submissionLatestDecId),
           set("actions.$[cancellationItem].versionNo", submissionLatestVersionNo)
         ),

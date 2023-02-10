@@ -102,7 +102,8 @@ object AddActionFieldsForAmendISpec {
       |          "enhancedStatus" : "ERRORS"
       |        }
       |      ],
-      |      "decId" : "b140390f-56d4-4302-887f-5971886cb0e7"
+      |      "decId" : "b140390f-56d4-4302-887f-5971886cb0e7",
+      |      "versionNo" : 1
       |    },
       |    {
       |      "id" : "7ed4d825-8cc6-4d9f-abc2-05fa92d65e85",
