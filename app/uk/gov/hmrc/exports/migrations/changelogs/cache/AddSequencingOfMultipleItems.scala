@@ -43,7 +43,8 @@ class AddSequencingOfMultipleItems extends MigrationDefinition with Logging {
       id = s"CEDS-4370 Add sequencing for RoutingCountry, Container and Seal fields",
       order = 18,
       author = "Lucio Biondi",
-      runAlways = true // Can be removed (default is false) once this migration is deployed to production
+      // Can be removed (default is false) once this migration is deployed to all envs (production & integration included)
+      runAlways = true
     )
 
   override def migrationFunction(db: MongoDatabase): Unit = {
