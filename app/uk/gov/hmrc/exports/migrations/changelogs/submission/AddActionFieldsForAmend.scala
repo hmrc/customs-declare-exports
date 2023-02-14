@@ -46,7 +46,7 @@ class AddActionFieldsForAmend extends MigrationDefinition with Logging {
     val submissionCollection = db.getCollection("submissions")
 
     val updated = submissionCollection
-      .find()
+      .find(Filters.elemMatch("actions", Filters.and(Filters.exists("versionNo", false), Filters.exists("decId", false))))
       .asScala
       .map { document =>
         val submissionId = document.getString(uuid)
@@ -66,16 +66,8 @@ class AddActionFieldsForAmend extends MigrationDefinition with Logging {
               .arrayFilters(
                 util.Arrays
                   .asList(
-                    Filters.and(
-                      Filters.eq("submissionItem.requestType", SubmissionRequest.toString),
-                      Filters.exists("submissionItem.versionNo", false),
-                      Filters.exists("submissionItem.decId", false)
-                    ),
-                    Filters.and(
-                      Filters.eq("cancellationItem.requestType", CancellationRequest.toString),
-                      Filters.exists("cancellationItem.versionNo", false),
-                      Filters.exists("cancellationItem.decId", false)
-                    )
+                    Filters.and(Filters.eq("submissionItem.requestType", SubmissionRequest.toString)),
+                    Filters.and(Filters.eq("cancellationItem.requestType", CancellationRequest.toString))
                   )
               )
           )
