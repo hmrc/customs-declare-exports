@@ -34,7 +34,7 @@ object AlteredField {
 }
 
 trait DiffTools[T] {
-  def createDiff(original: T, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int]): ExportsDeclarationDiff
+  def createDiff(original: T, pointerString: ExportsFieldPointer, sequenceId: Option[Int]): ExportsDeclarationDiff
 
   def createDiff[E <: DiffTools[E]](original: Seq[E], current: Seq[E], pointerString: ExportsFieldPointer): ExportsDeclarationDiff = {
     val elementPairs = current.map(Some(_)).zipAll(original.map(Some(_)), None, None)
@@ -42,7 +42,7 @@ trait DiffTools[T] {
     val allDifferences = elementPairs.zipWithIndex.map { pairAndIndex =>
       pairAndIndex match {
         case ((Some(x), Some(y)), i) => x.createDiff(y, pointerString, Some(i + 1))
-        case ((None, None), i)       => None
+        case ((None, None), _)       => None
         case ((curr, orig), i)       => Some(AlteredField(combinePointers(pointerString, Some(i + 1)), OriginalAndNewValues(orig, curr)))
       }
     }
@@ -92,7 +92,7 @@ object DiffTools {
     val allDifferences = elementPairs.zipWithIndex.map { pairAndIndex =>
       pairAndIndex match {
         case ((Some(x), Some(y)), i) => compareStringDifference(x, y, combinePointers(pointerString, Some(i + 1)))
-        case ((None, None), i)       => None
+        case ((None, None), _)       => None
         case ((orig, curr), i)       => Some(AlteredField(combinePointers(pointerString, Some(i + 1)), OriginalAndNewValues(orig, curr)))
       }
     }
@@ -140,7 +140,7 @@ object DiffTools {
     val allDifferences = elementPairs.zipWithIndex.map { pairAndIndex =>
       pairAndIndex match {
         case ((Some(x), Some(y)), i) => compareDifference(x, y, combinePointers(pointerString, Some(i + 1)))
-        case ((None, None), i)       => None
+        case ((None, None), _)       => None
         case ((orig, curr), i)       => Some(AlteredField(combinePointers(pointerString, Some(i + 1)), OriginalAndNewValues(orig, curr)))
       }
     }

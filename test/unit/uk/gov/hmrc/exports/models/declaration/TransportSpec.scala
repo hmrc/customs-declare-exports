@@ -139,8 +139,8 @@ class TransportSpec extends UnitSpec {
       "the original version's containers field has a different value to this one" in {
         val fieldPointer = s"${Transport.pointer}.${Container.pointer}.1.id"
         withClue("both versions have Some non-empty containers values but values are different") {
-          val transport = Transport(containers = Some(Seq(Container("latest", Seq.empty[Seal]))))
-          val originalValue = Seq(Container("original", Seq.empty[Seal]))
+          val transport = Transport(containers = Some(Seq(Container(1, "latest", Seq.empty[Seal]))))
+          val originalValue = Seq(Container(1, "original", Seq.empty[Seal]))
           transport.createDiff(transport.copy(containers = Some(originalValue)), Transport.pointer) mustBe Seq(
             constructAlteredField(fieldPointer, originalValue(0).id, (transport.containers.get)(0).id)
           )

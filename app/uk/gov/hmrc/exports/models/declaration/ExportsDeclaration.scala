@@ -57,18 +57,18 @@ case class ExportsDeclaration(
   def createDiff(
     original: ExportsDeclaration,
     pointerString: ExportsFieldPointer = ExportsDeclaration.pointer,
-    sequenceNbr: Option[Int] = None
+    sequenceId: Option[Int] = None
   ): ExportsDeclarationDiff =
     Seq(
-      compareDifference(original.mucr, mucr, combinePointers(pointerString, MUCR.pointer, sequenceNbr)),
-      compareDifference(original.natureOfTransaction, natureOfTransaction, combinePointers(pointerString, NatureOfTransaction.pointer, sequenceNbr)),
-      createDiff(original.items, items, combinePointers(pointerString, ExportItem.pointer, sequenceNbr))
+      compareDifference(original.mucr, mucr, combinePointers(pointerString, MUCR.pointer, sequenceId)),
+      compareDifference(original.natureOfTransaction, natureOfTransaction, combinePointers(pointerString, NatureOfTransaction.pointer, sequenceId)),
+      createDiff(original.items, items, combinePointers(pointerString, ExportItem.pointer, sequenceId))
     ).flatten ++
-      transport.createDiff(original.transport, combinePointers(pointerString, Transport.pointer, sequenceNbr)) ++
-      parties.createDiff(original.parties, combinePointers(pointerString, Parties.pointer, sequenceNbr)) ++
-      locations.createDiff(original.locations, combinePointers(pointerString, Locations.pointer, sequenceNbr)) ++
-      createDiffOfOptions(original.totalNumberOfItems, totalNumberOfItems, combinePointers(pointerString, TotalNumberOfItems.pointer, sequenceNbr)) ++
-      createDiffOfOptions(original.previousDocuments, previousDocuments, combinePointers(pointerString, PreviousDocuments.pointer, sequenceNbr))
+      transport.createDiff(original.transport, combinePointers(pointerString, Transport.pointer, sequenceId)) ++
+      parties.createDiff(original.parties, combinePointers(pointerString, Parties.pointer, sequenceId)) ++
+      locations.createDiff(original.locations, combinePointers(pointerString, Locations.pointer, sequenceId)) ++
+      createDiffOfOptions(original.totalNumberOfItems, totalNumberOfItems, combinePointers(pointerString, TotalNumberOfItems.pointer, sequenceId)) ++
+      createDiffOfOptions(original.previousDocuments, previousDocuments, combinePointers(pointerString, PreviousDocuments.pointer, sequenceId))
 }
 
 object ExportsDeclaration extends FieldMapping {

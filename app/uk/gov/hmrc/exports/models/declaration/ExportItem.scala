@@ -25,17 +25,17 @@ import uk.gov.hmrc.exports.services.DiffTools
 import java.time.LocalDate
 
 case class ProcedureCodes(procedureCode: Option[String], additionalProcedureCodes: Seq[String]) extends DiffTools[ProcedureCodes] {
-  override def createDiff(original: ProcedureCodes, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
+  override def createDiff(original: ProcedureCodes, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
     Seq(
       compareStringDifference(
         original.procedureCode,
         procedureCode,
-        combinePointers(pointerString, ProcedureCodes.procedureCodesPointer, sequenceNbr)
+        combinePointers(pointerString, ProcedureCodes.procedureCodesPointer, sequenceId)
       ),
       compareStringDifference(
         original.additionalProcedureCodes,
         additionalProcedureCodes,
-        combinePointers(pointerString, ProcedureCodes.additionalProcedureCodesPointer, sequenceNbr)
+        combinePointers(pointerString, ProcedureCodes.additionalProcedureCodesPointer, sequenceId)
       )
     ).flatten
 
@@ -60,11 +60,11 @@ case class AdditionalFiscalReference(country: String, reference: String) extends
   override def createDiff(
     original: AdditionalFiscalReference,
     pointerString: ExportsFieldPointer,
-    sequenceNbr: Option[Int] = None
+    sequenceId: Option[Int] = None
   ): ExportsDeclarationDiff =
     Seq(
-      compareStringDifference(original.country, country, combinePointers(pointerString, AdditionalFiscalReference.countryPointer, sequenceNbr)),
-      compareStringDifference(original.reference, reference, combinePointers(pointerString, AdditionalFiscalReference.referencePointer, sequenceNbr))
+      compareStringDifference(original.country, country, combinePointers(pointerString, AdditionalFiscalReference.countryPointer, sequenceId)),
+      compareStringDifference(original.reference, reference, combinePointers(pointerString, AdditionalFiscalReference.referencePointer, sequenceId))
     ).flatten
 }
 object AdditionalFiscalReference extends FieldMapping {
@@ -79,9 +79,9 @@ case class AdditionalFiscalReferences(references: Seq[AdditionalFiscalReference]
   override def createDiff(
     original: AdditionalFiscalReferences,
     pointerString: ExportsFieldPointer,
-    sequenceNbr: Option[Int] = None
+    sequenceId: Option[Int] = None
   ): ExportsDeclarationDiff =
-    Seq(createDiff(original.references, references, combinePointers(pointerString, AdditionalFiscalReferences.pointer, sequenceNbr))).flatten
+    Seq(createDiff(original.references, references, combinePointers(pointerString, AdditionalFiscalReferences.pointer, sequenceId))).flatten
 }
 
 object AdditionalFiscalReferences extends FieldMapping {
@@ -92,17 +92,17 @@ object AdditionalFiscalReferences extends FieldMapping {
 
 case class CommodityDetails(combinedNomenclatureCode: Option[String], descriptionOfGoods: Option[String]) extends DiffTools[CommodityDetails] {
 
-  def createDiff(original: CommodityDetails, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
+  def createDiff(original: CommodityDetails, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
     Seq(
       compareStringDifference(
         original.combinedNomenclatureCode,
         combinedNomenclatureCode,
-        combinePointers(pointerString, CommodityDetails.combinedNomenclatureCodePointer, sequenceNbr)
+        combinePointers(pointerString, CommodityDetails.combinedNomenclatureCodePointer, sequenceId)
       ),
       compareStringDifference(
         original.descriptionOfGoods,
         descriptionOfGoods,
-        combinePointers(pointerString, CommodityDetails.descriptionOfGoodsPointer, sequenceNbr)
+        combinePointers(pointerString, CommodityDetails.descriptionOfGoodsPointer, sequenceId)
       )
     ).flatten
 }
@@ -190,23 +190,23 @@ object IdentificationTypeCodes {
 case class PackageInformation(id: String, typesOfPackages: Option[String], numberOfPackages: Option[Int], shippingMarks: Option[String])
     extends DiffTools[PackageInformation] {
 
-  def createDiff(original: PackageInformation, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
+  def createDiff(original: PackageInformation, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
     Seq(
-      compareStringDifference(original.id, id, combinePointers(pointerString, PackageInformation.idPointer, sequenceNbr)),
+      compareStringDifference(original.id, id, combinePointers(pointerString, PackageInformation.idPointer, sequenceId)),
       compareStringDifference(
         original.typesOfPackages,
         typesOfPackages,
-        combinePointers(pointerString, PackageInformation.typesOfPackagesPointer, sequenceNbr)
+        combinePointers(pointerString, PackageInformation.typesOfPackagesPointer, sequenceId)
       ),
       compareIntDifference(
         original.numberOfPackages,
         numberOfPackages,
-        combinePointers(pointerString, PackageInformation.numberOfPackagesPointer, sequenceNbr)
+        combinePointers(pointerString, PackageInformation.numberOfPackagesPointer, sequenceId)
       ),
       compareStringDifference(
         original.shippingMarks,
         shippingMarks,
-        combinePointers(pointerString, PackageInformation.shippingMarksPointer, sequenceNbr)
+        combinePointers(pointerString, PackageInformation.shippingMarksPointer, sequenceId)
       )
     ).flatten
 
@@ -235,15 +235,15 @@ case class CommodityMeasure(
 ) extends DiffTools[CommodityMeasure] {
 
   // supplementaryUnitsNotRequired is not used to build WCO XML payload
-  def createDiff(original: CommodityMeasure, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
+  def createDiff(original: CommodityMeasure, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
     Seq(
       compareStringDifference(
         original.supplementaryUnits,
         supplementaryUnits,
-        combinePointers(pointerString, CommodityMeasure.supplementaryUnitsPointer, sequenceNbr)
+        combinePointers(pointerString, CommodityMeasure.supplementaryUnitsPointer, sequenceId)
       ),
-      compareStringDifference(original.netMass, netMass, combinePointers(pointerString, CommodityMeasure.netMassPointer, sequenceNbr)),
-      compareStringDifference(original.grossMass, grossMass, combinePointers(pointerString, CommodityMeasure.grossMassPointer, sequenceNbr))
+      compareStringDifference(original.netMass, netMass, combinePointers(pointerString, CommodityMeasure.netMassPointer, sequenceId)),
+      compareStringDifference(original.grossMass, grossMass, combinePointers(pointerString, CommodityMeasure.grossMassPointer, sequenceId))
     ).flatten
 }
 
@@ -257,14 +257,10 @@ object CommodityMeasure extends FieldMapping {
 }
 
 case class AdditionalInformation(code: String, description: String) extends DiffTools[AdditionalInformation] {
-  def createDiff(original: AdditionalInformation, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
+  def createDiff(original: AdditionalInformation, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
     Seq(
-      compareStringDifference(original.code, code, combinePointers(pointerString, AdditionalInformation.codePointer, sequenceNbr)),
-      compareStringDifference(
-        original.description,
-        description,
-        combinePointers(pointerString, AdditionalInformation.descriptionPointer, sequenceNbr)
-      )
+      compareStringDifference(original.code, code, combinePointers(pointerString, AdditionalInformation.codePointer, sequenceId)),
+      compareStringDifference(original.description, description, combinePointers(pointerString, AdditionalInformation.descriptionPointer, sequenceId))
     ).flatten
 }
 
@@ -279,8 +275,8 @@ object AdditionalInformation extends FieldMapping {
 case class AdditionalInformations(isRequired: Option[YesNoAnswer], items: Seq[AdditionalInformation]) extends DiffTools[AdditionalInformations] {
 
   // isRequired field is not used to produce the WCO XML payload
-  def createDiff(original: AdditionalInformations, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(createDiff(original.items, items, combinePointers(pointerString, AdditionalInformations.itemsPointer, sequenceNbr))).flatten
+  def createDiff(original: AdditionalInformations, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
+    Seq(createDiff(original.items, items, combinePointers(pointerString, AdditionalInformations.itemsPointer, sequenceId))).flatten
 }
 
 object AdditionalInformations extends FieldMapping {
@@ -294,11 +290,11 @@ object AdditionalInformations extends FieldMapping {
 }
 
 case class Date(day: Option[Int], month: Option[Int], year: Option[Int]) extends DiffTools[Date] {
-  def createDiff(original: Date, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
+  def createDiff(original: Date, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
     Seq(
-      compareIntDifference(original.day, day, combinePointers(pointerString, Date.dayPointer, sequenceNbr)),
-      compareIntDifference(original.month, month, combinePointers(pointerString, Date.monthPointer, sequenceNbr)),
-      compareIntDifference(original.year, year, combinePointers(pointerString, Date.yearPointer, sequenceNbr))
+      compareIntDifference(original.day, day, combinePointers(pointerString, Date.dayPointer, sequenceId)),
+      compareIntDifference(original.month, month, combinePointers(pointerString, Date.monthPointer, sequenceId)),
+      compareIntDifference(original.year, year, combinePointers(pointerString, Date.yearPointer, sequenceId))
     ).flatten
 
   def toLocalDate: LocalDate = LocalDate.of(year.getOrElse(0), month.getOrElse(0), day.getOrElse(0))
@@ -313,17 +309,17 @@ object Date extends FieldMapping {
 }
 
 case class DocumentWriteOff(measurementUnit: Option[String], documentQuantity: Option[BigDecimal]) extends DiffTools[DocumentWriteOff] {
-  def createDiff(original: DocumentWriteOff, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
+  def createDiff(original: DocumentWriteOff, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
     Seq(
       compareStringDifference(
         original.measurementUnit,
         measurementUnit,
-        combinePointers(pointerString, DocumentWriteOff.measurementUnitPointer, sequenceNbr)
+        combinePointers(pointerString, DocumentWriteOff.measurementUnitPointer, sequenceId)
       ),
       compareBigDecimalDifference(
         original.documentQuantity,
         documentQuantity,
-        combinePointers(pointerString, DocumentWriteOff.documentQuantityPointer, sequenceNbr)
+        combinePointers(pointerString, DocumentWriteOff.documentQuantityPointer, sequenceId)
       )
     ).flatten
 }
@@ -344,35 +340,35 @@ case class AdditionalDocument(
   dateOfValidity: Option[Date],
   documentWriteOff: Option[DocumentWriteOff]
 ) extends DiffTools[AdditionalDocument] {
-  def createDiff(original: AdditionalDocument, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
+  def createDiff(original: AdditionalDocument, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
     Seq(
       compareStringDifference(
         original.documentTypeCode,
         documentTypeCode,
-        combinePointers(pointerString, AdditionalDocument.documentTypeCodePointer, sequenceNbr)
+        combinePointers(pointerString, AdditionalDocument.documentTypeCodePointer, sequenceId)
       ),
       compareStringDifference(
         original.documentIdentifier,
         documentIdentifier,
-        combinePointers(pointerString, AdditionalDocument.documentIdentifierPointer, sequenceNbr)
+        combinePointers(pointerString, AdditionalDocument.documentIdentifierPointer, sequenceId)
       ),
       compareStringDifference(
         original.documentStatus,
         documentStatus,
-        combinePointers(pointerString, AdditionalDocument.documentStatusPointer, sequenceNbr)
+        combinePointers(pointerString, AdditionalDocument.documentStatusPointer, sequenceId)
       ),
       compareStringDifference(
         original.documentStatusReason,
         documentStatusReason,
-        combinePointers(pointerString, AdditionalDocument.documentStatusReasonPointer, sequenceNbr)
+        combinePointers(pointerString, AdditionalDocument.documentStatusReasonPointer, sequenceId)
       ),
       compareStringDifference(
         original.issuingAuthorityName,
         issuingAuthorityName,
-        combinePointers(pointerString, AdditionalDocument.issuingAuthorityNamePointer, sequenceNbr)
+        combinePointers(pointerString, AdditionalDocument.issuingAuthorityNamePointer, sequenceId)
       ),
-      createDiffOfOptions(original.dateOfValidity, dateOfValidity, combinePointers(pointerString, Date.pointer, sequenceNbr)),
-      createDiffOfOptions(original.documentWriteOff, documentWriteOff, combinePointers(pointerString, DocumentWriteOff.pointer, sequenceNbr))
+      createDiffOfOptions(original.dateOfValidity, dateOfValidity, combinePointers(pointerString, Date.pointer, sequenceId)),
+      createDiffOfOptions(original.documentWriteOff, documentWriteOff, combinePointers(pointerString, DocumentWriteOff.pointer, sequenceId))
     ).flatten
 }
 
@@ -390,8 +386,8 @@ object AdditionalDocument extends FieldMapping {
 
 case class AdditionalDocuments(isRequired: Option[YesNoAnswer], documents: Seq[AdditionalDocument]) extends DiffTools[AdditionalDocuments] {
   // isRequired field is not used to produce the WCO XML payload
-  def createDiff(original: AdditionalDocuments, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(createDiff(original.documents, documents, combinePointers(pointerString, AdditionalDocuments.documentsPointer, sequenceNbr))).flatten
+  def createDiff(original: AdditionalDocuments, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
+    Seq(createDiff(original.documents, documents, combinePointers(pointerString, AdditionalDocuments.documentsPointer, sequenceId))).flatten
 }
 
 object AdditionalDocuments extends FieldMapping {
@@ -422,38 +418,42 @@ case class ExportItem(
 ) extends DiffTools[ExportItem] {
 
   // id and fiscalInformation fields are not used to create WCO XML
-  override def createDiff(original: ExportItem, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
+  override def createDiff(original: ExportItem, pointerString: ExportsFieldPointer, maybeSequenceId: Option[Int] = None): ExportsDeclarationDiff =
     Seq(
-      compareIntDifference(original.sequenceId, sequenceId, combinePointers(pointerString, ExportItem.sequenceNbrPointer, sequenceNbr)),
-      createDiffOfOptions(original.procedureCodes, procedureCodes, combinePointers(pointerString, ProcedureCodes.pointer, sequenceNbr)),
+      compareIntDifference(original.sequenceId, sequenceId, combinePointers(pointerString, ExportItem.sequenceIdPointer, maybeSequenceId)),
+      createDiffOfOptions(original.procedureCodes, procedureCodes, combinePointers(pointerString, ProcedureCodes.pointer, maybeSequenceId)),
       createDiffOfOptions(
         original.additionalFiscalReferencesData,
         additionalFiscalReferencesData,
-        combinePointers(pointerString, AdditionalFiscalReferences.pointer, sequenceNbr)
+        combinePointers(pointerString, AdditionalFiscalReferences.pointer, maybeSequenceId)
       ),
-      compareDifference(original.statisticalValue, statisticalValue, combinePointers(pointerString, StatisticalValue.pointer, sequenceNbr)),
-      createDiffOfOptions(original.commodityDetails, commodityDetails, combinePointers(pointerString, CommodityDetails.pointer, sequenceNbr)),
-      compareDifference(original.dangerousGoodsCode, dangerousGoodsCode, combinePointers(pointerString, UNDangerousGoodsCode.pointer, sequenceNbr)),
-      compareDifference(original.cusCode, cusCode, combinePointers(pointerString, CUSCode.pointer, sequenceNbr)),
-      compareDifference(original.taricCodes, taricCodes, combinePointers(pointerString, TaricCode.pointer, sequenceNbr)),
-      compareDifference(original.nactCodes, nactCodes, combinePointers(pointerString, NactCode.pointer, sequenceNbr)),
-      compareDifference(original.nactExemptionCode, nactExemptionCode, combinePointers(pointerString, NactCode.pointer, sequenceNbr)),
-      createDiff(original.packageInformation, packageInformation, combinePointers(pointerString, PackageInformation.pointer, sequenceNbr)),
-      createDiffOfOptions(original.commodityMeasure, commodityMeasure, combinePointers(pointerString, CommodityMeasure.pointer, sequenceNbr)),
+      compareDifference(original.statisticalValue, statisticalValue, combinePointers(pointerString, StatisticalValue.pointer, maybeSequenceId)),
+      createDiffOfOptions(original.commodityDetails, commodityDetails, combinePointers(pointerString, CommodityDetails.pointer, maybeSequenceId)),
+      compareDifference(
+        original.dangerousGoodsCode,
+        dangerousGoodsCode,
+        combinePointers(pointerString, UNDangerousGoodsCode.pointer, maybeSequenceId)
+      ),
+      compareDifference(original.cusCode, cusCode, combinePointers(pointerString, CUSCode.pointer, maybeSequenceId)),
+      compareDifference(original.taricCodes, taricCodes, combinePointers(pointerString, TaricCode.pointer, maybeSequenceId)),
+      compareDifference(original.nactCodes, nactCodes, combinePointers(pointerString, NactCode.pointer, maybeSequenceId)),
+      compareDifference(original.nactExemptionCode, nactExemptionCode, combinePointers(pointerString, NactCode.pointer, maybeSequenceId)),
+      createDiff(original.packageInformation, packageInformation, combinePointers(pointerString, PackageInformation.pointer, maybeSequenceId)),
+      createDiffOfOptions(original.commodityMeasure, commodityMeasure, combinePointers(pointerString, CommodityMeasure.pointer, maybeSequenceId)),
       createDiffOfOptions(
         original.additionalInformation,
         additionalInformation,
-        combinePointers(pointerString, AdditionalInformations.pointer, sequenceNbr)
+        combinePointers(pointerString, AdditionalInformations.pointer, maybeSequenceId)
       ),
       createDiffOfOptions(
         original.additionalDocuments,
         additionalDocuments,
-        combinePointers(pointerString, AdditionalDocuments.pointer, sequenceNbr)
+        combinePointers(pointerString, AdditionalDocuments.pointer, maybeSequenceId)
       ),
       compareBooleanDifference(
         original.isLicenceRequired,
         isLicenceRequired,
-        combinePointers(pointerString, s"${AdditionalDocuments.pointer}.${AdditionalDocuments.documentsPointer}", sequenceNbr)
+        combinePointers(pointerString, s"${AdditionalDocuments.pointer}.${AdditionalDocuments.documentsPointer}", maybeSequenceId)
       )
     ).flatten
 }
@@ -462,5 +462,5 @@ object ExportItem extends FieldMapping {
   implicit val format: OFormat[ExportItem] = Json.format[ExportItem]
 
   val pointer: ExportsFieldPointer = "items"
-  val sequenceNbrPointer: ExportsFieldPointer = "sequenceNbr"
+  val sequenceIdPointer: ExportsFieldPointer = "sequenceId"
 }

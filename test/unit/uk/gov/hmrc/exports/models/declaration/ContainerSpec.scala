@@ -21,27 +21,28 @@ import uk.gov.hmrc.exports.services.AlteredField
 import uk.gov.hmrc.exports.services.AlteredField.constructAlteredField
 
 class ContainerSpec extends UnitSpec {
+
   "Container.createDiff" should {
     val baseFieldPointer = s"${ExportsDeclaration.pointer}.${Transport.pointer}.${Container.pointer}"
 
-    val seals = Seq(Seal("one"), Seal("two"), Seal("three"))
+    val seals = Seq(Seal(1, "one"), Seal(2, "two"), Seal(3, "three"))
 
     "produce the expected ExportsDeclarationDiff instance" when {
       "no differences exist between the two versions" in {
         withClue("when no seals are present") {
-          val container = Container("latest", Seq.empty[Seal])
+          val container = Container(1, "latest", Seq.empty[Seal])
           container.createDiff(container, Container.pointer, Some(1)) mustBe Seq.empty[AlteredField]
         }
 
         withClue("when seals are present") {
-          val container = Container("latest", seals)
+          val container = Container(1, "latest", seals)
           container.createDiff(container, Container.pointer, Some(1)) mustBe Seq.empty[AlteredField]
         }
       }
 
       "the Container's id values are not equal" in {
         val fieldPointer = s"$baseFieldPointer.1.${Container.idPointer}"
-        val container = Container("latest", Seq.empty[Seal])
+        val container = Container(1, "latest", Seq.empty[Seal])
         val originalValue = "other"
         container.createDiff(container.copy(id = originalValue), baseFieldPointer, Some(1)) mustBe Seq(
           constructAlteredField(fieldPointer, originalValue, container.id)
@@ -51,7 +52,7 @@ class ContainerSpec extends UnitSpec {
       "when seals are present but not equal" in {
         val fieldPointer = s"$baseFieldPointer.1.${Seal.pointer}"
         withClue("original container's seals are not present") {
-          val container = Container("latest", seals)
+          val container = Container(1, "latest", seals)
           container.createDiff(container.copy(seals = Seq.empty[Seal]), baseFieldPointer, Some(1)) mustBe Seq(
             constructAlteredField(s"${fieldPointer}.1", None, Some(seals(0))),
             constructAlteredField(s"${fieldPointer}.2", None, Some(seals(1))),
@@ -60,7 +61,7 @@ class ContainerSpec extends UnitSpec {
         }
 
         withClue("this container's seals are not present") {
-          val container = Container("latest", Seq.empty[Seal])
+          val container = Container(1, "latest", Seq.empty[Seal])
           container.createDiff(container.copy(seals = seals), baseFieldPointer, Some(1)) mustBe Seq(
             constructAlteredField(s"${fieldPointer}.1", Some(seals(0)), None),
             constructAlteredField(s"${fieldPointer}.2", Some(seals(1)), None),
@@ -69,7 +70,7 @@ class ContainerSpec extends UnitSpec {
         }
 
         withClue("both container seals contain different number of elements") {
-          val container = Container("latest", seals.drop(1))
+          val container = Container(1, "latest", seals.drop(1))
           container.createDiff(container.copy(seals = seals), baseFieldPointer, Some(1)) mustBe Seq(
             constructAlteredField(s"${fieldPointer}.1.id", Some(seals(0).id), Some(seals(1).id)),
             constructAlteredField(s"${fieldPointer}.2.id", Some(seals(1).id), Some(seals(2).id)),
@@ -78,7 +79,7 @@ class ContainerSpec extends UnitSpec {
         }
 
         withClue("both container seals contain same elements but in different order") {
-          val container = Container("latest", seals)
+          val container = Container(1, "latest", seals)
           container.createDiff(container.copy(seals = seals.reverse), baseFieldPointer, Some(1)) mustBe Seq(
             constructAlteredField(s"${fieldPointer}.1.id", Some(seals(2).id), Some(seals(0).id)),
             constructAlteredField(s"${fieldPointer}.3.id", Some(seals(0).id), Some(seals(2).id))
@@ -86,7 +87,7 @@ class ContainerSpec extends UnitSpec {
         }
 
         withClue("container seals contain elements with different values") {
-          val container = Container("latest", Seq(Seal("other")) ++ seals.drop(1))
+          val container = Container(1, "latest", Seq(Seal(1, "other")) ++ seals.drop(1))
           container.createDiff(container.copy(seals = seals), baseFieldPointer, Some(1)) mustBe Seq(
             constructAlteredField(s"${fieldPointer}.1.id", Some(seals(0).id), Some("other"))
           )
