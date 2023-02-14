@@ -35,12 +35,7 @@ class RenameToAdditionalDocuments extends MigrationDefinition with Logging {
   private val collectionName = "declarations"
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(
-      id = "CEDS-3254 Rename items.documentsProducedData to items.additionalDocuments",
-      order = 3,
-      author = "Lucio Biondi",
-      runAlways = false
-    )
+    MigrationInformation(id = "CEDS-3254 Rename items.documentsProducedData to items.additionalDocuments", order = 3, author = "Lucio Biondi")
 
   override def migrationFunction(db: MongoDatabase): Unit = {
     logger.info(s"Applying '${migrationInformation.id}' db migration...")

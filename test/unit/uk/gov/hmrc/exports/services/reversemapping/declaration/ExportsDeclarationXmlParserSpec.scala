@@ -19,8 +19,10 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 import org.mockito.ArgumentMatchersSugar.any
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.STANDARD_PRE_LODGED
+import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.{ContainerKey, RoutingCountryKey, SealKey}
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
+import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParserSpec.inputXml
 import uk.gov.hmrc.exports.services.reversemapping.declaration.items.ItemsParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.locations.LocationsParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.parties.PartiesParser
@@ -68,10 +70,7 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec {
   "ExportsDeclarationXmlParser on fromXml" should {
 
     "call all sub-parsers" in {
-
-      val xml = ExportsDeclarationXmlParserSpec.inputXml
-
-      exportsDeclarationXmlParser.fromXml(mappingContext, xml)
+      exportsDeclarationXmlParser.fromXml(mappingContext, inputXml)
 
       verify(additionalDeclarationTypeParser).parse(any[NodeSeq])(any[MappingContext])
       verify(consignmentReferencesParser).parse(any[NodeSeq])(any[MappingContext])
@@ -83,11 +82,8 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec {
     }
 
     "return Right with ExportsDeclaration" when {
-
       "all sub-parsers return Right" in {
-        val xml = ExportsDeclarationXmlParserSpec.inputXml
-
-        val result = exportsDeclarationXmlParser.fromXml(mappingContext, xml)
+        val result = exportsDeclarationXmlParser.fromXml(mappingContext, inputXml)
 
         result.isRight mustBe true
         result.toOption.get mustBe an[ExportsDeclaration]
@@ -98,9 +94,7 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec {
       "ExportsDeclaration.mucr is None" in {
         when(mucrParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
 
-        val xml = ExportsDeclarationXmlParserSpec.inputXml
-
-        val result = exportsDeclarationXmlParser.fromXml(mappingContext, xml)
+        val result = exportsDeclarationXmlParser.fromXml(mappingContext, inputXml)
 
         result.isRight mustBe true
         result.toOption.get mustBe an[ExportsDeclaration]
@@ -112,9 +106,7 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec {
       "ExportsDeclaration.mucr is NOT None" in {
         when(mucrParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(Some(MUCR("mucr"))))
 
-        val xml = ExportsDeclarationXmlParserSpec.inputXml
-
-        val result = exportsDeclarationXmlParser.fromXml(mappingContext, xml)
+        val result = exportsDeclarationXmlParser.fromXml(mappingContext, inputXml)
 
         result.isRight mustBe true
         result.toOption.get mustBe an[ExportsDeclaration]
@@ -122,21 +114,38 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec {
       }
     }
 
-    "return Left with XmlParserError" when {
+    "set ExportsDeclaration.declarationMeta.maxSequenceIds according to the received content" in {
+      val container1 = Container(1, "C1", List(Seal(1, "1111A"), Seal(2, "2222B")))
+      val container2 = Container(2, "C2", List(Seal(3, "3333C"), Seal(4, "4444D")))
+      val transport = Transport(containers = Some(List(container1, container2)))
+      when(transportParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(transport))
 
+      val routingCountries = List(RoutingCountry(1, Country(Some("AT"))), RoutingCountry(2, Country(Some("IT"))))
+      val locations = Locations(routingCountries = routingCountries)
+      when(locationsParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(locations))
+
+      val result = exportsDeclarationXmlParser.fromXml(mappingContext, inputXml)
+
+      result.isRight mustBe true
+      val declaration = result.toOption.get
+      val maxSequenceIds = declaration.declarationMeta.maxSequenceIds
+      maxSequenceIds.size mustBe 3
+      maxSequenceIds.get(ContainerKey) mustBe Some(2)
+      maxSequenceIds.get(RoutingCountryKey) mustBe Some(2)
+      maxSequenceIds.get(SealKey) mustBe Some(4)
+    }
+
+    "return Left with XmlParserError" when {
       "any parser returns Left" in {
         when(additionalDeclarationTypeParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Left("Test Exception"))
 
-        val xml = ExportsDeclarationXmlParserSpec.inputXml
-
-        val result = exportsDeclarationXmlParser.fromXml(mappingContext, xml)
+        val result = exportsDeclarationXmlParser.fromXml(mappingContext, inputXml)
 
         result.isLeft mustBe true
         result.left.value mustBe "Test Exception"
       }
     }
   }
-
 }
 
 //noinspection ScalaStyle
@@ -185,6 +194,10 @@ object ExportsDeclarationXmlParserSpec {
       |                <ns3:SequenceNumeric>0</ns3:SequenceNumeric>
       |                <ns3:RoutingCountryCode>GB</ns3:RoutingCountryCode>
       |            </ns3:Itinerary>
+      |            <ns3:Itinerary>
+      |                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+      |                <ns3:RoutingCountryCode>FR</ns3:RoutingCountryCode>
+      |            </ns3:Itinerary>
       |        </ns3:Consignment>
       |        <ns3:CurrencyExchange>
       |            <ns3:RateNumeric>1.49</ns3:RateNumeric>
@@ -226,10 +239,26 @@ object ExportsDeclarationXmlParserSpec {
       |                </ns3:GoodsLocation>
       |                <ns3:TransportEquipment>
       |                    <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
-      |                    <ns3:ID>123456</ns3:ID>
+      |                    <ns3:ID>Container1</ns3:ID>
       |                    <ns3:Seal>
       |                        <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
-      |                        <ns3:ID>NOSEALS</ns3:ID>
+      |                        <ns3:ID>1111A</ns3:ID>
+      |                    </ns3:Seal>
+      |                    <ns3:Seal>
+      |                        <ns3:SequenceNumeric>2</ns3:SequenceNumeric>
+      |                        <ns3:ID>2222B</ns3:ID>
+      |                    </ns3:Seal>
+      |                </ns3:TransportEquipment>
+      |                <ns3:TransportEquipment>
+      |                    <ns3:SequenceNumeric>2</ns3:SequenceNumeric>
+      |                    <ns3:ID>Container2</ns3:ID>
+      |                    <ns3:Seal>
+      |                        <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+      |                        <ns3:ID>3333C</ns3:ID>
+      |                    </ns3:Seal>
+      |                    <ns3:Seal>
+      |                        <ns3:SequenceNumeric>2</ns3:SequenceNumeric>
+      |                        <ns3:ID>4444D</ns3:ID>
       |                    </ns3:Seal>
       |                </ns3:TransportEquipment>
       |            </ns3:Consignment>

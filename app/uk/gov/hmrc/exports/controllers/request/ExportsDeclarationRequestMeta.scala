@@ -17,6 +17,7 @@
 package uk.gov.hmrc.exports.controllers.request
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.exports.models.declaration.DeclarationMeta._
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
 
 import java.time.Instant
@@ -27,7 +28,8 @@ case class ExportsDeclarationRequestMeta(
   createdDateTime: Instant,
   updatedDateTime: Instant,
   summaryWasVisited: Option[Boolean] = None,
-  readyForSubmission: Option[Boolean] = None
+  readyForSubmission: Option[Boolean] = None,
+  maxSequenceIds: Map[String, Int] = Map(ContainerKey -> 0, RoutingCountryKey -> 0, SealKey -> 0)
 )
 
 object ExportsDeclarationRequestMeta {

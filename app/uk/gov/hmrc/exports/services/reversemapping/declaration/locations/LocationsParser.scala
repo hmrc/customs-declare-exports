@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.locations
 
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.{STANDARD_FRONTIER, STANDARD_PRE_LODGED, SUPPLEMENTARY_SIMPLIFIED}
 import uk.gov.hmrc.exports.models.declaration.InlandOrBorder.{Border, Inland}
-import uk.gov.hmrc.exports.models.declaration.{Country, Locations}
+import uk.gov.hmrc.exports.models.declaration.{Country, Locations, RoutingCountry}
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
@@ -67,7 +67,7 @@ class LocationsParser @Inject() (
         originationCountry = originationCountry,
         destinationCountry = destinationCountry,
         hasRoutingCountries = hasRoutingCountries,
-        routingCountries = routingCountries,
+        routingCountries = routingCountries.zipWithIndex.map { case (country, ix) => RoutingCountry(ix + 1, country) },
         goodsLocation = goodsLocation,
         officeOfExit = officeOfExit,
         supervisingCustomsOffice = supervisingCustomsOffice,

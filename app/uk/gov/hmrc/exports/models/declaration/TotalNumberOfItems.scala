@@ -29,28 +29,24 @@ case class TotalNumberOfItems(
   exchangeRate: Option[String] = None,
   totalPackage: Option[String] = None
 ) extends DiffTools[TotalNumberOfItems] {
-  def createDiff(original: TotalNumberOfItems, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
+  def createDiff(original: TotalNumberOfItems, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
     Seq(
       compareStringDifference(
         original.totalAmountInvoiced,
         totalAmountInvoiced,
-        combinePointers(pointerString, TotalNumberOfItems.totalAmountInvoicedPointer, sequenceNbr)
+        combinePointers(pointerString, TotalNumberOfItems.totalAmountInvoicedPointer, sequenceId)
       ),
       compareStringDifference(
         original.totalAmountInvoicedCurrency,
         totalAmountInvoicedCurrency,
-        combinePointers(pointerString, TotalNumberOfItems.totalAmountInvoicedCurrencyPointer, sequenceNbr)
+        combinePointers(pointerString, TotalNumberOfItems.totalAmountInvoicedCurrencyPointer, sequenceId)
       ),
       compareStringDifference(
         original.exchangeRate,
         exchangeRate,
-        combinePointers(pointerString, TotalNumberOfItems.exchangeRatePointer, sequenceNbr)
+        combinePointers(pointerString, TotalNumberOfItems.exchangeRatePointer, sequenceId)
       ),
-      compareStringDifference(
-        original.totalPackage,
-        totalPackage,
-        combinePointers(pointerString, TotalNumberOfItems.totalPackagePointer, sequenceNbr)
-      )
+      compareStringDifference(original.totalPackage, totalPackage, combinePointers(pointerString, TotalNumberOfItems.totalPackagePointer, sequenceId))
     ).flatten
 }
 

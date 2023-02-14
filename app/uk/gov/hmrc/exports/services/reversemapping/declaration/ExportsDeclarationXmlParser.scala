@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType._
+import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.{ContainerKey, RoutingCountryKey, SealKey}
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
@@ -66,7 +67,8 @@ class ExportsDeclarationXmlParser @Inject() (
         createdDateTime = Instant.now(),
         updatedDateTime = Instant.now(),
         summaryWasVisited = Some(true),
-        readyForSubmission = Some(true)
+        readyForSubmission = Some(true),
+        maxSequenceIds = deriveSequenceIds(locations, transport)
       ),
       `type` = declarationType,
       dispatchLocation = None,
@@ -101,4 +103,15 @@ class ExportsDeclarationXmlParser @Inject() (
 
       Right(declarationType)
     }.getOrElse(Left("Cannot derive DeclarationType from an undefined AdditionalDeclarationType"))
+
+  private def deriveSequenceIds(locations: Locations, transport: Transport): Map[String, Int] = {
+    val routingCountries = locations.routingCountries.size
+    val (containers, seals) = transport.containers.fold((0, 0)) {
+      _.foldLeft((0, 0)) { case ((containers, seals), container) =>
+        (containers + 1, seals + container.seals.size)
+      }
+    }
+
+    Map(RoutingCountryKey -> routingCountries, ContainerKey -> containers, SealKey -> seals)
+  }
 }

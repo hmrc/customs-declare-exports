@@ -2,9 +2,9 @@ import sbt._
 
 object AppDependencies {
 
-  val bootstrapPlayVersion = "7.12.0"
+  val bootstrapPlayVersion = "7.13.0"
   val hmrcMongoVersion = "0.74.0"
-  val jacksonVersion = "2.14.1"
+  val jacksonVersion = "2.14.2"
   val testScope = "test,it"
 
   val compile = Seq(
@@ -16,7 +16,7 @@ object AppDependencies {
     // Used by the Migration tool. Keep this library's version to the same major.minor version as the mongo-scala-driver.
     "org.mongodb"                    %  "mongodb-driver-sync"               % "4.6.1",
     // Added to replace javax.xml.bind (removed in Java 11)
-    "org.glassfish.jaxb"             % "jaxb-runtime"                       % "2.3.7"
+    "org.glassfish.jaxb"             % "jaxb-runtime"                       % "2.3.8"
   )
 
   val test = Seq(
@@ -24,7 +24,7 @@ object AppDependencies {
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28" % hmrcMongoVersion     % testScope,
     "com.vladsch.flexmark"   %  "flexmark-all"            % "0.64.0"             % testScope,
     "org.mockito"            %% "mockito-scala-scalatest" % "1.17.12"            % "test",
-    "org.scalatest"          %% "scalatest"               % "3.2.14"             % testScope,
+    "org.scalatest"          %% "scalatest"               % "3.2.15"             % testScope,
     "com.github.tomakehurst" %  "wiremock-jre8"           % "2.35.0"             % testScope,
   )
 }

@@ -179,7 +179,8 @@ class LocationsSpec extends UnitSpec {
 
         "when routingCountries are not equal" in {
           val fieldPointer = s"${baseFieldPointer}.${Locations.routingCountriesPointer}"
-          val routingCountries = Seq(Country(Some("one")), Country(Some("two")), Country(Some("three")))
+          val routingCountries =
+            Seq(RoutingCountry(1, Country(Some("one"))), RoutingCountry(2, Country(Some("two"))), RoutingCountry(3, Country(Some("three"))))
 
           withClue("original Locations routingCountries are not present") {
             val locations = Locations(routingCountries = routingCountries)
@@ -202,8 +203,8 @@ class LocationsSpec extends UnitSpec {
           withClue("both locations routingCountries contain different number of elements") {
             val locations = Locations(routingCountries = routingCountries.drop(1))
             locations.createDiff(locations.copy(routingCountries = routingCountries), baseFieldPointer, Some(1)) mustBe Seq(
-              constructAlteredField(s"${fieldPointer}.1.code", routingCountries(0).code, routingCountries(1).code),
-              constructAlteredField(s"${fieldPointer}.2.code", routingCountries(1).code, routingCountries(2).code),
+              constructAlteredField(s"${fieldPointer}.1.code", routingCountries(0).country.code, routingCountries(1).country.code),
+              constructAlteredField(s"${fieldPointer}.2.code", routingCountries(1).country.code, routingCountries(2).country.code),
               constructAlteredField(s"${fieldPointer}.3", Some(routingCountries(2)), None)
             )
           }
@@ -211,15 +212,15 @@ class LocationsSpec extends UnitSpec {
           withClue("both locations routingCountries contain same elements but in different order") {
             val locations = Locations(routingCountries = routingCountries)
             locations.createDiff(locations.copy(routingCountries = routingCountries.reverse), baseFieldPointer, Some(1)) mustBe Seq(
-              constructAlteredField(s"${fieldPointer}.1.code", routingCountries(2).code, routingCountries(0).code),
-              constructAlteredField(s"${fieldPointer}.3.code", routingCountries(0).code, routingCountries(2).code)
+              constructAlteredField(s"${fieldPointer}.1.code", routingCountries(2).country.code, routingCountries(0).country.code),
+              constructAlteredField(s"${fieldPointer}.3.code", routingCountries(0).country.code, routingCountries(2).country.code)
             )
           }
 
           withClue("locations routingCountries contain elements with different values") {
-            val locations = Locations(routingCountries = Seq(Country(Some("other"))) ++ routingCountries.drop(1))
+            val locations = Locations(routingCountries = Seq(RoutingCountry(1, Country(Some("other")))) ++ routingCountries.drop(1))
             locations.createDiff(locations.copy(routingCountries = routingCountries), baseFieldPointer, Some(1)) mustBe Seq(
-              constructAlteredField(s"${fieldPointer}.1.code", routingCountries(0).code, Some("other"))
+              constructAlteredField(s"${fieldPointer}.1.code", routingCountries(0).country.code, Some("other"))
             )
           }
         }

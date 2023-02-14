@@ -26,7 +26,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 
 class DeclarationConsignmentBuilder @Inject() (
   freightBuilder: FreightBuilder,
-  iteneraryBuilder: IteneraryBuilder,
+  itineraryBuilder: ItineraryBuilder,
   consignmentCarrierBuilder: ConsignmentCarrierBuilder,
   consignorBuilder: ConsignmentConsignorBuilder
 ) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
@@ -36,7 +36,7 @@ class DeclarationConsignmentBuilder @Inject() (
         val consignment = new Declaration.Consignment()
         freightBuilder.buildThenAdd(model, consignment)
         consignorBuilder.buildThenAdd(model, consignment)
-        iteneraryBuilder.buildThenAdd(model, consignment)
+        itineraryBuilder.buildThenAdd(model, consignment)
         consignmentCarrierBuilder.buildThenAdd(model, consignment)
         declaration.setConsignment(consignment)
       case _ => (): Unit

@@ -17,14 +17,15 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.sequenceIdPlaceholder
 import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
 import uk.gov.hmrc.exports.models.FieldMapping
 import uk.gov.hmrc.exports.services.DiffTools
 import uk.gov.hmrc.exports.services.DiffTools._
 
 case class Country(code: Option[String]) extends DiffTools[Country] {
-  override def createDiff(original: Country, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(compareStringDifference(original.code, code, combinePointers(pointerString, Country.pointer, sequenceNbr))).flatten
+  override def createDiff(original: Country, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
+    Seq(compareStringDifference(original.code, code, combinePointers(pointerString, Country.pointer, sequenceId))).flatten
 }
 
 object Country extends FieldMapping {
@@ -33,25 +34,37 @@ object Country extends FieldMapping {
   val pointer: ExportsFieldPointer = "code"
 }
 
+case class RoutingCountry(
+  sequenceId: Int = sequenceIdPlaceholder, // Initialised to enable migration of existing documents
+  country: Country
+) extends DiffTools[RoutingCountry] {
+  override def createDiff(original: RoutingCountry, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
+    Seq(compareStringDifference(original.country.code, country.code, combinePointers(pointerString, Country.pointer, sequenceId))).flatten
+}
+
+object RoutingCountry {
+  implicit val format: OFormat[RoutingCountry] = Json.format[RoutingCountry]
+}
+
 case class GoodsLocation(country: String, typeOfLocation: String, qualifierOfIdentification: String, identificationOfLocation: Option[String])
     extends DiffTools[GoodsLocation] {
-  def createDiff(original: GoodsLocation, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
+  def createDiff(original: GoodsLocation, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
     Seq(
-      compareStringDifference(original.country, country, combinePointers(pointerString, GoodsLocation.countryPointer, sequenceNbr)),
+      compareStringDifference(original.country, country, combinePointers(pointerString, GoodsLocation.countryPointer, sequenceId)),
       compareStringDifference(
         original.typeOfLocation,
         typeOfLocation,
-        combinePointers(pointerString, GoodsLocation.typeOfLocationPointer, sequenceNbr)
+        combinePointers(pointerString, GoodsLocation.typeOfLocationPointer, sequenceId)
       ),
       compareStringDifference(
         original.qualifierOfIdentification,
         qualifierOfIdentification,
-        combinePointers(pointerString, GoodsLocation.qualifierOfIdentificationPointer, sequenceNbr)
+        combinePointers(pointerString, GoodsLocation.qualifierOfIdentificationPointer, sequenceId)
       ),
       compareStringDifference(
         original.identificationOfLocation,
         identificationOfLocation,
-        combinePointers(pointerString, GoodsLocation.identificationOfLocationPointer, sequenceNbr)
+        combinePointers(pointerString, GoodsLocation.identificationOfLocationPointer, sequenceId)
       )
     ).flatten
 }
@@ -109,7 +122,7 @@ object InlandOrBorder {
 }
 
 case class InlandModeOfTransportCode(inlandModeOfTransportCode: Option[ModeOfTransportCode]) extends DiffTools[InlandModeOfTransportCode] {
-  def createDiff(original: InlandModeOfTransportCode, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
+  def createDiff(original: InlandModeOfTransportCode, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
     Seq(compareDifference(original.inlandModeOfTransportCode, inlandModeOfTransportCode, pointerString)).flatten
 }
 
@@ -123,7 +136,7 @@ case class Locations(
   originationCountry: Option[Country] = None,
   destinationCountry: Option[Country] = None,
   hasRoutingCountries: Option[Boolean] = None,
-  routingCountries: Seq[Country] = Seq.empty,
+  routingCountries: Seq[RoutingCountry] = Seq.empty,
   goodsLocation: Option[GoodsLocation] = None,
   officeOfExit: Option[OfficeOfExit] = None,
   supervisingCustomsOffice: Option[SupervisingCustomsOffice] = None,
@@ -136,37 +149,37 @@ case class Locations(
   def createDiff(
     original: Locations,
     pointerString: ExportsFieldPointer = ExportsDeclaration.pointer,
-    sequenceNbr: Option[Int] = None
+    sequenceId: Option[Int] = None
   ): ExportsDeclarationDiff =
     Seq(
-      compareDifference(original.officeOfExit, officeOfExit, combinePointers(pointerString, OfficeOfExit.pointer, sequenceNbr)),
+      compareDifference(original.officeOfExit, officeOfExit, combinePointers(pointerString, OfficeOfExit.pointer, sequenceId)),
       compareDifference(
         original.supervisingCustomsOffice,
         supervisingCustomsOffice,
-        combinePointers(pointerString, SupervisingCustomsOffice.pointer, sequenceNbr)
+        combinePointers(pointerString, SupervisingCustomsOffice.pointer, sequenceId)
       ),
       compareDifference(
         original.warehouseIdentification,
         warehouseIdentification,
-        combinePointers(pointerString, WarehouseIdentification.pointer, sequenceNbr)
+        combinePointers(pointerString, WarehouseIdentification.pointer, sequenceId)
       )
     ).flatten ++
       createDiffOfOptions(
         original.originationCountry,
         originationCountry,
-        combinePointers(pointerString, Locations.originationCountryPointer, sequenceNbr)
+        combinePointers(pointerString, Locations.originationCountryPointer, sequenceId)
       ) ++
       createDiffOfOptions(
         original.destinationCountry,
         destinationCountry,
-        combinePointers(pointerString, Locations.destinationCountryPointer, sequenceNbr)
+        combinePointers(pointerString, Locations.destinationCountryPointer, sequenceId)
       ) ++
       createDiff(original.routingCountries, routingCountries, combinePointers(pointerString, Locations.routingCountriesPointer)) ++
-      createDiffOfOptions(original.goodsLocation, goodsLocation, combinePointers(pointerString, GoodsLocation.pointer, sequenceNbr)) ++
+      createDiffOfOptions(original.goodsLocation, goodsLocation, combinePointers(pointerString, GoodsLocation.pointer, sequenceId)) ++
       createDiffOfOptions(
         original.inlandModeOfTransportCode,
         inlandModeOfTransportCode,
-        combinePointers(pointerString, InlandModeOfTransportCode.pointer, sequenceNbr)
+        combinePointers(pointerString, InlandModeOfTransportCode.pointer, sequenceId)
       )
 }
 

@@ -34,12 +34,12 @@ class ExportsDeclarationSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "ExportsDeclaration" should {
     "be correctly derived from ExportsDeclarationRequest" in {
-      ExportsDeclaration(id, Eori(eori), exportsDeclarationRequest) mustBe exportsDeclaration
+      ExportsDeclaration.init(id, Eori(eori), exportsDeclarationRequest) mustBe exportsDeclaration
     }
 
     "be set to initial state when without references" in {
       val declarationRequest = exportsDeclarationRequest.copy(consignmentReferences = None)
-      ExportsDeclaration(id, Eori(eori), declarationRequest).status mustBe DeclarationStatus.INITIAL
+      ExportsDeclaration.init(id, Eori(eori), declarationRequest).status mustBe DeclarationStatus.INITIAL
     }
   }
 
@@ -49,7 +49,7 @@ class ExportsDeclarationSpec extends UnitSpec with ExportsDeclarationBuilder {
         .parse(exportsDeclarationRequestAsString)
         .as(ExportsDeclarationRequest.format)
 
-      val declaration = ExportsDeclaration("1", Eori("GB12345678"), exportsDeclarationRequest)
+      val declaration = ExportsDeclaration.init("1", Eori("GB12345678"), exportsDeclarationRequest)
 
       val json = Json.toJson(declaration)(ExportsDeclaration.REST.writes)
 
@@ -212,7 +212,8 @@ object ExportsDeclarationSpec {
       createdDateTime = createdDate,
       updatedDateTime = updatedDate,
       summaryWasVisited = Some(true),
-      readyForSubmission = Some(true)
+      readyForSubmission = Some(true),
+      maxSequenceIds = Map("dummy" -> -1)
     ),
     `type` = `type`,
     dispatchLocation = Some(dispatchLocation),
@@ -237,7 +238,8 @@ object ExportsDeclarationSpec {
       updatedDateTime = updatedDate,
       parentDeclarationId = Some("parentDeclarationId"),
       summaryWasVisited = Some(true),
-      readyForSubmission = Some(true)
+      readyForSubmission = Some(true),
+      maxSequenceIds = Map("dummy" -> -1)
     ),
     eori = eori,
     `type` = `type`,
@@ -260,11 +262,17 @@ object ExportsDeclarationSpec {
     """{
       |  "id": "6f31582e-bfd5-4b27-90be-2dca6e236b20",
       |  "declarationMeta": {
-      |   "createdDateTime": "2019-12-10T15:52:32.681Z",
-      |   "updatedDateTime": "2019-12-10T15:53:13.697Z",
-      |   "parentDeclarationId": "parentDeclarationId",
-      |   "summaryWasVisited": true,
-      |   "readyForSubmission": true
+      |    "createdDateTime": "2019-12-10T15:52:32.681Z",
+      |    "updatedDateTime": "2019-12-10T15:53:13.697Z",
+      |    "parentDeclarationId": "parentDeclarationId",
+      |    "summaryWasVisited": true,
+      |    "readyForSubmission": true,
+      |    "maxSequenceIds": {
+      |      "dummy": -1,
+      |      "Containers": 1,
+      |      "RoutingCountries": 1,
+      |      "Seals": 0
+      |    }
       |  },
       |  "status": "DRAFT",
       |  "eori": "GB7172755078551",
@@ -294,6 +302,7 @@ object ExportsDeclarationSpec {
       |    },
       |    "containers": [
       |      {
+      |        "sequenceId": 1,
       |        "id": "123456",
       |        "seals": []
       |      }
@@ -369,7 +378,10 @@ object ExportsDeclarationSpec {
       |    "hasRoutingCountries": true,
       |    "routingCountries": [
       |      {
-      |        "code" : "FR"
+      |        "sequenceId": 1,
+      |        "country": {
+      |          "code" : "FR"
+      |        }
       |      }
       |    ],
       |    "goodsLocation": {

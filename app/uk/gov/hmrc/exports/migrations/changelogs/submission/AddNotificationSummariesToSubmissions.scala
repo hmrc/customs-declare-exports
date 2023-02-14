@@ -38,8 +38,7 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
     MigrationInformation(
       id = s"CEDS-3895 Add notification summaries, $latestStatus & $statusLastUpdated to those Submission docs not updated yet with these data",
       order = 14,
-      author = "Lucio Biondi",
-      runAlways = false
+      author = "Lucio Biondi"
     )
 
   override def migrationFunction(db: MongoDatabase): Unit = {
