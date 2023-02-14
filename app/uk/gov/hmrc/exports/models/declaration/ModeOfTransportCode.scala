@@ -17,12 +17,17 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{JsString, JsonValidationError, Reads, Writes}
+import uk.gov.hmrc.exports.models.FieldMapping
 
-sealed abstract class ModeOfTransportCode(val value: String) {
+sealed abstract class ModeOfTransportCode(val value: String) extends Ordered[ModeOfTransportCode] {
   def isValidCode: Boolean = this != ModeOfTransportCode.Empty
+
+  override def compare(y: ModeOfTransportCode): Int = value.compareTo(y.value)
 }
 
-object ModeOfTransportCode {
+object ModeOfTransportCode extends FieldMapping {
+
+  val pointer: String = "code"
 
   case object Maritime extends ModeOfTransportCode("1")
   case object Rail extends ModeOfTransportCode("2")

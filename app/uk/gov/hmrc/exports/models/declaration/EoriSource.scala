@@ -18,7 +18,9 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{JsString, JsonValidationError, Reads, Writes}
 
-sealed trait EoriSource
+sealed trait EoriSource extends Ordered[EoriSource] {
+  override def compare(y: EoriSource): Int = this.compareTo(y)
+}
 
 object EoriSource {
   case object UserEori extends EoriSource

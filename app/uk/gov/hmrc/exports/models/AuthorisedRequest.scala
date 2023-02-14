@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.models
 
 import play.api.libs.json.{Format, Reads, Writes}
 import play.api.mvc.{Request, WrappedRequest}
+import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
 
 trait HasLocalReferenceNumber {
   val lrn: LocalReferenceNumber
@@ -43,11 +44,15 @@ case class LocalReferenceNumber(value: String) extends AnyVal
 case class Ducr(value: String) extends AnyVal
 case class Mrn(value: String) extends AnyVal
 
-case class Eori(value: String)
+case class Eori(value: String) extends Ordered[Eori] {
+  override def compare(y: Eori): Int = value.compareTo(y.value)
+}
 
-object Eori {
+object Eori extends FieldMapping {
   implicit val format: Format[Eori] =
     Format(Reads.StringReads.map(apply), Writes(eori => Writes.StringWrites.writes(eori.value)))
+
+  override val pointer: ExportsFieldPointer = "eori"
 }
 
 case class ConversationId(value: String) extends AnyVal

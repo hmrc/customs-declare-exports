@@ -17,11 +17,25 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
+import uk.gov.hmrc.exports.models.FieldMapping
+import uk.gov.hmrc.exports.services.DiffTools
+import uk.gov.hmrc.exports.services.DiffTools.{combinePointers, compareDifference, compareStringDifference, ExportsDeclarationDiff}
 
-case class TransportLeavingTheBorder(code: Option[ModeOfTransportCode] = None)
+case class TransportLeavingTheBorder(code: Option[ModeOfTransportCode] = None) extends Ordered[TransportLeavingTheBorder] {
+  override def compare(that: TransportLeavingTheBorder): Int =
+    (code, that.code) match {
+      case (None, None)                    => 0
+      case (_, None)                       => 1
+      case (None, _)                       => -1
+      case (Some(current), Some(original)) => current.compare(original)
+    }
+}
 
-object TransportLeavingTheBorder {
+object TransportLeavingTheBorder extends FieldMapping {
   implicit val format = Json.format[TransportLeavingTheBorder]
+
+  val pointer: String = "borderModeOfTransportCode.code"
 }
 
 case class Transport(
@@ -34,7 +48,7 @@ case class Transport(
   transportCrossingTheBorderNationality: Option[TransportCountry] = None,
   meansOfTransportCrossingTheBorderType: Option[String] = None,
   meansOfTransportCrossingTheBorderIDNumber: Option[String] = None
-) {
+) extends DiffTools[Transport] {
   def hasBorderTransportDetails: Boolean =
     meansOfTransportCrossingTheBorderIDNumber.exists(_.nonEmpty) &&
       meansOfTransportCrossingTheBorderType.exists(_.nonEmpty)
@@ -47,10 +61,58 @@ case class Transport(
   def hasTransportLeavingTheBorder: Boolean = borderModeOfTransportCode.nonEmpty
 
   def isMeansOfTransportOnDepartureDefined: Boolean = meansOfTransportOnDepartureType.exists(_ != Transport.optionNone)
+
+  def createDiff(original: Transport, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
+    Seq(
+      compareDifference(
+        original.expressConsignment,
+        expressConsignment,
+        combinePointers(pointerString, Transport.expressConsignmentPointer, sequenceNbr)
+      ),
+      compareDifference(original.transportPayment, transportPayment, combinePointers(pointerString, TransportPayment.pointer, sequenceNbr)),
+      compareDifference(
+        original.borderModeOfTransportCode,
+        borderModeOfTransportCode,
+        combinePointers(pointerString, TransportLeavingTheBorder.pointer, sequenceNbr)
+      ),
+      compareStringDifference(
+        original.meansOfTransportOnDepartureType,
+        meansOfTransportOnDepartureType,
+        combinePointers(pointerString, Transport.transportOnDeparturePointer, sequenceNbr)
+      ),
+      compareStringDifference(
+        original.meansOfTransportOnDepartureIDNumber,
+        meansOfTransportOnDepartureIDNumber,
+        combinePointers(pointerString, Transport.transportOnDepartureIdPointer, sequenceNbr)
+      ),
+      compareDifference(
+        original.transportCrossingTheBorderNationality,
+        transportCrossingTheBorderNationality,
+        combinePointers(pointerString, TransportCountry.pointer, sequenceNbr)
+      ),
+      compareStringDifference(
+        original.meansOfTransportCrossingTheBorderType,
+        meansOfTransportCrossingTheBorderType,
+        combinePointers(pointerString, Transport.transportCrossingTheBorderPointer, sequenceNbr)
+      ),
+      compareStringDifference(
+        original.meansOfTransportCrossingTheBorderIDNumber,
+        meansOfTransportCrossingTheBorderIDNumber,
+        combinePointers(pointerString, Transport.transportCrossingTheBorderIdPointer, sequenceNbr)
+      )
+    ).flatten ++
+      createDiff(original.containers, containers, combinePointers(pointerString, Container.pointer, sequenceNbr))
 }
 
-object Transport {
+object Transport extends FieldMapping {
   implicit val format: OFormat[Transport] = Json.format[Transport]
 
   val optionNone = "option_none"
+
+  val pointer: ExportsFieldPointer = "transport"
+  val expressConsignmentPointer: ExportsFieldPointer = "expressConsignment"
+  val transportOnDeparturePointer: ExportsFieldPointer = "meansOfTransportOnDepartureType"
+  val transportOnDepartureIdPointer: ExportsFieldPointer = "meansOfTransportOnDepartureIDNumber"
+  val transportCrossingTheBorderPointer: ExportsFieldPointer = "meansOfTransportCrossingTheBorderType"
+  val transportCrossingTheBorderIdPointer: ExportsFieldPointer = "meansOfTransportCrossingTheBorderIDNumber"
 }
