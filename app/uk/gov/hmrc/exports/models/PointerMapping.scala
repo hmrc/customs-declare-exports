@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.exports.models
 
+import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
+
 case class PointerMapping(wcoPattern: PointerPattern, exportsPattern: PointerPattern) {
 
   def applyToWCOPointer(pointer: Pointer): Pointer = {
@@ -50,4 +52,12 @@ case class PointerMapping(wcoPattern: PointerPattern, exportsPattern: PointerPat
         None
       }
     }.filter(_.isDefined).flatten.toMap
+}
+
+object ExportsFieldPointer {
+  type ExportsFieldPointer = String
+}
+
+trait FieldMapping {
+  val pointer: ExportsFieldPointer
 }

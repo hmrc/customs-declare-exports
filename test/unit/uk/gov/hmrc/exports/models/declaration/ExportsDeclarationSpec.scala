@@ -22,10 +22,13 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.controllers.request.{ExportsDeclarationRequest, ExportsDeclarationRequestMeta}
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
+import uk.gov.hmrc.exports.services.{AlteredField, OriginalAndNewValues}
+import uk.gov.hmrc.exports.services.AlteredField.constructAlteredField
+import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
 import java.time.Instant
 
-class ExportsDeclarationSpec extends UnitSpec {
+class ExportsDeclarationSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   import ExportsDeclarationSpec._
 
@@ -61,6 +64,125 @@ class ExportsDeclarationSpec extends UnitSpec {
             declaration.parties.authorisationProcedureCodeChoice mustNot be(empty)
           }
         )
+    }
+  }
+
+  "ExportsDeclaration.createDiff" should {
+    val baseFieldPointer = ExportsDeclaration.pointer
+
+    "produce the expected ExportsDeclarationDiff instance" when {
+      "no differences exist between the two versions" in {
+        val declaration = aDeclaration()
+        declaration.createDiff(declaration) mustBe Seq.empty[AlteredField]
+      }
+
+      "the original version's MUCR field has a different value to this one" in {
+        val fieldPointer = s"${baseFieldPointer}.${MUCR.pointer}"
+        withClue("both declarations have Some values but values are different") {
+          val declaration = aDeclaration(withMUCR("latest"))
+          val originalValue = MUCR("original")
+          declaration.createDiff(declaration.copy(mucr = Some(originalValue))) mustBe Seq(
+            constructAlteredField(fieldPointer, originalValue, declaration.mucr.get)
+          )
+        }
+
+        withClue("the original version's MUCR field is None but this one has Some value") {
+          val declaration = aDeclaration(withMUCR("latest"))
+          val originalValue = None
+          declaration.createDiff(declaration.copy(mucr = originalValue)) mustBe Seq(
+            constructAlteredField(fieldPointer, originalValue, declaration.mucr)
+          )
+        }
+
+        withClue("the original version's MUCR field is Some but this one has None as its value") {
+          val declaration = aDeclaration()
+          val originalValue = Some(MUCR("original"))
+          declaration.createDiff(declaration.copy(mucr = originalValue)) mustBe Seq(
+            constructAlteredField(fieldPointer, originalValue, declaration.mucr)
+          )
+        }
+      }
+
+      "the original version's transport field has a different value to this one" in {
+        val fieldPointer = s"${baseFieldPointer}.${Transport.pointer}.${Transport.expressConsignmentPointer}"
+        val declaration = aDeclaration()
+        val originalValue = Transport(expressConsignment = Some(YesNoAnswer.yes))
+        declaration.createDiff(declaration.copy(transport = originalValue)) mustBe Seq(
+          constructAlteredField(fieldPointer, originalValue.expressConsignment, declaration.transport.expressConsignment)
+        )
+      }
+
+      "the original version's parties field has a different value to this one" in {
+        val fieldPointer = s"${baseFieldPointer}.${Parties.pointer}.${Parties.isEntryIntoDeclarantsRecordsPointer}"
+        val declaration = aDeclaration()
+        val originalValue = Parties(isEntryIntoDeclarantsRecords = Some(YesNoAnswer.yes))
+        declaration.createDiff(declaration.copy(parties = originalValue)) mustBe Seq(
+          constructAlteredField(fieldPointer, originalValue.isEntryIntoDeclarantsRecords, declaration.parties.isEntryIntoDeclarantsRecords)
+        )
+      }
+
+      "the original version's locations field has a different value to this one" in {
+        val fieldPointer = s"${baseFieldPointer}.${Locations.pointer}.${Locations.originationCountryPointer}"
+        val declaration = aDeclaration()
+        val originalValue = Locations(originationCountry = Some(Country(Some("GB"))))
+        declaration.createDiff(declaration.copy(locations = originalValue)) mustBe Seq(
+          constructAlteredField(fieldPointer, originalValue.originationCountry, declaration.locations.originationCountry)
+        )
+      }
+
+      "the original version's items field has a different value to this one" in {
+        val fieldPointer = s"${baseFieldPointer}.${ExportItem.pointer}.1"
+        val declaration = aDeclaration()
+        val originalValue = ExportItem("1", 1)
+        declaration.createDiff(declaration.copy(items = Seq(originalValue))) mustBe Seq(
+          AlteredField(fieldPointer, OriginalAndNewValues(Some(originalValue), None))
+        )
+      }
+
+      "the original version's totalNumberOfItems field has a different value to this one" in {
+        val fieldPointer = s"${baseFieldPointer}.${TotalNumberOfItems.pointer}"
+        val declaration = aDeclaration()
+        val originalValue = TotalNumberOfItems(totalAmountInvoiced = Some("1"))
+        declaration.createDiff(declaration.copy(totalNumberOfItems = Some(originalValue))) mustBe Seq(
+          constructAlteredField(fieldPointer, Some(originalValue), declaration.totalNumberOfItems)
+        )
+      }
+
+      "the original version's previousDocuments field has a different value to this one" in {
+        val fieldPointer = s"${baseFieldPointer}.${PreviousDocuments.pointer}"
+        val declaration = aDeclaration()
+        val originalValue = PreviousDocuments(Seq.empty)
+        declaration.createDiff(declaration.copy(previousDocuments = Some(originalValue))) mustBe Seq(
+          constructAlteredField(fieldPointer, Some(originalValue), declaration.previousDocuments)
+        )
+      }
+
+      "the original version's NatureOfTransaction field has a different value to this one" in {
+        val fieldPointer = s"${baseFieldPointer}.${NatureOfTransaction.pointer}"
+        withClue("both versions have Some values but values are different") {
+          val declaration = aDeclaration(withNatureOfTransaction("latest"))
+          val originalValue = NatureOfTransaction("original")
+          declaration.createDiff(declaration.copy(natureOfTransaction = Some(originalValue))) mustBe Seq(
+            constructAlteredField(fieldPointer, originalValue, declaration.natureOfTransaction.get)
+          )
+        }
+
+        withClue("the original version's NatureOfTransaction field is None but this one has Some value") {
+          val declaration = aDeclaration(withNatureOfTransaction("latest"))
+          val originalValue = None
+          declaration.createDiff(declaration.copy(natureOfTransaction = originalValue)) mustBe Seq(
+            constructAlteredField(fieldPointer, originalValue, declaration.natureOfTransaction)
+          )
+        }
+
+        withClue("the original version's NatureOfTransaction field is Some but this one has None as its value") {
+          val declaration = aDeclaration()
+          val originalValue = Some(NatureOfTransaction("original"))
+          declaration.createDiff(declaration.copy(natureOfTransaction = originalValue)) mustBe Seq(
+            constructAlteredField(fieldPointer, originalValue, declaration.natureOfTransaction)
+          )
+        }
+      }
     }
   }
 }

@@ -17,11 +17,17 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
+import uk.gov.hmrc.exports.models.FieldMapping
 
-case class MUCR(mucr: String) {
+case class MUCR(mucr: String) extends Ordered[MUCR] {
   def nonEmpty: Boolean = this.mucr.nonEmpty
+
+  override def compare(y: MUCR): Int = mucr.compareTo(y.mucr)
 }
 
-object MUCR {
+object MUCR extends FieldMapping {
   implicit val format: OFormat[MUCR] = Json.format[MUCR]
+
+  override val pointer: ExportsFieldPointer = "mucr"
 }
