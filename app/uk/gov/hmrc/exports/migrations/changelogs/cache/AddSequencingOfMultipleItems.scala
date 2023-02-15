@@ -33,6 +33,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.Enhance
 
 import java.time.Instant
 import scala.jdk.CollectionConverters._
+import scala.util.{Failure, Success, Try}
 
 class AddSequencingOfMultipleItems extends MigrationDefinition with Logging {
 
@@ -54,23 +55,35 @@ class AddSequencingOfMultipleItems extends MigrationDefinition with Logging {
 
     val batchSize = 100
 
-    collection
+    val result = collection
       .find(not(exists(maxSequenceIds)))
       .batchSize(batchSize)
       .asScala
-      .map { document =>
-        val declaration = Json.parse(document.toJson).as[ExportsDeclaration](AddSequencingOfMultipleItems.reads)
-        val maxSequenceIds = Map(
-          ContainerKey -> declaration.transport.containers.fold(0)(_.size),
-          RoutingCountryKey -> declaration.locations.routingCountries.size,
-          SealKey -> declaration.transport.containers.fold(0)(_.foldLeft(0)(_ + _.seals.size))
-        )
-        val meta = declaration.declarationMeta
-        val declarationWithSequenceIds = declaration.copy(declarationMeta = meta.copy(maxSequenceIds = maxSequenceIds))
+      .foldLeft(0) { (counter, document) =>
+        Try(Json.parse(document.toJson).as[ExportsDeclaration](AddSequencingOfMultipleItems.reads)) match {
+          case Failure(exc) =>
+            val id = document.get("_id")
+            val error = exc.getMessage
+            logger.error(s"Error parsing document with _id($id): $error")
+            counter + 1
 
-        val filter = and(equal("eori", declaration.eori), equal("id", declaration.id))
-        collection.replaceOne(filter, Document.parse(Json.toJson(declarationWithSequenceIds)(Mongo.format).toString))
+          case Success(declaration) =>
+            val maxSequenceIds = Map(
+              ContainerKey -> declaration.transport.containers.fold(0)(_.size),
+              RoutingCountryKey -> declaration.locations.routingCountries.size,
+              SealKey -> declaration.transport.containers.fold(0)(_.foldLeft(0)(_ + _.seals.size))
+            )
+            val meta = declaration.declarationMeta
+            val declarationWithSequenceIds = declaration.copy(declarationMeta = meta.copy(maxSequenceIds = maxSequenceIds))
+
+            val filter = and(equal("eori", declaration.eori), equal("id", declaration.id))
+            collection.replaceOne(filter, Document.parse(Json.toJson(declarationWithSequenceIds)(Mongo.format).toString))
+            counter
+        }
       }
+
+    if (result > 1) logger.error(s"$result documents could not be migrated due to parsing errors.")
+    else if (result == 1) logger.error(s"$result document could not be migrated due to parsing errors.")
   }
 
   logger.info(s"Finished applying '${migrationInformation.id}' db migration.")
