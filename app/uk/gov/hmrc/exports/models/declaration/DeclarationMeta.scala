@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.exports.models.declaration
 
-import play.api.libs.json.{Format, Json, OFormat}
+import play.api.libs.json._
+import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.sequenceIdPlaceholder
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
@@ -30,14 +31,35 @@ case class DeclarationMeta(
   createdDateTime: Instant,
   updatedDateTime: Instant,
   summaryWasVisited: Option[Boolean] = None,
-  readyForSubmission: Option[Boolean] = None
+  readyForSubmission: Option[Boolean] = None,
+  maxSequenceIds: Map[String, Int] = Map("dummy" -> sequenceIdPlaceholder)
 )
 
 object DeclarationMeta {
+
+  val readsForMaxSequenceIds: Reads[Map[String, Int]] =
+    (value: JsValue) =>
+      JsSuccess(value.as[Map[String, JsValue]].map { case (key, value) =>
+        key -> Integer.parseInt(value.toString())
+      })
+
+  val writesForMaxSequenceIds: Writes[Map[String, Int]] =
+    (map: Map[String, Int]) => JsObject(map.map { case (key, value) => key -> Json.toJson(value) })
+
+  implicit val formatMap: Format[Map[String, Int]] = Format(readsForMaxSequenceIds, writesForMaxSequenceIds)
+
   implicit val format: OFormat[DeclarationMeta] = Json.format[DeclarationMeta]
 
   object Mongo {
+
     implicit val formatInstant: Format[Instant] = MongoJavatimeFormats.instantFormat
     implicit val format: OFormat[DeclarationMeta] = Json.format[DeclarationMeta]
   }
+
+  // For reverse mapping
+  val sequenceIdPlaceholder = -1
+
+  val RoutingCountryKey = "RoutingCountries"
+  val ContainerKey = "Containers"
+  val SealKey = "Seals"
 }

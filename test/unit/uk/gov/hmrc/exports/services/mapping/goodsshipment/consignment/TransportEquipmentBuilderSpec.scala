@@ -28,7 +28,8 @@ class TransportEquipmentBuilderSpec extends UnitSpec {
         val builder = new TransportEquipmentBuilder
         val consignment: GoodsShipment.Consignment = new GoodsShipment.Consignment
 
-        val containers = Seq(Container("container-a", Seq(Seal("seal-1a"), Seal("seal-2a"))), Container("container-b", Seq(Seal("seal-b"))))
+        val containers =
+          Seq(Container(1, "container-a", Seq(Seal(1, "seal-1a"), Seal(2, "seal-2a"))), Container(2, "container-b", Seq(Seal(2, "seal-b"))))
 
         builder.buildThenAdd(containers, consignment)
 
@@ -59,7 +60,7 @@ class TransportEquipmentBuilderSpec extends UnitSpec {
         val builder = new TransportEquipmentBuilder
         val consignment: GoodsShipment.Consignment = new GoodsShipment.Consignment
 
-        val containers = Seq(Container("container-a", Seq.empty))
+        val containers = Seq(Container(1, "container-a", Seq.empty))
         builder.buildThenAdd(containers, consignment)
 
         consignment.getTransportEquipment.size() must be(1)

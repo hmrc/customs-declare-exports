@@ -21,46 +21,43 @@ import uk.gov.hmrc.exports.models.declaration.Country
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class IteneraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
+class ItineraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
-  "IteneraryBuilder" should {
+  "ItineraryBuilder" should {
 
     "build then add" when {
 
       "no destination countries" in {
-
         // Given
         val model = aDeclaration(withoutOriginationCountry(), withoutDestinationCountry(), withoutRoutingCountries())
         val consignment = new Declaration.Consignment()
 
         // When
-        new IteneraryBuilder().buildThenAdd(model, consignment)
+        new ItineraryBuilder().buildThenAdd(model, consignment)
 
         // Then
         consignment.getItinerary mustBe empty
       }
 
       "with empty destination country" in {
-
         // Given
         val model = aDeclaration(withoutOriginationCountry(), withEmptyDestinationCountry(), withoutRoutingCountries())
         val consignment = new Declaration.Consignment()
 
         // When
-        new IteneraryBuilder().buildThenAdd(model, consignment)
+        new ItineraryBuilder().buildThenAdd(model, consignment)
 
         // Then
         consignment.getItinerary mustBe empty
       }
 
       "multiple routing countries" in {
-
         // Given
         val model = aDeclaration(withRoutingCountries(Seq(Country(Some("GB")), Country(Some("FR")))))
         val consignment = new Declaration.Consignment()
 
         // When
-        new IteneraryBuilder().buildThenAdd(model, consignment)
+        new ItineraryBuilder().buildThenAdd(model, consignment)
 
         // Then
         consignment.getItinerary must have(size(2))
@@ -72,11 +69,11 @@ class IteneraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
       "no routing countries are provided and origin is GB" in {
         // Given
-        val model = aDeclaration(withRoutingCountries(Seq()), withOriginationCountry(Country(Some("GB"))))
+        val model = aDeclaration(withoutRoutingCountries(), withOriginationCountry(Country(Some("GB"))))
         val consignment = new Declaration.Consignment()
 
         // When
-        new IteneraryBuilder().buildThenAdd(model, consignment)
+        new ItineraryBuilder().buildThenAdd(model, consignment)
 
         // Then
         consignment.getItinerary must have(size(1))
@@ -86,11 +83,11 @@ class IteneraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
       "no routing countries are provided and origin is not GB" in {
         // Given
-        val model = aDeclaration(withRoutingCountries(Seq()), withOriginationCountry(Country(Some("FR"))))
+        val model = aDeclaration(withoutRoutingCountries(), withOriginationCountry(Country(Some("FR"))))
         val consignment = new Declaration.Consignment()
 
         // When
-        new IteneraryBuilder().buildThenAdd(model, consignment)
+        new ItineraryBuilder().buildThenAdd(model, consignment)
 
         // Then
         consignment.getItinerary must have(size(0))

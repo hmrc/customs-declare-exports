@@ -44,7 +44,8 @@ class AddDeclarationMetaEntity extends MigrationDefinition with Logging {
       id = s"CEDS-4371 Add DeclarationMeta entity. Move several declaration metadata fields inside it.",
       order = 16,
       author = "Tom Robinson",
-      runAlways = false
+      // Can be removed (default is false) once this migration is deployed to all envs (production & integration included)
+      runAlways = true
     )
 
   override def migrationFunction(db: MongoDatabase): Unit = {

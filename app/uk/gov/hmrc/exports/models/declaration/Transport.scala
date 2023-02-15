@@ -62,46 +62,46 @@ case class Transport(
 
   def isMeansOfTransportOnDepartureDefined: Boolean = meansOfTransportOnDepartureType.exists(_ != Transport.optionNone)
 
-  def createDiff(original: Transport, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
+  def createDiff(original: Transport, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
     Seq(
       compareDifference(
         original.expressConsignment,
         expressConsignment,
-        combinePointers(pointerString, Transport.expressConsignmentPointer, sequenceNbr)
+        combinePointers(pointerString, Transport.expressConsignmentPointer, sequenceId)
       ),
-      compareDifference(original.transportPayment, transportPayment, combinePointers(pointerString, TransportPayment.pointer, sequenceNbr)),
+      compareDifference(original.transportPayment, transportPayment, combinePointers(pointerString, TransportPayment.pointer, sequenceId)),
       compareDifference(
         original.borderModeOfTransportCode,
         borderModeOfTransportCode,
-        combinePointers(pointerString, TransportLeavingTheBorder.pointer, sequenceNbr)
+        combinePointers(pointerString, TransportLeavingTheBorder.pointer, sequenceId)
       ),
       compareStringDifference(
         original.meansOfTransportOnDepartureType,
         meansOfTransportOnDepartureType,
-        combinePointers(pointerString, Transport.transportOnDeparturePointer, sequenceNbr)
+        combinePointers(pointerString, Transport.transportOnDeparturePointer, sequenceId)
       ),
       compareStringDifference(
         original.meansOfTransportOnDepartureIDNumber,
         meansOfTransportOnDepartureIDNumber,
-        combinePointers(pointerString, Transport.transportOnDepartureIdPointer, sequenceNbr)
+        combinePointers(pointerString, Transport.transportOnDepartureIdPointer, sequenceId)
       ),
       compareDifference(
         original.transportCrossingTheBorderNationality,
         transportCrossingTheBorderNationality,
-        combinePointers(pointerString, TransportCountry.pointer, sequenceNbr)
+        combinePointers(pointerString, TransportCountry.pointer, sequenceId)
       ),
       compareStringDifference(
         original.meansOfTransportCrossingTheBorderType,
         meansOfTransportCrossingTheBorderType,
-        combinePointers(pointerString, Transport.transportCrossingTheBorderPointer, sequenceNbr)
+        combinePointers(pointerString, Transport.transportCrossingTheBorderPointer, sequenceId)
       ),
       compareStringDifference(
         original.meansOfTransportCrossingTheBorderIDNumber,
         meansOfTransportCrossingTheBorderIDNumber,
-        combinePointers(pointerString, Transport.transportCrossingTheBorderIdPointer, sequenceNbr)
+        combinePointers(pointerString, Transport.transportCrossingTheBorderIdPointer, sequenceId)
       )
     ).flatten ++
-      createDiff(original.containers, containers, combinePointers(pointerString, Container.pointer, sequenceNbr))
+      createDiff(original.containers, containers, combinePointers(pointerString, Container.pointer, sequenceId))
 }
 
 object Transport extends FieldMapping {

@@ -35,10 +35,10 @@ class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
   private val (client, mongoDatabase) = createMongoClient
   private val db = client.getDatabase(mongoDatabase)
 
-  private val lockMaxTries = 10
   private val lockMaxWaitMillis = minutesToMillis(5)
   private val lockAcquiredForMillis = minutesToMillis(3)
 
+  private val lockMaxTries = 10
   private val lockManagerConfig = LockManagerConfig(lockMaxTries, lockMaxWaitMillis, lockAcquiredForMillis)
 
   private val migrationsRegistry = MigrationsRegistry()
@@ -52,6 +52,7 @@ class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
     .register(new RemoveMeansOfTransportCrossingTheBorderNationality())
     .register(new AddDeclarationMetaEntity())
     .register(new AddSubmissionFieldsForAmend())
+    .register(new AddSequencingOfMultipleItems())
     .register(new AddActionFieldsForAmend())
 
   ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute()

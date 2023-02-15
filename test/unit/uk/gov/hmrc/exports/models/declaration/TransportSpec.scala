@@ -30,7 +30,9 @@ class TransportSpec extends UnitSpec {
     val json = Json.obj(
       "expressConsignment" -> Json.obj("answer" -> "Yes"),
       "transportPayment" -> Json.obj("paymentMethod" -> "payment-method"),
-      "containers" -> Json.arr(Json.obj("id" -> "container-id", "seals" -> Json.arr(Json.obj("id" -> "seal-id")))),
+      "containers" -> Json.arr(
+        Json.obj("sequenceId" -> 1, "id" -> "container-id", "seals" -> Json.arr(Json.obj("sequenceId" -> 1, "id" -> "seal-id")))
+      ),
       "borderModeOfTransportCode" -> Json.obj("code" -> "3"),
       "meansOfTransportOnDepartureType" -> "means-of-transport-on-departure",
       "meansOfTransportOnDepartureIDNumber" -> "means-of-transport-on-departure-id-number",
@@ -42,7 +44,7 @@ class TransportSpec extends UnitSpec {
     val transport = Transport(
       expressConsignment = Some(YesNoAnswer.yes),
       transportPayment = Some(TransportPayment(paymentMethod = "payment-method")),
-      containers = Some(Seq(Container(id = "container-id", seals = Seq(Seal(id = "seal-id"))))),
+      containers = Some(Seq(Container(1, "container-id", Seq(Seal(1, "seal-id"))))),
       borderModeOfTransportCode = Some(TransportLeavingTheBorder(Some(ModeOfTransportCode.Road))),
       meansOfTransportOnDepartureType = Some("means-of-transport-on-departure"),
       meansOfTransportOnDepartureIDNumber = Some("means-of-transport-on-departure-id-number"),
@@ -52,16 +54,12 @@ class TransportSpec extends UnitSpec {
     )
 
     "convert Transport object to JSON" in {
-
       val resultJson = Transport.format.writes(transport)
-
       resultJson mustBe json
     }
 
     "convert JSON to Transport object" in {
-
       val resultTransport = Transport.format.reads(json)
-
       resultTransport mustBe JsSuccess(transport)
     }
   }
@@ -141,8 +139,8 @@ class TransportSpec extends UnitSpec {
       "the original version's containers field has a different value to this one" in {
         val fieldPointer = s"${Transport.pointer}.${Container.pointer}.1.id"
         withClue("both versions have Some non-empty containers values but values are different") {
-          val transport = Transport(containers = Some(Seq(Container("latest", Seq.empty[Seal]))))
-          val originalValue = Seq(Container("original", Seq.empty[Seal]))
+          val transport = Transport(containers = Some(Seq(Container(1, "latest", Seq.empty[Seal]))))
+          val originalValue = Seq(Container(1, "original", Seq.empty[Seal]))
           transport.createDiff(transport.copy(containers = Some(originalValue)), Transport.pointer) mustBe Seq(
             constructAlteredField(fieldPointer, originalValue(0).id, (transport.containers.get)(0).id)
           )

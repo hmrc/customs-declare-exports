@@ -24,18 +24,18 @@ import uk.gov.hmrc.exports.services.DiffTools.{combinePointers, compareStringDif
 
 case class PreviousDocument(documentType: String, documentReference: String, goodsItemIdentifier: Option[String])
     extends DiffTools[PreviousDocument] {
-  def createDiff(original: PreviousDocument, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
+  def createDiff(original: PreviousDocument, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
     Seq(
-      compareStringDifference(original.documentType, documentType, combinePointers(pointerString, PreviousDocument.documentTypePointer, sequenceNbr)),
+      compareStringDifference(original.documentType, documentType, combinePointers(pointerString, PreviousDocument.documentTypePointer, sequenceId)),
       compareStringDifference(
         original.documentReference,
         documentReference,
-        combinePointers(pointerString, PreviousDocument.documentReferencePointer, sequenceNbr)
+        combinePointers(pointerString, PreviousDocument.documentReferencePointer, sequenceId)
       ),
       compareStringDifference(
         original.goodsItemIdentifier,
         goodsItemIdentifier,
-        combinePointers(pointerString, PreviousDocument.goodsItemIdentifierPointer, sequenceNbr)
+        combinePointers(pointerString, PreviousDocument.goodsItemIdentifierPointer, sequenceId)
       )
     ).flatten
 }
@@ -50,8 +50,8 @@ object PreviousDocument extends FieldMapping {
 }
 
 case class PreviousDocuments(documents: Seq[PreviousDocument]) extends DiffTools[PreviousDocuments] {
-  def createDiff(original: PreviousDocuments, pointerString: ExportsFieldPointer, sequenceNbr: Option[Int] = None): ExportsDeclarationDiff =
-    createDiff(original.documents, documents, combinePointers(pointerString, PreviousDocuments.pointer, sequenceNbr))
+  def createDiff(original: PreviousDocuments, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
+    createDiff(original.documents, documents, combinePointers(pointerString, PreviousDocuments.pointer, sequenceId))
 }
 
 object PreviousDocuments extends FieldMapping {

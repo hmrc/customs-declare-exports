@@ -30,7 +30,7 @@ class ExportItemSpec extends UnitSpec {
       }
 
       "the original version's sequenceId field has a different value to this one" in {
-        val fieldPointer = s"${baseFieldPointer}.${ExportItem.sequenceNbrPointer}"
+        val fieldPointer = s"${baseFieldPointer}.${ExportItem.sequenceIdPointer}"
         val item = ExportItem("latestId", sequenceId = 1)
         val originalValue = 2
         item.createDiff(item.copy(sequenceId = originalValue), baseFieldPointer) mustBe Seq(

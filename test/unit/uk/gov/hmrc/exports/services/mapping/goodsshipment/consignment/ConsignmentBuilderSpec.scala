@@ -53,7 +53,7 @@ class ConsignmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
               withType(declarationType),
               withBorderTransport(Some("40"), Some("1234567878ui")),
               withTransportCountry(Some("Portugal")),
-              withContainerData(Container("container", Seq(Seal("seal1"), Seal("seal2"))))
+              withContainerData(Container(1, "container", Seq(Seal(1, "seal1"), Seal(2, "seal2"))))
             )
 
           val goodsShipment: Declaration.GoodsShipment = new Declaration.GoodsShipment

@@ -200,6 +200,24 @@ class TransportParserSpec extends UnitSpec {
         result.toOption.get.meansOfTransportCrossingTheBorderIDNumber.get mustBe expectedValue
       }
     }
+
+    "initialise declarationMeta.maxSequenceId with the number of Containers and Seals parsed" in {
+      val transportXml = containersXml(Map("1" -> Seq("seal1", "seal2"), "2" -> Seq("seal3", "seal4")))
+
+      val result = new TransportParser(new ContainersParser()).parse(transportXml)
+
+      val containers = result.toOption.get.containers.get
+      containers.size mustBe 2
+      containers.head.sequenceId mustBe 1
+      containers.head.seals.size mustBe 2
+      containers.head.seals.head.sequenceId mustBe 1
+      containers.head.seals.last.sequenceId mustBe 2
+
+      containers.last.sequenceId mustBe 2
+      containers.last.seals.size mustBe 2
+      containers.last.seals.head.sequenceId mustBe 3
+      containers.last.seals.last.sequenceId mustBe 4
+    }
   }
 
   private def borderModeOfTransportCodeXml(inputValue: Option[String] = None): Elem =
@@ -311,6 +329,35 @@ class TransportParserSpec extends UnitSpec {
         </ns3:Consignment>
       }.getOrElse(NodeSeq.Empty)
     }
+      </ns3:Declaration>
+    </meta>
+
+  private def containersXml(transportStructure: Map[String, Seq[String]]): Elem =
+    <meta>
+      <ns3:Declaration>
+        <ns3:GoodsShipment>
+          <ns3:Consignment>
+            {
+      transportStructure.map { case (id, seals) =>
+        <ns3:TransportEquipment>
+              <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+              <ns3:ID>
+                {id}
+              </ns3:ID>{
+          seals.map { sealId =>
+            <ns3:Seal>
+                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+                <ns3:ID>
+                  {sealId}
+                </ns3:ID>
+              </ns3:Seal>
+          }
+        }
+            </ns3:TransportEquipment>
+      }
+    }
+          </ns3:Consignment>
+        </ns3:GoodsShipment>
       </ns3:Declaration>
     </meta>
 }
