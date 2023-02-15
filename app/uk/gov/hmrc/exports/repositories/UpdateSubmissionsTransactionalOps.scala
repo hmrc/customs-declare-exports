@@ -22,8 +22,8 @@ import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, NotificationSummary, Submission, SubmissionRequest}
-import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
+import uk.gov.hmrc.exports.models.declaration.submissions._
+import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.{notificationsToAction, updateActionWithNotificationSummaries}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.transaction.{TransactionConfiguration, Transactions}
 
@@ -68,12 +68,13 @@ class UpdateSubmissionsTransactionalOps @Inject() (
     notifications: Seq[ParsedNotification],
     submission: Submission
   ): Future[Option[Submission]] = {
+
     val index = submission.actions.indexWhere(_.id == actionId)
     val action = submission.actions(index)
     val seed = action.notifications.fold(Seq.empty[NotificationSummary])(identity)
 
     val (actionWithAllNotificationSummaries, notificationSummaries) =
-      updateActionWithNotificationSummaries(action, submission.actions, notifications, seed)
+      updateActionWithNotificationSummaries(notificationsToAction(action), submission.actions, notifications, seed)
 
     if (action.requestType == SubmissionRequest)
       updateSubmissionRequest(
@@ -83,8 +84,10 @@ class UpdateSubmissionsTransactionalOps @Inject() (
         notificationSummaries.head,
         submission.actions.updated(index, actionWithAllNotificationSummaries)
       )
-    else
+    else if (action.requestType == CancellationRequest)
       updateCancellationRequest(session, actionId, submission.actions.updated(index, actionWithAllNotificationSummaries))
+    else Future.successful(None)
+
   }
 
   private def updateCancellationRequest(session: ClientSession, actionId: String, actions: Seq[Action]): Future[Option[Submission]] = {
@@ -116,7 +119,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
 object ActionWithNotificationSummariesHelper {
 
   def updateActionWithNotificationSummaries(
-    action: Action,
+    notificationsToAction: Seq[NotificationSummary] => Action,
     existingActions: Seq[Action],
     notifications: Seq[ParsedNotification],
     seed: Seq[NotificationSummary]
@@ -128,9 +131,11 @@ object ActionWithNotificationSummariesHelper {
     // Parsed notifications need to be sorted (asc), by dateTimeIssued, due to the (ACCEPTED => GOODS_ARRIVED_MESSAGE) condition
     val notificationSummaries = notifications.sorted.foldLeft(seed)(prependNotificationSummary)
 
-    // The resulting notificationSummaries are sorted again, this time (dsc), since it's not sure
-    // if they are more recent or not of the (maybe) existing notificationSummaries of the action.
-    val actionWithAllNotificationSummaries = action.copy(notifications = Some(notificationSummaries.sorted.reverse))
-    (actionWithAllNotificationSummaries, notificationSummaries)
+    (notificationsToAction(notificationSummaries.sorted.reverse), notificationSummaries)
   }
+
+  def notificationsToAction(action: Action): Seq[NotificationSummary] => Action = { notificationSummaries =>
+    action.copy(notifications = Some(notificationSummaries))
+  }
+
 }

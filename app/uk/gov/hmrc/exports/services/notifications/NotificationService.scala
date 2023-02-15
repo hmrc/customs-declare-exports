@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.services.notifications
 
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionRequest}
-import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, UnparsedNotificationWorkItemRepository}
+import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, UnparsedNotificationWorkItemRepository}
 import uk.gov.hmrc.exports.services.notifications.receiptactions._
 
 import javax.inject.{Inject, Singleton}
@@ -27,7 +27,6 @@ import scala.xml.NodeSeq
 
 @Singleton
 class NotificationService @Inject() (
-  submissionRepository: SubmissionRepository,
   unparsedNotificationWorkItemRepository: UnparsedNotificationWorkItemRepository,
   notificationRepository: ParsedNotificationRepository,
   notificationReceiptActionsScheduler: NotificationReceiptActionsScheduler

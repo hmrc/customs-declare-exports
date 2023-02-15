@@ -81,20 +81,31 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       "ducr",
       None,
       None,
-      List(Action(id = "conv-id", requestType = CancellationRequest, notifications = notification)),
+      List(Action(id = "conv-id", requestType = CancellationRequest, notifications = notification, decId = Some("id"), versionNo = 1)),
       latestDecId = "id"
     )
     val cancellation = SubmissionCancellation("id", "ref-id", "mrn", "description", "reason")
 
-    "submit and delegate to repository" when {
-      "submission exists" in {
-        when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
-        when(wcoMapperService.toXml(any())).thenReturn("xml")
-        when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
-        when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
-        when(submissionRepository.addAction(any[String](), any())).thenReturn(Future.successful(Some(submission)))
+    "submit and delegate to repository and iterates version number in cancel action from submission" when {
+      "submission exists" which {
+        "copies version number to cancel action from submission" in {
+          when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
+          when(wcoMapperService.toXml(any())).thenReturn("xml")
+          when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
+          when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
 
-        submissionService.cancel(eori, cancellation).futureValue mustBe CancellationRequestSent
+          val captor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])
+
+          when(submissionRepository.addAction(any[String](), any[Action]())).thenReturn(Future.successful(Some(submission)))
+
+          submissionService.cancel(eori, cancellation).futureValue mustBe CancellationRequestSent
+
+          verify(submissionRepository)
+            .addAction(any[String](), captor.capture())
+
+          captor.getValue.decId mustBe Some(submission.latestDecId)
+          captor.getValue.versionNo mustBe submission.latestVersionNo
+        }
       }
 
       "submission is missing" in {
@@ -244,7 +255,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
       val dateTimeIssued = ZonedDateTime.now(ZoneOffset.UTC)
 
-      val newAction = Action(id = "conv-id", requestType = SubmissionRequest, requestTimestamp = dateTimeIssued)
+      val newAction =
+        Action(id = "conv-id", requestType = SubmissionRequest, requestTimestamp = dateTimeIssued, decId = Some(declaration.id), versionNo = 1)
 
       val submission = Submission(declaration, "lrn", "mrn", newAction)
 

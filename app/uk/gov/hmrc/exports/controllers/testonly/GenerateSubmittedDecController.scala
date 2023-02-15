@@ -76,28 +76,26 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
   case class CreateSubmitDecDocumentsRequest(eori: String, lrn: Option[String], ducr: Option[String], receivedOnly: Option[Int])
 
   def createSubmission(declaration: ExportsDeclaration, parsedNotifications: Seq[ParsedNotification]) = {
-    val tempAction = SubmissionAction(
-      id = parsedNotifications.head.actionId,
-      requestType = SubmissionRequest,
-      requestTimestamp = ZonedDateTime.now(ZoneId.of("UTC"))
-    )
-
-    val (action, notificationSummaries) =
-      updateActionWithNotificationSummaries(tempAction, Seq.empty[submissions.Action], parsedNotifications, Seq.empty[NotificationSummary])
-    val notificationSummary = notificationSummaries.head
 
     val uuid: String = UUID.randomUUID.toString
-    Submission(
-      uuid,
-      eori = declaration.eori,
-      lrn = declaration.consignmentReferences.flatMap(_.lrn).getOrElse(""),
-      mrn = declaration.consignmentReferences.flatMap(_.mrn),
-      ducr = declaration.consignmentReferences.flatMap(_.ducr).map(_.ducr).getOrElse(""),
-      latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
-      enhancedStatusLastUpdated = Some(notificationSummary.dateTimeIssued),
-      actions = List(action),
-      latestDecId = uuid
-    )
+
+    val notificationsToAction: Seq[NotificationSummary] => SubmissionAction = { notifications =>
+      SubmissionAction(
+        id = parsedNotifications.head.actionId,
+        requestType = SubmissionRequest,
+        requestTimestamp = ZonedDateTime.now(ZoneId.of("UTC")),
+        notifications = Some(notifications),
+        decId = Some(uuid),
+        versionNo = 1
+      )
+    }
+
+    val (action, notificationSummaries) =
+      updateActionWithNotificationSummaries(notificationsToAction, Seq.empty[submissions.Action], parsedNotifications, Seq.empty[NotificationSummary])
+    val notificationSummary = notificationSummaries.head
+
+    Submission(uuid, declaration, notificationSummary, action = action)
+
   }
 
   def createNotification(
@@ -187,7 +185,6 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
       withReadyForSubmission()
     )
   }
-  // scalastyle:on
 
   private def randomLrn() = randomAlphanumericString(22)
   private def randomMRN() = s"${Random.nextInt(9)}${Random.nextInt(9)}GB${randomAlphanumericString(13)}"
@@ -213,4 +210,5 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
 
   private def randomStatus(statuses: List[SubmissionStatus] = submittedStatuses): SubmissionStatus =
     statuses(Random.nextInt(statuses.length))
+
 }

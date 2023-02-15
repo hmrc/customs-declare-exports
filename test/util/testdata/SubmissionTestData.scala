@@ -31,13 +31,13 @@ object SubmissionTestData {
   private val instant1971 = ZonedDateTime.of(1971, 1, 1, 1, 1, 0, 0, utc)
   private val instant1972 = ZonedDateTime.of(1972, 1, 1, 1, 1, 0, 0, utc)
 
-  lazy val action = Action(id = actionId, requestType = SubmissionRequest)
+  lazy val action = Action(id = actionId, requestType = SubmissionRequest, decId = Some(uuid), versionNo = 1)
 
-  lazy val action_2 = Action(id = actionId_2, requestType = SubmissionRequest, requestTimestamp = instant1971)
+  lazy val action_2 = Action(id = actionId_2, requestType = SubmissionRequest, requestTimestamp = instant1971, decId = Some(uuid), versionNo = 1)
 
-  lazy val action_3 = Action(id = actionId_3, requestType = SubmissionRequest, requestTimestamp = instant1972)
+  lazy val action_3 = Action(id = actionId_3, requestType = SubmissionRequest, requestTimestamp = instant1972, decId = Some(uuid), versionNo = 1)
 
-  lazy val actionCancellation = Action(actionId, CancellationRequest, action.requestTimestamp.plus(3, HOURS))
+  lazy val actionCancellation = Action(actionId, CancellationRequest, action.requestTimestamp.plus(3, HOURS), decId = Some(uuid), versionNo = 1)
 
   lazy val uuid: String = UUID.randomUUID.toString
   lazy val uuid_2: String = UUID.randomUUID.toString

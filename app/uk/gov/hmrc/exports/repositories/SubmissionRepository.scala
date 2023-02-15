@@ -49,7 +49,7 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
 
   def addAction(mrn: String, newAction: Action): Future[Option[Submission]] = {
     val filter = Json.obj("mrn" -> mrn)
-    val update = Json.obj("$addToSet" -> Json.obj("actions" -> newAction))
+    val update = Json.obj("$addToSet" -> Json.obj("actions" -> Json.toJson(newAction)))
     findOneAndUpdate(filter, update)
   }
 

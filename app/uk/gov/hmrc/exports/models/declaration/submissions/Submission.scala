@@ -43,4 +43,17 @@ object Submission {
 
   def apply(declaration: ExportsDeclaration, lrn: String, ducr: String, action: Action): Submission =
     new Submission(declaration.id, declaration.eori, lrn, None, ducr, actions = List(action), latestDecId = declaration.id)
+  def apply(uuid: String, declaration: ExportsDeclaration, notificationSummary: NotificationSummary, action: Action): Submission =
+    new Submission(
+      uuid,
+      eori = declaration.eori,
+      lrn = declaration.consignmentReferences.flatMap(_.lrn).getOrElse(""),
+      mrn = declaration.consignmentReferences.flatMap(_.mrn),
+      ducr = declaration.consignmentReferences.flatMap(_.ducr).map(_.ducr).getOrElse(""),
+      latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
+      enhancedStatusLastUpdated = Some(notificationSummary.dateTimeIssued),
+      actions = List(action),
+      latestDecId = uuid
+    )
+
 }

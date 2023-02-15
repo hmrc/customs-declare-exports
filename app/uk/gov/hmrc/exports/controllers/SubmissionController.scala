@@ -64,11 +64,9 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
   }
 
   def find(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    submissionService.findSubmission(request.eori.value, id).map { maybeSub =>
-      maybeSub match {
-        case Some(submission) => Ok(submission)
-        case _                => NotFound
-      }
+    submissionService.findSubmission(request.eori.value, id).map {
+      case Some(submission) => Ok(submission)
+      case _                => NotFound
     }
   }
 

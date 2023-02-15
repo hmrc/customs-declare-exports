@@ -178,7 +178,6 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
           "the enhanced status be updated with the SubmissionRequest action's data only" in {
             val submission = Json.parse(submissionWithoutNotificationSummaries).as[Submission]
             submissionRepository.insertOne(submission).futureValue
-
             parseAndSaveAction.save(List(submissionNotification)).futureValue
             val submissions = parseAndSaveAction.save(List(cancellationNotification)).futureValue
             submissions.size mustBe 1
@@ -220,10 +219,12 @@ object ParseAndSaveActionISpec {
       NotificationDetails(mrn = mrn, dateTimeIssued = ZonedDateTime.parse(submissionDateTime), status = SubmissionStatus.REJECTED, errors = errors)
   )
 
+  val id: String = "9f324b20-71bf-4c70-ae8d-aa53f81a99ff"
+
   val submissionWithoutNotificationSummaries =
     s"""{
       |  "_id": "62b088b16a76c36b550804ab",
-      |  "uuid": "9f324b20-71bf-4c70-ae8d-aa53f81a99ff",
+      |  "uuid": "$id",
       |  "eori": "GB239355053000",
       |  "lrn": "QSLRN2341102",
       |  "ducr": "8GB123456261385-101SHIP3",
@@ -231,12 +232,16 @@ object ParseAndSaveActionISpec {
       |    {
       |      "id": "914083cb-6647-4476-aedb-6edf45616b3d",
       |      "requestType": "SubmissionRequest",
-      |      "requestTimestamp": "2022-06-20T14:48:17.545Z[UTC]"
+      |      "requestTimestamp": "2022-06-20T14:48:17.545Z[UTC]",
+      |      "decId" : "$id",
+      |      "versionNo" : 1
       |    },
       |    {
       |      "id": "7c7faf96-a65e-408d-a8f7-7cb181f696b6",
       |      "requestType": "CancellationRequest",
-      |      "requestTimestamp": "2022-06-20T14:52:13.999Z[UTC]"
+      |      "requestTimestamp": "2022-06-20T14:52:13.999Z[UTC]",
+      |      "decId" : "62b088b16a76c36b550804ab",
+      |      "versionNo" : 1
       |    }
       |  ],
       |  "latestDecId" : "62b088b16a76c36b550804ab",
@@ -266,7 +271,9 @@ object ParseAndSaveActionISpec {
       |          "dateTimeIssued": "${submissionDateTime}",
       |          "enhancedStatus": "ERRORS"
       |        }
-      |      ]
+      |      ],
+      |      "decId" : "$id",
+      |      "versionNo" : 1
       |    },
       |    {
       |      "id": "${cancellationActionId}",
@@ -278,7 +285,9 @@ object ParseAndSaveActionISpec {
       |          "dateTimeIssued": "${cancellationDateTime}",
       |          "enhancedStatus": "EXPIRED_NO_DEPARTURE"
       |        }
-      |      ]
+      |      ],
+      |      "decId" : "62b088b16a76c36b550804ab",
+      |      "versionNo" : 1
       |    }
       |  ],
       |  "latestDecId" : "62b088b16a76c36b550804ab",

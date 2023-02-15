@@ -25,7 +25,9 @@ case class Action(
   id: String,
   requestType: RequestType,
   requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")),
-  notifications: Option[Seq[NotificationSummary]] = None
+  notifications: Option[Seq[NotificationSummary]] = None,
+  decId: Option[String],
+  versionNo: Int
 ) {
   val latestNotificationSummary: Option[NotificationSummary] =
     notifications.flatMap(_.lastOption)
@@ -43,5 +45,8 @@ object Action {
     ((__ \ "id").read[String] and
       (__ \ "requestType").read[RequestType] and
       ((__ \ "requestTimestamp").read[ZonedDateTime] or (__ \ "requestTimestamp").read[ZonedDateTime](readLocalDateTimeFromString)) and
-      (__ \ "notifications").readNullable[Seq[NotificationSummary]])(Action.apply _)
+      (__ \ "notifications").readNullable[Seq[NotificationSummary]] and
+      (__ \ "decId").readNullable[String] and
+      (__ \ "versionNo").read[Int])(Action.apply _)
+
 }

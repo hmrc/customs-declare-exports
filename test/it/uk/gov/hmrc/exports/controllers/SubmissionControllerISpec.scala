@@ -105,6 +105,8 @@ object SubmissionControllerISpec extends IntegrationTestSpec {
        |      "id" : "$actionId",
        |      "requestType" : "SubmissionRequest",
        |      "requestTimestamp" : "$now",
+       |      "versionNo" : 1,
+       |      "decId" : "$id",
        |      "notifications" : [
        |        {
        |          "notificationId" : "8ce6ea97-cd82-41e7-90b3-e016c29e8768",
