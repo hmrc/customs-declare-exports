@@ -51,8 +51,8 @@ class DeclarationController @Inject() (
   def findOrCreateDraftForAmend(submissionId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     declarationService.findOrCreateDraftForAmend(request.eori, submissionId).map {
       case Some(DeclarationService.CREATED -> declarationId) => Created(JsString(declarationId))
-      case Some(DeclarationService.FOUND -> id) => Ok(JsString(id))
-      case _ => NotFound
+      case Some(DeclarationService.FOUND -> id)              => Ok(JsString(id))
+      case _                                                 => NotFound
     }
   }
 

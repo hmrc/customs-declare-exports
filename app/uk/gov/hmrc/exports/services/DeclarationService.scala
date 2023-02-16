@@ -64,7 +64,7 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
 
     submissionRepository.findById(eori.value, submissionId).flatMap {
       case Some(submission) => findOrCreateDraftFfromSubmission(submission)
-      case _ => Future.successful(None)
+      case _                => Future.successful(None)
     }
   }
 
