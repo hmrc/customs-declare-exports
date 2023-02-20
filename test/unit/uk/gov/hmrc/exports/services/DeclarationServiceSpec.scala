@@ -22,6 +22,7 @@ import play.api.libs.json.JsValue
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.DeclarationService.{CREATED, FOUND}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
@@ -85,6 +86,34 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
       given(declarationRepository.findOne(Eori("eori"), "id")).willReturn(Future.successful(Some(declaration)))
 
       service.findOne(Eori("eori"), "id").futureValue mustBe Some(declaration)
+    }
+  }
+
+  "findOrCreateDraftForAmend" should {
+    val newId = "newId"
+    val submissionId = "submissionId"
+    val submission = Submission("id", "eori", "lrn", None, "ducr", latestDecId = "parentId")
+
+    "return a value indicating that a draft declaration with 'parentDeclarationId' equal to the given Submission's 'latestDecId' was found" in {
+      when(submissionRepository.findById(any(), any())).thenReturn(Future.successful(Some(submission)))
+      when(declarationRepository.findOne(any[JsValue]())).thenReturn(Future.successful(Some(aDeclaration(withId(newId)))))
+      service.findOrCreateDraftForAmend(Eori("eori"), submissionId)(global).futureValue mustBe Some(FOUND -> newId)
+    }
+
+    "return a value indicating that a draft declaration with 'parentDeclarationId' equal to the given Submission's 'latestDecId' was created" in {
+      when(submissionRepository.findById(any(), any())).thenReturn(Future.successful(Some(submission)))
+      when(declarationRepository.findOne(any[JsValue]())).thenReturn(Future.successful(None))
+
+      val declaration = aDeclaration(withId(newId))
+      when(declarationRepository.get(any[JsValue]())).thenReturn(Future.successful(declaration))
+      when(declarationRepository.create(any[ExportsDeclaration]())).thenReturn(Future.successful(declaration))
+
+      service.findOrCreateDraftForAmend(Eori("eori"), submissionId)(global).futureValue.get._1 mustBe CREATED
+    }
+
+    "return None when a submission with the given id was not found" in {
+      when(submissionRepository.findById(any(), any())).thenReturn(Future.successful(None))
+      service.findOrCreateDraftForAmend(Eori("eori"), submissionId)(global).futureValue mustBe None
     }
   }
 

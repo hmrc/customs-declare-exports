@@ -48,13 +48,19 @@ class DeclarationController @Inject() (
       .map(declaration => Created(declaration))
   }
 
+  def findOrCreateDraftForAmend(submissionId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    declarationService.findOrCreateDraftForAmend(request.eori, submissionId).map {
+      case Some(DeclarationService.CREATED -> declarationId) => Created(JsString(declarationId))
+      case Some(DeclarationService.FOUND -> id)              => Ok(JsString(id))
+      case _                                                 => NotFound
+    }
+  }
+
   def findOrCreateDraftFromParent(parentId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    declarationService.findOrCreateDraftFromParent(request.eori, parentId).map { result =>
-      result match {
-        case (DeclarationService.CREATED, id) => Created(JsString(id))
-        /* FOUND */
-        case (_, id) => Ok(JsString(id))
-      }
+    declarationService.findOrCreateDraftFromParent(request.eori, parentId).map {
+      case (DeclarationService.CREATED, id) => Created(JsString(id))
+      /* FOUND */
+      case (_, id) => Ok(JsString(id))
     }
   }
 
