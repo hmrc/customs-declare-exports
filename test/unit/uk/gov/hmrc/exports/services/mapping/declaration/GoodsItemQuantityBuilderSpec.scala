@@ -24,7 +24,6 @@ class GoodsItemQuantityBuilderSpec extends UnitSpec with ExportsDeclarationBuild
 
   "GoodsItemQuantityBuilder" should {
     "correctly map to the WCO-DEC Type Goods Item Quantity" in {
-
       val builder = new GoodsItemQuantityBuilder
 
       val declaration = new Declaration
@@ -32,7 +31,6 @@ class GoodsItemQuantityBuilderSpec extends UnitSpec with ExportsDeclarationBuild
       builder.buildThenAdd(model, declaration)
 
       declaration.getGoodsItemQuantity.getValue must be(new java.math.BigDecimal(6))
-
     }
   }
 }

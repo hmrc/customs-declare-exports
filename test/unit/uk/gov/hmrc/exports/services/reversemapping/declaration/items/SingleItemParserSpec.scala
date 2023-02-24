@@ -61,7 +61,7 @@ class SingleItemParserSpec extends UnitSpec {
 
     "return Right with ExportItem containing values returned by sub-parsers" when {
       "all sub-parsers return Right" in {
-        val expectedPackageInformation = PackageInformation("1", Some("nOP"), Some(3), Some("sM"))
+        val expectedPackageInformation = PackageInformation(1, "1", Some("nOP"), Some(3), Some("sM"))
         when(packageInformationParser.parse(any[NodeSeq])(any[MappingContext]))
           .thenReturn(Right(List(Some(expectedPackageInformation))))
 

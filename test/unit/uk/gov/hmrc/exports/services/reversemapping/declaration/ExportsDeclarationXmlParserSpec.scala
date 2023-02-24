@@ -18,8 +18,9 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import org.mockito.ArgumentMatchersSugar.any
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.controllers.testonly.GenerateDraftDecController.{anItem, withPackageInformation}
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.STANDARD_PRE_LODGED
-import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.{ContainerKey, RoutingCountryKey, SealKey}
+import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.{ContainerKey, PackageInformationKey, RoutingCountryKey, SealKey}
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParserSpec.inputXml
@@ -124,15 +125,24 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec {
       val locations = Locations(routingCountries = routingCountries)
       when(locationsParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(locations))
 
+      val item1 = anItem(withPackageInformation(Some("RT"), Some(11904), Some("cr6"), -1))
+      val item2 = anItem(withPackageInformation(Some("RT"), Some(11904), Some("cr6"), -1))
+      when(itemsParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(List(item1, item2)))
+
       val result = exportsDeclarationXmlParser.fromXml(mappingContext, inputXml)
 
       result.isRight mustBe true
+
       val declaration = result.toOption.get
       val maxSequenceIds = declaration.declarationMeta.maxSequenceIds
-      maxSequenceIds.size mustBe 3
+      maxSequenceIds.size mustBe 4
       maxSequenceIds.get(ContainerKey) mustBe Some(2)
+      maxSequenceIds.get(PackageInformationKey) mustBe Some(2)
       maxSequenceIds.get(RoutingCountryKey) mustBe Some(2)
       maxSequenceIds.get(SealKey) mustBe Some(4)
+
+      declaration.items.head.packageInformation.value.head.sequenceId mustBe 1
+      declaration.items.last.packageInformation.value.head.sequenceId mustBe 2
     }
 
     "return Left with XmlParserError" when {

@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.models.declaration
 import play.api.libs.json._
 import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
 import uk.gov.hmrc.exports.models.FieldMapping
+import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.sequenceIdPlaceholder
 import uk.gov.hmrc.exports.services.DiffTools._
 import uk.gov.hmrc.exports.services.DiffTools
 
@@ -187,8 +188,13 @@ object IdentificationTypeCodes {
   }
 }
 
-case class PackageInformation(id: String, typesOfPackages: Option[String], numberOfPackages: Option[Int], shippingMarks: Option[String])
-    extends DiffTools[PackageInformation] {
+case class PackageInformation(
+  sequenceId: Int = sequenceIdPlaceholder, // Initialised to enable migration of existing documents
+  id: String,
+  typesOfPackages: Option[String],
+  numberOfPackages: Option[Int],
+  shippingMarks: Option[String]
+) extends DiffTools[PackageInformation] {
 
   def createDiff(original: PackageInformation, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
     Seq(
@@ -211,8 +217,8 @@ case class PackageInformation(id: String, typesOfPackages: Option[String], numbe
     ).flatten
 
   override def equals(obj: Any): Boolean = obj match {
-    case PackageInformation(_, `typesOfPackages`, `numberOfPackages`, `shippingMarks`) => true
-    case _                                                                             => false
+    case PackageInformation(_, _, `typesOfPackages`, `numberOfPackages`, `shippingMarks`) => true
+    case _                                                                                => false
   }
   override def hashCode(): Int = (typesOfPackages, numberOfPackages, shippingMarks).##
 }

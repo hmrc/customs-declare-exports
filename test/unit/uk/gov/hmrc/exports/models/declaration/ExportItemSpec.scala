@@ -227,9 +227,9 @@ class ExportItemSpec extends UnitSpec {
       }
 
       val packageInformations = List(
-        PackageInformation("1", Some("typesOfPackagesOne"), Some(1), Some("shippingMarksOne")),
-        PackageInformation("2", Some("typesOfPackagesTwo"), Some(2), Some("shippingMarksTwo")),
-        PackageInformation("3", Some("typesOfPackagesThree"), Some(3), Some("shippingMarksThree"))
+        PackageInformation(1, "1", Some("typesOfPackagesOne"), Some(1), Some("shippingMarksOne")),
+        PackageInformation(2, "2", Some("typesOfPackagesTwo"), Some(2), Some("shippingMarksTwo")),
+        PackageInformation(3, "3", Some("typesOfPackagesThree"), Some(3), Some("shippingMarksThree"))
       )
 
       "when packageInformation are present but not equal" in {
@@ -348,7 +348,7 @@ class ExportItemSpec extends UnitSpec {
         }
 
         withClue("packageInformation contain elements with different values") {
-          val newValue = PackageInformation("4", Some("typesOfPackagesFour"), Some(3), Some("shippingMarksFour"))
+          val newValue = PackageInformation(4, "4", Some("typesOfPackagesFour"), Some(3), Some("shippingMarksFour"))
           val item = ExportItem("latestId", packageInformation = Some(List(newValue) ++ packageInformations.drop(1)))
           item.createDiff(item.copy(packageInformation = Some(packageInformations)), baseFieldPointer) mustBe Seq(
             constructAlteredField(s"${fieldPointer}.1.id", Some(packageInformations(0).id), Some(newValue.id)),
@@ -658,29 +658,29 @@ class ExportItemSpec extends UnitSpec {
     "produce the expected ExportsDeclarationDiff instance" when {
       "no differences exist between the two versions" in {
         withClue("all values are empty") {
-          val packageInformation = PackageInformation("1", None, None, None)
+          val packageInformation = PackageInformation(1, "1", None, None, None)
           packageInformation.createDiff(packageInformation, baseFieldPointer) mustBe Seq.empty
         }
 
         withClue("typesOfPackages is None, the rest have some values") {
-          val packageInformation = PackageInformation("1", None, Some(2), Some("latestShippingMarks"))
+          val packageInformation = PackageInformation(1, "1", None, Some(2), Some("latestShippingMarks"))
           packageInformation.createDiff(packageInformation, baseFieldPointer) mustBe Seq.empty
         }
 
         withClue("typesOfPackages is None, the rest have some values") {
-          val packageInformation = PackageInformation("1", Some("latestTypesOfPackages"), None, Some("latestShippingMarks"))
+          val packageInformation = PackageInformation(1, "1", Some("latestTypesOfPackages"), None, Some("latestShippingMarks"))
           packageInformation.createDiff(packageInformation, baseFieldPointer) mustBe Seq.empty
         }
 
         withClue("typesOfPackages is None, the rest have some values") {
-          val packageInformation = PackageInformation("1", Some("latestTypesOfPackages"), Some(2), None)
+          val packageInformation = PackageInformation(1, "1", Some("latestTypesOfPackages"), Some(2), None)
           packageInformation.createDiff(packageInformation, baseFieldPointer) mustBe Seq.empty
         }
       }
 
       "the original version's id field has a different value to this one" in {
         val fieldPointer = s"${baseFieldPointer}.${PackageInformation.idPointer}"
-        val packageInformation = PackageInformation("1", Some("latestTypesOfPackages"), Some(2), Some("latestShippingMarks"))
+        val packageInformation = PackageInformation(1, "1", Some("latestTypesOfPackages"), Some(2), Some("latestShippingMarks"))
         val originalValue = "2"
         packageInformation.createDiff(packageInformation.copy(id = originalValue), baseFieldPointer) mustBe Seq(
           constructAlteredField(fieldPointer, originalValue, packageInformation.id)
@@ -689,7 +689,7 @@ class ExportItemSpec extends UnitSpec {
 
       "the original version's id typesOfPackages has a different value to this one" in {
         val fieldPointer = s"${baseFieldPointer}.${PackageInformation.typesOfPackagesPointer}"
-        val packageInformation = PackageInformation("1", Some("latestTypesOfPackages"), Some(2), Some("latestShippingMarks"))
+        val packageInformation = PackageInformation(1, "1", Some("latestTypesOfPackages"), Some(2), Some("latestShippingMarks"))
         val originalValue = "originalValue"
         packageInformation.createDiff(packageInformation.copy(typesOfPackages = Some(originalValue)), baseFieldPointer) mustBe Seq(
           constructAlteredField(fieldPointer, originalValue, packageInformation.typesOfPackages.get)
@@ -698,7 +698,7 @@ class ExportItemSpec extends UnitSpec {
 
       "the original version's id numberOfPackages has a different value to this one" in {
         val fieldPointer = s"${baseFieldPointer}.${PackageInformation.numberOfPackagesPointer}"
-        val packageInformation = PackageInformation("1", Some("latestTypesOfPackages"), Some(2), Some("latestShippingMarks"))
+        val packageInformation = PackageInformation(1, "1", Some("latestTypesOfPackages"), Some(2), Some("latestShippingMarks"))
         val originalValue = 1
         packageInformation.createDiff(packageInformation.copy(numberOfPackages = Some(originalValue)), baseFieldPointer) mustBe Seq(
           constructAlteredField(fieldPointer, originalValue, packageInformation.numberOfPackages.get)
@@ -707,7 +707,7 @@ class ExportItemSpec extends UnitSpec {
 
       "the original version's id shippingMarksPointer has a different value to this one" in {
         val fieldPointer = s"${baseFieldPointer}.${PackageInformation.shippingMarksPointer}"
-        val packageInformation = PackageInformation("1", Some("latestTypesOfPackages"), Some(2), Some("latestShippingMarks"))
+        val packageInformation = PackageInformation(1, "1", Some("latestTypesOfPackages"), Some(2), Some("latestShippingMarks"))
         val originalValue = "originalValue"
         packageInformation.createDiff(packageInformation.copy(shippingMarks = Some(originalValue)), baseFieldPointer) mustBe Seq(
           constructAlteredField(fieldPointer, originalValue, packageInformation.shippingMarks.get)

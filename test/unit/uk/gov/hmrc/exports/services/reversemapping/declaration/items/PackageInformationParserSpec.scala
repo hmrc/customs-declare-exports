@@ -50,7 +50,7 @@ class PackageInformationParserSpec extends UnitSpec {
         val xml = inputXml(List(Packaging(Some("TypeCode"), Some("3"), Some("MarksNumbersID"))))
 
         packageInformationParser.parse(xml).toOption.get.head.get must matchPattern {
-          case PackageInformation(_, Some("TypeCode"), Some(3), Some("MarksNumbersID")) =>
+          case PackageInformation(_, _, Some("TypeCode"), Some(3), Some("MarksNumbersID")) =>
         }
       }
 
@@ -62,9 +62,9 @@ class PackageInformationParserSpec extends UnitSpec {
         val listOfPackageInformation = packageInformationParser.parse(xml).toOption.get
 
         listOfPackageInformation.size mustBe 2
-        listOfPackageInformation.head.get must matchPattern { case PackageInformation(_, Some("TypeCode1"), Some(1), Some("MarksNumbersID1")) =>
+        listOfPackageInformation.head.get must matchPattern { case PackageInformation(_, _, Some("TypeCode1"), Some(1), Some("MarksNumbersID1")) =>
         }
-        listOfPackageInformation.last.get must matchPattern { case PackageInformation(_, Some("TypeCode2"), Some(2), Some("MarksNumbersID2")) =>
+        listOfPackageInformation.last.get must matchPattern { case PackageInformation(_, _, Some("TypeCode2"), Some(2), Some("MarksNumbersID2")) =>
         }
       }
 
@@ -72,46 +72,41 @@ class PackageInformationParserSpec extends UnitSpec {
 
         "only includes a '/ TypeCode' element" in {
           val xml = inputXml(List(Packaging(typeCode = Some("TypeCode"))))
-
-          packageInformationParser.parse(xml).toOption.get.head.get must matchPattern { case PackageInformation(_, Some("TypeCode"), None, None) =>
+          packageInformationParser.parse(xml).toOption.get.head.get must matchPattern { case PackageInformation(_, _, Some("TypeCode"), None, None) =>
           }
         }
 
         "only includes a '/ QuantityQuantity' element" in {
           val xml = inputXml(List(Packaging(quantityQuantity = Some("3"))))
-
-          packageInformationParser.parse(xml).toOption.get.head.get must matchPattern { case PackageInformation(_, None, Some(3), None) =>
+          packageInformationParser.parse(xml).toOption.get.head.get must matchPattern { case PackageInformation(_, _, None, Some(3), None) =>
           }
         }
 
         "only includes a '/ MarksNumbersID' element" in {
           val xml = inputXml(List(Packaging(marksNumbersID = Some("MarksNumbersID"))))
-
           packageInformationParser.parse(xml).toOption.get.head.get must matchPattern {
-            case PackageInformation(_, None, None, Some("MarksNumbersID")) =>
+            case PackageInformation(_, _, None, None, Some("MarksNumbersID")) =>
           }
         }
 
         "only includes '/ TypeCode' and '/ QuantityQuantity' elements" in {
           val xml = inputXml(List(Packaging(typeCode = Some("TypeCode"), quantityQuantity = Some("3"))))
-
-          packageInformationParser.parse(xml).toOption.get.head.get must matchPattern { case PackageInformation(_, Some("TypeCode"), Some(3), None) =>
+          packageInformationParser.parse(xml).toOption.get.head.get must matchPattern {
+            case PackageInformation(_, _, Some("TypeCode"), Some(3), None) =>
           }
         }
 
         "only includes '/ TypeCode' and '/ MarksNumbersID' elements" in {
           val xml = inputXml(List(Packaging(typeCode = Some("TypeCode"), marksNumbersID = Some("MarksNumbersID"))))
-
           packageInformationParser.parse(xml).toOption.get.head.get must matchPattern {
-            case PackageInformation(_, Some("TypeCode"), None, Some("MarksNumbersID")) =>
+            case PackageInformation(_, _, Some("TypeCode"), None, Some("MarksNumbersID")) =>
           }
         }
 
         "only includes '/ QuantityQuantity' and '/ MarksNumbersID' elements" in {
           val xml = inputXml(List(Packaging(quantityQuantity = Some("3"), marksNumbersID = Some("MarksNumbersID"))))
-
           packageInformationParser.parse(xml).toOption.get.head.get must matchPattern {
-            case PackageInformation(_, None, Some(3), Some("MarksNumbersID")) =>
+            case PackageInformation(_, _, None, Some(3), Some("MarksNumbersID")) =>
           }
         }
       }
@@ -132,32 +127,26 @@ class PackageInformationParserSpec extends UnitSpec {
 
   private def inputXml(listOfPackaging: List[Packaging] = List.empty): Elem =
     <ns3:GovernmentAgencyGoodsItem>
-
       {
       listOfPackaging.map { packaging =>
         <ns3:Packaging>
-
-            {
+          {
           packaging.typeCode.map { TypeCode =>
             <ns3:TypeCode>{TypeCode}</ns3:TypeCode>
           }.getOrElse(NodeSeq.Empty)
         }
-
-            {
+          {
           packaging.quantityQuantity.map { QuantityQuantity =>
             <ns3:QuantityQuantity>{QuantityQuantity}</ns3:QuantityQuantity>
           }.getOrElse(NodeSeq.Empty)
         }
-
-            {
+          {
           packaging.marksNumbersID.map { MarksNumbersID =>
             <ns3:MarksNumbersID>{MarksNumbersID}</ns3:MarksNumbersID>
           }.getOrElse(NodeSeq.Empty)
         }
-
-          </ns3:Packaging>
+        </ns3:Packaging>
       }
     }
-
     </ns3:GovernmentAgencyGoodsItem>
 }

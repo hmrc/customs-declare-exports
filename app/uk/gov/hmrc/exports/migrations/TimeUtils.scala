@@ -16,7 +16,11 @@
 
 package uk.gov.hmrc.exports.migrations
 
-import java.time.Instant
+import org.bson.json.{Converter, JsonWriterSettings, StrictJsonWriter}
+
+import java.lang
+import java.time.{Instant, ZoneId}
+import java.time.format.DateTimeFormatter
 
 class TimeUtils {
 
@@ -27,4 +31,21 @@ class TimeUtils {
   private[migrations] def minutesToMillis(minutes: Long): Long = minutes * 60 * 1000
 
   private[migrations] def millisToMinutes(millis: Long): Long = millis / (60 * 1000)
+}
+
+object TimeUtils {
+
+  private val converter: Converter[lang.Long] = new Converter[lang.Long] {
+    val formatter = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("UTC"))
+
+    override def convert(value: lang.Long, writer: StrictJsonWriter): Unit = {
+      val s = formatter.format(Instant.ofEpochMilli(value))
+      writer.writeString(s)
+    }
+  }
+
+  val jsonWriter = JsonWriterSettings
+    .builder()
+    .dateTimeConverter(converter)
+    .build()
 }

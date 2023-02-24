@@ -22,6 +22,7 @@ import org.mongodb.scala.model.Filters.{and, equal, exists, not}
 import play.api.Logging
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import uk.gov.hmrc.exports.migrations.TimeUtils.jsonWriter
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
@@ -60,7 +61,7 @@ class AddSequencingOfMultipleItems extends MigrationDefinition with Logging {
       .batchSize(batchSize)
       .asScala
       .foldLeft(0) { (counter, document) =>
-        Try(Json.parse(document.toJson).as[ExportsDeclaration](AddSequencingOfMultipleItems.reads)) match {
+        Try(Json.parse(document.toJson(jsonWriter)).as[ExportsDeclaration](AddSequencingOfMultipleItems.reads)) match {
           case Failure(exc) =>
             val id = document.get("_id")
             val error = exc.getMessage
@@ -90,8 +91,6 @@ class AddSequencingOfMultipleItems extends MigrationDefinition with Logging {
 }
 
 object AddSequencingOfMultipleItems {
-
-  implicit val instantReads: Reads[Instant] = Reads.at[String](__ \ "$date").map(Instant.parse)
 
   implicit val readsForDeclarationMeta: Reads[DeclarationMeta] =
     ((__ \ "parentDeclarationId").readNullable[String] and

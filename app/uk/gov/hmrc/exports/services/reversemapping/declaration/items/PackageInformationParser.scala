@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.items
 
+import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.sequenceIdPlaceholder
+
 import java.lang.Character.isDigit
 import java.util.UUID.randomUUID
-
 import scala.xml.NodeSeq
-
 import uk.gov.hmrc.exports.models.declaration.PackageInformation
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
@@ -39,7 +39,7 @@ class PackageInformationParser extends DeclarationXmlParser[Seq[Option[PackageIn
     if (packageInformation.flatten.isEmpty) Right(None)
     else
       parseNumberOfPackages(packageInformation(1)).map { numberOfPackages =>
-        Some(PackageInformation(randomUUID.toString, packageInformation(0), numberOfPackages, packageInformation(2)))
+        Some(PackageInformation(sequenceIdPlaceholder, randomUUID.toString, packageInformation(0), numberOfPackages, packageInformation(2)))
       }
   }
 
