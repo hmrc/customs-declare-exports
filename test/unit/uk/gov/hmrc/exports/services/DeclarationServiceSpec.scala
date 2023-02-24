@@ -92,7 +92,7 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
   "findOrCreateDraftForAmend" should {
     val newId = "newId"
     val submissionId = "submissionId"
-    val submission = Submission("id", "eori", "lrn", None, "ducr", latestDecId = "parentId")
+    val submission = Submission("id", "eori", "lrn", None, "ducr", latestDecId = Some("parentId"))
 
     "return a value indicating that a draft declaration with 'parentDeclarationId' equal to the given Submission's 'latestDecId' was found" in {
       when(submissionRepository.findById(any(), any())).thenReturn(Future.successful(Some(submission)))

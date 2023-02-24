@@ -78,7 +78,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
         None,
         None,
         Seq(Action("id1", SubmissionRequest, decId = Some("id"), versionNo = 1)),
-        latestDecId = "id"
+        latestDecId = Some("id")
       )
       val notifications = Seq(
         ParsedNotification(
@@ -95,7 +95,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
     }
 
     "only retrieve notifications related to the submissions of declarations (must filter out actionCancellation)" in {
-      val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", None, None, Seq(actionCancellation, action), latestDecId = "id")
+      val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", None, None, Seq(actionCancellation, action), latestDecId = Some("id"))
       // Not relevant to the test
       when(notificationRepository.findNotifications(any[Seq[String]])).thenReturn(Future.successful(Seq(notification)))
 

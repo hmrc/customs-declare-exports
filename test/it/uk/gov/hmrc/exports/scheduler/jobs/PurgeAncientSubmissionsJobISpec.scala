@@ -374,7 +374,7 @@ object PurgeAncientSubmissionsJobISpec {
   val eori = "XL165944621471200"
 
   def submission(latestEnhancedStatus: EnhancedStatus, enhancedStatusLastUpdated: ZonedDateTime, actionIds: Seq[String], uuid: String): Submission =
-    Submission(eori = eori, lrn = "XzmBvLMY6ZfrZL9lxu", ducr = "6TS321341891866-112L6H21L", latestDecId = uuid).copy(
+    Submission(eori = eori, lrn = "XzmBvLMY6ZfrZL9lxu", ducr = "6TS321341891866-112L6H21L", latestDecId = Some(uuid)).copy(
       uuid = uuid,
       latestEnhancedStatus = Some(latestEnhancedStatus),
       enhancedStatusLastUpdated = Some(enhancedStatusLastUpdated),
