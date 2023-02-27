@@ -31,7 +31,7 @@ class AddActionFieldsForAmend extends MigrationDefinition with Logging {
   override val migrationInformation: MigrationInformation =
     MigrationInformation(
       id = s"CEDS-4446 Add new fields to the Action model for amended Declarations.",
-      order = 18,
+      order = 19,
       author = "Darryl Murphy",
       runAlways = true
     )

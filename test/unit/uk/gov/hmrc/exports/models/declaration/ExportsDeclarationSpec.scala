@@ -51,9 +51,8 @@ class ExportsDeclarationSpec extends UnitSpec with ExportsDeclarationBuilder {
 
       val declaration = ExportsDeclaration.init("1", Eori("GB12345678"), exportsDeclarationRequest)
 
-      val json = Json.toJson(declaration)(ExportsDeclaration.REST.writes)
-
-      json
+      Json
+        .toJson(declaration)(ExportsDeclaration.REST.writes)
         .validate(ExportsDeclarationRequest.format)
         .fold(
           error => fail(s"Could not parse - $error"),
@@ -430,6 +429,7 @@ object ExportsDeclarationSpec {
       |      "nactCodes": [],
       |      "packageInformation": [
       |        {
+      |          "sequenceId": 1,
       |          "id": "12345678",
       |          "typesOfPackages": "PK",
       |          "numberOfPackages": 10,

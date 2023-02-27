@@ -20,6 +20,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, ControllerComponents, Request}
 import uk.gov.hmrc.exports.controllers.RESTController
 import uk.gov.hmrc.exports.models.declaration.AuthorisationProcedureCode.CodeOther
+import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.PackageInformationKey
 import uk.gov.hmrc.exports.models.declaration.ModeOfTransportCode.Maritime
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
@@ -84,6 +85,7 @@ object GenerateDraftDecController extends ExportsDeclarationBuilder {
     }
 
     aDeclaration(
+      withMaxSequenceIdFor(PackageInformationKey, 1),
       withEori(request.body.eori),
       withStatus(DeclarationStatus.DRAFT),
       withAdditionalDeclarationType(AdditionalDeclarationType.STANDARD_PRE_LODGED),

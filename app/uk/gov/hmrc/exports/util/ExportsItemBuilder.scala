@@ -69,21 +69,19 @@ trait ExportsItemBuilder {
   def withPackageInformation(first: PackageInformation, others: PackageInformation*): ItemModifier =
     withPackageInformation(List(first) ++ others.toList)
 
-  def withPackageInformation(informations: List[PackageInformation]): ItemModifier =
-    _.copy(packageInformation = Some(informations))
+  def withPackageInformation(packageInformation: List[PackageInformation]): ItemModifier =
+    _.copy(packageInformation = Some(packageInformation))
 
   def withPackageInformation(
     typesOfPackages: Option[String] = None,
     numberOfPackages: Option[Int] = None,
-    shippingMarks: Option[String] = None
+    shippingMarks: Option[String] = None,
+    sequenceId: Int = 1
   ): ItemModifier =
-    cache =>
-      cache.copy(packageInformation =
-        Some(
-          cache.packageInformation
-            .getOrElse(List.empty) :+ PackageInformation("1234567890", typesOfPackages, numberOfPackages, shippingMarks)
-        )
-      )
+    exportsItem => {
+      val packageInformation = PackageInformation(sequenceId, "1234567890", typesOfPackages, numberOfPackages, shippingMarks)
+      exportsItem.copy(packageInformation = Some(exportsItem.packageInformation.getOrElse(List.empty) :+ packageInformation))
+    }
 
   def withAdditionalDocuments(isRequired: Option[YesNoAnswer], first: AdditionalDocument, docs: AdditionalDocument*): ItemModifier = cache => {
     val existing = cache.additionalDocuments.map(_.documents).getOrElse(Seq.empty)
