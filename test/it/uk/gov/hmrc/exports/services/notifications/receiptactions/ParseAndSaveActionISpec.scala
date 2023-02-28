@@ -246,7 +246,6 @@ object ParseAndSaveActionISpec {
       |  ],
       |  "latestDecId" : "62b088b16a76c36b550804ab",
       |  "latestVersionNo" : 1,
-      |  "blockAmendments" : false,
       |  "mrn": "${mrn}"
       |}
       |""".stripMargin
@@ -291,8 +290,7 @@ object ParseAndSaveActionISpec {
       |    }
       |  ],
       |  "latestDecId" : "62b088b16a76c36b550804ab",
-      |  "latestVersionNo" : 1,
-      |  "blockAmendments" : false
+      |  "latestVersionNo" : 1
       |}
       |""".stripMargin
 }

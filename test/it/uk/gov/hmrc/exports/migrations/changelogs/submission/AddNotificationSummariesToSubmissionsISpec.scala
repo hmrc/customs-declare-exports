@@ -155,7 +155,6 @@ object AddNotificationSummariesToSubmissionsISpec {
       |  ],
       |  "latestDecId" : "62a719953e0e9418e3a638b9",
       |  "latestVersionNo" : 1,
-      |  "blockAmendments" : false,
       |  "enhancedStatusLastUpdated" : "2022-06-13T09:11:09Z[UTC]",
       |  "latestEnhancedStatus" : "GOODS_ARRIVED"
       }""".stripMargin
@@ -233,8 +232,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |      }
       |  ],
       |  "latestDecId" : "62a719953e0e9418e3a638b9",
-      |  "latestVersionNo" : 1,
-      |  "blockAmendments" : false
+      |  "latestVersionNo" : 1
       }""".stripMargin
 
   val submissionOutOfScope1 =
@@ -313,8 +311,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |      }
       |  ],
       |  "latestDecId" : "62a719953e0e9418e3a638b9",
-      |  "latestVersionNo" : 1,
-      |  "blockAmendments" : false
+      |  "latestVersionNo" : 1
       |}""".stripMargin
 
   val parsedNotifications = List(

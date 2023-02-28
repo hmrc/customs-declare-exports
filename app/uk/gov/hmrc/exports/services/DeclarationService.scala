@@ -34,7 +34,7 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
     declarationRepository.create(declaration)
 
   def findOrCreateDraftForAmend(eori: Eori, submissionId: String)(implicit ec: ExecutionContext): Future[Option[(Boolean, String)]] = {
-    def findOrCreateDraftFfromSubmission(submission: Submission): Future[Option[(Boolean, String)]] = {
+    def findOrCreateDraftFromSubmission(submission: Submission): Future[Option[(Boolean, String)]] = {
       val filter = Json.obj(
         "eori" -> eori,
         "declarationMeta.parentDeclarationId" -> submission.latestDecId,
@@ -51,7 +51,7 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
                 declaration.copy(
                   id = UUID.randomUUID.toString,
                   declarationMeta = declaration.declarationMeta.copy(
-                    parentDeclarationId = Some(submission.latestDecId),
+                    parentDeclarationId = submission.latestDecId,
                     parentDeclarationEnhancedStatus = submission.latestEnhancedStatus,
                     status = AMENDMENT_DRAFT
                   )
@@ -63,7 +63,7 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
     }
 
     submissionRepository.findById(eori.value, submissionId).flatMap {
-      case Some(submission) => findOrCreateDraftFfromSubmission(submission)
+      case Some(submission) => findOrCreateDraftFromSubmission(submission)
       case _                => Future.successful(None)
     }
   }

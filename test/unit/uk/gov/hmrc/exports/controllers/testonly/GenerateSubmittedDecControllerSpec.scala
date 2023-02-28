@@ -85,7 +85,7 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with ExportsDeclaratio
       newParsedNotification.details.mrn mustBe newDec.consignmentReferences.get.mrn.get
     }
 
-    val submission = Submission("declaration.id", "declaration.eori", "lrn", None, "ducr", latestDecId = "declaration.Id")
+    val submission = Submission("declaration.id", "declaration.eori", "lrn", None, "ducr", latestDecId = Some("declaration.Id"))
 
     "insert only one ACCEPT notification if first two digits of MRN are an odd number" in {
       given(declarationRepository.create(any())).willReturn(Future.successful(aDeclaration(withConsignmentReferences(mrn = Some("11GB1234567890")))))
