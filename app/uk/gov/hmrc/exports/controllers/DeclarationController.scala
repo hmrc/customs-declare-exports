@@ -99,6 +99,23 @@ class DeclarationController @Inject() (
         }
     }
 
+  def diff(originalId: String, currentId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    declarationService.findOne(request.eori, originalId) flatMap { ogOpt =>
+      declarationService.findOne(request.eori, currentId) flatMap { currentOpt =>
+        Future.successful {
+          (for {
+            og <- ogOpt
+            current <- currentOpt
+          } yield
+            if (og.eori == request.eori.value && current.eori == request.eori.value) {
+              if (current.createDiff(og).nonEmpty) Ok
+              else NoContent
+            } else Unauthorized).getOrElse(NotFound)
+        }
+      }
+    }
+  }
+
   private def logPayload[T](prefix: String, payload: T)(implicit wts: Writes[T]): T = {
     logger.debug(s"$prefix: ${Json.toJson(payload)}")
     payload

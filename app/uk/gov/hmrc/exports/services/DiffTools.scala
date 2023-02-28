@@ -19,13 +19,14 @@ package uk.gov.hmrc.exports.services
 import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
 import uk.gov.hmrc.exports.services.DiffTools.{combinePointers, ExportsDeclarationDiff}
 
-case class OriginalAndNewValues[T](originalVal: Option[T], newVal: Option[T]) {}
+case class OriginalAndNewValues[T](originalVal: Option[T], newVal: Option[T])
 
 case class AlteredField(fieldPointer: ExportsFieldPointer, values: OriginalAndNewValues[_]) {
   override def toString: String = s"[$fieldPointer -> ${values.originalVal} :: ${values.newVal}]"
 }
 
 object AlteredField {
+
   def constructAlteredField[T](fieldPointer: String, originalVal: T, newVal: T): AlteredField =
     AlteredField(fieldPointer, OriginalAndNewValues(Some(originalVal), Some(newVal)))
 
@@ -39,12 +40,10 @@ trait DiffTools[T] {
   def createDiff[E <: DiffTools[E]](original: Seq[E], current: Seq[E], pointerString: ExportsFieldPointer): ExportsDeclarationDiff = {
     val elementPairs = current.map(Some(_)).zipAll(original.map(Some(_)), None, None)
 
-    val allDifferences = elementPairs.zipWithIndex.map { pairAndIndex =>
-      pairAndIndex match {
-        case ((Some(x), Some(y)), i) => x.createDiff(y, pointerString, Some(i + 1))
-        case ((None, None), _)       => None
-        case ((curr, orig), i)       => Some(AlteredField(combinePointers(pointerString, Some(i + 1)), OriginalAndNewValues(orig, curr)))
-      }
+    val allDifferences = elementPairs.zipWithIndex.map {
+      case ((Some(x), Some(y)), i) => x.createDiff(y, pointerString, Some(i + 1))
+      case ((None, None), _)       => None
+      case ((curr, orig), i)       => Some(AlteredField(combinePointers(pointerString, Some(i + 1)), OriginalAndNewValues(orig, curr)))
     }
 
     allDifferences.flatten
@@ -89,12 +88,10 @@ object DiffTools {
   def compareStringDifference(original: Seq[String], current: Seq[String], pointerString: ExportsFieldPointer): ExportsDeclarationDiff = {
     val elementPairs = original.map(Some(_)).zipAll(current.map(Some(_)), None, None)
 
-    val allDifferences = elementPairs.zipWithIndex.map { pairAndIndex =>
-      pairAndIndex match {
-        case ((Some(x), Some(y)), i) => compareStringDifference(x, y, combinePointers(pointerString, Some(i + 1)))
-        case ((None, None), _)       => None
-        case ((orig, curr), i)       => Some(AlteredField(combinePointers(pointerString, Some(i + 1)), OriginalAndNewValues(orig, curr)))
-      }
+    val allDifferences = elementPairs.zipWithIndex.map {
+      case ((Some(x), Some(y)), i) => compareStringDifference(x, y, combinePointers(pointerString, Some(i + 1)))
+      case ((None, None), _)       => None
+      case ((orig, curr), i)       => Some(AlteredField(combinePointers(pointerString, Some(i + 1)), OriginalAndNewValues(orig, curr)))
     }
 
     allDifferences.flatten
@@ -137,12 +134,10 @@ object DiffTools {
   def compareDifference[T <: Ordered[T]](original: Seq[T], current: Seq[T], pointerString: ExportsFieldPointer): ExportsDeclarationDiff = {
     val elementPairs = original.map(Some(_)).zipAll(current.map(Some(_)), None, None)
 
-    val allDifferences = elementPairs.zipWithIndex.map { pairAndIndex =>
-      pairAndIndex match {
-        case ((Some(x), Some(y)), i) => compareDifference(x, y, combinePointers(pointerString, Some(i + 1)))
-        case ((None, None), _)       => None
-        case ((orig, curr), i)       => Some(AlteredField(combinePointers(pointerString, Some(i + 1)), OriginalAndNewValues(orig, curr)))
-      }
+    val allDifferences = elementPairs.zipWithIndex.map {
+      case ((Some(x), Some(y)), i) => compareDifference(x, y, combinePointers(pointerString, Some(i + 1)))
+      case ((None, None), _)       => None
+      case ((orig, curr), i)       => Some(AlteredField(combinePointers(pointerString, Some(i + 1)), OriginalAndNewValues(orig, curr)))
     }
 
     allDifferences.flatten
@@ -171,7 +166,7 @@ object DiffTools {
     seq1.size == seq2.size && seq1.zip(seq2).forall { case (x, y) => x == y }
 
   def removeTrailingSequenceNbr(field: AlteredField): AlteredField =
-    if (field.fieldPointer.length > 0 && field.fieldPointer.takeRight(1).charAt(0).isDigit)
+    if (field.fieldPointer.nonEmpty && field.fieldPointer.takeRight(1).charAt(0).isDigit)
       field.copy(fieldPointer = field.fieldPointer.dropRight(2))
     else
       field

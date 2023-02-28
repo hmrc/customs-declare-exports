@@ -330,6 +330,108 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
     }
   }
 
+  "DeclarationController.diff" should {
+    val getRequest = FakeRequest("GET", "/diff-declarations/id1/id2")
+
+    "return 200" when {
+      "request is valid with difference in declarations" in {
+        val dec1 = aDeclaration(withId("id1"), withEori(userEori))
+        val dec2 = aDeclaration(withId("id2"), withEori(userEori), withCarrierDetails(Some("123")))
+
+        given(declarationService.findOne(any[Eori](), eqRef[String]("id1"))).willReturn(Future.successful(Some(dec1)))
+        given(declarationService.findOne(any[Eori](), eqRef[String]("id2"))).willReturn(Future.successful(Some(dec2)))
+
+        val result = controller.diff("id1", "id2")(getRequest)
+
+        status(result) must be(OK)
+        verify(declarationService).findOne(userEori, "id1")
+        verify(declarationService).findOne(userEori, "id2")
+      }
+    }
+
+    "return 204" when {
+      "request is valid with no difference" in {
+        val dec1 = aDeclaration(withId("id1"), withEori(userEori))
+        val dec2 = aDeclaration(withId("id2"), withEori(userEori))
+
+        given(declarationService.findOne(any[Eori](), eqRef[String]("id1"))).willReturn(Future.successful(Some(dec1)))
+        given(declarationService.findOne(any[Eori](), eqRef[String]("id2"))).willReturn(Future.successful(Some(dec2)))
+
+        val result = controller.diff("id1", "id2")(getRequest)
+
+        status(result) must be(NO_CONTENT)
+        verify(declarationService).findOne(userEori, "id1")
+        verify(declarationService).findOne(userEori, "id2")
+      }
+    }
+
+    "return 404" when {
+      "one id is not found" in {
+        val dec1 = aDeclaration(withId("id1"), withEori(userEori))
+
+        given(declarationService.findOne(any[Eori](), eqRef[String]("id1"))).willReturn(Future.successful(Some(dec1)))
+        given(declarationService.findOne(any[Eori](), eqRef[String]("id2"))).willReturn(Future.successful(None))
+
+        val result = controller.diff("id1", "id2")(getRequest)
+
+        status(result) must be(NOT_FOUND)
+        verify(declarationService).findOne(eqRef(userEori), eqRef("id1"))
+        verify(declarationService).findOne(eqRef(userEori), eqRef("id2"))
+      }
+      "other id is not found" in {
+        val dec2 = aDeclaration(withId("id2"), withEori(userEori))
+
+        given(declarationService.findOne(any[Eori](), eqRef[String]("id2"))).willReturn(Future.successful(Some(dec2)))
+        given(declarationService.findOne(any[Eori](), eqRef[String]("id1"))).willReturn(Future.successful(None))
+
+        val result = controller.diff("id1", "id2")(getRequest)
+
+        status(result) must be(NOT_FOUND)
+        verify(declarationService).findOne(eqRef(userEori), eqRef("id1"))
+        verify(declarationService).findOne(eqRef(userEori), eqRef("id2"))
+      }
+    }
+
+    "return 401" when {
+      "unauthorized" in {
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        val result = controller.diff("id1", "id2")(getRequest)
+
+        status(result) must be(UNAUTHORIZED)
+        verifyNoInteractions(declarationService)
+      }
+      "one declaration is not owned by user" in {
+        val dec1 = aDeclaration(withId("id1"), withEori(userEori.copy("000")))
+        val dec2 = aDeclaration(withId("id2"), withEori(userEori))
+
+        given(declarationService.findOne(any[Eori](), eqRef[String]("id1"))).willReturn(Future.successful(Some(dec1)))
+        given(declarationService.findOne(any[Eori](), eqRef[String]("id2"))).willReturn(Future.successful(Some(dec2)))
+
+        val result = controller.diff("id1", "id2")(getRequest)
+
+        status(result) must be(UNAUTHORIZED)
+
+        verify(declarationService).findOne(eqRef(userEori), eqRef("id1"))
+        verify(declarationService).findOne(eqRef(userEori), eqRef("id2"))
+      }
+      "other declaration is not owned by user" in {
+        val dec1 = aDeclaration(withId("id1"), withEori(userEori))
+        val dec2 = aDeclaration(withId("id2"), withEori(userEori.copy("000")))
+
+        given(declarationService.findOne(any[Eori](), eqRef[String]("id1"))).willReturn(Future.successful(Some(dec1)))
+        given(declarationService.findOne(any[Eori](), eqRef[String]("id2"))).willReturn(Future.successful(Some(dec2)))
+
+        val result = controller.diff("id1", "id2")(getRequest)
+
+        status(result) must be(UNAUTHORIZED)
+
+        verify(declarationService).findOne(eqRef(userEori), eqRef("id1"))
+        verify(declarationService).findOne(eqRef(userEori), eqRef("id2"))
+      }
+    }
+  }
+
   "DeclarationController.findOrCreateDraftForAmend" should {
     val newId = "newId"
     val submissionId = "submissionId"
