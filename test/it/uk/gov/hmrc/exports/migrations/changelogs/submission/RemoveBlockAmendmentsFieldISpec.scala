@@ -1,46 +1,30 @@
-/*
- * Copyright 2023 HM Revenue & Customs
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package uk.gov.hmrc.exports.migrations.changelogs.submission
 
 import uk.gov.hmrc.exports.base.IntegrationTestMigrationToolSpec
-import uk.gov.hmrc.exports.migrations.changelogs.submission.AddSubmissionFieldsForAmendISpec.{submissionAfterMigration, submissionBeforeMigration}
+import uk.gov.hmrc.exports.migrations.changelogs.submission.RemoveBlockAmendmentsFieldISpec.{submissionAfterMigration, submissionBeforeMigration}
 
-class AddSubmissionFieldsForAmendISpec extends IntegrationTestMigrationToolSpec {
+class RemoveBlockAmendmentsFieldISpec extends IntegrationTestMigrationToolSpec {
 
   override val collectionUnderTest = "submissions"
-  override val changeLog = new AddSubmissionFieldsForAmend()
+  override val changeLog = new RemoveBlockAmendmentsField()
 
   "AddSubmissionFieldsForAmend" should {
 
     "not update a Submission document" when {
-      "the document already has a 'latestDecId' field" in {
-        runTest(submissionAfterMigration, submissionAfterMigration)
+      "the document has a 'blockAmendments' field" in {
+        runTest(submissionBeforeMigration, submissionAfterMigration)
       }
     }
 
     "update a Submission document" when {
-      "the document does not have 'latestDecId' field" in {
-        runTest(submissionBeforeMigration, submissionAfterMigration)
+      "the document does not have 'blockAmendments' field" in {
+        runTest(submissionAfterMigration, submissionAfterMigration)
       }
     }
   }
 }
 
-object AddSubmissionFieldsForAmendISpec {
+object RemoveBlockAmendmentsFieldISpec {
 
   val submissionBeforeMigration =
     """{
@@ -65,7 +49,10 @@ object AddSubmissionFieldsForAmendISpec {
       |  ],
       |  "mrn" : "20GBFYLCAYVUPGJPJPYF",
       |  "enhancedStatusLastUpdated" : "2020-12-01T17:33:31Z[UTC]",
-      |  "latestEnhancedStatus" : "ERRORS"
+      |  "latestEnhancedStatus" : "ERRORS",
+      |  "latestDecId" : "b140390f-56d4-4302-887f-5971886cb0e7",
+      |  "latestVersionNo" : 1,
+      |  "blockAmendments" : false
       |}""".stripMargin
 
   val submissionAfterMigration =
@@ -93,7 +80,6 @@ object AddSubmissionFieldsForAmendISpec {
       |  "enhancedStatusLastUpdated" : "2020-12-01T17:33:31Z[UTC]",
       |  "latestEnhancedStatus" : "ERRORS",
       |  "latestDecId" : "b140390f-56d4-4302-887f-5971886cb0e7",
-      |  "latestVersionNo" : 1,
-      |  "blockAmendments" : false
+      |  "latestVersionNo" : 1
       |}""".stripMargin
 }

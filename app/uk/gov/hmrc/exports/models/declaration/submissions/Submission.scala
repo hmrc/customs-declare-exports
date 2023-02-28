@@ -32,17 +32,18 @@ case class Submission(
   latestEnhancedStatus: Option[EnhancedStatus] = None,
   enhancedStatusLastUpdated: Option[ZonedDateTime] = None,
   actions: Seq[Action] = Seq.empty,
-  latestDecId: String, // Initial value => always as 'uuid' field
-  latestVersionNo: Int = 1,
-  blockAmendments: Boolean = false
-)
+  latestDecId: Option[String], // Initial value => always as 'uuid' field
+  latestVersionNo: Int = 1
+) {
+  val blockAmendments: Boolean = latestDecId.isEmpty
+}
 
 object Submission {
 
   implicit val format = Json.format[Submission]
 
   def apply(declaration: ExportsDeclaration, lrn: String, ducr: String, action: Action): Submission =
-    new Submission(declaration.id, declaration.eori, lrn, None, ducr, actions = List(action), latestDecId = declaration.id)
+    new Submission(declaration.id, declaration.eori, lrn, None, ducr, actions = List(action), latestDecId = Some(declaration.id))
   def apply(uuid: String, declaration: ExportsDeclaration, notificationSummary: NotificationSummary, action: Action): Submission =
     new Submission(
       uuid,
@@ -53,7 +54,7 @@ object Submission {
       latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
       enhancedStatusLastUpdated = Some(notificationSummary.dateTimeIssued),
       actions = List(action),
-      latestDecId = uuid
+      latestDecId = Some(uuid)
     )
 
 }
