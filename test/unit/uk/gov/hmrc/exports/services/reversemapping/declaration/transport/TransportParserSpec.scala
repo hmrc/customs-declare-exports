@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 import org.mockito.ArgumentMatchersSugar.any
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.{ModeOfTransportCode, Transport, TransportPayment, YesNoAnswer}
+import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserError
 
@@ -202,7 +202,8 @@ class TransportParserSpec extends UnitSpec {
     }
 
     "initialise declarationMeta.maxSequenceId with the number of Containers and Seals parsed" in {
-      val transportXml = containersXml(Map("1" -> Seq("seal1", "seal2"), "2" -> Seq("seal3", "seal4")))
+      val transportXml =
+        containersXml(Container(1, "1", List(Seal(1, "seal1"), Seal(2, "seal2"))), Container(2, "2", List(Seal(3, "seal3"), Seal(4, "seal4"))))
 
       val result = new TransportParser(new ContainersParser()).parse(transportXml)
 
@@ -223,7 +224,7 @@ class TransportParserSpec extends UnitSpec {
   private def borderModeOfTransportCodeXml(inputValue: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        {
+      {
       inputValue.map { value =>
         <ns3:BorderTransportMeans>
           <ns3:ModeCode>{value}</ns3:ModeCode>
@@ -236,7 +237,7 @@ class TransportParserSpec extends UnitSpec {
   private def expressConsignmentXml(inputValue: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        {
+      {
       inputValue.map { value =>
         <ns3:DeclarationSpecificCircumstancesCodeCodeType>{value}</ns3:DeclarationSpecificCircumstancesCodeCodeType>
       }.getOrElse(NodeSeq.Empty)
@@ -247,7 +248,7 @@ class TransportParserSpec extends UnitSpec {
   private def meansOfTransportCrossingTheBorderIDNumber(idNumber: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        {
+      {
       idNumber.map { id =>
         <ns3:BorderTransportMeans>
           <ns3:ID>{id}</ns3:ID>
@@ -260,7 +261,7 @@ class TransportParserSpec extends UnitSpec {
   private def transportCrossingTheBorderNationality(inputValue: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        {
+      {
       inputValue.map { value =>
         <ns3:BorderTransportMeans>
           <ns3:RegistrationNationalityCode>{value}</ns3:RegistrationNationalityCode>
@@ -273,7 +274,7 @@ class TransportParserSpec extends UnitSpec {
   private def meansOfTransportCrossingTheBorderType(inputValue: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        {
+      {
       inputValue.map { value =>
         <ns3:BorderTransportMeans>
           <ns3:IdentificationTypeCode>{value}</ns3:IdentificationTypeCode>
@@ -286,7 +287,7 @@ class TransportParserSpec extends UnitSpec {
   private def meansOfTransportOnDepartureIDNumber(inputValue: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        {
+      {
       inputValue.map { value =>
         <ns3:GoodsShipment>
           <ns3:Consignment>
@@ -303,7 +304,7 @@ class TransportParserSpec extends UnitSpec {
   private def meansOfTransportOnDepartureType(inputValue: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        {
+      {
       inputValue.map { value =>
         <ns3:GoodsShipment>
           <ns3:Consignment>
@@ -320,7 +321,7 @@ class TransportParserSpec extends UnitSpec {
   private def transportPaymentXml(inputValue: Option[String] = None): Elem =
     <meta>
       <ns3:Declaration>
-        {
+      {
       inputValue.map { value =>
         <ns3:Consignment>
           <ns3:Freight>
@@ -332,25 +333,22 @@ class TransportParserSpec extends UnitSpec {
       </ns3:Declaration>
     </meta>
 
-  private def containersXml(transportStructure: Map[String, Seq[String]]): Elem =
+  private def containersXml(containers: Container*): Elem =
     <meta>
       <ns3:Declaration>
         <ns3:GoodsShipment>
           <ns3:Consignment>
-            {
-      transportStructure.map { case (id, seals) =>
+          {
+      containers.map { container =>
         <ns3:TransportEquipment>
-              <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
-              <ns3:ID>
-                {id}
-              </ns3:ID>{
-          seals.map { sealId =>
+              <ns3:SequenceNumeric>{container.sequenceId}</ns3:SequenceNumeric>
+              <ns3:ID>{container.id}</ns3:ID>
+              {
+          container.seals.map { seal =>
             <ns3:Seal>
-                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
-                <ns3:ID>
-                  {sealId}
-                </ns3:ID>
-              </ns3:Seal>
+                  <ns3:SequenceNumeric>{seal.sequenceId}</ns3:SequenceNumeric>
+                  <ns3:ID>{seal.id}</ns3:ID>
+                </ns3:Seal>
           }
         }
             </ns3:TransportEquipment>

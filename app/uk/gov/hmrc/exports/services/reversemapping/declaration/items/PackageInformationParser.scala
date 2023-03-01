@@ -16,16 +16,14 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.items
 
-import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.sequenceIdPlaceholder
-
-import java.lang.Character.isDigit
-import java.util.UUID.randomUUID
-import scala.xml.NodeSeq
 import uk.gov.hmrc.exports.models.declaration.PackageInformation
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.XmlTags._
+
+import java.util.UUID.randomUUID
+import scala.xml.NodeSeq
 
 class PackageInformationParser extends DeclarationXmlParser[Seq[Option[PackageInformation]]] {
 
@@ -34,21 +32,20 @@ class PackageInformationParser extends DeclarationXmlParser[Seq[Option[PackageIn
 
   private def parsePackageInformation(inputXml: NodeSeq): XmlParserResult[Option[PackageInformation]] = {
     val packageInformation =
-      List((inputXml \ TypeCode).toStringOption, (inputXml \ QuantityQuantity).toStringOption, (inputXml \ MarksNumbersID).toStringOption)
+      List(
+        (inputXml \ SequenceNumeric).toStringOption,
+        (inputXml \ TypeCode).toStringOption,
+        (inputXml \ QuantityQuantity).toStringOption,
+        (inputXml \ MarksNumbersID).toStringOption
+      )
 
     if (packageInformation.flatten.isEmpty) Right(None)
     else
-      parseNumberOfPackages(packageInformation(1)).map { numberOfPackages =>
-        Some(PackageInformation(sequenceIdPlaceholder, randomUUID.toString, packageInformation(0), numberOfPackages, packageInformation(2)))
-      }
+      for {
+        sequenceId <- parseSequenceId(packageInformation, s"$errorPath/SequenceNumeric")
+        numberOfPackages <- parseIntIfAny(packageInformation, 2, s"$errorPath/QuantityQuantity")
+      } yield Some(PackageInformation(sequenceId, randomUUID.toString, packageInformation(1), numberOfPackages, packageInformation(3)))
   }
 
-  private def parseNumberOfPackages(maybeNumberOfPackages: Option[String]): XmlParserResult[Option[Int]] =
-    maybeNumberOfPackages.map { numberOfPackages =>
-      if (numberOfPackages forall isDigit) Right(Some(numberOfPackages.toInt))
-      else {
-        val msg = "Expected a numeric value for 'GoodsShipment/GovernmentAgencyGoodsItem/Packaging/QuantityQuantity' element"
-        Left(s"$msg. It was instead ($numberOfPackages)")
-      }
-    }.getOrElse(Right(None))
+  private val errorPath = "GoodsShipment/GovernmentAgencyGoodsItem/Packaging"
 }

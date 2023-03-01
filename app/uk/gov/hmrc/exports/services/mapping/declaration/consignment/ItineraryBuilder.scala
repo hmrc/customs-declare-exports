@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration.consignment
 
-import uk.gov.hmrc.exports.models.declaration.{Country, ExportsDeclaration}
+import uk.gov.hmrc.exports.models.declaration.Country
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.Consignment.Itinerary
@@ -27,27 +28,33 @@ import scala.jdk.CollectionConverters._
 
 class ItineraryBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration, Declaration.Consignment] {
 
-  def buildThenAdd(model: ExportsDeclaration, consignment: Declaration.Consignment): Unit = {
-    val itineraries = getRoutingCountries(model).flatMap(_.code).zipWithIndex.map { case (countryCode, idx) =>
-      createItinerary(idx, countryCode)
-    }
-
+  def buildThenAdd(declaration: ExportsDeclaration, consignment: Declaration.Consignment): Unit = {
+    val itineraries = getRoutingCountries(declaration).map(createItinerary)
     consignment.getItinerary.addAll(itineraries.toList.asJava)
   }
 
-  private def createItinerary(index: Integer, country: String): Itinerary = {
+  private def createItinerary(country: (String, Int)): Itinerary = {
+    val countryCode = country._1
+    val sequenceId = country._2
+
     val itinerary = new Declaration.Consignment.Itinerary()
-    itinerary.setSequenceNumeric(new java.math.BigDecimal(index))
+    itinerary.setSequenceNumeric(new java.math.BigDecimal(sequenceId))
 
     val countryCodeType = new ItineraryRoutingCountryCodeType()
-    countryCodeType.setValue(country)
+    countryCodeType.setValue(countryCode)
     itinerary.setRoutingCountryCode(countryCodeType)
     itinerary
   }
 
-  private lazy val gbCountry = Country(Some("GB"))
+  private val GB = "GB"
+  private lazy val gb = Some(Country(Some(GB)))
 
-  private def getRoutingCountries(model: ExportsDeclaration): Seq[Country] =
-    if (model.locations.routingCountries.isEmpty && model.locations.originationCountry == Some(gbCountry)) Seq(gbCountry)
-    else model.locations.routingCountries.map(_.country)
+  private def getRoutingCountries(model: ExportsDeclaration): Seq[(String, Int)] = {
+    val locations = model.locations
+    if (locations.routingCountries.isEmpty && locations.originationCountry == gb) Seq(GB -> 0)
+    else
+      locations.routingCountries.flatMap { routingCountry =>
+        routingCountry.country.code.map(_ -> routingCountry.sequenceId)
+      }
+  }
 }

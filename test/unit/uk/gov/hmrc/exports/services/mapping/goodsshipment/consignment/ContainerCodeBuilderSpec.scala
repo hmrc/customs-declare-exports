@@ -26,19 +26,17 @@ class ContainerCodeBuilderSpec extends UnitSpec {
     "correctly map ContainerCode instance from new model" when {
 
       "there are containers" in {
-        val builder = new ContainerCodeBuilder
         val consignment = new GoodsShipment.Consignment
 
-        builder.buildThenAdd(Seq(Container(1, "id", Seq.empty)), consignment)
+        new ContainerCodeBuilder().buildThenAdd(Seq(Container(1, "id", Seq.empty)), consignment)
 
         consignment.getContainerCode.getValue must be("1")
       }
 
       "there are no containers" in {
-        val builder = new ContainerCodeBuilder
         val consignment = new GoodsShipment.Consignment
 
-        builder.buildThenAdd(Seq.empty, consignment)
+        new ContainerCodeBuilder().buildThenAdd(Seq.empty, consignment)
 
         consignment.getContainerCode.getValue must be("0")
       }

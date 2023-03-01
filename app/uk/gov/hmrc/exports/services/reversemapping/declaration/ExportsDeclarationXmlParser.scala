@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType._
-import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.{ContainerKey, PackageInformationKey, RoutingCountryKey, SealKey}
+import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.{sequenceIdPlaceholder, ContainerKey, PackageInformationKey, RoutingCountryKey, SealKey}
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
@@ -56,7 +56,6 @@ class ExportsDeclarationXmlParser @Inject() (
       consignmentReferences <- consignmentReferencesParser.parse(declarationXml)
       mucr <- mucrParser.parse(declarationXml)
       items <- itemsParser.parse(declarationXml)
-      itemsFinal = updateSequenceIdsOfPackageInfo(items)
       transport <- transportParser.parse(declarationXml)
       parties <- partiesParser.parse(declarationXml)
       locations <- locationsParser.parse(declarationXml)
@@ -69,7 +68,7 @@ class ExportsDeclarationXmlParser @Inject() (
         updatedDateTime = Instant.now(),
         summaryWasVisited = Some(true),
         readyForSubmission = Some(true),
-        maxSequenceIds = deriveSequenceIds(itemsFinal, locations, transport)
+        maxSequenceIds = deriveSequenceIds(items, locations, transport)
       ),
       `type` = declarationType,
       dispatchLocation = None,
@@ -80,7 +79,7 @@ class ExportsDeclarationXmlParser @Inject() (
       transport = transport,
       parties = parties,
       locations = locations,
-      items = itemsFinal,
+      items = items,
       totalNumberOfItems = None,
       previousDocuments = None,
       natureOfTransaction = None,
@@ -103,32 +102,29 @@ class ExportsDeclarationXmlParser @Inject() (
       }
 
       Right(declarationType)
-    }.getOrElse(Left("Cannot derive DeclarationType from an undefined AdditionalDeclarationType"))
+    }
+      .getOrElse(Left("Cannot derive DeclarationType from an undefined AdditionalDeclarationType"))
 
   private def deriveSequenceIds(items: Seq[ExportItem], locations: Locations, transport: Transport): Map[String, Int] = {
-    val packageInformation = items.foldLeft(0) { case (sequenceId, item) =>
-      item.packageInformation.fold(sequenceId)(_.size + sequenceId)
-    }
-    val routingCountries = locations.routingCountries.size
-    val (containers, seals) = transport.containers.fold((0, 0)) {
-      _.foldLeft((0, 0)) { case ((containers, seals), container) =>
-        (containers + 1, seals + container.seals.size)
-      }
-    }
+    val packageInformation = items.flatMap(_.packageInformation).flatten.map(_.sequenceId)
 
-    Map(ContainerKey -> containers, PackageInformationKey -> packageInformation, RoutingCountryKey -> routingCountries, SealKey -> seals)
+    val routingCountries = locations.routingCountries.map(_.sequenceId)
+
+    val containersAndSeals = transport.containers
+      .fold(Seq.empty[(Int, Seq[Int])]) {
+        _.map(container => (container.sequenceId, container.seals.map(_.sequenceId)))
+      }
+      .unzip
+
+    val (containers, seals) =
+      if (containersAndSeals._1.isEmpty) (sequenceIdPlaceholder, List.empty[Int])
+      else (containersAndSeals._1.max, containersAndSeals._2.flatten)
+
+    Map(
+      ContainerKey -> containers,
+      PackageInformationKey -> (if (packageInformation.isEmpty) sequenceIdPlaceholder else packageInformation.max),
+      RoutingCountryKey -> (if (routingCountries.isEmpty) sequenceIdPlaceholder else routingCountries.max),
+      SealKey -> (if (seals.isEmpty) sequenceIdPlaceholder else seals.max)
+    )
   }
-
-  private def updateSequenceIdsOfPackageInfo(items: Seq[ExportItem]): Seq[ExportItem] =
-    items
-      .foldLeft((List.empty[ExportItem], 0)) { case ((listOfItem, sequenceId), item) =>
-        val (newItem, count) = item.packageInformation.fold((item, 0)) { listOfPackageInfo =>
-          val newListOfPackageInfo = listOfPackageInfo.zipWithIndex.map { case (packageInformation, index) =>
-            packageInformation.copy(sequenceId + index + 1)
-          }
-          (item.copy(packageInformation = Some(newListOfPackageInfo)), listOfPackageInfo.size)
-        }
-        (listOfItem :+ newItem, sequenceId + count)
-      }
-      ._1
 }

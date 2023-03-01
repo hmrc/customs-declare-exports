@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
-import javax.inject.Inject
-import uk.gov.hmrc.exports.models.DeclarationType
-import uk.gov.hmrc.exports.models.DeclarationType.STANDARD
+import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
+
+import javax.inject.Inject
 
 class ConsignmentBuilder @Inject() (
   goodsLocationBuilder: GoodsLocationBuilder,
@@ -28,20 +28,20 @@ class ConsignmentBuilder @Inject() (
   departureTransportMeansBuilder: DepartureTransportMeansBuilder,
   transportEquipmentBuilder: TransportEquipmentBuilder
 ) {
-
-  def buildThenAdd(exportsCacheModel: ExportsDeclaration, goodsShipment: GoodsShipment): Unit = {
+  def buildThenAdd(declaration: ExportsDeclaration, goodsShipment: GoodsShipment): Unit = {
     val consignment = new GoodsShipment.Consignment()
 
-    exportsCacheModel.locations.goodsLocation
+    declaration.locations.goodsLocation
       .foreach(goodsLocation => goodsLocationBuilder.buildThenAdd(goodsLocation, consignment))
 
-    containerCodeBuilder.buildThenAdd(exportsCacheModel.transport.containers.getOrElse(Seq.empty), consignment)
+    containerCodeBuilder.buildThenAdd(declaration.transport.containers.getOrElse(Seq.empty), consignment)
 
-    departureTransportMeansBuilder.buildThenAdd(exportsCacheModel.transport, exportsCacheModel.locations.inlandModeOfTransportCode, consignment)
+    departureTransportMeansBuilder.buildThenAdd(declaration.transport, declaration.locations.inlandModeOfTransportCode, consignment)
 
-    exportsCacheModel.`type` match {
-      case STANDARD | DeclarationType.SIMPLIFIED | DeclarationType.SUPPLEMENTARY | DeclarationType.OCCASIONAL | DeclarationType.CLEARANCE =>
-        transportEquipmentBuilder.buildThenAdd(exportsCacheModel.transport.containers.getOrElse(Seq.empty), consignment)
+    declaration.`type` match {
+      case STANDARD | SIMPLIFIED | SUPPLEMENTARY | OCCASIONAL | CLEARANCE =>
+        transportEquipmentBuilder.buildThenAdd(declaration.transport.containers.getOrElse(Seq.empty), consignment)
+
       case _ => (): Unit
     }
 
