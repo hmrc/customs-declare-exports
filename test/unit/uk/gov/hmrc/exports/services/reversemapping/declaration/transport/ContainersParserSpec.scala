@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.models.declaration.{Container, Seal}
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.ContainersParser.NO_SEALS
 
@@ -41,92 +42,101 @@ class ContainersParserSpec extends UnitSpec {
 
     "return Right with Containers" when {
       val containerId = "1"
-      val sealId = "100"
-      val secondSealId = "200"
+      val sealId1 = "100"
+      val sealId2 = "200"
 
       "a TransportEquipment element is present" which {
         "contains an ID element but no Seal elements" in {
-          val result = parser.parse(generateValidXml(Map(containerId -> Seq.empty[String])))
+          val result = parser.parse(generateValidXml(Container(1, "1", Seq.empty)))
 
           result.isRight mustBe true
           result.toOption.get.size mustBe 1
 
           val container = result.toOption.get.head
 
+          container.sequenceId mustBe 1
           container.id mustBe containerId
           container.seals.size mustBe 0
         }
 
         "contains an ID element with only one Seal element" in {
-          val result = parser.parse(generateValidXml(Map(containerId -> Seq(sealId))))
+          val result = parser.parse(generateValidXml(Container(1, "1", List(Seal(1, sealId1)))))
 
           result.isRight mustBe true
           result.toOption.get.size mustBe 1
 
           val container = result.toOption.get.head
 
+          container.sequenceId mustBe 1
           container.id mustBe containerId
           container.seals.size mustBe 1
-          container.seals.head.id mustBe sealId
+          container.seals.head.id mustBe sealId1
         }
 
         "contains an ID element with only one Seal element containing value 'NOSEALS'" in {
-          val result = parser.parse(generateValidXml(Map(containerId -> Seq(NO_SEALS))))
+          val result = parser.parse(generateValidXml(Container(1, "1", List(Seal(0, NO_SEALS)))))
 
           result.isRight mustBe true
           result.toOption.get.size mustBe 1
 
           val container = result.toOption.get.head
 
+          container.sequenceId mustBe 1
           container.id mustBe containerId
           container.seals.size mustBe 0
         }
 
         "contains an ID element with multiple Seal elements with one of them containing value 'NOSEALS'" in {
-          val result = parser.parse(generateValidXml(Map(containerId -> Seq(sealId, secondSealId, NO_SEALS))))
+          val result = parser.parse(generateValidXml(Container(1, "1", List(Seal(1, sealId1), Seal(2, sealId2), Seal(0, NO_SEALS)))))
 
           result.isRight mustBe true
           result.toOption.get.size mustBe 1
 
           val container = result.toOption.get.head
 
+          container.sequenceId mustBe 1
           container.id mustBe containerId
           container.seals.size mustBe 2
         }
 
         "contains an ID element with multiple Seal elements" in {
-          val result = parser.parse(generateValidXml(Map(containerId -> Seq(sealId, secondSealId))))
+          val result = parser.parse(generateValidXml(Container(1, "1", List(Seal(1, sealId1), Seal(2, sealId2)))))
 
           result.isRight mustBe true
           result.toOption.get.size mustBe 1
 
           val container = result.toOption.get.head
 
+          container.sequenceId mustBe 1
           container.id mustBe containerId
           container.seals.size mustBe 2
-          container.seals.head.id mustBe sealId
-          container.seals.last.id mustBe secondSealId
+          container.seals.head.id mustBe sealId1
+          container.seals.last.id mustBe sealId2
         }
       }
 
       "multiple TransportEquipment element are present" in {
         val secondContainerId = "2"
-        val result = parser.parse(generateValidXml(Map(containerId -> Seq(sealId), secondContainerId -> Seq(secondSealId))))
+        val result = parser.parse(generateValidXml(Container(1, "1", List(Seal(1, sealId1))), Container(2, "2", List(Seal(3, sealId2)))))
 
         result.isRight mustBe true
         result.toOption.get.size mustBe 2
 
         val container1 = result.toOption.get.head
 
+        container1.sequenceId mustBe 1
         container1.id mustBe containerId
         container1.seals.size mustBe 1
-        container1.seals.head.id mustBe sealId
+        container1.seals.head.sequenceId mustBe 1
+        container1.seals.head.id mustBe sealId1
 
         val container2 = result.toOption.get.last
 
+        container2.sequenceId mustBe 2
         container2.id mustBe secondContainerId
         container2.seals.size mustBe 1
-        container2.seals.head.id mustBe secondSealId
+        container2.seals.head.sequenceId mustBe 3
+        container2.seals.head.id mustBe sealId2
       }
     }
 
@@ -145,25 +155,25 @@ class ContainersParserSpec extends UnitSpec {
     }
   }
 
-  private def generateValidXml(transportStructure: Map[String, Seq[String]] = Map()): Elem =
+  private def generateValidXml(containers: Container*): Elem =
     <meta>
       <ns3:Declaration>
         <ns3:GoodsShipment>
           <ns3:Consignment>
-            {
-      transportStructure.map { case (id, seals) =>
+          {
+      containers.map { container =>
         <ns3:TransportEquipment>
-                  <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
-                  <ns3:ID>{id}</ns3:ID>
-                {
-          seals.map { sealId =>
+              <ns3:SequenceNumeric>{container.sequenceId}</ns3:SequenceNumeric>
+              <ns3:ID>{container.id}</ns3:ID>
+              {
+          container.seals.map { seal =>
             <ns3:Seal>
-                      <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
-                      <ns3:ID>{sealId}</ns3:ID>
-                    </ns3:Seal>
+                  <ns3:SequenceNumeric>{seal.sequenceId}</ns3:SequenceNumeric>
+                  <ns3:ID>{seal.id}</ns3:ID>
+                </ns3:Seal>
           }
         }
-                </ns3:TransportEquipment>
+            </ns3:TransportEquipment>
       }
     }
           </ns3:Consignment>
@@ -184,10 +194,10 @@ class ContainersParserSpec extends UnitSpec {
               </ns3:Seal>
             </ns3:TransportEquipment>
             <ns3:TransportEquipment>
-              <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+              <ns3:SequenceNumeric>2</ns3:SequenceNumeric>
               <ns3:ID>2</ns3:ID>
               <ns3:Seal>
-                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+                <ns3:SequenceNumeric>2</ns3:SequenceNumeric>
                 <ns3:ID>100</ns3:ID>
               </ns3:Seal>
             </ns3:TransportEquipment>
@@ -207,7 +217,7 @@ class ContainersParserSpec extends UnitSpec {
                 <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
               </ns3:Seal>
               <ns3:Seal>
-                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+                <ns3:SequenceNumeric>2</ns3:SequenceNumeric>
                 <ns3:ID>100</ns3:ID>
               </ns3:Seal>
             </ns3:TransportEquipment>

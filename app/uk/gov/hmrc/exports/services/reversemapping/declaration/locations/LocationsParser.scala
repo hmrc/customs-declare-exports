@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.locations
 
-import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.{STANDARD_FRONTIER, STANDARD_PRE_LODGED, SUPPLEMENTARY_SIMPLIFIED}
+import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType._
 import uk.gov.hmrc.exports.models.declaration.InlandOrBorder.{Border, Inland}
 import uk.gov.hmrc.exports.models.declaration.{Country, Locations, RoutingCountry}
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
@@ -31,7 +31,6 @@ import scala.xml.NodeSeq
 @Singleton
 class LocationsParser @Inject() (
   additionalDeclarationTypeParser: AdditionalDeclarationTypeParser,
-  countryParser: CountryParser,
   goodsLocationParser: GoodsLocationParser,
   officeOfExitParser: OfficeOfExitParser,
   supervisingCustomsOfficeParser: SupervisingCustomsOfficeParser,
@@ -41,8 +40,8 @@ class LocationsParser @Inject() (
 
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Locations] =
     for {
-      originationCountry <- countryParser.parse(inputXml \ Declaration \ GoodsShipment \ ExportCountry \ ID)
-      destinationCountry <- countryParser.parse(inputXml \ Declaration \ GoodsShipment \ Destination \ CountryCode)
+      originationCountry <- parseCountry(inputXml \ Declaration \ GoodsShipment \ ExportCountry \ ID)
+      destinationCountry <- parseCountry(inputXml \ Declaration \ GoodsShipment \ Destination \ CountryCode)
       routingCountries <- parseRoutingCountries(inputXml)
       goodsLocation <- goodsLocationParser.parse(inputXml)
       officeOfExit <- officeOfExitParser.parse(inputXml)
@@ -67,7 +66,7 @@ class LocationsParser @Inject() (
         originationCountry = originationCountry,
         destinationCountry = destinationCountry,
         hasRoutingCountries = hasRoutingCountries,
-        routingCountries = routingCountries.zipWithIndex.map { case (country, ix) => RoutingCountry(ix + 1, country) },
+        routingCountries = routingCountries,
         goodsLocation = goodsLocation,
         officeOfExit = officeOfExit,
         supervisingCustomsOffice = supervisingCustomsOffice,
@@ -77,10 +76,26 @@ class LocationsParser @Inject() (
       )
     }
 
-  private def parseRoutingCountries(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Seq[Country]] =
-    (inputXml \ Declaration \ Consignment \ Itinerary \ RoutingCountryCode).map(countryParser.parse).toEitherOfList.map(_.flatten)
+  private def parseCountry(inputXml: NodeSeq): XmlParserResult[Option[Country]] =
+    Right(inputXml.toStringOption.map(countryCode => Country(Some(countryCode))))
+
+  private def parseRoutingCountries(inputXml: NodeSeq): XmlParserResult[Seq[RoutingCountry]] =
+    (inputXml \ Declaration \ Consignment \ Itinerary).map(parseRoutingCountry).toEitherOfList.map(_.flatten)
+
+  private def parseRoutingCountry(inputXml: NodeSeq): XmlParserResult[Option[RoutingCountry]] = {
+    val routingCountry = List((inputXml \ SequenceNumeric).toStringOption, (inputXml \ RoutingCountryCode).toStringOption)
+    if (routingCountry.flatten.isEmpty) Right(None)
+    else
+      for {
+        sequenceId <- parseSequenceId(routingCountry, s"$path/SequenceNumeric")
+        countryCode <- parseText(routingCountry, 1, s"$path/RoutingCountryCode")
+      } yield Some(RoutingCountry(sequenceId, Country(Some(countryCode))))
+  }
+
+  private val path = "Consignment/Itinerary"
 }
 
 object LocationsParser {
+
   val additionalDeclTypesForInlandOrBorder = List(STANDARD_FRONTIER, STANDARD_PRE_LODGED, SUPPLEMENTARY_SIMPLIFIED)
 }

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.services.reversemapping.declaration.transport
 
-import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.sequenceIdPlaceholder
 import uk.gov.hmrc.exports.models.declaration.{Container, Seal => SealModel}
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser
@@ -31,25 +30,24 @@ class ContainersParser extends DeclarationXmlParser[Seq[Container]] {
     (inputXml \ Declaration \ GoodsShipment \ Consignment \ TransportEquipment).map(parseTransportEquipmentNode).toEitherOfList
 
   private def parseTransportEquipmentNode(inputXml: NodeSeq): XmlParserResult[Container] = {
-    val id = (inputXml \ ID).toStringOption
-    val eitherSeals = (inputXml \ Seal).map(parseSealNode).toEitherOfList
-
-    (id, eitherSeals) match {
-      case (Some(value), Right(seals)) =>
-        val filteredSeals = seals.filterNot(_.id.equals(NO_SEALS))
-        Right(Container(sequenceIdPlaceholder, value, filteredSeals))
-
-      case (None, _) => Left("TransportEquipment element is missing the required ID element")
-
-      case (_, Left(sealsError)) => Left(sealsError)
-    }
+    val containers = List((inputXml \ SequenceNumeric).toStringOption, (inputXml \ ID).toStringOption)
+    for {
+      sequenceId <- parseSequenceId(containers, s"$path/SequenceNumeric")
+      id <- parseText(containers, 1, s"$path/ID")
+      listOfSeals <- (inputXml \ Seal).map(parseSealNode).toEitherOfList
+      seals = listOfSeals.filterNot(_.id.equals(NO_SEALS))
+    } yield Container(sequenceId, id, seals)
   }
 
-  private def parseSealNode(inputXml: NodeSeq): Either[XmlParserError, SealModel] =
-    (inputXml \ ID).toStringOption match {
-      case Some(value) => Right(SealModel(sequenceIdPlaceholder, value))
-      case None        => Left("Seal element is missing the required ID element")
-    }
+  private def parseSealNode(inputXml: NodeSeq): XmlParserResult[SealModel] = {
+    val seals = List((inputXml \ SequenceNumeric).toStringOption, (inputXml \ ID).toStringOption)
+    for {
+      sequenceId <- parseSequenceId(seals, s"$path/Seal/SequenceNumeric")
+      id <- parseText(seals, 1, s"$path/Seal/ID")
+    } yield SealModel(sequenceId, id)
+  }
+
+  private val path = "/GoodsShipment/Consignment/TransportEquipment"
 }
 
 object ContainersParser {

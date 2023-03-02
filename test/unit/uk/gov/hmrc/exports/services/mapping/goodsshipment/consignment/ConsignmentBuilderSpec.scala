@@ -18,8 +18,7 @@ package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import com.google.inject.Guice
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.DeclarationType
-import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
+import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -36,29 +35,20 @@ class ConsignmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       val meansOfTransportOnDepartureType = "T"
       val meansOfTransportOnDepartureIDNumber = "12345"
 
-      for (
-        declarationType: DeclarationType <- Seq(
-          DeclarationType.STANDARD,
-          DeclarationType.SUPPLEMENTARY,
-          DeclarationType.SIMPLIFIED,
-          DeclarationType.OCCASIONAL,
-          DeclarationType.CLEARANCE
-        )
-      )
+      for (declarationType <- Seq(STANDARD, SUPPLEMENTARY, SIMPLIFIED, OCCASIONAL, CLEARANCE))
         s"for $declarationType declaration" in {
-          val model: ExportsDeclaration =
-            aDeclaration(
-              withGoodsLocation(GoodsLocationBuilderSpec.validGoodsLocation),
-              withDepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, meansOfTransportOnDepartureIDNumber),
-              withType(declarationType),
-              withBorderTransport(Some("40"), Some("1234567878ui")),
-              withTransportCountry(Some("Portugal")),
-              withContainerData(Container(1, "container", Seq(Seal(1, "seal1"), Seal(2, "seal2"))))
-            )
+          val declaration = aDeclaration(
+            withGoodsLocation(GoodsLocationBuilderSpec.validGoodsLocation),
+            withDepartureTransport(borderModeOfTransportCode, meansOfTransportOnDepartureType, meansOfTransportOnDepartureIDNumber),
+            withType(declarationType),
+            withBorderTransport(Some("40"), Some("1234567878ui")),
+            withTransportCountry(Some("Portugal")),
+            withContainerData(Container(1, "container", Seq(Seal(1, "seal1"), Seal(2, "seal2"))))
+          )
 
           val goodsShipment: Declaration.GoodsShipment = new Declaration.GoodsShipment
 
-          builder.buildThenAdd(model, goodsShipment)
+          builder.buildThenAdd(declaration, goodsShipment)
 
           val consignment = goodsShipment.getConsignment
 
@@ -67,17 +57,15 @@ class ConsignmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
           assert(Option(consignment.getDepartureTransportMeans).isDefined)
           assert(Option(consignment.getTransportEquipment).isDefined)
         }
-
     }
 
     "correctly call TransportEquipmentBuilder" when {
       "no containers present" in {
-
-        val model: ExportsDeclaration = aDeclaration(withoutContainerData())
+        val declaration = aDeclaration(withoutContainerData())
 
         val goodsShipment: Declaration.GoodsShipment = new Declaration.GoodsShipment
 
-        builder.buildThenAdd(model, goodsShipment)
+        builder.buildThenAdd(declaration, goodsShipment)
 
         goodsShipment.getConsignment.getTransportEquipment.get(0).getSequenceNumeric.intValue() mustEqual 0
       }

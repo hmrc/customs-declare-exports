@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.models.declaration.ExportItem
+import uk.gov.hmrc.exports.models.declaration.{ExportItem, PackageInformation}
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem.Packaging
@@ -26,26 +26,20 @@ import wco.datamodel.wco.declaration_ds.dms._2.{PackagingMarksNumbersIDType, Pac
 class PackagingBuilder @Inject() () extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
 
   def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem): Unit =
-    exportItem.packageInformation.getOrElse(List.empty).zipWithIndex.foreach { case (packing, index) =>
-      wcoGovernmentAgencyGoodsItem.getPackaging
-        .add(createWcoPackaging(index, packing.typesOfPackages, packing.numberOfPackages, packing.shippingMarks))
-    }
+    exportItem.packageInformation.map(_.foreach { packageInfo =>
+      wcoGovernmentAgencyGoodsItem.getPackaging.add(createWcoPackaging(packageInfo))
+    })
 
-  private def createWcoPackaging(
-    sequenceNumeric: Int,
-    typeCodeOpt: Option[String],
-    quantityOpt: Option[Int],
-    markNumberOpt: Option[String]
-  ): Packaging = {
+  private def createWcoPackaging(packageInfo: PackageInformation): Packaging = {
     val wcoPackaging = new Packaging
 
-    typeCodeOpt.foreach { typeCode =>
+    packageInfo.typesOfPackages.map { typeCode =>
       val packagingTypeCodeType = new PackagingTypeCodeType
       packagingTypeCodeType.setValue(typeCode)
       wcoPackaging.setTypeCode(packagingTypeCodeType)
     }
 
-    quantityOpt.foreach { quantity =>
+    packageInfo.numberOfPackages.map { quantity =>
       val packagingQuantityQuantityType = new PackagingQuantityQuantityType
       // TODO noticed here that quantity type in old scala wco is not captured.. no cannot set :-
       // packagingQuantityQuantityType.setUnitCode(????)
@@ -53,13 +47,13 @@ class PackagingBuilder @Inject() () extends ModifyingBuilder[ExportItem, GoodsSh
       wcoPackaging.setQuantityQuantity(packagingQuantityQuantityType)
     }
 
-    markNumberOpt.foreach { markNumber =>
+    packageInfo.shippingMarks.map { markNumber =>
       val packagingMarksNumbersIDType = new PackagingMarksNumbersIDType
       packagingMarksNumbersIDType.setValue(markNumber)
       wcoPackaging.setMarksNumbersID(packagingMarksNumbersIDType)
     }
 
-    wcoPackaging.setSequenceNumeric(new java.math.BigDecimal(sequenceNumeric))
+    wcoPackaging.setSequenceNumeric(new java.math.BigDecimal(packageInfo.sequenceId))
 
     wcoPackaging
   }

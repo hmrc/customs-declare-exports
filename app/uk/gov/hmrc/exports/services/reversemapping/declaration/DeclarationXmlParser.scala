@@ -17,9 +17,10 @@
 package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 import uk.gov.hmrc.exports.models.StringOption
-import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
+import uk.gov.hmrc.exports.services.reversemapping.declaration.DeclarationXmlParser.XmlParserResult
 
+import java.lang.Character.isDigit
 import scala.annotation.tailrec
 import scala.xml.NodeSeq
 
@@ -49,5 +50,37 @@ object DeclarationXmlParser {
 
   implicit class OptionalString(nodeSeq: NodeSeq) {
     def toStringOption: Option[String] = StringOption(nodeSeq.text)
+  }
+
+  def parseIntIfAny(listOfNode: List[Option[String]], index: Int, xmlPath: => String): XmlParserResult[Option[Int]] = {
+    def error(sequenceId: String): Left[XmlParserError, Option[Int]] = {
+      val msg = s"Expected a numeric value for '$xmlPath' element"
+      Left(s"$msg. The element was instead $sequenceId")
+    }
+    listOfNode
+      .lift(index)
+      .flatten
+      .map { value =>
+        if (value forall isDigit) Right(Some(value.toInt)) else error(value)
+      }
+      .getOrElse(Right(None))
+  }
+
+  def parseSequenceId(listOfNode: List[Option[String]], xmlPath: => String): XmlParserResult[Int] = {
+    def error(sequenceId: String): Left[XmlParserError, Int] = {
+      val msg = s"Expected a numeric value for '$xmlPath' element"
+      Left(s"$msg. The element was instead $sequenceId")
+    }
+    listOfNode.headOption.flatten.map { sequenceId =>
+      if (sequenceId forall isDigit) Right(sequenceId.toInt) else error(s"'$sequenceId'")
+    }
+      .getOrElse(error("missing/not found"))
+  }
+
+  def parseText(listOfNode: List[Option[String]], index: Int, xmlPath: => String): XmlParserResult[String] = {
+    def error: Left[XmlParserError, String] =
+      Left(s"Expected a value for '$xmlPath' element. The element was instead missing/not found")
+
+    listOfNode.lift(index).flatten.map(Right(_)).getOrElse(error)
   }
 }

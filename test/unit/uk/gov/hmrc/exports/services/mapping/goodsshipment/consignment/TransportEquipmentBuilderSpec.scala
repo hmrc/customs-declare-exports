@@ -25,13 +25,11 @@ class TransportEquipmentBuilderSpec extends UnitSpec {
   "TransportEquipmentBuilder" should {
     "correctly map TransportEquipment instance for Standard journey " when {
       "all data is supplied" in {
-        val builder = new TransportEquipmentBuilder
+        val containers =
+          Seq(Container(1, "container-a", Seq(Seal(1, "seal-1a"), Seal(2, "seal-2a"))), Container(2, "container-b", Seq(Seal(3, "seal-b"))))
         val consignment: GoodsShipment.Consignment = new GoodsShipment.Consignment
 
-        val containers =
-          Seq(Container(1, "container-a", Seq(Seal(1, "seal-1a"), Seal(2, "seal-2a"))), Container(2, "container-b", Seq(Seal(2, "seal-b"))))
-
-        builder.buildThenAdd(containers, consignment)
+        new TransportEquipmentBuilder().buildThenAdd(containers, consignment)
 
         consignment.getTransportEquipment.size() must be(2)
 
@@ -51,17 +49,16 @@ class TransportEquipmentBuilderSpec extends UnitSpec {
         containerB.getSeal.size() must be(1)
 
         containerB.getSeal.get(0).getID.getValue must be("seal-b")
-        containerB.getSeal.get(0).getSequenceNumeric.intValue() must be(1)
+        containerB.getSeal.get(0).getSequenceNumeric.intValue() must be(3)
       }
     }
 
     "correctly map TransportEquipment instance for Standard journey " when {
       "container has no seals" in {
-        val builder = new TransportEquipmentBuilder
+        val containers = Seq(Container(1, "container-a", Seq.empty))
         val consignment: GoodsShipment.Consignment = new GoodsShipment.Consignment
 
-        val containers = Seq(Container(1, "container-a", Seq.empty))
-        builder.buildThenAdd(containers, consignment)
+        new TransportEquipmentBuilder().buildThenAdd(containers, consignment)
 
         consignment.getTransportEquipment.size() must be(1)
 
@@ -71,27 +68,26 @@ class TransportEquipmentBuilderSpec extends UnitSpec {
         containerA.getSeal.size() must be(1)
 
         containerA.getSeal.get(0).getID.getValue must be(TransportEquipmentBuilder.nosealsId)
-        containerA.getSeal.get(0).getSequenceNumeric.intValue() must be(1)
+        containerA.getSeal.get(0).getSequenceNumeric.intValue() must be(0)
       }
     }
 
     "correctly map TransportEquipment instance for Standard journey " when {
       "there are no containers" in {
-        val builder = new TransportEquipmentBuilder
+        val containers = Seq.empty
         val consignment: GoodsShipment.Consignment = new GoodsShipment.Consignment
 
-        val containers = Seq.empty
-        builder.buildThenAdd(containers, consignment)
+        new TransportEquipmentBuilder().buildThenAdd(containers, consignment)
 
         consignment.getTransportEquipment.size() must be(1)
 
         val containerA = consignment.getTransportEquipment.get(0)
         containerA.getSequenceNumeric.intValue() must be(0)
-        containerA.getID must be(null)
+        Option(containerA.getID) mustBe None
         containerA.getSeal.size() must be(1)
 
         containerA.getSeal.get(0).getID.getValue must be(TransportEquipmentBuilder.nosealsId)
-        containerA.getSeal.get(0).getSequenceNumeric.intValue() must be(1)
+        containerA.getSeal.get(0).getSequenceNumeric.intValue() must be(0)
       }
     }
   }

@@ -125,8 +125,8 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec {
       val locations = Locations(routingCountries = routingCountries)
       when(locationsParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(locations))
 
-      val item1 = anItem(withPackageInformation(Some("RT"), Some(11904), Some("cr6"), -1))
-      val item2 = anItem(withPackageInformation(Some("RT"), Some(11904), Some("cr6"), -1))
+      val item1 = anItem(withPackageInformation(Some("RT"), Some(11904), Some("cr6"), 2))
+      val item2 = anItem(withPackageInformation(Some("RT"), Some(11904), Some("cr6"), 4))
       when(itemsParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(List(item1, item2)))
 
       val result = exportsDeclarationXmlParser.fromXml(mappingContext, inputXml)
@@ -137,12 +137,12 @@ class ExportsDeclarationXmlParserSpec extends UnitSpec {
       val maxSequenceIds = declaration.declarationMeta.maxSequenceIds
       maxSequenceIds.size mustBe 4
       maxSequenceIds.get(ContainerKey) mustBe Some(2)
-      maxSequenceIds.get(PackageInformationKey) mustBe Some(2)
+      maxSequenceIds.get(PackageInformationKey) mustBe Some(4)
       maxSequenceIds.get(RoutingCountryKey) mustBe Some(2)
       maxSequenceIds.get(SealKey) mustBe Some(4)
 
-      declaration.items.head.packageInformation.value.head.sequenceId mustBe 1
-      declaration.items.last.packageInformation.value.head.sequenceId mustBe 2
+      declaration.items.head.packageInformation.value.head.sequenceId mustBe 2
+      declaration.items.last.packageInformation.value.head.sequenceId mustBe 4
     }
 
     "return Left with XmlParserError" when {

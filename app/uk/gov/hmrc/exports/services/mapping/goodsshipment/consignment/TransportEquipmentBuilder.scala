@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
-import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.sequenceIdPlaceholder
 import uk.gov.hmrc.exports.models.declaration.{Container, Seal}
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
@@ -30,11 +29,11 @@ class TransportEquipmentBuilder @Inject() () extends ModifyingBuilder[Seq[Contai
 
   import TransportEquipmentBuilder._
 
-  override def buildThenAdd(containersHolder: Seq[Container], consignment: Consignment): Unit =
-    if (containersHolder.isEmpty) {
+  override def buildThenAdd(containers: Seq[Container], consignment: Consignment): Unit =
+    if (containers.isEmpty) {
       consignment.getTransportEquipment.add(createEmptyTransportEquipment)
     } else {
-      consignment.getTransportEquipment.addAll(containersHolder.zipWithIndex.map(data => createTransportEquipment(data)).toList.asJava)
+      consignment.getTransportEquipment.addAll(containers.map(createTransportEquipment(_)).toList.asJava)
     }
 
   private def createEmptyTransportEquipment: Consignment.TransportEquipment = {
@@ -44,37 +43,38 @@ class TransportEquipmentBuilder @Inject() () extends ModifyingBuilder[Seq[Contai
     transportEquipment
   }
 
-  private def createTransportEquipment(containerData: (Container, Int)): GoodsShipment.Consignment.TransportEquipment = {
+  private def createTransportEquipment(container: Container): GoodsShipment.Consignment.TransportEquipment = {
     val transportEquipment = new GoodsShipment.Consignment.TransportEquipment()
-    transportEquipment.setSequenceNumeric(new java.math.BigDecimal(containerData._2 + 1))
+    transportEquipment.setSequenceNumeric(new java.math.BigDecimal(container.sequenceId))
 
     val containerID: TransportEquipmentIdentificationIDType = new TransportEquipmentIdentificationIDType
-    containerID.setValue(containerData._1.id)
+    containerID.setValue(container.id)
     transportEquipment.setID(containerID)
 
-    if (containerData._1.seals.isEmpty) {
+    if (container.seals.isEmpty) {
       transportEquipment.getSeal.add(createSeal(emptySeal))
     } else {
-      transportEquipment.getSeal.addAll(containerData._1.seals.zipWithIndex.map(data => createSeal(data)).toList.asJava)
+      transportEquipment.getSeal.addAll(container.seals.map(createSeal(_)).toList.asJava)
     }
     transportEquipment
   }
 
-  private def createSeal(sealData: (Seal, Int)): Consignment.TransportEquipment.Seal = {
-    val seal = new Consignment.TransportEquipment.Seal
+  private def createSeal(seal: Seal): Consignment.TransportEquipment.Seal = {
+    val sealWCO = new Consignment.TransportEquipment.Seal
 
-    seal.setSequenceNumeric(new java.math.BigDecimal(sealData._2 + 1))
+    sealWCO.setSequenceNumeric(new java.math.BigDecimal(seal.sequenceId))
 
     val identificationIDType = new SealIdentificationIDType
-    identificationIDType.setValue(sealData._1.id)
-    seal.setID(identificationIDType)
+    identificationIDType.setValue(seal.id)
+    sealWCO.setID(identificationIDType)
 
-    seal
+    sealWCO
   }
 
-  private val emptySeal: (Seal, Int) = (Seal(sequenceIdPlaceholder, nosealsId), 0)
+  private val emptySeal = Seal(0, nosealsId)
 }
 
 object TransportEquipmentBuilder {
+
   val nosealsId = "NOSEALS"
 }

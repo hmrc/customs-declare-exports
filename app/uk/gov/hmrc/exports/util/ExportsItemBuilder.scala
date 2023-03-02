@@ -66,11 +66,8 @@ trait ExportsItemBuilder {
 
   def withoutPackageInformation(): ItemModifier = _.copy(packageInformation = None)
 
-  def withPackageInformation(first: PackageInformation, others: PackageInformation*): ItemModifier =
-    withPackageInformation(List(first) ++ others.toList)
-
-  def withPackageInformation(packageInformation: List[PackageInformation]): ItemModifier =
-    _.copy(packageInformation = Some(packageInformation))
+  def withPackageInformation(packageInformation: PackageInformation*): ItemModifier =
+    _.copy(packageInformation = Some(packageInformation.toList))
 
   def withPackageInformation(
     typesOfPackages: Option[String] = None,
