@@ -121,7 +121,7 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: 
               reportAs = Status.INTERNAL_SERVER_ERROR
             )
           case _ =>
-            logger.warn(s"Received status:${response.status} with headers: ${response.headers}")
+            logger.debug(s"Received status:${response.status} with headers: ${response.headers}")
             CustomsDeclarationsResponse(
               response.status,
               Some(
