@@ -45,7 +45,9 @@ class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
   private val goodsShipmentBuilder: GoodsShipmentBuilder = mock[GoodsShipmentBuilder]
   private val identificationBuilder: IdentificationBuilder = mock[IdentificationBuilder]
   private val submitterBuilder: SubmitterBuilder = mock[SubmitterBuilder]
-  private val amendmentBuilder: AmendmentBuilder = mock[AmendmentBuilder]
+  private val amendmentCancelBuilder: AmendmentCancelBuilder = mock[AmendmentCancelBuilder]
+  private val amendmentUpdateBuilder: AmendmentUpdateBuilder = mock[AmendmentUpdateBuilder]
+  private val amendmentPointerBuilder: AmendmentPointerBuilder = mock[AmendmentPointerBuilder]
   private val additionalInformationBuilder: AdditionalInformationBuilder = mock[AdditionalInformationBuilder]
 
   private val builder = new DeclarationBuilder(
@@ -68,7 +70,9 @@ class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
     goodsShipmentBuilder,
     identificationBuilder,
     submitterBuilder,
-    amendmentBuilder,
+    amendmentCancelBuilder,
+    amendmentUpdateBuilder,
+    amendmentPointerBuilder,
     additionalInformationBuilder
   )
 
@@ -106,7 +110,7 @@ class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
       verify(functionalReferenceIdBuilder).buildThenAdd("ref", declaration)
       verify(identificationBuilder).buildThenAdd("id", declaration)
       verify(submitterBuilder).buildThenAdd("eori", declaration)
-      verify(amendmentBuilder).buildThenAdd("reason", declaration)
+      verify(amendmentCancelBuilder).buildThenAdd("reason", declaration)
       verify(additionalInformationBuilder).buildThenAdd("description", declaration)
     }
   }

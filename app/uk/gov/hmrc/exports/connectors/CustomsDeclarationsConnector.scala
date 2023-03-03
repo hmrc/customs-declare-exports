@@ -50,6 +50,18 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: 
       }
     }
 
+  def submitAmendment(eori: String, xml: String)(implicit hc: HeaderCarrier): Future[String] =
+    postMetaData(eori, appConfig.amendDeclarationUri, xml).map { res =>
+      logger.debug(s"CUSTOMS_DECLARATIONS response is  --> ${res.toString}")
+      res match {
+        case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) => conversationId
+        case CustomsDeclarationsResponse(status, Some(message)) =>
+          throw new InternalServerException(s"Customs Declarations Service returned [$status] with error message: $message")
+        case CustomsDeclarationsResponse(status, _) =>
+          throw new InternalServerException(s"Customs Declarations Service returned [$status]")
+      }
+    }
+
   def submitCancellation(submission: Submission, xml: String)(implicit hc: HeaderCarrier): Future[String] = {
     def actionId: String = submission.actions.find(_.requestType == SubmissionRequest).fold("Not a SubmissionRequest?")(_.id)
 

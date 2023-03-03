@@ -120,6 +120,7 @@ object ExportsMetrics {
   }
 
   val submissionMonitor = Monitor(SubmissionMetric.wholeSubmission)
+  val amendmentMonitor = Monitor(AmendmentMetric.wholeSubmission)
 
   object Timers {
     val notificationTimer: Timer = Timer(NotificationMetric.notificationReceiptHandling)
@@ -133,6 +134,10 @@ object ExportsMetrics {
     val submissionConvertToXmlTimer: Timer = Timer(SubmissionMetric.convertToXml)
     val submissionFindOrCreateSubmissionTimer: Timer = Timer(SubmissionMetric.findOrCreateSubmission)
     val submissionSendToDecApiTimer: Timer = Timer(SubmissionMetric.sendToDecApi)
+
+    val amendmentProduceMetaDataTimer: Timer = Timer(AmendmentMetric.produceMetaData)
+    val amendmentConvertToXmlTimer: Timer = Timer(AmendmentMetric.convertToXml)
+    val amendmentSendToDecApiTimer: Timer = Timer(AmendmentMetric.sendToDecApi)
   }
 
   object Counters {

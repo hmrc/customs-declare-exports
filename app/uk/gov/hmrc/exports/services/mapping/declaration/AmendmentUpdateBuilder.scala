@@ -16,21 +16,17 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import uk.gov.hmrc.exports.base.UnitSpec
-import wco.datamodel.wco.dec_dms._2.Declaration
+import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
+import wco.datamodel.wco.dec_dms._2.Declaration.Amendment
+import wco.datamodel.wco.declaration_ds.dms._2.AmendmentChangeReasonCodeType
 
-class AmendmentBuilderTest extends UnitSpec {
+import javax.inject.Inject
 
-  private val builder = new AmendmentBuilder()
+class AmendmentUpdateBuilder @Inject() () extends ModifyingBuilder[String, Amendment] {
 
-  "Build then add" should {
-    "append to declaration" in {
-      val declaration = new Declaration()
-
-      builder.buildThenAdd("reason", declaration)
-
-      declaration.getAmendment.get(0).getChangeReasonCode.getValue mustBe "reason"
-    }
+  override def buildThenAdd(changeReason: String, amendment: Amendment): Unit = {
+    val changeReasonCodeType = new AmendmentChangeReasonCodeType()
+    changeReasonCodeType.setValue(changeReason)
+    amendment.setChangeReasonCode(changeReasonCodeType)
   }
-
 }

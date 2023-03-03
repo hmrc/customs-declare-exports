@@ -26,7 +26,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
     customsDeclarationsConnector = customsDeclarationsConnector,
     submissionRepository = submissionRepository,
     declarationRepository = declarationRepository,
-    metaDataBuilder = metaDataBuilder,
+    cancelMetaDataBuilder = metaDataBuilder,
     wcoMapperService = wcoMapperService,
     metrics = exportsMetrics
   )(global)

@@ -44,7 +44,9 @@ class DeclarationBuilder @Inject() (
   goodsShipmentBuilder: GoodsShipmentBuilder,
   identificationBuilder: IdentificationBuilder,
   submitterBuilder: SubmitterBuilder,
-  amendmentBuilder: AmendmentBuilder,
+  amendmentCancelBuilder: AmendmentCancelBuilder,
+  amendmentUpdateBuilder: AmendmentUpdateBuilder,
+  amendmentPointerBuilder: AmendmentPointerBuilder,
   additionalInformationBuilder: AdditionalInformationBuilder
 ) {
 
@@ -88,8 +90,40 @@ class DeclarationBuilder @Inject() (
     functionalReferenceIdBuilder.buildThenAdd(functionalReferenceId, declaration)
     identificationBuilder.buildThenAdd(declarationId, declaration)
     submitterBuilder.buildThenAdd(eori, declaration)
-    amendmentBuilder.buildThenAdd(changeReason, declaration)
+    amendmentCancelBuilder.buildThenAdd(changeReason, declaration)
     additionalInformationBuilder.buildThenAdd(statementDescription, declaration)
+
+    declaration
+  }
+
+  def buildAmendment(model: ExportsDeclaration, wcoPointers: Seq[String]): Declaration = {
+    val declaration = new Declaration()
+    val amendment = new Declaration.Amendment()
+    declaration.getAmendment.add(amendment)
+
+    functionCodeBuilder.buildThenAdd("13", declaration)
+    typeCodeBuilder.buildThenAdd("COR", declaration)
+    functionalReferenceIdBuilder.buildThenAdd(model, declaration)
+    identificationBuilder.buildThenAdd(model.id, declaration)
+    submitterBuilder.buildThenAdd(model.eori, declaration)
+    amendmentUpdateBuilder.buildThenAdd("32", amendment)
+    wcoPointers.foreach(wcoPointer => amendmentPointerBuilder.buildThenAdd(wcoPointer, amendment))
+
+    goodsItemQuantityBuilder.buildThenAdd(model, declaration)
+    agentBuilder.buildThenAdd(model, declaration)
+    goodsShipmentBuilder.buildThenAdd(model, declaration)
+    exitOfficeBuilder.buildThenAdd(model, declaration)
+    borderTransportMeansBuilder.buildThenAdd(model, declaration)
+    exporterBuilder.buildThenAdd(model, declaration)
+    declarantBuilder.buildThenAdd(model, declaration)
+    invoiceAmountBuilder.buildThenAdd(model, declaration)
+    specificCircumstancesCodeBuilder.buildThenAdd(model, declaration)
+    supervisingOfficeBuilder.buildThenAdd(model, declaration)
+    totalPackageQuantityBuilder.buildThenAdd(model, declaration)
+    declarationConsignmentBuilder.buildThenAdd(model, declaration)
+    authorisationHoldersBuilder.buildThenAdd(model, declaration)
+    currencyExchangeBuilder.buildThenAdd(model, declaration)
+    additionalInformationBuilder.buildThenAdd(model.statementDescription.getOrElse("None"), declaration)
 
     declaration
   }

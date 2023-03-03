@@ -30,13 +30,13 @@ import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.{FetchSubmissionPageData, PageOfSubmissions}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
+import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, CancellationMetaDataBuilder}
 import uk.gov.hmrc.exports.services.notifications.receiptactions.SendEmailForDmsDocAction
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
-import java.time.{ZoneOffset, ZonedDateTime}
+import java.time.{ZonedDateTime, ZoneOffset}
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -46,21 +46,24 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
   private val customsDeclarationsConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
   private val submissionRepository: SubmissionRepository = mock[SubmissionRepository]
   private val declarationRepository: DeclarationRepository = mock[DeclarationRepository]
-  private val metaDataBuilder: CancellationMetaDataBuilder = mock[CancellationMetaDataBuilder]
+  private val cancelMetaDataBuilder: CancellationMetaDataBuilder = mock[CancellationMetaDataBuilder]
+  private val amendMetaDataBuilder: AmendmentMetaDataBuilder = mock[AmendmentMetaDataBuilder]
   private val wcoMapperService: WcoMapperService = mock[WcoMapperService]
   private val sendEmailForDmsDocAction: SendEmailForDmsDocAction = mock[SendEmailForDmsDocAction]
+
 
   private val submissionService = new SubmissionService(
     customsDeclarationsConnector = customsDeclarationsConnector,
     submissionRepository = submissionRepository,
     declarationRepository = declarationRepository,
-    metaDataBuilder = metaDataBuilder,
+    cancelMetaDataBuilder = cancelMetaDataBuilder,
+    amendmentMetaDataBuilder = amendMetaDataBuilder,
     wcoMapperService = wcoMapperService,
     metrics = exportsMetrics
   )(ExecutionContext.global)
 
   override def afterEach(): Unit = {
-    reset(customsDeclarationsConnector, submissionRepository, declarationRepository, metaDataBuilder, wcoMapperService, sendEmailForDmsDocAction)
+    reset(customsDeclarationsConnector, submissionRepository, declarationRepository, cancelMetaDataBuilder, wcoMapperService, sendEmailForDmsDocAction)
     super.afterEach()
   }
 
@@ -89,7 +92,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     "submit and delegate to repository and iterates version number in cancel action from submission" when {
       "submission exists" which {
         "copies version number to cancel action from submission" in {
-          when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
+          when(cancelMetaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
           when(wcoMapperService.toXml(any())).thenReturn("xml")
           when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
           when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
@@ -109,7 +112,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       }
 
       "submission is missing" in {
-        when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
+        when(cancelMetaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
         when(wcoMapperService.toXml(any())).thenReturn("xml")
         when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(None))
@@ -118,7 +121,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       }
 
       "submission exists and previously cancelled" in {
-        when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
+        when(cancelMetaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
         when(wcoMapperService.toXml(any())).thenReturn("xml")
         when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submissionCancelled)))
