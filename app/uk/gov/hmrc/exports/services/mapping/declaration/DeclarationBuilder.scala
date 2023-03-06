@@ -98,17 +98,19 @@ class DeclarationBuilder @Inject() (
 
   def buildAmendment(model: ExportsDeclaration, wcoPointers: Seq[String]): Declaration = {
     val declaration = new Declaration()
-    val amendment = new Declaration.Amendment()
-    declaration.getAmendment.add(amendment)
+    val pointers = if(wcoPointers.isEmpty) Seq("42A.67A.99B.465") else wcoPointers // Nil amendments still need a pointer, but the value is not changed
 
     functionCodeBuilder.buildThenAdd("13", declaration)
     typeCodeBuilder.buildThenAdd("COR", declaration)
     functionalReferenceIdBuilder.buildThenAdd(model, declaration)
     identificationBuilder.buildThenAdd(model.id, declaration)
     submitterBuilder.buildThenAdd(model.eori, declaration)
-    amendmentUpdateBuilder.buildThenAdd("32", amendment)
-    wcoPointers.foreach(wcoPointer => amendmentPointerBuilder.buildThenAdd(wcoPointer, amendment))
-
+    pointers.foreach(pointer => {
+      val amendment = new Declaration.Amendment()
+      declaration.getAmendment.add(amendment)
+      amendmentUpdateBuilder.buildThenAdd("32", amendment)
+      amendmentPointerBuilder.buildThenAdd(pointer, amendment)
+    })
     goodsItemQuantityBuilder.buildThenAdd(model, declaration)
     agentBuilder.buildThenAdd(model, declaration)
     goodsShipmentBuilder.buildThenAdd(model, declaration)

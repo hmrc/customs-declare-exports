@@ -21,8 +21,9 @@ import uk.gov.hmrc.exports.services.mapping.declaration.DeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
+import java.io.StringWriter
 import javax.inject.Inject
-import javax.xml.bind.JAXBElement
+import javax.xml.bind.{JAXBContext, JAXBElement, Marshaller}
 import javax.xml.namespace.QName
 
 class AmendmentMetaDataBuilder @Inject() (declarationBuilder: DeclarationBuilder) {
@@ -38,5 +39,19 @@ class AmendmentMetaDataBuilder @Inject() (declarationBuilder: DeclarationBuilder
     metaData.setAny(element)
 
     metaData
+  }
+}
+
+object AmendmentMetaDataBuilder {
+
+  def toXml(metaData: MetaData): String = {
+    lazy val jaxbContext = JAXBContext.newInstance(classOf[MetaData])
+    val jaxbMarshaller = jaxbContext.createMarshaller
+
+    jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true)
+
+    val sw = new StringWriter
+    jaxbMarshaller.marshal(metaData, sw)
+    sw.toString
   }
 }

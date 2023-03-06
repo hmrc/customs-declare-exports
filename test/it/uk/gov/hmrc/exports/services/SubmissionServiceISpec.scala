@@ -6,7 +6,7 @@ import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
+import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, CancellationMetaDataBuilder}
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
@@ -17,6 +17,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
 
   private val customsDeclarationsConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
   private val metaDataBuilder: CancellationMetaDataBuilder = mock[CancellationMetaDataBuilder]
+  private val amendmentMetaDataBuilder: AmendmentMetaDataBuilder = mock[AmendmentMetaDataBuilder]
   private val wcoMapperService: WcoMapperService = mock[WcoMapperService]
 
   private val declarationRepository = instanceOf[DeclarationRepository]
@@ -27,6 +28,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
     submissionRepository = submissionRepository,
     declarationRepository = declarationRepository,
     cancelMetaDataBuilder = metaDataBuilder,
+    amendmentMetaDataBuilder = amendmentMetaDataBuilder,
     wcoMapperService = wcoMapperService,
     metrics = exportsMetrics
   )(global)
