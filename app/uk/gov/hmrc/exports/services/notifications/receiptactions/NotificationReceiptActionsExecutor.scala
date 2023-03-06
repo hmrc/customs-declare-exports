@@ -29,5 +29,4 @@ class NotificationReceiptActionsExecutor @Inject() (parseAndSaveAction: ParseAnd
       _ <- parseAndSaveAction.execute(notification)
       _ <- sendEmailForDmsDocAction.execute(notification.actionId)
     } yield ()
-
 }

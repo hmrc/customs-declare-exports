@@ -186,13 +186,13 @@ class SubmissionService @Inject() (
 
     val xml: String = wcoMapperService.toXml(metadata)
     customsDeclarationsConnector.submitCancellation(submission, xml).flatMap { actionId =>
-      updateSubmissionInDB(cancellation.mrn, actionId, submission)
+      updateSubmissionInDB(submission, actionId)
     }
   }
 
-  private def updateSubmissionInDB(mrn: String, actionId: String, submission: Submission): Future[CancellationStatus] = {
-    val newAction = Action(id = actionId, CancellationRequest, decId = Some(submission.uuid), versionNo = submission.latestVersionNo)
-    submissionRepository.addAction(mrn, newAction).map {
+  private def updateSubmissionInDB(submission: Submission, actionId: String): Future[CancellationStatus] = {
+    val newAction = Action(actionId, CancellationRequest, Some(submission.uuid), submission.latestVersionNo)
+    submissionRepository.addAction(submission.uuid, newAction).map {
       case Some(_) => CancellationRequestSent
       case None    => NotFound
     }
