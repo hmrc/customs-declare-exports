@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.Addition
 import uk.gov.hmrc.exports.models.declaration._
 
 case class ExportsDeclarationRequest(
-  declarationMeta: ExportsDeclarationRequestMeta,
+  declarationMeta: DeclarationMeta,
   `type`: DeclarationType,
   dispatchLocation: Option[DispatchLocation] = None,
   additionalDeclarationType: Option[AdditionalDeclarationType] = None,

@@ -19,8 +19,9 @@ package uk.gov.hmrc.exports.models.declaration
 import org.mockito.MockitoSugar.mock
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.controllers.request.{ExportsDeclarationRequest, ExportsDeclarationRequestMeta}
+import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus._
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 import uk.gov.hmrc.exports.services.{AlteredField, OriginalAndNewValues}
 import uk.gov.hmrc.exports.services.AlteredField.constructAlteredField
@@ -33,13 +34,20 @@ class ExportsDeclarationSpec extends UnitSpec with ExportsDeclarationBuilder {
   import ExportsDeclarationSpec._
 
   "ExportsDeclaration" should {
+
     "be correctly derived from ExportsDeclarationRequest" in {
       ExportsDeclaration.init(id, Eori(eori), exportsDeclarationRequest) mustBe exportsDeclaration
     }
 
     "be set to initial state when without references" in {
       val declarationRequest = exportsDeclarationRequest.copy(consignmentReferences = None)
-      ExportsDeclaration.init(id, Eori(eori), declarationRequest).status mustBe DeclarationStatus.INITIAL
+      ExportsDeclaration.init(id, Eori(eori), declarationRequest).status mustBe INITIAL
+    }
+
+    "keep the ExportsDeclarationRequest's status" in {
+      val meta = exportsDeclarationRequest.declarationMeta.copy(status = AMENDMENT_DRAFT)
+      val declarationRequest = exportsDeclarationRequest.copy(declarationMeta = meta)
+      ExportsDeclaration.init(id, Eori(eori), declarationRequest).status mustBe AMENDMENT_DRAFT
     }
   }
 
@@ -206,8 +214,10 @@ object ExportsDeclarationSpec {
   private val natureOfTransaction = mock[NatureOfTransaction]
 
   val exportsDeclarationRequest = ExportsDeclarationRequest(
-    declarationMeta = ExportsDeclarationRequestMeta(
+    declarationMeta = DeclarationMeta(
       parentDeclarationId = Some("parentDeclarationId"),
+      parentDeclarationEnhancedStatus = None,
+      status = DRAFT,
       createdDateTime = createdDate,
       updatedDateTime = updatedDate,
       summaryWasVisited = Some(true),
@@ -232,7 +242,7 @@ object ExportsDeclarationSpec {
   val exportsDeclaration = ExportsDeclaration(
     id = id,
     declarationMeta = DeclarationMeta(
-      status = DeclarationStatus.DRAFT,
+      status = DRAFT,
       createdDateTime = createdDate,
       updatedDateTime = updatedDate,
       parentDeclarationId = Some("parentDeclarationId"),
@@ -261,6 +271,7 @@ object ExportsDeclarationSpec {
     """{
       |  "id": "6f31582e-bfd5-4b27-90be-2dca6e236b20",
       |  "declarationMeta": {
+      |    "status": "DRAFT",
       |    "createdDateTime": "2019-12-10T15:52:32.681Z",
       |    "updatedDateTime": "2019-12-10T15:53:13.697Z",
       |    "parentDeclarationId": "parentDeclarationId",
