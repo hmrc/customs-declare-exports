@@ -22,7 +22,7 @@ import testdata.ExportsTestData.{actionId, actionId_2, actionId_4, mrn}
 import testdata.TestDataHelper
 import uk.gov.hmrc.exports.controllers.util.CustomsHeaderNames
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, NotificationError, ParsedNotification, UnparsedNotification}
-import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus._
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 
 import java.time.temporal.ChronoUnit.MINUTES
@@ -99,17 +99,23 @@ object NotificationTestData {
   val notification = ParsedNotification(
     unparsedNotificationId = UUID.randomUUID,
     actionId = actionId,
-    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = SubmissionStatus.UNKNOWN, errors = errors)
+    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = UNKNOWN, errors = errors)
   )
   val notification_2 = ParsedNotification(
     unparsedNotificationId = UUID.randomUUID,
     actionId = actionId,
-    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = SubmissionStatus.UNKNOWN, errors = errors)
+    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = UNKNOWN, errors = errors)
   )
   val notification_3 = ParsedNotification(
     unparsedNotificationId = UUID.randomUUID,
     actionId = actionId_2,
-    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = SubmissionStatus.UNKNOWN, errors = Seq.empty)
+    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = UNKNOWN, errors = Seq.empty)
+  )
+
+  val notificationForExternalAmendment = ParsedNotification(
+    unparsedNotificationId = UUID.randomUUID,
+    actionId = actionId,
+    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = AMENDED, errors = Seq.empty)
   )
 
   val notificationUnparsed = UnparsedNotification(actionId = actionId_4, payload = payload)

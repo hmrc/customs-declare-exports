@@ -47,9 +47,19 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
   override def classTag: ClassTag[Submission] = implicitly[ClassTag[Submission]]
   override val executionContext = ec
 
-  def addAction(mrn: String, newAction: Action): Future[Option[Submission]] = {
-    val filter = Json.obj("mrn" -> mrn)
-    val update = Json.obj("$addToSet" -> Json.obj("actions" -> Json.toJson(newAction)))
+  def addAction(uuid: String, action: Action): Future[Option[Submission]] = {
+    val filter = Json.obj("uuid" -> uuid)
+    val update = Json.obj("$addToSet" -> Json.obj("actions" -> Json.toJson(action)))
+    findOneAndUpdate(filter, update)
+  }
+
+  def addExternalAmendmentAction(uuid: String, action: Action): Future[Option[Submission]] = {
+    val filter = Json.obj("uuid" -> uuid)
+    val update = Json.obj(
+      "$addToSet" -> Json.obj("actions" -> Json.toJson(action)),
+      "$inc" -> Json.obj("latestVersionNo" -> 1),
+      "$unset" -> Json.obj("latestDecId" -> "")
+    )
     findOneAndUpdate(filter, update)
   }
 
@@ -158,6 +168,7 @@ object SubmissionRepository {
         .partialFilterExpression(BsonDocument(filter.toString))
         .unique(true)
     ),
+    IndexModel(ascending("uuid"), IndexOptions().name("uuidIdx").unique(true)),
     IndexModel(compoundIndex(ascending("eori"), descending("action.requestTimestamp")), IndexOptions().name("actionOrderedEori")),
     IndexModel(compoundIndex(ascending("eori"), descending("lrn")), IndexOptions().name("lrnByEori")),
     IndexModel(
