@@ -18,21 +18,26 @@ package uk.gov.hmrc.exports.repositories
 
 import org.mongodb.scala.ClientSession
 import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.model.Filters.{and, equal}
 import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.config.AppConfig
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.AMENDMENT_DRAFT
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions._
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.AMENDED
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.{notificationsToAction, updateActionWithNotificationSummaries}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.transaction.{TransactionConfiguration, Transactions}
 
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UpdateSubmissionsTransactionalOps @Inject() (
   val mongoComponent: MongoComponent,
+  declarationRepository: DeclarationRepository,
   submissionRepository: SubmissionRepository,
   notificationRepository: ParsedNotificationRepository,
   appConfig: AppConfig
@@ -70,25 +75,56 @@ class UpdateSubmissionsTransactionalOps @Inject() (
   ): Future[Option[Submission]] = {
 
     val index = submission.actions.indexWhere(_.id == actionId)
-    val action = submission.actions(index)
+    val action =
+      if (notifications.head.details.status != AMENDED) submission.actions(index)
+      else Action(UUID.randomUUID().toString, ExternalAmendmentRequest, None, submission.latestVersionNo + 1)
+
     val seed = action.notifications.fold(Seq.empty[NotificationSummary])(identity)
 
     val (actionWithAllNotificationSummaries, notificationSummaries) =
       updateActionWithNotificationSummaries(notificationsToAction(action), submission.actions, notifications, seed)
 
-    if (action.requestType == SubmissionRequest)
-      updateSubmissionRequest(
-        session,
-        actionId,
-        notifications.head.details.mrn,
-        notificationSummaries.head,
-        submission.actions.updated(index, actionWithAllNotificationSummaries)
-      )
-    else if (action.requestType == CancellationRequest)
-      updateCancellationRequest(session, actionId, submission.actions.updated(index, actionWithAllNotificationSummaries))
-    else Future.successful(None)
+    action.requestType match {
+      case SubmissionRequest =>
+        updateSubmissionRequest(
+          session,
+          actionId,
+          notifications.head.details.mrn,
+          notificationSummaries.head,
+          submission.actions.updated(index, actionWithAllNotificationSummaries)
+        )
 
+      case ExternalAmendmentRequest =>
+        addExtAmendmentRequestAction(session, submission, action)
+
+      case CancellationRequest =>
+        updateCancellationRequest(session, actionId, submission.actions.updated(index, actionWithAllNotificationSummaries))
+
+      case _ => Future.successful(None)
+    }
   }
+
+  private def addExtAmendmentRequestAction(session: ClientSession, submission: Submission, action: Action): Future[Option[Submission]] =
+    submissionRepository.addExternalAmendmentAction(submission.uuid, action).flatMap {
+      case Some(submissionWithNewAction) =>
+        submission.latestDecId match {
+          case Some(latestDecId) =>
+            val filter = and(
+              equal("eori", submission.eori),
+              equal("declarationMeta.parentDeclarationId", latestDecId),
+              equal("declarationMeta.status", AMENDMENT_DRAFT.toString)
+            )
+            declarationRepository.removeEvery(session, filter).map { _ =>
+              Some(submissionWithNewAction)
+            }
+
+          case _ => Future.successful(Some(submissionWithNewAction))
+        }
+
+      case _ =>
+        logger.error(s"Cannot add an (external amendment) 'Action' to Submission(${submission.uuid})")
+        Future.successful(None)
+    }
 
   private def updateCancellationRequest(session: ClientSession, actionId: String, actions: Seq[Action]): Future[Option[Submission]] = {
     val filter = Json.obj("actions.id" -> actionId)
@@ -137,5 +173,4 @@ object ActionWithNotificationSummariesHelper {
   def notificationsToAction(action: Action): Seq[NotificationSummary] => Action = { notificationSummaries =>
     action.copy(notifications = Some(notificationSummaries))
   }
-
 }

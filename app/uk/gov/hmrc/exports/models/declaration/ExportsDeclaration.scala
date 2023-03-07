@@ -21,7 +21,7 @@ import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.{Eori, FieldMapping}
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
-import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus._
 import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
 import uk.gov.hmrc.exports.services.DiffTools
 import uk.gov.hmrc.exports.services.DiffTools.{combinePointers, compareDifference, ExportsDeclarationDiff}
@@ -48,7 +48,7 @@ case class ExportsDeclaration(
 
   def status: DeclarationStatus = declarationMeta.status
 
-  def isCompleted: Boolean = status == DeclarationStatus.COMPLETE
+  def isCompleted: Boolean = status == COMPLETE
 
   /*
    This diff only compares the fields that are used when generating a WCO XML declaration.
@@ -89,7 +89,7 @@ object ExportsDeclaration extends FieldMapping {
       declarationMeta = DeclarationMeta(
         parentDeclarationId = meta.parentDeclarationId,
         parentDeclarationEnhancedStatus = meta.parentDeclarationEnhancedStatus,
-        status = declarationRequest.consignmentReferences.map(_ => DeclarationStatus.DRAFT).getOrElse(DeclarationStatus.INITIAL),
+        status = declarationRequest.consignmentReferences.map(_ => if (meta.status == INITIAL) DRAFT else meta.status).getOrElse(INITIAL),
         createdDateTime = meta.createdDateTime,
         updatedDateTime = meta.updatedDateTime,
         summaryWasVisited = meta.summaryWasVisited,

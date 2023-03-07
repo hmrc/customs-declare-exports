@@ -16,14 +16,16 @@
 
 package uk.gov.hmrc.exports.repositories
 
+import testdata.ExportsTestData
 import testdata.ExportsTestData.actionId
 import testdata.SubmissionTestData.{action, notificationSummary_1, notificationSummary_2, pendingSubmissionWithoutMrn, submission}
-import testdata.notifications.NotificationTestData.notification
+import testdata.notifications.NotificationTestData.{notification, notificationForExternalAmendment}
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.config.AppConfig
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.AMENDMENT_DRAFT
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{EnhancedStatus, GOODS_ARRIVED_MESSAGE, UNKNOWN}
-import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionStatus}
+import uk.gov.hmrc.exports.models.declaration.submissions.{ExternalAmendmentRequest, Submission, SubmissionRequest, SubmissionStatus}
 import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,13 +34,17 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
 
   private val appConfig = mock[AppConfig]
   private val mongoComponent = instanceOf[MongoComponent]
+  private val declarationRepository = instanceOf[DeclarationRepository]
   private val notificationRepository = instanceOf[ParsedNotificationRepository]
   private val submissionRepository = instanceOf[SubmissionRepository]
 
-  private val transactionalOps = new UpdateSubmissionsTransactionalOps(mongoComponent, submissionRepository, notificationRepository, appConfig)
+  private val transactionalOps =
+    new UpdateSubmissionsTransactionalOps(mongoComponent, declarationRepository, submissionRepository, notificationRepository, appConfig)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
+
+    declarationRepository.removeAll.futureValue
     notificationRepository.removeAll.futureValue
     submissionRepository.removeAll.futureValue
   }
@@ -73,6 +79,34 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
             val details = notification.details.copy(status = SubmissionStatus.ACCEPTED)
 
             testUpdateSubmissionAndNotifications(actionId, List(notification.copy(details = details)), storedSubmission, GOODS_ARRIVED_MESSAGE, 3)
+          }
+        }
+      }
+
+      "an 'external amendment' Notification is given" should {
+        "add a new Action to the Submission and" should {
+          "remove any existing 'AMENDMENT_DRAFT' declarations" in {
+            val declaration =
+              aDeclaration(withEori(ExportsTestData.eori), withStatus(AMENDMENT_DRAFT), withParentDeclarationId(submission.latestDecId.value))
+            declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
+
+            submission.latestDecId.value mustBe submission.uuid
+            submission.latestVersionNo mustBe 1
+            submission.actions.size mustBe 1
+            submission.actions.head.requestType mustBe SubmissionRequest
+            submissionRepository.insertOne(submission).futureValue.isRight mustBe true
+
+            val submissionForAmendment =
+              transactionalOps.updateSubmissionAndNotifications("ignored", List(notificationForExternalAmendment), submission).futureValue.get
+
+            submissionForAmendment.latestDecId mustBe None
+            submissionForAmendment.latestVersionNo mustBe 2
+            submissionForAmendment.actions.size mustBe 2
+            val action = submissionForAmendment.actions.find(_.requestType == ExternalAmendmentRequest).value
+            action.decId mustBe None
+            action.versionNo mustBe 2
+
+            declarationRepository.findAll().futureValue.size mustBe 0
           }
         }
       }
