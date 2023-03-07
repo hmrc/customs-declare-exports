@@ -46,21 +46,22 @@ class TransportParser @Inject() (containersParser: ContainersParser) extends Dec
     }
 
   private def parseBorderModeOfTransportCode(inputXml: NodeSeq): Option[TransportLeavingTheBorder] = {
-    val modeOfTransportCode = (inputXml \ Declaration \ BorderTransportMeans \ ModeCode).text
+    val modeOfTransportCode = (inputXml \ FullDeclarationDataDetails \ FullDeclarationObject \ Declaration \ BorderTransportMeans \ ModeCode).text
     def transportLeavingTheBorder = TransportLeavingTheBorder(Some(ModeOfTransportCode(modeOfTransportCode)))
     if (modeOfTransportCode.nonEmpty) Some(transportLeavingTheBorder) else None
   }
 
   private def parseBorderTransportMeans(inputXml: NodeSeq): NodeSeq =
-    inputXml \ Declaration \ BorderTransportMeans
+    inputXml \ FullDeclarationDataDetails \ FullDeclarationObject \ Declaration \ BorderTransportMeans
 
   private def parseExpressConsignment(inputXml: NodeSeq): Option[YesNoAnswer] = {
-    val specificCircumstances = (inputXml \ Declaration \ DeclarationSpecificCircumstancesCodeCodeType).text
+    val specificCircumstances =
+      (inputXml \ FullDeclarationDataDetails \ FullDeclarationObject \ Declaration \ DeclarationSpecificCircumstancesCodeCodeType).text
     if (specificCircumstances == "A20") Some(YesNoAnswer.yes) else None
   }
 
   private def parseDepartureTransportMeans(inputXml: NodeSeq): NodeSeq =
-    inputXml \ Declaration \ GoodsShipment \ Consignment \ DepartureTransportMeans
+    inputXml \ FullDeclarationDataDetails \ FullDeclarationObject \ Declaration \ GoodsShipment \ Consignment \ DepartureTransportMeans
 
   private def parseTransportCrossingTheBorderNationality(borderTransportMeans: NodeSeq): Option[TransportCountry] = {
     val nationalityCode = (borderTransportMeans \ RegistrationNationalityCode).text
@@ -68,7 +69,7 @@ class TransportParser @Inject() (containersParser: ContainersParser) extends Dec
   }
 
   private def parseTransportPayment(inputXml: NodeSeq): Option[TransportPayment] = {
-    val paymentMethod = (inputXml \ Declaration \ Consignment \ Freight \ PaymentMethodCode).text
+    val paymentMethod = (inputXml \ FullDeclarationDataDetails \ FullDeclarationObject \ Declaration \ Consignment \ Freight \ PaymentMethodCode).text
     if (paymentMethod.nonEmpty) Some(TransportPayment(paymentMethod)) else None
   }
 }

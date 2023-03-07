@@ -156,7 +156,7 @@ trait RepositoryOps[T] {
   def findOneAndUpdate(filter: JsValue, update: JsValue): Future[Option[T]] =
     findOneAndUpdate(BsonDocument(filter.toString), BsonDocument(update.toString))
 
-  private lazy val doNotUpsertAndReturnAfter = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
+  protected def doNotUpsertAndReturnAfter = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
 
   def findOneAndUpdate(filter: Bson, update: Bson): Future[Option[T]] =
     collection

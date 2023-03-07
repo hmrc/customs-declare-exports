@@ -16,19 +16,30 @@
 
 package uk.gov.hmrc.exports.services
 
+import org.mongodb.scala.model.{Filters, Updates}
+import play.api.Logging
 import play.api.libs.json.Json
+import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.{AMENDMENT_DRAFT, COMPLETE, DRAFT}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.models.declaration.submissions.Submission
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.DeclarationService.{CREATED, FOUND}
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
+import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParser
+import uk.gov.hmrc.http.HeaderCarrier
 
 import java.util.UUID
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class DeclarationService @Inject() (declarationRepository: DeclarationRepository, submissionRepository: SubmissionRepository) {
+class DeclarationService @Inject() (
+  declarationRepository: DeclarationRepository,
+  submissionRepository: SubmissionRepository,
+  customsDeclarationsConnector: CustomsDeclarationsInformationConnector,
+  exportsDeclarationXmlParser: ExportsDeclarationXmlParser
+) extends Logging {
 
   def create(declaration: ExportsDeclaration): Future[ExportsDeclaration] =
     declarationRepository.create(declaration)
@@ -108,10 +119,43 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
       declaration,
       false
     )
+
+  def fetchAndSave(mrn: Mrn, eori: Eori, actionId: String, submissionId: String)(
+    implicit ec: ExecutionContext,
+    hc: HeaderCarrier
+  ): Future[Option[Submission]] =
+    customsDeclarationsConnector.fetchMrnFullDeclaration(mrn.value, None) flatMap { xml =>
+      exportsDeclarationXmlParser.fromXml(MappingContext(eori.value), xml.toString).toOption match {
+        case Some(declaration) =>
+          val update = for {
+            _ <- declarationRepository.create(declaration)
+            submission <- submissionRepository.updateAction(submissionId, actionId, declaration.id)
+          } yield submission
+
+          update flatMap { submission =>
+            updateDecId(submission, actionId, declaration.id)
+          }
+        case _ =>
+          Future.successful(None)
+      }
+    }
+
+  private def updateDecId(updatedSubmission: Option[Submission], actionId: String, declarationId: String): Future[Option[Submission]] = {
+
+    def findAction(submission: Submission): Action => Boolean = { action =>
+      action.id == actionId && action.versionNo == submission.latestVersionNo
+    }
+
+    updatedSubmission match {
+      case Some(submission) if submission.actions.exists(findAction(submission)) =>
+        submissionRepository.findOneAndUpdate(Filters.eq("uuid", submission.uuid), Updates.set("latestDecId", declarationId))
+      case submission => Future.successful(submission)
+    }
+  }
+
 }
 
 object DeclarationService {
-
   val CREATED = true
   val FOUND = false
 }

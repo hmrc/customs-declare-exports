@@ -20,11 +20,13 @@ import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.DeclarationService.{CREATED, FOUND}
+import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParser
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
 import scala.concurrent.ExecutionContext.global
@@ -34,7 +36,11 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   private val declarationRepository = mock[DeclarationRepository]
   private val submissionRepository = mock[SubmissionRepository]
-  private val service = new DeclarationService(declarationRepository, submissionRepository)
+  private val mockCustomsDeclarationsInformationConnector = mock[CustomsDeclarationsInformationConnector]
+  private val mockExportsDeclarationXmlParser = mock[ExportsDeclarationXmlParser]
+
+  private val service =
+    new DeclarationService(declarationRepository, submissionRepository, mockCustomsDeclarationsInformationConnector, mockExportsDeclarationXmlParser)
 
   "Create" should {
     "delegate to the repository" in {
