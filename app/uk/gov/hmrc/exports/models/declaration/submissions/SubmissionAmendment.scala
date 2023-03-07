@@ -16,6 +16,10 @@
 
 package uk.gov.hmrc.exports.models.declaration.submissions
 
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import play.api.libs.json.Json
 
-case class SubmissionAmendment(submissionId: String, mrn: String, declaration: ExportsDeclaration, wcoPointers: Seq[String])
+case class SubmissionAmendment(submissionId: String, declarationId: String, wcoPointers: Seq[String])
+
+object SubmissionAmendment {
+  implicit val format = Json.format[SubmissionAmendment]
+}

@@ -31,8 +31,8 @@ class CancellationController @Inject() (authenticator: Authenticator, submission
 
   val create: Action[SubmissionCancellation] =
     authenticator.authorisedAction(parsingJson[SubmissionCancellation]) { implicit request =>
-      submissionService.cancel(request.eori.value, request.body).map { cancelationStatus =>
-        Ok(cancelationStatus)
+      submissionService.cancel(request.eori.value, request.body).map { cancellationStatus =>
+        Ok(cancellationStatus)
       }
     }
 }

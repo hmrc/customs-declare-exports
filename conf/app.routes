@@ -5,6 +5,8 @@ PUT         /declarations/:id                  uk.gov.hmrc.exports.controllers.D
 GET         /declarations/:id                  uk.gov.hmrc.exports.controllers.DeclarationController.findById(id: String)
 DELETE      /declarations/:id                  uk.gov.hmrc.exports.controllers.DeclarationController.deleteById(id: String)
 
+POST        /amendments                        uk.gov.hmrc.exports.controllers.AmendmentController.create
+
 GET         /draft-declaration/:parentId       uk.gov.hmrc.exports.controllers.DeclarationController.findOrCreateDraftFromParent(parentId: String)
 GET         /amend-declaration/:submissionId   uk.gov.hmrc.exports.controllers.DeclarationController.findOrCreateDraftForAmend(submissionId: String)
 

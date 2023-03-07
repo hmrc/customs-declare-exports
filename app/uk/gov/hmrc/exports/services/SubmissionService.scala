@@ -118,7 +118,7 @@ class SubmissionService @Inject() (
 
   def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] =
     metrics.timeAsyncCall(ExportsMetrics.submissionMonitor) {
-      logProgress(declaration, "Beginning Declaration Submission")
+      logProgress(declaration.id, "Beginning Declaration Submission")
 
       val metaData = metrics.timeCall(Timers.submissionProduceMetaDataTimer)(wcoMapperService.produceMetaData(declaration))
 
@@ -132,12 +132,12 @@ class SubmissionService @Inject() (
 
       val payload = metrics.timeCall(Timers.submissionConvertToXmlTimer)(wcoMapperService.toXml(metaData))
 
-      logProgress(declaration, "Submitting new declaration to the Declaration API")
+      logProgress(declaration.id, "Submitting new declaration to the Declaration API")
       for {
         // Submit the declaration to the Dec API
         // Revert the declaration status back to DRAFT if it fails
         actionId: String <- metrics.timeAsyncCall(Timers.submissionSendToDecApiTimer)(submit(declaration, payload))
-        _ = logProgress(declaration, "Submitted new declaration to the Declaration API Successfully")
+        _ = logProgress(declaration.id, "Submitted new declaration to the Declaration API Successfully")
 
         // Create the Submission with action
         action = Action(id = actionId, SubmissionRequest, decId = Some(declaration.id), versionNo = 1)
@@ -145,7 +145,7 @@ class SubmissionService @Inject() (
         submission <- metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer)(
           submissionRepository.create(Submission(declaration, lrn, ducr, action))
         )
-        _ = logProgress(declaration, "New submission creation completed")
+        _ = logProgress(declaration.id, "New submission creation completed")
       } yield submission
     }
 
@@ -155,14 +155,14 @@ class SubmissionService @Inject() (
       case _            => false
     }
 
-  private def logProgress(declaration: ExportsDeclaration, message: String): Unit =
-    logger.info(s"Declaration [${declaration.id}]: $message")
+  private def logProgress(declarationId: String, message: String): Unit =
+    logger.info(s"Declaration [$declarationId]: $message")
 
   private def submit(declaration: ExportsDeclaration, payload: String)(implicit hc: HeaderCarrier): Future[String] =
     customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).recoverWith { case throwable: Throwable =>
-      logProgress(declaration, "Submission failed")
+      logProgress(declaration.id, "Submission failed")
       declarationRepository.revertStatusToDraft(declaration) flatMap { _ =>
-        logProgress(declaration, "Reverted declaration to DRAFT")
+        logProgress(declaration.id, "Reverted declaration to DRAFT")
         Future.failed[String](throwable)
       }
     }
@@ -199,55 +199,43 @@ class SubmissionService @Inject() (
     }
   }
 
-  def amend(amendmentRequest: SubmissionAmendment)(implicit hc: HeaderCarrier): Future[Submission] =
-    metrics.timeAsyncCall(ExportsMetrics.submissionMonitor) {
-      val declaration = amendmentRequest.declaration
-      logProgress(declaration, "Beginning Amend Submission")
-
-      val metaData = metrics.timeCall(Timers.submissionProduceMetaDataTimer)(wcoMapperService.produceMetaData(declaration))
-
-      val payload = metrics.timeCall(Timers.submissionConvertToXmlTimer)(wcoMapperService.toXml(metaData))
-      println(payload)
-
-      logProgress(declaration, "Submitting amendment request to the Declaration API")
+  def amend(eori: String, amendment: SubmissionAmendment, declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[String] =
+    metrics.timeAsyncCall(ExportsMetrics.amendmentMonitor) {
+      logProgress(amendment.declarationId, "Beginning Amend Submission")
       for {
-        // Submit the declaration to the Dec API
-        // Revert the declaration status back to DRAFT if it fails
-        actionId <- metrics.timeAsyncCall(Timers.submissionSendToDecApiTimer)(sendAmendmentRequest(declaration, amendmentRequest.wcoPointers))
-        _ = logProgress(declaration, "Submitted amendment request to the Declaration API Successfully")
-
-        // Update the Submission with action
-
-        submission <- metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer)(
-          submissionRepository.findById(declaration.eori, amendmentRequest.submissionId).flatMap {
-            case Some(t) => Future.successful(t)
-            case None    => Future.failed(new NoSuchElementException("None.get"))
-          }
-        )
-        _ = logProgress(declaration, "New submission creation completed")
-      } yield submission
-
-      Future.failed(new NotImplementedError())
+        Some(consignmentReferences) <- Future.successful(declaration.consignmentReferences)
+        Some(mrn) <- Future.successful(consignmentReferences.mrn)
+        Some(submission) <- submissionRepository.findOne(Json.obj("eori" -> eori, "uuid" -> amendment.submissionId))
+        actionId <- sendAmendmentRequest(declaration, submission, amendment.wcoPointers, mrn)
+      } yield actionId
     }
 
-  private def sendAmendmentRequest(declaration: ExportsDeclaration, wcoPointers: Seq[String])(
+  private def sendAmendmentRequest(declaration: ExportsDeclaration, submission: Submission, wcoPointers: Seq[String], mrn: String)(
     implicit hc: HeaderCarrier
-  ): Future[CancellationStatus] = {
-    val metadata: MetaData = amendmentMetaDataBuilder.buildRequest(declaration, wcoPointers)
+  ): Future[String] = {
+    val metadata =  metrics.timeCall(Timers.amendmentProduceMetaDataTimer)(amendmentMetaDataBuilder.buildRequest(declaration, wcoPointers))
+    val xml = metrics.timeCall(Timers.amendmentConvertToXmlTimer)(wcoMapperService.toXml(metadata))
 
-    val xml: String = wcoMapperService.toXml(metadata)
-    /*customsDeclarationsConnector.submitAmendment(declaration.eori, xml).flatMap { actionId =>
-      updateSubmissionInDB(cancellation.mrn, actionId, submission)
-    }*/
-
-    Future.failed(new NotImplementedError(s"$xml $hc"))
+    logProgress(declaration.id, "Submitting amendment request to the Declaration API")
+    (for {
+      actionId <- metrics.timeCall(Timers.amendmentSendToDecApiTimer)(customsDeclarationsConnector.submitAmendment(declaration.eori, xml))
+      _ = logProgress(declaration.id, "Submitted amendment request to the Declaration API Successfully")
+      _ = logProgress(declaration.id, "Appending cancellation action to submission...")
+      _ <- updateSubmissionWithAmendmentAction(mrn, actionId, submission)
+    } yield actionId).recoverWith { case throwable: Throwable =>
+        logProgress(declaration.id, "Amendment failed")
+        declarationRepository.revertStatusToAmendmentDraft(declaration) flatMap { _ =>
+          logProgress(declaration.id, "Reverted amendment to AMENDMENT_DRAFT")
+          Future.failed[String](throwable)
+        }
+      }
   }
 
-  /*private def updateSubmissionWithAmendmentAction(mrn: String, actionId: String, submission: Submission): Future[CancellationStatus] = {
-    val newAction = Action(id = actionId, CancellationRequest, decId = Some(submission.uuid), versionNo = submission.latestVersionNo)
+  private def updateSubmissionWithAmendmentAction(mrn: String, actionId: String, submission: Submission): Future[Unit] = {
+    val newAction = Action(id = actionId, AmendmentRequest, decId = Some(submission.uuid), versionNo = submission.latestVersionNo)
     submissionRepository.addAction(mrn, newAction).map {
-      case Some(_) => CancellationRequestSent
-      case None    => NotFound
+      case Some(_) => logger.info(s"Updated submission with id ${submission.uuid} successfully with amendment action.")
+      case _ => throw new NoSuchElementException(s"Failed to find submission with id ${submission.uuid} to update with amendment action.")
     }
-  }*/
+  }
 }
