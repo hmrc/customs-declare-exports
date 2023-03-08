@@ -2,7 +2,7 @@ package uk.gov.hmrc.exports.services
 
 import org.mockito.ArgumentMatchers.any
 import org.mongodb.scala.model.Filters
-import play.api.test.Helpers.OK
+import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{IntegrationTestSpec, MockMetrics}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
@@ -13,7 +13,7 @@ import uk.gov.hmrc.exports.models.ead.parsers.MrnDeclarationParserTestData
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
 import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParser
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import java.util.UUID
@@ -108,6 +108,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
     val mrnDeclarationUrl = fetchMrnDeclarationUrl.replace(id, mrn)
 
     "retrieve and parse a declaration from DIS using an MRN" which {
+
       "is persisted with a new `declarationId`" which {
         "has an updated action where decId is updated" which {
           "update submission.latestDecId" when {
@@ -161,6 +162,20 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
 
             }
           }
+        }
+      }
+    }
+
+    "throw exception" when {
+      "no declaration is returned from DIS" in {
+
+        getFromDownstreamService(mrnDeclarationUrl, NOT_FOUND)
+
+        val submission =
+          Submission(declaration, "lrn", "ducr", submissionAction).copy(latestVersionNo = 2, actions = List(submissionAction, externalAction))
+
+        intercept[InternalServerException] {
+          await(submissionService.fetchExternalAmendmentToUpdateSubmission(mrn = Mrn(mrn), Eori(eori), externalActionId, submission.uuid)(hc))
         }
       }
     }
