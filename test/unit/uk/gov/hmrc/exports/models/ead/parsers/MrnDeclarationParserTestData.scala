@@ -192,4 +192,16 @@ object MrnDeclarationParserTestData {
           </p:FullDeclarationObject>
         </p:FullDeclarationDataDetails>
       </p:DeclarationFullResponse>
+
+  val badTestSample: Elem =
+    <p:DeclarationFullResponse xsi:schemaLocation="http://gov.uk/customs/FullDeclarationDataRetrievalService"
+                                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                 xmlns:p4="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:6"
+                                 xmlns:p3="urn:wco:datamodel:WCO:Declaration_DS:DMS:2"
+                                 xmlns:p2="urn:wco:datamodel:WCO:DEC-DMS:2" xmlns:p1="urn:wco:datamodel:WCO:Response_DS:DMS:2"
+                                 xmlns:p="http://gov.uk/customs/FullDeclarationDataRetrievalService">
+            <p:Declaration>
+              <p:TypeCode>EXD</p:TypeCode>
+            </p:Declaration>
+      </p:DeclarationFullResponse>
 }

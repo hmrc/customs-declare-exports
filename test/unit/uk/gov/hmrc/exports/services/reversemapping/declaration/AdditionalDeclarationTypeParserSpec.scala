@@ -63,8 +63,12 @@ class AdditionalDeclarationTypeParserSpec extends UnitSpec {
 
   private def inputXml(typeCode: Option[String]): Elem =
     <meta>
+      <p:FullDeclarationDataDetails>
+        <p:FullDeclarationObject>
       <ns3:Declaration>
         {typeCode.map(code => <ns3:TypeCode>{code}</ns3:TypeCode>).getOrElse(NodeSeq.Empty)}
       </ns3:Declaration>
-    </meta>
+        </p:FullDeclarationObject>
+      </p:FullDeclarationDataDetails>
+        </meta>
 }

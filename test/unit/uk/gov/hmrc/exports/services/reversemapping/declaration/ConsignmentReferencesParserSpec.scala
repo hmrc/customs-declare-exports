@@ -155,6 +155,8 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
     previousDocument: List[PreviousDocument] = List.empty,
     traderAssignedReferenceID: Option[String] = None
   ): Elem = ReverseMappingTestData.inputXmlMetaData {
+    <p:FullDeclarationDataDetails>
+      <p:FullDeclarationObject>
     <ns3:Declaration>
       {
       functionalReferenceId.map { refId =>
@@ -184,5 +186,7 @@ class ConsignmentReferencesParserSpec extends UnitSpec {
     }
       </ns3:GoodsShipment>
     </ns3:Declaration>
+      </p:FullDeclarationObject>
+    </p:FullDeclarationDataDetails>
   }
 }

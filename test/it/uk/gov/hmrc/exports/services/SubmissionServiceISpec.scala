@@ -10,6 +10,7 @@ import uk.gov.hmrc.exports.models.{Eori, Mrn}
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, ExternalAmendmentRequest, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.models.ead.parsers.MrnDeclarationParserTestData
+import uk.gov.hmrc.exports.models.ead.parsers.MrnDeclarationParserTestData.{badTestSample, mrnDeclarationTestSample}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
 import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParser
@@ -140,7 +141,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
           "does not update submission.latestDecId" when {
             "action.versionNo is not submission.latestVersionNo" in {
 
-              getFromDownstreamService(mrnDeclarationUrl, OK, Some(MrnDeclarationParserTestData.mrnDeclarationTestSample(mrn, None).toString))
+              getFromDownstreamService(mrnDeclarationUrl, OK, Some(mrnDeclarationTestSample(mrn, None).toString))
 
               val submission =
                 Submission(declaration, "lrn", "ducr", submissionAction).copy(latestVersionNo = 3, actions = List(submissionAction, externalAction))
@@ -163,6 +164,41 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
             }
           }
         }
+      }
+    }
+
+    "return without submission" when {
+      "declaration cannot be parsed from DIS" in {
+
+        getFromDownstreamService(mrnDeclarationUrl, OK, Some(badTestSample.toString))
+
+        val submission =
+          Submission(declaration, "lrn", "ducr", submissionAction).copy(latestVersionNo = 3, actions = List(submissionAction, externalAction))
+
+        submissionRepository.insertOne(submission).futureValue.isRight mustBe true
+
+        val result: Option[Submission] = submissionService
+          .fetchExternalAmendmentToUpdateSubmission(mrn = Mrn(mrn), Eori(eori), externalActionId, submission.uuid)(hc)
+          .futureValue
+
+        result mustBe None
+
+      }
+      "submission cannot be updated" in {
+
+        getFromDownstreamService(mrnDeclarationUrl, OK, Some(MrnDeclarationParserTestData.mrnDeclarationTestSample(mrn, None).toString))
+
+        val submission =
+          Submission(declaration, "lrn", "ducr", submissionAction).copy(latestVersionNo = 3, actions = List(submissionAction, externalAction))
+
+        submissionRepository.insertOne(submission).futureValue.isRight mustBe true
+
+        val result: Option[Submission] = submissionService
+          .fetchExternalAmendmentToUpdateSubmission(mrn = Mrn(mrn), Eori(eori), externalActionId, "noId")(hc)
+          .futureValue
+
+        result mustBe None
+
       }
     }
 
