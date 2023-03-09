@@ -407,7 +407,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
 
   "DeclarationController.latestDecId" should {
     "return OK with the latestDecId" when {
-      "given a submission" ignore {
+      "given a submission" in {
 
         val actionId = "actionId"
         val submissionId = "submissionId"
@@ -427,13 +427,11 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
       }
     }
     "return NotFound" when {
-      "no submission is given from SubmissionService" ignore {
+      "no submission is given from SubmissionService" in {
 
         val actionId = "actionId"
         val submissionId = "submissionId"
         val mrn = "mrn"
-
-        val dec = aDeclaration(withId("decId"))
 
         val getRequest = FakeRequest("GET", s"/fetch-dis-declaration/$mrn/$actionId/$submissionId")
 
@@ -442,8 +440,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
 
         val result = controller.latestDecId(mrn, actionId, submissionId)(getRequest)
 
-        status(result) must be(OK)
-        contentAsJson(result).as[String] mustBe dec.id
+        status(result) must be(NOT_FOUND)
       }
     }
   }
