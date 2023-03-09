@@ -101,16 +101,20 @@ class DeclarationBuilder @Inject() (
     val pointers = if(wcoPointers.isEmpty) Seq("42A.67A.99B.465") else wcoPointers // Nil amendments still need a pointer, but the value is not changed
 
     functionCodeBuilder.buildThenAdd("13", declaration)
-    typeCodeBuilder.buildThenAdd("COR", declaration)
     functionalReferenceIdBuilder.buildThenAdd(model, declaration)
-    identificationBuilder.buildThenAdd(model.id, declaration)
-    submitterBuilder.buildThenAdd(model.eori, declaration)
-    pointers.foreach(pointer => {
+    model.consignmentReferences.flatMap(_.mrn).foreach(mrn => identificationBuilder.buildThenAdd(mrn, declaration))
+    typeCodeBuilder.buildThenAdd("COR", declaration)
+    invoiceAmountBuilder.buildThenAdd(model, declaration)
+    additionalInformationBuilder.buildThenAdd(model, declaration)
+    pointers.zipWithIndex.foreach { case (_, index) =>
+      additionalInformationBuilder.buildThenAdd(model.statementDescription.getOrElse("None"), declaration, index + 1)
+    }
+    pointers.foreach { pointer =>
       val amendment = new Declaration.Amendment()
       declaration.getAmendment.add(amendment)
       amendmentUpdateBuilder.buildThenAdd("32", amendment)
       amendmentPointerBuilder.buildThenAdd(pointer, amendment)
-    })
+    }
     goodsItemQuantityBuilder.buildThenAdd(model, declaration)
     agentBuilder.buildThenAdd(model, declaration)
     goodsShipmentBuilder.buildThenAdd(model, declaration)
@@ -118,14 +122,11 @@ class DeclarationBuilder @Inject() (
     borderTransportMeansBuilder.buildThenAdd(model, declaration)
     exporterBuilder.buildThenAdd(model, declaration)
     declarantBuilder.buildThenAdd(model, declaration)
-    invoiceAmountBuilder.buildThenAdd(model, declaration)
     specificCircumstancesCodeBuilder.buildThenAdd(model, declaration)
     supervisingOfficeBuilder.buildThenAdd(model, declaration)
-    totalPackageQuantityBuilder.buildThenAdd(model, declaration)
     declarationConsignmentBuilder.buildThenAdd(model, declaration)
     authorisationHoldersBuilder.buildThenAdd(model, declaration)
     currencyExchangeBuilder.buildThenAdd(model, declaration)
-    additionalInformationBuilder.buildThenAdd(model.statementDescription.getOrElse("None"), declaration)
 
     declaration
   }
