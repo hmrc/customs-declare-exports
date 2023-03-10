@@ -50,7 +50,10 @@ class CustomsDeclarationsInformationConnector @Inject() (mrnStatusParser: MrnSta
             logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION: fetch MRN status response ${response.body}")
             throw new InternalServerException(s"Customs Declarations Information Service (DIS) returned [$status]")
         }
-      }
+      } recoverWith { case _: org.xml.sax.SAXParseException =>
+      logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION cannot parse response into valid xml")
+      throw new InternalServerException(s"Customs Declarations cannot parse response into valid xml")
+    }
 
   def fetchMrnStatus(mrn: String)(implicit hc: HeaderCarrier): Future[Option[MrnStatus]] =
     httpClient

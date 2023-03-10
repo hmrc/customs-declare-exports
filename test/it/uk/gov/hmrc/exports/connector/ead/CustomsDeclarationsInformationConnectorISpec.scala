@@ -72,11 +72,20 @@ class CustomsDeclarationsInformationConnectorISpec extends IntegrationTestSpec {
         }
       }
 
-      "request is not processed - 500" in {
-        getFromDownstreamService(mrnDeclarationUrl, INTERNAL_SERVER_ERROR)
+      "request is not processed - 500" when {
+        "downstream returns 500" in {
+          getFromDownstreamService(mrnDeclarationUrl, INTERNAL_SERVER_ERROR)
 
-        intercept[InternalServerException] {
-          await(connector.fetchMrnFullDeclaration(mrn, None))
+          intercept[InternalServerException] {
+            await(connector.fetchMrnFullDeclaration(mrn, None))
+          }
+        }
+        "downstream returns invalid xml" in {
+          getFromDownstreamService(mrnDeclarationUrl, OK, Some("invalid xml"))
+
+          intercept[InternalServerException] {
+            await(connector.fetchMrnFullDeclaration(mrn, None))
+          }
         }
       }
 
@@ -108,20 +117,11 @@ class CustomsDeclarationsInformationConnectorISpec extends IntegrationTestSpec {
         verifyDecServiceWasCalledCorrectly()
       }
 
-      "request is not processed - 500" when {
-        "500 is returned from downstream" in {
-          getFromDownstreamService(mrnStatusUrl, INTERNAL_SERVER_ERROR)
+      "request is not processed - 500" in {
+        getFromDownstreamService(mrnStatusUrl, INTERNAL_SERVER_ERROR)
 
-          intercept[InternalServerException] {
-            await(connector.fetchMrnStatus(mrn))
-          }
-        }
-        "invalid xml is returned from downstream" in {
-          getFromDownstreamService(mrnDeclarationUrl, OK, Some("invalid xml"))
-
-          intercept[InternalServerException] {
-            await(connector.fetchMrnStatus(mrn))
-          }
+        intercept[InternalServerException] {
+          await(connector.fetchMrnStatus(mrn))
         }
       }
 
