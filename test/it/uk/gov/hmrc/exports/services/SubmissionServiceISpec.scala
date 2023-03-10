@@ -123,6 +123,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
                 val submission =
                   Submission(declaration, "lrn", "ducr", submissionAction).copy(
                     latestVersionNo = 2,
+                    latestDecId = None,
                     actions = List(submissionAction, externalActionVersion2)
                   )
 
@@ -149,6 +150,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
                 val submission =
                   Submission(declaration, "lrn", "ducr", submissionAction).copy(
                     latestVersionNo = 3,
+                    latestDecId = None,
                     actions = List(submissionAction, externalActionVersion2, externalActionVersion3)
                   )
 
@@ -179,6 +181,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
               val submission =
                 Submission(declaration, "lrn", "ducr", submissionAction).copy(
                   latestVersionNo = 3,
+                  latestDecId = None,
                   actions = List(submissionAction, externalActionVersion2, externalActionVersion3)
                 )
 
@@ -194,7 +197,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
                 .futureValue
                 .value
 
-              result.latestDecId.value mustBe declaration.id
+              result.latestDecId mustBe None
               result.actions(1).decId.value mustBe savedDec.id
 
             }
@@ -204,13 +207,14 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
     }
 
     "return without submission" when {
-      "declaration cannot be parsed from DIS" ignore {
+      "declaration cannot be parsed from DIS" in {
 
         getFromDownstreamService(mrnDeclarationUrl, OK, Some(badTestSample.toString))
 
         val submission =
           Submission(declaration, "lrn", "ducr", submissionAction).copy(
             latestVersionNo = 3,
+            latestDecId = None,
             actions = List(submissionAction, externalActionVersion2, externalActionVersion3)
           )
 
@@ -223,13 +227,14 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
         result mustBe None
 
       }
-      "submission cannot be updated" ignore {
+      "submission cannot be updated" in {
 
         getFromDownstreamService(mrnDeclarationUrl, OK, Some(MrnDeclarationParserTestData.mrnDeclarationTestSample(mrn, None).toString))
 
         val submission =
           Submission(declaration, "lrn", "ducr", submissionAction).copy(
             latestVersionNo = 3,
+            latestDecId = None,
             actions = List(submissionAction, externalActionVersion2, externalActionVersion3)
           )
 
@@ -245,13 +250,14 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
     }
 
     "throw exception" when {
-      "no declaration is returned from DIS" ignore {
+      "no declaration is returned from DIS" in {
 
         getFromDownstreamService(mrnDeclarationUrl, NOT_FOUND)
 
         val submission =
           Submission(declaration, "lrn", "ducr", submissionAction).copy(
             latestVersionNo = 3,
+            latestDecId = None,
             actions = List(submissionAction, externalActionVersion2, externalActionVersion3)
           )
 
