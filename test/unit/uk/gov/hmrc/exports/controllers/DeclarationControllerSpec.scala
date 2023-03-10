@@ -33,7 +33,7 @@ import uk.gov.hmrc.exports.models.DeclarationType.STANDARD
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.INITIAL
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, ExternalAmendmentRequest, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.models.declaration.{DeclarationMeta, DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
@@ -406,39 +406,67 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
   }
 
   "DeclarationController.latestDecId" should {
-    "return OK with the latestDecId" when {
+
+    val submissionActionId = "submissionActionId"
+    val externalAmendmentActionId = "externalAmendmentActionId"
+    val submissionId = "submissionId"
+    val mrn = "mrn"
+
+    val submissionAction = Action(submissionActionId, SubmissionRequest, Some("subDecId"), 1)
+    val externalAmendmentAction = Action(externalAmendmentActionId, ExternalAmendmentRequest, None, 2)
+
+    val dec = aDeclaration(withId("decId"))
+
+    val submission = Submission(dec, "lrn", "ducr", submissionAction)
+
+    "return OK with the updated action.decId" when {
       "given a submission" in {
 
-        val actionId = "actionId"
-        val submissionId = "submissionId"
-        val mrn = "mrn"
-
-        val dec = aDeclaration(withId("decId"))
-
-        val getRequest = FakeRequest("GET", s"/fetch-dis-declaration/$mrn/$actionId/$submissionId")
+        val getRequest = FakeRequest("GET", s"/fetch-dis-declaration/$mrn/$externalAmendmentActionId/$submissionId")
 
         when(mockSubmissionService.fetchExternalAmendmentToUpdateSubmission(any[Mrn](), any[Eori](), anyString(), anyString())(any[HeaderCarrier]()))
-          .thenReturn(Future.successful(Some(Submission(dec, "lrn", "ducr", Action("submissionActionId", SubmissionRequest, None, 1)))))
+          .thenReturn(
+            Future.successful(
+              Some(
+                submission
+                  .copy(actions = Seq(submissionAction, externalAmendmentAction.copy(decId = Some("externalAmendmentDecId"))))
+              )
+            )
+          )
 
-        val result = controller.latestDecId(mrn, actionId, submissionId)(getRequest)
+        val result = controller.fetchExternalAmendmentDecId(mrn, externalAmendmentActionId, submissionId)(getRequest)
 
         status(result) must be(OK)
-        contentAsJson(result).as[String] mustBe dec.id
+        contentAsJson(result).as[String] mustBe "externalAmendmentDecId"
       }
     }
     "return NotFound" when {
       "no submission is given from SubmissionService" in {
 
-        val actionId = "actionId"
-        val submissionId = "submissionId"
-        val mrn = "mrn"
-
-        val getRequest = FakeRequest("GET", s"/fetch-dis-declaration/$mrn/$actionId/$submissionId")
+        val getRequest = FakeRequest("GET", s"/fetch-dis-declaration/$mrn/$externalAmendmentActionId/$submissionId")
 
         when(mockSubmissionService.fetchExternalAmendmentToUpdateSubmission(any[Mrn], any[Eori], anyString, anyString)(any[HeaderCarrier]))
           .thenReturn(Future.successful(None))
 
-        val result = controller.latestDecId(mrn, actionId, submissionId)(getRequest)
+        val result = controller.fetchExternalAmendmentDecId(mrn, externalAmendmentActionId, submissionId)(getRequest)
+
+        status(result) must be(NOT_FOUND)
+      }
+      "no decId is returned in the action" in {
+
+        val getRequest = FakeRequest("GET", s"/fetch-dis-declaration/$mrn/$externalAmendmentActionId/$submissionId")
+
+        when(mockSubmissionService.fetchExternalAmendmentToUpdateSubmission(any[Mrn], any[Eori], anyString, anyString)(any[HeaderCarrier]))
+          .thenReturn(
+            Future.successful(
+              Some(
+                submission
+                  .copy(actions = Seq(submissionAction, externalAmendmentAction))
+              )
+            )
+          )
+
+        val result = controller.fetchExternalAmendmentDecId(mrn, externalAmendmentActionId, submissionId)(getRequest)
 
         status(result) must be(NOT_FOUND)
       }

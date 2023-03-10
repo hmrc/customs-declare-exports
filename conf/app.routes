@@ -8,7 +8,7 @@ DELETE      /declarations/:id                                       uk.gov.hmrc.
 GET         /draft-declaration/:parentId                            uk.gov.hmrc.exports.controllers.DeclarationController.findOrCreateDraftFromParent(parentId: String)
 GET         /amend-declaration/:submissionId                        uk.gov.hmrc.exports.controllers.DeclarationController.findOrCreateDraftForAmend(submissionId: String)
 
-GET         /fetch-dis-declaration/:mrn/:actionId/:submissionId     uk.gov.hmrc.exports.controllers.DeclarationController.latestDecId(mrn: String, actionId: String, submissionId: String)
+GET         /fetch-dis-declaration/:mrn/:actionId/:submissionId     uk.gov.hmrc.exports.controllers.DeclarationController.fetchExternalAmendmentDecId(mrn: String, actionId: String, submissionId: String)
 
 POST        /cancellations                                          uk.gov.hmrc.exports.controllers.CancellationController.create
 

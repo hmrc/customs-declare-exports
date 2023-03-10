@@ -100,11 +100,15 @@ class DeclarationController @Inject() (
         }
     }
 
-  def latestDecId(mrn: String, actionId: String, submissionId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) {
+  def fetchExternalAmendmentDecId(mrn: String, actionId: String, submissionId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) {
     implicit request =>
       submissionService.fetchExternalAmendmentToUpdateSubmission(Mrn(mrn), request.eori, actionId, submissionId) map {
-        case Some(submission) => Ok(submission.latestDecId)
-        case _                => NotFound
+        case Some(submission) =>
+          submission.actions.find(_.id == actionId).flatMap(_.decId) match {
+            case Some(decId) => Ok(decId)
+            case _           => NotFound
+          }
+        case _ => NotFound
       }
   }
 
