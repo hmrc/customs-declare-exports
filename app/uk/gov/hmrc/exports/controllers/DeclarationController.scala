@@ -100,8 +100,8 @@ class DeclarationController @Inject() (
         }
     }
 
-  def fetchExternalAmendmentDecId(mrn: String, actionId: String, submissionId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) {
-    implicit request =>
+  def fetchExternalAmendmentDecId(mrn: String, actionId: String, submissionId: String): Action[AnyContent] =
+    authenticator.authorisedAction(parse.default) { implicit request =>
       submissionService.fetchExternalAmendmentToUpdateSubmission(Mrn(mrn), request.eori, actionId, submissionId) map {
         case Some(submission) =>
           submission.actions.find(_.id == actionId).flatMap(_.decId) match {
@@ -110,7 +110,7 @@ class DeclarationController @Inject() (
           }
         case _ => NotFound
       }
-  }
+    }
 
   private def logPayload[T](prefix: String, payload: T)(implicit wts: Writes[T]): T = {
     logger.debug(s"$prefix: ${Json.toJson(payload)}")
