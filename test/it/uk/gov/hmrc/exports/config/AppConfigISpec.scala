@@ -32,6 +32,7 @@ class AppConfigISpec extends IntegrationTestSpec {
   private val customsDeclarationsApiVersion = "1.0"
   private val submitDeclarationUri = "/"
   private val cancelDeclarationUri = "/cancellation-requests"
+  private val amendDeclarationUri = "/amend"
   private val notificationBearerToken = "Bearer customs-declare-exports"
   private val developerHubClientId = "customs-declare-exports"
   private val draftTimeToLive: FiniteDuration = 30.days
@@ -70,6 +71,8 @@ class AppConfigISpec extends IntegrationTestSpec {
   assert(appConfig.submitDeclarationUri == submitDeclarationUri, s"submitDeclarationUri must be $submitDeclarationUri")
 
   assert(appConfig.cancelDeclarationUri == cancelDeclarationUri, s"cancelDeclarationUri must be $cancelDeclarationUri")
+
+  assert(appConfig.amendDeclarationUri == amendDeclarationUri, s"amendDeclarationUri must be $amendDeclarationUri")
 
   assert(appConfig.notificationBearerToken == notificationBearerToken, s"notificationBearerToken must be $notificationBearerToken")
 

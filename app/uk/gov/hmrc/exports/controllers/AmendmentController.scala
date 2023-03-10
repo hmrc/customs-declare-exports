@@ -33,12 +33,13 @@ class AmendmentController @Inject() (authenticator: Authenticator, submissionSer
   val create: Action[SubmissionAmendment] =
     authenticator.authorisedAction(parsingJson[SubmissionAmendment]) { implicit request =>
       submissionService.markCompleted(request.eori, request.request.body.declarationId).flatMap {
-        case Some(declaration) => if (declaration.isCompleted) {
-          Future.successful(Conflict(ErrorResponse("Amendment has already been submitted")))
-        } else {
-          submissionService.amend(request.eori.value, request.body, declaration).map(Ok(_))
-        }
-        case _ => Future.successful(NotFound)
+        case Some(declaration) =>
+          if (declaration.isCompleted) {
+            Future.successful(Conflict(ErrorResponse("Amendment has already been submitted.")))
+          } else {
+            submissionService.amend(request.eori, request.body, declaration).map(Ok(_))
+          }
+        case _ => Future.successful(NotFound("Declaration not found."))
       }
 
     }

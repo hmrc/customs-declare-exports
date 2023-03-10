@@ -7,7 +7,11 @@ import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.COMPLETE
 import uk.gov.hmrc.exports.models.declaration.EoriSource.OtherEori
 import uk.gov.hmrc.exports.models.declaration.ModeOfTransportCode.{Maritime, Road}
 import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.services.mapping.AmendmentMetaDataBuilderISpec.{declaration, expectedAmendmentWithMultiplePointersXml, expectedAmendmentXml}
+import uk.gov.hmrc.exports.services.mapping.AmendmentMetaDataBuilderISpec.{
+  declaration,
+  expectedAmendmentWithMultiplePointersXml,
+  expectedAmendmentXml
+}
 
 import java.time.Instant
 
@@ -41,7 +45,8 @@ class AmendmentMetaDataBuilderISpec extends IntegrationTestSpec {
       "given multiple pointers to amend" in {
         val builder = instanceOf[AmendmentMetaDataBuilder]
 
-        val wcoPointers = Seq("42A.67A.99B.465", "42A.67A.68A.1.23A.137", "42A.67A.68A.1.114") // Destination country code, item description of goods, item value
+        val wcoPointers =
+          Seq("42A.67A.99B.465", "42A.67A.68A.1.23A.137", "42A.67A.68A.1.114") // Destination country code, item description of goods, item value
         val wcoDeclaration = builder.buildRequest(declaration, wcoPointers)
         val xmlResult = AmendmentMetaDataBuilder.toXml(wcoDeclaration)
 
@@ -53,7 +58,89 @@ class AmendmentMetaDataBuilderISpec extends IntegrationTestSpec {
 }
 
 object AmendmentMetaDataBuilderISpec {
-  private val declaration = ExportsDeclaration("23GB2K3TH1KSVE1AA7", DeclarationMeta(None, None, COMPLETE, Instant.parse("2023-03-06T13:41:55.626826Z"), Instant.parse("2023-03-06T13:41:55.626829Z"), Some(true), Some(true), Map("Containers" -> 1, "PackageInformation" -> 1, "RoutingCountries" -> 1, "Seals" -> 0)), "GB239355053000", STANDARD, None, Some(STANDARD_FRONTIER), Some(ConsignmentReferences(Some(DUCR("1GB121212121212-TOMAMENDTEST")), Some("Toms amend test"), None, None, Some("23GB2K3TH1KSVE1AA7"))), None, None, Transport(None, Some(TransportPayment("H")), Some(List(Container(1, "123456", List()))), Some(TransportLeavingTheBorder(Some(Maritime))), Some("30"), Some("Unknown"), Some(TransportCountry(Some("ZA"))), Some("11"), Some("Unknown")), Parties(Some(ExporterDetails(EntityDetails(Some("GB239355053000"), None))), None, None, None, Some(DeclarantDetails(EntityDetails(Some("GB239355053000"), None))), Some(DeclarantIsExporter("Yes")), Some(RepresentativeDetails(Some(EntityDetails(Some("GB239355053000"), None)), None, None)), None, Some(DeclarationHolders(List(DeclarationHolder(Some("EXRR"), Some("GB239355053000"), Some(OtherEori))), Some(YesNoAnswer("Yes")))), None, None, None, None), Locations(Some(Country(Some("GB"))), Some(Country(Some("US"))), Some(true), List(RoutingCountry(1, Country(Some("GB")))), Some(GoodsLocation("GB", "A", "U", Some("DEUDEUDEUGVM"))), Some(OfficeOfExit(Some("GB000060"))), None, None, Some(InlandOrBorder("Inland")), Some(InlandModeOfTransportCode(Some(Road)))), List(ExportItem("80e1ffbd-ca58-4cf4-b5d7-0995eaf84a72", 1, Some(ProcedureCodes(Some("1040"), List("000"))), None, None, Some(StatisticalValue("1000")), Some(CommodityDetails(Some("42034000"), Some("test"))), None, None, Some(List()), Some(List(NactCode("VATZ"))), None, Some(List(PackageInformation(1, "2b6417ed-ae38-401d-aa70-853baf9d696e", Some("XD"), Some(10), Some("Shipping description")))), Some(CommodityMeasure(Some("10"), Some(false), Some("500"), Some("700"))), Some(AdditionalInformations(Some(YesNoAnswer("Yes")), List(AdditionalInformation("00400", "EXPORTER")))), None, None)), None, None, None, None)
+  private val declaration = ExportsDeclaration(
+    "23GB2K3TH1KSVE1AA7",
+    DeclarationMeta(
+      None,
+      None,
+      COMPLETE,
+      Instant.parse("2023-03-06T13:41:55.626826Z"),
+      Instant.parse("2023-03-06T13:41:55.626829Z"),
+      Some(true),
+      Some(true),
+      Map("Containers" -> 1, "PackageInformation" -> 1, "RoutingCountries" -> 1, "Seals" -> 0)
+    ),
+    "GB239355053000",
+    STANDARD,
+    None,
+    Some(STANDARD_FRONTIER),
+    Some(ConsignmentReferences(Some(DUCR("1GB121212121212-TOMAMENDTEST")), Some("Toms amend test"), None, None, Some("23GB2K3TH1KSVE1AA7"))),
+    None,
+    None,
+    Transport(
+      None,
+      Some(TransportPayment("H")),
+      Some(List(Container(1, "123456", List()))),
+      Some(TransportLeavingTheBorder(Some(Maritime))),
+      Some("30"),
+      Some("Unknown"),
+      Some(TransportCountry(Some("ZA"))),
+      Some("11"),
+      Some("Unknown")
+    ),
+    Parties(
+      Some(ExporterDetails(EntityDetails(Some("GB239355053000"), None))),
+      None,
+      None,
+      None,
+      Some(DeclarantDetails(EntityDetails(Some("GB239355053000"), None))),
+      Some(DeclarantIsExporter("Yes")),
+      Some(RepresentativeDetails(Some(EntityDetails(Some("GB239355053000"), None)), None, None)),
+      None,
+      Some(DeclarationHolders(List(DeclarationHolder(Some("EXRR"), Some("GB239355053000"), Some(OtherEori))), Some(YesNoAnswer("Yes")))),
+      None,
+      None,
+      None,
+      None
+    ),
+    Locations(
+      Some(Country(Some("GB"))),
+      Some(Country(Some("US"))),
+      Some(true),
+      List(RoutingCountry(1, Country(Some("GB")))),
+      Some(GoodsLocation("GB", "A", "U", Some("DEUDEUDEUGVM"))),
+      Some(OfficeOfExit(Some("GB000060"))),
+      None,
+      None,
+      Some(InlandOrBorder("Inland")),
+      Some(InlandModeOfTransportCode(Some(Road)))
+    ),
+    List(
+      ExportItem(
+        "80e1ffbd-ca58-4cf4-b5d7-0995eaf84a72",
+        1,
+        Some(ProcedureCodes(Some("1040"), List("000"))),
+        None,
+        None,
+        Some(StatisticalValue("1000")),
+        Some(CommodityDetails(Some("42034000"), Some("test"))),
+        None,
+        None,
+        Some(List()),
+        Some(List(NactCode("VATZ"))),
+        None,
+        Some(List(PackageInformation(1, "2b6417ed-ae38-401d-aa70-853baf9d696e", Some("XD"), Some(10), Some("Shipping description")))),
+        Some(CommodityMeasure(Some("10"), Some(false), Some("500"), Some("700"))),
+        Some(AdditionalInformations(Some(YesNoAnswer("Yes")), List(AdditionalInformation("00400", "EXPORTER")))),
+        None,
+        None
+      )
+    ),
+    None,
+    None,
+    None,
+    None
+  )
 
   private val expectedAmendmentXml =
     """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -77,30 +164,6 @@ object AmendmentMetaDataBuilderISpec {
       |            </ns3:Pointer>
       |            <ns3:Pointer>
       |                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
-      |                <ns3:DocumentSectionCode>06A</ns3:DocumentSectionCode>
-      |            </ns3:Pointer>
-      |        </ns3:AdditionalInformation>
-      |        <ns3:AdditionalInformation>
-      |            <ns3:StatementDescription>None</ns3:StatementDescription>
-      |            <ns3:StatementTypeCode>AES</ns3:StatementTypeCode>
-      |            <ns3:Pointer>
-      |                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
-      |                <ns3:DocumentSectionCode>42A</ns3:DocumentSectionCode>
-      |            </ns3:Pointer>
-      |            <ns3:Pointer>
-      |                <ns3:SequenceNumeric>2</ns3:SequenceNumeric>
-      |                <ns3:DocumentSectionCode>06A</ns3:DocumentSectionCode>
-      |            </ns3:Pointer>
-      |        </ns3:AdditionalInformation>
-      |        <ns3:AdditionalInformation>
-      |            <ns3:StatementDescription>None</ns3:StatementDescription>
-      |            <ns3:StatementTypeCode>AES</ns3:StatementTypeCode>
-      |            <ns3:Pointer>
-      |                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
-      |                <ns3:DocumentSectionCode>42A</ns3:DocumentSectionCode>
-      |            </ns3:Pointer>
-      |            <ns3:Pointer>
-      |                <ns3:SequenceNumeric>3</ns3:SequenceNumeric>
       |                <ns3:DocumentSectionCode>06A</ns3:DocumentSectionCode>
       |            </ns3:Pointer>
       |        </ns3:AdditionalInformation>

@@ -199,43 +199,49 @@ class SubmissionService @Inject() (
     }
   }
 
-  def amend(eori: String, amendment: SubmissionAmendment, declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[String] =
+  def amend(eori: Eori, amendment: SubmissionAmendment, declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[String] =
     metrics.timeAsyncCall(ExportsMetrics.amendmentMonitor) {
-      logProgress(amendment.declarationId, "Beginning Amend Submission")
-      for {
+      logProgress(amendment.declarationId, "Beginning Amend Submission.")
+
+      val submissionLookup = submissionRepository.findOne(Json.obj("eori" -> eori, "uuid" -> amendment.submissionId)) map {
+        case Some(submission) => submission
+        case _                => throw new NoSuchElementException("No submission matching eori and id was found.")
+      }
+
+      (for {
         Some(consignmentReferences) <- Future.successful(declaration.consignmentReferences)
         Some(mrn) <- Future.successful(consignmentReferences.mrn)
-        Some(submission) <- submissionRepository.findOne(Json.obj("eori" -> eori, "uuid" -> amendment.submissionId))
+        submission <- submissionLookup
         actionId <- sendAmendmentRequest(declaration, submission, amendment.wcoPointers, mrn)
-      } yield actionId
-    }
-
-  private def sendAmendmentRequest(declaration: ExportsDeclaration, submission: Submission, wcoPointers: Seq[String], mrn: String)(
-    implicit hc: HeaderCarrier
-  ): Future[String] = {
-    val metadata =  metrics.timeCall(Timers.amendmentProduceMetaDataTimer)(amendmentMetaDataBuilder.buildRequest(declaration, wcoPointers))
-    val xml = metrics.timeCall(Timers.amendmentConvertToXmlTimer)(wcoMapperService.toXml(metadata))
-
-    logProgress(declaration.id, "Submitting amendment request to the Declaration API")
-    (for {
-      actionId <- metrics.timeCall(Timers.amendmentSendToDecApiTimer)(customsDeclarationsConnector.submitAmendment(declaration.eori, xml))
-      _ = logProgress(declaration.id, "Submitted amendment request to the Declaration API Successfully")
-      _ = logProgress(declaration.id, "Appending cancellation action to submission...")
-      _ <- updateSubmissionWithAmendmentAction(mrn, actionId, submission)
-    } yield actionId).recoverWith { case throwable: Throwable =>
+      } yield actionId).recoverWith { case throwable: Throwable =>
         logProgress(declaration.id, "Amendment failed")
         declarationRepository.revertStatusToAmendmentDraft(declaration) flatMap { _ =>
           logProgress(declaration.id, "Reverted amendment to AMENDMENT_DRAFT")
           Future.failed[String](throwable)
         }
       }
+    }
+
+  private def sendAmendmentRequest(declaration: ExportsDeclaration, submission: Submission, wcoPointers: Seq[String], mrn: String)(
+    implicit hc: HeaderCarrier
+  ): Future[String] = {
+    val metadata = metrics.timeCall(Timers.amendmentProduceMetaDataTimer)(amendmentMetaDataBuilder.buildRequest(declaration, wcoPointers))
+    val xml = metrics.timeCall(Timers.amendmentConvertToXmlTimer)(wcoMapperService.toXml(metadata))
+
+    logProgress(declaration.id, "Submitting amendment request to the Declaration API")
+    for {
+      actionId <- metrics.timeCall(Timers.amendmentSendToDecApiTimer)(customsDeclarationsConnector.submitAmendment(declaration.eori, xml))
+      _ = logProgress(declaration.id, "Submitted amendment request to the Declaration API Successfully")
+      _ = logProgress(declaration.id, "Appending amendment action to submission...")
+      _ <- updateSubmissionWithAmendmentAction(mrn, actionId, declaration.id, submission)
+    } yield actionId
   }
 
-  private def updateSubmissionWithAmendmentAction(mrn: String, actionId: String, submission: Submission): Future[Unit] = {
-    val newAction = Action(id = actionId, AmendmentRequest, decId = Some(submission.uuid), versionNo = submission.latestVersionNo)
+  private def updateSubmissionWithAmendmentAction(mrn: String, actionId: String, decId: String, submission: Submission): Future[Unit] = {
+    val newAction = Action(id = actionId, AmendmentRequest, decId = Some(decId), versionNo = submission.latestVersionNo)
     submissionRepository.addAction(mrn, newAction).map {
       case Some(_) => logger.info(s"Updated submission with id ${submission.uuid} successfully with amendment action.")
-      case _ => throw new NoSuchElementException(s"Failed to find submission with id ${submission.uuid} to update with amendment action.")
+      case _       => throw new NoSuchElementException(s"Failed to find submission with id ${submission.uuid} to update with amendment action.")
     }
   }
 }
