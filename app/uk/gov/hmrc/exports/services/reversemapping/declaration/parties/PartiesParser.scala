@@ -34,20 +34,22 @@ class PartiesParser @Inject() (
   declarationHolderParser: DeclarationHolderParser
 ) extends DeclarationXmlParser[Parties] {
 
-  override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Parties] =
+  override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Parties] = {
+
+    val toDeclaration = inputXml \ FullDeclarationDataDetails \ FullDeclarationObject \ Declaration
+
     for {
-      maybeExporterEntityDetails <- entityDetailsParser.parse(inputXml \ Declaration \ Exporter)
-      maybeConsigneeEntityDetails <- entityDetailsParser.parse(inputXml \ Declaration \ Consignee)
-      maybeConsignorEntityDetails <- entityDetailsParser.parse(inputXml \ Declaration \ Consignor)
-      maybeCarrierEntityDetails <- entityDetailsParser.parse(inputXml \ Declaration \ Carrier)
-      maybeRepresentativeEntityDetails <- entityDetailsParser.parse(inputXml \ Declaration \ Agent)
+      maybeExporterEntityDetails <- entityDetailsParser.parse(toDeclaration \ Exporter)
+      maybeConsigneeEntityDetails <- entityDetailsParser.parse(toDeclaration \ Consignee)
+      maybeConsignorEntityDetails <- entityDetailsParser.parse(toDeclaration \ Consignor)
+      maybeCarrierEntityDetails <- entityDetailsParser.parse(toDeclaration \ Carrier)
+      maybeRepresentativeEntityDetails <- entityDetailsParser.parse(toDeclaration \ Agent)
       maybeRepresentativeFunctionCode <- agentFunctionCodeParser.parse(inputXml)
       holders <- declarationHolderParser.parse(inputXml)
     } yield {
-      val maybeHolders = holders.isEmpty match {
-        case true  => None
-        case false => Some(holders)
-      }
+      val maybeHolders =
+        if (holders.isEmpty) None
+        else Some(holders)
 
       Parties(
         exporterDetails = maybeExporterEntityDetails.map(ExporterDetails(_)),
@@ -60,6 +62,7 @@ class PartiesParser @Inject() (
         declarationHoldersData = maybeHolders.map(DeclarationHolders(_, Some(YesNoAnswer.yes)))
       )
     }
+  }
 
   private def defineDeclarantIsExporter(
     maybeExporterEntityDetails: Option[EntityDetails]
@@ -93,7 +96,7 @@ object PartiesParser {
       val matchResults = for {
         item <- explicitDec.items
         procedureCode <- item.procedureCodes
-      } yield procedureCode.procedureCode.map(targetProcedureCodes.contains(_)).getOrElse(false)
+      } yield procedureCode.procedureCode.exists(targetProcedureCodes.contains(_))
 
       matchResults.contains(true)
     }

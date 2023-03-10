@@ -24,6 +24,7 @@ import org.scalatest.Assertion
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
+import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData.DEFAULT_LIMIT
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{CUSTOMS_POSITION_GRANTED, WITHDRAWN}
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
@@ -32,6 +33,7 @@ import uk.gov.hmrc.exports.models.{FetchSubmissionPageData, PageOfSubmissions}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
 import uk.gov.hmrc.exports.services.notifications.receiptactions.SendEmailForDmsDocAction
+import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParser
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
@@ -49,11 +51,15 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
   private val metaDataBuilder: CancellationMetaDataBuilder = mock[CancellationMetaDataBuilder]
   private val wcoMapperService: WcoMapperService = mock[WcoMapperService]
   private val sendEmailForDmsDocAction: SendEmailForDmsDocAction = mock[SendEmailForDmsDocAction]
+  private val mockCustomsDeclarationsInformationConnector = mock[CustomsDeclarationsInformationConnector]
+  private val mockExportsDeclarationXmlParser = mock[ExportsDeclarationXmlParser]
 
   private val submissionService = new SubmissionService(
     customsDeclarationsConnector = customsDeclarationsConnector,
     submissionRepository = submissionRepository,
     declarationRepository = declarationRepository,
+    customsDeclarationsInformationConnector = mockCustomsDeclarationsInformationConnector,
+    exportsDeclarationXmlParser = mockExportsDeclarationXmlParser,
     metaDataBuilder = metaDataBuilder,
     wcoMapperService = wcoMapperService,
     metrics = exportsMetrics
