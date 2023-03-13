@@ -41,6 +41,5 @@ class AmendmentController @Inject() (authenticator: Authenticator, submissionSer
           }
         case _ => Future.successful(NotFound("Declaration not found."))
       }
-
     }
 }

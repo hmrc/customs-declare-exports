@@ -394,4 +394,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
       val meta = cache.declarationMeta
       cache.copy(declarationMeta = meta.copy(maxSequenceIds = meta.maxSequenceIds + (key -> value)))
     }
+
+  def withStatementDescription(desc: String): ExportsDeclarationModifier =
+    _.copy(statementDescription = Some(desc))
 }

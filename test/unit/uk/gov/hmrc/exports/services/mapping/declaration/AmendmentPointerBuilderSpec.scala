@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.services.mapping.declaration
 import uk.gov.hmrc.exports.base.UnitSpec
 import wco.datamodel.wco.dec_dms._2.Declaration.Amendment
 
-class AmendmentPointerBuilderTest extends UnitSpec {
+class AmendmentPointerBuilderSpec extends UnitSpec {
 
   private val builder = new AmendmentPointerBuilder()
 

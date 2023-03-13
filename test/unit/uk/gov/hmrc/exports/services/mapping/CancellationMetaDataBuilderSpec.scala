@@ -23,7 +23,7 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.mapping.declaration.DeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class CancellationMetaDataBuilderTest extends UnitSpec {
+class CancellationMetaDataBuilderSpec extends UnitSpec {
 
   private val declarationBuilder = mock[DeclarationBuilder]
   private val builder = new CancellationMetaDataBuilder(declarationBuilder)

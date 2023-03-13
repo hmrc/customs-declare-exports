@@ -23,8 +23,9 @@ import uk.gov.hmrc.exports.services.mapping.declaration.consignment.DeclarationC
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.GoodsShipmentBuilder
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
+import wco.datamodel.wco.dec_dms._2.Declaration.Amendment
 
-class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
+class DeclarationBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   private val functionCodeBuilder: FunctionCodeBuilder = mock[FunctionCodeBuilder]
   private val functionalReferenceIdBuilder: FunctionalReferenceIdBuilder = mock[FunctionalReferenceIdBuilder]
@@ -112,6 +113,40 @@ class DeclarationBuilderTest extends UnitSpec with ExportsDeclarationBuilder {
       verify(submitterBuilder).buildThenAdd("eori", declaration)
       verify(amendmentCancelBuilder).buildThenAdd("reason", declaration)
       verify(additionalInformationBuilder).buildThenAdd("description", declaration)
+    }
+  }
+
+  "DeclarationBuilder.buildAmendment" should {
+    "build and append to declaration" in {
+      val statementDesc = "test-amend"
+      val inputDeclaration =
+        aDeclaration(withEori("eori"), withConsignmentReferences(mrn = Some("mrn")), withStatementDescription(statementDesc), withItems(1))
+      val pointers = Seq("42A.67A.99B.465", "42A.67A.68A.1.23A.137", "42A.67A.68A.1.114")
+      val declaration: Declaration = builder.buildAmendment(inputDeclaration, pointers)
+
+      verify(functionCodeBuilder).buildThenAdd("13", declaration)
+      verify(typeCodeBuilder).buildThenAdd("COR", declaration)
+      verify(functionalReferenceIdBuilder).buildThenAdd(eqTo(inputDeclaration), eqTo(declaration))
+      verify(identificationBuilder).buildThenAdd("mrn", declaration)
+      verify(invoiceAmountBuilder).buildThenAdd(eqTo(inputDeclaration), eqTo(declaration))
+      verify(additionalInformationBuilder, times(1)).buildThenAdd(eqTo(inputDeclaration), eqTo(declaration))
+      verify(amendmentUpdateBuilder, times(pointers.size)).buildThenAdd(eqTo("32"), any[Amendment])
+      pointers.zipWithIndex.foreach { case (pointer, index) =>
+        verify(amendmentPointerBuilder, times(1)).buildThenAdd(eqTo(pointer), any[Amendment])
+        verify(additionalInformationBuilder, times(1)).buildThenAdd(statementDesc, declaration, index + 1)
+      }
+      verify(goodsItemQuantityBuilder).buildThenAdd(eqTo(inputDeclaration), eqTo(declaration))
+      verify(agentBuilder).buildThenAdd(eqTo(inputDeclaration), eqTo(declaration))
+      verify(goodsShipmentBuilder).buildThenAdd(eqTo(inputDeclaration), eqTo(declaration))
+      verify(exitOfficeBuilder).buildThenAdd(eqTo(inputDeclaration), eqTo(declaration))
+      verify(borderTransportMeansBuilder).buildThenAdd(eqTo(inputDeclaration), eqTo(declaration))
+      verify(exporterBuilder).buildThenAdd(eqTo(inputDeclaration), eqTo(declaration))
+      verify(declarantBuilder).buildThenAdd(eqTo(inputDeclaration), eqTo(declaration))
+      verify(specificCircumstancesCodeBuilder).buildThenAdd(eqTo(inputDeclaration), eqTo(declaration))
+      verify(supervisingOfficeBuilder).buildThenAdd(eqTo(inputDeclaration), eqTo(declaration))
+      verify(declarationConsignmentBuilder).buildThenAdd(eqTo(inputDeclaration), eqTo(declaration))
+      verify(authorisationHoldersBuilder).buildThenAdd(eqTo(inputDeclaration), eqTo(declaration))
+      verify(currencyExchangeBuilder).buildThenAdd(eqTo(inputDeclaration), eqTo(declaration))
     }
   }
 }
