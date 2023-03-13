@@ -9,7 +9,7 @@ import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.{AmendmentRequest, Submission, SubmissionAmendment}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, CancellationMetaDataBuilder}
+import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, CancellationMetaDataBuilder, ExportsPointerToWCOPointer}
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
@@ -22,6 +22,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
   private val metaDataBuilder: CancellationMetaDataBuilder = mock[CancellationMetaDataBuilder]
   private val amendmentMetaDataBuilder: AmendmentMetaDataBuilder = mock[AmendmentMetaDataBuilder]
   private val wcoMapperService: WcoMapperService = mock[WcoMapperService]
+  private val exportsPointerToWCOPointer: ExportsPointerToWCOPointer = mock[ExportsPointerToWCOPointer]
 
   private val declarationRepository = instanceOf[DeclarationRepository]
   private val submissionRepository = instanceOf[SubmissionRepository]
@@ -31,6 +32,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
     customsDeclarationsConnector = customsDeclarationsConnector,
     submissionRepository = submissionRepository,
     declarationRepository = declarationRepository,
+    exportsPointerToWCOPointer = exportsPointerToWCOPointer,
     cancelMetaDataBuilder = metaDataBuilder,
     amendmentMetaDataBuilder = amendmentMetaDataBuilder,
     wcoMapperService = wcoMapperService,
@@ -38,7 +40,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
   )(global)
 
   override def afterEach(): Unit = {
-    reset(customsDeclarationsConnector, mockSubmissionRepository, metaDataBuilder, wcoMapperService)
+    reset(customsDeclarationsConnector, mockSubmissionRepository, exportsPointerToWCOPointer, metaDataBuilder, wcoMapperService)
     super.afterEach()
   }
 
@@ -87,6 +89,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
     val declaration = aDeclaration(withId(amendmentId), withEori(eori), withConsignmentReferences(mrn = mrn))
 
     "add an Amendment action to the submission on amend" in {
+      when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Seq(""))
       when(amendmentMetaDataBuilder.buildRequest(any(), any())).thenReturn(metadata)
       when(wcoMapperService.toXml(any())).thenReturn(xml)
       when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))

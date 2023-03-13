@@ -32,7 +32,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.{Eori, FetchSubmissionPageData, PageOfSubmissions}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, CancellationMetaDataBuilder}
+import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, CancellationMetaDataBuilder, ExportsPointerToWCOPointer}
 import uk.gov.hmrc.exports.services.notifications.receiptactions.SendEmailForDmsDocAction
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
@@ -48,6 +48,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
   private val customsDeclarationsConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
   private val submissionRepository: SubmissionRepository = mock[SubmissionRepository]
   private val declarationRepository: DeclarationRepository = mock[DeclarationRepository]
+  private val exportsPointerToWCOPointer: ExportsPointerToWCOPointer = mock[ExportsPointerToWCOPointer]
   private val cancelMetaDataBuilder: CancellationMetaDataBuilder = mock[CancellationMetaDataBuilder]
   private val amendMetaDataBuilder: AmendmentMetaDataBuilder = mock[AmendmentMetaDataBuilder]
   private val wcoMapperService: WcoMapperService = mock[WcoMapperService]
@@ -57,6 +58,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     customsDeclarationsConnector = customsDeclarationsConnector,
     submissionRepository = submissionRepository,
     declarationRepository = declarationRepository,
+    exportsPointerToWCOPointer = exportsPointerToWCOPointer,
     cancelMetaDataBuilder = cancelMetaDataBuilder,
     amendmentMetaDataBuilder = amendMetaDataBuilder,
     wcoMapperService = wcoMapperService,
@@ -68,6 +70,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       customsDeclarationsConnector,
       submissionRepository,
       declarationRepository,
+      exportsPointerToWCOPointer,
       cancelMetaDataBuilder,
       amendMetaDataBuilder,
       wcoMapperService,
@@ -323,10 +326,11 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
   }
 
   "SubmissionService.amend" should {
-    val wcoPointers = Seq("pointers")
+    val fieldPointers = Seq("pointers")
+    val wcoPointers = Seq("wco")
     val amendmentId = "amendmentId"
     val actionId = "actionId"
-    val submissionAmendment = SubmissionAmendment(id, amendmentId, wcoPointers)
+    val submissionAmendment = SubmissionAmendment(id, amendmentId, fieldPointers)
     val dec = aDeclaration(withId(amendmentId), withEori(eori), withConsignmentReferences(mrn = Some("mrn")))
     val metadata = mock[MetaData]
 
@@ -334,7 +338,6 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       "initial submission lookup does not return a submission" in {
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(None))
         when(amendMetaDataBuilder.buildRequest(any(), any())).thenReturn(metadata)
-        when(wcoMapperService.toXml(any())).thenReturn(xml)
         when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
         when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(Some(submission)))
         when(declarationRepository.revertStatusToAmendmentDraft(any())).thenReturn(Future.successful(Some(dec)))
@@ -346,6 +349,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       }
       "updating submission with amendment action fails" in {
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
+        when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Seq(""))
         when(amendMetaDataBuilder.buildRequest(any(), any())).thenReturn(metadata)
         when(wcoMapperService.toXml(any())).thenReturn(xml)
         when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
@@ -361,6 +365,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
     "call expected methods and return an actionId" in {
       when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
+      when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(wcoPointers)
       when(amendMetaDataBuilder.buildRequest(any(), any())).thenReturn(metadata)
       when(wcoMapperService.toXml(any())).thenReturn(xml)
       when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
@@ -369,6 +374,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       val result = submissionService.amend(Eori(eori), submissionAmendment, dec)
 
       verify(submissionRepository).findOne(meq(Json.obj("eori" -> eori, "uuid" -> submission.uuid)))
+      verify(exportsPointerToWCOPointer).getWCOPointers(fieldPointers.head)
       verify(amendMetaDataBuilder).buildRequest(meq(dec), meq(wcoPointers))
       verify(wcoMapperService).toXml(meq(metadata))
       verify(customsDeclarationsConnector).submitAmendment(meq(eori), meq(xml))(any())

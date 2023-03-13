@@ -27,7 +27,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.{StatusGro
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.{Eori, FetchSubmissionPageData, PageOfSubmissions}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, CancellationMetaDataBuilder}
+import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, CancellationMetaDataBuilder, ExportsPointerToWCOPointer}
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
@@ -40,6 +40,7 @@ class SubmissionService @Inject() (
   customsDeclarationsConnector: CustomsDeclarationsConnector,
   submissionRepository: SubmissionRepository,
   declarationRepository: DeclarationRepository,
+  exportsPointerToWCOPointer: ExportsPointerToWCOPointer,
   cancelMetaDataBuilder: CancellationMetaDataBuilder,
   amendmentMetaDataBuilder: AmendmentMetaDataBuilder,
   wcoMapperService: WcoMapperService,
@@ -212,7 +213,7 @@ class SubmissionService @Inject() (
         Some(consignmentReferences) <- Future.successful(declaration.consignmentReferences)
         Some(mrn) <- Future.successful(consignmentReferences.mrn)
         submission <- submissionLookup
-        actionId <- sendAmendmentRequest(declaration, submission, amendment.wcoPointers, mrn)
+        actionId <- sendAmendmentRequest(declaration, submission, amendment.fieldPointers, mrn)
       } yield actionId).recoverWith { case throwable: Throwable =>
         logProgress(declaration.id, "Amendment failed")
         declarationRepository.revertStatusToAmendmentDraft(declaration) flatMap { _ =>
@@ -222,9 +223,10 @@ class SubmissionService @Inject() (
       }
     }
 
-  private def sendAmendmentRequest(declaration: ExportsDeclaration, submission: Submission, wcoPointers: Seq[String], mrn: String)(
+  private def sendAmendmentRequest(declaration: ExportsDeclaration, submission: Submission, fieldPointers: Seq[String], mrn: String)(
     implicit hc: HeaderCarrier
   ): Future[String] = {
+    val wcoPointers = fieldPointers.flatMap(exportsPointerToWCOPointer.getWCOPointers).distinct
     val metadata = metrics.timeCall(Timers.amendmentProduceMetaDataTimer)(amendmentMetaDataBuilder.buildRequest(declaration, wcoPointers))
     val xml = metrics.timeCall(Timers.amendmentConvertToXmlTimer)(wcoMapperService.toXml(metadata))
 
