@@ -1,29 +1,27 @@
 # JSON Based
-POST        /declarations                                           uk.gov.hmrc.exports.controllers.DeclarationController.create
-GET         /declarations                                           uk.gov.hmrc.exports.controllers.DeclarationController.findAll(status: Option[String] ?= None, page: Page ?= Page(), sort: DeclarationSort ?= DeclarationSort())
-PUT         /declarations/:id                                       uk.gov.hmrc.exports.controllers.DeclarationController.update(id: String)
-GET         /declarations/:id                                       uk.gov.hmrc.exports.controllers.DeclarationController.findById(id: String)
-DELETE      /declarations/:id                                       uk.gov.hmrc.exports.controllers.DeclarationController.deleteById(id: String)
+POST        /declarations                      uk.gov.hmrc.exports.controllers.DeclarationController.create
+GET         /declarations                      uk.gov.hmrc.exports.controllers.DeclarationController.findAll(status: Option[String] ?= None, page: Page ?= Page(), sort: DeclarationSort ?= DeclarationSort())
+PUT         /declarations/:id                  uk.gov.hmrc.exports.controllers.DeclarationController.update(id: String)
+GET         /declarations/:id                  uk.gov.hmrc.exports.controllers.DeclarationController.findById(id: String)
+DELETE      /declarations/:id                  uk.gov.hmrc.exports.controllers.DeclarationController.deleteById(id: String)
 
-GET         /draft-declaration/:parentId                            uk.gov.hmrc.exports.controllers.DeclarationController.findOrCreateDraftFromParent(parentId: String)
-GET         /amend-declaration/:submissionId                        uk.gov.hmrc.exports.controllers.DeclarationController.findOrCreateDraftForAmend(submissionId: String)
+GET         /draft-declaration/:parentId       uk.gov.hmrc.exports.controllers.DeclarationController.findOrCreateDraftFromParent(parentId: String)
+GET         /amend-declaration/:submissionId   uk.gov.hmrc.exports.controllers.DeclarationController.findOrCreateDraftForAmend(submissionId: String)
 
-GET         /fetch-dis-declaration/:mrn/:actionId/:submissionId     uk.gov.hmrc.exports.controllers.DeclarationController.fetchExternalAmendmentDecId(mrn: String, actionId: String, submissionId: String)
+POST        /cancellations                     uk.gov.hmrc.exports.controllers.CancellationController.create
 
-POST        /cancellations                                          uk.gov.hmrc.exports.controllers.CancellationController.create
+GET         /lrn-already-used/:lrn             uk.gov.hmrc.exports.controllers.SubmissionController.isLrnAlreadyUsed(lrn: String)
 
-GET         /lrn-already-used/:lrn                                  uk.gov.hmrc.exports.controllers.SubmissionController.isLrnAlreadyUsed(lrn: String)
+GET         /paginated-submissions             uk.gov.hmrc.exports.controllers.SubmissionController.fetchPage
 
-GET         /paginated-submissions                                  uk.gov.hmrc.exports.controllers.SubmissionController.fetchPage
+GET         /submission/:id                    uk.gov.hmrc.exports.controllers.SubmissionController.find(id: String)
+POST        /submission/:id                    uk.gov.hmrc.exports.controllers.SubmissionController.create(id: String)
 
-GET         /submission/:id                                         uk.gov.hmrc.exports.controllers.SubmissionController.find(id: String)
-POST        /submission/:id                                         uk.gov.hmrc.exports.controllers.SubmissionController.create(id: String)
+GET         /submission/notifications/:id      uk.gov.hmrc.exports.controllers.NotificationController.findAll(id: String)
 
-GET         /submission/notifications/:id                           uk.gov.hmrc.exports.controllers.NotificationController.findAll(id: String)
+GET         /ead/:mrn                          uk.gov.hmrc.exports.controllers.ead.EADController.findByMrn(mrn: String)
 
-GET         /ead/:mrn                                               uk.gov.hmrc.exports.controllers.ead.EADController.findByMrn(mrn: String)
-
-GET         /eori-email/:eori                                       uk.gov.hmrc.exports.controllers.EmailByEoriController.getEmailIfVerified(eori: String)
+GET         /eori-email/:eori                  uk.gov.hmrc.exports.controllers.EmailByEoriController.getEmailIfVerified(eori: String)
 
 # XML Based
-POST        /customs-declare-exports/notify                         uk.gov.hmrc.exports.controllers.NotificationController.saveNotification
+POST        /customs-declare-exports/notify    uk.gov.hmrc.exports.controllers.NotificationController.saveNotification

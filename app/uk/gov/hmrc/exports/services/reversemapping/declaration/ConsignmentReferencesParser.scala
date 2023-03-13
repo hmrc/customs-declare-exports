@@ -29,10 +29,7 @@ class ConsignmentReferencesParser @Inject() (additionalDeclarationTypeParser: Ad
     extends DeclarationXmlParser[Option[ConsignmentReferences]] {
 
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Option[ConsignmentReferences]] = {
-
-    val toDeclaration = inputXml \ FullDeclarationDataDetails \ FullDeclarationObject \ Declaration
-
-    val previousDocumentNode = toDeclaration \ GoodsShipment \ PreviousDocument
+    val previousDocumentNode = inputXml \ Declaration \ GoodsShipment \ PreviousDocument
     val additionalDeclarationType: XmlParserResult[AdtMaybe] = additionalDeclarationTypeParser.parse(inputXml)
 
     val ducrOpt = previousDocumentNode
@@ -40,9 +37,9 @@ class ConsignmentReferencesParser @Inject() (additionalDeclarationTypeParser: Ad
       .map(previousDocument => (previousDocument \ ID).text)
       .map(DUCR(_))
 
-    val lrnOpt = (toDeclaration \ FunctionalReferenceID).toStringOption
+    val lrnOpt = (inputXml \ Declaration \ FunctionalReferenceID).toStringOption
 
-    val personalUcrOpt = (toDeclaration \ GoodsShipment \ UCR \ TraderAssignedReferenceID).toStringOption
+    val personalUcrOpt = (inputXml \ Declaration \ GoodsShipment \ UCR \ TraderAssignedReferenceID).toStringOption
 
     val eidrDateStamp = parseEidrDateStamp(additionalDeclarationType, previousDocumentNode)
     val mrn = parseMrn(additionalDeclarationType, previousDocumentNode)

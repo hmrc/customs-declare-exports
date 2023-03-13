@@ -17,7 +17,6 @@
 package uk.gov.hmrc.exports.repositories
 
 import com.mongodb.client.model.Indexes.{ascending, compoundIndex, descending}
-import com.mongodb.client.model.Updates.set
 import org.bson.conversions.Bson
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.Filters._
@@ -35,7 +34,6 @@ import java.time.ZonedDateTime
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
-import java.util.Arrays.{asList => ArrayList}
 
 @Singleton
 class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
@@ -64,15 +62,6 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     )
     findOneAndUpdate(filter, update)
   }
-
-  def updateAction(submissionId: String, actionId: String, decId: String): Future[Option[Submission]] =
-    collection
-      .findOneAndUpdate(
-        equal("uuid", submissionId),
-        set("actions.$[itemNo].decId", decId),
-        doNotUpsertAndReturnAfter.arrayFilters(ArrayList(equal("itemNo.id", actionId)))
-      )
-      .toFutureOption()
 
   def countSubmissionsInGroup(eori: String, statusGroup: StatusGroup): Future[Int] =
     collection

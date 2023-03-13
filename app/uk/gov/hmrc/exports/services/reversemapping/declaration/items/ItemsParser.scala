@@ -28,8 +28,6 @@ import scala.xml.NodeSeq
 class ItemsParser @Inject() (singleItemParser: SingleItemParser) extends DeclarationXmlParser[Seq[ExportItem]] {
 
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Seq[ExportItem]] =
-    (inputXml \ FullDeclarationDataDetails \ FullDeclarationObject \ Declaration \ GoodsShipment \ GovernmentAgencyGoodsItem)
-      .map(singleItemParser.parse)
-      .toEitherOfList
+    (inputXml \ Declaration \ GoodsShipment \ GovernmentAgencyGoodsItem).map(singleItemParser.parse).toEitherOfList
 
 }

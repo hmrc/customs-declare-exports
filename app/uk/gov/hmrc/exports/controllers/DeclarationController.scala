@@ -24,8 +24,8 @@ import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Mrn, Page}
-import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
+import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Page}
+import uk.gov.hmrc.exports.services.DeclarationService
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
@@ -35,7 +35,6 @@ import scala.util.Try
 @Singleton
 class DeclarationController @Inject() (
   declarationService: DeclarationService,
-  submissionService: SubmissionService,
   authenticator: Authenticator,
   override val controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
@@ -98,18 +97,6 @@ class DeclarationController @Inject() (
           case Some(declaration) => Ok(declaration)
           case None              => NotFound
         }
-    }
-
-  def fetchExternalAmendmentDecId(mrn: String, actionId: String, submissionId: String): Action[AnyContent] =
-    authenticator.authorisedAction(parse.default) { implicit request =>
-      submissionService.fetchExternalAmendmentToUpdateSubmission(Mrn(mrn), request.eori, actionId, submissionId) map {
-        case Some(submission) =>
-          submission.actions.find(_.id == actionId).flatMap(_.decId) match {
-            case Some(decId) => Ok(decId)
-            case _           => NotFound
-          }
-        case _ => NotFound
-      }
     }
 
   private def logPayload[T](prefix: String, payload: T)(implicit wts: Writes[T]): T = {

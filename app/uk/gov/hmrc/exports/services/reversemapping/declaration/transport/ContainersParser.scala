@@ -27,9 +27,7 @@ import scala.xml.NodeSeq
 
 class ContainersParser extends DeclarationXmlParser[Seq[Container]] {
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Seq[Container]] =
-    (inputXml \ FullDeclarationDataDetails \ FullDeclarationObject \ Declaration \ GoodsShipment \ Consignment \ TransportEquipment)
-      .map(parseTransportEquipmentNode)
-      .toEitherOfList
+    (inputXml \ Declaration \ GoodsShipment \ Consignment \ TransportEquipment).map(parseTransportEquipmentNode).toEitherOfList
 
   private def parseTransportEquipmentNode(inputXml: NodeSeq): XmlParserResult[Container] = {
     val containers = List((inputXml \ SequenceNumeric).toStringOption, (inputXml \ ID).toStringOption)

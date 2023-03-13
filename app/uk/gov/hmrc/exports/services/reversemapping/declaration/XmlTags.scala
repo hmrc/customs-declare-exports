@@ -18,9 +18,6 @@ package uk.gov.hmrc.exports.services.reversemapping.declaration
 
 object XmlTags {
 
-  val FullDeclarationDataDetails = "FullDeclarationDataDetails"
-  val FullDeclarationObject = "FullDeclarationObject"
-
   val AdditionalInformation = "AdditionalInformation"
   val Address = "Address"
   val AEOMutualRecognitionParty = "AEOMutualRecognitionParty"

@@ -157,8 +157,6 @@ class ContainersParserSpec extends UnitSpec {
 
   private def generateValidXml(containers: Container*): Elem =
     <meta>
-      <p:FullDeclarationDataDetails>
-        <p:FullDeclarationObject>
       <ns3:Declaration>
         <ns3:GoodsShipment>
           <ns3:Consignment>
@@ -181,14 +179,10 @@ class ContainersParserSpec extends UnitSpec {
           </ns3:Consignment>
         </ns3:GoodsShipment>
       </ns3:Declaration>
-        </p:FullDeclarationObject>
-      </p:FullDeclarationDataDetails>
     </meta>
 
   private val missingContainerIdElementXml: Elem =
     <meta>
-      <p:FullDeclarationDataDetails>
-        <p:FullDeclarationObject>
       <ns3:Declaration>
         <ns3:GoodsShipment>
           <ns3:Consignment>
@@ -210,14 +204,10 @@ class ContainersParserSpec extends UnitSpec {
           </ns3:Consignment>
         </ns3:GoodsShipment>
       </ns3:Declaration>
-    </p:FullDeclarationObject>
-      </p:FullDeclarationDataDetails>
     </meta>
 
   private val missingSealIdElementXml: Elem =
     <meta>
-      <p:FullDeclarationDataDetails>
-        <p:FullDeclarationObject>
       <ns3:Declaration>
         <ns3:GoodsShipment>
           <ns3:Consignment>
@@ -234,7 +224,5 @@ class ContainersParserSpec extends UnitSpec {
           </ns3:Consignment>
         </ns3:GoodsShipment>
       </ns3:Declaration>
-    </p:FullDeclarationObject>
-      </p:FullDeclarationDataDetails>
     </meta>
 }

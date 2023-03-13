@@ -42,7 +42,7 @@ trait HasMrn {
 
 case class LocalReferenceNumber(value: String) extends AnyVal
 case class Ducr(value: String) extends AnyVal
-case class Mrn(value: String)
+case class Mrn(value: String) extends AnyVal
 
 case class Eori(value: String) extends Ordered[Eori] {
   override def compare(y: Eori): Int = value.compareTo(y.value)

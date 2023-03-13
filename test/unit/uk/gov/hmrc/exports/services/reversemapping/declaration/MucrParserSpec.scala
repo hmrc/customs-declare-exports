@@ -55,8 +55,6 @@ class MucrParserSpec extends UnitSpec {
 
   private def inputXml(previousDocument: Option[PreviousDocument] = None): Elem =
     <meta>
-      <p:FullDeclarationDataDetails>
-        <p:FullDeclarationObject>
       <ns3:Declaration>
         {
       previousDocument.map { tc =>
@@ -69,7 +67,5 @@ class MucrParserSpec extends UnitSpec {
       }.getOrElse(NodeSeq.Empty)
     }
       </ns3:Declaration>
-        </p:FullDeclarationObject>
-      </p:FullDeclarationDataDetails>
     </meta>
 }

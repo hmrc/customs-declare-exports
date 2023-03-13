@@ -223,8 +223,6 @@ class TransportParserSpec extends UnitSpec {
 
   private def borderModeOfTransportCodeXml(inputValue: Option[String] = None): Elem =
     <meta>
-      <p:FullDeclarationDataDetails>
-        <p:FullDeclarationObject>
       <ns3:Declaration>
       {
       inputValue.map { value =>
@@ -234,14 +232,10 @@ class TransportParserSpec extends UnitSpec {
       }.getOrElse(NodeSeq.Empty)
     }
       </ns3:Declaration>
-        </p:FullDeclarationObject>
-      </p:FullDeclarationDataDetails>
     </meta>
 
   private def expressConsignmentXml(inputValue: Option[String] = None): Elem =
     <meta>
-      <p:FullDeclarationDataDetails>
-        <p:FullDeclarationObject>
       <ns3:Declaration>
       {
       inputValue.map { value =>
@@ -249,14 +243,10 @@ class TransportParserSpec extends UnitSpec {
       }.getOrElse(NodeSeq.Empty)
     }
       </ns3:Declaration>
-        </p:FullDeclarationObject>
-      </p:FullDeclarationDataDetails>
     </meta>
 
   private def meansOfTransportCrossingTheBorderIDNumber(idNumber: Option[String] = None): Elem =
     <meta>
-      <p:FullDeclarationDataDetails>
-        <p:FullDeclarationObject>
       <ns3:Declaration>
       {
       idNumber.map { id =>
@@ -266,14 +256,10 @@ class TransportParserSpec extends UnitSpec {
       }.getOrElse(NodeSeq.Empty)
     }
       </ns3:Declaration>
-        </p:FullDeclarationObject>
-      </p:FullDeclarationDataDetails>
     </meta>
 
   private def transportCrossingTheBorderNationality(inputValue: Option[String] = None): Elem =
     <meta>
-      <p:FullDeclarationDataDetails>
-        <p:FullDeclarationObject>
       <ns3:Declaration>
       {
       inputValue.map { value =>
@@ -283,14 +269,10 @@ class TransportParserSpec extends UnitSpec {
       }.getOrElse(NodeSeq.Empty)
     }
       </ns3:Declaration>
-        </p:FullDeclarationObject>
-      </p:FullDeclarationDataDetails>
     </meta>
 
   private def meansOfTransportCrossingTheBorderType(inputValue: Option[String] = None): Elem =
     <meta>
-      <p:FullDeclarationDataDetails>
-        <p:FullDeclarationObject>
       <ns3:Declaration>
       {
       inputValue.map { value =>
@@ -300,14 +282,10 @@ class TransportParserSpec extends UnitSpec {
       }.getOrElse(NodeSeq.Empty)
     }
       </ns3:Declaration>
-        </p:FullDeclarationObject>
-      </p:FullDeclarationDataDetails>
     </meta>
 
   private def meansOfTransportOnDepartureIDNumber(inputValue: Option[String] = None): Elem =
     <meta>
-      <p:FullDeclarationDataDetails>
-        <p:FullDeclarationObject>
       <ns3:Declaration>
       {
       inputValue.map { value =>
@@ -321,14 +299,10 @@ class TransportParserSpec extends UnitSpec {
       }.getOrElse(NodeSeq.Empty)
     }
       </ns3:Declaration>
-        </p:FullDeclarationObject>
-      </p:FullDeclarationDataDetails>
     </meta>
 
   private def meansOfTransportOnDepartureType(inputValue: Option[String] = None): Elem =
     <meta>
-      <p:FullDeclarationDataDetails>
-        <p:FullDeclarationObject>
       <ns3:Declaration>
       {
       inputValue.map { value =>
@@ -342,14 +316,10 @@ class TransportParserSpec extends UnitSpec {
       }.getOrElse(NodeSeq.Empty)
     }
       </ns3:Declaration>
-        </p:FullDeclarationObject>
-      </p:FullDeclarationDataDetails>
     </meta>
 
   private def transportPaymentXml(inputValue: Option[String] = None): Elem =
     <meta>
-      <p:FullDeclarationDataDetails>
-        <p:FullDeclarationObject>
       <ns3:Declaration>
       {
       inputValue.map { value =>
@@ -361,14 +331,10 @@ class TransportParserSpec extends UnitSpec {
       }.getOrElse(NodeSeq.Empty)
     }
       </ns3:Declaration>
-        </p:FullDeclarationObject>
-      </p:FullDeclarationDataDetails>
     </meta>
 
   private def containersXml(containers: Container*): Elem =
     <meta>
-      <p:FullDeclarationDataDetails>
-        <p:FullDeclarationObject>
       <ns3:Declaration>
         <ns3:GoodsShipment>
           <ns3:Consignment>
@@ -391,7 +357,5 @@ class TransportParserSpec extends UnitSpec {
           </ns3:Consignment>
         </ns3:GoodsShipment>
       </ns3:Declaration>
-        </p:FullDeclarationObject>
-      </p:FullDeclarationDataDetails>
     </meta>
 }
