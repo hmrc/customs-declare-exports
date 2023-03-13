@@ -17,39 +17,18 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json._
-import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
-import uk.gov.hmrc.exports.models.FieldMapping
 import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.sequenceIdPlaceholder
-import uk.gov.hmrc.exports.services.DiffTools._
-import uk.gov.hmrc.exports.services.DiffTools
 
 import java.time.LocalDate
 
-case class ProcedureCodes(procedureCode: Option[String], additionalProcedureCodes: Seq[String]) extends DiffTools[ProcedureCodes] {
-  override def createDiff(original: ProcedureCodes, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareStringDifference(
-        original.procedureCode,
-        procedureCode,
-        combinePointers(pointerString, ProcedureCodes.procedureCodesPointer, sequenceId)
-      ),
-      compareStringDifference(
-        original.additionalProcedureCodes,
-        additionalProcedureCodes,
-        combinePointers(pointerString, ProcedureCodes.additionalProcedureCodesPointer, sequenceId)
-      )
-    ).flatten
+case class ProcedureCodes(procedureCode: Option[String], additionalProcedureCodes: Seq[String]) {
 
   def extractProcedureCode(): (Option[String], Option[String]) =
     (procedureCode.map(_.substring(0, 2)), procedureCode.map(_.substring(2, 4)))
 }
 
-object ProcedureCodes extends FieldMapping {
+object ProcedureCodes {
   implicit val format: OFormat[ProcedureCodes] = Json.format[ProcedureCodes]
-
-  val pointer: ExportsFieldPointer = "procedureCodes"
-  val procedureCodesPointer: ExportsFieldPointer = "procedure.code"
-  val additionalProcedureCodesPointer: ExportsFieldPointer = "additionalProcedureCodes"
 }
 
 case class FiscalInformation(onwardSupplyRelief: String)
@@ -57,113 +36,52 @@ object FiscalInformation {
   implicit val format: OFormat[FiscalInformation] = Json.format[FiscalInformation]
 }
 
-case class AdditionalFiscalReference(country: String, reference: String) extends DiffTools[AdditionalFiscalReference] {
-  override def createDiff(
-    original: AdditionalFiscalReference,
-    pointerString: ExportsFieldPointer,
-    sequenceId: Option[Int] = None
-  ): ExportsDeclarationDiff =
-    Seq(
-      compareStringDifference(original.country, country, combinePointers(pointerString, AdditionalFiscalReference.countryPointer, sequenceId)),
-      compareStringDifference(original.reference, reference, combinePointers(pointerString, AdditionalFiscalReference.referencePointer, sequenceId))
-    ).flatten
-}
-object AdditionalFiscalReference extends FieldMapping {
+case class AdditionalFiscalReference(country: String, reference: String)
+
+object AdditionalFiscalReference {
   implicit val format: OFormat[AdditionalFiscalReference] = Json.format[AdditionalFiscalReference]
-
-  val pointer: ExportsFieldPointer = "references"
-  val countryPointer: ExportsFieldPointer = "country"
-  val referencePointer: ExportsFieldPointer = "reference"
 }
 
-case class AdditionalFiscalReferences(references: Seq[AdditionalFiscalReference]) extends DiffTools[AdditionalFiscalReferences] {
-  override def createDiff(
-    original: AdditionalFiscalReferences,
-    pointerString: ExportsFieldPointer,
-    sequenceId: Option[Int] = None
-  ): ExportsDeclarationDiff =
-    Seq(createDiff(original.references, references, combinePointers(pointerString, AdditionalFiscalReferences.pointer, sequenceId))).flatten
-}
+case class AdditionalFiscalReferences(references: Seq[AdditionalFiscalReference])
 
-object AdditionalFiscalReferences extends FieldMapping {
+object AdditionalFiscalReferences {
   implicit val format: OFormat[AdditionalFiscalReferences] = Json.format[AdditionalFiscalReferences]
-
-  val pointer: ExportsFieldPointer = "additionalFiscalReferencesData"
 }
 
-case class CommodityDetails(combinedNomenclatureCode: Option[String], descriptionOfGoods: Option[String]) extends DiffTools[CommodityDetails] {
+case class CommodityDetails(combinedNomenclatureCode: Option[String], descriptionOfGoods: Option[String])
 
-  def createDiff(original: CommodityDetails, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareStringDifference(
-        original.combinedNomenclatureCode,
-        combinedNomenclatureCode,
-        combinePointers(pointerString, CommodityDetails.combinedNomenclatureCodePointer, sequenceId)
-      ),
-      compareStringDifference(
-        original.descriptionOfGoods,
-        descriptionOfGoods,
-        combinePointers(pointerString, CommodityDetails.descriptionOfGoodsPointer, sequenceId)
-      )
-    ).flatten
-}
-
-object CommodityDetails extends FieldMapping {
+object CommodityDetails {
   implicit val format: OFormat[CommodityDetails] = Json.format[CommodityDetails]
-
-  val pointer: ExportsFieldPointer = "commodityDetails"
-  val combinedNomenclatureCodePointer: ExportsFieldPointer = "combinedNomenclatureCode"
-  val descriptionOfGoodsPointer: ExportsFieldPointer = "descriptionOfGoods"
 }
 
-case class UNDangerousGoodsCode(dangerousGoodsCode: Option[String]) extends Ordered[UNDangerousGoodsCode] {
-  override def compare(that: UNDangerousGoodsCode): Int =
-    compareOptionalString(dangerousGoodsCode, that.dangerousGoodsCode)
-}
+case class UNDangerousGoodsCode(dangerousGoodsCode: Option[String])
 
-object UNDangerousGoodsCode extends FieldMapping {
+object UNDangerousGoodsCode {
   implicit val format: OFormat[UNDangerousGoodsCode] = Json.format[UNDangerousGoodsCode]
-
-  val pointer: ExportsFieldPointer = "dangerousGoodsCode.dangerousGoodsCode"
 }
 
-case class CUSCode(cusCode: Option[String]) extends Ordered[CUSCode] {
-  override def compare(that: CUSCode): Int =
-    compareOptionalString(cusCode, that.cusCode)
-}
+case class CUSCode(cusCode: Option[String])
 
-object CUSCode extends FieldMapping {
+object CUSCode {
   implicit val format: OFormat[CUSCode] = Json.format[CUSCode]
-
-  val pointer: ExportsFieldPointer = "cusCode"
 }
 
-case class TaricCode(taricCode: String) extends Ordered[TaricCode] {
-  override def compare(y: TaricCode): Int = taricCode.compareTo(y.taricCode)
-}
-object TaricCode extends FieldMapping {
+case class TaricCode(taricCode: String)
+
+object TaricCode {
   implicit val format: OFormat[TaricCode] = Json.format[TaricCode]
-
-  val pointer: ExportsFieldPointer = CommodityDetails.combinedNomenclatureCodePointer
 }
 
-case class NactCode(nactCode: String) extends Ordered[NactCode] {
-  override def compare(y: NactCode): Int = nactCode.compareTo(y.nactCode)
-}
-object NactCode extends FieldMapping {
+case class NactCode(nactCode: String)
+
+object NactCode {
   implicit val format: OFormat[NactCode] = Json.format[NactCode]
-
-  val pointer: ExportsFieldPointer = CommodityDetails.combinedNomenclatureCodePointer
 }
 
-case class StatisticalValue(statisticalValue: String) extends Ordered[StatisticalValue] {
-  override def compare(y: StatisticalValue): Int = statisticalValue.compareTo(y.statisticalValue)
-}
+case class StatisticalValue(statisticalValue: String)
 
-object StatisticalValue extends FieldMapping {
+object StatisticalValue {
   implicit val format: OFormat[StatisticalValue] = Json.format[StatisticalValue]
-
-  val pointer: ExportsFieldPointer = "statisticalValue.statisticalValue"
 }
 
 sealed abstract class IdentificationTypeCodes(val value: String)
@@ -194,28 +112,7 @@ case class PackageInformation(
   typesOfPackages: Option[String],
   numberOfPackages: Option[Int],
   shippingMarks: Option[String]
-) extends DiffTools[PackageInformation] {
-
-  def createDiff(original: PackageInformation, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareStringDifference(original.id, id, combinePointers(pointerString, PackageInformation.idPointer, sequenceId)),
-      compareStringDifference(
-        original.typesOfPackages,
-        typesOfPackages,
-        combinePointers(pointerString, PackageInformation.typesOfPackagesPointer, sequenceId)
-      ),
-      compareIntDifference(
-        original.numberOfPackages,
-        numberOfPackages,
-        combinePointers(pointerString, PackageInformation.numberOfPackagesPointer, sequenceId)
-      ),
-      compareStringDifference(
-        original.shippingMarks,
-        shippingMarks,
-        combinePointers(pointerString, PackageInformation.shippingMarksPointer, sequenceId)
-      )
-    ).flatten
-
+) {
   override def equals(obj: Any): Boolean = obj match {
     case PackageInformation(_, _, `typesOfPackages`, `numberOfPackages`, `shippingMarks`) => true
     case _                                                                                => false
@@ -223,14 +120,8 @@ case class PackageInformation(
   override def hashCode(): Int = (typesOfPackages, numberOfPackages, shippingMarks).##
 }
 
-object PackageInformation extends FieldMapping {
+object PackageInformation {
   implicit val format: OFormat[PackageInformation] = Json.format[PackageInformation]
-
-  val pointer: ExportsFieldPointer = "packageInformation"
-  val idPointer: ExportsFieldPointer = "id"
-  val shippingMarksPointer: ExportsFieldPointer = "shippingMarks"
-  val numberOfPackagesPointer: ExportsFieldPointer = "numberOfPackages"
-  val typesOfPackagesPointer: ExportsFieldPointer = "typesOfPackages"
 }
 
 case class CommodityMeasure(
@@ -238,103 +129,39 @@ case class CommodityMeasure(
   supplementaryUnitsNotRequired: Option[Boolean],
   netMass: Option[String],
   grossMass: Option[String]
-) extends DiffTools[CommodityMeasure] {
+)
 
-  // supplementaryUnitsNotRequired is not used to build WCO XML payload
-  def createDiff(original: CommodityMeasure, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareStringDifference(
-        original.supplementaryUnits,
-        supplementaryUnits,
-        combinePointers(pointerString, CommodityMeasure.supplementaryUnitsPointer, sequenceId)
-      ),
-      compareStringDifference(original.netMass, netMass, combinePointers(pointerString, CommodityMeasure.netMassPointer, sequenceId)),
-      compareStringDifference(original.grossMass, grossMass, combinePointers(pointerString, CommodityMeasure.grossMassPointer, sequenceId))
-    ).flatten
-}
-
-object CommodityMeasure extends FieldMapping {
+object CommodityMeasure {
   implicit val format: OFormat[CommodityMeasure] = Json.format[CommodityMeasure]
-
-  val pointer: ExportsFieldPointer = "commodityMeasure"
-  val supplementaryUnitsPointer: ExportsFieldPointer = "supplementaryUnits"
-  val netMassPointer: ExportsFieldPointer = "netMass"
-  val grossMassPointer: ExportsFieldPointer = "grossMass"
 }
 
-case class AdditionalInformation(code: String, description: String) extends DiffTools[AdditionalInformation] {
-  def createDiff(original: AdditionalInformation, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareStringDifference(original.code, code, combinePointers(pointerString, AdditionalInformation.codePointer, sequenceId)),
-      compareStringDifference(original.description, description, combinePointers(pointerString, AdditionalInformation.descriptionPointer, sequenceId))
-    ).flatten
-}
+case class AdditionalInformation(code: String, description: String)
 
-object AdditionalInformation extends FieldMapping {
+object AdditionalInformation {
   implicit val format: OFormat[AdditionalInformation] = Json.format[AdditionalInformation]
-
-  val pointer: ExportsFieldPointer = "info"
-  val codePointer: ExportsFieldPointer = "code"
-  val descriptionPointer: ExportsFieldPointer = "description"
 }
 
-case class AdditionalInformations(isRequired: Option[YesNoAnswer], items: Seq[AdditionalInformation]) extends DiffTools[AdditionalInformations] {
+case class AdditionalInformations(isRequired: Option[YesNoAnswer], items: Seq[AdditionalInformation])
 
-  // isRequired field is not used to produce the WCO XML payload
-  def createDiff(original: AdditionalInformations, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(createDiff(original.items, items, combinePointers(pointerString, AdditionalInformations.itemsPointer, sequenceId))).flatten
-}
-
-object AdditionalInformations extends FieldMapping {
+object AdditionalInformations {
   implicit val format: OFormat[AdditionalInformations] = Json.format[AdditionalInformations]
 
   def apply(items: Seq[AdditionalInformation]): AdditionalInformations =
     new AdditionalInformations(Some(if (items.nonEmpty) YesNoAnswer.yes else YesNoAnswer.no), items)
-
-  val pointer: ExportsFieldPointer = "additionalInformation"
-  val itemsPointer: ExportsFieldPointer = "items"
 }
 
-case class Date(day: Option[Int], month: Option[Int], year: Option[Int]) extends DiffTools[Date] {
-  def createDiff(original: Date, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareIntDifference(original.day, day, combinePointers(pointerString, Date.dayPointer, sequenceId)),
-      compareIntDifference(original.month, month, combinePointers(pointerString, Date.monthPointer, sequenceId)),
-      compareIntDifference(original.year, year, combinePointers(pointerString, Date.yearPointer, sequenceId))
-    ).flatten
-
+case class Date(day: Option[Int], month: Option[Int], year: Option[Int]) {
   def toLocalDate: LocalDate = LocalDate.of(year.getOrElse(0), month.getOrElse(0), day.getOrElse(0))
 }
-object Date extends FieldMapping {
+
+object Date {
   implicit val format: OFormat[Date] = Json.format[Date]
-
-  val pointer: ExportsFieldPointer = "dateOfValidity"
-  val dayPointer: ExportsFieldPointer = "day"
-  val monthPointer: ExportsFieldPointer = "month"
-  val yearPointer: ExportsFieldPointer = "year"
 }
 
-case class DocumentWriteOff(measurementUnit: Option[String], documentQuantity: Option[BigDecimal]) extends DiffTools[DocumentWriteOff] {
-  def createDiff(original: DocumentWriteOff, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareStringDifference(
-        original.measurementUnit,
-        measurementUnit,
-        combinePointers(pointerString, DocumentWriteOff.measurementUnitPointer, sequenceId)
-      ),
-      compareBigDecimalDifference(
-        original.documentQuantity,
-        documentQuantity,
-        combinePointers(pointerString, DocumentWriteOff.documentQuantityPointer, sequenceId)
-      )
-    ).flatten
-}
-object DocumentWriteOff extends FieldMapping {
+case class DocumentWriteOff(measurementUnit: Option[String], documentQuantity: Option[BigDecimal])
+
+object DocumentWriteOff {
   implicit val format: OFormat[DocumentWriteOff] = Json.format[DocumentWriteOff]
-
-  val pointer: ExportsFieldPointer = "documentWriteOff"
-  val measurementUnitPointer: ExportsFieldPointer = "measurementUnit"
-  val documentQuantityPointer: ExportsFieldPointer = "documentQuantity"
 }
 
 case class AdditionalDocument(
@@ -345,62 +172,16 @@ case class AdditionalDocument(
   issuingAuthorityName: Option[String],
   dateOfValidity: Option[Date],
   documentWriteOff: Option[DocumentWriteOff]
-) extends DiffTools[AdditionalDocument] {
-  def createDiff(original: AdditionalDocument, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareStringDifference(
-        original.documentTypeCode,
-        documentTypeCode,
-        combinePointers(pointerString, AdditionalDocument.documentTypeCodePointer, sequenceId)
-      ),
-      compareStringDifference(
-        original.documentIdentifier,
-        documentIdentifier,
-        combinePointers(pointerString, AdditionalDocument.documentIdentifierPointer, sequenceId)
-      ),
-      compareStringDifference(
-        original.documentStatus,
-        documentStatus,
-        combinePointers(pointerString, AdditionalDocument.documentStatusPointer, sequenceId)
-      ),
-      compareStringDifference(
-        original.documentStatusReason,
-        documentStatusReason,
-        combinePointers(pointerString, AdditionalDocument.documentStatusReasonPointer, sequenceId)
-      ),
-      compareStringDifference(
-        original.issuingAuthorityName,
-        issuingAuthorityName,
-        combinePointers(pointerString, AdditionalDocument.issuingAuthorityNamePointer, sequenceId)
-      ),
-      createDiffOfOptions(original.dateOfValidity, dateOfValidity, combinePointers(pointerString, Date.pointer, sequenceId)),
-      createDiffOfOptions(original.documentWriteOff, documentWriteOff, combinePointers(pointerString, DocumentWriteOff.pointer, sequenceId))
-    ).flatten
-}
+)
 
-object AdditionalDocument extends FieldMapping {
+object AdditionalDocument {
   implicit val format: OFormat[AdditionalDocument] = Json.format[AdditionalDocument]
-
-  val pointer: ExportsFieldPointer = "document"
-  val documentTypeCodePointer: ExportsFieldPointer = "documentTypeCode"
-  val documentIdentifierPointer: ExportsFieldPointer = "documentIdentifier"
-  val documentStatusPointer: ExportsFieldPointer = "documentStatus"
-  val documentStatusReasonPointer: ExportsFieldPointer = "documentStatusReason"
-  val issuingAuthorityNamePointer: ExportsFieldPointer = "issuingAuthorityName"
-  val documentWriteOffPointer: ExportsFieldPointer = "documentWriteOff"
 }
 
-case class AdditionalDocuments(isRequired: Option[YesNoAnswer], documents: Seq[AdditionalDocument]) extends DiffTools[AdditionalDocuments] {
-  // isRequired field is not used to produce the WCO XML payload
-  def createDiff(original: AdditionalDocuments, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(createDiff(original.documents, documents, combinePointers(pointerString, AdditionalDocuments.documentsPointer, sequenceId))).flatten
-}
+case class AdditionalDocuments(isRequired: Option[YesNoAnswer], documents: Seq[AdditionalDocument])
 
-object AdditionalDocuments extends FieldMapping {
+object AdditionalDocuments {
   implicit val format: OFormat[AdditionalDocuments] = Json.format[AdditionalDocuments]
-
-  val pointer: ExportsFieldPointer = "additionalDocuments"
-  val documentsPointer: ExportsFieldPointer = "documents"
 }
 
 case class ExportItem(
@@ -421,52 +202,8 @@ case class ExportItem(
   additionalInformation: Option[AdditionalInformations] = None,
   additionalDocuments: Option[AdditionalDocuments] = None,
   isLicenceRequired: Option[Boolean] = None
-) extends DiffTools[ExportItem] {
+)
 
-  // id and fiscalInformation fields are not used to create WCO XML
-  override def createDiff(original: ExportItem, pointerString: ExportsFieldPointer, maybeSequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareIntDifference(original.sequenceId, sequenceId, combinePointers(pointerString, ExportItem.sequenceIdPointer, maybeSequenceId)),
-      createDiffOfOptions(original.procedureCodes, procedureCodes, combinePointers(pointerString, ProcedureCodes.pointer, maybeSequenceId)),
-      createDiffOfOptions(
-        original.additionalFiscalReferencesData,
-        additionalFiscalReferencesData,
-        combinePointers(pointerString, AdditionalFiscalReferences.pointer, maybeSequenceId)
-      ),
-      compareDifference(original.statisticalValue, statisticalValue, combinePointers(pointerString, StatisticalValue.pointer, maybeSequenceId)),
-      createDiffOfOptions(original.commodityDetails, commodityDetails, combinePointers(pointerString, CommodityDetails.pointer, maybeSequenceId)),
-      compareDifference(
-        original.dangerousGoodsCode,
-        dangerousGoodsCode,
-        combinePointers(pointerString, UNDangerousGoodsCode.pointer, maybeSequenceId)
-      ),
-      compareDifference(original.cusCode, cusCode, combinePointers(pointerString, CUSCode.pointer, maybeSequenceId)),
-      compareDifference(original.taricCodes, taricCodes, combinePointers(pointerString, TaricCode.pointer, maybeSequenceId)),
-      compareDifference(original.nactCodes, nactCodes, combinePointers(pointerString, NactCode.pointer, maybeSequenceId)),
-      compareDifference(original.nactExemptionCode, nactExemptionCode, combinePointers(pointerString, NactCode.pointer, maybeSequenceId)),
-      createDiff(original.packageInformation, packageInformation, combinePointers(pointerString, PackageInformation.pointer, maybeSequenceId)),
-      createDiffOfOptions(original.commodityMeasure, commodityMeasure, combinePointers(pointerString, CommodityMeasure.pointer, maybeSequenceId)),
-      createDiffOfOptions(
-        original.additionalInformation,
-        additionalInformation,
-        combinePointers(pointerString, AdditionalInformations.pointer, maybeSequenceId)
-      ),
-      createDiffOfOptions(
-        original.additionalDocuments,
-        additionalDocuments,
-        combinePointers(pointerString, AdditionalDocuments.pointer, maybeSequenceId)
-      ),
-      compareBooleanDifference(
-        original.isLicenceRequired,
-        isLicenceRequired,
-        combinePointers(pointerString, s"${AdditionalDocuments.pointer}.${AdditionalDocuments.documentsPointer}", maybeSequenceId)
-      )
-    ).flatten
-}
-
-object ExportItem extends FieldMapping {
+object ExportItem {
   implicit val format: OFormat[ExportItem] = Json.format[ExportItem]
-
-  val pointer: ExportsFieldPointer = "items"
-  val sequenceIdPointer: ExportsFieldPointer = "sequenceId"
 }

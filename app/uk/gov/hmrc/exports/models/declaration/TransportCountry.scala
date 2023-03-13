@@ -17,20 +17,9 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.exports.models.FieldMapping
 
-case class TransportCountry(countryName: Option[String]) extends Ordered[TransportCountry] {
-  override def compare(that: TransportCountry): Int =
-    (countryName, that.countryName) match {
-      case (None, None)                    => 0
-      case (_, None)                       => 1
-      case (None, _)                       => -1
-      case (Some(current), Some(original)) => current.compare(original)
-    }
-}
+case class TransportCountry(countryName: Option[String])
 
-object TransportCountry extends FieldMapping {
+object TransportCountry {
   implicit val format: OFormat[TransportCountry] = Json.format[TransportCountry]
-
-  val pointer: String = "meansOfTransportCrossingTheBorderNationality"
 }

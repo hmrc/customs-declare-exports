@@ -18,22 +18,12 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.sequenceIdPlaceholder
-import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
-import uk.gov.hmrc.exports.models.FieldMapping
-import uk.gov.hmrc.exports.services.DiffTools
-import uk.gov.hmrc.exports.services.DiffTools.{combinePointers, compareStringDifference, ExportsDeclarationDiff}
 
 case class Seal(
   sequenceId: Int = sequenceIdPlaceholder, // Initialised to enable migration of existing documents
   id: String
-) extends DiffTools[Seal] {
-  override def createDiff(original: Seal, pointerString: ExportsFieldPointer, sequenceId: Option[Int]): ExportsDeclarationDiff =
-    Seq(compareStringDifference(original.id, id, combinePointers(pointerString, Seal.idPointer, sequenceId))).flatten
-}
+)
 
-object Seal extends FieldMapping {
+object Seal {
   implicit val format: OFormat[Seal] = Json.format[Seal]
-
-  override val pointer: ExportsFieldPointer = "seals"
-  val idPointer: ExportsFieldPointer = "id"
 }

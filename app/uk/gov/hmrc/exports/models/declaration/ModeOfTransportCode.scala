@@ -17,18 +17,12 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{JsString, JsonValidationError, Reads, Writes}
-import uk.gov.hmrc.exports.models.FieldMapping
 
-sealed abstract class ModeOfTransportCode(val value: String) extends Ordered[ModeOfTransportCode] {
+sealed abstract class ModeOfTransportCode(val value: String) {
   def isValidCode: Boolean = this != ModeOfTransportCode.Empty
-
-  override def compare(y: ModeOfTransportCode): Int = value.compareTo(y.value)
 }
 
-object ModeOfTransportCode extends FieldMapping {
-
-  val pointer: String = "code"
-
+object ModeOfTransportCode {
   case object Maritime extends ModeOfTransportCode("1")
   case object Rail extends ModeOfTransportCode("2")
   case object Road extends ModeOfTransportCode("3")
@@ -50,5 +44,4 @@ object ModeOfTransportCode extends FieldMapping {
   implicit val reads: Reads[ModeOfTransportCode] = Reads.StringReads.collect(JsonValidationError("error.unknown"))(reverseLookup)
 
   implicit val writes: Writes[ModeOfTransportCode] = Writes(code => JsString(code.value))
-
 }

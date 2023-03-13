@@ -17,45 +17,15 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
-import uk.gov.hmrc.exports.models.FieldMapping
-import uk.gov.hmrc.exports.services.DiffTools
-import uk.gov.hmrc.exports.services.DiffTools.{combinePointers, compareStringDifference, ExportsDeclarationDiff}
 
 case class PreviousDocument(documentType: String, documentReference: String, goodsItemIdentifier: Option[String])
-    extends DiffTools[PreviousDocument] {
-  def createDiff(original: PreviousDocument, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareStringDifference(original.documentType, documentType, combinePointers(pointerString, PreviousDocument.documentTypePointer, sequenceId)),
-      compareStringDifference(
-        original.documentReference,
-        documentReference,
-        combinePointers(pointerString, PreviousDocument.documentReferencePointer, sequenceId)
-      ),
-      compareStringDifference(
-        original.goodsItemIdentifier,
-        goodsItemIdentifier,
-        combinePointers(pointerString, PreviousDocument.goodsItemIdentifierPointer, sequenceId)
-      )
-    ).flatten
-}
 
-object PreviousDocument extends FieldMapping {
+object PreviousDocument {
   implicit val format: OFormat[PreviousDocument] = Json.format[PreviousDocument]
-
-  val pointer: ExportsFieldPointer = "documents"
-  val documentTypePointer: ExportsFieldPointer = "documentType"
-  val documentReferencePointer: ExportsFieldPointer = "documentReference"
-  val goodsItemIdentifierPointer: ExportsFieldPointer = "goodsItemIdentifier"
 }
 
-case class PreviousDocuments(documents: Seq[PreviousDocument]) extends DiffTools[PreviousDocuments] {
-  def createDiff(original: PreviousDocuments, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    createDiff(original.documents, documents, combinePointers(pointerString, PreviousDocuments.pointer, sequenceId))
-}
+case class PreviousDocuments(documents: Seq[PreviousDocument])
 
-object PreviousDocuments extends FieldMapping {
+object PreviousDocuments {
   implicit val format: OFormat[PreviousDocuments] = Json.format[PreviousDocuments]
-
-  val pointer: ExportsFieldPointer = "previousDocuments"
 }
