@@ -16,14 +16,10 @@
 
 package uk.gov.hmrc.exports.models.declaration
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
-import uk.gov.hmrc.exports.models.FieldMapping
 
-case class TransportPayment(paymentMethod: String) extends Ordered[TransportPayment] {
-  override def compare(that: TransportPayment): Int = paymentMethod.compare(that.paymentMethod)
-}
+case class TransportPayment(paymentMethod: String)
 
-object TransportPayment extends FieldMapping {
+object TransportPayment {
 
   implicit val format: OFormat[TransportPayment] = Json.format[TransportPayment]
 
@@ -39,6 +35,4 @@ object TransportPayment extends FieldMapping {
   val paymentMethodsAllowedToBeSent = Set(cash, creditCard, cheque, other, eFunds, accHolder, notPrePaid) // does not include 'notAvailable'
 
   def canBeSent(paymentMethod: String): Boolean = paymentMethodsAllowedToBeSent.contains(paymentMethod)
-
-  override val pointer: ExportsFieldPointer = "transportPayment.paymentMethod"
 }
