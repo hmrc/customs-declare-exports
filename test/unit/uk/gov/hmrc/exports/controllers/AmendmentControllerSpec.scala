@@ -23,7 +23,8 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
-import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.{AMENDMENT_DRAFT, COMPLETE}
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus._
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionAmendment
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
@@ -60,14 +61,16 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
         verifyZeroInteractions(mockSubmissionService.amend(any(), any(), any())(any()))
       }
     }
-    "amendment is found but with status of COMPLETE" should {
-      "return 409 CONFLICT" in {
-        val completeDec = aDeclaration(withStatus(COMPLETE))
-        when(mockSubmissionService.markCompleted(any(), any())).thenReturn(Future.successful(Some(completeDec)))
+    DeclarationStatus.values.excl(AMENDMENT_DRAFT).foreach { decStatus =>
+      s"amendment is found with a status of $decStatus" should {
+        "return 409 CONFLICT" in {
+          val completeDec = aDeclaration(withStatus(COMPLETE))
+          when(mockSubmissionService.markCompleted(any(), any())).thenReturn(Future.successful(Some(completeDec)))
 
-        val result = controller.create(postRequest)
+          val result = controller.create(postRequest)
 
-        status(result) mustBe CONFLICT
+          status(result) mustBe CONFLICT
+        }
       }
     }
     "amendment is found in AMENDMENT_DRAFT state" should {
