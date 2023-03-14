@@ -39,48 +39,28 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: 
     extends Logging {
 
   def submitDeclaration(eori: String, xml: String)(implicit hc: HeaderCarrier): Future[String] =
-    postMetaData(eori, appConfig.submitDeclarationUri, xml).map { res =>
-      logger.debug(s"CUSTOMS_DECLARATIONS response is  --> ${res.toString}")
-      res match {
-        case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) => conversationId
-        case CustomsDeclarationsResponse(status, Some(message)) =>
-          throw new InternalServerException(s"Customs Declarations Service returned [$status] with error message: $message")
-        case CustomsDeclarationsResponse(status, _) =>
-          throw new InternalServerException(s"Customs Declarations Service returned [$status]")
-      }
-    }
-
+    post(eori, appConfig.submitDeclarationUri, xml).map(handleResponse)
   def submitAmendment(eori: String, xml: String)(implicit hc: HeaderCarrier): Future[String] =
-    postMetaData(eori, appConfig.amendDeclarationUri, xml).map { res =>
-      logger.debug(s"CUSTOMS_DECLARATIONS response is  --> ${res.toString}")
-      res match {
-        case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) => conversationId
-        case CustomsDeclarationsResponse(status, Some(message)) =>
-          throw new InternalServerException(s"Customs Declarations Service returned [$status] with error message: $message")
-        case CustomsDeclarationsResponse(status, _) =>
-          throw new InternalServerException(s"Customs Declarations Service returned [$status]")
-      }
-    }
+    post(eori, appConfig.amendDeclarationUri, xml).map(handleResponse)
 
   def submitCancellation(submission: Submission, xml: String)(implicit hc: HeaderCarrier): Future[String] = {
     def actionId: String = submission.actions.find(_.requestType == SubmissionRequest).fold("Not a SubmissionRequest?")(_.id)
-
     val headerCarrier = if (appConfig.isUpstreamStubbed) hc.withExtraHeaders(SubmissionConversationId -> actionId) else hc
+    post(submission.eori, appConfig.cancelDeclarationUri, xml)(headerCarrier).map(handleResponse)
+  }
 
-    postMetaData(submission.eori, appConfig.cancelDeclarationUri, xml)(headerCarrier).map { res =>
-      logger.debug(s"CUSTOMS_DECLARATIONS cancellation response is  --> ${res.toString}")
-      res match {
-        case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) => conversationId
-        case CustomsDeclarationsResponse(status, _) =>
-          throw new RuntimeException(s"Bad response status [${status}] from Cancellation Request ")
-      }
+  private def handleResponse(response: CustomsDeclarationsResponse) = {
+    logger.debug(s"CUSTOMS_DECLARATIONS response is  --> ${response.toString}")
+    response match {
+      case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) => conversationId
+      case CustomsDeclarationsResponse(status, Some(message)) =>
+        throw new InternalServerException(s"Customs Declarations Service returned [$status] with error message: $message")
+      case CustomsDeclarationsResponse(status, _) =>
+        throw new InternalServerException(s"Customs Declarations Service returned [$status]")
     }
   }
 
-  private def postMetaData(eori: String, uri: String, xml: String)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] =
-    post(eori, uri, xml)
-
-  private[connectors] def post(eori: String, uri: String, body: String)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] = {
+  private def post(eori: String, uri: String, body: String)(implicit hc: HeaderCarrier): Future[CustomsDeclarationsResponse] = {
     logger.debug(s"CUSTOMS_DECLARATIONS request payload is -> $body")
 
     metrics.timeAsyncCall(Timers.upstreamCustomsDeclarationsTimer) {
@@ -133,7 +113,7 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: 
               reportAs = Status.INTERNAL_SERVER_ERROR
             )
           case _ =>
-            logger.warn(s"Received status:${response.status} with headers: ${response.headers}")
+            logger.debug(s"Received status:${response.status} with headers: ${response.headers}")
             CustomsDeclarationsResponse(
               response.status,
               Some(

@@ -16,18 +16,22 @@
 
 package uk.gov.hmrc.exports.services
 
+import org.mongodb.scala.model.{Filters, Updates}
 import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
+import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timers
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.{StatusGroup, SubmittedStatuses}
 import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.exports.models.{Eori, FetchSubmissionPageData, PageOfSubmissions}
+import uk.gov.hmrc.exports.models.{Eori, FetchSubmissionPageData, Mrn, PageOfSubmissions}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, CancellationMetaDataBuilder, ExportsPointerToWCOPointer}
+import uk.gov.hmrc.exports.services.reversemapping.MappingContext
+import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParser
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
@@ -38,11 +42,13 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class SubmissionService @Inject() (
   customsDeclarationsConnector: CustomsDeclarationsConnector,
+  customsDeclarationsInformationConnector: CustomsDeclarationsInformationConnector,
   submissionRepository: SubmissionRepository,
   declarationRepository: DeclarationRepository,
   exportsPointerToWCOPointer: ExportsPointerToWCOPointer,
   cancelMetaDataBuilder: CancellationMetaDataBuilder,
   amendmentMetaDataBuilder: AmendmentMetaDataBuilder,
+  exportsDeclarationXmlParser: ExportsDeclarationXmlParser,
   wcoMapperService: WcoMapperService,
   metrics: ExportsMetrics
 )(implicit executionContext: ExecutionContext)
@@ -150,6 +156,38 @@ class SubmissionService @Inject() (
       } yield submission
     }
 
+  def fetchExternalAmendmentToUpdateSubmission(mrn: Mrn, eori: Eori, actionId: String, submissionId: String)(
+    implicit hc: HeaderCarrier
+  ): Future[Option[Submission]] =
+    customsDeclarationsInformationConnector.fetchMrnFullDeclaration(mrn.value, None) flatMap { xml =>
+      exportsDeclarationXmlParser.fromXml(MappingContext(eori.value), xml.toString).toOption match {
+        case Some(declaration) =>
+          val update = for {
+            _ <- declarationRepository.create(declaration)
+            submission <- submissionRepository.updateAction(submissionId, actionId, declaration.id)
+          } yield submission
+
+          update flatMap { submission =>
+            updateDecId(submission, actionId, declaration.id)
+          }
+        case _ =>
+          Future.successful(None)
+      }
+    }
+
+  private def updateDecId(updatedSubmission: Option[Submission], actionId: String, declarationId: String): Future[Option[Submission]] = {
+
+    def findAction(submission: Submission): Action => Boolean = { action =>
+      action.id == actionId && action.versionNo == submission.latestVersionNo
+    }
+
+    updatedSubmission match {
+      case Some(submission) if submission.actions.exists(findAction(submission)) =>
+        submissionRepository.findOneAndUpdate(Filters.eq("uuid", submission.uuid), Updates.set("latestDecId", declarationId))
+      case submission => Future.successful(submission)
+    }
+  }
+
   private def isSubmissionAlreadyCancelled(submission: Submission): Boolean =
     submission.actions.find(_.requestType == CancellationRequest) match {
       case Some(action) => action.latestNotificationSummary.fold(false)(_.enhancedStatus == CUSTOMS_POSITION_GRANTED)
@@ -210,10 +248,8 @@ class SubmissionService @Inject() (
       }
 
       (for {
-        Some(consignmentReferences) <- Future.successful(declaration.consignmentReferences)
-        Some(mrn) <- Future.successful(consignmentReferences.mrn)
         submission <- submissionLookup
-        actionId <- sendAmendmentRequest(declaration, submission, amendment.fieldPointers, mrn)
+        actionId <- sendAmendmentRequest(declaration, submission, amendment.fieldPointers)
       } yield actionId).recoverWith { case throwable: Throwable =>
         logProgress(declaration.id, "Amendment failed")
         declarationRepository.revertStatusToAmendmentDraft(declaration) flatMap { _ =>
@@ -223,7 +259,7 @@ class SubmissionService @Inject() (
       }
     }
 
-  private def sendAmendmentRequest(declaration: ExportsDeclaration, submission: Submission, fieldPointers: Seq[String], mrn: String)(
+  private def sendAmendmentRequest(declaration: ExportsDeclaration, submission: Submission, fieldPointers: Seq[String])(
     implicit hc: HeaderCarrier
   ): Future[String] = {
     val wcoPointers = fieldPointers.flatMap(exportsPointerToWCOPointer.getWCOPointers).distinct
@@ -235,13 +271,13 @@ class SubmissionService @Inject() (
       actionId <- metrics.timeCall(Timers.amendmentSendToDecApiTimer)(customsDeclarationsConnector.submitAmendment(declaration.eori, xml))
       _ = logProgress(declaration.id, "Submitted amendment request to the Declaration API Successfully")
       _ = logProgress(declaration.id, "Appending amendment action to submission...")
-      _ <- updateSubmissionWithAmendmentAction(mrn, actionId, declaration.id, submission)
+      _ <- updateSubmissionWithAmendmentAction(actionId, declaration.id, submission)
     } yield actionId
   }
 
-  private def updateSubmissionWithAmendmentAction(mrn: String, actionId: String, decId: String, submission: Submission): Future[Unit] = {
+  private def updateSubmissionWithAmendmentAction(actionId: String, decId: String, submission: Submission): Future[Unit] = {
     val newAction = Action(id = actionId, AmendmentRequest, decId = Some(decId), versionNo = submission.latestVersionNo)
-    submissionRepository.addAction(mrn, newAction).map {
+    submissionRepository.addAction(submission.uuid, newAction).map {
       case Some(_) => logger.info(s"Updated submission with id ${submission.uuid} successfully with amendment action.")
       case _       => throw new NoSuchElementException(s"Failed to find submission with id ${submission.uuid} to update with amendment action.")
     }

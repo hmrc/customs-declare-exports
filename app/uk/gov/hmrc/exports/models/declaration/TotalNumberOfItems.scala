@@ -17,10 +17,6 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
-import uk.gov.hmrc.exports.models.FieldMapping
-import uk.gov.hmrc.exports.services.DiffTools
-import uk.gov.hmrc.exports.services.DiffTools.{combinePointers, compareStringDifference, ExportsDeclarationDiff}
 
 case class TotalNumberOfItems(
   totalAmountInvoiced: Option[String] = None,
@@ -28,35 +24,8 @@ case class TotalNumberOfItems(
   agreedExchangeRate: Option[String] = None,
   exchangeRate: Option[String] = None,
   totalPackage: Option[String] = None
-) extends DiffTools[TotalNumberOfItems] {
-  def createDiff(original: TotalNumberOfItems, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareStringDifference(
-        original.totalAmountInvoiced,
-        totalAmountInvoiced,
-        combinePointers(pointerString, TotalNumberOfItems.totalAmountInvoicedPointer, sequenceId)
-      ),
-      compareStringDifference(
-        original.totalAmountInvoicedCurrency,
-        totalAmountInvoicedCurrency,
-        combinePointers(pointerString, TotalNumberOfItems.totalAmountInvoicedCurrencyPointer, sequenceId)
-      ),
-      compareStringDifference(
-        original.exchangeRate,
-        exchangeRate,
-        combinePointers(pointerString, TotalNumberOfItems.exchangeRatePointer, sequenceId)
-      ),
-      compareStringDifference(original.totalPackage, totalPackage, combinePointers(pointerString, TotalNumberOfItems.totalPackagePointer, sequenceId))
-    ).flatten
-}
+)
 
-object TotalNumberOfItems extends FieldMapping {
+object TotalNumberOfItems {
   implicit val format: OFormat[TotalNumberOfItems] = Json.format[TotalNumberOfItems]
-
-  val pointer: ExportsFieldPointer = "totalNumberOfItems"
-
-  val totalAmountInvoicedPointer: ExportsFieldPointer = "totalAmountInvoiced"
-  val totalAmountInvoicedCurrencyPointer: ExportsFieldPointer = "totalAmountInvoicedCurrency"
-  val exchangeRatePointer: ExportsFieldPointer = "exchangeRate"
-  val totalPackagePointer: ExportsFieldPointer = "totalPackage"
 }

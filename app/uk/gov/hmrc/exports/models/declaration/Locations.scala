@@ -18,98 +18,44 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.sequenceIdPlaceholder
-import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
-import uk.gov.hmrc.exports.models.FieldMapping
-import uk.gov.hmrc.exports.services.DiffTools
-import uk.gov.hmrc.exports.services.DiffTools._
 
-case class Country(code: Option[String]) extends DiffTools[Country] {
-  override def createDiff(original: Country, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(compareStringDifference(original.code, code, combinePointers(pointerString, Country.pointer, sequenceId))).flatten
-}
+case class Country(code: Option[String])
 
-object Country extends FieldMapping {
+object Country {
   implicit val format = Json.format[Country]
-
-  val pointer: ExportsFieldPointer = "code"
 }
 
 case class RoutingCountry(
   sequenceId: Int = sequenceIdPlaceholder, // Initialised to enable migration of existing documents
   country: Country
-) extends DiffTools[RoutingCountry] {
-  override def createDiff(original: RoutingCountry, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(compareStringDifference(original.country.code, country.code, combinePointers(pointerString, Country.pointer, sequenceId))).flatten
-}
+)
 
 object RoutingCountry {
   implicit val format: OFormat[RoutingCountry] = Json.format[RoutingCountry]
 }
 
 case class GoodsLocation(country: String, typeOfLocation: String, qualifierOfIdentification: String, identificationOfLocation: Option[String])
-    extends DiffTools[GoodsLocation] {
-  def createDiff(original: GoodsLocation, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareStringDifference(original.country, country, combinePointers(pointerString, GoodsLocation.countryPointer, sequenceId)),
-      compareStringDifference(
-        original.typeOfLocation,
-        typeOfLocation,
-        combinePointers(pointerString, GoodsLocation.typeOfLocationPointer, sequenceId)
-      ),
-      compareStringDifference(
-        original.qualifierOfIdentification,
-        qualifierOfIdentification,
-        combinePointers(pointerString, GoodsLocation.qualifierOfIdentificationPointer, sequenceId)
-      ),
-      compareStringDifference(
-        original.identificationOfLocation,
-        identificationOfLocation,
-        combinePointers(pointerString, GoodsLocation.identificationOfLocationPointer, sequenceId)
-      )
-    ).flatten
-}
 
-object GoodsLocation extends FieldMapping {
+object GoodsLocation {
   implicit val format: OFormat[GoodsLocation] = Json.format[GoodsLocation]
-
-  val pointer: ExportsFieldPointer = "goodsLocation"
-  val countryPointer: ExportsFieldPointer = "country"
-  val typeOfLocationPointer: ExportsFieldPointer = "typeOfLocation"
-  val qualifierOfIdentificationPointer: ExportsFieldPointer = "qualifierOfIdentification"
-  val identificationOfLocationPointer: ExportsFieldPointer = "identificationOfLocation"
 }
 
-case class OfficeOfExit(officeId: Option[String]) extends Ordered[OfficeOfExit] {
-  override def compare(that: OfficeOfExit): Int =
-    compareOptionalString(officeId, that.officeId)
-}
+case class OfficeOfExit(officeId: Option[String])
 
-object OfficeOfExit extends FieldMapping {
+object OfficeOfExit {
   implicit val format: OFormat[OfficeOfExit] = Json.format[OfficeOfExit]
-
-  val pointer: ExportsFieldPointer = "officeOfExit.officeId"
 }
 
-case class WarehouseIdentification(identificationNumber: Option[String]) extends Ordered[WarehouseIdentification] {
-  override def compare(that: WarehouseIdentification): Int =
-    compareOptionalString(identificationNumber, that.identificationNumber)
-}
+case class WarehouseIdentification(identificationNumber: Option[String])
 
-object WarehouseIdentification extends FieldMapping {
+object WarehouseIdentification {
   implicit val format = Json.format[WarehouseIdentification]
-
-  val pointer: ExportsFieldPointer = "warehouseIdentification.identificationNumber"
 }
 
-case class SupervisingCustomsOffice(supervisingCustomsOffice: Option[String]) extends Ordered[SupervisingCustomsOffice] {
-  override def compare(that: SupervisingCustomsOffice): Int =
-    compareOptionalString(supervisingCustomsOffice, that.supervisingCustomsOffice)
-}
+case class SupervisingCustomsOffice(supervisingCustomsOffice: Option[String])
 
-object SupervisingCustomsOffice extends FieldMapping {
+object SupervisingCustomsOffice {
   implicit val format = Json.format[SupervisingCustomsOffice]
-
-  val pointer: ExportsFieldPointer = "supervisingCustomsOffice"
 }
 
 case class InlandOrBorder(location: String)
@@ -121,15 +67,10 @@ object InlandOrBorder {
   val Inland = new InlandOrBorder("Inland")
 }
 
-case class InlandModeOfTransportCode(inlandModeOfTransportCode: Option[ModeOfTransportCode]) extends DiffTools[InlandModeOfTransportCode] {
-  def createDiff(original: InlandModeOfTransportCode, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(compareDifference(original.inlandModeOfTransportCode, inlandModeOfTransportCode, pointerString)).flatten
-}
+case class InlandModeOfTransportCode(inlandModeOfTransportCode: Option[ModeOfTransportCode])
 
-object InlandModeOfTransportCode extends FieldMapping {
+object InlandModeOfTransportCode {
   implicit val format = Json.format[InlandModeOfTransportCode]
-
-  val pointer: ExportsFieldPointer = "inlandModeOfTransportCode.inlandModeOfTransportCode"
 }
 
 case class Locations(
@@ -143,51 +84,8 @@ case class Locations(
   warehouseIdentification: Option[WarehouseIdentification] = None,
   inlandOrBorder: Option[InlandOrBorder] = None,
   inlandModeOfTransportCode: Option[InlandModeOfTransportCode] = None
-) extends DiffTools[Locations] {
+)
 
-  // hasRoutingCountries and inlandOrBorder fields are not used to create WCO XML
-  def createDiff(
-    original: Locations,
-    pointerString: ExportsFieldPointer = ExportsDeclaration.pointer,
-    sequenceId: Option[Int] = None
-  ): ExportsDeclarationDiff =
-    Seq(
-      compareDifference(original.officeOfExit, officeOfExit, combinePointers(pointerString, OfficeOfExit.pointer, sequenceId)),
-      compareDifference(
-        original.supervisingCustomsOffice,
-        supervisingCustomsOffice,
-        combinePointers(pointerString, SupervisingCustomsOffice.pointer, sequenceId)
-      ),
-      compareDifference(
-        original.warehouseIdentification,
-        warehouseIdentification,
-        combinePointers(pointerString, WarehouseIdentification.pointer, sequenceId)
-      )
-    ).flatten ++
-      createDiffOfOptions(
-        original.originationCountry,
-        originationCountry,
-        combinePointers(pointerString, Locations.originationCountryPointer, sequenceId)
-      ) ++
-      createDiffOfOptions(
-        original.destinationCountry,
-        destinationCountry,
-        combinePointers(pointerString, Locations.destinationCountryPointer, sequenceId)
-      ) ++
-      createDiff(original.routingCountries, routingCountries, combinePointers(pointerString, Locations.routingCountriesPointer)) ++
-      createDiffOfOptions(original.goodsLocation, goodsLocation, combinePointers(pointerString, GoodsLocation.pointer, sequenceId)) ++
-      createDiffOfOptions(
-        original.inlandModeOfTransportCode,
-        inlandModeOfTransportCode,
-        combinePointers(pointerString, InlandModeOfTransportCode.pointer, sequenceId)
-      )
-}
-
-object Locations extends FieldMapping {
+object Locations {
   implicit val format: OFormat[Locations] = Json.format[Locations]
-
-  val pointer: ExportsFieldPointer = "locations"
-  val originationCountryPointer: ExportsFieldPointer = "originationCountry"
-  val destinationCountryPointer: ExportsFieldPointer = "destinationCountry"
-  val routingCountriesPointer: ExportsFieldPointer = "routingCountries"
 }

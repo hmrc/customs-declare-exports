@@ -39,20 +39,20 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
 
   "SubmissionRepository.addAction" when {
 
-    "there is no Submission with the given MRN" should {
+    "there is no Submission with the given UUID" should {
       "return an empty Option" in {
         val newAction = Action(actionId_2, CancellationRequest, decId = Some(""), versionNo = 0)
-        repository.addAction(mrn, newAction).futureValue mustNot be(defined)
+        repository.addAction(uuid, newAction).futureValue mustNot be(defined)
       }
     }
 
-    "there is a Submission with the given MRN" should {
+    "there is a Submission with the given UUID" should {
       "return the Submission updated" in {
         repository.insertOne(submission).futureValue.isRight mustBe true
-        val newAction = Action(actionId_2, CancellationRequest, decId = submission.latestDecId, versionNo = submission.latestVersionNo + 1)
+        val newAction = Action(actionId_2, CancellationRequest, submission.latestDecId, submission.latestVersionNo + 1)
         val expectedUpdatedSubmission = submission.copy(actions = submission.actions :+ newAction)
 
-        val updatedSubmission = repository.addAction(mrn, newAction).futureValue
+        val updatedSubmission = repository.addAction(submission.uuid, newAction).futureValue
 
         updatedSubmission.value must equal(expectedUpdatedSubmission)
       }
@@ -251,7 +251,7 @@ object SubmissionRepositoryISpecHelper {
       ducr = ducr,
       latestEnhancedStatus = Some(status),
       enhancedStatusLastUpdated = Some(lastStatusUpdate),
-      actions = List(Action(uuid, SubmissionRequest, dateTime, None, decId = Some(""), versionNo = 1)),
+      actions = List(Action(uuid, SubmissionRequest, decId = Some(""), versionNo = 1, None, dateTime)),
       latestDecId = Some(uuid)
     )
   }

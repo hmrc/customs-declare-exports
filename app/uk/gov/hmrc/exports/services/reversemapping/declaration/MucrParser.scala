@@ -29,7 +29,7 @@ class MucrParser extends DeclarationXmlParser[Option[MUCR]] {
 
   override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Option[MUCR]] =
     Right(
-      (inputXml \ Declaration \ GoodsShipment \ PreviousDocument)
+      (inputXml \ FullDeclarationDataDetails \ FullDeclarationObject \ Declaration \ GoodsShipment \ PreviousDocument)
         .find(previousDocument => (previousDocument \ TypeCode).text == "MCR")
         .map(previousDocument => (previousDocument \ ID).text)
         .map(MUCR(_))

@@ -259,6 +259,8 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
 
   val xml: Elem =
     <meta>
+      <p:FullDeclarationDataDetails>
+        <p:FullDeclarationObject>
       <ns3:Declaration>
         <ns3:GoodsShipment>
           <ns3:ExportCountry>
@@ -279,10 +281,14 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
           </ns3:Itinerary>
         </ns3:Consignment>
       </ns3:Declaration>
+        </p:FullDeclarationObject>
+      </p:FullDeclarationDataDetails>
     </meta>
 
   val xmlWithoutRoutingCountries: Elem =
     <meta>
+      <p:FullDeclarationDataDetails>
+        <p:FullDeclarationObject>
       <ns3:Declaration>
         <ns3:GoodsShipment>
           <ns3:ExportCountry>
@@ -293,5 +299,7 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
           </ns3:Destination>
         </ns3:GoodsShipment>
       </ns3:Declaration>
+    </p:FullDeclarationObject>
+      </p:FullDeclarationDataDetails>
     </meta>
 }

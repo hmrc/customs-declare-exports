@@ -28,13 +28,16 @@ import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.auth.core.InsufficientEnrolments
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
-import uk.gov.hmrc.exports.controllers.request.{ExportsDeclarationRequest, ExportsDeclarationRequestMeta}
+import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.DeclarationType.STANDARD
 import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.INITIAL
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
-import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.services.DeclarationService
+import uk.gov.hmrc.exports.models.declaration.submissions.{Action, ExternalAmendmentRequest, Submission, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.{DeclarationMeta, DeclarationStatus, ExportsDeclaration}
+import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
+import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant.now
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -45,17 +48,18 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
   private val cc = stubControllerComponents()
   private val authenticator = new Authenticator(mockAuthConnector, cc)
   private val declarationService: DeclarationService = mock[DeclarationService]
+  private val mockSubmissionService: SubmissionService = mock[SubmissionService]
 
-  private val controller = new DeclarationController(declarationService, authenticator, cc)
+  private val controller = new DeclarationController(declarationService, mockSubmissionService, authenticator, cc)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(mockAuthConnector, declarationService)
+    reset(mockAuthConnector, declarationService, mockSubmissionService)
     withAuthorizedUser()
   }
 
   private val body =
-    ExportsDeclarationRequest(declarationMeta = ExportsDeclarationRequestMeta(createdDateTime = now, updatedDateTime = now), `type` = STANDARD)
+    ExportsDeclarationRequest(declarationMeta = DeclarationMeta(status = INITIAL, createdDateTime = now, updatedDateTime = now), `type` = STANDARD)
 
   "DeclarationController.create" should {
     val postRequest = FakeRequest("POST", "/declarations")
@@ -397,6 +401,74 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
 
         status(result) must be(CREATED)
         contentAsJson(result).as[String] mustBe newId
+      }
+    }
+  }
+
+  "DeclarationController.latestDecId" should {
+
+    val submissionActionId = "submissionActionId"
+    val externalAmendmentActionId = "externalAmendmentActionId"
+    val submissionId = "submissionId"
+    val mrn = "mrn"
+
+    val submissionAction = Action(submissionActionId, SubmissionRequest, Some("subDecId"), 1)
+    val externalAmendmentAction = Action(externalAmendmentActionId, ExternalAmendmentRequest, None, 2)
+
+    val dec = aDeclaration(withId("decId"))
+
+    val submission = Submission(dec, "lrn", "ducr", submissionAction)
+
+    "return OK with the updated action.decId" when {
+      "given a submission" in {
+
+        val getRequest = FakeRequest("GET", s"/fetch-dis-declaration/$mrn/$externalAmendmentActionId/$submissionId")
+
+        when(mockSubmissionService.fetchExternalAmendmentToUpdateSubmission(any[Mrn](), any[Eori](), anyString(), anyString())(any[HeaderCarrier]()))
+          .thenReturn(
+            Future.successful(
+              Some(
+                submission
+                  .copy(actions = Seq(submissionAction, externalAmendmentAction.copy(decId = Some("externalAmendmentDecId"))))
+              )
+            )
+          )
+
+        val result = controller.fetchExternalAmendmentDecId(mrn, externalAmendmentActionId, submissionId)(getRequest)
+
+        status(result) must be(OK)
+        contentAsJson(result).as[String] mustBe "externalAmendmentDecId"
+      }
+    }
+    "return NotFound" when {
+      "no submission is given from SubmissionService" in {
+
+        val getRequest = FakeRequest("GET", s"/fetch-dis-declaration/$mrn/$externalAmendmentActionId/$submissionId")
+
+        when(mockSubmissionService.fetchExternalAmendmentToUpdateSubmission(any[Mrn], any[Eori], anyString, anyString)(any[HeaderCarrier]))
+          .thenReturn(Future.successful(None))
+
+        val result = controller.fetchExternalAmendmentDecId(mrn, externalAmendmentActionId, submissionId)(getRequest)
+
+        status(result) must be(NOT_FOUND)
+      }
+      "no decId is returned in the action" in {
+
+        val getRequest = FakeRequest("GET", s"/fetch-dis-declaration/$mrn/$externalAmendmentActionId/$submissionId")
+
+        when(mockSubmissionService.fetchExternalAmendmentToUpdateSubmission(any[Mrn], any[Eori], anyString, anyString)(any[HeaderCarrier]))
+          .thenReturn(
+            Future.successful(
+              Some(
+                submission
+                  .copy(actions = Seq(submissionAction, externalAmendmentAction))
+              )
+            )
+          )
+
+        val result = controller.fetchExternalAmendmentDecId(mrn, externalAmendmentActionId, submissionId)(getRequest)
+
+        status(result) must be(NOT_FOUND)
       }
     }
   }

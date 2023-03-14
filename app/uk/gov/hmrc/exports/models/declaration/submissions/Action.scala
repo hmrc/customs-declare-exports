@@ -24,10 +24,10 @@ import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 case class Action(
   id: String,
   requestType: RequestType,
-  requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC")),
-  notifications: Option[Seq[NotificationSummary]] = None,
   decId: Option[String],
-  versionNo: Int
+  versionNo: Int,
+  notifications: Option[Seq[NotificationSummary]] = None,
+  requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC"))
 ) {
   val latestNotificationSummary: Option[NotificationSummary] =
     notifications.flatMap(_.lastOption)
@@ -44,9 +44,8 @@ object Action {
   implicit val reads: Reads[Action] =
     ((__ \ "id").read[String] and
       (__ \ "requestType").read[RequestType] and
-      ((__ \ "requestTimestamp").read[ZonedDateTime] or (__ \ "requestTimestamp").read[ZonedDateTime](readLocalDateTimeFromString)) and
-      (__ \ "notifications").readNullable[Seq[NotificationSummary]] and
       (__ \ "decId").readNullable[String] and
-      (__ \ "versionNo").read[Int])(Action.apply _)
-
+      (__ \ "versionNo").read[Int] and
+      (__ \ "notifications").readNullable[Seq[NotificationSummary]] and
+      ((__ \ "requestTimestamp").read[ZonedDateTime] or (__ \ "requestTimestamp").read[ZonedDateTime](readLocalDateTimeFromString)))(Action.apply _)
 }

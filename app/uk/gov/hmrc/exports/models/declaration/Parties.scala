@@ -17,56 +17,24 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.exports.models.{Eori, FieldMapping}
-import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
-import uk.gov.hmrc.exports.services.DiffTools
-import uk.gov.hmrc.exports.services.DiffTools._
+import uk.gov.hmrc.exports.models.Eori
 
-case class EntityDetails(eori: Option[String], address: Option[Address]) extends DiffTools[EntityDetails] {
-  override def createDiff(original: EntityDetails, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareStringDifference(original.eori, eori, combinePointers(pointerString, EntityDetails.eoriPointer, sequenceId)),
-      createDiffOfOptions(original.address, address, combinePointers(pointerString, Address.pointer, sequenceId))
-    ).flatten
-}
+case class EntityDetails(eori: Option[String], address: Option[Address])
 
-object EntityDetails extends FieldMapping {
+object EntityDetails {
   implicit val format: OFormat[EntityDetails] = Json.format[EntityDetails]
-
-  val pointer: ExportsFieldPointer = "details"
-  val eoriPointer: ExportsFieldPointer = "eori"
 }
 
-case class Address(fullName: String, addressLine: String, townOrCity: String, postCode: String, country: String) extends DiffTools[Address] {
-  override def createDiff(original: Address, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareStringDifference(original.fullName, fullName, combinePointers(pointerString, Address.fullNamePointer, sequenceId)),
-      compareStringDifference(original.addressLine, addressLine, combinePointers(pointerString, Address.addressLinePointer, sequenceId)),
-      compareStringDifference(original.townOrCity, townOrCity, combinePointers(pointerString, Address.townOrCityPointer, sequenceId)),
-      compareStringDifference(original.postCode, postCode, combinePointers(pointerString, Address.postCodePointer, sequenceId)),
-      compareStringDifference(original.country, country, combinePointers(pointerString, Address.countryPointer, sequenceId))
-    ).flatten
-}
-object Address extends FieldMapping {
+case class Address(fullName: String, addressLine: String, townOrCity: String, postCode: String, country: String)
+
+object Address {
   implicit val format: OFormat[Address] = Json.format[Address]
-
-  val pointer: ExportsFieldPointer = "address"
-  val fullNamePointer: ExportsFieldPointer = "fullName"
-  val addressLinePointer: ExportsFieldPointer = "addressLine"
-  val townOrCityPointer: ExportsFieldPointer = "townOrCity"
-  val postCodePointer: ExportsFieldPointer = "postCode"
-  val countryPointer: ExportsFieldPointer = "country"
 }
 
-case class ExporterDetails(details: EntityDetails) extends DiffTools[ExporterDetails] {
-  override def createDiff(original: ExporterDetails, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(details.createDiff(original.details, combinePointers(pointerString, EntityDetails.pointer, sequenceId))).flatten
-}
+case class ExporterDetails(details: EntityDetails)
 
-object ExporterDetails extends FieldMapping {
+object ExporterDetails {
   implicit val format: OFormat[ExporterDetails] = Json.format[ExporterDetails]
-
-  val pointer: ExportsFieldPointer = "exporterDetails"
 }
 
 case class IsExs(isExs: String)
@@ -74,61 +42,37 @@ object IsExs {
   implicit val format: OFormat[IsExs] = Json.format[IsExs]
 }
 
-case class ConsigneeDetails(details: EntityDetails) extends DiffTools[ConsigneeDetails] {
-  override def createDiff(original: ConsigneeDetails, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(details.createDiff(original.details, combinePointers(pointerString, ConsigneeDetails.pointer, sequenceId))).flatten
-}
-object ConsigneeDetails extends FieldMapping {
+case class ConsigneeDetails(details: EntityDetails)
+
+object ConsigneeDetails {
   implicit val format: OFormat[ConsigneeDetails] = Json.format[ConsigneeDetails]
-
-  val pointer: ExportsFieldPointer = "consigneeDetails"
 }
 
-case class ConsignorDetails(details: EntityDetails) extends DiffTools[ConsignorDetails] {
-  override def createDiff(original: ConsignorDetails, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(details.createDiff(original.details, combinePointers(pointerString, ConsignorDetails.pointer, sequenceId))).flatten
-}
+case class ConsignorDetails(details: EntityDetails)
 
-object ConsignorDetails extends FieldMapping {
+object ConsignorDetails {
   implicit val format: OFormat[ConsignorDetails] = Json.format[ConsignorDetails]
-
-  val pointer: ExportsFieldPointer = "consignorDetails"
 }
 
-case class DeclarantDetails(details: EntityDetails) extends DiffTools[DeclarantDetails] {
-  override def createDiff(original: DeclarantDetails, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(details.createDiff(original.details, combinePointers(pointerString, DeclarantDetails.pointer, sequenceId))).flatten
-}
+case class DeclarantDetails(details: EntityDetails)
 
-object DeclarantDetails extends FieldMapping {
+object DeclarantDetails {
   implicit val format: OFormat[DeclarantDetails] = Json.format[DeclarantDetails]
-
-  val pointer: ExportsFieldPointer = "declarantDetails"
 }
 
 case class DeclarantIsExporter(answer: String) {
   def isExporter: Boolean = answer == "Yes"
 }
+
 object DeclarantIsExporter {
   implicit val format: OFormat[DeclarantIsExporter] = Json.format[DeclarantIsExporter]
 }
 
-case class RepresentativeDetails(details: Option[EntityDetails], statusCode: Option[String], representingOtherAgent: Option[String])
-    extends DiffTools[RepresentativeDetails] {
+case class RepresentativeDetails(details: Option[EntityDetails], statusCode: Option[String], representingOtherAgent: Option[String]) {
   def isRepresentingOtherAgent = representingOtherAgent.contains("Yes")
-
-  // representingOtherAgent field is not used to generate WCO XML
-  override def createDiff(
-    original: RepresentativeDetails,
-    pointerString: ExportsFieldPointer,
-    sequenceId: Option[Int] = None
-  ): ExportsDeclarationDiff =
-    Seq(
-      createDiffOfOptions(original.details, details, combinePointers(pointerString, RepresentativeDetails.detailsPointer, sequenceId)),
-      compareStringDifference(original.statusCode, statusCode, combinePointers(pointerString, RepresentativeDetails.statusCodePointer, sequenceId))
-    ).flatten
 }
-object RepresentativeDetails extends FieldMapping {
+
+object RepresentativeDetails {
 
   implicit val format: OFormat[RepresentativeDetails] = Json.format[RepresentativeDetails]
 
@@ -136,90 +80,39 @@ object RepresentativeDetails extends FieldMapping {
   val Declarant = "1"
   val DirectRepresentative = "2"
   val IndirectRepresentative = "3"
-
-  val pointer: ExportsFieldPointer = "representativeDetails"
-  val detailsPointer: ExportsFieldPointer = "details"
-  val statusCodePointer: ExportsFieldPointer = "statusCode"
 }
 
-case class DeclarationAdditionalActors(actors: Seq[DeclarationAdditionalActor]) extends DiffTools[DeclarationAdditionalActors] {
-  def createDiff(original: DeclarationAdditionalActors, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    createDiff(original.actors, actors, combinePointers(pointerString, DeclarationAdditionalActor.pointer, None))
-      .map(
-        removeTrailingSequenceNbr(_)
-      ) // This entity is unique in being a sequence of items but not having a SequenceNumber (so we strip off the numeric part)
-}
-object DeclarationAdditionalActors extends FieldMapping {
+case class DeclarationAdditionalActors(actors: Seq[DeclarationAdditionalActor])
+
+object DeclarationAdditionalActors {
   implicit val format: OFormat[DeclarationAdditionalActors] = Json.format[DeclarationAdditionalActors]
-
-  val pointer: ExportsFieldPointer = "declarationAdditionalActorsData"
 }
 
-case class DeclarationAdditionalActor(eori: Option[String], partyType: Option[String]) extends DiffTools[DeclarationAdditionalActor] {
-  def createDiff(original: DeclarationAdditionalActor, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareStringDifference(original.eori, eori, combinePointers(pointerString, DeclarationAdditionalActor.eoriPointer, None)),
-      compareStringDifference(original.partyType, partyType, combinePointers(pointerString, DeclarationAdditionalActor.partyTypePointer, None))
-    ).flatten
-}
+case class DeclarationAdditionalActor(eori: Option[String], partyType: Option[String])
 
-object DeclarationAdditionalActor extends FieldMapping {
+object DeclarationAdditionalActor {
   implicit val format: OFormat[DeclarationAdditionalActor] = Json.format[DeclarationAdditionalActor]
-
-  val pointer: ExportsFieldPointer = "actors"
-  val eoriPointer: ExportsFieldPointer = "eori"
-  val partyTypePointer: ExportsFieldPointer = "partyType"
 }
 
-case class DeclarationHolders(holders: Seq[DeclarationHolder], isRequired: Option[YesNoAnswer]) extends DiffTools[DeclarationHolders] {
-  // isRequired field is not used to generate the WCO XML
-  def createDiff(original: DeclarationHolders, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    createDiff(original.holders, holders, combinePointers(pointerString, DeclarationHolder.pointer, None))
-}
+case class DeclarationHolders(holders: Seq[DeclarationHolder], isRequired: Option[YesNoAnswer])
 
-object DeclarationHolders extends FieldMapping {
+object DeclarationHolders {
   implicit val format: OFormat[DeclarationHolders] = Json.format[DeclarationHolders]
-
-  val pointer: ExportsFieldPointer = "declarationHoldersData"
 }
 
 case class DeclarationHolder(authorisationTypeCode: Option[String], eori: Option[String], eoriSource: Option[EoriSource])
-    extends DiffTools[DeclarationHolder] {
 
-  // eoriSource is not used to generate the WCO XML
-  def createDiff(original: DeclarationHolder, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareStringDifference(
-        original.authorisationTypeCode,
-        authorisationTypeCode,
-        combinePointers(pointerString, DeclarationHolder.authorisationTypeCodePointer, sequenceId)
-      ),
-      compareStringDifference(original.eori, eori, combinePointers(pointerString, DeclarationHolder.eoriPointer, sequenceId))
-    ).flatten
-}
-
-object DeclarationHolder extends FieldMapping {
+object DeclarationHolder {
   implicit val format: OFormat[DeclarationHolder] = Json.format[DeclarationHolder]
-
-  val pointer: ExportsFieldPointer = "holders"
-  val authorisationTypeCodePointer: ExportsFieldPointer = "authorisationTypeCode"
-  val eoriPointer: ExportsFieldPointer = "eori"
 }
 
-case class CarrierDetails(details: EntityDetails) extends DiffTools[CarrierDetails] {
-  override def createDiff(original: CarrierDetails, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(details.createDiff(original.details, combinePointers(pointerString, CarrierDetails.pointer, sequenceId))).flatten
-}
+case class CarrierDetails(details: EntityDetails)
 
-object CarrierDetails extends FieldMapping {
+object CarrierDetails {
   implicit val format: OFormat[CarrierDetails] = Json.format[CarrierDetails]
-
-  val pointer: ExportsFieldPointer = "carrierDetails"
 }
 
-case class YesNoAnswer(answer: String) extends Ordered[YesNoAnswer] {
-  override def compare(that: YesNoAnswer): Int = answer.compare(that.answer)
-}
+case class YesNoAnswer(answer: String)
 
 object YesNoAnswer {
   implicit val format: OFormat[YesNoAnswer] = Json.format[YesNoAnswer]
@@ -233,19 +126,10 @@ object YesNoAnswer {
   val no = YesNoAnswer(YesNoStringAnswers.no)
 }
 
-case class PersonPresentingGoodsDetails(eori: Eori) extends DiffTools[PersonPresentingGoodsDetails] {
-  override def createDiff(
-    original: PersonPresentingGoodsDetails,
-    pointerString: ExportsFieldPointer,
-    sequenceId: Option[Int] = None
-  ): ExportsDeclarationDiff =
-    Seq(compareDifference(original.eori, eori, combinePointers(pointerString, Eori.pointer, sequenceId))).flatten
-}
+case class PersonPresentingGoodsDetails(eori: Eori)
 
-object PersonPresentingGoodsDetails extends FieldMapping {
+object PersonPresentingGoodsDetails {
   implicit val format: OFormat[PersonPresentingGoodsDetails] = Json.format[PersonPresentingGoodsDetails]
-
-  val pointer: ExportsFieldPointer = "personPresentingGoodsDetails"
 }
 
 case class Parties(
@@ -262,43 +146,10 @@ case class Parties(
   carrierDetails: Option[CarrierDetails] = None,
   isEntryIntoDeclarantsRecords: Option[YesNoAnswer] = None,
   personPresentingGoodsDetails: Option[PersonPresentingGoodsDetails] = None
-) extends DiffTools[Parties] {
+)
 
-  // isExs, declarantIsExporter & authorisationProcedureCodeChoice fields are not used to create WCO XML
-  override def createDiff(original: Parties, pointerString: ExportsFieldPointer, sequenceId: Option[Int] = None): ExportsDeclarationDiff =
-    Seq(
-      compareDifference(
-        original.isEntryIntoDeclarantsRecords,
-        isEntryIntoDeclarantsRecords,
-        combinePointers(pointerString, Parties.isEntryIntoDeclarantsRecordsPointer, sequenceId)
-      )
-    ).flatten ++
-      createDiffOfOptions(original.exporterDetails, exporterDetails, combinePointers(pointerString, ExporterDetails.pointer, sequenceId)) ++
-      createDiffOfOptions(original.consigneeDetails, consigneeDetails, combinePointers(pointerString, ConsigneeDetails.pointer, sequenceId)) ++
-      createDiffOfOptions(original.consignorDetails, consignorDetails, combinePointers(pointerString, ConsignorDetails.pointer, sequenceId)) ++
-      createDiffOfOptions(original.declarantDetails, declarantDetails, combinePointers(pointerString, DeclarantDetails.pointer, sequenceId)) ++
-      createDiffOfOptions(
-        original.representativeDetails,
-        representativeDetails,
-        combinePointers(pointerString, RepresentativeDetails.pointer, sequenceId)
-      ) ++
-      createDiffOfOptions(
-        original.declarationAdditionalActorsData,
-        declarationAdditionalActorsData,
-        combinePointers(pointerString, DeclarationAdditionalActors.pointer, sequenceId)
-      ) ++
-      createDiffOfOptions(original.carrierDetails, carrierDetails, combinePointers(pointerString, CarrierDetails.pointer, sequenceId)) ++
-      createDiffOfOptions(
-        original.personPresentingGoodsDetails,
-        personPresentingGoodsDetails,
-        combinePointers(pointerString, PersonPresentingGoodsDetails.pointer, sequenceId)
-      )
-}
-object Parties extends FieldMapping {
+object Parties {
   implicit val format: OFormat[Parties] = Json.format[Parties]
-
-  val pointer: ExportsFieldPointer = "parties"
-  val isEntryIntoDeclarantsRecordsPointer: ExportsFieldPointer = "personPresentingGoodsDetails.eori"
 }
 
 object PartyType {

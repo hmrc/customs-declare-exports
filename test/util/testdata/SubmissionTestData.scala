@@ -37,7 +37,7 @@ object SubmissionTestData {
 
   lazy val action_3 = Action(id = actionId_3, requestType = SubmissionRequest, requestTimestamp = instant1972, decId = Some(uuid), versionNo = 1)
 
-  lazy val actionCancellation = Action(actionId, CancellationRequest, action.requestTimestamp.plus(3, HOURS), decId = Some(uuid), versionNo = 1)
+  lazy val actionCancellation = Action(actionId, CancellationRequest, Some(uuid), 1, None, action.requestTimestamp.plus(3, HOURS))
 
   lazy val uuid: String = UUID.randomUUID.toString
   lazy val uuid_2: String = UUID.randomUUID.toString

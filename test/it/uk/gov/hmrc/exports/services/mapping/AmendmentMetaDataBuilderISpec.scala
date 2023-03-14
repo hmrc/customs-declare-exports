@@ -197,7 +197,7 @@ object AmendmentMetaDataBuilderISpec {
       |                <ns3:PaymentMethodCode>H</ns3:PaymentMethodCode>
       |            </ns3:Freight>
       |            <ns3:Itinerary>
-      |                <ns3:SequenceNumeric>0</ns3:SequenceNumeric>
+      |                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
       |                <ns3:RoutingCountryCode>GB</ns3:RoutingCountryCode>
       |            </ns3:Itinerary>
       |        </ns3:Consignment>
@@ -230,7 +230,7 @@ object AmendmentMetaDataBuilderISpec {
       |                    <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
       |                    <ns3:ID>123456</ns3:ID>
       |                    <ns3:Seal>
-      |                        <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+      |                        <ns3:SequenceNumeric>0</ns3:SequenceNumeric>
       |                        <ns3:ID>NOSEALS</ns3:ID>
       |                    </ns3:Seal>
       |                </ns3:TransportEquipment>
@@ -272,7 +272,7 @@ object AmendmentMetaDataBuilderISpec {
       |                    <ns3:CurrentCode>000</ns3:CurrentCode>
       |                </ns3:GovernmentProcedure>
       |                <ns3:Packaging>
-      |                    <ns3:SequenceNumeric>0</ns3:SequenceNumeric>
+      |                    <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
       |                    <ns3:MarksNumbersID>Shipping description</ns3:MarksNumbersID>
       |                    <ns3:QuantityQuantity>10</ns3:QuantityQuantity>
       |                    <ns3:TypeCode>XD</ns3:TypeCode>
@@ -405,7 +405,7 @@ object AmendmentMetaDataBuilderISpec {
       |                <ns3:PaymentMethodCode>H</ns3:PaymentMethodCode>
       |            </ns3:Freight>
       |            <ns3:Itinerary>
-      |                <ns3:SequenceNumeric>0</ns3:SequenceNumeric>
+      |                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
       |                <ns3:RoutingCountryCode>GB</ns3:RoutingCountryCode>
       |            </ns3:Itinerary>
       |        </ns3:Consignment>
@@ -438,7 +438,7 @@ object AmendmentMetaDataBuilderISpec {
       |                    <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
       |                    <ns3:ID>123456</ns3:ID>
       |                    <ns3:Seal>
-      |                        <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+      |                        <ns3:SequenceNumeric>0</ns3:SequenceNumeric>
       |                        <ns3:ID>NOSEALS</ns3:ID>
       |                    </ns3:Seal>
       |                </ns3:TransportEquipment>
@@ -480,7 +480,7 @@ object AmendmentMetaDataBuilderISpec {
       |                    <ns3:CurrentCode>000</ns3:CurrentCode>
       |                </ns3:GovernmentProcedure>
       |                <ns3:Packaging>
-      |                    <ns3:SequenceNumeric>0</ns3:SequenceNumeric>
+      |                    <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
       |                    <ns3:MarksNumbersID>Shipping description</ns3:MarksNumbersID>
       |                    <ns3:QuantityQuantity>10</ns3:QuantityQuantity>
       |                    <ns3:TypeCode>XD</ns3:TypeCode>

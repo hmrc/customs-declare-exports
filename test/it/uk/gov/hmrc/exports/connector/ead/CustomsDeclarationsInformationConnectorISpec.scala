@@ -72,11 +72,20 @@ class CustomsDeclarationsInformationConnectorISpec extends IntegrationTestSpec {
         }
       }
 
-      "request is not processed - 500" in {
-        getFromDownstreamService(mrnDeclarationUrl, INTERNAL_SERVER_ERROR)
+      "request is not processed - 500" when {
+        "downstream returns 500" in {
+          getFromDownstreamService(mrnDeclarationUrl, INTERNAL_SERVER_ERROR)
 
-        intercept[InternalServerException] {
-          await(connector.fetchMrnFullDeclaration(mrn, None))
+          intercept[InternalServerException] {
+            await(connector.fetchMrnFullDeclaration(mrn, None))
+          }
+        }
+        "downstream returns invalid xml" in {
+          getFromDownstreamService(mrnDeclarationUrl, OK, Some("invalid xml"))
+
+          intercept[InternalServerException] {
+            await(connector.fetchMrnFullDeclaration(mrn, None))
+          }
         }
       }
 

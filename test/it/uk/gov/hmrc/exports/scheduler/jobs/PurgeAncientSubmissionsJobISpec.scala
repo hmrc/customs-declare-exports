@@ -28,8 +28,8 @@ class PurgeAncientSubmissionsJobISpec extends IntegrationTestPurgeSubmissionsToo
         val submissions: List[Submission] = List(
           submission(
             latestEnhancedStatus = EnhancedStatus.GOODS_HAVE_EXITED,
-            actionIds = Seq(actionIds.head, actionIds(1), actionIds(2), actionIds(3)),
-            uuid = uuids.head,
+            actionIds = Seq(actionIds(0), actionIds(1), actionIds(2), actionIds(3)),
+            uuid = uuids(0),
             enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan
           ),
           submission(
@@ -70,19 +70,19 @@ class PurgeAncientSubmissionsJobISpec extends IntegrationTestPurgeSubmissionsToo
           )
         )
         val declarations: List[ExportsDeclaration] = List(
-          aDeclaration(withId(uuids.head), withUpdatedDateTime(), withEori(eori)),
+          aDeclaration(withId(uuids(0)), withUpdatedDateTime(), withEori(eori)),
           aDeclaration(withId(uuids(1)), withUpdatedDateTime(), withEori(eori)),
           aDeclaration(withId(uuids(2)), withUpdatedDateTime(), withEori(eori)),
           aDeclaration(withId(uuids(3)), withUpdatedDateTime(), withEori(eori))
         )
         val notifications = List(
-          notification(unparsedNotificationId = unparsedNotificationIds.head, actionId = actionIds.head),
+          notification(unparsedNotificationId = unparsedNotificationIds(0), actionId = actionIds(0)),
           notification(unparsedNotificationId = unparsedNotificationIds(1), actionId = actionIds(1)),
           notification(unparsedNotificationId = unparsedNotificationIds(2), actionId = actionIds(2)),
           notification(unparsedNotificationId = unparsedNotificationIds(3), actionId = actionIds(3))
         )
         val unparsedNotifications: List[UnparsedNotification] = List(
-          unparsedNotification(unparsedNotificationIds.head, actionIds.head),
+          unparsedNotification(unparsedNotificationIds(0), actionIds(0)),
           unparsedNotification(unparsedNotificationIds(1), actionIds(1)),
           unparsedNotification(unparsedNotificationIds(2), actionIds(2)),
           unparsedNotification(unparsedNotificationIds(3), actionIds(3))
@@ -116,8 +116,8 @@ class PurgeAncientSubmissionsJobISpec extends IntegrationTestPurgeSubmissionsToo
           submission(
             enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
             latestEnhancedStatus = EnhancedStatus.GOODS_HAVE_EXITED,
-            actionIds = Seq(actionIds.head, actionIds(1), actionIds(2), actionIds(3)),
-            uuid = uuids.head
+            actionIds = Seq(actionIds(0), actionIds(1), actionIds(2), actionIds(3)),
+            uuid = uuids(0)
           ),
           submission(
             enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
@@ -158,14 +158,14 @@ class PurgeAncientSubmissionsJobISpec extends IntegrationTestPurgeSubmissionsToo
           submission(
             latestEnhancedStatus = EnhancedStatus.PENDING,
             actionIds = Seq.empty,
-            uuid = uuids.head,
+            uuid = uuids(7),
             enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent
           )
         )
 
-        val declarations: List[ExportsDeclaration] = List(aDeclaration(withId(uuids.head), withEori(eori)))
-        val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds.head, actionId = actionIds.head))
-        val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds.head, actionIds.head))
+        val declarations: List[ExportsDeclaration] = List(aDeclaration(withId(uuids(0)), withEori(eori)))
+        val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds(0), actionId = actionIds(0)))
+        val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds(0), actionIds(0)))
 
         whenReady {
           for {
@@ -192,14 +192,14 @@ class PurgeAncientSubmissionsJobISpec extends IntegrationTestPurgeSubmissionsToo
           submission(
             enhancedStatusLastUpdated = enhancedStatusLastUpdatedRecent,
             latestEnhancedStatus = EnhancedStatus.ADDITIONAL_DOCUMENTS_REQUIRED,
-            actionIds = Seq(actionIds.head),
-            uuid = uuids.head
+            actionIds = Seq(actionIds(0)),
+            uuid = uuids(0)
           ),
           submission(
             enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
             latestEnhancedStatus = EnhancedStatus.AMENDED,
             actionIds = Seq.empty,
-            uuid = uuids.tail.head
+            uuid = uuids(1)
           ),
           submission(
             enhancedStatusLastUpdated = enhancedStatusLastUpdatedOlderThan,
@@ -275,9 +275,9 @@ class PurgeAncientSubmissionsJobISpec extends IntegrationTestPurgeSubmissionsToo
           )
         )
 
-        val declarations: List[ExportsDeclaration] = List(aDeclaration(withId(uuids.head), withEori(eori)))
-        val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds.head, actionId = actionIds.head))
-        val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds.head, actionIds.head))
+        val declarations: List[ExportsDeclaration] = List(aDeclaration(withId(uuids(0)), withEori(eori)))
+        val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds(0), actionId = actionIds(0)))
+        val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds(0), actionIds(0)))
 
         whenReady {
           for {
@@ -334,6 +334,7 @@ object PurgeAncientSubmissionsJobISpec {
     "9c5ef91c-a62a-4337-b51a-750b175fe6d1",
     "1d5ef91c-a62a-4337-b51a-750b175fe6d1"
   )
+
   private val unparsedNotificationIds = Seq(
     "1a429490-8688-48ec-bdca-8d6f48c5ad5f",
     "2a429490-8688-48ec-bdca-8d6f48c5ad5f",

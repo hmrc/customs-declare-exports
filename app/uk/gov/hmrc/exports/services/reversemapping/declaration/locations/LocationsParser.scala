@@ -38,10 +38,13 @@ class LocationsParser @Inject() (
   inlandModeOfTransportCodeParser: InlandModeOfTransportCodeParser
 ) extends DeclarationXmlParser[Locations] {
 
-  override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Locations] =
+  override def parse(inputXml: NodeSeq)(implicit context: MappingContext): XmlParserResult[Locations] = {
+
+    val toDeclaration = inputXml \ FullDeclarationDataDetails \ FullDeclarationObject \ Declaration
+
     for {
-      originationCountry <- parseCountry(inputXml \ Declaration \ GoodsShipment \ ExportCountry \ ID)
-      destinationCountry <- parseCountry(inputXml \ Declaration \ GoodsShipment \ Destination \ CountryCode)
+      originationCountry <- parseCountry(toDeclaration \ GoodsShipment \ ExportCountry \ ID)
+      destinationCountry <- parseCountry(toDeclaration \ GoodsShipment \ Destination \ CountryCode)
       routingCountries <- parseRoutingCountries(inputXml)
       goodsLocation <- goodsLocationParser.parse(inputXml)
       officeOfExit <- officeOfExitParser.parse(inputXml)
@@ -75,12 +78,16 @@ class LocationsParser @Inject() (
         inlandModeOfTransportCode = inlandModeOfTransportCode
       )
     }
+  }
 
   private def parseCountry(inputXml: NodeSeq): XmlParserResult[Option[Country]] =
     Right(inputXml.toStringOption.map(countryCode => Country(Some(countryCode))))
 
   private def parseRoutingCountries(inputXml: NodeSeq): XmlParserResult[Seq[RoutingCountry]] =
-    (inputXml \ Declaration \ Consignment \ Itinerary).map(parseRoutingCountry).toEitherOfList.map(_.flatten)
+    (inputXml \ FullDeclarationDataDetails \ FullDeclarationObject \ Declaration \ Consignment \ Itinerary)
+      .map(parseRoutingCountry)
+      .toEitherOfList
+      .map(_.flatten)
 
   private def parseRoutingCountry(inputXml: NodeSeq): XmlParserResult[Option[RoutingCountry]] = {
     val routingCountry = List((inputXml \ SequenceNumeric).toStringOption, (inputXml \ RoutingCountryCode).toStringOption)

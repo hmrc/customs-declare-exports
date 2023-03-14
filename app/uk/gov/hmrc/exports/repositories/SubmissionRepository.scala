@@ -17,6 +17,7 @@
 package uk.gov.hmrc.exports.repositories
 
 import com.mongodb.client.model.Indexes.{ascending, compoundIndex, descending}
+import com.mongodb.client.model.Updates.set
 import org.bson.conversions.Bson
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.Filters._
@@ -34,6 +35,7 @@ import java.time.ZonedDateTime
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
+import java.util.Arrays.{asList => ArrayList}
 
 @Singleton
 class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
@@ -47,11 +49,30 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
   override def classTag: ClassTag[Submission] = implicitly[ClassTag[Submission]]
   override val executionContext = ec
 
-  def addAction(mrn: String, newAction: Action): Future[Option[Submission]] = {
-    val filter = Json.obj("mrn" -> mrn)
-    val update = Json.obj("$addToSet" -> Json.obj("actions" -> Json.toJson(newAction)))
+  def addAction(uuid: String, action: Action): Future[Option[Submission]] = {
+    val filter = Json.obj("uuid" -> uuid)
+    val update = Json.obj("$addToSet" -> Json.obj("actions" -> Json.toJson(action)))
     findOneAndUpdate(filter, update)
   }
+
+  def addExternalAmendmentAction(uuid: String, action: Action): Future[Option[Submission]] = {
+    val filter = Json.obj("uuid" -> uuid)
+    val update = Json.obj(
+      "$addToSet" -> Json.obj("actions" -> Json.toJson(action)),
+      "$inc" -> Json.obj("latestVersionNo" -> 1),
+      "$unset" -> Json.obj("latestDecId" -> "")
+    )
+    findOneAndUpdate(filter, update)
+  }
+
+  def updateAction(submissionId: String, actionId: String, decId: String): Future[Option[Submission]] =
+    collection
+      .findOneAndUpdate(
+        equal("uuid", submissionId),
+        set("actions.$[itemNo].decId", decId),
+        doNotUpsertAndReturnAfter.arrayFilters(ArrayList(equal("itemNo.id", actionId)))
+      )
+      .toFutureOption()
 
   def countSubmissionsInGroup(eori: String, statusGroup: StatusGroup): Future[Int] =
     collection
@@ -158,6 +179,7 @@ object SubmissionRepository {
         .partialFilterExpression(BsonDocument(filter.toString))
         .unique(true)
     ),
+    IndexModel(ascending("uuid"), IndexOptions().name("uuidIdx").unique(true)),
     IndexModel(compoundIndex(ascending("eori"), descending("action.requestTimestamp")), IndexOptions().name("actionOrderedEori")),
     IndexModel(compoundIndex(ascending("eori"), descending("lrn")), IndexOptions().name("lrnByEori")),
     IndexModel(

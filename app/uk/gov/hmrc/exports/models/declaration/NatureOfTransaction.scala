@@ -17,15 +17,9 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.exports.models.ExportsFieldPointer.ExportsFieldPointer
-import uk.gov.hmrc.exports.models.FieldMapping
 
-case class NatureOfTransaction(natureType: String) extends Ordered[NatureOfTransaction] {
-  override def compare(y: NatureOfTransaction): Int = natureType.compareTo(y.natureType)
-}
+case class NatureOfTransaction(natureType: String)
 
-object NatureOfTransaction extends FieldMapping {
+object NatureOfTransaction {
   implicit val format: OFormat[NatureOfTransaction] = Json.format[NatureOfTransaction]
-
-  override val pointer: ExportsFieldPointer = "natureOfTransaction.natureType"
 }
