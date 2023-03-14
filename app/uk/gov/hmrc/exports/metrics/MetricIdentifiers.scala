@@ -42,4 +42,13 @@ private[metrics] object MetricIdentifiers {
     val addSubmissionAction = "submission.declaration.addSubmissionAction"
     val appendMrnToSubmission = "submission.declaration.appendMrnToSubmission"
   }
+
+  object AmendmentMetric {
+    val wholeSubmission = "amendment.declaration"
+    val produceMetaData = "amendment.declaration.produceMetaData"
+    val convertToXml = "amendment.declaration.convertToXml"
+    val updateDeclaration = "amendment.declaration.updateDeclarationStatus"
+    val sendToDecApi = "amendment.declaration.sendToDecApi"
+    val addSubmissionAction = "amendment.declaration.addSubmissionAction"
+  }
 }

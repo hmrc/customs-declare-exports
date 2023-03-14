@@ -48,6 +48,9 @@ class AppConfig @Inject() (val configuration: Configuration, servicesConfig: Ser
   lazy val submitDeclarationUri: String =
     servicesConfig.getString("microservice.services.customs-declarations.submit-uri")
 
+  lazy val amendDeclarationUri: String =
+    servicesConfig.getString("microservice.services.customs-declarations.amend-uri")
+
   lazy val cancelDeclarationUri: String =
     servicesConfig.getString("microservice.services.customs-declarations.cancel-uri")
 

@@ -91,6 +91,12 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
       filter = BsonDocument(Json.obj("eori" -> declaration.eori, "id" -> declaration.id).toString),
       update = set(s"$meta.status", DeclarationStatus.DRAFT.toString)
     )
+
+  def revertStatusToAmendmentDraft(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
+    findOneAndUpdate(
+      filter = BsonDocument(Json.obj("eori" -> declaration.eori, "id" -> declaration.id).toString),
+      update = set(s"$meta.status", DeclarationStatus.AMENDMENT_DRAFT.toString)
+    )
 }
 
 object DeclarationRepository {

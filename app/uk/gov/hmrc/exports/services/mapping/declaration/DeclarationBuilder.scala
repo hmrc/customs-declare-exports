@@ -44,7 +44,9 @@ class DeclarationBuilder @Inject() (
   goodsShipmentBuilder: GoodsShipmentBuilder,
   identificationBuilder: IdentificationBuilder,
   submitterBuilder: SubmitterBuilder,
-  amendmentBuilder: AmendmentBuilder,
+  amendmentCancelBuilder: AmendmentCancelBuilder,
+  amendmentUpdateBuilder: AmendmentUpdateBuilder,
+  amendmentPointerBuilder: AmendmentPointerBuilder,
   additionalInformationBuilder: AdditionalInformationBuilder
 ) {
 
@@ -88,8 +90,44 @@ class DeclarationBuilder @Inject() (
     functionalReferenceIdBuilder.buildThenAdd(functionalReferenceId, declaration)
     identificationBuilder.buildThenAdd(declarationId, declaration)
     submitterBuilder.buildThenAdd(eori, declaration)
-    amendmentBuilder.buildThenAdd(changeReason, declaration)
+    amendmentCancelBuilder.buildThenAdd(changeReason, declaration)
     additionalInformationBuilder.buildThenAdd(statementDescription, declaration)
+
+    declaration
+  }
+
+  def buildAmendment(model: ExportsDeclaration, wcoPointers: Seq[String]): Declaration = {
+    val declaration = new Declaration()
+    val pointers =
+      if (wcoPointers.isEmpty) Seq("42A.67A.99B.465") else wcoPointers // Nil amendments still need a pointer, but the value pointed at is not changed
+
+    functionCodeBuilder.buildThenAdd("13", declaration)
+    functionalReferenceIdBuilder.buildThenAdd(model, declaration)
+    model.consignmentReferences.flatMap(_.mrn).foreach(mrn => identificationBuilder.buildThenAdd(mrn, declaration))
+    typeCodeBuilder.buildThenAdd("COR", declaration)
+    invoiceAmountBuilder.buildThenAdd(model, declaration)
+    additionalInformationBuilder.buildThenAdd(model, declaration)
+    pointers.zipWithIndex.foreach { case (_, index) =>
+      additionalInformationBuilder.buildThenAdd(model.statementDescription.getOrElse("None"), declaration, index + 1)
+    }
+    pointers.foreach { pointer =>
+      val amendment = new Declaration.Amendment()
+      declaration.getAmendment.add(amendment)
+      amendmentUpdateBuilder.buildThenAdd("32", amendment)
+      amendmentPointerBuilder.buildThenAdd(pointer, amendment)
+    }
+    goodsItemQuantityBuilder.buildThenAdd(model, declaration)
+    agentBuilder.buildThenAdd(model, declaration)
+    goodsShipmentBuilder.buildThenAdd(model, declaration)
+    exitOfficeBuilder.buildThenAdd(model, declaration)
+    borderTransportMeansBuilder.buildThenAdd(model, declaration)
+    exporterBuilder.buildThenAdd(model, declaration)
+    declarantBuilder.buildThenAdd(model, declaration)
+    specificCircumstancesCodeBuilder.buildThenAdd(model, declaration)
+    supervisingOfficeBuilder.buildThenAdd(model, declaration)
+    declarationConsignmentBuilder.buildThenAdd(model, declaration)
+    authorisationHoldersBuilder.buildThenAdd(model, declaration)
+    currencyExchangeBuilder.buildThenAdd(model, declaration)
 
     declaration
   }

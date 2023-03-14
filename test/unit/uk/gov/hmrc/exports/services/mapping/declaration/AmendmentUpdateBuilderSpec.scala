@@ -19,17 +19,17 @@ package uk.gov.hmrc.exports.services.mapping.declaration
 import uk.gov.hmrc.exports.base.UnitSpec
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class AmendmentBuilderTest extends UnitSpec {
+class AmendmentUpdateBuilderSpec extends UnitSpec {
 
-  private val builder = new AmendmentBuilder()
+  private val builder = new AmendmentUpdateBuilder()
 
   "Build then add" should {
     "append to declaration" in {
-      val declaration = new Declaration()
+      val amendment = new Declaration.Amendment
 
-      builder.buildThenAdd("reason", declaration)
+      builder.buildThenAdd("reason", amendment)
 
-      declaration.getAmendment.get(0).getChangeReasonCode.getValue mustBe "reason"
+      amendment.getChangeReasonCode.getValue mustBe "reason"
     }
   }
 

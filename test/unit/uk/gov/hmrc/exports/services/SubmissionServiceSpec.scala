@@ -17,11 +17,13 @@
 package uk.gov.hmrc.exports.services
 
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{eq => meq}
+import org.mockito.ArgumentMatchers._
 import org.mockito.ArgumentMatchersSugar.eqTo
 import org.mockito.invocation.InvocationOnMock
 import org.scalatest.Assertion
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json}
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
@@ -29,9 +31,9 @@ import uk.gov.hmrc.exports.models.FetchSubmissionPageData.DEFAULT_LIMIT
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{CUSTOMS_POSITION_GRANTED, WITHDRAWN}
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
 import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.exports.models.{FetchSubmissionPageData, PageOfSubmissions}
+import uk.gov.hmrc.exports.models.{Eori, FetchSubmissionPageData, PageOfSubmissions}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
+import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, CancellationMetaDataBuilder, ExportsPointerToWCOPointer}
 import uk.gov.hmrc.exports.services.notifications.receiptactions.SendEmailForDmsDocAction
 import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParser
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
@@ -48,7 +50,9 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
   private val customsDeclarationsConnector: CustomsDeclarationsConnector = mock[CustomsDeclarationsConnector]
   private val submissionRepository: SubmissionRepository = mock[SubmissionRepository]
   private val declarationRepository: DeclarationRepository = mock[DeclarationRepository]
-  private val metaDataBuilder: CancellationMetaDataBuilder = mock[CancellationMetaDataBuilder]
+  private val exportsPointerToWCOPointer: ExportsPointerToWCOPointer = mock[ExportsPointerToWCOPointer]
+  private val cancelMetaDataBuilder: CancellationMetaDataBuilder = mock[CancellationMetaDataBuilder]
+  private val amendMetaDataBuilder: AmendmentMetaDataBuilder = mock[AmendmentMetaDataBuilder]
   private val wcoMapperService: WcoMapperService = mock[WcoMapperService]
   private val sendEmailForDmsDocAction: SendEmailForDmsDocAction = mock[SendEmailForDmsDocAction]
   private val mockCustomsDeclarationsInformationConnector = mock[CustomsDeclarationsInformationConnector]
@@ -58,15 +62,26 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     customsDeclarationsConnector = customsDeclarationsConnector,
     submissionRepository = submissionRepository,
     declarationRepository = declarationRepository,
+    exportsPointerToWCOPointer = exportsPointerToWCOPointer,
+    cancelMetaDataBuilder = cancelMetaDataBuilder,
+    amendmentMetaDataBuilder = amendMetaDataBuilder,
     customsDeclarationsInformationConnector = mockCustomsDeclarationsInformationConnector,
     exportsDeclarationXmlParser = mockExportsDeclarationXmlParser,
-    metaDataBuilder = metaDataBuilder,
     wcoMapperService = wcoMapperService,
     metrics = exportsMetrics
   )(ExecutionContext.global)
 
   override def afterEach(): Unit = {
-    reset(customsDeclarationsConnector, submissionRepository, declarationRepository, metaDataBuilder, wcoMapperService, sendEmailForDmsDocAction)
+    reset(
+      customsDeclarationsConnector,
+      submissionRepository,
+      declarationRepository,
+      exportsPointerToWCOPointer,
+      cancelMetaDataBuilder,
+      amendMetaDataBuilder,
+      wcoMapperService,
+      sendEmailForDmsDocAction
+    )
     super.afterEach()
   }
 
@@ -75,28 +90,30 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     when(submissionRepository.countSubmissionsInGroup(any(), any())).thenReturn(Future.successful(1))
   }
   private val eori = "eori"
-  private val submission = Submission("id", eori, "lrn", None, "ducr", latestDecId = Some("id"))
+  private val id = "id"
+  private val xml = "xml"
+  private val submission = Submission(id, eori, "lrn", None, "ducr", latestDecId = Some(id))
 
   "SubmissionService.cancel" should {
     val notification = Some(Seq(new NotificationSummary(UUID.randomUUID(), ZonedDateTime.now(), CUSTOMS_POSITION_GRANTED)))
     val submissionCancelled = Submission(
-      "id",
+      id,
       eori,
       "lrn",
       None,
       "ducr",
       None,
       None,
-      List(Action(id = "conv-id", requestType = CancellationRequest, notifications = notification, decId = Some("id"), versionNo = 1)),
-      latestDecId = Some("id")
+      List(Action(id = "conv-id", requestType = CancellationRequest, notifications = notification, decId = Some(id), versionNo = 1)),
+      latestDecId = Some(id)
     )
-    val cancellation = SubmissionCancellation("id", "ref-id", "mrn", "description", "reason")
+    val cancellation = SubmissionCancellation(id, "ref-id", "mrn", "description", "reason")
 
     "submit and delegate to repository and iterates version number in cancel action from submission" when {
       "submission exists" which {
         "copies version number to cancel action from submission" in {
-          when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
-          when(wcoMapperService.toXml(any())).thenReturn("xml")
+          when(cancelMetaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
+          when(wcoMapperService.toXml(any())).thenReturn(xml)
           when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
           when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
 
@@ -115,8 +132,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       }
 
       "submission is missing" in {
-        when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
-        when(wcoMapperService.toXml(any())).thenReturn("xml")
+        when(cancelMetaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
+        when(wcoMapperService.toXml(any())).thenReturn(xml)
         when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(None))
 
@@ -124,8 +141,8 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       }
 
       "submission exists and previously cancelled" in {
-        when(metaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
-        when(wcoMapperService.toXml(any())).thenReturn("xml")
+        when(cancelMetaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
+        when(wcoMapperService.toXml(any())).thenReturn(xml)
         when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submissionCancelled)))
 
@@ -271,7 +288,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(wcoMapperService.produceMetaData(any())).thenReturn(mock[MetaData])
         when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
         when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
-        when(wcoMapperService.toXml(any())).thenReturn("xml")
+        when(wcoMapperService.toXml(any())).thenReturn(xml)
         when(submissionRepository.create(any())).thenReturn(Future.successful(submission))
         when(customsDeclarationsConnector.submitDeclaration(any(), any())(any())).thenReturn(Future.successful("conv-id"))
 
@@ -311,6 +328,70 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
           submissionService.submit(aDeclaration()).futureValue
         }
       }
+    }
+  }
+
+  "SubmissionService.amend" should {
+    val fieldPointers = Seq("pointers")
+    val wcoPointers = Seq("wco")
+    val amendmentId = "amendmentId"
+    val actionId = "actionId"
+    val submissionAmendment = SubmissionAmendment(id, amendmentId, fieldPointers)
+    val dec = aDeclaration(withId(amendmentId), withEori(eori), withConsignmentReferences(mrn = Some("mrn")))
+    val metadata = mock[MetaData]
+
+    "throw appropriate exception and revert the status of the amendment to AMENDMENT_DRAFT" when {
+      "initial submission lookup does not return a submission" in {
+        when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(None))
+        when(amendMetaDataBuilder.buildRequest(any(), any())).thenReturn(metadata)
+        when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
+        when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(Some(submission)))
+        when(declarationRepository.revertStatusToAmendmentDraft(any())).thenReturn(Future.successful(Some(dec)))
+
+        assertThrows[java.util.NoSuchElementException] {
+          await(submissionService.amend(Eori(eori), submissionAmendment, dec))
+        }
+        verify(declarationRepository).revertStatusToAmendmentDraft(meq(dec))
+      }
+      "updating submission with amendment action fails" in {
+        when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
+        when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Seq(""))
+        when(amendMetaDataBuilder.buildRequest(any(), any())).thenReturn(metadata)
+        when(wcoMapperService.toXml(any())).thenReturn(xml)
+        when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
+        when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(None))
+        when(declarationRepository.revertStatusToAmendmentDraft(any())).thenReturn(Future.successful(Some(dec)))
+
+        assertThrows[java.util.NoSuchElementException] {
+          await(submissionService.amend(Eori(eori), submissionAmendment, dec))
+        }
+        verify(declarationRepository).revertStatusToAmendmentDraft(meq(dec))
+      }
+    }
+
+    "call expected methods and return an actionId" in {
+      when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
+      when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(wcoPointers)
+      when(amendMetaDataBuilder.buildRequest(any(), any())).thenReturn(metadata)
+      when(wcoMapperService.toXml(any())).thenReturn(xml)
+      when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
+      when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(Some(submission)))
+
+      val result = submissionService.amend(Eori(eori), submissionAmendment, dec)
+
+      verify(submissionRepository).findOne(meq(Json.obj("eori" -> eori, "uuid" -> submission.uuid)))
+      verify(exportsPointerToWCOPointer).getWCOPointers(fieldPointers.head)
+      verify(amendMetaDataBuilder).buildRequest(meq(dec), meq(wcoPointers))
+      verify(wcoMapperService).toXml(meq(metadata))
+      verify(customsDeclarationsConnector).submitAmendment(meq(eori), meq(xml))(any())
+      val captor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])
+      verify(submissionRepository).addAction(meq(id), captor.capture())
+
+      captor.getValue.id mustBe actionId
+      captor.getValue.requestType mustBe AmendmentRequest
+      captor.getValue.decId mustBe Some(amendmentId)
+      captor.getValue.versionNo mustBe submission.latestVersionNo
+      await(result) mustBe actionId
     }
   }
 }

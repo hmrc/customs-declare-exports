@@ -37,11 +37,10 @@ class CustomsDeclarationsConnectorISpec extends IntegrationTestSpec with Exports
 
   private lazy val connector = instanceOf[CustomsDeclarationsConnector]
 
-  val submissionURL = "/"
+  private val submissionURL = "/"
+  private val appConfig: AppConfig = instanceOf[AppConfig]
+  private val id = "123"
 
-  // TODO: added couple of tests for having convId or not, seems like there is logic which even if we got 202 but not convId
-  // TODO: it will be wrapped into 500 (to be confirmed)
-  // TODO: do we handle cancellations now ? as if so we would need to add tests here
   "CustomsDeclarationsConnector.submitDeclaration" should {
 
     "return response with specific status" when {
@@ -49,16 +48,16 @@ class CustomsDeclarationsConnectorISpec extends IntegrationTestSpec with Exports
       "request is processed successfully - 202" in {
         val headers = Map("X-Conversation-ID" -> UUID.randomUUID.toString)
         postToDownstreamService(submissionURL, ACCEPTED, None, headers)
-        await(sendValidXml(expectedSubmissionRequestPayload("123")))
+        await(sendValidXml(expectedSubmissionRequestPayload(id)))
 
-        verifyDecServiceWasCalledCorrectly(requestBody = expectedSubmissionRequestPayload("123"), expectedEori = declarantEoriValue)
+        verifyDecServiceWasCalledCorrectly(requestBody = expectedSubmissionRequestPayload(id), expectedEori = declarantEoriValue, url = submissionURL)
       }
 
       "request is processed successfully (external 202), but does not have conversationId - 500" in {
         postToDownstreamService(submissionURL, ACCEPTED)
 
         intercept[InternalServerException] {
-          await(sendValidXml(expectedSubmissionRequestPayload("123")))
+          await(sendValidXml(expectedSubmissionRequestPayload(id)))
         }
       }
 
@@ -71,28 +70,14 @@ class CustomsDeclarationsConnectorISpec extends IntegrationTestSpec with Exports
         }
       }
     }
-
-    def sendValidXml(xml: String): Future[String] = connector.submitDeclaration(declarantEoriValue, xml)
-
-    def verifyDecServiceWasCalledCorrectly(requestBody: String, expectedEori: String, expectedApiVersion: String = "1.0"): Unit =
-      WireMock.verify(
-        1,
-        postRequestedFor(urlMatching(submissionURL))
-          .withHeader(CONTENT_TYPE, equalTo(ContentTypes.XML(Codec.utf_8)))
-          .withHeader(ACCEPT, equalTo(s"application/vnd.hmrc.$expectedApiVersion+xml"))
-          .withHeader(CustomsHeaderNames.XEoriIdentifierHeaderName, equalTo(expectedEori))
-          .withRequestBody(equalToXml(requestBody))
-      )
   }
 
   "CustomsDeclarationsConnector.submitCancellation" should {
     "send the expected ConversationId header" when {
       "the 'isUpstreamStubbed' config property is set to 'true'" in {
-        val body = "some XML body"
-        val appConfig: AppConfig = instanceOf[AppConfig]
         val headers = Map("X-Conversation-ID" -> UUID.randomUUID.toString)
         postToDownstreamService(appConfig.cancelDeclarationUri, ACCEPTED, None, headers)
-        await(connector.submitCancellation(submission, expectedSubmissionRequestPayload(body)))
+        await(connector.submitCancellation(submission, expectedSubmissionRequestPayload(id)))
 
         val url = urlMatching(appConfig.cancelDeclarationUri)
         val postRequest = postRequestedFor(url).withHeader(CustomsHeaderNames.SubmissionConversationId, equalTo(action.id))
@@ -100,4 +85,49 @@ class CustomsDeclarationsConnectorISpec extends IntegrationTestSpec with Exports
       }
     }
   }
+
+  "CustomsDeclarationsConnector.submitAmendment" should {
+    "return response with specific status" when {
+      "request is processed successfully - 202" in {
+        val headers = Map("X-Conversation-ID" -> UUID.randomUUID.toString)
+        postToDownstreamService(appConfig.amendDeclarationUri, ACCEPTED, None, headers)
+        await(connector.submitAmendment(declarantEoriValue, expectedSubmissionRequestPayload(id)))
+
+        verifyDecServiceWasCalledCorrectly(
+          requestBody = expectedSubmissionRequestPayload(id),
+          expectedEori = declarantEoriValue,
+          url = appConfig.amendDeclarationUri
+        )
+      }
+
+      "request is processed successfully (external 202), but does not have conversationId - 500" in {
+        postToDownstreamService(appConfig.amendDeclarationUri, ACCEPTED)
+
+        intercept[InternalServerException] {
+          await(connector.submitAmendment(declarantEoriValue, expectedSubmissionRequestPayload(id)))
+        }
+      }
+
+      "request is not processed - 500" in {
+        val headers = Map("X-Conversation-ID" -> UUID.randomUUID.toString)
+        postToDownstreamService(appConfig.amendDeclarationUri, INTERNAL_SERVER_ERROR, None, headers)
+
+        intercept[InternalServerException] {
+          await(connector.submitAmendment(declarantEoriValue, expectedSubmissionRequestPayload(id)))
+        }
+      }
+    }
+  }
+
+  private def sendValidXml(xml: String): Future[String] = connector.submitDeclaration(declarantEoriValue, xml)
+
+  def verifyDecServiceWasCalledCorrectly(requestBody: String, url: String, expectedEori: String, expectedApiVersion: String = "1.0"): Unit =
+    WireMock.verify(
+      1,
+      postRequestedFor(urlMatching(url))
+        .withHeader(CONTENT_TYPE, equalTo(ContentTypes.XML(Codec.utf_8)))
+        .withHeader(ACCEPT, equalTo(s"application/vnd.hmrc.$expectedApiVersion+xml"))
+        .withHeader(CustomsHeaderNames.XEoriIdentifierHeaderName, equalTo(expectedEori))
+        .withRequestBody(equalToXml(requestBody))
+    )
 }

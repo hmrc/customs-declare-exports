@@ -29,7 +29,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.{StatusGro
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.{Eori, FetchSubmissionPageData, Mrn, PageOfSubmissions}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.mapping.CancellationMetaDataBuilder
+import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, CancellationMetaDataBuilder, ExportsPointerToWCOPointer}
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParser
 import uk.gov.hmrc.http.HeaderCarrier
@@ -45,19 +45,14 @@ class SubmissionService @Inject() (
   customsDeclarationsInformationConnector: CustomsDeclarationsInformationConnector,
   submissionRepository: SubmissionRepository,
   declarationRepository: DeclarationRepository,
+  exportsPointerToWCOPointer: ExportsPointerToWCOPointer,
+  cancelMetaDataBuilder: CancellationMetaDataBuilder,
+  amendmentMetaDataBuilder: AmendmentMetaDataBuilder,
   exportsDeclarationXmlParser: ExportsDeclarationXmlParser,
-  metaDataBuilder: CancellationMetaDataBuilder,
   wcoMapperService: WcoMapperService,
   metrics: ExportsMetrics
 )(implicit executionContext: ExecutionContext)
     extends Logging {
-
-  def cancel(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationStatus] =
-    submissionRepository.findOne(Json.obj("eori" -> eori, "uuid" -> cancellation.submissionId)).flatMap {
-      case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationAlreadyRequested)
-      case Some(submission)                                             => sendCancellationRequest(submission, cancellation)
-      case _                                                            => Future.successful(NotFound)
-    }
 
   def fetchFirstPage(eori: String, statusGroups: Seq[StatusGroup], limit: Int): Future[PageOfSubmissions] = {
     // When multiple StatusGroup(s) are provided, the fetch proceeds in sequence group by group.
@@ -130,7 +125,7 @@ class SubmissionService @Inject() (
 
   def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] =
     metrics.timeAsyncCall(ExportsMetrics.submissionMonitor) {
-      logProgress(declaration, "Beginning Submission")
+      logProgress(declaration.id, "Beginning Declaration Submission")
 
       val metaData = metrics.timeCall(Timers.submissionProduceMetaDataTimer)(wcoMapperService.produceMetaData(declaration))
 
@@ -144,12 +139,12 @@ class SubmissionService @Inject() (
 
       val payload = metrics.timeCall(Timers.submissionConvertToXmlTimer)(wcoMapperService.toXml(metaData))
 
-      logProgress(declaration, "Submitting to the Declaration API")
+      logProgress(declaration.id, "Submitting new declaration to the Declaration API")
       for {
         // Submit the declaration to the Dec API
         // Revert the declaration status back to DRAFT if it fails
         actionId: String <- metrics.timeAsyncCall(Timers.submissionSendToDecApiTimer)(submit(declaration, payload))
-        _ = logProgress(declaration, "Submitted to the Declaration API Successfully")
+        _ = logProgress(declaration.id, "Submitted new declaration to the Declaration API Successfully")
 
         // Create the Submission with action
         action = Action(id = actionId, SubmissionRequest, decId = Some(declaration.id), versionNo = 1)
@@ -157,7 +152,7 @@ class SubmissionService @Inject() (
         submission <- metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer)(
           submissionRepository.create(Submission(declaration, lrn, ducr, action))
         )
-        _ = logProgress(declaration, "New submission creation completed")
+        _ = logProgress(declaration.id, "New submission creation completed")
       } yield submission
     }
 
@@ -199,22 +194,29 @@ class SubmissionService @Inject() (
       case _            => false
     }
 
-  private def logProgress(declaration: ExportsDeclaration, message: String): Unit =
-    logger.info(s"Declaration [${declaration.id}]: $message")
+  private def logProgress(declarationId: String, message: String): Unit =
+    logger.info(s"Declaration [$declarationId]: $message")
 
   private def submit(declaration: ExportsDeclaration, payload: String)(implicit hc: HeaderCarrier): Future[String] =
     customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).recoverWith { case throwable: Throwable =>
-      logProgress(declaration, "Submission failed")
+      logProgress(declaration.id, "Submission failed")
       declarationRepository.revertStatusToDraft(declaration) flatMap { _ =>
-        logProgress(declaration, "Reverted declaration to DRAFT")
+        logProgress(declaration.id, "Reverted declaration to DRAFT")
         Future.failed[String](throwable)
       }
+    }
+
+  def cancel(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationStatus] =
+    submissionRepository.findOne(Json.obj("eori" -> eori, "uuid" -> cancellation.submissionId)).flatMap {
+      case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationAlreadyRequested)
+      case Some(submission)                                             => sendCancellationRequest(submission, cancellation)
+      case _                                                            => Future.successful(NotFound)
     }
 
   private def sendCancellationRequest(submission: Submission, cancellation: SubmissionCancellation)(
     implicit hc: HeaderCarrier
   ): Future[CancellationStatus] = {
-    val metadata: MetaData = metaDataBuilder.buildRequest(
+    val metadata: MetaData = cancelMetaDataBuilder.buildRequest(
       cancellation.functionalReferenceId,
       cancellation.mrn,
       cancellation.statementDescription,
@@ -224,15 +226,60 @@ class SubmissionService @Inject() (
 
     val xml: String = wcoMapperService.toXml(metadata)
     customsDeclarationsConnector.submitCancellation(submission, xml).flatMap { actionId =>
-      updateSubmissionInDB(submission, actionId)
+      updateSubmissionWithCancellationAction(cancellation.mrn, actionId, submission)
     }
   }
 
-  private def updateSubmissionInDB(submission: Submission, actionId: String): Future[CancellationStatus] = {
-    val newAction = Action(actionId, CancellationRequest, Some(submission.uuid), submission.latestVersionNo)
-    submissionRepository.addAction(submission.uuid, newAction).map {
+  private def updateSubmissionWithCancellationAction(mrn: String, actionId: String, submission: Submission): Future[CancellationStatus] = {
+    val newAction = Action(id = actionId, CancellationRequest, decId = Some(submission.uuid), versionNo = submission.latestVersionNo)
+    submissionRepository.addAction(mrn, newAction).map {
       case Some(_) => CancellationRequestSent
       case None    => NotFound
+    }
+  }
+
+  def amend(eori: Eori, amendment: SubmissionAmendment, declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[String] =
+    metrics.timeAsyncCall(ExportsMetrics.amendmentMonitor) {
+      logProgress(amendment.declarationId, "Beginning Amend Submission.")
+
+      val submissionLookup = submissionRepository.findOne(Json.obj("eori" -> eori, "uuid" -> amendment.submissionId)) map {
+        case Some(submission) => submission
+        case _                => throw new NoSuchElementException("No submission matching eori and id was found.")
+      }
+
+      (for {
+        submission <- submissionLookup
+        actionId <- sendAmendmentRequest(declaration, submission, amendment.fieldPointers)
+      } yield actionId).recoverWith { case throwable: Throwable =>
+        logProgress(declaration.id, "Amendment failed")
+        declarationRepository.revertStatusToAmendmentDraft(declaration) flatMap { _ =>
+          logProgress(declaration.id, "Reverted amendment to AMENDMENT_DRAFT")
+          Future.failed[String](throwable)
+        }
+      }
+    }
+
+  private def sendAmendmentRequest(declaration: ExportsDeclaration, submission: Submission, fieldPointers: Seq[String])(
+    implicit hc: HeaderCarrier
+  ): Future[String] = {
+    val wcoPointers = fieldPointers.flatMap(exportsPointerToWCOPointer.getWCOPointers).distinct
+    val metadata = metrics.timeCall(Timers.amendmentProduceMetaDataTimer)(amendmentMetaDataBuilder.buildRequest(declaration, wcoPointers))
+    val xml = metrics.timeCall(Timers.amendmentConvertToXmlTimer)(wcoMapperService.toXml(metadata))
+
+    logProgress(declaration.id, "Submitting amendment request to the Declaration API")
+    for {
+      actionId <- metrics.timeCall(Timers.amendmentSendToDecApiTimer)(customsDeclarationsConnector.submitAmendment(declaration.eori, xml))
+      _ = logProgress(declaration.id, "Submitted amendment request to the Declaration API Successfully")
+      _ = logProgress(declaration.id, "Appending amendment action to submission...")
+      _ <- updateSubmissionWithAmendmentAction(actionId, declaration.id, submission)
+    } yield actionId
+  }
+
+  private def updateSubmissionWithAmendmentAction(actionId: String, decId: String, submission: Submission): Future[Unit] = {
+    val newAction = Action(id = actionId, AmendmentRequest, decId = Some(decId), versionNo = submission.latestVersionNo)
+    submissionRepository.addAction(submission.uuid, newAction).map {
+      case Some(_) => logger.info(s"Updated submission with id ${submission.uuid} successfully with amendment action.")
+      case _       => throw new NoSuchElementException(s"Failed to find submission with id ${submission.uuid} to update with amendment action.")
     }
   }
 }

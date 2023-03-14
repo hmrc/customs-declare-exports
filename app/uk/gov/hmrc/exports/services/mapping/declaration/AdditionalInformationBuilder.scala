@@ -59,7 +59,7 @@ class AdditionalInformationBuilder @Inject() () extends ModifyingBuilder[Exports
     additionalInformation
   }
 
-  def buildThenAdd(statementDescription: String, declaration: Declaration): Unit = {
+  def buildThenAdd(statementDescription: String, declaration: Declaration, sequenceIndex: Int = 1): Unit = {
     val additionalInformation = new Declaration.AdditionalInformation()
     val statementDescriptionTextType = new AdditionalInformationStatementDescriptionTextType()
     statementDescriptionTextType.setValue(statementDescription)
@@ -74,6 +74,7 @@ class AdditionalInformationBuilder @Inject() () extends ModifyingBuilder[Exports
     pointer1.setDocumentSectionCode(pointerDocumentSectionCodeType1)
 
     val pointer2 = new Pointer()
+    pointer2.setSequenceNumeric(new java.math.BigDecimal(sequenceIndex))
     val pointerDocumentSectionCodeType2 = new PointerDocumentSectionCodeType()
     pointerDocumentSectionCodeType2.setValue("06A")
     pointer2.setDocumentSectionCode(pointerDocumentSectionCodeType2)
