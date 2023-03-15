@@ -2,10 +2,13 @@ package uk.gov.hmrc.exports.services.mapping
 
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.Environment
 
 class ExportsPointerToWCOPointerISpec extends AnyWordSpec with Matchers {
 
-  private val exportsPointerToWCOPointer = new ExportsPointerToWCOPointer()
+  private val environment = Environment.simple()
+
+  private val exportsPointerToWCOPointer = new ExportsPointerToWCOPointer(environment)
 
   "ExportsPointerToWCOPointer.getWCOPointers" should {
 

@@ -16,20 +16,24 @@
 
 package uk.gov.hmrc.exports.services.mapping
 
+import play.api.Environment
+
 import java.io.IOException
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
 import scala.io.Source
 
 @Singleton
-class ExportsPointerToWCOPointer {
+class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
 
-  private val pointerFile = "conf/exports-wco-mapping.csv"
+  private val pointerFile = "exports-wco-mapping.csv"
 
   // Negative look-ahead. Line must not start with "declaration." as it's added while building the mapping.
   private val regex = "^(?!declaration\\.).+".r
 
-  protected[this] lazy val mapping: Map[String, Seq[String]] = {
-    val allLines = Source.fromFile(pointerFile).getLines().toList
+  protected[this] val mapping: Map[String, Seq[String]] = {
+    val stream = environment.resourceAsStream(pointerFile).getOrElse(throw new Exception(s"$pointerFile could not be read!"))
+    val allLines = Source.fromInputStream(stream).getLines().toList
+    stream.close()
     val lines = allLines.filter(line => line.count(_ == '|') == 1 && regex.matches(line))
     if (lines.size != allLines.size)
       throw new IOException(s"File $pointerFile is malformed. Expecting rows NOT starting with 'declaration.' and with 2 values separated by '|'")

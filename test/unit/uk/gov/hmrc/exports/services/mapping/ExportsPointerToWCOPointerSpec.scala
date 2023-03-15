@@ -18,12 +18,15 @@ package uk.gov.hmrc.exports.services.mapping
 
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.Environment
 
 class ExportsPointerToWCOPointerSpec extends AnyWordSpec with Matchers {
 
-  private val exportsPointerToWCOPointer = new ExportsPointerToWCOPointer {
+  private val environment = Environment.simple()
 
-    override protected[this] lazy val mapping: Map[String, Seq[String]] =
+  private val exportsPointerToWCOPointer = new ExportsPointerToWCOPointer(environment) {
+
+    override protected[this] val mapping: Map[String, Seq[String]] =
       Map(
         "declaration.parties.declarationHoldersData.holders.1.authorisationTypeCode" -> List("42A.17C.$1.R145"),
         "declaration.mucr.1.test" -> List("42A.67A.99A.$1.171", "42A.67A.99A.$1.D018", "42A.67A.99A.5.D019", "42A.67A.99A.6.D031"),
