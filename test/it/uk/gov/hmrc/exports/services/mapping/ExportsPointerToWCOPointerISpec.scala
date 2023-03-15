@@ -5,7 +5,7 @@ import org.scalatest.wordspec.AnyWordSpec
 
 class ExportsPointerToWCOPointerISpec extends AnyWordSpec with Matchers {
 
-  private val exportsPointerToWCOPointer = new ExportsPointerToWCOPointerLoader()
+  private val exportsPointerToWCOPointer = new ExportsPointerToWCOPointer()
 
   "ExportsPointerToWCOPointer.getWCOPointers" should {
 
