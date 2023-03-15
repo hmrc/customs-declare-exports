@@ -91,7 +91,7 @@ class ExportsPointerToWCOPointerLoader extends ExportsPointerToWCOPointer {
   // Negative look-ahead. Line must not start with "declaration." as it's added while building the mapping.
   private val regex = "^(?!declaration\\.).+".r
 
-  protected[this] val mapping: Map[String, Seq[String]] = {
+  protected[this] lazy val mapping: Map[String, Seq[String]] = {
     val allLines = Source.fromFile(pointerFile).getLines().toList
     val lines = allLines.filter(line => line.count(_ == '|') == 1 && regex.matches(line))
     if (lines.size != allLines.size)
