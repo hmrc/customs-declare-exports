@@ -16,16 +16,39 @@
 
 package uk.gov.hmrc.exports.services.mapping
 
-import com.google.inject.ImplementedBy
-
 import java.io.IOException
 import javax.inject.Singleton
 import scala.io.Source
 
-@ImplementedBy(classOf[ExportsPointerToWCOPointerLoader])
-trait ExportsPointerToWCOPointer {
+@Singleton
+class ExportsPointerToWCOPointer {
 
-  protected[this] val mapping: Map[String, Seq[String]]
+  private val pointerFile = "conf/exports-wco-mapping.csv"
+
+  // Negative look-ahead. Line must not start with "declaration." as it's added while building the mapping.
+  private val regex = "^(?!declaration\\.).+".r
+
+  protected[this] lazy val mapping: Map[String, Seq[String]] = {
+    val allLines = Source.fromFile(pointerFile).getLines().toList
+    val lines = allLines.filter(line => line.count(_ == '|') == 1 && regex.matches(line))
+    if (lines.size != allLines.size)
+      throw new IOException(s"File $pointerFile is malformed. Expecting rows NOT starting with 'declaration.' and with 2 values separated by '|'")
+
+    val tuples = lines.map(_.split('|').map(_.trim).toList) collect {
+      case List(exportsPointer, wcoPointer) if exportsPointer.nonEmpty && wcoPointer.nonEmpty =>
+        if (exportsPointer.count(_ == '$') == wcoPointer.count(_ == '$')) removeDollarSign(exportsPointer, wcoPointer)
+        else throw new IOException(s"File $pointerFile is malformed. Not matching '$$' for $exportsPointer")
+
+      case line =>
+        throw new IOException(s"File $pointerFile is malformed. Empty value(s) in line ($line)")
+    }
+
+    // Group by Exports Pointer. Result is (Exports Pointer -> List of WCO Pointers) (1 to many)
+    tuples.groupMap(_._1)(_._2)
+  }
+
+  private def removeDollarSign(exportsPointer: String, wcoPointer: String): (String, String) =
+    s"declaration.$exportsPointer".replace("$", "") -> wcoPointer
 
   def getWCOPointers(exportsPointer: String): Seq[String] = {
     val segments = exportsPointer.split("\\.")
@@ -81,35 +104,4 @@ trait ExportsPointerToWCOPointer {
         else (index, if (result.isEmpty) s else s"$result.$s")
       }
       ._2
-}
-
-@Singleton
-class ExportsPointerToWCOPointerLoader extends ExportsPointerToWCOPointer {
-
-  private val pointerFile = "conf/exports-wco-mapping.csv"
-
-  // Negative look-ahead. Line must not start with "declaration." as it's added while building the mapping.
-  private val regex = "^(?!declaration\\.).+".r
-
-  protected[this] lazy val mapping: Map[String, Seq[String]] = {
-    val allLines = Source.fromFile(pointerFile).getLines().toList
-    val lines = allLines.filter(line => line.count(_ == '|') == 1 && regex.matches(line))
-    if (lines.size != allLines.size)
-      throw new IOException(s"File $pointerFile is malformed. Expecting rows NOT starting with 'declaration.' and with 2 values separated by '|'")
-
-    val tuples = lines.map(_.split('|').map(_.trim).toList) collect {
-      case List(exportsPointer, wcoPointer) if exportsPointer.nonEmpty && wcoPointer.nonEmpty =>
-        if (exportsPointer.count(_ == '$') == wcoPointer.count(_ == '$')) removeDollarSign(exportsPointer, wcoPointer)
-        else throw new IOException(s"File $pointerFile is malformed. Not matching '$$' for $exportsPointer")
-
-      case line =>
-        throw new IOException(s"File $pointerFile is malformed. Empty value(s) in line ($line)")
-    }
-
-    // Group by Exports Pointer. Result is (Exports Pointer -> List of WCO Pointers) (1 to many)
-    tuples.groupMap(_._1)(_._2)
-  }
-
-  private def removeDollarSign(exportsPointer: String, wcoPointer: String): (String, String) =
-    s"declaration.$exportsPointer".replace("$", "") -> wcoPointer
 }
