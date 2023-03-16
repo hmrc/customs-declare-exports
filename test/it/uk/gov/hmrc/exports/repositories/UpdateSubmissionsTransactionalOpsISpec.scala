@@ -24,7 +24,7 @@ import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.AMENDMENT_DRAFT
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{EnhancedStatus, GOODS_ARRIVED_MESSAGE, UNKNOWN}
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{AMENDED, EnhancedStatus, GOODS_ARRIVED_MESSAGE, UNKNOWN}
 import uk.gov.hmrc.exports.models.declaration.submissions.{ExternalAmendmentRequest, Submission, SubmissionRequest, SubmissionStatus}
 import uk.gov.hmrc.mongo.MongoComponent
 
@@ -97,14 +97,20 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
             submissionRepository.insertOne(submission).futureValue.isRight mustBe true
 
             val submissionForAmendment =
-              transactionalOps.updateSubmissionAndNotifications("ignored", List(notificationForExternalAmendment), submission).futureValue.get
+              transactionalOps.updateSubmissionAndNotifications(actionId, List(notificationForExternalAmendment), submission).futureValue.get
 
             submissionForAmendment.latestDecId mustBe None
             submissionForAmendment.latestVersionNo mustBe 2
             submissionForAmendment.actions.size mustBe 2
-            val action = submissionForAmendment.actions.find(_.requestType == ExternalAmendmentRequest).value
-            action.decId mustBe None
-            action.versionNo mustBe 2
+            val externalAmendAction = submissionForAmendment.actions.find(_.requestType == ExternalAmendmentRequest).value
+            externalAmendAction.decId mustBe None
+            externalAmendAction.versionNo mustBe 2
+
+            val submissionAction = submissionForAmendment.actions.find(_.requestType == SubmissionRequest).value
+            submissionAction.decId mustBe Some(submission.uuid)
+            submissionAction.versionNo mustBe 1
+            submissionAction.notifications.get.size mustBe 1
+            submissionAction.notifications.get.last.enhancedStatus mustBe AMENDED
 
             declarationRepository.findAll().futureValue.size mustBe 0
           }
