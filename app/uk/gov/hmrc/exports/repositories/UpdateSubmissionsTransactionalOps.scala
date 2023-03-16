@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.exports.repositories
 
+import com.mongodb.client.model.Filters._
 import org.mongodb.scala.ClientSession
 import org.mongodb.scala.bson.BsonDocument
-import org.mongodb.scala.model.Filters.{and, equal}
+import org.mongodb.scala.model.Filters.equal
 import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.AMENDMENT_DRAFT
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.AMENDED
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.AMENDMENT_DRAFT
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.{notificationsToAction, updateActionWithNotificationSummaries}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.transaction.{TransactionConfiguration, Transactions}
@@ -95,20 +96,16 @@ class UpdateSubmissionsTransactionalOps @Inject() (
         )
 
       case ExternalAmendmentRequest =>
-        for {
-          _ <- updateSubmissionRequest(
-            session,
-            actionId,
-            notifications.head.details.mrn,
-            notificationSummaries.head,
-            submission.actions.updated(index, actionWithAllNotificationSummaries)
-          )
-          optSubmission <- addExtAmendmentRequestAction(
-            session,
-            submission,
-            Action(UUID.randomUUID().toString, ExternalAmendmentRequest, None, submission.latestVersionNo + 1)
-          )
-        } yield optSubmission
+        val newExtAmendAction = Action(UUID.randomUUID().toString, ExternalAmendmentRequest, None, submission.latestVersionNo + 1)
+        updateSubmissionRequestWithExternalAmendment(
+          session,
+          actionId,
+          notifications.head.details.mrn,
+          notificationSummaries.head,
+          submission.actions.updated(index, actionWithAllNotificationSummaries) :+ newExtAmendAction
+        ).flatMap { optSubmission =>
+          deleteAnyAmendmentDraftDecs(session, submission, optSubmission)
+        }
 
       case CancellationRequest =>
         updateCancellationRequest(session, actionId, submission.actions.updated(index, actionWithAllNotificationSummaries))
@@ -117,13 +114,17 @@ class UpdateSubmissionsTransactionalOps @Inject() (
     }
   }
 
-  private def addExtAmendmentRequestAction(session: ClientSession, submission: Submission, action: Action): Future[Option[Submission]] =
-    submissionRepository.addExternalAmendmentAction(submission.uuid, action).flatMap {
+  private def deleteAnyAmendmentDraftDecs(
+    session: ClientSession,
+    submission: Submission,
+    optSubmission: Option[Submission]
+  ): Future[Option[Submission]] =
+    optSubmission match {
       case Some(submissionWithNewAction) =>
         submission.latestDecId match {
           case Some(latestDecId) =>
             val filter = and(
-              equal("eori", submission.eori),
+              equal("eori", submissionWithNewAction.eori),
               equal("declarationMeta.parentDeclarationId", latestDecId),
               equal("declarationMeta.status", AMENDMENT_DRAFT.toString)
             )
@@ -142,6 +143,27 @@ class UpdateSubmissionsTransactionalOps @Inject() (
   private def updateCancellationRequest(session: ClientSession, actionId: String, actions: Seq[Action]): Future[Option[Submission]] = {
     val filter = Json.obj("actions.id" -> actionId)
     val update = Json.obj("$set" -> Json.obj("actions" -> actions))
+    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
+  }
+
+  private def updateSubmissionRequestWithExternalAmendment(
+    session: ClientSession,
+    actionId: String,
+    mrn: String,
+    summary: NotificationSummary,
+    actions: Seq[Action]
+  ): Future[Option[Submission]] = {
+    val filter = Json.obj("actions.id" -> actionId)
+    val update = Json.obj(
+      "$inc" -> Json.obj("latestVersionNo" -> 1),
+      "$unset" -> Json.obj("latestDecId" -> ""),
+      "$set" -> Json.obj(
+        "mrn" -> mrn,
+        "latestEnhancedStatus" -> summary.enhancedStatus,
+        "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
+        "actions" -> actions
+      )
+    )
     submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
   }
 
