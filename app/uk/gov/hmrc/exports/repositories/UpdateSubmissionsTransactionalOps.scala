@@ -75,16 +75,16 @@ class UpdateSubmissionsTransactionalOps @Inject() (
   ): Future[Option[Submission]] = {
 
     val index = submission.actions.indexWhere(_.id == actionId)
-    val action =
-      if (notifications.head.details.status != AMENDED) submission.actions(index)
-      else Action(UUID.randomUUID().toString, ExternalAmendmentRequest, None, submission.latestVersionNo + 1)
+    val action = submission.actions(index)
 
     val seed = action.notifications.fold(Seq.empty[NotificationSummary])(identity)
 
     val (actionWithAllNotificationSummaries, notificationSummaries) =
       updateActionWithNotificationSummaries(notificationsToAction(action), submission.actions, notifications, seed)
 
-    action.requestType match {
+    val requestType = if (notifications.head.details.status != AMENDED) action.requestType else ExternalAmendmentRequest
+
+    requestType match {
       case SubmissionRequest =>
         updateSubmissionRequest(
           session,
@@ -95,7 +95,20 @@ class UpdateSubmissionsTransactionalOps @Inject() (
         )
 
       case ExternalAmendmentRequest =>
-        addExtAmendmentRequestAction(session, submission, action)
+        for {
+          _ <- updateSubmissionRequest(
+            session,
+            actionId,
+            notifications.head.details.mrn,
+            notificationSummaries.head,
+            submission.actions.updated(index, actionWithAllNotificationSummaries)
+          )
+          optSubmission <- addExtAmendmentRequestAction(
+            session,
+            submission,
+            Action(UUID.randomUUID().toString, ExternalAmendmentRequest, None, submission.latestVersionNo + 1)
+          )
+        } yield optSubmission
 
       case CancellationRequest =>
         updateCancellationRequest(session, actionId, submission.actions.updated(index, actionWithAllNotificationSummaries))

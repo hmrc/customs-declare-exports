@@ -71,7 +71,9 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     metrics = exportsMetrics
   )(ExecutionContext.global)
 
-  override def afterEach(): Unit = {
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+
     reset(
       customsDeclarationsConnector,
       submissionRepository,
@@ -82,11 +84,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       wcoMapperService,
       sendEmailForDmsDocAction
     )
-    super.afterEach()
-  }
 
-  override def beforeEach(): Unit = {
-    super.beforeEach()
     when(submissionRepository.countSubmissionsInGroup(any(), any())).thenReturn(Future.successful(1))
   }
   private val eori = "eori"
