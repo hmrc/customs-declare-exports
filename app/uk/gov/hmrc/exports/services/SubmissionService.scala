@@ -263,7 +263,8 @@ class SubmissionService @Inject() (
     implicit hc: HeaderCarrier
   ): Future[String] = {
     val wcoPointers = fieldPointers.flatMap(exportsPointerToWCOPointer.getWCOPointers).distinct
-    val metadata = metrics.timeCall(Timers.amendmentProduceMetaDataTimer)(amendmentMetaDataBuilder.buildRequest(declaration, wcoPointers))
+    val metadata =
+      metrics.timeCall(Timers.amendmentProduceMetaDataTimer)(amendmentMetaDataBuilder.buildRequest(submission.mrn, declaration, wcoPointers))
     val xml = metrics.timeCall(Timers.amendmentConvertToXmlTimer)(wcoMapperService.toXml(metadata))
 
     logProgress(declaration.id, "Submitting amendment request to the Declaration API")

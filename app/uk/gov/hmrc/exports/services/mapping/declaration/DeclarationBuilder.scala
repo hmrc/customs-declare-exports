@@ -96,14 +96,14 @@ class DeclarationBuilder @Inject() (
     declaration
   }
 
-  def buildAmendment(model: ExportsDeclaration, wcoPointers: Seq[String]): Declaration = {
+  def buildAmendment(mrn: Option[String], model: ExportsDeclaration, wcoPointers: Seq[String]): Declaration = {
     val declaration = new Declaration()
     val pointers =
       if (wcoPointers.isEmpty) Seq("42A.67A.99B.465") else wcoPointers // Nil amendments still need a pointer, but the value pointed at is not changed
 
     functionCodeBuilder.buildThenAdd("13", declaration)
     functionalReferenceIdBuilder.buildThenAdd(model, declaration)
-    model.consignmentReferences.flatMap(_.mrn).foreach(mrn => identificationBuilder.buildThenAdd(mrn, declaration))
+    mrn.map(mrn => identificationBuilder.buildThenAdd(mrn, declaration))
     typeCodeBuilder.buildThenAdd("COR", declaration)
     invoiceAmountBuilder.buildThenAdd(model, declaration)
     additionalInformationBuilder.buildThenAdd(model, declaration)

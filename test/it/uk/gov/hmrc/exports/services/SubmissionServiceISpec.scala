@@ -118,7 +118,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
 
     "add an Amendment action to the submission on amend" in {
       when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Seq(""))
-      when(amendmentMetaDataBuilder.buildRequest(any(), any())).thenReturn(metadata)
+      when(amendmentMetaDataBuilder.buildRequest(any(), any(), any())).thenReturn(metadata)
       when(wcoMapperService.toXml(any())).thenReturn(xml)
       when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
       await(submissionRepository.insertOne(submission))
@@ -134,7 +134,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
 
     "revert submission to AMENDMENT_DRAFT on failure" in {
       when(mockSubmissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
-      when(amendmentMetaDataBuilder.buildRequest(any(), any())).thenReturn(metadata)
+      when(amendmentMetaDataBuilder.buildRequest(any(), any(), any())).thenReturn(metadata)
       when(wcoMapperService.toXml(any())).thenReturn(xml)
       when(customsDeclarationsConnector.submitDeclaration(any[String], any[String])(any[HeaderCarrier]))
         .thenReturn(Future.failed(new RuntimeException("Some error")))
