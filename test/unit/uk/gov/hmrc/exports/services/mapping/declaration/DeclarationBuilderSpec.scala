@@ -122,7 +122,7 @@ class DeclarationBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       val inputDeclaration =
         aDeclaration(withEori("eori"), withConsignmentReferences(mrn = Some("mrn")), withStatementDescription(statementDesc), withItems(1))
       val pointers = Seq("42A.67A.99B.465", "42A.67A.68A.1.23A.137", "42A.67A.68A.1.114")
-      val declaration: Declaration = builder.buildAmendment(inputDeclaration, pointers)
+      val declaration: Declaration = builder.buildAmendment(Some("mrn"), inputDeclaration, pointers)
 
       verify(functionCodeBuilder).buildThenAdd("13", declaration)
       verify(typeCodeBuilder).buildThenAdd("COR", declaration)

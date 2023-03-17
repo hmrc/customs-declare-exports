@@ -28,13 +28,13 @@ import javax.xml.namespace.QName
 
 class AmendmentMetaDataBuilder @Inject() (declarationBuilder: DeclarationBuilder) {
 
-  def buildRequest(model: ExportsDeclaration, wcoPointers: Seq[String]): MetaData = {
+  def buildRequest(mrn: Option[String], model: ExportsDeclaration, wcoPointers: Seq[String]): MetaData = {
     val metaData = new MetaData
 
     val element: JAXBElement[Declaration] = new JAXBElement[Declaration](
       new QName("urn:wco:datamodel:WCO:DEC-DMS:2", "Declaration"),
       classOf[Declaration],
-      declarationBuilder.buildAmendment(model, wcoPointers)
+      declarationBuilder.buildAmendment(mrn, model, wcoPointers)
     )
     metaData.setAny(element)
 

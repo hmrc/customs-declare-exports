@@ -90,7 +90,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
   private val eori = "eori"
   private val id = "id"
   private val xml = "xml"
-  private val submission = Submission(id, eori, "lrn", None, "ducr", latestDecId = Some(id))
+  private val submission = Submission(id, eori, "lrn", Some("mrn"), "ducr", latestDecId = Some(id))
 
   "SubmissionService.cancel" should {
     val notification = Some(Seq(new NotificationSummary(UUID.randomUUID(), ZonedDateTime.now(), CUSTOMS_POSITION_GRANTED)))
@@ -341,7 +341,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     "throw appropriate exception and revert the status of the amendment to AMENDMENT_DRAFT" when {
       "initial submission lookup does not return a submission" in {
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(None))
-        when(amendMetaDataBuilder.buildRequest(any(), any())).thenReturn(metadata)
+        when(amendMetaDataBuilder.buildRequest(any(), any(), any())).thenReturn(metadata)
         when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
         when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(Some(submission)))
         when(declarationRepository.revertStatusToAmendmentDraft(any())).thenReturn(Future.successful(Some(dec)))
@@ -354,7 +354,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       "updating submission with amendment action fails" in {
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
         when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Seq(""))
-        when(amendMetaDataBuilder.buildRequest(any(), any())).thenReturn(metadata)
+        when(amendMetaDataBuilder.buildRequest(any(), any(), any())).thenReturn(metadata)
         when(wcoMapperService.toXml(any())).thenReturn(xml)
         when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
         when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(None))
@@ -370,7 +370,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     "call expected methods and return an actionId" in {
       when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
       when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(wcoPointers)
-      when(amendMetaDataBuilder.buildRequest(any(), any())).thenReturn(metadata)
+      when(amendMetaDataBuilder.buildRequest(any(), any(), any())).thenReturn(metadata)
       when(wcoMapperService.toXml(any())).thenReturn(xml)
       when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
       when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(Some(submission)))
@@ -379,7 +379,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
       verify(submissionRepository).findOne(meq(Json.obj("eori" -> eori, "uuid" -> submission.uuid)))
       verify(exportsPointerToWCOPointer).getWCOPointers(fieldPointers.head)
-      verify(amendMetaDataBuilder).buildRequest(meq(dec), meq(wcoPointers))
+      verify(amendMetaDataBuilder).buildRequest(meq(submission.mrn), meq(dec), meq(wcoPointers))
       verify(wcoMapperService).toXml(meq(metadata))
       verify(customsDeclarationsConnector).submitAmendment(meq(eori), meq(xml))(any())
       val captor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])

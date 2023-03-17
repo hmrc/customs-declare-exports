@@ -10,7 +10,8 @@ import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.mapping.AmendmentMetaDataBuilderISpec.{
   declaration,
   expectedAmendmentWithMultiplePointersXml,
-  expectedAmendmentXml
+  expectedAmendmentXml,
+  mrn
 }
 
 import java.time.Instant
@@ -25,7 +26,7 @@ class AmendmentMetaDataBuilderISpec extends IntegrationTestSpec {
         val builder = instanceOf[AmendmentMetaDataBuilder]
 
         val wcoPointers = Seq("42A.67A.99B.465") // Destination country code
-        val wcoDeclaration = builder.buildRequest(declaration, wcoPointers)
+        val wcoDeclaration = builder.buildRequest(Some(mrn), declaration, wcoPointers)
         val xmlResult = AmendmentMetaDataBuilder.toXml(wcoDeclaration)
 
         xmlResult mustBe expectedAmendmentXml
@@ -35,7 +36,7 @@ class AmendmentMetaDataBuilderISpec extends IntegrationTestSpec {
         val builder = instanceOf[AmendmentMetaDataBuilder]
 
         val wcoPointers = Seq.empty
-        val wcoDeclaration = builder.buildRequest(declaration, wcoPointers)
+        val wcoDeclaration = builder.buildRequest(Some(mrn), declaration, wcoPointers)
         val xmlResult = AmendmentMetaDataBuilder.toXml(wcoDeclaration)
 
         // Result should be same as single pointer spec as Nil amendment must be sent with a pointer. 42A.67A.99B.465 is this chosen pointer.
@@ -47,7 +48,7 @@ class AmendmentMetaDataBuilderISpec extends IntegrationTestSpec {
 
         val wcoPointers =
           Seq("42A.67A.99B.465", "42A.67A.68A.1.23A.137", "42A.67A.68A.1.114") // Destination country code, item description of goods, item value
-        val wcoDeclaration = builder.buildRequest(declaration, wcoPointers)
+        val wcoDeclaration = builder.buildRequest(Some(mrn), declaration, wcoPointers)
         val xmlResult = AmendmentMetaDataBuilder.toXml(wcoDeclaration)
 
         xmlResult mustBe expectedAmendmentWithMultiplePointersXml
@@ -58,8 +59,9 @@ class AmendmentMetaDataBuilderISpec extends IntegrationTestSpec {
 }
 
 object AmendmentMetaDataBuilderISpec {
+  private val mrn = "mrn"
   private val declaration = ExportsDeclaration(
-    "23GB2K3TH1KSVE1AA7",
+    "id",
     DeclarationMeta(
       None,
       None,
@@ -74,7 +76,7 @@ object AmendmentMetaDataBuilderISpec {
     STANDARD,
     None,
     Some(STANDARD_FRONTIER),
-    Some(ConsignmentReferences(Some(DUCR("1GB121212121212-TOMAMENDTEST")), Some("Toms amend test"), None, None, Some("23GB2K3TH1KSVE1AA7"))),
+    Some(ConsignmentReferences(Some(DUCR("1GB121212121212-TOMAMENDTEST")), Some("Toms amend test"), None, None, None)),
     None,
     None,
     Transport(
@@ -148,7 +150,7 @@ object AmendmentMetaDataBuilderISpec {
       |    <ns3:Declaration>
       |        <ns3:FunctionCode>13</ns3:FunctionCode>
       |        <ns3:FunctionalReferenceID>Toms amend test</ns3:FunctionalReferenceID>
-      |        <ns3:ID>23GB2K3TH1KSVE1AA7</ns3:ID>
+      |        <ns3:ID>mrn</ns3:ID>
       |        <ns3:TypeCode>COR</ns3:TypeCode>
       |        <ns3:GoodsItemQuantity>1</ns3:GoodsItemQuantity>
       |        <ns3:AdditionalInformation>
@@ -284,12 +286,6 @@ object AmendmentMetaDataBuilderISpec {
       |                <ns3:TypeCode>DCR</ns3:TypeCode>
       |                <ns3:LineNumeric>1</ns3:LineNumeric>
       |            </ns3:PreviousDocument>
-      |            <ns3:PreviousDocument>
-      |                <ns3:CategoryCode>Y</ns3:CategoryCode>
-      |                <ns3:ID>23GB2K3TH1KSVE1AA7</ns3:ID>
-      |                <ns3:TypeCode>SDE</ns3:TypeCode>
-      |                <ns3:LineNumeric>1</ns3:LineNumeric>
-      |            </ns3:PreviousDocument>
       |        </ns3:GoodsShipment>
       |    </ns3:Declaration>
       |</MetaData>
@@ -301,7 +297,7 @@ object AmendmentMetaDataBuilderISpec {
       |    <ns3:Declaration>
       |        <ns3:FunctionCode>13</ns3:FunctionCode>
       |        <ns3:FunctionalReferenceID>Toms amend test</ns3:FunctionalReferenceID>
-      |        <ns3:ID>23GB2K3TH1KSVE1AA7</ns3:ID>
+      |        <ns3:ID>mrn</ns3:ID>
       |        <ns3:TypeCode>COR</ns3:TypeCode>
       |        <ns3:GoodsItemQuantity>1</ns3:GoodsItemQuantity>
       |        <ns3:AdditionalInformation>
@@ -490,12 +486,6 @@ object AmendmentMetaDataBuilderISpec {
       |                <ns3:CategoryCode>Z</ns3:CategoryCode>
       |                <ns3:ID>1GB121212121212-TOMAMENDTEST</ns3:ID>
       |                <ns3:TypeCode>DCR</ns3:TypeCode>
-      |                <ns3:LineNumeric>1</ns3:LineNumeric>
-      |            </ns3:PreviousDocument>
-      |            <ns3:PreviousDocument>
-      |                <ns3:CategoryCode>Y</ns3:CategoryCode>
-      |                <ns3:ID>23GB2K3TH1KSVE1AA7</ns3:ID>
-      |                <ns3:TypeCode>SDE</ns3:TypeCode>
       |                <ns3:LineNumeric>1</ns3:LineNumeric>
       |            </ns3:PreviousDocument>
       |        </ns3:GoodsShipment>
