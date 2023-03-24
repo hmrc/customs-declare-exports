@@ -63,8 +63,8 @@ class SplitTheNotificationsCollectionISpec extends IntegrationTestMigrationToolS
         val parsedNotificationAfter = notificationsRepo.find().first()
         val unparsedNotificationAfter = unparsedNotificationsRepo.find().first()
 
-        compareJson(parsedNotificationAfter.toJson, TestData_1.parsedNotificationAfterChanges)
-        compareJson(unparsedNotificationAfter.toJson, TestData_1.unparsedNotification)
+        compare(parsedNotificationAfter.toJson, TestData_1.parsedNotificationAfterChanges)
+        compare(unparsedNotificationAfter.toJson, TestData_1.unparsedNotification)
 
         val id = unparsedNotificationAfter.get("item", classOf[Document]).getString("id")
         id mustBe parsedNotificationAfter.getString("unparsedNotificationId")
@@ -106,8 +106,8 @@ class SplitTheNotificationsCollectionISpec extends IntegrationTestMigrationToolS
           val unparsedNotificationAfter = unparsedNotificationsAfter.find(_.get("_id", classOf[ObjectId]) == unparsed.get("_id", classOf[ObjectId]))
           unparsedNotificationAfter mustBe defined
 
-          compareJson(parsedNotificationAfter.get.toJson, parsed.toJson)
-          compareJson(unparsedNotificationAfter.get.toJson, unparsed.toJson)
+          compare(parsedNotificationAfter.get.toJson, parsed.toJson)
+          compare(unparsedNotificationAfter.get.toJson, unparsed.toJson)
           unparsedNotificationAfter.get.get("item", classOf[Document]).getString("id") mustBe parsedNotificationAfter.get.getString(
             "unparsedNotificationId"
           )
@@ -387,7 +387,7 @@ class SplitTheNotificationsCollectionISpec extends IntegrationTestMigrationToolS
     }
   }
 
-  private def compareJson(actual: String, expected: String): Unit = {
+  private def compare(actual: String, expected: String): Unit = {
     val mapper = new ObjectMapper
 
     val jsonActual = mapper.readTree(actual)

@@ -17,8 +17,7 @@
 package uk.gov.hmrc.exports.services
 
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.{eq => meq}
-import org.mockito.ArgumentMatchers._
+import org.mockito.ArgumentMatchers.{eq => meq, _}
 import org.mockito.ArgumentMatchersSugar.eqTo
 import org.mockito.invocation.InvocationOnMock
 import org.scalatest.Assertion
@@ -28,7 +27,7 @@ import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData.DEFAULT_LIMIT
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{CUSTOMS_POSITION_GRANTED, WITHDRAWN}
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{CUSTOMS_POSITION_GRANTED, PENDING, WITHDRAWN}
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.{Eori, FetchSubmissionPageData, PageOfSubmissions}
@@ -36,11 +35,11 @@ import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionReposi
 import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, CancellationMetaDataBuilder, ExportsPointerToWCOPointer}
 import uk.gov.hmrc.exports.services.notifications.receiptactions.SendEmailForDmsDocAction
 import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParser
-import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
-import java.time.{ZoneOffset, ZonedDateTime}
+import java.time.ZonedDateTime
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -93,15 +92,16 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
   private val submission = Submission(id, eori, "lrn", Some("mrn"), "ducr", latestDecId = Some(id))
 
   "SubmissionService.cancel" should {
-    val notification = Some(Seq(new NotificationSummary(UUID.randomUUID(), ZonedDateTime.now(), CUSTOMS_POSITION_GRANTED)))
+    val now = TimeUtils.now()
+    val notification = Some(Seq(new NotificationSummary(UUID.randomUUID(), now, CUSTOMS_POSITION_GRANTED)))
     val submissionCancelled = Submission(
       id,
       eori,
       "lrn",
       None,
       "ducr",
-      None,
-      None,
+      PENDING,
+      now,
       List(Action(id = "conv-id", requestType = CancellationRequest, notifications = notification, decId = Some(id), versionNo = 1)),
       latestDecId = Some(id)
     )
@@ -149,7 +149,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     }
   }
 
-  private val cancelledSubmissions = List(submission.copy(latestEnhancedStatus = Some(WITHDRAWN)))
+  private val cancelledSubmissions = List(submission.copy(latestEnhancedStatus = WITHDRAWN))
 
   "SubmissionService.fetchFirstPage" should {
 
@@ -183,7 +183,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
   "SubmissionService.fetchPage" should {
 
-    val now = ZonedDateTime.now
+    val now = TimeUtils.now()
 
     def fetchSubmissionPageData(
       datetimeForPreviousPage: Option[ZonedDateTime] = Some(now),
@@ -274,7 +274,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     "submit to the Dec API" when {
       val declaration = aDeclaration()
 
-      val dateTimeIssued = ZonedDateTime.now(ZoneOffset.UTC)
+      val dateTimeIssued = TimeUtils.now()
 
       val newAction =
         Action(id = "conv-id", requestType = SubmissionRequest, requestTimestamp = dateTimeIssued, decId = Some(declaration.id), versionNo = 1)
@@ -296,7 +296,11 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         // Then
         val submissionCreated = theSubmissionCreated()
         val actionGenerated = submissionCreated.actions.head
-        submissionCreated mustBe Submission(declaration, "lrn", "ducr", newAction.copy(requestTimestamp = actionGenerated.requestTimestamp))
+
+        val submissionExpected = Submission(declaration, "lrn", "ducr", newAction.copy(requestTimestamp = actionGenerated.requestTimestamp))
+          .copy(enhancedStatusLastUpdated = submissionCreated.enhancedStatusLastUpdated)
+
+        submissionCreated mustBe submissionExpected
 
         actionGenerated.id mustBe "conv-id"
         actionGenerated.requestType mustBe SubmissionRequest

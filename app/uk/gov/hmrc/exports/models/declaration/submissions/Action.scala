@@ -18,8 +18,10 @@ package uk.gov.hmrc.exports.models.declaration.submissions
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import uk.gov.hmrc.exports.util.TimeUtils
+import uk.gov.hmrc.exports.util.TimeUtils.defaultTimeZone
 
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
+import java.time.{LocalDateTime, ZonedDateTime}
 
 case class Action(
   id: String,
@@ -27,7 +29,7 @@ case class Action(
   decId: Option[String],
   versionNo: Int,
   notifications: Option[Seq[NotificationSummary]] = None,
-  requestTimestamp: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UTC"))
+  requestTimestamp: ZonedDateTime = TimeUtils.now()
 ) {
   val latestNotificationSummary: Option[NotificationSummary] =
     notifications.flatMap(_.lastOption)
@@ -35,10 +37,8 @@ case class Action(
 
 object Action {
 
-  val defaultDateTimeZone: ZoneId = ZoneId.of("UTC")
-
   implicit val readLocalDateTimeFromString: Reads[ZonedDateTime] = implicitly[Reads[LocalDateTime]]
-    .map(ZonedDateTime.of(_, ZoneId.of("UTC")))
+    .map(ZonedDateTime.of(_, defaultTimeZone))
 
   implicit val writes = Json.writes[Action]
   implicit val reads: Reads[Action] =

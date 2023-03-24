@@ -20,9 +20,10 @@ import play.api.Logging
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, NotificationError}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType, StringOption}
+import uk.gov.hmrc.exports.util.TimeUtils.defaultTimeZone
 
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.time.{ZoneId, ZonedDateTime}
 import scala.xml.{Node, NodeSeq}
 
 class NotificationParser extends Logging {
@@ -43,7 +44,7 @@ class NotificationParser extends Logging {
 
       NotificationDetails(
         mrn = mrn,
-        dateTimeIssued = dateTimeIssued.withZoneSameInstant(ZoneId.of("UTC")),
+        dateTimeIssued = dateTimeIssued.withZoneSameInstant(defaultTimeZone),
         status = SubmissionStatus.retrieve(functionCode, nameCode),
         errors = errors
       )

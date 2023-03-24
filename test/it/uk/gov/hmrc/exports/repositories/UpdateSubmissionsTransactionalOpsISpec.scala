@@ -130,15 +130,15 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
       if (submission.mrn.isDefined) actualSubmission.mrn mustBe submission.mrn
       else actualSubmission.mrn mustBe defined
 
-      actualSubmission.latestEnhancedStatus.value mustBe expectedEnhancedStatus
+      actualSubmission.latestEnhancedStatus mustBe expectedEnhancedStatus
 
       actualSubmission.actions.size mustBe 1
       val notificationSummaries = actualSubmission.actions.head.notifications.value
       notificationSummaries.size mustBe expectedNotificationSummaries
 
       val notificationSummary = notificationSummaries.head
-      notificationSummary.dateTimeIssued mustBe actualSubmission.enhancedStatusLastUpdated.value
-      notificationSummary.enhancedStatus mustBe actualSubmission.latestEnhancedStatus.value
+      notificationSummary.dateTimeIssued mustBe actualSubmission.enhancedStatusLastUpdated
+      notificationSummary.enhancedStatus mustBe actualSubmission.latestEnhancedStatus
       actualSubmission
     }
 }

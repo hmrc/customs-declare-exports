@@ -20,16 +20,16 @@ import testdata.ExportsTestData._
 import testdata.notifications.NotificationTestData.{notification, notification_2}
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{GOODS_HAVE_EXITED, RECEIVED}
 import uk.gov.hmrc.exports.models.declaration.submissions._
+import uk.gov.hmrc.exports.util.TimeUtils.defaultTimeZone
 
+import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit.HOURS
-import java.time.{ZoneId, ZonedDateTime}
 import java.util.UUID
 
 object SubmissionTestData {
 
-  private val utc = ZoneId.of("UTC")
-  private val instant1971 = ZonedDateTime.of(1971, 1, 1, 1, 1, 0, 0, utc)
-  private val instant1972 = ZonedDateTime.of(1972, 1, 1, 1, 1, 0, 0, utc)
+  private val instant1971 = ZonedDateTime.of(1971, 1, 1, 1, 1, 0, 0, defaultTimeZone)
+  private val instant1972 = ZonedDateTime.of(1972, 1, 1, 1, 1, 0, 0, defaultTimeZone)
 
   lazy val action = Action(id = actionId, requestType = SubmissionRequest, decId = Some(uuid), versionNo = 1)
 

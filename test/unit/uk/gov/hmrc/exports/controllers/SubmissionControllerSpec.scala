@@ -33,9 +33,8 @@ import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.{FetchSubmissionPageData, PageOfSubmissions}
 import uk.gov.hmrc.exports.services.SubmissionService
-import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, TimeUtils}
 
-import java.time.{ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -137,7 +136,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
       when(submissionService.fetchPage(any(), any[StatusGroup], any[FetchSubmissionPageData]))
         .thenReturn(Future.successful(pageOfSubmissions))
 
-      val datetime = ZonedDateTime.now(ZoneId.of("UTC"))
+      val datetime = TimeUtils.now()
       val instant = datetime.toInstant
 
       val query = s"/submission-page?groups=action&page=2&datetimeForPreviousPage=${instant}&datetimeForNextPage=${instant}&limit=2"
@@ -233,7 +232,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
 
       "the specified LRN exists within 48hrs but in an ERRORS submission" in {
         when(submissionService.findSubmissionsByLrn(any(), any()))
-          .thenReturn(Future.successful(Seq(submission.copy(latestEnhancedStatus = Some(EnhancedStatus.ERRORS)))))
+          .thenReturn(Future.successful(Seq(submission.copy(latestEnhancedStatus = EnhancedStatus.ERRORS))))
 
         val result = controller.isLrnAlreadyUsed(submission.lrn)(getRequest)
 

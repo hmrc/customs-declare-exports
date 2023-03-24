@@ -21,11 +21,12 @@ import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData.DEFAULT_LIMIT
-import uk.gov.hmrc.exports.models.declaration.submissions.Action.defaultDateTimeZone
 import uk.gov.hmrc.exports.models.declaration.submissions.{EnhancedStatus, StatusGroup, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.services.SubmissionService
+import uk.gov.hmrc.exports.util.TimeUtils
+import uk.gov.hmrc.exports.util.TimeUtils.defaultTimeZone
 
-import java.time.{Instant, ZoneId, ZonedDateTime}
+import java.time.{Instant, ZonedDateTime}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -71,11 +72,11 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
   }
 
   def isLrnAlreadyUsed(lrn: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    val now = ZonedDateTime.now(defaultDateTimeZone)
+    val now = TimeUtils.now()
 
     def isSubmissionYoungerThan48Hours(submission: Submission): Boolean =
       submission.latestEnhancedStatus match {
-        case Some(EnhancedStatus.ERRORS) => false // If the submission failed then don't block reuse of LRN
+        case EnhancedStatus.ERRORS => false // If the submission failed then don't block reuse of LRN
         case _ =>
           submission.actions
             .filter(_.requestType == SubmissionRequest)
@@ -89,7 +90,7 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
 
   private def genFetchSubmissionPageData(implicit request: Request[_]): FetchSubmissionPageData = {
     def parse(datetime: String): ZonedDateTime =
-      Instant.parse(datetime).atZone(ZoneId.of("UTC"))
+      Instant.parse(datetime).atZone(defaultTimeZone)
 
     val statusGroups = request
       .getQueryString("groups")

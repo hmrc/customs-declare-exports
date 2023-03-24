@@ -17,9 +17,10 @@
 package uk.gov.hmrc.exports.migrations
 
 import org.bson.json.{Converter, JsonWriterSettings, StrictJsonWriter}
+import uk.gov.hmrc.exports.util.TimeUtils.defaultTimeZone
 
 import java.lang
-import java.time.{Instant, ZoneId}
+import java.time.Instant
 import java.time.format.DateTimeFormatter
 
 class TimeUtils {
@@ -36,7 +37,7 @@ class TimeUtils {
 object TimeUtils {
 
   private val converter: Converter[lang.Long] = new Converter[lang.Long] {
-    val formatter = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("UTC"))
+    val formatter = DateTimeFormatter.ISO_INSTANT.withZone(defaultTimeZone)
 
     override def convert(value: lang.Long, writer: StrictJsonWriter): Unit = {
       val s = formatter.format(Instant.ofEpochMilli(value))

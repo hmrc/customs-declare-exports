@@ -28,14 +28,16 @@ import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.base.UnitTestMockBuilder._
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification, UnparsedNotification}
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.PENDING
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.ACCEPTED
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, UnparsedNotificationWorkItemRepository}
 import uk.gov.hmrc.exports.services.notifications.receiptactions.NotificationReceiptActionsScheduler
+import uk.gov.hmrc.exports.util.TimeUtils
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.ToDo
 import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem}
 
-import java.time.{Instant, ZoneId, ZonedDateTime}
+import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -69,14 +71,15 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
   "NotificationService on findAllNotificationsSubmissionRelated" should {
 
     "retrieve by conversation IDs" in {
+      val now = TimeUtils.now()
       val submission = Submission(
         "id",
         "eori",
         "lrn",
         Some("mrn"),
         "ducr",
-        None,
-        None,
+        PENDING,
+        now,
         Seq(Action("id1", SubmissionRequest, decId = Some("id"), versionNo = 1)),
         latestDecId = Some("id")
       )
@@ -84,7 +87,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
         ParsedNotification(
           unparsedNotificationId = UUID.randomUUID(),
           actionId = "id1",
-          details = NotificationDetails("mrn", ZonedDateTime.now(ZoneId.of("UTC")), ACCEPTED, Seq.empty)
+          details = NotificationDetails("mrn", now, ACCEPTED, Seq.empty)
         )
       )
       when(notificationRepository.findNotifications(any[Seq[String]])).thenReturn(Future.successful(notifications))
@@ -95,7 +98,8 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
     }
 
     "only retrieve notifications related to the submissions of declarations (must filter out actionCancellation)" in {
-      val submission = Submission("id", "eori", "lrn", Some("mrn"), "ducr", None, None, Seq(actionCancellation, action), latestDecId = Some("id"))
+      val submission =
+        Submission("id", "eori", "lrn", Some("mrn"), "ducr", PENDING, TimeUtils.now(), Seq(actionCancellation, action), latestDecId = Some("id"))
       // Not relevant to the test
       when(notificationRepository.findNotifications(any[Seq[String]])).thenReturn(Future.successful(Seq(notification)))
 

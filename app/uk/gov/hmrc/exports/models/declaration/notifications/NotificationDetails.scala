@@ -19,14 +19,15 @@ package uk.gov.hmrc.exports.models.declaration.notifications
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.SubmissionStatus
+import uk.gov.hmrc.exports.util.TimeUtils.defaultTimeZone
 
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
+import java.time.{LocalDateTime, ZonedDateTime}
 
 case class NotificationDetails(mrn: String, dateTimeIssued: ZonedDateTime, status: SubmissionStatus, errors: Seq[NotificationError])
 
 object NotificationDetails {
   implicit val readLocalDateTimeFromString: Reads[ZonedDateTime] = implicitly[Reads[LocalDateTime]]
-    .map(ZonedDateTime.of(_, ZoneId.of("UTC")))
+    .map(ZonedDateTime.of(_, defaultTimeZone))
 
   implicit val writes: OWrites[NotificationDetails] = Json.writes[NotificationDetails]
   implicit val reads: Reads[NotificationDetails] =

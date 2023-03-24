@@ -70,7 +70,7 @@ class SubmissionService @Inject() (
       submissions <- loopOnGroups(submissionRepository.fetchFirstPage(eori, _, limit))(_.nonEmpty)(statusGroups)
       totalSubmissionsInGroup <- countSubmissionsInGroup(eori, submissions)
     } yield {
-      val statusGroup = submissions.headOption.flatMap(_.latestEnhancedStatus.map(toStatusGroup)).getOrElse(SubmittedStatuses)
+      val statusGroup = submissions.headOption.fold(SubmittedStatuses)(submission => toStatusGroup(submission.latestEnhancedStatus))
       PageOfSubmissions(statusGroup, totalSubmissionsInGroup, submissions)
     }
   }
@@ -111,7 +111,7 @@ class SubmissionService @Inject() (
   private def countSubmissionsInGroup(eori: String, submissions: Seq[Submission]): Future[Int] =
     // When no submissions are found, there is no need to run an unnecessary 'count' query.
     submissions.headOption
-      .flatMap(_.latestEnhancedStatus.map(toStatusGroup))
+      .map(submission => toStatusGroup(submission.latestEnhancedStatus))
       .fold(Future.successful(0))(submissionRepository.countSubmissionsInGroup(eori, _))
 
   def findSubmission(eori: String, id: String): Future[Option[Submission]] =

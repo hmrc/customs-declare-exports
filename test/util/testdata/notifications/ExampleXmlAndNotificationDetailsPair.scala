@@ -16,14 +16,15 @@
 
 package testdata.notifications
 
-import uk.gov.hmrc.exports.models.{Pointer, PointerSection}
 import uk.gov.hmrc.exports.models.PointerSectionType.{FIELD, SEQUENCE}
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, NotificationError}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
+import uk.gov.hmrc.exports.models.{Pointer, PointerSection}
+import uk.gov.hmrc.exports.util.TimeUtils
 
-import java.time.{ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatter.ofPattern
+import java.time.{ZoneId, ZonedDateTime}
 import scala.xml.Elem
 
 final case class ExampleXmlAndNotificationDetailsPair(asXml: Elem = <empty/>, asDomainModel: Seq[NotificationDetails] = Seq.empty)
@@ -33,7 +34,7 @@ object ExampleXmlAndNotificationDetailsPair {
 
   val formatter304 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
 
-  def exampleReceivedNotification(mrn: String, dateTime: ZonedDateTime = ZonedDateTime.now(ZoneId.of("UCT"))): ExampleXmlAndNotificationDetailsPair =
+  def exampleReceivedNotification(mrn: String, dateTime: ZonedDateTime = TimeUtils.now()): ExampleXmlAndNotificationDetailsPair =
     ExampleXmlAndNotificationDetailsPair(
       asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
@@ -66,7 +67,7 @@ object ExampleXmlAndNotificationDetailsPair {
   // noinspection ScalaStyle
   def exampleRejectNotification(
     mrn: String,
-    dateTime: String = ZonedDateTime.now(ZoneId.of("UCT")).format(formatter304),
+    dateTime: String = TimeUtils.now().format(formatter304),
     with67ASequenceNo: Boolean = false
   ): ExampleXmlAndNotificationDetailsPair = ExampleXmlAndNotificationDetailsPair(
     asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
@@ -139,8 +140,8 @@ object ExampleXmlAndNotificationDetailsPair {
 
   def exampleNotificationWithMultipleResponses(
     mrn: String,
-    dateTime_received: String = ZonedDateTime.now(ZoneId.of("UCT")).format(formatter304),
-    dateTime_accepted: String = ZonedDateTime.now(ZoneId.of("UCT")).plusHours(1).format(formatter304)
+    dateTime_received: String = TimeUtils.now().format(formatter304),
+    dateTime_accepted: String = TimeUtils.now().plusHours(1).format(formatter304)
   ): ExampleXmlAndNotificationDetailsPair = ExampleXmlAndNotificationDetailsPair(
     asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
       <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
@@ -201,8 +202,8 @@ object ExampleXmlAndNotificationDetailsPair {
 
   def exampleUnparsableNotification(
     mrn: String,
-    dateTime_received: String = ZonedDateTime.now(ZoneId.of("UCT")).format(formatter304),
-    dateTime_accepted: String = ZonedDateTime.now(ZoneId.of("UCT")).plusHours(1).format(formatter304)
+    dateTime_received: String = TimeUtils.now().format(formatter304),
+    dateTime_accepted: String = TimeUtils.now().plusHours(1).format(formatter304)
   ): ExampleXmlAndNotificationDetailsPair =
     ExampleXmlAndNotificationDetailsPair(
       asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
@@ -238,7 +239,7 @@ object ExampleXmlAndNotificationDetailsPair {
 
   def exampleNotificationInIncorrectFormatXML(
     mrn: String,
-    dateTime: String = ZonedDateTime.now(ZoneId.of("UCT")).format(ofPattern("yyyyMMddHHmmssX"))
+    dateTime: String = TimeUtils.now().format(ofPattern("yyyyMMddHHmmssX"))
   ): ExampleXmlAndNotificationDetailsPair =
     ExampleXmlAndNotificationDetailsPair(
       asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">

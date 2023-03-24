@@ -36,13 +36,7 @@ import scala.util.{Failure, Success, Try}
 class AddSequenceIdsToPackageInformation extends MigrationDefinition with Logging {
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(
-      id = s"CEDS-4445 Add a 'sequenceId' field to 'PackageInformation' sub-documents",
-      order = 20,
-      author = "Lucio Biondi",
-      // Can be removed (default is false) once this migration is deployed to all envs (production & integration included)
-      runAlways = true
-    )
+    MigrationInformation(id = s"CEDS-4445 Add a 'sequenceId' field to 'PackageInformation' sub-documents", order = 20, author = "Lucio Biondi")
 
   override def migrationFunction(db: MongoDatabase): Unit = {
     logger.info(s"Applying '${migrationInformation.id}' db migration...")

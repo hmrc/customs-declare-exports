@@ -30,13 +30,7 @@ class AddSubmissionFieldsForAmend extends MigrationDefinition with Logging {
   private val blockAmendments = "blockAmendments"
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(
-      id = s"CEDS-4364 Add new fields to the Submission model for amended Declarations.",
-      order = 17,
-      author = "Lucio Biondi",
-      // Can be removed (default is false) once this migration is deployed to all envs (production & integration included)
-      runAlways = true
-    )
+    MigrationInformation(id = s"CEDS-4364 Add new fields to the Submission model for amended Declarations.", order = 17, author = "Lucio Biondi")
 
   override def migrationFunction(db: MongoDatabase): Unit = {
     logger.info(s"Applying '${migrationInformation.id}' db migration...")

@@ -22,8 +22,8 @@ import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationError, 
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.SubmissionStatus
+import uk.gov.hmrc.exports.util.TimeUtils
 
-import java.time.ZonedDateTime
 import java.util.UUID
 
 class EnhancedStatusSpec extends UnitSpec {
@@ -55,7 +55,7 @@ class EnhancedStatusSpec extends UnitSpec {
       }
 
       "the notification's status is ACCEPTED and the submission already includes a RECEIVED notification" in {
-        val notificationSummary = new NotificationSummary(UUID.randomUUID, ZonedDateTime.now, RECEIVED)
+        val notificationSummary = new NotificationSummary(UUID.randomUUID, TimeUtils.now(), RECEIVED)
         val notification = genNotification(SubmissionStatus.ACCEPTED)
         enhancedStatus(notification, notificationSummaries = List(notificationSummary)) mustBe GOODS_ARRIVED_MESSAGE
       }
@@ -72,7 +72,7 @@ class EnhancedStatusSpec extends UnitSpec {
       }
 
       "the notification's status is CANCELLED and a successful cancellation request has been already made" in {
-        val notificationSumaries = Some(List(NotificationSummary(UUID.randomUUID, ZonedDateTime.now, CUSTOMS_POSITION_GRANTED)))
+        val notificationSumaries = Some(List(NotificationSummary(UUID.randomUUID, TimeUtils.now(), CUSTOMS_POSITION_GRANTED)))
         val action = Action("Some Id", CancellationRequest, notifications = notificationSumaries, decId = Some("id"), versionNo = 1)
 
         val notification = genNotification(SubmissionStatus.CANCELLED)
