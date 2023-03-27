@@ -29,12 +29,7 @@ import scala.jdk.CollectionConverters._
 class AddActionFieldsForAmend extends MigrationDefinition with Logging {
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(
-      id = s"CEDS-4446 Add new fields to the Action model for amended Declarations.",
-      order = 19,
-      author = "Darryl Murphy",
-      runAlways = true
-    )
+    MigrationInformation(id = s"CEDS-4446 Add new fields to the Action model for amended Declarations.", order = 19, author = "Darryl Murphy")
   private val uuid = "uuid"
   private val latestDecId = "latestDecId"
   private val latestVersionNo = "latestVersionNo"

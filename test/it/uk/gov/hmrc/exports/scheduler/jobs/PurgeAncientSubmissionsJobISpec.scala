@@ -5,10 +5,10 @@ import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
 import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, TimeUtils}
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus
 
-import java.time.{ZoneId, ZonedDateTime}
+import java.time.ZonedDateTime
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -19,7 +19,7 @@ class PurgeAncientSubmissionsJobISpec extends IntegrationTestPurgeSubmissionsToo
   val testJob: PurgeAncientSubmissionsJob = instanceOf[PurgeAncientSubmissionsJob]
 
   val enhancedStatusLastUpdatedOlderThan = testJob.expiryDate
-  val enhancedStatusLastUpdatedRecent = ZonedDateTime.now(ZoneId.of("UTC")).minusDays(1)
+  val enhancedStatusLastUpdatedRecent = TimeUtils.now().minusDays(1)
 
   "PurgeAncientSubmissionsJob" should {
 
@@ -377,8 +377,8 @@ object PurgeAncientSubmissionsJobISpec {
   def submission(latestEnhancedStatus: EnhancedStatus, enhancedStatusLastUpdated: ZonedDateTime, actionIds: Seq[String], uuid: String): Submission =
     Submission(eori = eori, lrn = "XzmBvLMY6ZfrZL9lxu", ducr = "6TS321341891866-112L6H21L", latestDecId = Some(uuid)).copy(
       uuid = uuid,
-      latestEnhancedStatus = Some(latestEnhancedStatus),
-      enhancedStatusLastUpdated = Some(enhancedStatusLastUpdated),
+      latestEnhancedStatus = latestEnhancedStatus,
+      enhancedStatusLastUpdated = enhancedStatusLastUpdated,
       actions = actionIds.map(id => Action(id = id, SubmissionRequest, decId = Some(""), versionNo = 1))
     )
 

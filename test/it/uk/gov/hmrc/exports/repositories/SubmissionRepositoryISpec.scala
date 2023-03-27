@@ -23,8 +23,9 @@ import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
 import uk.gov.hmrc.exports.models.declaration.submissions._
+import uk.gov.hmrc.exports.util.TimeUtils
 
-import java.time.{ZoneId, ZonedDateTime}
+import java.time.ZonedDateTime
 import java.util.UUID
 import scala.util.Random
 
@@ -141,7 +142,7 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
   import uk.gov.hmrc.exports.repositories.SubmissionRepositoryISpecHelper._
 
   private def genSubmissions(statusGroup: StatusGroup, size: Int = itemsPerPage * 2): Seq[Submission] = {
-    val lastStatusUpdate = ZonedDateTime.now(ZoneId.of("UTC"))
+    val lastStatusUpdate = TimeUtils.now()
     val statuses = toEnhancedStatus(statusGroup).toList
 
     val submissions = (0 until size).map { seconds =>
@@ -149,7 +150,7 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
     }.toList
 
     repository.bulkInsert(submissions).futureValue mustBe size
-    submissions.sortWith { case (s1, s2) => s1.enhancedStatusLastUpdated.get.isAfter(s2.enhancedStatusLastUpdated.get) }
+    submissions.sortWith { case (s1, s2) => s1.enhancedStatusLastUpdated.isAfter(s2.enhancedStatusLastUpdated) }
   }
 
   "SubmissionRepository.fetchFirstPage" should {
@@ -197,7 +198,7 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
   "SubmissionRepository.fetchNextPage" should {
 
     "return an empty Sequence when there no Submissions for the given EORI and statusGroup" in {
-      repository.fetchNextPage("eori", SubmittedStatuses, ZonedDateTime.now, itemsPerPage).futureValue mustBe Seq.empty
+      repository.fetchNextPage("eori", SubmittedStatuses, TimeUtils.now(), itemsPerPage).futureValue mustBe Seq.empty
     }
 
     "return the next page of Submissions for the given EORI, statusGroup and statusLastUpdated in descending order" in {
@@ -205,9 +206,11 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
       val allSubmissions = genSubmissions(SubmittedStatuses, itemsPerPage * 4) // fetch the next page from these instead
 
       // Assume current page is 2
-      val dateTimeOfLastSubmissionOfPage2 = allSubmissions(itemsPerPage * 2 - 1).enhancedStatusLastUpdated.get
+      val dateTimeOfLastSubmissionOfPage2 = allSubmissions(itemsPerPage * 2 - 1).enhancedStatusLastUpdated
 
-      val submissions = repository.fetchNextPage("eori", SubmittedStatuses, dateTimeOfLastSubmissionOfPage2, itemsPerPage).futureValue
+      val submissions = repository
+        .fetchNextPage("eori", SubmittedStatuses, dateTimeOfLastSubmissionOfPage2, itemsPerPage)
+        .futureValue
       (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(itemsPerPage * 2 + ix))
     }
   }
@@ -215,7 +218,7 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
   "SubmissionRepository.fetchPreviousPage" should {
 
     "return an empty Sequence when there no Submissions for the given EORI and statusGroup" in {
-      repository.fetchPreviousPage("eori", SubmittedStatuses, ZonedDateTime.now, itemsPerPage).futureValue mustBe Seq.empty
+      repository.fetchPreviousPage("eori", SubmittedStatuses, TimeUtils.now(), itemsPerPage).futureValue mustBe Seq.empty
     }
 
     "return the previous page of Submissions for the given EORI, statusGroup and statusLastUpdated in descending order" in {
@@ -223,9 +226,11 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
       val allSubmissions = genSubmissions(SubmittedStatuses, itemsPerPage * 4) // fetch the previous page from these instead
 
       // Assume current page is 3
-      val dateTimeOfFirstSubmissionOfPage3 = allSubmissions(itemsPerPage * 2).enhancedStatusLastUpdated.get
+      val dateTimeOfFirstSubmissionOfPage3 = allSubmissions(itemsPerPage * 2).enhancedStatusLastUpdated
 
-      val submissions = repository.fetchPreviousPage("eori", SubmittedStatuses, dateTimeOfFirstSubmissionOfPage3, itemsPerPage).futureValue
+      val submissions = repository
+        .fetchPreviousPage("eori", SubmittedStatuses, dateTimeOfFirstSubmissionOfPage3, itemsPerPage)
+        .futureValue
       (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(itemsPerPage + ix))
     }
   }
@@ -239,7 +244,7 @@ object SubmissionRepositoryISpecHelper {
   val mrn = "mrn"
   val ducr = "ducr"
 
-  val dateTime = ZonedDateTime.now(ZoneId.of("UTC")).withNano(111000000)
+  val dateTime = TimeUtils.now().withNano(111000000)
 
   def submission(lastStatusUpdate: ZonedDateTime, status: EnhancedStatus = RECEIVED): Submission = {
     val uuid = UUID.randomUUID.toString
@@ -249,8 +254,8 @@ object SubmissionRepositoryISpecHelper {
       lrn = Random.alphanumeric.take(lrnLength).mkString.toUpperCase,
       mrn = Some(mrn),
       ducr = ducr,
-      latestEnhancedStatus = Some(status),
-      enhancedStatusLastUpdated = Some(lastStatusUpdate),
+      latestEnhancedStatus = status,
+      enhancedStatusLastUpdated = lastStatusUpdate,
       actions = List(Action(uuid, SubmissionRequest, decId = Some(""), versionNo = 1, None, dateTime)),
       latestDecId = Some(uuid)
     )

@@ -18,7 +18,8 @@ package uk.gov.hmrc.exports.models.declaration.submissions
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{EnhancedStatus, PENDING}
+import uk.gov.hmrc.exports.util.TimeUtils
 
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -29,8 +30,8 @@ case class Submission(
   lrn: String,
   mrn: Option[String] = None,
   ducr: String,
-  latestEnhancedStatus: Option[EnhancedStatus] = None,
-  enhancedStatusLastUpdated: Option[ZonedDateTime] = None,
+  latestEnhancedStatus: EnhancedStatus = PENDING,
+  enhancedStatusLastUpdated: ZonedDateTime = TimeUtils.now(),
   actions: Seq[Action] = Seq.empty,
   latestDecId: Option[String], // Initial value => always as 'uuid' field
   latestVersionNo: Int = 1
@@ -44,6 +45,7 @@ object Submission {
 
   def apply(declaration: ExportsDeclaration, lrn: String, ducr: String, action: Action): Submission =
     new Submission(declaration.id, declaration.eori, lrn, None, ducr, actions = List(action), latestDecId = Some(declaration.id))
+
   def apply(uuid: String, declaration: ExportsDeclaration, notificationSummary: NotificationSummary, action: Action): Submission =
     new Submission(
       uuid,
@@ -51,8 +53,8 @@ object Submission {
       lrn = declaration.consignmentReferences.flatMap(_.lrn).getOrElse(""),
       mrn = declaration.consignmentReferences.flatMap(_.mrn),
       ducr = declaration.consignmentReferences.flatMap(_.ducr).map(_.ducr).getOrElse(""),
-      latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
-      enhancedStatusLastUpdated = Some(notificationSummary.dateTimeIssued),
+      latestEnhancedStatus = notificationSummary.enhancedStatus,
+      enhancedStatusLastUpdated = notificationSummary.dateTimeIssued,
       actions = List(action),
       latestDecId = Some(uuid)
     )

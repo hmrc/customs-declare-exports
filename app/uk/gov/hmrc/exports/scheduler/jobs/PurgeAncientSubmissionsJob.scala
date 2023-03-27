@@ -22,8 +22,9 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
 import uk.gov.hmrc.exports.repositories.{PurgeSubmissionsTransactionalOps, SubmissionRepository}
+import uk.gov.hmrc.exports.util.TimeUtils
 
-import java.time.{LocalTime, ZoneId, ZonedDateTime}
+import java.time.LocalTime
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -45,7 +46,7 @@ class PurgeAncientSubmissionsJob @Inject() (
   lazy val expiryDate = {
     val days = 180L
     val oneMilliSec = 1000000
-    ZonedDateTime.now(ZoneId.of("UTC")).minusDays(days).withNano(oneMilliSec)
+    TimeUtils.now().minusDays(days).withNano(oneMilliSec)
   }
 
   private lazy val expiryDateAsString = Json.toJson(expiryDate).toString

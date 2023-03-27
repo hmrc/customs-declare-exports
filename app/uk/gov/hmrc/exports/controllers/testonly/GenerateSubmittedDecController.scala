@@ -28,9 +28,8 @@ import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus._
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action => SubmissionAction, NotificationSummary, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.updateActionWithNotificationSummaries
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, TimeUtils}
 
-import java.time.{ZoneId, ZonedDateTime}
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.annotation.tailrec
@@ -84,7 +83,7 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
       SubmissionAction(
         id = parsedNotifications.head.actionId,
         requestType = SubmissionRequest,
-        requestTimestamp = ZonedDateTime.now(ZoneId.of("UTC")),
+        requestTimestamp = TimeUtils.now(),
         notifications = Some(notifications),
         decId = Some(uuid),
         versionNo = 1
@@ -107,8 +106,7 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
     ParsedNotification(
       unparsedNotificationId = UUID.randomUUID(),
       actionId = actionId,
-      details =
-        NotificationDetails(declaration.consignmentReferences.flatMap(_.mrn).getOrElse(""), ZonedDateTime.now(ZoneId.of("UTC")), status, Seq.empty)
+      details = NotificationDetails(declaration.consignmentReferences.flatMap(_.mrn).getOrElse(""), TimeUtils.now(), status, Seq.empty)
     )
 
   // scalastyle:off

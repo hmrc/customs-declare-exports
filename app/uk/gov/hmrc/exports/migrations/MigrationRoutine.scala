@@ -56,6 +56,7 @@ class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
     .register(new AddActionFieldsForAmend())
     .register(new AddSequenceIdsToPackageInformation())
     .register(new RemoveBlockAmendmentsField())
+    .register(new SetEnhancedStatusAsNonOptional())
 
   ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute()
 

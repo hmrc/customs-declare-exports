@@ -20,9 +20,9 @@ import org.bson.types.ObjectId
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
+import uk.gov.hmrc.exports.util.TimeUtils
 
 import java.time.format.DateTimeFormatter
-import java.time.{ZoneId, ZonedDateTime}
 import java.util.UUID
 
 class ParsedNotificationSpec extends UnitSpec {
@@ -33,7 +33,7 @@ class ParsedNotificationSpec extends UnitSpec {
     val id = ObjectId.get
     val unparsedNotificationId = UUID.randomUUID()
     val actionId = "123"
-    val dateTime = ZonedDateTime.now(ZoneId.of("UCT"))
+    val dateTime = TimeUtils.now()
     val mrn = "id1"
 
     val notification = ParsedNotification(

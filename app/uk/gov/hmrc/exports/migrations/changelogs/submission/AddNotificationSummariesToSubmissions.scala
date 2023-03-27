@@ -31,12 +31,9 @@ import scala.jdk.CollectionConverters._
 
 class AddNotificationSummariesToSubmissions extends MigrationDefinition with Logging {
 
-  val latestStatus = "latestEnhancedStatus"
-  val statusLastUpdated = "enhancedStatusLastUpdated"
-
   override val migrationInformation: MigrationInformation =
     MigrationInformation(
-      id = s"CEDS-3895 Add notification summaries, $latestStatus & $statusLastUpdated to those Submission docs not updated yet with these data",
+      id = s"CEDS-3895 Add notification summaries to those Submission docs not updated yet with these data",
       order = 14,
       author = "Lucio Biondi"
     )
@@ -47,8 +44,15 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
     val notificationCollection = db.getCollection("notifications")
     val submissionCollection = db.getCollection("submissions")
 
+    /* This was the filter used before setting "latestEnhancedStatus" and "enhancedStatusLastUpdated" as non-optional.
+       It cannot be used anymore as, at line 61, we try convert the Json to a Submission,
+       which, as said, now assumes for the 2 fields to always have a value. */
+    // val findFilter = and(exists("mrn", true), exists("latestEnhancedStatus", false), exists("enhancedStatusLastUpdated", false))
+
+    val findFilter = and(exists("mrn", true))
+
     val results: Iterable[UpdateResult] = submissionCollection
-      .find(and(exists("mrn", true), exists(latestStatus, false), exists(statusLastUpdated, false)))
+      .find(findFilter)
       .asScala
       .map { document =>
         val submission = Json.parse(document.toJson).as[Submission]
@@ -62,13 +66,14 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
           if (action.requestType == SubmissionRequest) action.notifications.flatMap(_.headOption) else None
         }.flatten.headOption.fold(submission.copy(actions = actions)) { notificationSummary =>
           submission.copy(
-            latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
-            enhancedStatusLastUpdated = Some(notificationSummary.dateTimeIssued),
+            latestEnhancedStatus = notificationSummary.enhancedStatus,
+            enhancedStatusLastUpdated = notificationSummary.dateTimeIssued,
             actions = actions
           )
         }
 
-        submissionCollection.replaceOne(equal("uuid", document.get("uuid")), Document.parse(Json.toJson(updatedSubmission).toString))
+        val replaceFilter = equal("uuid", document.get("uuid"))
+        submissionCollection.replaceOne(replaceFilter, Document.parse(Json.toJson(updatedSubmission).toString))
       }
 
     val updates = results.foldLeft(0L)((acc, result) => acc + result.getModifiedCount)

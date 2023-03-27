@@ -72,10 +72,10 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
           submission1.mrn.value mustBe notification2.details.mrn
           submission1.mrn.value mustBe submission2.mrn.value
 
-          submission1.latestEnhancedStatus.value mustBe GOODS_ARRIVED
-          submission2.latestEnhancedStatus.value mustBe UNKNOWN
-          submission1.enhancedStatusLastUpdated.value mustBe notification2.details.dateTimeIssued
-          submission2.enhancedStatusLastUpdated.value mustBe notification3.details.dateTimeIssued
+          submission1.latestEnhancedStatus mustBe GOODS_ARRIVED
+          submission2.latestEnhancedStatus mustBe UNKNOWN
+          submission1.enhancedStatusLastUpdated mustBe notification2.details.dateTimeIssued
+          submission2.enhancedStatusLastUpdated mustBe notification3.details.dateTimeIssued
 
           submission1.actions.size mustBe 2
           submission1.actions.size mustBe submission2.actions.size
@@ -105,10 +105,10 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
           submission1.mrn.value mustBe notification2.details.mrn
           submission1.mrn.value mustBe submission2.mrn.value
 
-          submission1.latestEnhancedStatus.value mustBe GOODS_ARRIVED_MESSAGE
-          submission2.latestEnhancedStatus.value mustBe UNKNOWN
-          submission1.enhancedStatusLastUpdated.value mustBe notification2.details.dateTimeIssued
-          submission2.enhancedStatusLastUpdated.value mustBe notification3.details.dateTimeIssued
+          submission1.latestEnhancedStatus mustBe GOODS_ARRIVED_MESSAGE
+          submission2.latestEnhancedStatus mustBe UNKNOWN
+          submission1.enhancedStatusLastUpdated mustBe notification2.details.dateTimeIssued
+          submission2.enhancedStatusLastUpdated mustBe notification3.details.dateTimeIssued
 
           submission1.actions.size mustBe 2
           submission1.actions.size mustBe submission2.actions.size
@@ -133,8 +133,8 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
           val submission1 = submissions.head
 
           submission1.mrn.value mustBe notification2.details.mrn
-          submission1.latestEnhancedStatus.value mustBe UNKNOWN
-          submission1.enhancedStatusLastUpdated.value mustBe notification3.details.dateTimeIssued
+          submission1.latestEnhancedStatus mustBe UNKNOWN
+          submission1.enhancedStatusLastUpdated mustBe notification3.details.dateTimeIssued
 
           submission1.actions.size mustBe 1
           val notifications = submission1.actions(0).notifications.value
@@ -157,8 +157,8 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
           val submission1 = submissions.head
 
           submission1.mrn.value mustBe notification2.details.mrn
-          submission1.latestEnhancedStatus.value mustBe UNKNOWN
-          submission1.enhancedStatusLastUpdated.value mustBe notification3.details.dateTimeIssued
+          submission1.latestEnhancedStatus mustBe UNKNOWN
+          submission1.enhancedStatusLastUpdated mustBe notification3.details.dateTimeIssued
 
           submission1.actions.size mustBe 1
           val notifications = submission1.actions(0).notifications.value
@@ -244,6 +244,8 @@ object ParseAndSaveActionISpec {
       |      "versionNo" : 1
       |    }
       |  ],
+      |  "latestEnhancedStatus": "PENDING",
+      |  "enhancedStatusLastUpdated": "${submissionDateTime}",
       |  "latestDecId" : "62b088b16a76c36b550804ab",
       |  "latestVersionNo" : 1,
       |  "mrn": "${mrn}"

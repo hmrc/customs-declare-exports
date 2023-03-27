@@ -52,7 +52,7 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
                   id = UUID.randomUUID.toString,
                   declarationMeta = declaration.declarationMeta.copy(
                     parentDeclarationId = submission.latestDecId,
-                    parentDeclarationEnhancedStatus = submission.latestEnhancedStatus,
+                    parentDeclarationEnhancedStatus = Some(submission.latestEnhancedStatus),
                     status = AMENDMENT_DRAFT
                   )
                 )
@@ -83,7 +83,7 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
                 id = UUID.randomUUID.toString,
                 declarationMeta = declaration.declarationMeta.copy(
                   parentDeclarationId = Some(parentId),
-                  parentDeclarationEnhancedStatus = submission.flatMap(_.latestEnhancedStatus),
+                  parentDeclarationEnhancedStatus = submission.map(_.latestEnhancedStatus),
                   status = DRAFT
                 )
               )

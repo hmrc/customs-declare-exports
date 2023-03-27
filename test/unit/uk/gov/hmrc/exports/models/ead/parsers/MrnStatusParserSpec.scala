@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.exports.models.ead.parsers
 
-import java.time.ZonedDateTime
-
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.util.TimeUtils.defaultTimeZone
+
+import java.time.ZonedDateTime
 
 class MrnStatusParserSpec extends UnitSpec {
 
@@ -30,9 +31,9 @@ class MrnStatusParserSpec extends UnitSpec {
       mrnStatus.eori mustBe "GB123456789012000"
       mrnStatus.versionId mustBe "1"
       mrnStatus.declarationType mustBe "IMZ"
-      mrnStatus.acceptanceDateTime.map(_.isEqual(ZonedDateTime.of(2019, 1, 2, 11, 7, 57, 0, DateParser.zoneUTC))) mustBe Some(true)
-      mrnStatus.receivedDateTime.isEqual(ZonedDateTime.of(2019, 7, 2, 11, 8, 57, 0, DateParser.zoneUTC)) mustBe true
-      mrnStatus.releasedDateTime.map(_.isEqual(ZonedDateTime.of(2019, 7, 2, 13, 9, 57, 0, DateParser.zoneUTC))) mustBe Some(true)
+      mrnStatus.acceptanceDateTime.map(_.isEqual(ZonedDateTime.of(2019, 1, 2, 11, 7, 57, 0, defaultTimeZone))) mustBe Some(true)
+      mrnStatus.receivedDateTime.isEqual(ZonedDateTime.of(2019, 7, 2, 11, 8, 57, 0, defaultTimeZone)) mustBe true
+      mrnStatus.releasedDateTime.map(_.isEqual(ZonedDateTime.of(2019, 7, 2, 13, 9, 57, 0, defaultTimeZone))) mustBe Some(true)
       mrnStatus.createdDateTime mustNot be(None)
       mrnStatus.roe mustBe "6"
       mrnStatus.ics mustBe "15"
@@ -60,7 +61,7 @@ class MrnStatusParserSpec extends UnitSpec {
       mrnStatus.versionId mustBe "1"
       mrnStatus.declarationType mustBe "EXD"
       mrnStatus.acceptanceDateTime mustBe None
-      mrnStatus.receivedDateTime.isEqual(ZonedDateTime.of(2020, 2, 27, 11, 43, 5, 0, DateParser.zoneUTC)) mustBe true
+      mrnStatus.receivedDateTime.isEqual(ZonedDateTime.of(2020, 2, 27, 11, 43, 5, 0, defaultTimeZone)) mustBe true
       mrnStatus.releasedDateTime mustBe None
       mrnStatus.createdDateTime mustNot be(None)
       mrnStatus.roe mustBe "H"
@@ -79,7 +80,7 @@ class MrnStatusParserSpec extends UnitSpec {
       mrnStatus.versionId mustBe "1"
       mrnStatus.declarationType mustBe "EXD"
       mrnStatus.acceptanceDateTime mustBe None
-      mrnStatus.receivedDateTime.isEqual(ZonedDateTime.of(2020, 2, 27, 11, 43, 5, 0, DateParser.zoneUTC)) mustBe true
+      mrnStatus.receivedDateTime.isEqual(ZonedDateTime.of(2020, 2, 27, 11, 43, 5, 0, defaultTimeZone)) mustBe true
       mrnStatus.releasedDateTime mustBe None
       mrnStatus.createdDateTime mustNot be(None)
       mrnStatus.roe mustBe "H"

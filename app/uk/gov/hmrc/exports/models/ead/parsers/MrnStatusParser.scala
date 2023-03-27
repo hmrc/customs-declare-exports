@@ -19,8 +19,8 @@ package uk.gov.hmrc.exports.models.ead.parsers
 import uk.gov.hmrc.exports.models.StringOption
 import uk.gov.hmrc.exports.models.ead.XmlTags._
 import uk.gov.hmrc.exports.models.ead.{MrnStatus, PreviousDocument, XmlTags}
+import uk.gov.hmrc.exports.util.TimeUtils
 
-import java.time.ZonedDateTime
 import scala.xml.NodeSeq
 
 class MrnStatusParser {
@@ -43,7 +43,7 @@ class MrnStatusParser {
         DateParser.optionZonedDateTime((responseXml \ declarationStatusDetails \ declaration \ goodsReleasedDateTime \ dateTimeString).text),
       acceptanceDateTime =
         DateParser.optionZonedDateTime((responseXml \ declarationStatusDetails \ declaration \ acceptanceDateTime \ dateTimeString).text),
-      createdDateTime = ZonedDateTime.now(),
+      createdDateTime = TimeUtils.now(),
       roe = (responseXml \ declarationStatusDetails \ declaration \ roe).text,
       ics = (responseXml \ declarationStatusDetails \ declaration \ ics).text,
       irc = StringOption((responseXml \ declarationStatusDetails \ declaration \ irc).text),

@@ -79,8 +79,7 @@ object AddActionFieldsForAmendISpec {
       |  "enhancedStatusLastUpdated" : "2020-12-01T17:33:31Z[UTC]",
       |  "latestEnhancedStatus" : "ERRORS",
       |  "latestDecId" : "b140390f-56d4-4302-887f-5971886cb0e7",
-      |  "latestVersionNo" : 1,
-      |  "blockAmendments" : false
+      |  "latestVersionNo" : 1
       |}""".stripMargin
 
   val submissionMigrationWithFields =
@@ -124,8 +123,7 @@ object AddActionFieldsForAmendISpec {
       |  "enhancedStatusLastUpdated" : "2020-12-01T17:33:31Z[UTC]",
       |  "latestEnhancedStatus" : "ERRORS",
       |  "latestDecId" : "b140390f-56d4-4302-887f-5971886cb0e8",
-      |  "latestVersionNo" : 2,
-      |  "blockAmendments" : false
+      |  "latestVersionNo" : 2
       |}""".stripMargin
 
   val submissionAfterMigration =
@@ -169,7 +167,6 @@ object AddActionFieldsForAmendISpec {
       |  "enhancedStatusLastUpdated" : "2020-12-01T17:33:31Z[UTC]",
       |  "latestEnhancedStatus" : "ERRORS",
       |  "latestDecId" : "b140390f-56d4-4302-887f-5971886cb0e7",
-      |  "latestVersionNo" : 1,
-      |  "blockAmendments" : false
+      |  "latestVersionNo" : 1
       |}""".stripMargin
 }

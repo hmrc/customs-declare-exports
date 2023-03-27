@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.models.ead.parsers
+package uk.gov.hmrc.exports.util
 
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
+import java.time.{ZoneId, ZonedDateTime}
 
-object DateParser {
+object TimeUtils {
 
-  val formatter304: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
+  val defaultTimeZone: ZoneId = ZoneId.of("UTC")
 
-  def zonedDateTime(datetime: String): ZonedDateTime = ZonedDateTime.parse(datetime, formatter304)
-
-  def optionZonedDateTime(datetime: String): Option[ZonedDateTime] = if (datetime.nonEmpty) Some(zonedDateTime(datetime)) else None
+  def now(): ZonedDateTime = ZonedDateTime.now(defaultTimeZone)
 }

@@ -24,8 +24,8 @@ import uk.gov.hmrc.exports.controllers.SubmissionControllerISpec.submission
 import uk.gov.hmrc.exports.controllers.routes.SubmissionController
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
+import uk.gov.hmrc.exports.util.TimeUtils
 
-import java.time.{ZoneId, ZonedDateTime}
 import java.util.UUID
 
 class SubmissionControllerISpec extends IntegrationTestSpec with AuthTestSupport {
@@ -92,7 +92,7 @@ object SubmissionControllerISpec extends IntegrationTestSpec {
   val id = UUID.randomUUID.toString
   val actionId = "74d4670c-93ab-41df-99eb-d811fd5de75f"
   val lrn = "MNscA32pIUdNv6nzo"
-  val now = ZonedDateTime.now(ZoneId.of("UTC"))
+  val now = TimeUtils.now()
 
   val submission = Json
     .parse(s"""{
@@ -125,8 +125,7 @@ object SubmissionControllerISpec extends IntegrationTestSpec {
        |  "latestEnhancedStatus" : "AMENDED",
        |  "mrn" : "22GB9515JH78573779",
        |  "latestDecId" : "$id",
-       |  "latestVersionNo" : 1,
-       |  "blockAmendments" : false
+       |  "latestVersionNo" : 1
        |}
       |""".stripMargin)
     .as[Submission]
