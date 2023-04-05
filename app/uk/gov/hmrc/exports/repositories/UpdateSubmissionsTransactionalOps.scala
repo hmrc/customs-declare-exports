@@ -85,30 +85,58 @@ class UpdateSubmissionsTransactionalOps @Inject() (
 
     val requestType = if (notifications.head.details.status != AMENDED) action.requestType else ExternalAmendmentRequest
 
+    val mrn = notifications.head.details.mrn
+    val summary = notificationSummaries.head
+    val actions = submission.actions.updated(index, actionWithAllNotificationSummaries)
+
+    updateSubmission(session, submission, requestType, mrn, actionId, summary, actions)
+
+  }
+
+  private def updateSubmission(
+    session: ClientSession,
+    submission: Submission,
+    requestType: RequestType,
+    mrn: String,
+    actionId: String,
+    summary: NotificationSummary,
+    actions: Seq[Action]
+  ): Future[Option[Submission]] = {
+
+    val filter = Json.obj("actions.id" -> actionId)
+
     requestType match {
       case SubmissionRequest =>
-        updateSubmissionRequest(
-          session,
-          actionId,
-          notifications.head.details.mrn,
-          notificationSummaries.head,
-          submission.actions.updated(index, actionWithAllNotificationSummaries)
+        val update = Json.obj(
+          "$set" -> Json.obj(
+            "mrn" -> mrn,
+            "latestEnhancedStatus" -> summary.enhancedStatus,
+            "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
+            "actions" -> actions
+          )
         )
+        submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
 
       case ExternalAmendmentRequest =>
         val newExtAmendAction = Action(UUID.randomUUID().toString, ExternalAmendmentRequest, None, submission.latestVersionNo + 1)
-        updateSubmissionRequestWithExternalAmendment(
-          session,
-          actionId,
-          notifications.head.details.mrn,
-          notificationSummaries.head,
-          submission.actions.updated(index, actionWithAllNotificationSummaries) :+ newExtAmendAction
-        ).flatMap { optSubmission =>
+
+        val update = Json.obj(
+          "$inc" -> Json.obj("latestVersionNo" -> 1),
+          "$unset" -> Json.obj("latestDecId" -> ""),
+          "$set" -> Json.obj(
+            "mrn" -> mrn,
+            "latestEnhancedStatus" -> summary.enhancedStatus,
+            "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
+            "actions" -> (actions :+ newExtAmendAction)
+          )
+        )
+        submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString)) flatMap { optSubmission =>
           deleteAnyAmendmentDraftDecs(session, submission, optSubmission)
         }
 
       case CancellationRequest =>
-        updateCancellationRequest(session, actionId, submission.actions.updated(index, actionWithAllNotificationSummaries))
+        val update = Json.obj("$set" -> Json.obj("actions" -> actions))
+        submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
 
       case _ => Future.successful(None)
     }
@@ -140,51 +168,6 @@ class UpdateSubmissionsTransactionalOps @Inject() (
         Future.successful(None)
     }
 
-  private def updateCancellationRequest(session: ClientSession, actionId: String, actions: Seq[Action]): Future[Option[Submission]] = {
-    val filter = Json.obj("actions.id" -> actionId)
-    val update = Json.obj("$set" -> Json.obj("actions" -> actions))
-    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
-  }
-
-  private def updateSubmissionRequestWithExternalAmendment(
-    session: ClientSession,
-    actionId: String,
-    mrn: String,
-    summary: NotificationSummary,
-    actions: Seq[Action]
-  ): Future[Option[Submission]] = {
-    val filter = Json.obj("actions.id" -> actionId)
-    val update = Json.obj(
-      "$inc" -> Json.obj("latestVersionNo" -> 1),
-      "$unset" -> Json.obj("latestDecId" -> ""),
-      "$set" -> Json.obj(
-        "mrn" -> mrn,
-        "latestEnhancedStatus" -> summary.enhancedStatus,
-        "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
-        "actions" -> actions
-      )
-    )
-    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
-  }
-
-  private def updateSubmissionRequest(
-    session: ClientSession,
-    actionId: String,
-    mrn: String,
-    summary: NotificationSummary,
-    actions: Seq[Action]
-  ): Future[Option[Submission]] = {
-    val filter = Json.obj("actions.id" -> actionId)
-    val update = Json.obj(
-      "$set" -> Json.obj(
-        "mrn" -> mrn,
-        "latestEnhancedStatus" -> summary.enhancedStatus,
-        "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
-        "actions" -> actions
-      )
-    )
-    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
-  }
 }
 
 object ActionWithNotificationSummariesHelper {
