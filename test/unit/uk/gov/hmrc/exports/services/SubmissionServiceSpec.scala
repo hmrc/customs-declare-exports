@@ -379,7 +379,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
       when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(Some(submission)))
 
-      val result = submissionService.amend(Eori(eori), submissionAmendment, dec)
+      await(submissionService.amend(Eori(eori), submissionAmendment, dec)) mustBe actionId
 
       verify(submissionRepository).findOne(meq(Json.obj("eori" -> eori, "uuid" -> submission.uuid)))
       verify(exportsPointerToWCOPointer).getWCOPointers(fieldPointers.head)
@@ -393,7 +393,6 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       captor.getValue.requestType mustBe AmendmentRequest
       captor.getValue.decId mustBe Some(amendmentId)
       captor.getValue.versionNo mustBe submission.latestVersionNo
-      await(result) mustBe actionId
     }
   }
 }
