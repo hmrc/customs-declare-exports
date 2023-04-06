@@ -382,7 +382,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       val result = submissionService.amend(Eori(eori), submissionAmendment, dec)
 
       verify(submissionRepository).findOne(meq(Json.obj("eori" -> eori, "uuid" -> submission.uuid)))
-      verify(exportsPointerToWCOPointer).getWCOPointers(fieldPointers.head)
+      verify(exportsPointerToWCOPointer).getWCOPointers(meq(fieldPointers.head))
       verify(amendMetaDataBuilder).buildRequest(meq(submission.mrn), meq(dec), meq(wcoPointers))
       verify(wcoMapperService).toXml(meq(metadata))
       verify(customsDeclarationsConnector).submitAmendment(meq(eori), meq(xml))(any())
