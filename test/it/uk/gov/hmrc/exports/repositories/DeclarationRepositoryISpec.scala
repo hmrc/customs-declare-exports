@@ -124,7 +124,7 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
 
         val page = Page(index = 1, size = 10)
         repository
-          .find(DeclarationSearch(eori, Some(DeclarationStatus.DRAFT)), page, DeclarationSort())
+          .find(DeclarationSearch(eori, Seq(DeclarationStatus.DRAFT)), page, DeclarationSort())
           .futureValue mustBe Paginated(Seq(declaration1, declaration2), page, 2)
       }
     }

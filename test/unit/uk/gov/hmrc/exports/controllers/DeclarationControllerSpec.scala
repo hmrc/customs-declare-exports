@@ -98,11 +98,11 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val result = controller.findAll(None, Page(), DeclarationSort())(getRequest)
+        val result = controller.findAll(Seq(), Page(), DeclarationSort())(getRequest)
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(Paginated(declaration))
-        theSearch mustBe DeclarationSearch(eori = userEori, status = None)
+        theSearch mustBe DeclarationSearch(eori = userEori, statuses = Seq())
       }
 
       "request has valid pagination" in {
@@ -111,7 +111,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
           .willReturn(Future.successful(Paginated(declaration)))
 
         val size = 100
-        val result = controller.findAll(None, Page(1, size), DeclarationSort())(getRequest)
+        val result = controller.findAll(Seq(), Page(1, size), DeclarationSort())(getRequest)
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(Paginated(declaration))
@@ -123,11 +123,11 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val result = controller.findAll(Some("COMPLETE"), Page(), DeclarationSort())(getRequest)
+        val result = controller.findAll(Seq("COMPLETE"), Page(), DeclarationSort())(getRequest)
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(Paginated(declaration))
-        theSearch mustBe DeclarationSearch(eori = userEori, status = Some(DeclarationStatus.COMPLETE))
+        theSearch mustBe DeclarationSearch(eori = userEori, statuses = Seq(DeclarationStatus.COMPLETE))
       }
 
       "request has invalid search params" in {
@@ -135,11 +135,11 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val result = controller.findAll(Some("invalid"), Page(), DeclarationSort())(getRequest)
+        val result = controller.findAll(Seq("invalid"), Page(), DeclarationSort())(getRequest)
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(Paginated(declaration))
-        theSearch mustBe DeclarationSearch(eori = userEori, status = None)
+        theSearch mustBe DeclarationSearch(eori = userEori, statuses = Seq())
       }
 
       "request has sorting ascending sort params" in {
@@ -147,7 +147,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val result = controller.findAll(None, Page(), DeclarationSort(SortBy.UPDATED, SortDirection.ASC))(getRequest)
+        val result = controller.findAll(Seq(), Page(), DeclarationSort(SortBy.UPDATED, SortDirection.ASC))(getRequest)
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(Paginated(declaration))
@@ -159,7 +159,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
         given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
           .willReturn(Future.successful(Paginated(declaration)))
 
-        val result = controller.findAll(None, Page(), DeclarationSort(SortBy.CREATED, SortDirection.DES))(getRequest)
+        val result = controller.findAll(Seq(), Page(), DeclarationSort(SortBy.CREATED, SortDirection.DES))(getRequest)
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(Paginated(declaration))
@@ -171,7 +171,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
       "unauthorized" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result = controller.findAll(None, Page(), DeclarationSort())(getRequest)
+        val result = controller.findAll(Seq(), Page(), DeclarationSort())(getRequest)
 
         status(result) must be(UNAUTHORIZED)
         verifyNoInteractions(declarationService)
