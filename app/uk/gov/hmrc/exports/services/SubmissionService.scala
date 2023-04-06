@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.exports.services
 
+import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.{Filters, Updates}
 import play.api.Logging
 import play.api.libs.json.Json
@@ -113,6 +114,11 @@ class SubmissionService @Inject() (
     submissions.headOption
       .map(submission => toStatusGroup(submission.latestEnhancedStatus))
       .fold(Future.successful(0))(submissionRepository.countSubmissionsInGroup(eori, _))
+
+  def findAction(eori: Eori, actionId: String): Future[Option[Action]] = {
+    val filter = and(equal("actions.id", actionId), equal("eori", eori.value))
+    submissionRepository.findOne(filter).map(_.flatMap(_.actions.find(_.id == actionId)))
+  }
 
   def findSubmission(eori: String, id: String): Future[Option[Submission]] =
     submissionRepository.findById(eori, id)
@@ -226,11 +232,11 @@ class SubmissionService @Inject() (
 
     val xml: String = wcoMapperService.toXml(metadata)
     customsDeclarationsConnector.submitCancellation(submission, xml).flatMap { actionId =>
-      updateSubmissionWithCancellationAction(cancellation.mrn, actionId, submission)
+      updateSubmissionWithCancellationAction(actionId, submission)
     }
   }
 
-  private def updateSubmissionWithCancellationAction(mrn: String, actionId: String, submission: Submission): Future[CancellationStatus] = {
+  private def updateSubmissionWithCancellationAction(actionId: String, submission: Submission): Future[CancellationStatus] = {
     val newAction = Action(id = actionId, CancellationRequest, decId = Some(submission.uuid), versionNo = submission.latestVersionNo)
     submissionRepository.addAction(submission.uuid, newAction).map {
       case Some(_) => CancellationRequestSent
