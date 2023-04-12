@@ -25,8 +25,9 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.AMENDED
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus._
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.AMENDMENT_DRAFT
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{EnhancedStatus, ON_HOLD}
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.{notificationsToAction, updateActionWithNotificationSummaries}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.transaction.{TransactionConfiguration, Transactions}
@@ -76,6 +77,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
   ): Future[Option[Submission]] = {
 
     val index = submission.actions.indexWhere(_.id == actionId)
+
     val action = submission.actions(index)
 
     val seed = action.notifications.fold(Seq.empty[NotificationSummary])(identity)
@@ -83,63 +85,132 @@ class UpdateSubmissionsTransactionalOps @Inject() (
     val (actionWithAllNotificationSummaries, notificationSummaries) =
       updateActionWithNotificationSummaries(notificationsToAction(action), submission.actions, notifications, seed)
 
-    val requestType = if (notifications.head.details.status != AMENDED) action.requestType else ExternalAmendmentRequest
+    val requestType = if (notifications.head.details.status == AMENDED) ExternalAmendmentRequest else action.requestType
 
     val mrn = notifications.head.details.mrn
     val summary = notificationSummaries.head
-    val actions = submission.actions.updated(index, actionWithAllNotificationSummaries)
+    val updatedActions = submission.actions.updated(index, actionWithAllNotificationSummaries)
 
-    updateSubmission(session, submission, requestType, mrn, actionId, summary, actions)
+    requestType match {
+      case SubmissionRequest =>
+        updateSubmissionRequest(session, action, mrn, summary, updatedActions)
 
+      case AmendmentRequest =>
+        val submissionStatus = notifications.head.details.status
+
+        submission.actions
+          .find(_.requestType == SubmissionRequest)
+          .flatMap(_.latestNotificationSummary.map(_.enhancedStatus))
+          .map(updateAmendmentRequest(session, action, mrn, summary, updatedActions, submissionStatus, _))
+          .getOrElse(Future.successful(None))
+
+      case ExternalAmendmentRequest =>
+        updateExternalAmendmentRequest(session, submission, action, mrn, summary, updatedActions) flatMap {
+          deleteAnyAmendmentDraftDecs(session, submission, _)
+        }
+
+      case CancellationRequest =>
+        updateCancellationRequest(session, action, updatedActions)
+
+      case _ => Future.successful(None)
+    }
   }
 
-  private def updateSubmission(
+  private def updateSubmissionRequest(
     session: ClientSession,
-    submission: Submission,
-    requestType: RequestType,
+    action: Action,
     mrn: String,
-    actionId: String,
     summary: NotificationSummary,
     actions: Seq[Action]
   ): Future[Option[Submission]] = {
 
-    val filter = Json.obj("actions.id" -> actionId)
+    val filter = Json.obj("actions.id" -> action.id)
 
-    requestType match {
-      case SubmissionRequest =>
-        val update = Json.obj(
-          "$set" -> Json.obj(
-            "mrn" -> mrn,
-            "latestEnhancedStatus" -> summary.enhancedStatus,
-            "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
-            "actions" -> actions
+    val update = Json.obj(
+      "$set" -> Json.obj(
+        "mrn" -> mrn,
+        "latestEnhancedStatus" -> summary.enhancedStatus,
+        "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
+        "actions" -> actions
+      )
+    )
+    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
+  }
+
+  private def updateAmendmentRequest(
+    session: ClientSession,
+    action: Action,
+    mrn: String,
+    summary: NotificationSummary,
+    actions: Seq[Action],
+    submissionStatus: SubmissionStatus,
+    latestEnhancedStatus: EnhancedStatus
+  ): Future[Option[Submission]] = (for {
+    decId <- action.decId
+    update <- submissionStatus match {
+      case REJECTED | CUSTOMS_POSITION_DENIED =>
+        Some(
+          Json.obj(
+            "$set" -> Json.obj(
+              "latestDecId" -> decId,
+              "latestVersionNo" -> action.versionNo,
+              "mrn" -> mrn,
+              "latestEnhancedStatus" -> ON_HOLD,
+              "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
+              "actions" -> actions
+            )
           )
         )
-        submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
-
-      case ExternalAmendmentRequest =>
-        val newExtAmendAction = Action(UUID.randomUUID().toString, ExternalAmendmentRequest, None, submission.latestVersionNo + 1)
-
-        val update = Json.obj(
-          "$inc" -> Json.obj("latestVersionNo" -> 1),
-          "$unset" -> Json.obj("latestDecId" -> ""),
-          "$set" -> Json.obj(
-            "mrn" -> mrn,
-            "latestEnhancedStatus" -> summary.enhancedStatus,
-            "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
-            "actions" -> (actions :+ newExtAmendAction)
+      case CUSTOMS_POSITION_GRANTED =>
+        Some(
+          Json.obj(
+            "$set" -> Json.obj(
+              "latestDecId" -> decId,
+              "latestVersionNo" -> action.versionNo,
+              "mrn" -> mrn,
+              "latestEnhancedStatus" -> latestEnhancedStatus,
+              "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
+              "actions" -> actions
+            )
           )
         )
-        submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString)) flatMap { optSubmission =>
-          deleteAnyAmendmentDraftDecs(session, submission, optSubmission)
-        }
-
-      case CancellationRequest =>
-        val update = Json.obj("$set" -> Json.obj("actions" -> actions))
-        submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
-
-      case _ => Future.successful(None)
+      case _ => None
     }
+  } yield {
+    val filter = Json.obj("actions.id" -> action.id)
+    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
+  }) getOrElse Future.successful(None)
+
+  private def updateExternalAmendmentRequest(
+    session: ClientSession,
+    submission: Submission,
+    action: Action,
+    mrn: String,
+    summary: NotificationSummary,
+    actions: Seq[Action]
+  ): Future[Option[Submission]] = {
+
+    val filter = Json.obj("actions.id" -> action.id)
+
+    val newExtAmendAction = Action(UUID.randomUUID().toString, ExternalAmendmentRequest, None, submission.latestVersionNo + 1)
+
+    val update = Json.obj(
+      "$inc" -> Json.obj("latestVersionNo" -> 1),
+      "$unset" -> Json.obj("latestDecId" -> ""),
+      "$set" -> Json.obj(
+        "mrn" -> mrn,
+        "latestEnhancedStatus" -> summary.enhancedStatus,
+        "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
+        "actions" -> (actions :+ newExtAmendAction)
+      )
+    )
+    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
+  }
+
+  private def updateCancellationRequest(session: ClientSession, action: Action, actions: Seq[Action]): Future[Option[Submission]] = {
+    val filter = Json.obj("actions.id" -> action.id)
+    val update = Json.obj("$set" -> Json.obj("actions" -> actions))
+    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
   }
 
   private def deleteAnyAmendmentDraftDecs(

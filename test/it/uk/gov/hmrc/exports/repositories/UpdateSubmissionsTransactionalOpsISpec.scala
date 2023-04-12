@@ -16,18 +16,25 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import testdata.ExportsTestData
-import testdata.ExportsTestData.actionId
-import testdata.SubmissionTestData.{action, notificationSummary_1, notificationSummary_2, pendingSubmissionWithoutMrn, submission}
-import testdata.notifications.NotificationTestData.{notification, notificationForExternalAmendment}
+import testdata.ExportsTestData._
+import testdata.SubmissionTestData._
+import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.AMENDMENT_DRAFT
-import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{AMENDED, EnhancedStatus, GOODS_ARRIVED_MESSAGE, UNKNOWN}
-import uk.gov.hmrc.exports.models.declaration.submissions.{ExternalAmendmentRequest, Submission, SubmissionRequest, SubmissionStatus}
+import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
+import uk.gov.hmrc.exports.models.declaration.submissions.{
+  AmendmentRequest,
+  ExternalAmendmentRequest,
+  NotificationSummary,
+  Submission,
+  SubmissionRequest,
+  SubmissionStatus
+}
 import uk.gov.hmrc.mongo.MongoComponent
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
@@ -87,7 +94,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
         "add a new Action to the Submission and" should {
           "remove any existing 'AMENDMENT_DRAFT' declarations" in {
             val declaration =
-              aDeclaration(withEori(ExportsTestData.eori), withStatus(AMENDMENT_DRAFT), withParentDeclarationId(submission.latestDecId.value))
+              aDeclaration(withEori(eori), withStatus(AMENDMENT_DRAFT), withParentDeclarationId(submission.latestDecId.value))
             declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
 
             submission.latestDecId.value mustBe submission.uuid
@@ -113,6 +120,143 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
             submissionAction.notifications.get.last.enhancedStatus mustBe AMENDED
 
             declarationRepository.findAll().futureValue.size mustBe 0
+          }
+        }
+      }
+
+      "an 'amendment' Notification is given" should {
+        "Store a NotificationSummary record for the notification against the correct AmendmentRequest action" when {
+          "CUSTOMS_POSITION_GRANTED (DMSREQ and code 39) notification status" which {
+            "updates the latestEnhancedStatus field to equal the latest notification status received against the current SubmissionRequest action" in {
+
+              val amendmentDraftDec =
+                aDeclaration(withEori(eori), withStatus(AMENDMENT_DRAFT), withParentDeclarationId(submission.latestDecId.value))
+
+              val notifications = Seq(
+                notificationSummary_1,
+                NotificationSummary(notification_2.unparsedNotificationId, notificationSummary_1.dateTimeIssued plusHours 1, GOODS_HAVE_EXITED)
+              )
+
+              val submissionAction = action.copy(notifications = Some(notifications))
+              val amendmentAction = action_2.copy(versionNo = 2, requestType = AmendmentRequest)
+
+              val testSubmission = submission.copy(actions = Seq(submissionAction, amendmentAction), latestEnhancedStatus = RECEIVED)
+
+              val notificationForAmendment = ParsedNotification(
+                unparsedNotificationId = UUID.randomUUID,
+                actionId = amendmentAction.id,
+                details = NotificationDetails(
+                  mrn = mrn,
+                  dateTimeIssued = dateTimeIssued_2,
+                  status = SubmissionStatus.CUSTOMS_POSITION_GRANTED,
+                  errors = Seq.empty
+                )
+              )
+
+              testSubmission.latestDecId.value mustBe testSubmission.uuid
+              testSubmission.latestVersionNo mustBe 1
+
+              declarationRepository
+                .insertOne(amendmentDraftDec)
+                .futureValue
+                .isRight mustBe true
+
+              submissionRepository
+                .insertOne(testSubmission)
+                .futureValue
+                .isRight mustBe true
+
+              val submissionForAmendment = transactionalOps
+                .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
+                .futureValue
+                .get
+
+              submissionForAmendment.latestDecId.value mustBe amendmentAction.decId.value
+              submissionForAmendment.latestVersionNo mustBe 2
+              submissionForAmendment.latestEnhancedStatus mustBe GOODS_HAVE_EXITED
+
+            }
+          }
+          "REJECTED notification status" in {
+
+            val amendmentDraftDec =
+              aDeclaration(withEori(eori), withStatus(AMENDMENT_DRAFT), withParentDeclarationId(submission.latestDecId.value))
+
+            val submissionAction = action.copy(notifications = Some(Seq(notificationSummary_1)))
+            val amendmentAction = action_2.copy(versionNo = 2, requestType = AmendmentRequest)
+
+            val testSubmission = submission.copy(actions = Seq(submissionAction, amendmentAction))
+
+            val notificationForAmendment = ParsedNotification(
+              unparsedNotificationId = UUID.randomUUID,
+              actionId = amendmentAction.id,
+              details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = SubmissionStatus.REJECTED, errors = Seq.empty)
+            )
+
+            testSubmission.latestDecId.value mustBe testSubmission.uuid
+            testSubmission.latestVersionNo mustBe 1
+
+            declarationRepository
+              .insertOne(amendmentDraftDec)
+              .futureValue
+              .isRight mustBe true
+
+            submissionRepository
+              .insertOne(testSubmission)
+              .futureValue
+              .isRight mustBe true
+
+            val submissionForAmendment = transactionalOps
+              .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
+              .futureValue
+              .get
+
+            submissionForAmendment.latestDecId.value mustBe amendmentAction.decId.value
+            submissionForAmendment.latestVersionNo mustBe 2
+
+          }
+          "CUSTOMS_POSITION_DENIED (DMSREQ and code 41) notification status" in {
+
+            val amendmentDraftDec =
+              aDeclaration(withEori(eori), withStatus(AMENDMENT_DRAFT), withParentDeclarationId(submission.latestDecId.value))
+
+            val submissionAction = action.copy(notifications = Some(Seq(notificationSummary_1)))
+            val amendmentAction = action_2.copy(versionNo = 2, requestType = AmendmentRequest)
+
+            val testSubmission = submission.copy(actions = Seq(submissionAction, amendmentAction))
+
+            val notificationForAmendment = ParsedNotification(
+              unparsedNotificationId = UUID.randomUUID,
+              actionId = amendmentAction.id,
+              details = NotificationDetails(
+                mrn = mrn,
+                dateTimeIssued = dateTimeIssued_3,
+                status = SubmissionStatus.CUSTOMS_POSITION_DENIED,
+                errors = Seq.empty
+              )
+            )
+
+            testSubmission.latestDecId.value mustBe testSubmission.uuid
+            testSubmission.latestVersionNo mustBe 1
+
+            declarationRepository
+              .insertOne(amendmentDraftDec)
+              .futureValue
+              .isRight mustBe true
+
+            submissionRepository
+              .insertOne(testSubmission)
+              .futureValue
+              .isRight mustBe true
+
+            val submissionForAmendment = transactionalOps
+              .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
+              .futureValue
+              .get
+
+            submissionForAmendment.latestDecId.value mustBe amendmentAction.decId.value
+            submissionForAmendment.latestVersionNo mustBe 2
+
           }
         }
       }
