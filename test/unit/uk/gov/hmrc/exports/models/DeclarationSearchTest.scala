@@ -23,9 +23,16 @@ import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 class DeclarationSearchTest extends UnitSpec {
 
   "Search" should {
-    "build Mongo Query" in {
-      val search = DeclarationSearch(eori = Eori("123"), status = Some(DeclarationStatus.COMPLETE))
-      Json.toJson(search) mustBe Json.obj("eori" -> "123", "declarationMeta.status" -> "COMPLETE")
+    "build Mongo Query with one status" in {
+      val search = DeclarationSearch(eori = Eori("123"), statuses = Seq(DeclarationStatus.COMPLETE))
+      Json.toJson(search) mustBe Json.obj("eori" -> "123", "declarationMeta.status" -> Json.obj("$in" -> Json.toJson(Seq("COMPLETE"))))
+    }
+    "build Mongo Query with more than one status" in {
+      val search = DeclarationSearch(eori = Eori("123"), statuses = Seq(DeclarationStatus.COMPLETE, DeclarationStatus.AMENDMENT_DRAFT))
+      Json.toJson(search) mustBe Json.obj(
+        "eori" -> "123",
+        "declarationMeta.status" -> Json.obj("$in" -> Json.toJson(Seq("COMPLETE", "AMENDMENT_DRAFT")))
+      )
     }
   }
 
