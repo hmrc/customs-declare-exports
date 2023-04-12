@@ -30,14 +30,16 @@ class AmendmentController @Inject() (authenticator: Authenticator, submissionSer
   implicit executionContext: ExecutionContext
 ) extends RESTController(cc) with JSONResponses {
 
-  val create: Action[SubmissionAmendment] =
-    authenticator.authorisedAction(parsingJson[SubmissionAmendment]) { implicit request =>
-      submissionService.markCompleted(request.eori, request.request.body.declarationId).flatMap {
-        case Some(declaration) if declaration.isCompleted => Future.successful(Conflict("Amendment has already been submitted."))
-        case Some(declaration) if declaration.declarationMeta.status != AMENDMENT_DRAFT =>
-          Future.successful(Conflict(s"Attempted to submit declaration with status ${declaration.declarationMeta.status} as an amendment."))
-        case Some(declaration) => submissionService.amend(request.eori, request.body, declaration).map(Ok(_))
-        case _                 => Future.successful(NotFound("Declaration not found."))
-      }
+  val create: Action[SubmissionAmendment] = authenticator.authorisedAction(parsingJson[SubmissionAmendment]) { implicit request =>
+    submissionService.markCompleted(request.eori, request.request.body.declarationId).flatMap {
+      case Some(declaration) if declaration.isCompleted => Future.successful(Conflict("Amendment has already been submitted."))
+
+      case Some(declaration) if declaration.declarationMeta.status != AMENDMENT_DRAFT =>
+        Future.successful(Conflict(s"Attempted to submit declaration with status ${declaration.declarationMeta.status} as an amendment."))
+
+      case Some(declaration) => submissionService.amend(request.eori, request.body, declaration).map(Ok(_))
+
+      case _ => Future.successful(NotFound("Declaration not found."))
     }
+  }
 }
