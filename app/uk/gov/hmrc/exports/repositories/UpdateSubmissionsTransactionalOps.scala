@@ -102,7 +102,10 @@ class UpdateSubmissionsTransactionalOps @Inject() (
           .find(_.requestType == SubmissionRequest)
           .flatMap(_.latestNotificationSummary.map(_.enhancedStatus))
           .map(updateAmendmentRequest(session, action, mrn, summary, updatedActions, submissionStatus, _))
-          .getOrElse(Future.successful(None))
+          .getOrElse {
+            logger.error(s"Cannot add an (amendment) 'Action' to Submission(${submission.uuid})")
+            Future.successful(None)
+          }
 
       case ExternalAmendmentRequest =>
         updateExternalAmendmentRequest(session, submission, action, mrn, summary, updatedActions) flatMap {
@@ -147,37 +150,23 @@ class UpdateSubmissionsTransactionalOps @Inject() (
     latestEnhancedStatus: EnhancedStatus
   ): Future[Option[Submission]] = (for {
     decId <- action.decId
-    update <- submissionStatus match {
-      case REJECTED | CUSTOMS_POSITION_DENIED =>
-        Some(
-          Json.obj(
-            "$set" -> Json.obj(
-              "latestDecId" -> decId,
-              "latestVersionNo" -> action.versionNo,
-              "mrn" -> mrn,
-              "latestEnhancedStatus" -> ON_HOLD,
-              "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
-              "actions" -> actions
-            )
-          )
-        )
-      case CUSTOMS_POSITION_GRANTED =>
-        Some(
-          Json.obj(
-            "$set" -> Json.obj(
-              "latestDecId" -> decId,
-              "latestVersionNo" -> action.versionNo,
-              "mrn" -> mrn,
-              "latestEnhancedStatus" -> latestEnhancedStatus,
-              "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
-              "actions" -> actions
-            )
-          )
-        )
-      case _ => None
+    latestEnhancedStatus <- submissionStatus match {
+      case REJECTED | CUSTOMS_POSITION_DENIED => Some(ON_HOLD)
+      case CUSTOMS_POSITION_GRANTED           => Some(latestEnhancedStatus)
+      case _                                  => None
     }
   } yield {
     val filter = Json.obj("actions.id" -> action.id)
+    val update = Json.obj(
+      "$set" -> Json.obj(
+        "latestDecId" -> decId,
+        "latestVersionNo" -> action.versionNo,
+        "mrn" -> mrn,
+        "latestEnhancedStatus" -> latestEnhancedStatus,
+        "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
+        "actions" -> actions
+      )
+    )
     submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
   }) getOrElse Future.successful(None)
 
