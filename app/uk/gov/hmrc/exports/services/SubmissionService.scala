@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.exports.services
 
+import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.{Filters, Updates}
 import play.api.Logging
 import play.api.libs.json.Json
@@ -114,8 +115,10 @@ class SubmissionService @Inject() (
       .map(submission => toStatusGroup(submission.latestEnhancedStatus))
       .fold(Future.successful(0))(submissionRepository.countSubmissionsInGroup(eori, _))
 
-  def findAction(actionId: String): Future[Option[Action]] =
-    submissionRepository.findOne("actions.id", actionId).map(_.flatMap(_.actions.find(_.id == actionId)))
+  def findAction(eori: Eori, actionId: String): Future[Option[Action]] = {
+    val filter = and(equal("actions.id", actionId), equal("eori", eori.value))
+    submissionRepository.findOne(filter).map(_.flatMap(_.actions.find(_.id == actionId)))
+  }
 
   def findSubmission(eori: String, id: String): Future[Option[Submission]] =
     submissionRepository.findById(eori, id)

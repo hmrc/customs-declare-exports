@@ -49,8 +49,8 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
     }
   }
 
-  def findAction(actionId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { _ =>
-    submissionService.findAction(actionId).map {
+  def findAction(actionId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    submissionService.findAction(request.eori, actionId).map {
       case Some(action) => Ok(action)
       case _            => NotFound
     }
