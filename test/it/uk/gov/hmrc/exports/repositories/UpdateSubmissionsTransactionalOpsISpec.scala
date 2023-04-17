@@ -211,8 +211,9 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
               .futureValue
               .get
 
-            submissionForAmendment.latestDecId.value mustBe amendmentAction.decId.value
-            submissionForAmendment.latestVersionNo mustBe 2
+            submissionForAmendment.latestDecId.value mustBe testSubmission.latestDecId.value
+            submissionForAmendment.latestVersionNo mustBe 1
+            submissionForAmendment.latestEnhancedStatus mustBe ON_HOLD
 
           }
           "CUSTOMS_POSITION_DENIED (DMSREQ and code 41) notification status" in {
@@ -254,8 +255,9 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
               .futureValue
               .get
 
-            submissionForAmendment.latestDecId.value mustBe amendmentAction.decId.value
-            submissionForAmendment.latestVersionNo mustBe 2
+            submissionForAmendment.latestDecId.value mustBe testSubmission.latestDecId.value
+            submissionForAmendment.latestVersionNo mustBe 1
+            submissionForAmendment.latestEnhancedStatus mustBe ON_HOLD
 
           }
         }

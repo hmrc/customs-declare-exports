@@ -101,7 +101,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
         submission.actions
           .find(_.requestType == SubmissionRequest)
           .flatMap(_.latestNotificationSummary.map(_.enhancedStatus))
-          .map(updateAmendmentRequest(session, action, mrn, summary, updatedActions, submissionStatus, _))
+          .map(updateAmendmentRequest(session, action, summary, updatedActions, submissionStatus, _))
           .getOrElse {
             logger.error(s"Cannot add an (amendment) 'Action' to Submission(${submission.uuid})")
             Future.successful(None)
@@ -143,30 +143,36 @@ class UpdateSubmissionsTransactionalOps @Inject() (
   private def updateAmendmentRequest(
     session: ClientSession,
     action: Action,
-    mrn: String,
     summary: NotificationSummary,
     actions: Seq[Action],
     submissionStatus: SubmissionStatus,
     latestEnhancedStatus: EnhancedStatus
   ): Future[Option[Submission]] = (for {
     decId <- action.decId
-    latestEnhancedStatus <- submissionStatus match {
-      case REJECTED | CUSTOMS_POSITION_DENIED => Some(ON_HOLD)
-      case CUSTOMS_POSITION_GRANTED           => Some(latestEnhancedStatus)
-      case _                                  => None
+    update <- submissionStatus match {
+      case REJECTED | CUSTOMS_POSITION_DENIED =>
+        Some(
+          Json.obj(
+            "$set" ->
+              Json.obj("latestEnhancedStatus" -> ON_HOLD, "enhancedStatusLastUpdated" -> summary.dateTimeIssued, "actions" -> actions)
+          )
+        )
+      case CUSTOMS_POSITION_GRANTED =>
+        Some(
+          Json.obj(
+            "$set" -> Json.obj(
+              "latestDecId" -> decId,
+              "latestVersionNo" -> action.versionNo,
+              "latestEnhancedStatus" -> latestEnhancedStatus,
+              "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
+              "actions" -> actions
+            )
+          )
+        )
+      case _ => None
     }
   } yield {
     val filter = Json.obj("actions.id" -> action.id)
-    val update = Json.obj(
-      "$set" -> Json.obj(
-        "latestDecId" -> decId,
-        "latestVersionNo" -> action.versionNo,
-        "mrn" -> mrn,
-        "latestEnhancedStatus" -> latestEnhancedStatus,
-        "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
-        "actions" -> actions
-      )
-    )
     submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
   }) getOrElse Future.successful(None)
 
