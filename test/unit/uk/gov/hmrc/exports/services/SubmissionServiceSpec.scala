@@ -392,7 +392,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       captor.getValue.id mustBe actionId
       captor.getValue.requestType mustBe AmendmentRequest
       captor.getValue.decId mustBe Some(amendmentId)
-      captor.getValue.versionNo mustBe submission.latestVersionNo
+      captor.getValue.versionNo mustBe submission.latestVersionNo + 1
     }
   }
 }

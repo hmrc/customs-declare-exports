@@ -283,7 +283,7 @@ class SubmissionService @Inject() (
   }
 
   private def updateSubmissionWithAmendmentAction(actionId: String, decId: String, submission: Submission): Future[Unit] = {
-    val newAction = Action(id = actionId, AmendmentRequest, decId = Some(decId), versionNo = submission.latestVersionNo)
+    val newAction = Action(id = actionId, AmendmentRequest, decId = Some(decId), versionNo = submission.latestVersionNo + 1)
     submissionRepository.addAction(submission.uuid, newAction).map {
       case Some(_) => logger.info(s"Updated submission with id ${submission.uuid} successfully with amendment action.")
       case _       => throw new NoSuchElementException(s"Failed to find submission with id ${submission.uuid} to update with amendment action.")

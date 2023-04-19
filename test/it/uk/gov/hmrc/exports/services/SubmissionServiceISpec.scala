@@ -129,7 +129,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
       expectedAction.decId.get mustBe amendmentId
       expectedAction.id mustBe actionId
       expectedAction.requestType mustBe AmendmentRequest
-      expectedAction.versionNo mustBe submission.latestVersionNo
+      expectedAction.versionNo mustBe submission.latestVersionNo + 1
     }
 
     "revert submission to AMENDMENT_DRAFT on failure" in {
