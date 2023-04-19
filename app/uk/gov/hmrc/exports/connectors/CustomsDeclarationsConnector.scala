@@ -40,6 +40,7 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: 
 
   def submitDeclaration(eori: String, xml: String)(implicit hc: HeaderCarrier): Future[String] =
     post(eori, appConfig.submitDeclarationUri, xml).map(handleResponse)
+
   def submitAmendment(eori: String, xml: String)(implicit hc: HeaderCarrier): Future[String] =
     post(eori, appConfig.amendDeclarationUri, xml).map(handleResponse)
 
