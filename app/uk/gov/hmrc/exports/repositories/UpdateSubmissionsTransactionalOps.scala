@@ -21,7 +21,7 @@ import org.mongodb.scala.ClientSession
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.Filters.equal
 import play.api.Logging
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions._
@@ -147,20 +147,15 @@ class UpdateSubmissionsTransactionalOps @Inject() (
     actions: Seq[Action],
     submissionStatus: SubmissionStatus,
     latestEnhancedStatus: EnhancedStatus
-  ): Future[Option[Submission]] = (for {
-    decId <- action.decId
-    update <- submissionStatus match {
-      case REJECTED | CUSTOMS_POSITION_DENIED =>
-        Some(
-          Json.obj(
-            "$set" ->
-              Json.obj("latestEnhancedStatus" -> ON_HOLD, "enhancedStatusLastUpdated" -> summary.dateTimeIssued, "actions" -> actions)
-          )
-        )
-      case CUSTOMS_POSITION_GRANTED =>
-        Some(
-          Json.obj(
-            "$set" -> Json.obj(
+  ): Future[Option[Submission]] = {
+
+    def updateFromStatus(decId: String): Option[JsObject] =
+      submissionStatus match {
+        case REJECTED | CUSTOMS_POSITION_DENIED =>
+          Some(Json.obj("latestEnhancedStatus" -> ON_HOLD, "enhancedStatusLastUpdated" -> summary.dateTimeIssued, "actions" -> actions))
+        case CUSTOMS_POSITION_GRANTED =>
+          Some(
+            Json.obj(
               "latestDecId" -> decId,
               "latestVersionNo" -> action.versionNo,
               "latestEnhancedStatus" -> latestEnhancedStatus,
@@ -168,14 +163,18 @@ class UpdateSubmissionsTransactionalOps @Inject() (
               "actions" -> actions
             )
           )
-        )
-      case _ => None
-    }
-  } yield {
-    val filter = Json.obj("actions.id" -> action.id)
-    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
-  }) getOrElse Future.successful(None)
+        case _ => None
+      }
 
+    (for {
+      decId <- action.decId
+      update <- updateFromStatus(decId)
+    } yield {
+      val filter = Json.obj("actions.id" -> action.id)
+      submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument((Json.obj("$set" -> update)).toString))
+    }) getOrElse Future.successful(None)
+
+  }
   private def updateExternalAmendmentRequest(
     session: ClientSession,
     submission: Submission,
