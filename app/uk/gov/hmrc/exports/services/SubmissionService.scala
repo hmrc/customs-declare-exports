@@ -268,7 +268,9 @@ class SubmissionService @Inject() (
   private def sendAmendmentRequest(declaration: ExportsDeclaration, submission: Submission, fieldPointers: Seq[String])(
     implicit hc: HeaderCarrier
   ): Future[String] = {
+    logger.info(s"Field pointers received from frontend:\n$fieldPointers")
     val wcoPointers = fieldPointers.flatMap(exportsPointerToWCOPointer.getWCOPointers).distinct
+    logger.info(s"Processed WCO pointers:\n$wcoPointers")
     val metadata =
       metrics.timeCall(Timers.amendmentProduceMetaDataTimer)(amendmentMetaDataBuilder.buildRequest(submission.mrn, declaration, wcoPointers))
     val xml = metrics.timeCall(Timers.amendmentConvertToXmlTimer)(wcoMapperService.toXml(metadata))
