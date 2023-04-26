@@ -233,9 +233,9 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
 
         "amendmentRequest" when {
 
-          "status is other than 1139, 1141, 03" in {
+          "status is other than CUSTOMS_POSITION_GRANTED, CUSTOMS_POSITION_DENIED, 03" in {
 
-            val status = Gen.oneOf(codesMap removedAll List("1139", "1141", "03")).sample.get._2
+            val status = Gen.oneOf(codesMap removedAll List("1139", "1141", "REJECTED")).sample.get._2
 
             val notifications = Seq(
               notificationSummary_1,
