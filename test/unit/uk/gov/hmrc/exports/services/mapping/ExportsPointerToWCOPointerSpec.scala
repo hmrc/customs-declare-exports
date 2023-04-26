@@ -31,7 +31,7 @@ class ExportsPointerToWCOPointerSpec extends AnyWordSpec with Matchers {
         "declaration.parties.declarationHoldersData.holders.1.authorisationTypeCode" -> List("42A.17C.$1.R145"),
         "declaration.mucr.1.test" -> List("42A.67A.99A.$1.171", "42A.67A.99A.$1.D018", "42A.67A.99A.5.D019", "42A.67A.99A.6.D031"),
         "declaration.type" -> List("42A.D013"),
-        "declaration.transport.container.1.seals.2.id" -> List("42A.67A.28A.31B.$1.44B.$2.165"),
+        "declaration.transport.container.1.seals.2" -> List("42A.67A.28A.31B.$1.44B.$2"),
         "declaration.parties.declarationHoldersData.holders.1.eori" -> List("42A.17C.$1.R144")
       )
   }
@@ -47,8 +47,8 @@ class ExportsPointerToWCOPointerSpec extends AnyWordSpec with Matchers {
       val expectedWCOPointersForDynamicExportsPointer1 = List("42A.17C.9.R144")
       exportsPointerToWCOPointer.getWCOPointers(dynamicExportsPointer1) mustBe expectedWCOPointersForDynamicExportsPointer1
 
-      val dynamicExportsPointer2 = "declaration.transport.container.98.seals.43.id"
-      val expectedWCOPointersForDynamicExportsPointer2 = List("42A.67A.28A.31B.98.44B.43.165")
+      val dynamicExportsPointer2 = "declaration.transport.container.98.seals.43"
+      val expectedWCOPointersForDynamicExportsPointer2 = List("42A.67A.28A.31B.98.44B.43")
       exportsPointerToWCOPointer.getWCOPointers(dynamicExportsPointer2) mustBe expectedWCOPointersForDynamicExportsPointer2
 
       val exportsPointerWithMultipleWCOPointers = "declaration.mucr.19.test"

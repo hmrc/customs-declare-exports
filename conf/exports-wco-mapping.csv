@@ -1,4 +1,6 @@
 consignmentReferences.lrn|42A.D026
+goodsItemQuantity|42A.228
+items.$1|42A.67A.68A.$1
 items.$1.additionalDocuments.documents.$2.dateOfValidity.day|42A.67A.68A.$1.02A.$2.276
 items.$1.additionalDocuments.documents.$2.dateOfValidity.month|42A.67A.68A.$1.02A.$2.276
 items.$1.additionalDocuments.documents.$2.dateOfValidity.year|42A.67A.68A.$1.02A.$2.276
@@ -19,6 +21,7 @@ items.$1.commodityMeasure.netMass|42A.67A.68A.$1.23A.65A.128
 items.$1.commodityMeasure.supplementaryUnits|42A.67A.68A.$1.23A.65A.130
 items.$1.cusCode|42A.67A.68A.$1.23A.21A.337
 items.$1.dangerousGoodsCode.dangerousGoodsCode|42A.67A.68A.$1.23A.12C.506
+items.$1.packageInformation.$2|42A.67A.68A.$1.93A.$2
 items.$1.packageInformation.$2.numberOfPackages|42A.67A.68A.$1.93A.$2.144
 items.$1.packageInformation.$2.shippingMarks|42A.67A.68A.$1.93A.$2.142
 items.$1.packageInformation.$2.typesOfPackages|42A.67A.68A.$1.93A.$2.141
@@ -32,7 +35,7 @@ locations.goodsLocation.typeOfLocation|42A.67A.28A.64A.L110
 locations.inlandModeOfTransportCode.inlandModeOfTransportCode|42A.67A.28A.46A.T021
 locations.officeOfExit.officeId|42A.56A.G005
 locations.originationCountry.code|42A.67A.95B.062
-locations.routingCountries.$1|42A.28A.62A.$1.64
+locations.routingCountries.$1|42A.28A.62A.$1
 locations.warehouseIdentification.identificationNumber|42A.67A.43B.L019
 locations.warehouseIdentification.identificationNumber|42A.67A.43B.L112
 mucr|42A.67A.99A.1.171
@@ -79,8 +82,8 @@ totalNumberOfItems.totalAmountInvoiced|42A.109
 totalNumberOfItems.totalPackage|42A.146
 transport.borderModeOfTransportCode.code|42A.15A.T022
 transport.containers|42A.67A.28A.096
-transport.containers.$1.id|42A.67A.28A.31B.$1.159
-transport.containter.$1.seals.$2.id|42A.67A.28A.31B.$1.44B.$2.165
+transport.containers.$1|42A.67A.28A.31B.$1
+transport.containers.$1.seals.$2|42A.67A.28A.31B.$1.44B.$2
 transport.expressConsignment|42A.504
 transport.meansOfTransportCrossingTheBorderIDNumber|42A.15A.T006
 transport.meansOfTransportCrossingTheBorderNationality|42A.15A.T014
