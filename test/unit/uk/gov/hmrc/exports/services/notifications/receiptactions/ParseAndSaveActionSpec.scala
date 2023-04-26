@@ -20,11 +20,14 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.invocation.InvocationOnMock
+import play.api.test.Helpers._
 import testdata.SubmissionTestData.{submission, submission_2, submission_3}
 import testdata.notifications.NotificationTestData.{notification, notification_2, notification_3}
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{SubmissionRepository, UpdateSubmissionsTransactionalOps}
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
+import uk.gov.hmrc.http.InternalServerException
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -55,7 +58,9 @@ class ParseAndSaveActionSpec extends UnitSpec {
       "return a list with no submissions (empty)" in {
         when(submissionRepository.findOne(any, any)).thenReturn(Future.successful(None))
 
-        parseAndSaveAction.save(List(notification)).futureValue mustBe List.empty
+        intercept[InternalServerException] {
+          await(parseAndSaveAction.save(List(notification)))
+        }
         verifyNoInteractions(transactionalOps)
       }
     }
@@ -63,7 +68,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
     "provided with a single ParsedNotification with a stored Submission document and" should {
       "return a List with a single Submission" in {
         when(submissionRepository.findOne(any, any)).thenReturn(Future.successful(Some(submission)))
-        when(transactionalOps.updateSubmissionAndNotifications(any, any, any)).thenReturn(Future.successful(Some(submission)))
+        when(transactionalOps.updateSubmissionAndNotifications(any, any, any)).thenReturn(Future.successful(submission))
 
         parseAndSaveAction.save(List(notification)).futureValue mustBe List(submission)
 
@@ -76,13 +81,14 @@ class ParseAndSaveActionSpec extends UnitSpec {
         val withResult = (invocation: InvocationOnMock) => {
           val actionId = invocation.getArguments.head.asInstanceOf[String]
           val submission = if (actionId == notification_2.actionId) submission_2 else submission_3
-          Future.successful(Some(submission))
+          submission
         }
+        val toFuture: Submission => Future[Submission] = Future.successful
+        val toOptionFuture: Submission => Future[Option[Submission]] = sub => Future.successful(Some(sub))
 
         val captor = ArgumentCaptor.forClass(classOf[String])
-        when(submissionRepository.findOne(any[String], captor.capture())).thenAnswer(withResult)
-
-        when(transactionalOps.updateSubmissionAndNotifications(captor.capture(), any, any)).thenAnswer(withResult)
+        when(submissionRepository.findOne(any[String], captor.capture())).thenAnswer(withResult andThen toOptionFuture)
+        when(transactionalOps.updateSubmissionAndNotifications(captor.capture(), any, any)).thenAnswer(withResult andThen toFuture)
 
         parseAndSaveAction.save(List(notification_2, notification_3)).futureValue must contain theSameElementsAs (List(submission_2, submission_3))
 

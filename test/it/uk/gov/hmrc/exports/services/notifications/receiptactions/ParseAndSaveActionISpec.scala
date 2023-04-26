@@ -51,6 +51,74 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
 
   "ParseAndSaveAction.save" when {
 
+    "provided with multiple ParsedNotifications with the same actionId, and" when {
+      "the Submission's action DOES NOT CONTAIN yet any NotificationSummary" should {
+        "return the Submission with the action including the new NotificationSummaries in desc order" in {
+          submissionRepository.insertOne(submission.copy(actions = List(action_2))).futureValue
+
+          val notification3 = notification_3.copy(actionId = actionId_2)
+          val submissions = parseAndSaveAction.save(List(notification2, notification3)).futureValue
+          submissions.size mustBe 1
+
+          val submission1 = submissions.head
+
+          submission1.mrn.value mustBe notification2.details.mrn
+          submission1.latestEnhancedStatus mustBe UNKNOWN
+          submission1.enhancedStatusLastUpdated mustBe notification3.details.dateTimeIssued
+
+          submission1.actions.size mustBe 1
+          val notifications = submission1.actions.head.notifications.value
+          notifications.size mustBe 2
+          assert(notifications.head.dateTimeIssued.isAfter(notifications(1).dateTimeIssued))
+        }
+      }
+    }
+
+    "provided with multiple ParsedNotifications with the same actionId, and" when {
+      "the Submission's action DOES CONTAIN already NotificationSummaries" should {
+        "return the Submission with the action including all NotificationSummaries in desc order" in {
+          val action2 = action_2.copy(notifications = Some(List(notificationSummary_1, notificationSummary_2)))
+          submissionRepository.insertOne(submission.copy(actions = List(action2))).futureValue
+
+          val notification3 = notification_3.copy(actionId = actionId_2)
+          val submissions = parseAndSaveAction.save(List(notification2, notification3)).futureValue
+          submissions.size mustBe 1
+
+          val submission1 = submissions.head
+
+          submission1.mrn.value mustBe notification2.details.mrn
+          submission1.latestEnhancedStatus mustBe UNKNOWN
+          submission1.enhancedStatusLastUpdated mustBe notification3.details.dateTimeIssued
+
+          submission1.actions.size mustBe 1
+          val notifications = submission1.actions.head.notifications.value
+          notifications.size mustBe 4
+          assert(
+            notifications.head.dateTimeIssued.isAfter(notifications(1).dateTimeIssued) &&
+              notifications(1).dateTimeIssued.isAfter(notifications(2).dateTimeIssued) &&
+              notifications(2).dateTimeIssued.isAfter(notifications(3).dateTimeIssued)
+          )
+        }
+      }
+    }
+
+    "provided with multiple ParsedNotifications with different actionIds (for SubmissionRequest and CancellationRequest), and" when {
+      "the Submission's actions DO NOT CONTAIN yet any NotificationSummary" should {
+        "return the Submission with the actions including the new NotificationSummaries in desc order, and" should {
+          "the enhanced status be updated with the SubmissionRequest action's data only" in {
+            val submission = Json.parse(submissionWithoutNotificationSummaries).as[Submission]
+            submissionRepository.insertOne(submission).futureValue
+            parseAndSaveAction.save(List(submissionNotification)).futureValue
+            val submissions = parseAndSaveAction.save(List(cancellationNotification)).futureValue
+            submissions.size mustBe 1
+
+            val actualSubmission = Json.toJson(submissions.head)
+            actualSubmission mustBe Json.parse(submissionWithNotificationSummaries)
+          }
+        }
+      }
+    }
+
     /* Do not remove. It provides an example of a potential implementation in case we are notified that we could
    receive from the parsing a list of notifications with different actionIds for the same Submission document.
 
@@ -120,74 +188,6 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
       }
     }
      */
-
-    "provided with multiple ParsedNotifications with the same actionId, and" when {
-      "the Submission's action DOES NOT CONTAIN yet any NotificationSummary" should {
-        "return the Submission with the action including the new NotificationSummaries in desc order" in {
-          submissionRepository.insertOne(submission.copy(actions = List(action_2))).futureValue
-
-          val notification3 = notification_3.copy(actionId = actionId_2)
-          val submissions = parseAndSaveAction.save(List(notification2, notification3)).futureValue
-          submissions.size mustBe 1
-
-          val submission1 = submissions.head
-
-          submission1.mrn.value mustBe notification2.details.mrn
-          submission1.latestEnhancedStatus mustBe UNKNOWN
-          submission1.enhancedStatusLastUpdated mustBe notification3.details.dateTimeIssued
-
-          submission1.actions.size mustBe 1
-          val notifications = submission1.actions(0).notifications.value
-          notifications.size mustBe 2
-          assert(notifications(0).dateTimeIssued.isAfter(notifications(1).dateTimeIssued))
-        }
-      }
-    }
-
-    "provided with multiple ParsedNotifications with the same actionId, and" when {
-      "the Submission's action DOES CONTAIN already NotificationSummaries" should {
-        "return the Submission with the action including all NotificationSummaries in desc order" in {
-          val action2 = action_2.copy(notifications = Some(List(notificationSummary_1, notificationSummary_2)))
-          submissionRepository.insertOne(submission.copy(actions = List(action2))).futureValue
-
-          val notification3 = notification_3.copy(actionId = actionId_2)
-          val submissions = parseAndSaveAction.save(List(notification2, notification3)).futureValue
-          submissions.size mustBe 1
-
-          val submission1 = submissions.head
-
-          submission1.mrn.value mustBe notification2.details.mrn
-          submission1.latestEnhancedStatus mustBe UNKNOWN
-          submission1.enhancedStatusLastUpdated mustBe notification3.details.dateTimeIssued
-
-          submission1.actions.size mustBe 1
-          val notifications = submission1.actions(0).notifications.value
-          notifications.size mustBe 4
-          assert(
-            notifications(0).dateTimeIssued.isAfter(notifications(1).dateTimeIssued) &&
-              notifications(1).dateTimeIssued.isAfter(notifications(2).dateTimeIssued) &&
-              notifications(2).dateTimeIssued.isAfter(notifications(3).dateTimeIssued)
-          )
-        }
-      }
-    }
-
-    "provided with multiple ParsedNotifications with different actionIds (for SubmissionRequest and CancellationRequest), and" when {
-      "the Submission's actions DO NOT CONTAIN yet any NotificationSummary" should {
-        "return the Submission with the actions including the new NotificationSummaries in desc order, and" should {
-          "the enhanced status be updated with the SubmissionRequest action's data only" in {
-            val submission = Json.parse(submissionWithoutNotificationSummaries).as[Submission]
-            submissionRepository.insertOne(submission).futureValue
-            parseAndSaveAction.save(List(submissionNotification)).futureValue
-            val submissions = parseAndSaveAction.save(List(cancellationNotification)).futureValue
-            submissions.size mustBe 1
-
-            val actualSubmission = Json.toJson(submissions.head)
-            actualSubmission mustBe Json.parse(submissionWithNotificationSummaries)
-          }
-        }
-      }
-    }
   }
 }
 
