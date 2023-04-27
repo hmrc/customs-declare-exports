@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.repositories
 
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
+import play.api.test.Helpers._
 import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.config.AppConfig
@@ -28,6 +29,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.mongo.MongoComponent
 import org.scalacheck.Gen
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.codesMap
+import uk.gov.hmrc.http.InternalServerException
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -228,14 +230,18 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
       "raise exception" when {
 
         "a ParsedNotification is given without a stored Submission document (because it was removed in the meanwhile)" in {
-          transactionalOps.updateSubmissionAndNotifications(actionId, List(notification), submission).futureValue mustBe None
+          intercept[InternalServerException] {
+            await {
+              transactionalOps.updateSubmissionAndNotifications(actionId, List(notification), submission)
+            }
+          }
         }
 
         "amendmentRequest" when {
 
-          "status is other than CUSTOMS_POSITION_GRANTED, CUSTOMS_POSITION_DENIED, 03" in {
+          "status is other than CUSTOMS_POSITION_GRANTED, CUSTOMS_POSITION_DENIED, REJECTED" in {
 
-            val status = Gen.oneOf(codesMap removedAll List("1139", "1141", "REJECTED")).sample.get._2
+            val status = Gen.oneOf(codesMap removedAll List("1139", "1141", "03")).sample.get._2
 
             val notifications = Seq(
               notificationSummary_1,
@@ -258,11 +264,12 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
               .futureValue
               .isRight mustBe true
 
-            val submissionForAmendment = transactionalOps
-              .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
-              .futureValue
-
-            submissionForAmendment mustBe None
+            intercept[InternalServerException] {
+              await {
+                transactionalOps
+                  .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
+              }
+            }
 
           }
 
@@ -289,12 +296,12 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
               .futureValue
               .isRight mustBe true
 
-            val submissionForAmendment = transactionalOps
-              .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
-              .futureValue
-
-            submissionForAmendment mustBe None
-
+            intercept[InternalServerException] {
+              await {
+                transactionalOps
+                  .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
+              }
+            }
           }
         }
 
