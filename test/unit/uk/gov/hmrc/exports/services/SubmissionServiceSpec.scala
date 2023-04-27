@@ -102,12 +102,13 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       "ducr",
       PENDING,
       now,
-      List(Action(id = "conv-id", requestType = CancellationRequest, notifications = notification, decId = Some(id), versionNo = 1)),
+      List(Action(id = "conv-id", requestType = CancellationRequest, notifications = notification, decId = None, versionNo = 1)),
       latestDecId = Some(id)
     )
     val cancellation = SubmissionCancellation(id, "ref-id", "mrn", "description", "reason")
 
     "submit and delegate to repository and iterates version number in cancel action from submission" when {
+
       "submission exists" which {
         "copies version number to cancel action from submission" in {
           when(cancelMetaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
@@ -121,8 +122,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
           submissionService.cancel(eori, cancellation).futureValue mustBe CancellationRequestSent
 
-          verify(submissionRepository)
-            .addAction(any[String](), captor.capture())
+          verify(submissionRepository).addAction(any[String](), captor.capture())
 
           captor.getValue.decId mustBe submission.latestDecId
           captor.getValue.versionNo mustBe submission.latestVersionNo
