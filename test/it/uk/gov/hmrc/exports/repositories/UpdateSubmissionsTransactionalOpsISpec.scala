@@ -230,11 +230,12 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
       "raise exception" when {
 
         "a ParsedNotification is given without a stored Submission document (because it was removed in the meanwhile)" in {
-          intercept[InternalServerException] {
+          val result = intercept[InternalServerException] {
             await {
               transactionalOps.updateSubmissionAndNotifications(actionId, List(notification), submission)
             }
           }
+          result.message mustBe s"Failed to update Submission(${submission.uuid}) with Action($actionId)"
         }
 
         "amendmentRequest" when {
@@ -264,12 +265,13 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
               .futureValue
               .isRight mustBe true
 
-            intercept[InternalServerException] {
+            val result = intercept[InternalServerException] {
               await {
                 transactionalOps
                   .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
               }
             }
+            result.message mustBe s"Cannot update for submission status $status"
 
           }
 
@@ -296,18 +298,20 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
               .futureValue
               .isRight mustBe true
 
-            intercept[InternalServerException] {
+            val result = intercept[InternalServerException] {
               await {
                 transactionalOps
                   .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
               }
             }
+            result.message mustBe s"Cannot find latest notification on submission request for Submission(${testSubmission.uuid})"
           }
-        }
 
+        }
       }
 
     }
+
   }
 
   private def testUpdateSubmissionAndNotifications(
