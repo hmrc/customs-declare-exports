@@ -28,7 +28,7 @@ object SubmissionStatus extends Enumeration {
     CLEARED, CANCELLED, CUSTOMS_POSITION_GRANTED, CUSTOMS_POSITION_DENIED, GOODS_HAVE_EXITED_THE_COMMUNITY, DECLARATION_HANDLED_EXTERNALLY,
     AWAITING_EXIT_RESULTS, QUERY_NOTIFICATION_MESSAGE, UNKNOWN = Value
 
-  private val codesMap: Map[String, SubmissionStatus] = Map(
+  val codesMap: Map[String, SubmissionStatus] = Map(
     "Pending" -> PENDING,
     "Cancellation Requested" -> REQUESTED_CANCELLATION,
     "01" -> ACCEPTED, // DMSACC

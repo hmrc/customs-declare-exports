@@ -21,6 +21,7 @@ import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification,
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{SubmissionRepository, UpdateSubmissionsTransactionalOps}
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
+import uk.gov.hmrc.http.InternalServerException
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -47,7 +48,6 @@ class ParseAndSaveAction @Inject() (
           }
           .toList
       )
-      .map(_.flatten)
 
   /* Do not remove. It provides an example of a potential implementation in case we are notified that we could
    receive from the parsing a list of notifications with different actionIds for the same Submission document.
@@ -68,14 +68,13 @@ class ParseAndSaveAction @Inject() (
   }
    */
 
-  private def findAndUpdateSubmission(actionId: String, notifications: Seq[ParsedNotification]): Future[Option[Submission]] =
+  private def findAndUpdateSubmission(actionId: String, notifications: Seq[ParsedNotification]): Future[Submission] =
     submissionRepository
       .findOne("actions.id", actionId)
       .flatMap {
         case Some(submission) =>
           transactionalOps.updateSubmissionAndNotifications(actionId, notifications, submission)
         case _ =>
-          logger.error(s"No submission record was found for (parsed) notifications with actionId($actionId)")
-          Future.successful(None)
+          Future.failed(throw new InternalServerException(s"No submission record was found for (parsed) notifications with actionId($actionId)"))
       }
 }

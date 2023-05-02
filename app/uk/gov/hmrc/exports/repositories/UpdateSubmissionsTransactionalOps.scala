@@ -29,6 +29,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus._
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.AMENDMENT_DRAFT
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{EnhancedStatus, ON_HOLD}
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.{notificationsToAction, updateActionWithNotificationSummaries}
+import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.transaction.{TransactionConfiguration, Transactions}
 
@@ -46,38 +47,30 @@ class UpdateSubmissionsTransactionalOps @Inject() (
 )(implicit ec: ExecutionContext)
     extends Transactions with Logging {
 
-  private implicit val tc = TransactionConfiguration.strict
+  private implicit val tc: TransactionConfiguration = TransactionConfiguration.strict
 
   private lazy val nonTransactionalSession = mongoComponent.client.startSession().toFuture()
 
-  def updateSubmissionAndNotifications(actionId: String, notifications: Seq[ParsedNotification], submission: Submission): Future[Option[Submission]] =
+  def updateSubmissionAndNotifications(actionId: String, notifications: Seq[ParsedNotification], submission: Submission): Future[Submission] =
     if (appConfig.useTransactionalDBOps)
-      withSessionAndTransaction[Option[Submission]](startOp(_, actionId, notifications, submission)).recover { case e: Exception =>
-        logger.warn(s"There was an error while writing to the DB => ${e.getMessage}", e)
-        None
-      }
-    else nonTransactionalSession.flatMap(startOp(_, actionId, notifications, submission))
+      withSessionAndTransaction[Submission](startOp(_, actionId, notifications, submission))
+    else
+      nonTransactionalSession.flatMap(startOp(_, actionId, notifications, submission))
 
-  private def startOp(
-    session: ClientSession,
-    actionId: String,
-    notifications: Seq[ParsedNotification],
-    submission: Submission
-  ): Future[Option[Submission]] =
+  private def startOp(session: ClientSession, actionId: String, notifications: Seq[ParsedNotification], submission: Submission): Future[Submission] =
     for {
-      maybeSubmission <- addNotificationSummariesToSubmissionAndUpdate(session, actionId, notifications, submission)
+      submission <- addNotificationSummariesToSubmissionAndUpdate(session, actionId, notifications, submission)
       _ <- notificationRepository.bulkInsert(session, notifications)
-    } yield maybeSubmission
+    } yield submission
 
   private def addNotificationSummariesToSubmissionAndUpdate(
     session: ClientSession,
     actionId: String,
     notifications: Seq[ParsedNotification],
     submission: Submission
-  ): Future[Option[Submission]] = {
+  ): Future[Submission] = {
 
     val index = submission.actions.indexWhere(_.id == actionId)
-
     val action = submission.actions(index)
 
     val seed = action.notifications.fold(Seq.empty[NotificationSummary])(identity)
@@ -91,7 +84,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
     val summary = notificationSummaries.head
     val updatedActions = submission.actions.updated(index, actionWithAllNotificationSummaries)
 
-    requestType match {
+    val update = requestType match {
       case SubmissionRequest =>
         updateSubmissionRequest(session, action, mrn, summary, updatedActions)
 
@@ -103,8 +96,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
           .flatMap(_.latestNotificationSummary.map(_.enhancedStatus))
           .map(updateAmendmentRequest(session, action, summary, updatedActions, submissionStatus, _))
           .getOrElse {
-            logger.error(s"Cannot add an (amendment) 'Action' to Submission(${submission.uuid})")
-            Future.successful(None)
+            throw new InternalServerException(s"Cannot find latest notification on submission request for Submission(${submission.uuid})")
           }
 
       case ExternalAmendmentRequest =>
@@ -116,6 +108,11 @@ class UpdateSubmissionsTransactionalOps @Inject() (
         updateCancellationRequest(session, action, updatedActions)
 
       case _ => Future.successful(None)
+    }
+
+    update flatMap {
+      case Some(submission) => Future.successful(submission)
+      case _ => Future.failed(throw new InternalServerException(s"Failed to update Submission(${submission.uuid}) with Action(${action.id})"))
     }
   }
 
@@ -149,30 +146,29 @@ class UpdateSubmissionsTransactionalOps @Inject() (
     latestEnhancedStatus: EnhancedStatus
   ): Future[Option[Submission]] = {
 
-    def updateFromStatus(decId: String): Option[JsObject] =
+    def updateFromStatus(decId: String): JsObject =
       submissionStatus match {
         case REJECTED | CUSTOMS_POSITION_DENIED =>
-          Some(Json.obj("latestEnhancedStatus" -> ON_HOLD, "enhancedStatusLastUpdated" -> summary.dateTimeIssued, "actions" -> actions))
+          Json.obj("latestEnhancedStatus" -> ON_HOLD, "enhancedStatusLastUpdated" -> summary.dateTimeIssued, "actions" -> actions)
         case CUSTOMS_POSITION_GRANTED =>
-          Some(
-            Json.obj(
-              "latestDecId" -> decId,
-              "latestVersionNo" -> action.versionNo,
-              "latestEnhancedStatus" -> latestEnhancedStatus,
-              "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
-              "actions" -> actions
-            )
+          Json.obj(
+            "latestDecId" -> decId,
+            "latestVersionNo" -> action.versionNo,
+            "latestEnhancedStatus" -> latestEnhancedStatus,
+            "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
+            "actions" -> actions
           )
-        case _ => None
+        case status => throw new InternalServerException(s"Cannot update for submission status $status")
       }
 
-    (for {
-      decId <- action.decId
-      update <- updateFromStatus(decId)
-    } yield {
+    action.decId map { decId =>
       val filter = Json.obj("actions.id" -> action.id)
-      submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument((Json.obj("$set" -> update)).toString))
-    }) getOrElse Future.successful(None)
+      submissionRepository.findOneAndUpdate(
+        session,
+        BsonDocument(filter.toString),
+        BsonDocument(Json.obj("$set" -> updateFromStatus(decId)).toString)
+      )
+    } getOrElse Future.failed(throw new InternalServerException(s"Action(${action.id}) to amend does not contain a decId"))
 
   }
   private def updateExternalAmendmentRequest(

@@ -18,21 +18,18 @@ package uk.gov.hmrc.exports.repositories
 
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
+import play.api.test.Helpers._
 import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.AMENDMENT_DRAFT
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
-import uk.gov.hmrc.exports.models.declaration.submissions.{
-  AmendmentRequest,
-  ExternalAmendmentRequest,
-  NotificationSummary,
-  Submission,
-  SubmissionRequest,
-  SubmissionStatus
-}
+import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.mongo.MongoComponent
+import org.scalacheck.Gen
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.codesMap
+import uk.gov.hmrc.http.InternalServerException
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -61,12 +58,6 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
     "appConfig.useTransactionalDBOps is false, and" when {
 
       appConfig.useTransactionalDBOps mustBe false
-
-      "a ParsedNotification is given without a stored Submission document (because it was removed in the meanwhile)" should {
-        "return an empty option" in {
-          transactionalOps.updateSubmissionAndNotifications(actionId, List(notification), submission).futureValue mustBe None
-        }
-      }
 
       "a single ParsedNotification is given with a stored Submission document and" when {
 
@@ -104,7 +95,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
             submissionRepository.insertOne(submission).futureValue.isRight mustBe true
 
             val submissionForAmendment =
-              transactionalOps.updateSubmissionAndNotifications(actionId, List(notificationForExternalAmendment), submission).futureValue.get
+              transactionalOps.updateSubmissionAndNotifications(actionId, List(notificationForExternalAmendment), submission).futureValue
 
             submissionForAmendment.latestDecId mustBe None
             submissionForAmendment.latestVersionNo mustBe 2
@@ -128,9 +119,6 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
         "Store a NotificationSummary record for the notification against the correct AmendmentRequest action" when {
           "CUSTOMS_POSITION_GRANTED (DMSREQ and code 39) notification status" which {
             "updates the latestEnhancedStatus field to equal the latest notification status received against the current SubmissionRequest action" in {
-
-              val amendmentDraftDec =
-                aDeclaration(withEori(eori), withStatus(AMENDMENT_DRAFT), withParentDeclarationId(submission.latestDecId.value))
 
               val notifications = Seq(
                 notificationSummary_1,
@@ -156,11 +144,6 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
               testSubmission.latestDecId.value mustBe testSubmission.uuid
               testSubmission.latestVersionNo mustBe 1
 
-              declarationRepository
-                .insertOne(amendmentDraftDec)
-                .futureValue
-                .isRight mustBe true
-
               submissionRepository
                 .insertOne(testSubmission)
                 .futureValue
@@ -169,7 +152,6 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
               val submissionForAmendment = transactionalOps
                 .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
                 .futureValue
-                .get
 
               submissionForAmendment.latestDecId.value mustBe amendmentAction.decId.value
               submissionForAmendment.latestVersionNo mustBe 2
@@ -178,9 +160,6 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
             }
           }
           "REJECTED notification status" in {
-
-            val amendmentDraftDec =
-              aDeclaration(withEori(eori), withStatus(AMENDMENT_DRAFT), withParentDeclarationId(submission.latestDecId.value))
 
             val submissionAction = action.copy(notifications = Some(Seq(notificationSummary_1)))
             val amendmentAction = action_2.copy(versionNo = 2, requestType = AmendmentRequest)
@@ -196,11 +175,6 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
             testSubmission.latestDecId.value mustBe testSubmission.uuid
             testSubmission.latestVersionNo mustBe 1
 
-            declarationRepository
-              .insertOne(amendmentDraftDec)
-              .futureValue
-              .isRight mustBe true
-
             submissionRepository
               .insertOne(testSubmission)
               .futureValue
@@ -209,7 +183,6 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
             val submissionForAmendment = transactionalOps
               .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
               .futureValue
-              .get
 
             submissionForAmendment.latestDecId.value mustBe testSubmission.latestDecId.value
             submissionForAmendment.latestVersionNo mustBe 1
@@ -217,9 +190,6 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
 
           }
           "CUSTOMS_POSITION_DENIED (DMSREQ and code 41) notification status" in {
-
-            val amendmentDraftDec =
-              aDeclaration(withEori(eori), withStatus(AMENDMENT_DRAFT), withParentDeclarationId(submission.latestDecId.value))
 
             val submissionAction = action.copy(notifications = Some(Seq(notificationSummary_1)))
             val amendmentAction = action_2.copy(versionNo = 2, requestType = AmendmentRequest)
@@ -240,11 +210,6 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
             testSubmission.latestDecId.value mustBe testSubmission.uuid
             testSubmission.latestVersionNo mustBe 1
 
-            declarationRepository
-              .insertOne(amendmentDraftDec)
-              .futureValue
-              .isRight mustBe true
-
             submissionRepository
               .insertOne(testSubmission)
               .futureValue
@@ -253,7 +218,6 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
             val submissionForAmendment = transactionalOps
               .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
               .futureValue
-              .get
 
             submissionForAmendment.latestDecId.value mustBe testSubmission.latestDecId.value
             submissionForAmendment.latestVersionNo mustBe 1
@@ -262,7 +226,92 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
           }
         }
       }
+
+      "raise exception" when {
+
+        "a ParsedNotification is given without a stored Submission document (because it was removed in the meanwhile)" in {
+          val result = intercept[InternalServerException] {
+            await {
+              transactionalOps.updateSubmissionAndNotifications(actionId, List(notification), submission)
+            }
+          }
+          result.message mustBe s"Failed to update Submission(${submission.uuid}) with Action($actionId)"
+        }
+
+        "amendmentRequest" when {
+
+          "status is other than CUSTOMS_POSITION_GRANTED, CUSTOMS_POSITION_DENIED, REJECTED" in {
+
+            val status = Gen.oneOf(codesMap removedAll List("1139", "1141", "03")).sample.get._2
+
+            val notifications = Seq(
+              notificationSummary_1,
+              NotificationSummary(notification_2.unparsedNotificationId, notificationSummary_1.dateTimeIssued plusHours 1, GOODS_HAVE_EXITED)
+            )
+
+            val submissionAction = action.copy(notifications = Some(notifications))
+            val amendmentAction = action_2.copy(versionNo = 2, requestType = AmendmentRequest)
+
+            val testSubmission = submission.copy(actions = Seq(submissionAction, amendmentAction), latestEnhancedStatus = RECEIVED)
+
+            val notificationForAmendment = ParsedNotification(
+              unparsedNotificationId = UUID.randomUUID,
+              actionId = amendmentAction.id,
+              details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = status, errors = Seq.empty)
+            )
+
+            submissionRepository
+              .insertOne(testSubmission)
+              .futureValue
+              .isRight mustBe true
+
+            val result = intercept[InternalServerException] {
+              await {
+                transactionalOps
+                  .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
+              }
+            }
+            result.message mustBe s"Cannot update for submission status $status"
+
+          }
+
+          "SubmissionRequest of Submission is without notifications" in {
+
+            val submissionAction = action.copy(notifications = None)
+            val amendmentAction = action_2.copy(versionNo = 2, requestType = AmendmentRequest)
+
+            val testSubmission = submission.copy(actions = Seq(submissionAction, amendmentAction), latestEnhancedStatus = RECEIVED)
+
+            val notificationForAmendment = ParsedNotification(
+              unparsedNotificationId = UUID.randomUUID,
+              actionId = amendmentAction.id,
+              details = NotificationDetails(
+                mrn = mrn,
+                dateTimeIssued = dateTimeIssued_2,
+                status = SubmissionStatus.CUSTOMS_POSITION_GRANTED,
+                errors = Seq.empty
+              )
+            )
+
+            submissionRepository
+              .insertOne(testSubmission)
+              .futureValue
+              .isRight mustBe true
+
+            val result = intercept[InternalServerException] {
+              await {
+                transactionalOps
+                  .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
+              }
+            }
+            result.message mustBe s"Cannot find latest notification on submission request for Submission(${testSubmission.uuid})"
+          }
+
+        }
+      }
+
     }
+
   }
 
   private def testUpdateSubmissionAndNotifications(
@@ -271,20 +320,22 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
     submission: Submission,
     expectedEnhancedStatus: EnhancedStatus,
     expectedNotificationSummaries: Int
-  ): Option[Submission] =
-    transactionalOps.updateSubmissionAndNotifications(actionId, notifications, submission).futureValue.map { actualSubmission =>
-      if (submission.mrn.isDefined) actualSubmission.mrn mustBe submission.mrn
-      else actualSubmission.mrn mustBe defined
+  ): Submission = {
+    val actualSubmission = transactionalOps.updateSubmissionAndNotifications(actionId, notifications, submission).futureValue
 
-      actualSubmission.latestEnhancedStatus mustBe expectedEnhancedStatus
+    if (submission.mrn.isDefined) actualSubmission.mrn mustBe submission.mrn
+    else actualSubmission.mrn mustBe defined
 
-      actualSubmission.actions.size mustBe 1
-      val notificationSummaries = actualSubmission.actions.head.notifications.value
-      notificationSummaries.size mustBe expectedNotificationSummaries
+    actualSubmission.latestEnhancedStatus mustBe expectedEnhancedStatus
 
-      val notificationSummary = notificationSummaries.head
-      notificationSummary.dateTimeIssued mustBe actualSubmission.enhancedStatusLastUpdated
-      notificationSummary.enhancedStatus mustBe actualSubmission.latestEnhancedStatus
-      actualSubmission
-    }
+    actualSubmission.actions.size mustBe 1
+    val notificationSummaries = actualSubmission.actions.head.notifications.value
+    notificationSummaries.size mustBe expectedNotificationSummaries
+
+    val notificationSummary = notificationSummaries.head
+    notificationSummary.dateTimeIssued mustBe actualSubmission.enhancedStatusLastUpdated
+    notificationSummary.enhancedStatus mustBe actualSubmission.latestEnhancedStatus
+    actualSubmission
+
+  }
 }
