@@ -60,9 +60,9 @@ class AmendmentPointerBuilder @Inject() () extends ModifyingBuilder[String, Amen
           result :+ (item, None, None)
         } else {
           val lastResult = result.last
-          item.toIntOption match {
-            case Some(intVal) if remaining.size != 1 => // item is a sequenceNbr
-              result.init :+ (lastResult._1, Some(intVal), lastResult._3)
+          item match {
+            case seqId @ _ if seqId.startsWith("#") => // item is a sequenceNbr
+              result.init :+ (lastResult._1, Some(seqId.drop(1).toInt), lastResult._3)
             case _ => // item is a tagId
               result.init :+ (lastResult._1, lastResult._2, Some(item))
           }

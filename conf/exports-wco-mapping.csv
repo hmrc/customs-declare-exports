@@ -38,10 +38,10 @@ locations.originationCountry.code|42A.67A.95B.062
 locations.routingCountries.$1|42A.28A.62A.$1
 locations.warehouseIdentification.identificationNumber|42A.67A.43B.L019
 locations.warehouseIdentification.identificationNumber|42A.67A.43B.L112
-mucr|42A.67A.99A.1.171
-mucr|42A.67A.99A.1.D018
-mucr|42A.67A.99A.1.D019
-mucr|42A.67A.99A.1.D031
+mucr|42A.67A.99A.#1.171
+mucr|42A.67A.99A.#1.D018
+mucr|42A.67A.99A.#1.D019
+mucr|42A.67A.99A.#1.D031
 natureOfTransaction.natureType|42A.67A.103
 parties.carrierDetails.details.address.adressLine|42A.28A.18A.04A.239
 parties.carrierDetails.details.address.country|42A.28A.18A.04A.242

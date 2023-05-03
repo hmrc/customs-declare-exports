@@ -30,11 +30,11 @@ class AmendmentPointerBuilderSpec extends UnitSpec {
   val tagId2 = "103"
 
   val section3 = "68A"
-  val sequenceNbr3 = 10
+  val sequenceNbr3 = "#10"
   val tagId3 = "114"
 
   val section4 = "02A"
-  val sequenceNbr4 = 20
+  val sequenceNbr4 = "#20"
   val tagId4 = "D028"
 
   "buildThenAdd" should {
@@ -105,11 +105,11 @@ class AmendmentPointerBuilderSpec extends UnitSpec {
   private def checkPointerContents(
     pointer: Amendment.Pointer,
     expectedSectionCode: String,
-    expectedSequenceNbr: Option[Int],
+    expectedSequenceNbr: Option[String],
     expectedTagId: Option[String]
   ) = {
     pointer.getDocumentSectionCode().getValue() must equal(expectedSectionCode)
-    Option(pointer.getSequenceNumeric()) mustBe expectedSequenceNbr.map(new java.math.BigDecimal(_))
+    Option(pointer.getSequenceNumeric()) mustBe expectedSequenceNbr.map(seqNbr => new java.math.BigDecimal(seqNbr.drop(1)))
     Option(pointer.getTagID()).map(_.getValue) mustBe expectedTagId
   }
 }
