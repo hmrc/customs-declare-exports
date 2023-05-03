@@ -274,6 +274,7 @@ class SubmissionService @Inject() (
     val metadata =
       metrics.timeCall(Timers.amendmentProduceMetaDataTimer)(amendmentMetaDataBuilder.buildRequest(submission.mrn, declaration, wcoPointers))
     val xml = metrics.timeCall(Timers.amendmentConvertToXmlTimer)(wcoMapperService.toXml(metadata))
+    logger.info(s"Generated amendment XML:\n$xml")
 
     logProgress(declaration.id, "Submitting amendment request to the Declaration API")
     for {

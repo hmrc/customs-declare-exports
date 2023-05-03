@@ -56,7 +56,7 @@ class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
 
   def getWCOPointers(exportsPointer: String): Seq[String] = {
     val segments = exportsPointer.split("\\.")
-    val placeholders = segments.filter(_.toIntOption.nonEmpty)
+    val placeholders = segments.filter(isSequenceNumber)
 
     mapping.get(exportsPointer) match {
 
@@ -83,13 +83,13 @@ class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
     val resultingExportsPointer = segments
       .foldLeft(0 -> "") { (tuple: (Int, String), s: String) =>
         if (s == "declaration") (0, s)
-        else if (s.toIntOption.nonEmpty) (tuple._1 + 1, s"${tuple._2}.${tuple._1 + 1}")
+        else if (isSequenceNumber(s)) (tuple._1 + 1, s"${tuple._2}.${tuple._1 + 1}")
         else (tuple._1, s"${tuple._2}.$s")
       }
       ._2
 
     mapping.get(resultingExportsPointer).fold(Seq.empty[String]) { // Not found.
-      val placeholders = segments.filter(_.toIntOption.nonEmpty) // Found.
+      val placeholders = segments.filter(isSequenceNumber) // Found.
       _.map(replacePlaceholders(_, placeholders)) // Found.
     }
   }
@@ -108,4 +108,6 @@ class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
         else (index, if (result.isEmpty) s else s"$result.$s")
       }
       ._2
+
+  private def isSequenceNumber(segment: String): Boolean = segment.startsWith("#") && segment.drop(1).toIntOption.nonEmpty
 }

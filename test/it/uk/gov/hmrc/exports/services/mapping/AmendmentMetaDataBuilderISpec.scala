@@ -47,7 +47,12 @@ class AmendmentMetaDataBuilderISpec extends IntegrationTestSpec {
         val builder = instanceOf[AmendmentMetaDataBuilder]
 
         val wcoPointers =
-          Seq("42A.67A.99B.465", "42A.67A.68A.1.23A.137", "42A.67A.68A.1.114") // Destination country code, item description of goods, item value
+          Seq(
+            "42A.67A.99B.465",
+            "42A.67A.68A.#1.23A.137",
+            "42A.67A.68A.#1.114",
+            "42A.67A.68A.#1.93A.#1"
+          ) // Destination country code, item description of goods, item value
         val wcoDeclaration = builder.buildRequest(Some(mrn), declaration, wcoPointers)
         val xmlResult = AmendmentMetaDataBuilder.toXml(wcoDeclaration)
 
@@ -340,6 +345,18 @@ object AmendmentMetaDataBuilderISpec {
       |                <ns3:DocumentSectionCode>06A</ns3:DocumentSectionCode>
       |            </ns3:Pointer>
       |        </ns3:AdditionalInformation>
+      |        <ns3:AdditionalInformation>
+      |            <ns3:StatementDescription>None</ns3:StatementDescription>
+      |            <ns3:StatementTypeCode>AES</ns3:StatementTypeCode>
+      |            <ns3:Pointer>
+      |                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+      |                <ns3:DocumentSectionCode>42A</ns3:DocumentSectionCode>
+      |            </ns3:Pointer>
+      |            <ns3:Pointer>
+      |                <ns3:SequenceNumeric>4</ns3:SequenceNumeric>
+      |                <ns3:DocumentSectionCode>06A</ns3:DocumentSectionCode>
+      |            </ns3:Pointer>
+      |        </ns3:AdditionalInformation>
       |        <ns3:Agent>
       |            <ns3:ID>GB239355053000</ns3:ID>
       |        </ns3:Agent>
@@ -385,6 +402,23 @@ object AmendmentMetaDataBuilderISpec {
       |                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
       |                <ns3:DocumentSectionCode>68A</ns3:DocumentSectionCode>
       |                <ns3:TagID>114</ns3:TagID>
+      |            </ns3:Pointer>
+      |        </ns3:Amendment>
+      |        <ns3:Amendment>
+      |            <ns3:ChangeReasonCode>32</ns3:ChangeReasonCode>
+      |            <ns3:Pointer>
+      |                <ns3:DocumentSectionCode>42A</ns3:DocumentSectionCode>
+      |            </ns3:Pointer>
+      |            <ns3:Pointer>
+      |                <ns3:DocumentSectionCode>67A</ns3:DocumentSectionCode>
+      |            </ns3:Pointer>
+      |            <ns3:Pointer>
+      |                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+      |                <ns3:DocumentSectionCode>68A</ns3:DocumentSectionCode>
+      |            </ns3:Pointer>
+      |            <ns3:Pointer>
+      |                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
+      |                <ns3:DocumentSectionCode>93A</ns3:DocumentSectionCode>
       |            </ns3:Pointer>
       |        </ns3:Amendment>
       |        <ns3:AuthorisationHolder>
