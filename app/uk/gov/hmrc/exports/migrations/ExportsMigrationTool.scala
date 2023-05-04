@@ -28,7 +28,7 @@ class ExportsMigrationTool(
   val migrationsRegistry: MigrationsRegistry,
   val changeEntryRepository: ChangeEntryRepository,
   val database: MongoDatabase,
-  val throwExceptionIfCannotObtainLock: Boolean = false
+  migrationStatus: MigrationStatus
 ) extends Logging {
 
   private var enabled: Boolean = true
@@ -41,15 +41,12 @@ class ExportsMigrationTool(
         executeMigration()
       } catch {
         case lockEx: LockManagerException =>
-          if (throwExceptionIfCannotObtainLock) {
-            logger.error(lockEx.getMessage)
-            throw new ExportsMigrationException(lockEx.getMessage)
-          }
           logger.warn(lockEx.getMessage)
           logger.warn("ExportsMigrationTool did not acquire process lock. EXITING WITHOUT RUNNING DATA MIGRATION")
-
+          handleMigrationsFailure()
         case exc: Throwable =>
           logger.error("ExportsMigrationTool - error on executing migration", exc)
+          handleMigrationsFailure()
       } finally {
         lockManager.releaseLockDefault() // we do it anyway, it's idempotent
         logger.info("ExportsMigrationTool has finished his job.")
@@ -95,6 +92,12 @@ class ExportsMigrationTool(
   }
 
   private def isRunAlways(migrationDefinition: MigrationDefinition): Boolean = migrationDefinition.migrationInformation.runAlways
+
+  private def handleMigrationsFailure(): Unit = {
+    logger.error("Migrations have failed.")
+    lockManager.releaseLockDefault()
+    migrationStatus.markFailed()
+  }
 }
 
 object ExportsMigrationTool {
@@ -102,7 +105,12 @@ object ExportsMigrationTool {
   private val lockCollectionName = "exportsMigrationLock"
   private val changeEntryCollectionName = "exportsMigrationChangeLog"
 
-  def apply(mongoDatabase: MongoDatabase, migrationsRegistry: MigrationsRegistry, lockManagerConfig: LockManagerConfig): ExportsMigrationTool = {
+  def apply(
+    mongoDatabase: MongoDatabase,
+    migrationsRegistry: MigrationsRegistry,
+    lockManagerConfig: LockManagerConfig,
+    migrationStatus: MigrationStatus
+  ): ExportsMigrationTool = {
     val lockRepository = new LockRepository(lockCollectionName, mongoDatabase)
     val timeUtils = new TimeUtils
     val lockRefreshChecker = new LockRefreshChecker(timeUtils)
@@ -112,6 +120,6 @@ object ExportsMigrationTool {
     lockRepository.ensureIndex()
     changeEntryRepository.ensureIndex()
 
-    new ExportsMigrationTool(lockManager, migrationsRegistry, changeEntryRepository, mongoDatabase)
+    new ExportsMigrationTool(lockManager, migrationsRegistry, changeEntryRepository, mongoDatabase, migrationStatus)
   }
 }
