@@ -22,7 +22,7 @@ import org.mockito.Mockito
 import org.mockito.Mockito._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
-import uk.gov.hmrc.exports.migrations.exceptions.{ExportsMigrationException, LockManagerException}
+import uk.gov.hmrc.exports.migrations.exceptions.LockManagerException
 import uk.gov.hmrc.exports.migrations.repositories.{ChangeEntry, ChangeEntryRepository}
 
 import java.time.Instant
@@ -33,15 +33,17 @@ class ExportsMigrationToolSpec extends UnitSpec {
   private val migrationsRegistry: MigrationsRegistry = mock[MigrationsRegistry]
   private val changeEntryRepository: ChangeEntryRepository = mock[ChangeEntryRepository]
   private val database: MongoDatabase = mock[MongoDatabase]
+  private val migrationStatus: MigrationStatus = mock[MigrationStatus]
 
-  private def exportsMigrationTool(throwExceptionIfCannotObtainLock: Boolean = false) =
-    new ExportsMigrationTool(lockManager, migrationsRegistry, changeEntryRepository, database, throwExceptionIfCannotObtainLock)
+  private def exportsMigrationTool() =
+    new ExportsMigrationTool(lockManager, migrationsRegistry, changeEntryRepository, database, migrationStatus)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(lockManager, migrationsRegistry, changeEntryRepository, database)
+    reset(lockManager, migrationsRegistry, changeEntryRepository, database, migrationStatus)
     when(migrationsRegistry.migrations).thenReturn(Seq.empty)
+    when(migrationStatus.isSuccess).thenReturn(true)
   }
 
   override def afterEach(): Unit = {
@@ -178,48 +180,36 @@ class ExportsMigrationToolSpec extends UnitSpec {
       }
     }
 
-    "LockManager throws LockManagerException" when {
+    "LockManager throws LockManagerException" should {
 
-      "throwExceptionIfCannotObtainLock == true" should {
+      "not throw ExportsMigrationException and flag migrationStatus failure" in {
+        val exceptionMessage = "Test Exception Message"
+        when(lockManager.acquireLockDefault()).thenThrow(new LockManagerException(exceptionMessage))
 
-        "throw ExportsMigrationException" in {
-          val exceptionMessage = "Test Exception Message"
-          when(lockManager.acquireLockDefault()).thenThrow(new LockManagerException(exceptionMessage))
-
-          intercept[ExportsMigrationException] {
-            exportsMigrationTool(throwExceptionIfCannotObtainLock = true).execute()
-          }.getMessage mustBe exceptionMessage
-        }
-
-        "call LockManager releaseLockDefault method" in {
-          val exceptionMessage = "Test Exception Message"
-          when(lockManager.acquireLockDefault()).thenThrow(new LockManagerException(exceptionMessage))
-
-          intercept[ExportsMigrationException] {
-            exportsMigrationTool(throwExceptionIfCannotObtainLock = true).execute()
-          }
-
-          verify(lockManager).releaseLockDefault()
-        }
+        noException shouldBe thrownBy(exportsMigrationTool().execute())
+        verify(migrationStatus).markFailed()
       }
 
-      "throwExceptionIfCannotObtainLock == false" should {
+      "call LockManager releaseLockDefault method and flag migrationStatus failure" in {
+        val exceptionMessage = "Test Exception Message"
+        when(lockManager.acquireLockDefault()).thenThrow(new LockManagerException(exceptionMessage))
 
-        "not throw ExportsMigrationException" in {
-          val exceptionMessage = "Test Exception Message"
-          when(lockManager.acquireLockDefault()).thenThrow(new LockManagerException(exceptionMessage))
+        exportsMigrationTool().execute()
 
-          noException shouldBe thrownBy(exportsMigrationTool().execute())
-        }
+        verify(lockManager, atLeastOnce).releaseLockDefault()
+        verify(migrationStatus).markFailed()
+      }
+    }
 
-        "call LockManager releaseLockDefault method" in {
-          val exceptionMessage = "Test Exception Message"
-          when(lockManager.acquireLockDefault()).thenThrow(new LockManagerException(exceptionMessage))
+    "Any other exception is thrown during the migration process" should {
+      "call LockManager releaseLockDefault method and flag migrationStatus failure" in {
+        val exceptionMessage = "Test Exception Message"
+        when(lockManager.acquireLockDefault()).thenThrow(new Exception(exceptionMessage))
 
-          exportsMigrationTool().execute()
+        exportsMigrationTool().execute()
 
-          verify(lockManager).releaseLockDefault()
-        }
+        verify(lockManager, atLeastOnce).releaseLockDefault()
+        verify(migrationStatus).markFailed()
       }
     }
   }

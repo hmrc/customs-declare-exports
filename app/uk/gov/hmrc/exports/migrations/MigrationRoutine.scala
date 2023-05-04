@@ -28,7 +28,7 @@ import uk.gov.hmrc.exports.migrations.changelogs.submission._
 import javax.inject.Inject
 
 @Singleton
-class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
+class MigrationRoutine @Inject() (appConfig: AppConfig, migrationStatus: MigrationStatus) extends Logging {
 
   logger.info("Starting migration with ExportsMigrationTool")
 
@@ -58,7 +58,7 @@ class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
     .register(new RemoveBlockAmendmentsField())
     .register(new SetEnhancedStatusAsNonOptional())
 
-  ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute()
+  ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig, migrationStatus).execute()
 
   client.close()
 

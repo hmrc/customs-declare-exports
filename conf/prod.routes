@@ -1,3 +1,6 @@
+# Declare our custom health check first to ensure the deployment fails if migrations fail
+GET     /ping/ping        uk.gov.hmrc.exports.controllers.CustomHealthController.ping()
+
 # Add all the application routes to the app.routes file
 ->      /                 app.Routes
 ->      /                 health.Routes
