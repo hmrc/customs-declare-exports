@@ -40,7 +40,7 @@ class ParsedNotificationSpec extends UnitSpec {
       _id = id,
       unparsedNotificationId,
       actionId = actionId,
-      details = NotificationDetails(mrn, dateTime, SubmissionStatus.ACCEPTED, Seq.empty)
+      details = NotificationDetails(mrn, dateTime, SubmissionStatus.ACCEPTED, version = 1, Seq.empty)
     )
 
     "have json writes that produce object which could be parsed by the front end service" in {
@@ -68,5 +68,5 @@ object ParsedNotificationSpec {
     s"""{"actionId":"${actionId}","mrn":"${mrn}","dateTimeIssued":"${dateTime}","status":"ACCEPTED","errors":[]}"""
 
   def serialisedWithDbFormat(_id: String, unparsedNotificationId: String, actionId: String, mrn: String, dateTime: String) =
-    s"""{"_id":{"$$oid":"${_id}"},"unparsedNotificationId":"${unparsedNotificationId}","actionId":"${actionId}","details":{"mrn":"${mrn}","dateTimeIssued":"${dateTime}","status":"ACCEPTED","errors":[]}}"""
+    s"""{"_id":{"$$oid":"${_id}"},"unparsedNotificationId":"${unparsedNotificationId}","actionId":"${actionId}","details":{"mrn":"${mrn}","dateTimeIssued":"${dateTime}","status":"ACCEPTED","version":1,"errors":[]}}"""
 }

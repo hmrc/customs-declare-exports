@@ -106,7 +106,7 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
     ParsedNotification(
       unparsedNotificationId = UUID.randomUUID(),
       actionId = actionId,
-      details = NotificationDetails(declaration.consignmentReferences.flatMap(_.mrn).getOrElse(""), TimeUtils.now(), status, Seq.empty)
+      details = NotificationDetails(declaration.consignmentReferences.flatMap(_.mrn).getOrElse(""), TimeUtils.now(), status, version = 1, Seq.empty)
     )
 
   // scalastyle:off

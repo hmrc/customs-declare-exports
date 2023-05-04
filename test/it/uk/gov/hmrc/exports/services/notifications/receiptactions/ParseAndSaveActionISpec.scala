@@ -205,6 +205,7 @@ object ParseAndSaveActionISpec {
       mrn = mrn,
       dateTimeIssued = ZonedDateTime.parse(cancellationDateTime),
       status = SubmissionStatus.CANCELLED,
+      version = 1,
       errors = List.empty
     )
   )
@@ -215,8 +216,13 @@ object ParseAndSaveActionISpec {
   val submissionNotification = ParsedNotification(
     unparsedNotificationId = UUID.randomUUID,
     actionId = submissionActionId,
-    details =
-      NotificationDetails(mrn = mrn, dateTimeIssued = ZonedDateTime.parse(submissionDateTime), status = SubmissionStatus.REJECTED, errors = errors)
+    details = NotificationDetails(
+      mrn = mrn,
+      dateTimeIssued = ZonedDateTime.parse(submissionDateTime),
+      status = SubmissionStatus.REJECTED,
+      version = 1,
+      errors = errors
+    )
   )
 
   val id: String = "9f324b20-71bf-4c70-ae8d-aa53f81a99ff"

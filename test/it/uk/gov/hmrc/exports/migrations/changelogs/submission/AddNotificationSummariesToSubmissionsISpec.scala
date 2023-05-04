@@ -288,6 +288,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |      "mrn" : "18GBJP3OS8Y5KKS9I9",
       |      "dateTimeIssued" : "2022-06-13T09:11:09Z[UTC]",
       |      "status" : "ACCEPTED",
+      |      "version" : 1,
       |      "errors" : []
       |  }
       |}""".stripMargin,
@@ -298,6 +299,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |      "mrn" : "18GBJP3OS8Y5KKS9I9",
       |      "dateTimeIssued" : "2022-06-13T09:01:09Z[UTC]",
       |      "status" : "GOODS_HAVE_EXITED_THE_COMMUNITY",
+      |      "version" : 1,
       |      "errors" : []
       |  }
       |}""".stripMargin,
@@ -308,6 +310,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |      "mrn" : "18GBJP3OS8Y5KKS9I9",
       |      "dateTimeIssued" : "2022-06-13T09:06:09Z[UTC]",
       |      "status" : "CLEARED",
+      |      "version" : 1,
       |      "errors" : []
       |  }
       |}""".stripMargin
@@ -320,6 +323,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |      "mrn" : "18GBJP3OS8Y5KKS9I9",
       |      "dateTimeIssued" : "2022-06-20T14:52:13Z[UTC]",
       |      "status" : "CANCELLED",
+      |      "version" : 1,
       |      "errors" : []
       |  }
       |}""".stripMargin)
