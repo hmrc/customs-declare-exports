@@ -39,7 +39,8 @@ class AddVersionField extends MigrationDefinition with Logging {
     MigrationInformation(
       id = "CEDS-4736 Add versionID field with default value of 1 to NotificationDeails entity",
       order = 23,
-      author = "Tim Wilkins"
+      author = "Tim Wilkins",
+      runAlways = true
     )
 
   override def migrationFunction(db: MongoDatabase): Unit = {
