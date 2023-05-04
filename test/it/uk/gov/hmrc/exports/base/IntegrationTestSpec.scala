@@ -57,6 +57,7 @@ trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSui
           "mongodb.uri" -> s"mongodb://localhost:27017/$databaseName"
         )
       )
+      .disable[uk.gov.hmrc.exports.routines.MigrationRunnerModule] // No need to run migrations during integration specs
       .build()
 
   implicit val hc: HeaderCarrier = HeaderCarrier(authorization = Some(Authorization("Bearer some-token")))
