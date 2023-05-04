@@ -100,24 +100,27 @@ object NotificationTestData {
   val notification = ParsedNotification(
     unparsedNotificationId = UUID.randomUUID,
     actionId = actionId,
-    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = UNKNOWN, errors = errors)
+    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = UNKNOWN, version = 1, errors = errors)
   )
   val notification_2 = ParsedNotification(
     unparsedNotificationId = UUID.randomUUID,
     actionId = actionId,
-    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = UNKNOWN, errors = errors)
+    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = UNKNOWN, version = 1, errors = errors)
   )
   val notification_3 = ParsedNotification(
     unparsedNotificationId = UUID.randomUUID,
     actionId = actionId_2,
-    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = UNKNOWN, errors = Seq.empty)
+    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = UNKNOWN, version = 1, errors = Seq.empty)
   )
 
   val notificationForExternalAmendment = ParsedNotification(
     unparsedNotificationId = UUID.randomUUID,
     actionId = actionId,
-    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = AMENDED, errors = Seq.empty)
+    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = AMENDED, version = 2, errors = Seq.empty)
   )
+
+  val notificationForExternalAmendmentV1 =
+    notificationForExternalAmendment.copy(details = notificationForExternalAmendment.details.copy(version = 1))
 
   val notificationUnparsed = UnparsedNotification(actionId = actionId_4, payload = payload)
 }

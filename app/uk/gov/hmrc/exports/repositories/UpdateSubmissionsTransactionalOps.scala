@@ -72,24 +72,22 @@ class UpdateSubmissionsTransactionalOps @Inject() (
 
     val index = submission.actions.indexWhere(_.id == actionId)
     val action = submission.actions(index)
-
     val seed = action.notifications.fold(Seq.empty[NotificationSummary])(identity)
+    val firstNotificationDetails = notifications.head.details
 
     val (actionWithAllNotificationSummaries, notificationSummaries) =
       updateActionWithNotificationSummaries(notificationsToAction(action), submission.actions, notifications, seed)
 
-    val requestType = if (notifications.head.details.status == AMENDED) ExternalAmendmentRequest else action.requestType
-
-    val mrn = notifications.head.details.mrn
+    val requestType = if (firstNotificationDetails.status == AMENDED) ExternalAmendmentRequest else action.requestType
     val summary = notificationSummaries.head
     val updatedActions = submission.actions.updated(index, actionWithAllNotificationSummaries)
 
     val update = requestType match {
       case SubmissionRequest =>
-        updateSubmissionRequest(session, action, mrn, summary, updatedActions)
+        updateSubmissionRequest(session, action, firstNotificationDetails.mrn, summary, updatedActions)
 
       case AmendmentRequest =>
-        val submissionStatus = notifications.head.details.status
+        val submissionStatus = firstNotificationDetails.status
 
         submission.actions
           .find(_.requestType == SubmissionRequest)
@@ -100,12 +98,19 @@ class UpdateSubmissionsTransactionalOps @Inject() (
           }
 
       case ExternalAmendmentRequest =>
-        updateExternalAmendmentRequest(session, submission, action, mrn, summary, updatedActions) flatMap {
-          deleteAnyAmendmentDraftDecs(session, submission, _)
+        // if this 'AMENDED' type notification relates to a later dec version than the current latestVersion then process, else ignore it
+        if (firstNotificationDetails.version > submission.latestVersionNo) {
+          updateExternalAmendmentRequest(session, submission, action, firstNotificationDetails.mrn, summary, updatedActions) flatMap {
+            deleteAnyAmendmentDraftDecs(session, submission, _)
+          }
+        } else {
+          logger.debug(
+            s"AMENDED notification ignored as its version number is <= to the submission's current latestVersion number of ${submission.latestVersionNo}"
+          )
+          Future.successful(Some(submission))
         }
 
-      case CancellationRequest =>
-        updateCancellationRequest(session, action, updatedActions)
+      case CancellationRequest => updateCancellationRequest(session, action, updatedActions)
 
       case _ => Future.successful(None)
     }

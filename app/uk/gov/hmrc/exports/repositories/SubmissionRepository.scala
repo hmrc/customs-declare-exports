@@ -55,16 +55,6 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     findOneAndUpdate(filter, update)
   }
 
-  def addExternalAmendmentAction(uuid: String, action: Action): Future[Option[Submission]] = {
-    val filter = Json.obj("uuid" -> uuid)
-    val update = Json.obj(
-      "$addToSet" -> Json.obj("actions" -> Json.toJson(action)),
-      "$inc" -> Json.obj("latestVersionNo" -> 1),
-      "$unset" -> Json.obj("latestDecId" -> "")
-    )
-    findOneAndUpdate(filter, update)
-  }
-
   def updateAction(submissionId: String, actionId: String, decId: String): Future[Option[Submission]] =
     collection
       .findOneAndUpdate(

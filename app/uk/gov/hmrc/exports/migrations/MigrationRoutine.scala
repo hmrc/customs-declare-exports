@@ -22,7 +22,7 @@ import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.migrations.changelogs.cache._
 import uk.gov.hmrc.exports.migrations.changelogs.emaildetails.RenameSendEmailDetailsToItem
-import uk.gov.hmrc.exports.migrations.changelogs.notification.{MakeParsedDetailsOptional, SplitTheNotificationsCollection}
+import uk.gov.hmrc.exports.migrations.changelogs.notification.{AddVersionField, MakeParsedDetailsOptional, SplitTheNotificationsCollection}
 import uk.gov.hmrc.exports.migrations.changelogs.submission._
 
 import javax.inject.Inject
@@ -57,6 +57,7 @@ class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
     .register(new AddSequenceIdsToPackageInformation())
     .register(new RemoveBlockAmendmentsField())
     .register(new SetEnhancedStatusAsNonOptional())
+    .register(new AddVersionField())
 
   ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute()
 

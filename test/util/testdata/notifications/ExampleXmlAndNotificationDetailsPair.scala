@@ -51,6 +51,7 @@ object ExampleXmlAndNotificationDetailsPair {
         </IssueDateTime>
         <Declaration>
           <ID>{mrn}</ID>
+          <VersionID>1</VersionID>
         </Declaration>
       </Response>
     </MetaData>,
@@ -59,6 +60,7 @@ object ExampleXmlAndNotificationDetailsPair {
           mrn = mrn,
           dateTimeIssued = dateTime.withZoneSameInstant(ZoneId.of("UCT")).withNano(0),
           status = SubmissionStatus.RECEIVED,
+          version = 1,
           errors = Seq.empty
         )
       )
@@ -117,6 +119,7 @@ object ExampleXmlAndNotificationDetailsPair {
         mrn = mrn,
         dateTimeIssued = ZonedDateTime.parse(dateTime, formatter304),
         status = SubmissionStatus.REJECTED,
+        1,
         errors = Seq(
           NotificationError(
             validationCode = "CDS10020",
@@ -158,6 +161,7 @@ object ExampleXmlAndNotificationDetailsPair {
         </IssueDateTime>
         <Declaration>
           <ID>{mrn}</ID>
+          <VersionID>1</VersionID>
         </Declaration>
       </Response>
       <Response>
@@ -168,6 +172,7 @@ object ExampleXmlAndNotificationDetailsPair {
         </IssueDateTime>
         <Declaration>
           <ID>{mrn}</ID>
+          <VersionID>1</VersionID>
         </Declaration>
       </Response>
     </MetaData>,
@@ -176,12 +181,14 @@ object ExampleXmlAndNotificationDetailsPair {
         mrn = mrn,
         dateTimeIssued = ZonedDateTime.parse(dateTime_received, formatter304),
         status = SubmissionStatus.RECEIVED,
+        version = 1,
         errors = Seq.empty
       ),
       NotificationDetails(
         mrn = mrn,
         dateTimeIssued = ZonedDateTime.parse(dateTime_accepted, formatter304),
         status = SubmissionStatus.ACCEPTED,
+        version = 1,
         errors = Seq.empty
       )
     )
@@ -221,6 +228,7 @@ object ExampleXmlAndNotificationDetailsPair {
         </IssueDateTime>
         <Declaration>
           <ID>{mrn}</ID>
+          <VersionID>1</VersionID>
         </Declaration>
       </Response>
       <Response>
@@ -231,6 +239,7 @@ object ExampleXmlAndNotificationDetailsPair {
         </wrong>
         <Declaration>
           <ID>{mrn}</ID>
+          <VersionID>1</VersionID>
         </Declaration>
       </Response>
     </MetaData>,

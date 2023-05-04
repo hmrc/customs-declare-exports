@@ -81,36 +81,70 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
         }
       }
 
-      "an 'external amendment' Notification is given" should {
-        "add a new Action to the Submission and" should {
-          "remove any existing 'AMENDMENT_DRAFT' declarations" in {
-            val declaration =
-              aDeclaration(withEori(eori), withStatus(AMENDMENT_DRAFT), withParentDeclarationId(submission.latestDecId.value))
-            declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
+      "an 'external amendment' Notification is given and" when {
+        "the 'external amendment' has a version number greater than the current latestVersionNo of the Submission" should {
+          "add a new Action to the Submission and" should {
+            "remove any existing 'AMENDMENT_DRAFT' declarations" in {
+              val declaration =
+                aDeclaration(withEori(eori), withStatus(AMENDMENT_DRAFT), withParentDeclarationId(submission.latestDecId.value))
+              declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
 
-            submission.latestDecId.value mustBe submission.uuid
-            submission.latestVersionNo mustBe 1
-            submission.actions.size mustBe 1
-            submission.actions.head.requestType mustBe SubmissionRequest
-            submissionRepository.insertOne(submission).futureValue.isRight mustBe true
+              submission.latestDecId.value mustBe submission.uuid
+              submission.latestVersionNo mustBe 1
+              submission.actions.size mustBe 1
+              submission.actions.head.requestType mustBe SubmissionRequest
+              submissionRepository.insertOne(submission).futureValue.isRight mustBe true
 
-            val submissionForAmendment =
-              transactionalOps.updateSubmissionAndNotifications(actionId, List(notificationForExternalAmendment), submission).futureValue
+              val submissionForAmendment =
+                transactionalOps.updateSubmissionAndNotifications(actionId, List(notificationForExternalAmendment), submission).futureValue
 
-            submissionForAmendment.latestDecId mustBe None
-            submissionForAmendment.latestVersionNo mustBe 2
-            submissionForAmendment.actions.size mustBe 2
-            val externalAmendAction = submissionForAmendment.actions.find(_.requestType == ExternalAmendmentRequest).value
-            externalAmendAction.decId mustBe None
-            externalAmendAction.versionNo mustBe 2
+              submissionForAmendment.latestDecId mustBe None
+              submissionForAmendment.latestVersionNo mustBe 2
+              submissionForAmendment.actions.size mustBe 2
+              val externalAmendAction = submissionForAmendment.actions.find(_.requestType == ExternalAmendmentRequest).value
+              externalAmendAction.decId mustBe None
+              externalAmendAction.versionNo mustBe 2
 
-            val submissionAction = submissionForAmendment.actions.find(_.requestType == SubmissionRequest).value
-            submissionAction.decId mustBe Some(submission.uuid)
-            submissionAction.versionNo mustBe 1
-            submissionAction.notifications.get.size mustBe 1
-            submissionAction.notifications.get.last.enhancedStatus mustBe AMENDED
+              val submissionAction = submissionForAmendment.actions.find(_.requestType == SubmissionRequest).value
+              submissionAction.decId mustBe Some(submission.uuid)
+              submissionAction.versionNo mustBe 1
+              submissionAction.notifications.get.size mustBe 1
+              submissionAction.notifications.get.last.enhancedStatus mustBe AMENDED
 
-            declarationRepository.findAll().futureValue.size mustBe 0
+              declarationRepository.findAll().futureValue.size mustBe 0
+            }
+          }
+        }
+
+        "the 'external amendment' has a version number the same or less than the current latestVersionNo of the Submission" should {
+          "NOT add a new Action to the Submission and" should {
+            "NOT remove any existing 'AMENDMENT_DRAFT' declarations" in {
+              val declaration =
+                aDeclaration(withEori(eori), withStatus(AMENDMENT_DRAFT), withParentDeclarationId(submission.latestDecId.value))
+              declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
+
+              submission.latestDecId.value mustBe submission.uuid
+              submission.latestVersionNo mustBe 1
+              submission.actions.size mustBe 1
+              submission.actions.head.requestType mustBe SubmissionRequest
+              submissionRepository.insertOne(submission).futureValue.isRight mustBe true
+
+              val submissionForAmendment =
+                transactionalOps.updateSubmissionAndNotifications(actionId, List(notificationForExternalAmendmentV1), submission).futureValue
+
+              submissionForAmendment.latestDecId mustBe Some(submission.uuid)
+              submissionForAmendment.latestVersionNo mustBe 1
+              submissionForAmendment.actions.size mustBe 1
+              submissionForAmendment.actions.find(_.requestType == ExternalAmendmentRequest) mustBe None
+              submissionForAmendment.latestEnhancedStatus mustBe PENDING
+
+              val submissionAction = submissionForAmendment.actions.find(_.requestType == SubmissionRequest).value
+              submissionAction.decId mustBe Some(submission.uuid)
+              submissionAction.versionNo mustBe 1
+              submissionAction.notifications mustBe None
+
+              declarationRepository.findAll().futureValue.size mustBe 1
+            }
           }
         }
       }
@@ -137,6 +171,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
                   mrn = mrn,
                   dateTimeIssued = dateTimeIssued_2,
                   status = SubmissionStatus.CUSTOMS_POSITION_GRANTED,
+                  version = 1,
                   errors = Seq.empty
                 )
               )
@@ -169,7 +204,8 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
             val notificationForAmendment = ParsedNotification(
               unparsedNotificationId = UUID.randomUUID,
               actionId = amendmentAction.id,
-              details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = SubmissionStatus.REJECTED, errors = Seq.empty)
+              details =
+                NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = SubmissionStatus.REJECTED, version = 1, errors = Seq.empty)
             )
 
             testSubmission.latestDecId.value mustBe testSubmission.uuid
@@ -203,6 +239,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
                 mrn = mrn,
                 dateTimeIssued = dateTimeIssued_3,
                 status = SubmissionStatus.CUSTOMS_POSITION_DENIED,
+                version = 1,
                 errors = Seq.empty
               )
             )
@@ -257,7 +294,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
             val notificationForAmendment = ParsedNotification(
               unparsedNotificationId = UUID.randomUUID,
               actionId = amendmentAction.id,
-              details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = status, errors = Seq.empty)
+              details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = status, version = 1, errors = Seq.empty)
             )
 
             submissionRepository
@@ -289,6 +326,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
                 mrn = mrn,
                 dateTimeIssued = dateTimeIssued_2,
                 status = SubmissionStatus.CUSTOMS_POSITION_GRANTED,
+                version = 1,
                 errors = Seq.empty
               )
             )

@@ -48,7 +48,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
   def createNotification(dateTimeIssued: ZonedDateTime, status: SubmissionStatus) = ParsedNotification(
     unparsedNotificationId = UUID.randomUUID(),
     actionId = actionId,
-    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = status, errors = Seq.empty)
+    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = status, version = 1, errors = Seq.empty)
   )
 
   "EmailSendingValidator on isEmailSendingCancelled" should {
