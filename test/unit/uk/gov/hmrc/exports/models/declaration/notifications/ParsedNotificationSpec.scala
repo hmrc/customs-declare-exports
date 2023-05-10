@@ -40,7 +40,7 @@ class ParsedNotificationSpec extends UnitSpec {
       _id = id,
       unparsedNotificationId,
       actionId = actionId,
-      details = NotificationDetails(mrn, dateTime, SubmissionStatus.ACCEPTED, version = 1, Seq.empty)
+      details = NotificationDetails(mrn, dateTime, SubmissionStatus.ACCEPTED, version = Some(1), Seq.empty)
     )
 
     "have json writes that produce object which could be parsed by the front end service" in {

@@ -171,7 +171,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
                   mrn = mrn,
                   dateTimeIssued = dateTimeIssued_2,
                   status = SubmissionStatus.CUSTOMS_POSITION_GRANTED,
-                  version = 1,
+                  version = Some(1),
                   errors = Seq.empty
                 )
               )
@@ -204,8 +204,13 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
             val notificationForAmendment = ParsedNotification(
               unparsedNotificationId = UUID.randomUUID,
               actionId = amendmentAction.id,
-              details =
-                NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = SubmissionStatus.REJECTED, version = 1, errors = Seq.empty)
+              details = NotificationDetails(
+                mrn = mrn,
+                dateTimeIssued = dateTimeIssued_3,
+                status = SubmissionStatus.REJECTED,
+                version = Some(1),
+                errors = Seq.empty
+              )
             )
 
             testSubmission.latestDecId.value mustBe testSubmission.uuid
@@ -239,7 +244,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
                 mrn = mrn,
                 dateTimeIssued = dateTimeIssued_3,
                 status = SubmissionStatus.CUSTOMS_POSITION_DENIED,
-                version = 1,
+                version = Some(1),
                 errors = Seq.empty
               )
             )
@@ -294,7 +299,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
             val notificationForAmendment = ParsedNotification(
               unparsedNotificationId = UUID.randomUUID,
               actionId = amendmentAction.id,
-              details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = status, version = 1, errors = Seq.empty)
+              details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = status, version = Some(1), errors = Seq.empty)
             )
 
             submissionRepository
@@ -326,7 +331,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
                 mrn = mrn,
                 dateTimeIssued = dateTimeIssued_2,
                 status = SubmissionStatus.CUSTOMS_POSITION_GRANTED,
-                version = 1,
+                version = None,
                 errors = Seq.empty
               )
             )

@@ -99,7 +99,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
 
       case ExternalAmendmentRequest =>
         // if this 'AMENDED' type notification relates to a later dec version than the current latestVersion then process, else ignore it
-        if (firstNotificationDetails.version > submission.latestVersionNo) {
+        if (firstNotificationDetails.version.getOrElse(0) > submission.latestVersionNo) {
           updateExternalAmendmentRequest(session, submission, action, firstNotificationDetails.mrn, summary, updatedActions) flatMap {
             deleteAnyAmendmentDraftDecs(session, submission, _)
           }

@@ -136,5 +136,15 @@ class NotificationParserSpec extends UnitSpec {
         }
       }
     }
+
+    "provided with notification without a VersionId value " should {
+      "correctly parse the version as None" in {
+        val testNotification = exampleReceivedNotificationNoVersionId(mrn)
+
+        val result = notificationParser.parse(testNotification.asXml)
+
+        compareNotificationSequences(result, testNotification.asDomainModel)
+      }
+    }
   }
 }

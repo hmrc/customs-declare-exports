@@ -23,7 +23,13 @@ import uk.gov.hmrc.exports.util.TimeUtils.defaultTimeZone
 
 import java.time.{LocalDateTime, ZonedDateTime}
 
-case class NotificationDetails(mrn: String, dateTimeIssued: ZonedDateTime, status: SubmissionStatus, version: Int, errors: Seq[NotificationError])
+case class NotificationDetails(
+  mrn: String,
+  dateTimeIssued: ZonedDateTime,
+  status: SubmissionStatus,
+  version: Option[Int],
+  errors: Seq[NotificationError]
+)
 
 object NotificationDetails {
   implicit val readLocalDateTimeFromString: Reads[ZonedDateTime] = implicitly[Reads[LocalDateTime]]
@@ -34,7 +40,7 @@ object NotificationDetails {
     ((__ \ "mrn").read[String] and
       ((__ \ "dateTimeIssued").read[ZonedDateTime] or (__ \ "dateTimeIssued").read[ZonedDateTime](readLocalDateTimeFromString)) and
       (__ \ "status").read[SubmissionStatus] and
-      (__ \ "version").read[Int] and
+      (__ \ "version").readNullable[Int] and
       (__ \ "errors").read[Seq[NotificationError]])(NotificationDetails.apply _)
 
   implicit val format: Format[NotificationDetails] = Format(reads, writes)
