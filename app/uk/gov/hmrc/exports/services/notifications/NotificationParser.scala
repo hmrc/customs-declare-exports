@@ -35,7 +35,7 @@ class NotificationParser extends Logging {
 
     responsesXml.map { singleResponseXml =>
       val mrn = (singleResponseXml \ "Declaration" \ "ID").text
-      val version = (singleResponseXml \ "Declaration" \ "VersionID").text.toInt
+      val version = (singleResponseXml \ "Declaration" \ "VersionID").headOption.map(_.text.toInt)
       val dateTimeIssued = ZonedDateTime.parse((singleResponseXml \ "IssueDateTime" \ "DateTimeString").text, formatter304)
       val functionCode = (singleResponseXml \ "FunctionCode").text
 

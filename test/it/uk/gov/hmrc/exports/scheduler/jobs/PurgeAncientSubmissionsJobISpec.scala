@@ -390,7 +390,7 @@ object PurgeAncientSubmissionsJobISpec {
         "22GB1168DI14797408",
         ZonedDateTime.parse("2022-08-02T13:20:06Z[UTC]"),
         SubmissionStatus.GOODS_HAVE_EXITED_THE_COMMUNITY,
-        version = 1,
+        version = None,
         Seq.empty
       )
     )

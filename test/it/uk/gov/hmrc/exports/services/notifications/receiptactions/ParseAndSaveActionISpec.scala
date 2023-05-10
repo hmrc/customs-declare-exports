@@ -205,7 +205,7 @@ object ParseAndSaveActionISpec {
       mrn = mrn,
       dateTimeIssued = ZonedDateTime.parse(cancellationDateTime),
       status = SubmissionStatus.CANCELLED,
-      version = 1,
+      version = None,
       errors = List.empty
     )
   )
@@ -220,7 +220,7 @@ object ParseAndSaveActionISpec {
       mrn = mrn,
       dateTimeIssued = ZonedDateTime.parse(submissionDateTime),
       status = SubmissionStatus.REJECTED,
-      version = 1,
+      version = None,
       errors = errors
     )
   )

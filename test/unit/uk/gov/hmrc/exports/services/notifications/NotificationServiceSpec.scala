@@ -87,7 +87,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
         ParsedNotification(
           unparsedNotificationId = UUID.randomUUID(),
           actionId = "id1",
-          details = NotificationDetails("mrn", now, ACCEPTED, 1, Seq.empty)
+          details = NotificationDetails("mrn", now, ACCEPTED, Some(1), Seq.empty)
         )
       )
       when(notificationRepository.findNotifications(any[Seq[String]])).thenReturn(Future.successful(notifications))

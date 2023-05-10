@@ -60,7 +60,38 @@ object ExampleXmlAndNotificationDetailsPair {
           mrn = mrn,
           dateTimeIssued = dateTime.withZoneSameInstant(ZoneId.of("UCT")).withNano(0),
           status = SubmissionStatus.RECEIVED,
-          version = 1,
+          version = Some(1),
+          errors = Seq.empty
+        )
+      )
+    )
+
+  def exampleReceivedNotificationNoVersionId(mrn: String, dateTime: ZonedDateTime = TimeUtils.now()): ExampleXmlAndNotificationDetailsPair =
+    ExampleXmlAndNotificationDetailsPair(
+      asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+        <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
+        <WCOTypeName>RES</WCOTypeName>
+        <ResponsibleCountryCode/>
+        <ResponsibleAgencyName/>
+        <AgencyAssignedCustomizationCode/>
+        <AgencyAssignedCustomizationVersionCode/>
+        <Response>
+          <FunctionCode>02</FunctionCode>
+          <FunctionalReferenceID>1234555</FunctionalReferenceID>
+          <IssueDateTime>
+            <DateTimeString formatCode="304">{dateTime.format(formatter304)}</DateTimeString>
+          </IssueDateTime>
+          <Declaration>
+            <ID>{mrn}</ID>
+          </Declaration>
+        </Response>
+      </MetaData>,
+      asDomainModel = Seq(
+        NotificationDetails(
+          mrn = mrn,
+          dateTimeIssued = dateTime.withZoneSameInstant(ZoneId.of("UCT")).withNano(0),
+          status = SubmissionStatus.RECEIVED,
+          version = None,
           errors = Seq.empty
         )
       )
@@ -119,7 +150,7 @@ object ExampleXmlAndNotificationDetailsPair {
         mrn = mrn,
         dateTimeIssued = ZonedDateTime.parse(dateTime, formatter304),
         status = SubmissionStatus.REJECTED,
-        1,
+        Some(1),
         errors = Seq(
           NotificationError(
             validationCode = "CDS10020",
@@ -181,14 +212,14 @@ object ExampleXmlAndNotificationDetailsPair {
         mrn = mrn,
         dateTimeIssued = ZonedDateTime.parse(dateTime_received, formatter304),
         status = SubmissionStatus.RECEIVED,
-        version = 1,
+        version = Some(1),
         errors = Seq.empty
       ),
       NotificationDetails(
         mrn = mrn,
         dateTimeIssued = ZonedDateTime.parse(dateTime_accepted, formatter304),
         status = SubmissionStatus.ACCEPTED,
-        version = 1,
+        version = Some(1),
         errors = Seq.empty
       )
     )
