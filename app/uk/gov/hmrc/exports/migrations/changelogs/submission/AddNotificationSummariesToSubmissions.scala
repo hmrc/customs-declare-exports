@@ -19,14 +19,17 @@ package uk.gov.hmrc.exports.migrations.changelogs.submission
 import com.mongodb.client.result.UpdateResult
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
-import org.mongodb.scala.model.Filters.{and, equal, exists}
+import org.mongodb.scala.model.Filters
+import org.mongodb.scala.model.Filters.{and, elemMatch, equal, exists, or}
 import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper._
 
+import java.time.ZonedDateTime
 import scala.jdk.CollectionConverters._
 
 class AddNotificationSummariesToSubmissions extends MigrationDefinition with Logging {
@@ -44,18 +47,17 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
     val notificationCollection = db.getCollection("notifications")
     val submissionCollection = db.getCollection("submissions")
 
-    /* This was the filter used before setting "latestEnhancedStatus" and "enhancedStatusLastUpdated" as non-optional.
-       It cannot be used anymore as, at line 61, we try convert the Json to a Submission,
-       which, as said, now assumes for the 2 fields to always have a value. */
-    // val findFilter = and(exists("mrn", true), exists("latestEnhancedStatus", false), exists("enhancedStatusLastUpdated", false))
-
-    val findFilter = and(exists("mrn", true))
+    val findFilter = or(
+      exists("latestEnhancedStatus", false),
+      exists("enhancedStatusLastUpdated", false),
+      elemMatch("actions", and(Filters.eq("requestType", "SubmissionRequest"), exists("notifications", false)))
+    )
 
     val results: Iterable[UpdateResult] = submissionCollection
       .find(findFilter)
       .asScala
       .map { document =>
-        val submission = Json.parse(document.toJson).as[Submission]
+        val submission = Json.parse(document.toJson).as[Submission](Submission.format)
 
         val actions = submission.actions.map {
           case action if action.notifications.isDefined => action
@@ -66,14 +68,14 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
           if (action.requestType == SubmissionRequest) action.notifications.flatMap(_.headOption) else None
         }.flatten.headOption.fold(submission.copy(actions = actions)) { notificationSummary =>
           submission.copy(
-            latestEnhancedStatus = notificationSummary.enhancedStatus,
-            enhancedStatusLastUpdated = notificationSummary.dateTimeIssued,
+            latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
+            enhancedStatusLastUpdated = Some(notificationSummary.dateTimeIssued),
             actions = actions
           )
         }
 
         val replaceFilter = equal("uuid", document.get("uuid"))
-        submissionCollection.replaceOne(replaceFilter, Document.parse(Json.toJson(updatedSubmission).toString))
+        submissionCollection.replaceOne(replaceFilter, Document.parse(Json.toJson(updatedSubmission)(Submission.format).toString))
       }
 
     val updates = results.foldLeft(0L)((acc, result) => acc + result.getModifiedCount)
@@ -94,4 +96,21 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
       updateActionWithNotificationSummaries(notificationsToAction(action), submission.actions, notifications, Seq.empty[NotificationSummary])._1
     }
   }
+}
+
+private case class Submission(
+  uuid: String,
+  eori: String,
+  lrn: String,
+  mrn: Option[String],
+  ducr: String,
+  latestEnhancedStatus: Option[EnhancedStatus],
+  enhancedStatusLastUpdated: Option[ZonedDateTime],
+  actions: Seq[Action],
+  latestDecId: Option[String],
+  latestVersionNo: Int
+)
+
+private object Submission {
+  implicit val format = Json.format[Submission]
 }
