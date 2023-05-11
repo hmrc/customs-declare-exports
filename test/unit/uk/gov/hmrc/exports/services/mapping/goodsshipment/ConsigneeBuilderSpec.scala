@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
+import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.{Address, ConsigneeDetails, EntityDetails}
 import uk.gov.hmrc.exports.services.CountriesService
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
@@ -25,8 +25,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 class ConsigneeBuilderSpec extends UnitSpec {
 
   val mockCountriesService = mock[CountriesService]
-  when(mockCountriesService.allCountries)
-    .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
+  when(mockCountriesService.getCountryCode(any())).thenReturn(Some("GB"))
 
   "ConsigneeBuilder" should {
     "correctly map to the WCO-DEC GoodsShipment.Consignee instance" when {
@@ -55,7 +54,7 @@ class ConsigneeBuilderSpec extends UnitSpec {
         goodsShipment.getConsignee.getName.getValue must be("Full Name")
         goodsShipment.getConsignee.getAddress.getLine.getValue must be("Address Line")
         goodsShipment.getConsignee.getAddress.getCityName.getValue must be("Town or City")
-        goodsShipment.getConsignee.getAddress.getCountryCode.getValue must be("PL")
+        goodsShipment.getConsignee.getAddress.getCountryCode.getValue must be("GB")
         goodsShipment.getConsignee.getAddress.getPostcodeID.getValue must be("AB12 34CD")
       }
 
@@ -83,7 +82,10 @@ class ConsigneeBuilderSpec extends UnitSpec {
         goodsShipment.getConsignee must be(null)
       }
 
+      "unknown country is supplied" in {}
+
       "'address.fullname' is not supplied" in {
+        when(mockCountriesService.getCountryCode(any())).thenReturn(Some("PL"))
         val builder = new ConsigneeBuilder(mockCountriesService)
 
         val goodsShipment = new GoodsShipment
@@ -104,7 +106,13 @@ class ConsigneeBuilderSpec extends UnitSpec {
 
 object ConsigneeBuilderSpec {
   val correctAddress =
-    Address(fullName = "Full Name", addressLine = "Address Line", townOrCity = "Town or City", postCode = "AB12 34CD", country = "Poland")
+    Address(
+      fullName = "Full Name",
+      addressLine = "Address Line",
+      townOrCity = "Town or City",
+      postCode = "AB12 34CD",
+      country = "United Kingdom, Great Britain, Northern Ireland"
+    )
 
   val addressWithEmptyFullname =
     Address(fullName = "", addressLine = "Address Line", townOrCity = "Town or City", postCode = "AB12 34CD", country = "Poland")

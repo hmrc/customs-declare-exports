@@ -63,12 +63,7 @@ class AgentBuilder @Inject() (countriesService: CountriesService) extends Modify
             postcode.setValue(address.postCode)
 
             val countryCode = new AddressCountryCodeType
-            countryCode.setValue(
-              countriesService.allCountries
-                .find(country => address.country.contains(country.countryName))
-                .map(_.countryCode)
-                .getOrElse("")
-            )
+            countryCode.setValue(countriesService.getCountryCode(address.country).getOrElse(""))
 
             agent.setName(agentName)
             agentAddress.setLine(line)

@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
+import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.Address
-import uk.gov.hmrc.exports.models.{Country, DeclarationType}
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -29,7 +30,6 @@ class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuil
   private val mockCountriesService = mock[CountriesService]
 
   "ConsignmentCarrierBuilderSpec" should {
-    when(mockCountriesService.allCountries).thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
     "build then add" when {
       for (
@@ -67,9 +67,13 @@ class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuil
           }
 
           "eori is empty" in {
+            when(mockCountriesService.getCountryCode(any())).thenReturn(Some("GB"))
             // Given
             val model = aDeclaration(
-              withCarrierDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))),
+              withCarrierDetails(
+                eori = None,
+                address = Some(Address("name", "line", "city", "postcode", "United Kingdom, Great Britain, Northern Ireland"))
+              ),
               withType(declarationType)
             )
             val consignment = new Declaration.Consignment()
@@ -79,6 +83,7 @@ class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuil
 
             // Then
             consignment.getCarrier.getID mustBe null
+            consignment.getCarrier.getAddress.getCountryCode.getValue must be("GB")
           }
 
           "fully populated" in {
@@ -114,6 +119,7 @@ class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuil
           }
 
           "invalid country" in {
+            when(mockCountriesService.getCountryCode(any())).thenReturn(None)
             // Given
             val model = aDeclaration(
               withCarrierDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "other"))),

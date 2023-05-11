@@ -18,6 +18,9 @@ package uk.gov.hmrc.exports.services
 
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.Country
+import org.scalacheck.Gen
+import org.scalacheck.Prop.forAll
+import org.scalatestplus.scalacheck.Checkers.check
 
 class CountriesServiceSpec extends UnitSpec {
 
@@ -32,6 +35,33 @@ class CountriesServiceSpec extends UnitSpec {
           c.countryName == "Afghanistan" || c.countryName == "Mayotte - Grande-Terre and Pamandzi" || c.countryName == "Zimbabwe"
         )
       threeCountries mustBe List(Country("Afghanistan", "AF"), Country("Mayotte - Grande-Terre and Pamandzi", "YT"), Country("Zimbabwe", "ZW"))
+    }
+
+    "getCountryCode" should {
+      val validCountries = countriesService.allCountries
+      val validCountryNames = validCountries.map(_.countryName)
+      val validCountriesGen = Gen.oneOf(validCountryNames)
+      val invalidCountryNamesGen = Gen.alphaStr.suchThat(str => !validCountryNames.contains(str) && str.nonEmpty)
+
+      "return expected code when name is valid" in {
+        check(forAll(validCountriesGen) { expectedCountryName =>
+          val code = countriesService.getCountryCode(expectedCountryName)
+          val returnedCountryName = validCountries.find(_.countryCode == code.get).map(_.countryName)
+          returnedCountryName contains expectedCountryName
+        })
+      }
+
+      "return None when name is invalid" in {
+        check(forAll(invalidCountryNamesGen) { countryName =>
+          countriesService.getCountryCode(countryName).isEmpty
+        })
+      }
+
+      "return None even when a substring is a valid country name" in {
+        check(forAll(invalidCountryNamesGen, validCountriesGen) { (invalidCountryName, validCountryName) =>
+          countriesService.getCountryCode(invalidCountryName + validCountryName).isEmpty
+        })
+      }
     }
   }
 }

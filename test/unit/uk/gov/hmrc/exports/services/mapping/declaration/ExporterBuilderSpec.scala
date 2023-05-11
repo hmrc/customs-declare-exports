@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
+import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.Address
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
@@ -26,8 +26,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 class ExporterBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   val mockCountriesService = mock[CountriesService]
-  when(mockCountriesService.allCountries)
-    .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
+  when(mockCountriesService.getCountryCode(any())).thenReturn(Some("GB"))
 
   "ExporterBuilder" should {
 
@@ -42,12 +41,18 @@ class ExporterBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       }
 
       "no eori" in {
-        val model = aDeclaration(withExporterDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "United Kingdom"))))
+        val model = aDeclaration(
+          withExporterDetails(
+            eori = None,
+            address = Some(Address("name", "line", "city", "postcode", "United Kingdom, Great Britain, Northern Ireland"))
+          )
+        )
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
 
         declaration.getExporter.getID must be(null)
+        declaration.getExporter.getAddress.getCountryCode.getValue must be("GB")
       }
 
       "no address" in {
@@ -60,6 +65,7 @@ class ExporterBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       }
 
       "unknown country" in {
+        when(mockCountriesService.getCountryCode(any())).thenReturn(None)
         val model = aDeclaration(withExporterDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "unknown"))))
         val declaration = new Declaration()
 

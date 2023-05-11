@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
+import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.Address
-import uk.gov.hmrc.exports.models.{Country, DeclarationType}
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -26,8 +27,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 class ConsignmentConsignorBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   val mockCountriesService = mock[CountriesService]
-  when(mockCountriesService.allCountries)
-    .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
+  when(mockCountriesService.getCountryCode(any())).thenReturn(Some("GB"))
 
   Seq(DeclarationType.CLEARANCE).map { declarationType =>
     "ConsignorBuilder" should {
@@ -57,7 +57,7 @@ class ConsignmentConsignorBuilderSpec extends UnitSpec with ExportsDeclarationBu
           consignment.getConsignor.getName.getValue must be("Consignor Full Name")
           consignment.getConsignor.getAddress.getLine.getValue must be("Address Line")
           consignment.getConsignor.getAddress.getCityName.getValue must be("Town or City")
-          consignment.getConsignor.getAddress.getCountryCode.getValue must be("PL")
+          consignment.getConsignor.getAddress.getCountryCode.getValue must be("GB")
           consignment.getConsignor.getAddress.getPostcodeID.getValue must be("AB12 34CD")
         }
 
@@ -89,6 +89,7 @@ class ConsignmentConsignorBuilderSpec extends UnitSpec with ExportsDeclarationBu
         }
 
         "'address.fullname' is not supplied" in {
+          when(mockCountriesService.getCountryCode(any())).thenReturn(Some("PL"))
           val builder = new ConsignmentConsignorBuilder(mockCountriesService)
 
           val model =
@@ -111,7 +112,13 @@ class ConsignmentConsignorBuilderSpec extends UnitSpec with ExportsDeclarationBu
 
 object ConsignmentConsignorBuilderSpec {
   val correctAddress =
-    Address(fullName = "Consignor Full Name", addressLine = "Address Line", townOrCity = "Town or City", postCode = "AB12 34CD", country = "Poland")
+    Address(
+      fullName = "Consignor Full Name",
+      addressLine = "Address Line",
+      townOrCity = "Town or City",
+      postCode = "AB12 34CD",
+      country = "United Kingdom, Great Britain, Northern Ireland"
+    )
 
   val addressWithEmptyFullname =
     Address(fullName = "", addressLine = "Address Line", townOrCity = "Town or City", postCode = "AB12 34CD", country = "Poland")

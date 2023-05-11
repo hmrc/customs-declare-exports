@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
+import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.{Address, EntityDetails, RepresentativeDetails}
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
@@ -26,12 +26,17 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 class AgentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   val mockCountriesService = mock[CountriesService]
-  when(mockCountriesService.allCountries)
-    .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
+  when(mockCountriesService.getCountryCode(any())).thenReturn(Some("GB"))
 
   val representativeEori = "9GB1234567ABCDEF"
   val declarantEori = "DEC_EORI"
-  val address = Address(fullName = "Full Name", addressLine = "Address Line", townOrCity = "Town or City", postCode = "AB12 34CD", country = "Poland")
+  val address = Address(
+    fullName = "Full Name",
+    addressLine = "Address Line",
+    townOrCity = "Town or City",
+    postCode = "AB12 34CD",
+    country = "United Kingdom, Great Britain, Northern Ireland"
+  )
 
   "AgentBuilder" should {
     "correctly map from ExportsCacheModel to the WCO-DEC Agent instance" when {
@@ -74,7 +79,7 @@ class AgentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         agent.getName.getValue must be(address.fullName)
         agent.getAddress.getLine.getValue must be(address.addressLine)
         agent.getAddress.getCityName.getValue must be(address.townOrCity)
-        agent.getAddress.getCountryCode.getValue must be("PL")
+        agent.getAddress.getCountryCode.getValue must be("GB")
         agent.getAddress.getPostcodeID.getValue must be(address.postCode)
         agent.getFunctionCode.getValue must be("2")
       }

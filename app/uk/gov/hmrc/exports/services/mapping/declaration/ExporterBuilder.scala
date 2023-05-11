@@ -69,12 +69,7 @@ class ExporterBuilder @Inject() (countriesService: CountriesService) extends Mod
     addressPostcodeIDType.setValue(address.postCode)
 
     val addressCountryCodeType = new AddressCountryCodeType
-    addressCountryCodeType.setValue(
-      countriesService.allCountries
-        .find(country => address.country.contains(country.countryName))
-        .map(_.countryCode)
-        .getOrElse("")
-    )
+    addressCountryCodeType.setValue(countriesService.getCountryCode(address.country).getOrElse(""))
 
     declarantAddress.setLine(addressLineTextType)
     declarantAddress.setCityName(addressCityNameTextType)
