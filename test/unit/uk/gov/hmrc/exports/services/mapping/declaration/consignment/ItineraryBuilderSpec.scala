@@ -66,30 +66,12 @@ class ItineraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         consignment.getItinerary.get(0).getRoutingCountryCode.getValue mustBe "GB"
         consignment.getItinerary.get(1).getRoutingCountryCode.getValue mustBe "FR"
       }
+    }
 
-      "no routing countries are provided and origin is GB" in {
-        // Given
-        val declaration = aDeclaration(withoutRoutingCountries(), withOriginationCountry(Country(Some("GB"))))
+    "not be added to the 'Consignment' payload" when {
+      "no routing countries are provided" in {
         val consignment = new Declaration.Consignment()
-
-        // When
-        new ItineraryBuilder().buildThenAdd(declaration, consignment)
-
-        // Then
-        consignment.getItinerary must have(size(1))
-        consignment.getItinerary.get(0).getSequenceNumeric.intValue mustBe 0
-        consignment.getItinerary.get(0).getRoutingCountryCode.getValue mustBe "GB"
-      }
-
-      "no routing countries are provided and origin is not GB" in {
-        // Given
-        val declaration = aDeclaration(withoutRoutingCountries(), withOriginationCountry(Country(Some("FR"))))
-        val consignment = new Declaration.Consignment()
-
-        // When
-        new ItineraryBuilder().buildThenAdd(declaration, consignment)
-
-        // Then
+        new ItineraryBuilder().buildThenAdd(aDeclaration(), consignment)
         consignment.getItinerary must have(size(0))
       }
     }

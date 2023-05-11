@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration.consignment
 
-import uk.gov.hmrc.exports.models.declaration.Country
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -46,15 +45,8 @@ class ItineraryBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration,
     itinerary
   }
 
-  private val GB = "GB"
-  private lazy val gb = Some(Country(Some(GB)))
-
-  private def getRoutingCountries(model: ExportsDeclaration): Seq[(String, Int)] = {
-    val locations = model.locations
-    if (locations.routingCountries.isEmpty && locations.originationCountry == gb) Seq(GB -> 0)
-    else
-      locations.routingCountries.flatMap { routingCountry =>
-        routingCountry.country.code.map(_ -> routingCountry.sequenceId)
-      }
-  }
+  private def getRoutingCountries(declaration: ExportsDeclaration): Seq[(String, Int)] =
+    declaration.locations.routingCountries.flatMap { routingCountry =>
+      routingCountry.country.code.map(_ -> routingCountry.sequenceId)
+    }
 }
