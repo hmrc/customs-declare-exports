@@ -79,12 +79,7 @@ class ConsigneeBuilder @Inject() (countriesService: CountriesService) extends Mo
 
     if (address.country.nonEmpty) {
       val countryCode = new AddressCountryCodeType
-      countryCode.setValue(
-        countriesService.allCountries
-          .find(country => address.country.contains(country.countryName))
-          .map(_.countryCode)
-          .getOrElse("")
-      )
+      countryCode.setValue(countriesService.getCountryCode(address.country).getOrElse(""))
       consigneeAddress.setCountryCode(countryCode)
 
     }
