@@ -16,7 +16,13 @@ import uk.gov.hmrc.exports.models.declaration.submissions.{Action, ExternalAmend
 import uk.gov.hmrc.exports.models.ead.parsers.MrnDeclarationParserTestData
 import uk.gov.hmrc.exports.models.ead.parsers.MrnDeclarationParserTestData.{badTestSample, mrnDeclarationTestSample}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, CancellationMetaDataBuilder, ExportsPointerToWCOPointer}
+import uk.gov.hmrc.exports.services.mapping.{
+  AmendmentMetaDataBuilder,
+  CancellationMetaDataBuilder,
+  ExportsPointerToWCOPointer,
+  NoMappingFoundError,
+  PointerMappingException
+}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParser
 import uk.gov.hmrc.http.InternalServerException
@@ -117,7 +123,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
     val declaration = aDeclaration(withId(amendmentId), withEori(eori), withConsignmentReferences(mrn = mrn))
 
     "add an Amendment action to the submission on amend" in {
-      when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Seq(""))
+      when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Right(Seq("")))
       when(amendmentMetaDataBuilder.buildRequest(any(), any(), any())).thenReturn(metadata)
       when(wcoMapperService.toXml(any())).thenReturn(xml)
       when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
@@ -148,6 +154,17 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
 
       val resultingDeclaration = declarationRepository.findOne(id, amendmentId).futureValue.value
       resultingDeclaration.status mustBe DeclarationStatus.AMENDMENT_DRAFT
+    }
+
+    "throw an exception that details the erroneous pointers" in {
+      when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Left(NoMappingFoundError("some.broken.pointer")))
+      await(submissionRepository.insertOne(submission))
+
+      val caught = intercept[PointerMappingException] {
+        await(submissionService.amend(Eori(eori), submissionAmendment, declaration)(HeaderCarrier()))
+      }
+
+      assert(caught.getMessage === "Unable to map [some.broken.pointer] to any value.")
     }
   }
 
