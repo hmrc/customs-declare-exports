@@ -54,7 +54,7 @@ class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
   private def removeDollarSign(exportsPointer: String, wcoPointer: String): (String, String) =
     s"declaration.$exportsPointer".replace("$", "") -> wcoPointer
 
-  def getWCOPointers(exportsPointer: String): Seq[String] = {
+  def getWCOPointers(exportsPointer: String): Either[MappingError, Seq[String]] = {
     val segments = exportsPointer.split("\\.")
     val placeholders = segments.filter(isSequenceNumber)
 
@@ -62,16 +62,17 @@ class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
 
       // List of WCO Pointers found.
       case Some(wcoPointers) =>
-        wcoPointers.map { wcoPointer =>
+        Right(wcoPointers.map { wcoPointer =>
           // Replacing placeholders, if any, in the WCO Pointers.
           if (wcoPointer.contains('$')) replacePlaceholders(wcoPointer, placeholders)
           else wcoPointer
-        }
+        })
 
       // OK, not found. Let's see if it's a dynamic pointer (when contains at least one numeric-only segment).
       case _ =>
-        if (placeholders.size == 0) List.empty // Nope. Nothing to do
-        else getAsDynamicPointer(segments)
+        val dynamicPointers = getAsDynamicPointer(segments)
+        if (dynamicPointers.isEmpty) Left(NoMappingFoundError(exportsPointer))
+        else Right(dynamicPointers)
     }
   }
 

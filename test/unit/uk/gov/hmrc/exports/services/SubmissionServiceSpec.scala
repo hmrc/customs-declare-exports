@@ -357,10 +357,11 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       }
       "updating submission with amendment action fails" in {
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
-        when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Seq(""))
+        when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Right(wcoPointers))
         when(amendMetaDataBuilder.buildRequest(any(), any(), any())).thenReturn(metadata)
         when(wcoMapperService.toXml(any())).thenReturn(xml)
         when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
+        // The following triggers an error
         when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(None))
         when(declarationRepository.revertStatusToAmendmentDraft(any())).thenReturn(Future.successful(Some(dec)))
 
@@ -373,7 +374,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
     "call expected methods and return an actionId" in {
       when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
-      when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(wcoPointers)
+      when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Right(wcoPointers))
       when(amendMetaDataBuilder.buildRequest(any(), any(), any())).thenReturn(metadata)
       when(wcoMapperService.toXml(any())).thenReturn(xml)
       when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))

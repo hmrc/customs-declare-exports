@@ -30,7 +30,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.{StatusGro
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.{Eori, FetchSubmissionPageData, Mrn, PageOfSubmissions}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, CancellationMetaDataBuilder, ExportsPointerToWCOPointer}
+import uk.gov.hmrc.exports.services.mapping._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParser
 import uk.gov.hmrc.http.HeaderCarrier
@@ -269,13 +269,11 @@ class SubmissionService @Inject() (
   private def sendAmendmentRequest(declaration: ExportsDeclaration, submission: Submission, fieldPointers: Seq[String])(
     implicit hc: HeaderCarrier
   ): Future[String] = {
-    logger.info(s"Field pointers received from frontend:\n$fieldPointers")
-    val wcoPointers = fieldPointers.flatMap(exportsPointerToWCOPointer.getWCOPointers).distinct
-    logger.info(s"Processed WCO pointers:\n$wcoPointers")
+    val wcoPointers = processPointers(fieldPointers, declaration.id)
     val metadata =
       metrics.timeCall(Timers.amendmentProduceMetaDataTimer)(amendmentMetaDataBuilder.buildRequest(submission.mrn, declaration, wcoPointers))
     val xml = metrics.timeCall(Timers.amendmentConvertToXmlTimer)(wcoMapperService.toXml(metadata))
-    logger.info(s"Generated amendment XML:\n$xml")
+    logProgress(declaration.id, s"Generated amendment XML:\n$xml")
 
     logProgress(declaration.id, "Submitting amendment request to the Declaration API")
     for {
@@ -289,8 +287,28 @@ class SubmissionService @Inject() (
   private def updateSubmissionWithAmendmentAction(actionId: String, decId: String, submission: Submission): Future[Unit] = {
     val newAction = Action(id = actionId, AmendmentRequest, decId = Some(decId), versionNo = submission.latestVersionNo + 1)
     submissionRepository.addAction(submission.uuid, newAction).map {
-      case Some(_) => logger.info(s"Updated submission with id ${submission.uuid} successfully with amendment action.")
+      case Some(_) => logProgress(decId, s"Updated submission with id ${submission.uuid} successfully with amendment action.")
       case _       => throw new NoSuchElementException(s"Failed to find submission with id ${submission.uuid} to update with amendment action.")
+    }
+  }
+
+  private def processPointers(fieldPointers: Seq[String], decId: String): Seq[String] = {
+    logProgress(decId, s"Field pointers received from frontend:\n$fieldPointers")
+    val results = fieldPointers.map(exportsPointerToWCOPointer.getWCOPointers)
+
+    val (errors, values) = results.partition(_.isLeft)
+    val flattenedErrors = errors.collect { case Left(err) => err }
+    val flattenedValues = values.collect { case Right(value) => value }
+
+    if (flattenedErrors.nonEmpty) {
+      val errorMessage = flattenedErrors.collect { case NoMappingFoundError(pointer) =>
+        s"Unable to map [$pointer] to any value."
+      }.mkString("\n")
+      throw new PointerMappingException(errorMessage)
+    } else {
+      val wcoPointers = flattenedValues.flatten
+      logProgress(decId, s"Processed WCO pointers:\n$wcoPointers")
+      wcoPointers
     }
   }
 }

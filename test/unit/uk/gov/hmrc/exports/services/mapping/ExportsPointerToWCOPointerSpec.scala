@@ -42,24 +42,27 @@ class ExportsPointerToWCOPointerSpec extends AnyWordSpec with Matchers {
     "return the expected WCO Pointers for the provided Exports Pointers" in {
       val nonDynamicExportsPointer = "declaration.type"
       val expectedNonDynamicWCOPointers = List("42A.D013")
-      exportsPointerToWCOPointer.getWCOPointers(nonDynamicExportsPointer) mustBe expectedNonDynamicWCOPointers
+      exportsPointerToWCOPointer.getWCOPointers(nonDynamicExportsPointer) mustBe Right(expectedNonDynamicWCOPointers)
 
       val dynamicExportsPointer1 = "declaration.parties.declarationHoldersData.holders.#9.eori"
       val expectedWCOPointersForDynamicExportsPointer1 = List("42A.17C.#9.R144")
-      exportsPointerToWCOPointer.getWCOPointers(dynamicExportsPointer1) mustBe expectedWCOPointersForDynamicExportsPointer1
+      exportsPointerToWCOPointer.getWCOPointers(dynamicExportsPointer1) mustBe Right(expectedWCOPointersForDynamicExportsPointer1)
 
       val dynamicExportsPointer2 = "declaration.transport.container.#98.seals.#43"
       val expectedWCOPointersForDynamicExportsPointer2 = List("42A.67A.28A.31B.#98.44B.#43")
-      exportsPointerToWCOPointer.getWCOPointers(dynamicExportsPointer2) mustBe expectedWCOPointersForDynamicExportsPointer2
+      exportsPointerToWCOPointer.getWCOPointers(dynamicExportsPointer2) mustBe Right(expectedWCOPointersForDynamicExportsPointer2)
 
       val exportsPointerWithMultipleWCOPointers = "declaration.mucr.#19.test"
       val expectedMultipleWCOPointers = List("42A.67A.99A.#19.171", "42A.67A.99A.#19.D018", "42A.67A.99A.#5.D019", "42A.67A.99A.#6.D031")
-      val actualMultipleWCOPointers = exportsPointerToWCOPointer.getWCOPointers(exportsPointerWithMultipleWCOPointers)
+      val actualMultipleWCOPointers = exportsPointerToWCOPointer.getWCOPointers(exportsPointerWithMultipleWCOPointers) match {
+        case Right(pointers) => pointers
+        case _               => fail()
+      }
       expectedMultipleWCOPointers.foreach(actualMultipleWCOPointers must contain(_))
     }
 
-    "return an empty List when WCO Pointers for the provided Exports Pointer cannot be found" in {
-      exportsPointerToWCOPointer.getWCOPointers("declaration.some.field") mustBe List.empty
+    "return a MappingError when WCO Pointers for the provided Exports Pointer cannot be found" in {
+      exportsPointerToWCOPointer.getWCOPointers("declaration.some.field") mustBe Left(NoMappingFoundError("declaration.some.field"))
     }
   }
 }
