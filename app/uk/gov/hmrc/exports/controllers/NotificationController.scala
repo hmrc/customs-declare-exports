@@ -48,6 +48,10 @@ class NotificationController @Inject() (
     }
   }
 
+  def findLatestNotification(actionId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { _ =>
+    notificationsService.findLatestNotification(actionId).map(Ok(_))
+  }
+
   val saveNotification: Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
     metrics.incrementCounter(Counters.notificationCounter)
 
