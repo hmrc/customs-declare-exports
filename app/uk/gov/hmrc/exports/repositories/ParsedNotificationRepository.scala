@@ -43,6 +43,9 @@ class ParsedNotificationRepository @Inject() (mongoComponent: MongoComponent)(im
   def findNotifications(actionIds: Seq[String]): Future[Seq[ParsedNotification]] =
     if (actionIds.isEmpty) Future.successful(List.empty)
     else findAll(Json.obj("$or" -> actionIds.map(id => Json.obj("actionId" -> JsString(id)))))
+
+  def findLatestNotification(actionId: String): Future[Option[ParsedNotification]] =
+    findFirst(Json.obj("actionId" -> actionId), Json.obj("details.dateTimeIssued" -> -1))
 }
 
 object ParsedNotificationRepository {
