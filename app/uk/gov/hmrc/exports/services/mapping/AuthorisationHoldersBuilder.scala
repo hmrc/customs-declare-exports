@@ -46,7 +46,11 @@ class AuthorisationHoldersBuilder @Inject() () extends ModifyingBuilder[ExportsD
       else {
         val hasAuthCodeForGVMSPorts = holders.exists(holder => authCodesForGVMSPorts.contains(holder.getCategoryCode.getValue))
         if (hasAuthCodeForGVMSPorts) holders
-        else holders :+ mapToAuthorisationHolder(DeclarationHolder(Some(EXRR), eoriForGVMSPort(declaration.parties), None))
+        else
+          eoriForGVMSPort(declaration.parties) match {
+            case None => holders
+            case eori => holders :+ mapToAuthorisationHolder(DeclarationHolder(Some(EXRR), eori, None))
+          }
       }
     }
   }
@@ -55,22 +59,15 @@ class AuthorisationHoldersBuilder @Inject() () extends ModifyingBuilder[ExportsD
     def filter(details: EntityDetails): Option[String] = details.eori.filter(_.trim.nonEmpty)
 
     val declarantEori = parties.declarantDetails.flatMap(dd => filter(dd.details))
-    val representativeEori = parties.representativeDetails.flatMap(_.details.flatMap(filter))
     val isDeclarantTheExporter = parties.declarantIsExporter.exists(_.isExporter)
-
-    val eori: Option[String] =
+    val eori =
       if (!isDeclarantTheExporter) {
         val exporterEori = parties.exporterDetails.flatMap(exd => filter(exd.details))
-        if (exporterEori.exists(_.take(2) == "GB"))
-          exporterEori // if declarant is agent & has the exporter’s EORI & exporter’s EORI starts GB Use exporter’s EORI
-        else if (parties.representativeDetails.exists(_.isRepresentingOtherAgent))
-          declarantEori // if declarant is agent & declarant holds the contract
-        else
-          representativeEori // Else Use representative’s EORI
-      } else if (declarantEori.exists(_.take(2) == "GB"))
-        declarantEori // If declarant is exporter & declarant EORI starts GB Use declarant’s EORI
-      else
-        representativeEori // Else Use representative’s EORI
+        if (exporterEori.exists(_.take(2) == "GB")) exporterEori
+        else if (parties.representativeDetails.exists(_.isRepresentingOtherAgent)) declarantEori
+        else None
+      } else if (declarantEori.exists(_.take(2) == "GB")) declarantEori
+      else None
 
     if (eori.isDefined) eori else parties.representativeDetails.flatMap(_.details.flatMap(filter))
   }
