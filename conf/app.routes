@@ -25,6 +25,8 @@ POST        /submission/:id                                         uk.gov.hmrc.
 
 GET         /submission/notifications/:id                           uk.gov.hmrc.exports.controllers.NotificationController.findAll(id: String)
 
+GET         /latest-notification/:actionId                          uk.gov.hmrc.exports.controllers.NotificationController.findLatestNotification(actionId: String)
+
 GET         /ead/:mrn                                               uk.gov.hmrc.exports.controllers.ead.EADController.findByMrn(mrn: String)
 
 GET         /eori-email/:eori                                       uk.gov.hmrc.exports.controllers.EmailByEoriController.getEmailIfVerified(eori: String)

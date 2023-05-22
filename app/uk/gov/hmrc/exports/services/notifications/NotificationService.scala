@@ -32,6 +32,9 @@ class NotificationService @Inject() (
   notificationReceiptActionsScheduler: NotificationReceiptActionsScheduler
 )(implicit executionContext: ExecutionContext) {
 
+  def findLatestNotification(actionId: String): Future[Option[ParsedNotification]] =
+    notificationRepository.findLatestNotification(actionId)
+
   def findAllNotificationsSubmissionRelated(submission: Submission): Future[Seq[ParsedNotification]] =
     notificationRepository.findNotifications(actionIdsSubmissionRelated(submission))
 

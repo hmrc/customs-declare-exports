@@ -59,7 +59,7 @@ class ParsedNotificationRepositoryISpec extends IntegrationTestSpec {
     }
   }
 
-  "Notification Repository on findNotificationsByActionId" when {
+  "Notification Repository on findAll" when {
 
     "there is no Notification with given actionId" should {
       "return empty list" in {
@@ -92,7 +92,7 @@ class ParsedNotificationRepositoryISpec extends IntegrationTestSpec {
     }
   }
 
-  "Notification Repository on findNotificationsByActionIds" when {
+  "Notification Repository on findNotifications" when {
 
     "there is no Notification for any given actionId" should {
       "return empty list" in {
@@ -151,6 +151,20 @@ class ParsedNotificationRepositoryISpec extends IntegrationTestSpec {
 
         repository.findNotifications(Seq.empty).futureValue must equal(Seq.empty)
       }
+    }
+  }
+
+  "Notification Repository on findLatestNotification" should {
+    "return the latest Notification" in {
+      val actionId = notification.actionId
+      repository.insertOne(notification).futureValue
+      repository.insertOne(notification_2.copy(actionId = actionId)).futureValue
+      repository.insertOne(notification_3.copy(actionId = actionId)).futureValue
+
+      val latestNotification = repository.findLatestNotification(actionId).futureValue.value
+
+      latestNotification.details.dateTimeIssued mustBe notification_3.details.dateTimeIssued
+      latestNotification.details.errors mustBe Seq.empty
     }
   }
 }
