@@ -107,7 +107,6 @@ class CommodityBuilder @Inject() () extends ModifyingBuilder[Commodity, Governme
 
     data.tariffQuantity.foreach { tariff =>
       val mappedQuantity = new GoodsMeasureTariffQuantityType
-      mappedQuantity.setUnitCode(defaultMeasureCode)
       mappedQuantity.setValue(tariff.value.get.bigDecimal)
       goodsMeasure.setTariffQuantity(mappedQuantity)
     }

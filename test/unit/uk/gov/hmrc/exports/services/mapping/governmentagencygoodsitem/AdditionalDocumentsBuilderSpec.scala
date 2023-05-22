@@ -38,10 +38,11 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
   )
 
   "AdditionalDocumentsBuilder" should {
-    "map correctly when values are present" in {
+    val measurementUnit = "KGM"
 
+    "map correctly when values are present" in {
       val amount = Amount(Some("GBP"), Some(BigDecimal(100)))
-      val measure = Measure(Some("KGM"), Some(BigDecimal(10)))
+      val measure = Measure(Some(measurementUnit), Some(BigDecimal(10)))
       val writeOff = WriteOff(Some(measure), Some(amount))
       val submitter = GovernmentAgencyGoodsItemAdditionalDocumentSubmitter(Some("issuingAuthorityName"), Some("role"))
       val dateTimeString = DateTimeString("102", "20170304")
@@ -73,8 +74,8 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
     }
 
     "map document from 'Is License Required' No" when {
-      "docs already exist" in {
 
+      "docs already exist" in {
         val additionalDocumentsBuilder = new AdditionalDocumentsBuilder()
         val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
 
@@ -101,8 +102,8 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
         governmentAgencyGoodsItem.getAdditionalDocument.get(5).getCategoryCode.getValue mustBe "Y"
 
       }
-      "docs do not exist" in {
 
+      "docs do not exist" in {
         val additionalDocumentsBuilder = new AdditionalDocumentsBuilder()
         val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
 
@@ -130,8 +131,8 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
     }
 
     "map AdditionalDocument to GovernmentAgencyGoodsItemAdditionalDocument" when {
-      "all fields are present" in {
 
+      "all fields are present" in {
         val wcoAdditionalDocument = AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument(additionalDocument)
 
         wcoAdditionalDocument.categoryCode mustBe Some("D")
@@ -173,6 +174,7 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
         }
 
         "require default values if missing" should {
+
           "should retain their values when their values are not missing" in {
             val additionalDocument = AdditionalDocument(
               documentTypeCode = docCodeRequiringDefaults,

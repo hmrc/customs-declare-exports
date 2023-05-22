@@ -21,7 +21,6 @@ import uk.gov.hmrc.exports.models.declaration.{CommodityMeasure, ExportItem}
 import uk.gov.hmrc.wco.dec._
 
 class CachingMappingHelper {
-  val defaultMeasureCode = "KGM"
 
   import CachingMappingHelper._
 
@@ -56,15 +55,15 @@ class CachingMappingHelper {
 
   private def createMeasure(unitValue: String) =
     try
-      Measure(Some(defaultMeasureCode), value = Some(BigDecimal(unitValue)))
+      Measure(value = Some(BigDecimal(unitValue)))
     catch {
-      case _: NumberFormatException => Measure(Some(defaultMeasureCode), value = Some(BigDecimal(0)))
+      case _: NumberFormatException => Measure(value = Some(BigDecimal(0)))
     }
 }
 
 object CachingMappingHelper {
 
-  val classificationMapper: (Option[String], Option[String], Seq[String], Option[String], Seq[String]) => Seq[Classification] = (
+  private val classificationMapper: (Option[String], Option[String], Seq[String], Option[String], Seq[String]) => Seq[Classification] = (
     commodityCode: Option[String],
     cusCode: Option[String],
     nationalAdditionalCodes: Seq[String],

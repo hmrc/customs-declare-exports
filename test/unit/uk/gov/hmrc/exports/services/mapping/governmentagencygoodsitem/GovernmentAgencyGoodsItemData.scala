@@ -33,8 +33,6 @@ trait GovernmentAgencyGoodsItemData {
   val documentStatusReason = "Reason"
   val issusingAuthorityName = "issuingAuthorityName"
 
-  val measurementUnit = "KGM"
-
   // Package Information Data
   val shippingMarks = "shippingMarks"
   val packageTypeValue = "packageType"
