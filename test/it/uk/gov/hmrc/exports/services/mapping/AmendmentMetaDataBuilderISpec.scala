@@ -268,7 +268,7 @@ object AmendmentMetaDataBuilderISpec {
       |                    <ns3:GoodsMeasure>
       |                        <ns3:GrossMassMeasure unitCode="KGM">700</ns3:GrossMassMeasure>
       |                        <ns3:NetNetWeightMeasure unitCode="KGM">500</ns3:NetNetWeightMeasure>
-      |                        <ns3:TariffQuantity unitCode="KGM">10</ns3:TariffQuantity>
+      |                        <ns3:TariffQuantity>10</ns3:TariffQuantity>
       |                    </ns3:GoodsMeasure>
       |                </ns3:Commodity>
       |                <ns3:GovernmentProcedure>
@@ -499,7 +499,7 @@ object AmendmentMetaDataBuilderISpec {
       |                    <ns3:GoodsMeasure>
       |                        <ns3:GrossMassMeasure unitCode="KGM">700</ns3:GrossMassMeasure>
       |                        <ns3:NetNetWeightMeasure unitCode="KGM">500</ns3:NetNetWeightMeasure>
-      |                        <ns3:TariffQuantity unitCode="KGM">10</ns3:TariffQuantity>
+      |                        <ns3:TariffQuantity>10</ns3:TariffQuantity>
       |                    </ns3:GoodsMeasure>
       |                </ns3:Commodity>
       |                <ns3:GovernmentProcedure>

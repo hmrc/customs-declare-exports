@@ -24,18 +24,18 @@ class CachingMappingHelperSpec extends UnitSpec {
   "CachingMappingHelper" should {
 
     "mapGoodsMeasure" when {
-      "tariffQuantity grossMassMeasure netWeightMeasure provided" in {
 
+      "tariffQuantity grossMassMeasure netWeightMeasure are provided" in {
         val commodityMeasure = CommodityMeasure(Some("10"), Some(false), Some("100.00"), Some("100.00"))
         val goodsMeasure = new CachingMappingHelper().mapGoodsMeasure(commodityMeasure).flatMap(_.goodsMeasure).get
 
+        goodsMeasure.tariffQuantity.get.unitCode mustBe None
         goodsMeasure.tariffQuantity.get.value.get mustBe 10
         goodsMeasure.grossMassMeasure.get.value.get mustBe 100.00
         goodsMeasure.netWeightMeasure.get.value.get mustBe 100.00
       }
 
-      "grossMassMeasure netWeightMeasure provided but no tariffQuantity" in {
-
+      "grossMassMeasure netWeightMeasure are provided but no tariffQuantity" in {
         val commodityMeasure = CommodityMeasure(None, Some(true), Some("100.00"), Some("100.00"))
 
         val goodsMeasure = new CachingMappingHelper().mapGoodsMeasure(commodityMeasure).flatMap(_.goodsMeasure).get
@@ -45,9 +45,7 @@ class CachingMappingHelperSpec extends UnitSpec {
       }
 
       "no fields are provided" in {
-
         val commodityMeasure = CommodityMeasure(None, None, None, None)
-
         new CachingMappingHelper().mapGoodsMeasure(commodityMeasure) mustBe None
       }
 
@@ -55,7 +53,7 @@ class CachingMappingHelperSpec extends UnitSpec {
 
     "mapCommodity" when {
 
-      "all values provided" in {
+      "all values are provided" in {
         val exportItem = ExportItem(
           "id",
           statisticalValue = Some(StatisticalValue("10")),
@@ -75,7 +73,7 @@ class CachingMappingHelperSpec extends UnitSpec {
           .map(c => c.id) mustBe Seq(Some("12345678"), Some("cusCode"), Some("nationalAdditionalCodes"), Some("taricAdditionalCodes"))
       }
 
-      "Only commodity code and description provided" in {
+      "Only commodity code and description are provided" in {
         val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(Some("1234567890"), Some("description"))))
 
         val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
@@ -86,13 +84,13 @@ class CachingMappingHelperSpec extends UnitSpec {
         commodity.classifications.map(c => c.id) mustBe Seq(Some("12345678"))
       }
 
-      "Only commodity description stripped of new lines" in {
+      "Only commodity description, stripped of new lines, are provided" in {
         val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(None, Some(s"description with\na new\r\nline"))))
         val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
         commodity.description mustBe Some("description with a new line")
       }
 
-      "Only description provided" in {
+      "Only description are provided" in {
         val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(None, Some("description"))))
 
         val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
@@ -103,7 +101,8 @@ class CachingMappingHelperSpec extends UnitSpec {
         commodity.classifications mustBe Seq.empty
       }
 
-      "No commodity code or description provided" when {
+      "No commodity code or description are provided" when {
+
         "cusCode and dangerousGoods provided" in {
           val exportItem = ExportItem("id", commodityDetails = None)
 
@@ -112,7 +111,7 @@ class CachingMappingHelperSpec extends UnitSpec {
           commodity mustBe None
         }
 
-        "cusCode and dangerousGoods not provided" in {
+        "cusCode and dangerousGoods are not provided" in {
           val exportItem = ExportItem(
             "id",
             commodityDetails = None,
@@ -185,7 +184,6 @@ class CachingMappingHelperSpec extends UnitSpec {
           )
         }
       }
-
     }
   }
 }

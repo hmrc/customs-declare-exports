@@ -51,7 +51,7 @@ class CommodityBuilderSpec extends UnitSpec {
       mappedCommodity.getGoodsMeasure.getNetNetWeightMeasure.getUnitCode must be("KGM")
       mappedCommodity.getGoodsMeasure.getNetNetWeightMeasure.getValue.intValue() must be(90)
 
-      mappedCommodity.getGoodsMeasure.getTariffQuantity.getUnitCode must be("KGM")
+      Option(mappedCommodity.getGoodsMeasure.getTariffQuantity.getUnitCode) mustBe None
       mappedCommodity.getGoodsMeasure.getTariffQuantity.getValue.intValue() must be(2)
     }
 
