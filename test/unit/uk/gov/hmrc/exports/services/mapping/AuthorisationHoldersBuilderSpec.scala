@@ -45,25 +45,27 @@ class AuthorisationHoldersBuilderSpec extends UnitSpec with ExportsDeclarationBu
 
         "the user didn't enter any authorisation code and" when {
           "the user selects a GVMS port on /location-of-goods" should {
-            "NOT add to the WCO Declaration an 'EXRR' 'AuthorisationHolder' property" in {
+            "NOT add to the WCO Declaration an 'EXRR' 'AuthorisationHolder' property" which {
+              "is because the eori cannot be extracted from declarantDetails, repDetails or exporterDetails" in {
 
-              val additionalType = withAdditionalDeclarationType(STANDARD_FRONTIER)
+                val additionalType = withAdditionalDeclarationType(STANDARD_FRONTIER)
 
-              val model =
-                aDeclaration(
-                  additionalType,
-                  withGoodsLocation(gvmGoodsLocation),
-                  withDeclarantIsExporter(),
-                  withoutDeclarantDetails(),
-                  withoutExporterDetails(),
-                  withoutRepresentativeDetails()
-                )
-              val declaration = new Declaration()
+                val model =
+                  aDeclaration(
+                    additionalType,
+                    withGoodsLocation(gvmGoodsLocation),
+                    withDeclarantIsExporter(),
+                    withoutDeclarantDetails(),
+                    withoutExporterDetails(),
+                    withoutRepresentativeDetails()
+                  )
+                val declaration = new Declaration()
 
-              authorisationHoldersBuilder.buildThenAdd(model, declaration)
+                authorisationHoldersBuilder.buildThenAdd(model, declaration)
 
-              val authHolders = declaration.getAuthorisationHolder
-              authHolders.size mustBe 0
+                val authHolders = declaration.getAuthorisationHolder
+                authHolders.size mustBe 0
+              }
             }
           }
         }
