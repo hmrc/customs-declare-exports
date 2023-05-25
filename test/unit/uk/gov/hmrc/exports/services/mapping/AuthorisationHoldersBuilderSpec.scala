@@ -33,13 +33,41 @@ class AuthorisationHoldersBuilderSpec extends UnitSpec with ExportsDeclarationBu
 
     "build the expected WCO declaration" when {
 
-      "the ExportsDeclaration instance contains no holders" in {
-        val model = aDeclaration(withoutDeclarationHolders())
-        val declaration = new Declaration()
+      "the ExportsDeclaration instance contains no holders" when {
+        "no declaration holders" in {
+          val model = aDeclaration(withoutDeclarationHolders())
+          val declaration = new Declaration()
 
-        authorisationHoldersBuilder.buildThenAdd(model, declaration)
+          authorisationHoldersBuilder.buildThenAdd(model, declaration)
 
-        declaration.getAuthorisationHolder mustBe empty
+          declaration.getAuthorisationHolder mustBe empty
+        }
+
+        "the user didn't enter any authorisation code and" when {
+          "the user selects a GVMS port on /location-of-goods" should {
+            "NOT add to the WCO Declaration an 'EXRR' 'AuthorisationHolder' property" in {
+
+              val additionalType = withAdditionalDeclarationType(STANDARD_FRONTIER)
+
+              val model =
+                aDeclaration(
+                  additionalType,
+                  withGoodsLocation(gvmGoodsLocation),
+                  withDeclarantIsExporter(),
+                  withoutDeclarantDetails(),
+                  withoutExporterDetails(),
+                  withoutRepresentativeDetails()
+                )
+              val declaration = new Declaration()
+
+              authorisationHoldersBuilder.buildThenAdd(model, declaration)
+
+              val authHolders = declaration.getAuthorisationHolder
+              authHolders.size mustBe 0
+            }
+          }
+        }
+
       }
 
       "the ExportsDeclaration instance contains multiple holders" in {
