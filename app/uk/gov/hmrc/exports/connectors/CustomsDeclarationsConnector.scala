@@ -102,7 +102,7 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: 
         getHttpResponseStatusType(response) match {
           case ApplicationErrorStatus =>
             throw UpstreamErrorResponse(
-              message = "Invalid request made to Customs Declarations API",
+              message = s"Invalid request made to Customs Declarations API ${getHttpResponseStatusType(response)}",
               statusCode = response.status,
               reportAs = Status.INTERNAL_SERVER_ERROR,
               headers = response.headers

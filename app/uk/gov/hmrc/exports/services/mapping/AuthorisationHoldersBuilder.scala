@@ -46,13 +46,17 @@ class AuthorisationHoldersBuilder @Inject() () extends ModifyingBuilder[ExportsD
       else {
         val hasAuthCodeForGVMSPorts = holders.exists(holder => authCodesForGVMSPorts.contains(holder.getCategoryCode.getValue))
         if (hasAuthCodeForGVMSPorts) holders
-        else holders :+ mapToAuthorisationHolder(DeclarationHolder(Some(EXRR), eoriForGVMSPort(declaration.parties), None))
+        else
+          eoriForGVMSPort(declaration.parties) match {
+            case None => holders
+            case eori => holders :+ mapToAuthorisationHolder(DeclarationHolder(Some(EXRR), eori, None))
+          }
       }
     }
   }
 
   private def eoriForGVMSPort(parties: Parties): Option[String] = {
-    def filter(details: EntityDetails): Option[String] = details.eori.filter(!_.trim.isEmpty)
+    def filter(details: EntityDetails): Option[String] = details.eori.filter(_.trim.nonEmpty)
 
     val declarantEori = parties.declarantDetails.flatMap(dd => filter(dd.details))
     val isDeclarantTheExporter = parties.declarantIsExporter.exists(_.isExporter)
