@@ -62,7 +62,7 @@ class AdditionalInformationBuilder @Inject() () extends ModifyingBuilder[Exports
   def buildThenAdd(statementDescription: String, declaration: Declaration, sequenceIndex: Int = 1): Unit = {
     val additionalInformation = new Declaration.AdditionalInformation()
     val statementDescriptionTextType = new AdditionalInformationStatementDescriptionTextType()
-    statementDescriptionTextType.setValue(statementDescription)
+    statementDescriptionTextType.setValue(statementDescription.replaceAll("\r", ""))
 
     val statementTypeCode = new AdditionalInformationStatementTypeCodeType()
     statementTypeCode.setValue("AES")
