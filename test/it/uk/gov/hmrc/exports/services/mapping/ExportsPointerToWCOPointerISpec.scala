@@ -13,8 +13,8 @@ class ExportsPointerToWCOPointerISpec extends AnyWordSpec with Matchers {
   "ExportsPointerToWCOPointer.getWCOPointers" should {
 
     "return the expected WCO Pointers for the provided Exports Pointers" in {
-      val dynamicExportsPointer = "declaration.items.#98.additionalFiscalReferencesData.references.#43.country"
-      val expectedWCOPointersForDynamicExportsPointer = Right(List("42A.67A.68A.#98.55B.#43.R119"))
+      val dynamicExportsPointer = "declaration.items.#98.additionalFiscalReferencesData.references.#43"
+      val expectedWCOPointersForDynamicExportsPointer = Right(List("42A.67A.68A.#98.55B.#43"))
       exportsPointerToWCOPointer.getWCOPointers(dynamicExportsPointer) mustBe expectedWCOPointersForDynamicExportsPointer
 
       val exportsPointerForMucr = "declaration.mucr"
