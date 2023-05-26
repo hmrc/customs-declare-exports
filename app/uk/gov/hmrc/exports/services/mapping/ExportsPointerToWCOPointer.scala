@@ -38,9 +38,17 @@ class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
     if (lines.size != allLines.size)
       throw new IOException(s"File $pointerFile is malformed. Expecting rows NOT starting with 'declaration.' and with 2 values separated by '|'")
 
+    // The following method is a temporary hack to handle pointers that come from the frontend as a sequence, but for reasons of expediency we are mapping to the WCO Pointer that is actually a parent of the sequenced elements.
+    // Example: There can be up to 99 taric or nact codes, but we will point to the Commodity element if any of these change.
+    // These are handled by removing the final sequence id so that this class will parse them.
+    def convertManyToOnePointers(pointer: String): String =
+      if (Seq("items.$1.nactCode.$2", "items.$1.taricCode.$2", "items.$1.procedureCodes.additionalProcedureCodes.$2").contains(pointer))
+        pointer.dropRight(3)
+      else pointer
+
     val tuples = lines.map(_.split('|').map(_.trim).toList) collect {
       case List(exportsPointer, wcoPointer) if exportsPointer.nonEmpty && wcoPointer.nonEmpty =>
-        if (exportsPointer.count(_ == '$') == wcoPointer.count(_ == '$')) removeDollarSign(exportsPointer, wcoPointer)
+        if (convertManyToOnePointers(exportsPointer).count(_ == '$') == wcoPointer.count(_ == '$')) removeDollarSign(exportsPointer, wcoPointer)
         else throw new IOException(s"File $pointerFile is malformed. Not matching '$$' for $exportsPointer")
 
       case line =>
