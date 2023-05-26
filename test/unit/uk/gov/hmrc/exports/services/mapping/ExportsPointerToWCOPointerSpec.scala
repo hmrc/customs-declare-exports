@@ -28,7 +28,7 @@ class ExportsPointerToWCOPointerSpec extends AnyWordSpec with Matchers {
 
     override protected[this] val mapping: Map[String, Seq[String]] =
       Map(
-        "declaration.parties.declarationHoldersData.holders.1.authorisationTypeCode" -> List("42A.17C.$1.R145"),
+        "declaration.parties.declarationHoldersData.holders.1" -> List("42A.17C.$1"),
         "declaration.mucr.1.test" -> List("42A.67A.99A.$1.171", "42A.67A.99A.$1.D018", "42A.67A.99A.#5.D019", "42A.67A.99A.#6.D031"),
         "declaration.type" -> List("42A.D013"),
         "declaration.transport.container.1.seals.2" -> List("42A.67A.28A.31B.$1.44B.$2"),

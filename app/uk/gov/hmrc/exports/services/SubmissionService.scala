@@ -309,7 +309,7 @@ class SubmissionService @Inject() (
       }.mkString("\n")
       throw new PointerMappingException(errorMessage)
     } else {
-      val wcoPointers = flattenedValues.flatten
+      val wcoPointers = flattenedValues.flatten.distinct
       logProgress(decId, s"Processed WCO pointers:\n$wcoPointers")
       wcoPointers
     }
