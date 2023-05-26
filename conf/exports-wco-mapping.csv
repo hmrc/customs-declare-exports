@@ -60,10 +60,8 @@ parties.consignorDetails.details.address.fullName|42A.28A.29A.30A.R020
 parties.consignorDetails.details.address.postCode|42A.28A.29A.30A.04A.245
 parties.consignorDetails.details.address.townOrCity|42A.28A.29A.30A.04A.241
 parties.consignorDetails.details.eori|42A.28A.29A.30A.R021
-parties.declarationAdditionalActorsData.actors.eori|42A.67A.16C.R143
-parties.declarationAdditionalActorsData.actors.partyType|42A.67A.16C.R005
-parties.declarationHoldersData.holders.$1.authorisationTypeCode|42A.17C.$1.R145
-parties.declarationHoldersData.holders.$1.eori|42A.17C.$1.R144
+parties.declarationAdditionalActorsData.actors.$1|42A.67A.16C.$1
+parties.declarationHoldersData.holders.$1|42A.17C.$1
 parties.exporterDetails.details.address|42A.57A.04A
 parties.exporterDetails.details.address|42A.57A.R031
 parties.exporterDetails.details.address.addressLine|42A.57A.04A.239
