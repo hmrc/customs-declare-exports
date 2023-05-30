@@ -104,7 +104,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
             deleteAnyAmendmentDraftDecs(session, submission, _)
           }
         } else {
-          logger.debug(
+          logger.info(
             s"AMENDED notification ignored as its version number is <= to the submission's current latestVersion number of ${submission.latestVersionNo}"
           )
           Future.successful(Some(submission))
