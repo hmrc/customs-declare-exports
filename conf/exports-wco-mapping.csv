@@ -37,6 +37,9 @@ mucr|42A.67A.99A.#1.D019
 mucr|42A.67A.99A.#1.D031
 natureOfTransaction.natureType|42A.67A.103
 parties.actors.declarationAdditionalActorsData.$1|42A.67A.16C.$1
+parties.carrierDetails|42A.28A.18A.04A
+parties.carrierDetails|42A.28A.18A.R011
+parties.carrierDetails|42A.28A.18A.R012
 parties.carrierDetails.address|42A.28A.18A.04A
 parties.carrierDetails.address|42A.28A.18A.R011
 parties.carrierDetails.address.addressLine|42A.28A.18A.04A.239
@@ -52,6 +55,9 @@ parties.consigneeDetails.address.country|42A.67A.27A.04A.242
 parties.consigneeDetails.address.fullName|42A.67A.27A.R014
 parties.consigneeDetails.address.postCode|42A.67A.27A.04A.245
 parties.consigneeDetails.address.townOrCity|42A.67A.27A.04A.241
+parties.consignorDetails|42A.28A.29A.30A.04A
+parties.consignorDetails|42A.28A.29A.30A.R020
+parties.consignorDetails|42A.28A.29A.30A.R021
 parties.consignorDetails.address|42A.28A.29A.30A.04A
 parties.consignorDetails.address|42A.28A.29A.30A.R020
 parties.consignorDetails.address.addressLine|42A.28A.29A.30A.04A.239
@@ -75,6 +81,7 @@ parties.exporterDetails.details.address.townOrCity|42A.57A.04A.241
 parties.exporterDetails.details.eori|42A.57A.R032
 parties.personPresentingGoodsDetails.eori|42A.57B.R123
 parties.personPresentingGoodsDetails|42A.57B.R123
+parties.representativeDetails|42A.05A
 parties.representativeDetails.details|42A.05A
 parties.representativeDetails.details.eori|42A.05A.R004
 parties.representativeDetails.statusCode|42A.05A.102
