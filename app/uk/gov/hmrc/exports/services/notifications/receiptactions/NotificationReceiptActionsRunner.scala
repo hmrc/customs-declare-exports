@@ -56,8 +56,8 @@ class NotificationReceiptActionsRunner @Inject() (
       .flatMap { _ =>
         unparsedNotificationWorkItemRepository.complete(unparsedNotificationWorkItem.id, Succeeded)
       }
-      .recoverWith { case _ =>
+      .recoverWith { case e =>
+        logger.warn(s"[Notification parsing error] parsing id:${unparsedNotificationWorkItem.item.id}' Failed!", e)
         unparsedNotificationWorkItemRepository.markAs(unparsedNotificationWorkItem.id, Failed)
       }
-
 }

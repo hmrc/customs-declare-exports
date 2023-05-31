@@ -69,17 +69,17 @@ class UpdateSubmissionsTransactionalOps @Inject() (
     notifications: Seq[ParsedNotification],
     submission: Submission
   ): Future[Submission] = {
-
     val index = submission.actions.indexWhere(_.id == actionId)
     val action = submission.actions(index)
     val seed = action.notifications.fold(Seq.empty[NotificationSummary])(identity)
-    val firstNotificationDetails = notifications.head.details
 
     val (actionWithAllNotificationSummaries, notificationSummaries) =
       updateActionWithNotificationSummaries(notificationsToAction(action), submission.actions, notifications, seed)
 
-    val requestType = if (firstNotificationDetails.status == AMENDED) ExternalAmendmentRequest else action.requestType
+    val firstNotificationDetails = notifications.head.details
     val summary = notificationSummaries.head
+
+    val requestType = if (firstNotificationDetails.status == AMENDED) ExternalAmendmentRequest else action.requestType
     val updatedActions = submission.actions.updated(index, actionWithAllNotificationSummaries)
 
     val update = requestType match {
@@ -104,15 +104,14 @@ class UpdateSubmissionsTransactionalOps @Inject() (
             deleteAnyAmendmentDraftDecs(session, submission, _)
           }
         } else {
-          logger.debug(
+          logger.info(
             s"AMENDED notification ignored as its version number is <= to the submission's current latestVersion number of ${submission.latestVersionNo}"
           )
           Future.successful(Some(submission))
         }
 
       case CancellationRequest => updateCancellationRequest(session, action, updatedActions)
-
-      case _ => Future.successful(None)
+      case _                   => Future.successful(None)
     }
 
     update flatMap {
@@ -153,7 +152,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
 
     def updateFromStatus(decId: String): JsObject =
       submissionStatus match {
-        case REJECTED | CUSTOMS_POSITION_DENIED =>
+        case RECEIVED | REJECTED | CUSTOMS_POSITION_DENIED =>
           Json.obj("latestEnhancedStatus" -> ON_HOLD, "enhancedStatusLastUpdated" -> summary.dateTimeIssued, "actions" -> actions)
         case CUSTOMS_POSITION_GRANTED =>
           Json.obj(
@@ -174,8 +173,8 @@ class UpdateSubmissionsTransactionalOps @Inject() (
         BsonDocument(Json.obj("$set" -> updateFromStatus(decId)).toString)
       )
     } getOrElse Future.failed(throw new InternalServerException(s"Action(${action.id}) to amend does not contain a decId"))
-
   }
+
   private def updateExternalAmendmentRequest(
     session: ClientSession,
     submission: Submission,
