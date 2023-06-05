@@ -294,9 +294,6 @@ class SubmissionService @Inject() (
 
   private def processPointers(fieldPointers: Seq[String], decId: String): Seq[String] = {
     logProgress(decId, s"Field pointers received from frontend:\n$fieldPointers")
-    // TEMPORARY EXCEPTION THROWN ON NIL AMENDMENT FOR TESTING PURPOSES
-    // To be removed when testing on CEDS-4762 is complete
-    if (fieldPointers.isEmpty) throw new PointerMappingException("No pointers were sent to the backend!")
     val results = fieldPointers.map(exportsPointerToWCOPointer.getWCOPointers)
 
     val (errors, values) = results.partition(_.isLeft)
