@@ -17,13 +17,13 @@ class ExportsPointerToWCOPointerISpec extends AnyWordSpec with Matchers {
       val expectedWCOPointersForDynamicExportsPointer = Right(List("42A.67A.68A.#98.55B.#43"))
       exportsPointerToWCOPointer.getWCOPointers(dynamicExportsPointer) mustBe expectedWCOPointersForDynamicExportsPointer
 
-      val exportsPointerForMucr = "declaration.mucr"
-      val expectedWCOPointersForMucr = List("42A.67A.99A.#1.171", "42A.67A.99A.#1.D018", "42A.67A.99A.#1.D019", "42A.67A.99A.#1.D031")
-      val actualWCOPointersForMucr = exportsPointerToWCOPointer.getWCOPointers(exportsPointerForMucr) match {
+      val exportsPointerForCarrierDetails = "declaration.parties.carrierDetails"
+      val expectedWCOPointersForCarrierDetails = List("42A.28A.18A.04A", "42A.28A.18A.R011", "42A.28A.18A.R012")
+      val actualWCOPointersForCarrierDetails = exportsPointerToWCOPointer.getWCOPointers(exportsPointerForCarrierDetails) match {
         case Right(pointers) => pointers
         case _               => fail()
       }
-      expectedWCOPointersForMucr.foreach(actualWCOPointersForMucr must contain(_))
+      expectedWCOPointersForCarrierDetails.foreach(actualWCOPointersForCarrierDetails must contain(_))
     }
 
     "return an empty List when WCO Pointers for the provided Exports Pointer cannot be found" in {
