@@ -17,47 +17,53 @@
 package uk.gov.hmrc.exports.services.mapping
 
 import play.api.Environment
+import play.api.libs.json.{Format, JsArray, Json, Reads}
 
 import java.io.IOException
 import javax.inject.{Inject, Singleton}
-import scala.io.Source
+import scala.util.{Failure, Success, Try}
 
 @Singleton
 class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
 
-  private val pointerFile = "exports-wco-mapping.csv"
+  private val pointerFile = "exports-wco-mapping.json"
 
   // Negative look-ahead. Line must not start with "declaration." as it's added while building the mapping.
   private val regex = "^(?!declaration\\.).+".r
 
-  protected[this] val mapping: Map[String, Seq[String]] = {
+  protected[this] def mapping(implicit reader: Reads[Pointers]): Map[String, Seq[String]] = {
+
     val stream = environment.resourceAsStream(pointerFile).getOrElse(throw new Exception(s"$pointerFile could not be read!"))
-    val allLines = Source.fromInputStream(stream).getLines().toList
-    stream.close()
-    val lines = allLines.filter(line => line.count(_ == '|') == 1 && regex.matches(line))
-    if (lines.size != allLines.size)
-      throw new IOException(s"File $pointerFile is malformed. Expecting rows NOT starting with 'declaration.' and with 2 values separated by '|'")
 
-    // The following method is a temporary hack to handle pointers that come from the frontend as a sequence, but for reasons of expediency we are mapping to the WCO Pointer that is actually a parent of the sequenced elements.
-    // Example: There can be up to 99 taric or nact codes, but we will point to the Commodity element if any of these change.
-    // These are handled by removing the final sequence id so that this class will parse them.
-    def convertManyToOnePointers(pointer: String): String =
-      if (Seq("items.$1.nactCode.$2", "items.$1.taricCode.$2", "items.$1.procedureCodes.additionalProcedureCodes.$2").contains(pointer))
-        pointer.dropRight(3)
-      else pointer
+    Try(Json.parse(stream)) match {
+      case Success(JsArray(jsValues)) =>
+        val allItems: Seq[Option[Pointers]] = jsValues.toList.map { jsValue =>
+          reader.reads(jsValue).asOpt
+        }
 
-    val tuples = lines.map(_.split('|').map(_.trim).toList) collect {
-      case List(exportsPointer, wcoPointer) if exportsPointer.nonEmpty && wcoPointer.nonEmpty =>
-        if (convertManyToOnePointers(exportsPointer).count(_ == '$') == wcoPointer.count(_ == '$')) removeDollarSign(exportsPointer, wcoPointer)
-        else throw new IOException(s"File $pointerFile is malformed. Not matching '$$' for $exportsPointer")
+        val items = allItems map {
+          case None =>
+            throw new IllegalArgumentException(s"One or more entries could not be parsed in JSON file: '$pointerFile'")
+          case Some(Pointers(cds, _)) if !regex.matches(cds) =>
+            throw new IOException(s"File $pointerFile is malformed. Expecting rows NOT starting with 'declaration.'")
+          case Some(Pointers(cds, wco)) if !(convertManyToOnePointers(cds).count(_ == '$') == wco.count(_ == '$')) || cds.isEmpty || wco.isEmpty =>
+            throw new IOException(s"File $pointerFile is malformed. Not matching '$$'")
+          case Some(Pointers(cds, wco)) =>
+            removeDollarSign(cds, wco)
+        }
 
-      case line =>
-        throw new IOException(s"File $pointerFile is malformed. Empty value(s) in line ($line)")
+        items.groupMap(_._1)(_._2)
+
+      case Success(_)  => throw new IllegalArgumentException(s"Could not read JSON array from file: '$pointerFile'")
+      case Failure(ex) => throw new IllegalArgumentException(s"Failed to read JSON file: '$pointerFile'", ex)
     }
 
-    // Group by Exports Pointer. Result is (Exports Pointer -> List of WCO Pointers) (1 to many)
-    tuples.groupMap(_._1)(_._2)
   }
+
+  private def convertManyToOnePointers(pointer: String): String =
+    if (Seq("items.$1.nactCode.$2", "items.$1.taricCode.$2", "items.$1.procedureCodes.additionalProcedureCodes.$2").contains(pointer))
+      pointer.dropRight(3)
+    else pointer
 
   private def removeDollarSign(exportsPointer: String, wcoPointer: String): (String, String) =
     s"declaration.$exportsPointer".replace("$", "") -> wcoPointer
@@ -119,4 +125,10 @@ class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
       ._2
 
   private def isSequenceNumber(segment: String): Boolean = segment.startsWith("#") && segment.drop(1).toIntOption.nonEmpty
+}
+
+sealed case class Pointers(cds: String, wco: String)
+
+object Pointers {
+  implicit val format: Format[Pointers] = Json.format[Pointers]
 }
