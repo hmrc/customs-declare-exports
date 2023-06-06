@@ -1,0 +1,402 @@
+[
+  {
+    "cds" : "consignmentReferences.lrn",
+    "wco" : "42A.D026"
+  },
+  {
+    "cds" : "goodsItemQuantity",
+    "wco" :  "42A.228"
+  },
+  {
+    "cds" : "items.$1",
+    "wco" : "42A.67A.68A.$1"
+  },
+  {
+    "cds" : "items.$1.additionalDocuments.documents.$2",
+    "wco" : "42A.67A.68A.$1.02A.$2"
+  },
+  {
+    "cds" : "items.$1.additionalFiscalReferencesData.references.$2",
+    "wco" : "42A.67A.68A.$1.55B.$2"
+  },
+  {
+    "cds" : "items.$1.additionalInformation.items.$2",
+    "wco" : "42A.67A.68A.$1.03A.$2"
+  },
+  {
+    "cds" : "items.$1.commodityDetails.combinedNomenclatureCode",
+    "wco" : "42A.67A.68A.$1.23A"
+  },
+  {
+    "cds" : "items.$1.commodityDetails.descriptionOfGoods",
+    "wco" : "42A.67A.68A.$1.23A.137"
+  },
+  {
+    "cds" : "items.$1.commodityMeasure.grossMass",
+    "wco" : "42A.67A.68A.$1.23A.65A.126"
+  },
+  {
+    "cds" : "items.$1.commodityMeasure.netMass",
+    "wco" : "42A.67A.68A.$1.23A.65A.128"
+  },
+  {
+    "cds" : "items.$1.commodityMeasure.supplementaryUnits",
+    "wco" : "42A.67A.68A.$1.23A.65A.130"
+  },
+  {
+    "cds" : "items.$1.nactCode.$2",
+    "wco" : "42A.67A.68A.$1.23A"
+  },
+  {
+    "cds" : "items.$1.taricCode.$2",
+    "wco" : "42A.67A.68A.$1.23A"
+  },
+  {
+    "cds" : "items.$1.cusCode",
+    "wco" : "42A.67A.68A.$1.23A"
+  },
+  {
+    "cds" : "items.$1.dangerousGoodsCode.dangerousGoodsCode",
+    "wco" : "42A.67A.68A.$1.23A.12C.506"
+  },
+  {
+    "cds" : "items.$1.packageInformation.$2",
+    "wco" : "42A.67A.68A.$1.93A.$2"
+  },
+  {
+    "cds" : "items.$1.packageInformation.$2.numberOfPackages",
+    "wco" : "42A.67A.68A.$1.93A.$2.144"
+  },
+  {
+    "cds" : "items.$1.packageInformation.$2.shippingMarks",
+    "wco" : "42A.67A.68A.$1.93A.$2.142"
+  },
+  {
+    "cds" : "items.$1.packageInformation.$2.typesOfPackages",
+    "wco" : "42A.67A.68A.$1.93A.$2.141"
+  },
+  {
+    "cds" : "items.$1.procedureCodes.procedure.code",
+    "wco" : "42A.67A.68A.$1"
+  },
+  {
+    "cds" : "items.$1.procedureCodes.additionalProcedureCodes.$2",
+    "wco" : "42A.67A.68A.$1"
+  },
+  {
+    "cds" : "items.$1.statisticalValue.statisticalValue",
+    "wco" : "42A.67A.68A.$1.114"
+  },
+  {
+    "cds" : "locations.destinationCountry.code",
+    "wco" : "42A.67A.99B.465"
+  },
+  {
+    "cds" : "locations.goodsLocation.country",
+    "wco" : "42A.67A.28A.64A.L016"
+  },
+  {
+    "cds" : "locations.goodsLocation.identificationOfLocation",
+    "wco" : "42A.67A.28A.64A.L017"
+  },
+  {
+    "cds" : "locations.goodsLocation.typeOfLocation",
+    "wco" : "42A.67A.28A.64A.L110"
+  },
+  {
+    "cds" : "locations.inlandModeOfTransportCode.inlandModeOfTransportCode",
+    "wco" : "42A.67A.28A.46A.T021"
+  },
+  {
+    "cds" : "locations.officeOfExit.officeId",
+    "wco" : "42A.56A.G005"
+  },
+  {
+    "cds" : "locations.originationCountry.code",
+    "wco" : "42A.67A.95B.062"
+  },
+  {
+    "cds" : "locations.routingCountries.$1",
+    "wco" : "42A.28A.62A.$1"
+  },
+  {
+    "cds" : "locations.warehouseIdentification.identificationNumber",
+    "wco" : "42A.67A.43B.L019"
+  },
+  {
+    "cds" : "locations.warehouseIdentification.identificationNumber",
+    "wco" : "42A.67A.43B.L112"
+  },
+  {
+    "cds" : "locations.supervisingCustomsOffice",
+    "wco" : "42A.97B.G012"
+  },
+  {
+    "cds" : "natureOfTransaction.natureType",
+    "wco" : "42A.67A.103"
+  },
+  {
+    "cds" : "parties.actors.declarationAdditionalActorsData.$1",
+    "wco" : "42A.67A.16C.$1"
+  },
+  {
+    "cds" : "parties.carrierDetails",
+    "wco" : "42A.28A.18A.04A"
+  },
+  {
+    "cds" : "parties.carrierDetails",
+    "wco" : "42A.28A.18A.R011"
+  },
+  {
+    "cds" : "parties.carrierDetails",
+    "wco" : "42A.28A.18A.R012"
+  },
+  {
+    "cds" : "parties.carrierDetails.address",
+    "wco" : "42A.28A.18A.04A"
+  },
+  {
+    "cds" : "parties.carrierDetails.address",
+    "wco" : "42A.28A.18A.R011"
+  },
+  {
+    "cds" : "parties.carrierDetails.address.addressLine",
+    "wco" : "42A.28A.18A.04A.239"
+  },
+  {
+    "cds" : "parties.carrierDetails.address.country",
+    "wco" : "42A.28A.18A.04A.242"
+  },
+  {
+    "cds" : "parties.carrierDetails.address.fullName",
+    "wco" : "42A.28A.18A.R011"
+  },
+  {
+    "cds" : "parties.carrierDetails.address.postCode",
+    "wco" : "42A.28A.18A.04A.245"
+  },
+  {
+    "cds" : "parties.carrierDetails.address.townOrCity",
+    "wco" : "42A.28A.18A.04A.241"
+  },
+  {
+    "cds" : "parties.carrierDetails.eori",
+    "wco" : "42A.28A.18A.R012"
+  },
+  {
+    "cds" : "parties.consigneeDetails.address",
+    "wco" : "42A.67A.27A.04A"
+  },
+  {
+    "cds" : "parties.consigneeDetails.address",
+    "wco" : "42A.67A.27A.R014"
+  },
+  {
+    "cds" : "parties.consigneeDetails.address.addressLine",
+    "wco" : "42A.67A.27A.04A.239"
+  },
+  {
+    "cds" : "parties.consigneeDetails.address.country",
+    "wco" : "42A.67A.27A.04A.242"
+  },
+  {
+    "cds" : "parties.consigneeDetails.address.fullName",
+    "wco" : "42A.67A.27A.R014"
+  },
+  {
+    "cds" : "parties.consigneeDetails.address.postCode",
+    "wco" : "42A.67A.27A.04A.245"
+  },
+  {
+    "cds" : "parties.consigneeDetails.address.townOrCity",
+    "wco" : "42A.67A.27A.04A.241"
+  },
+  {
+    "cds" : "parties.consignorDetails",
+    "wco" : "42A.28A.30A.04A"
+  },
+  {
+    "cds" : "parties.consignorDetails",
+    "wco" : "42A.28A.30A.R020"
+  },
+  {
+    "cds" : "parties.consignorDetails",
+    "wco" : "42A.28A.30A.R021"
+  },
+  {
+    "cds" : "parties.consignorDetails.address",
+    "wco" : "42A.28A.30A.04A"
+  },
+  {
+    "cds" : "parties.consignorDetails.address",
+    "wco" : "42A.28A.30A.R020"
+  },
+  {
+    "cds" : "parties.consignorDetails.address.addressLine",
+    "wco" : "42A.28A.30A.04A.239"
+  },
+  {
+    "cds" : "parties.consignorDetails.address.country",
+    "wco" : "42A.28A.30A.04A.242"
+  },
+  {
+    "cds" : "parties.consignorDetails.address.fullName",
+    "wco" : "42A.28A.30A.R020"
+  },
+  {
+    "cds" : "parties.consignorDetails.address.postCode",
+    "wco" : "42A.28A.30A.04A.245"
+  },
+  {
+    "cds" : "parties.consignorDetails.address.townOrCity",
+    "wco" : "42A.28A.30A.04A.241"
+  },
+  {
+    "cds" : "parties.consignorDetails.eori",
+    "wco" : "42A.28A.30A.R021"
+  },
+  {
+    "cds" : "parties.declarationAdditionalActorsData.actors.$1",
+    "wco" : "42A.67A.16C.$1"
+  },
+  {
+    "cds" : "parties.declarationHoldersData.holders.$1",
+    "wco" : "42A.17C.$1"
+  },
+  {
+    "cds" : "parties.exporterDetails",
+    "wco" : "42A.57A.04A"
+  },
+  {
+    "cds" : "parties.exporterDetails",
+    "wco" : "42A.57A.R031"
+  },
+  {
+    "cds" : "parties.exporterDetails",
+    "wco" : "42A.57A.R032"
+  },
+  {
+    "cds" : "parties.exporterDetails.details.address",
+    "wco" : "42A.57A.04A"
+  },
+  {
+    "cds" : "parties.exporterDetails.details.address",
+    "wco" : "42A.57A.R031"
+  },
+  {
+    "cds" : "parties.exporterDetails.details.address.addressLine",
+    "wco" : "42A.57A.04A.239"
+  },
+  {
+    "cds" : "parties.exporterDetails.details.address.country",
+    "wco" : "42A.57A.04A.242"
+  },
+  {
+    "cds" : "parties.exporterDetails.details.address.fullName",
+    "wco" : "42A.57A.R031"
+  },
+  {
+    "cds" : "parties.exporterDetails.details.address.postCode",
+    "wco" : "42A.57A.04A.245"
+  },
+  {
+    "cds" : "parties.exporterDetails.details.address.townOrCity",
+    "wco" : "42A.57A.04A.241"
+  },
+  {
+    "cds" : "parties.exporterDetails.details.eori",
+    "wco" : "42A.57A.R032"
+  },
+  {
+    "cds" : "parties.personPresentingGoodsDetails.eori",
+    "wco" : "42A.57B.R123"
+  },
+  {
+    "cds" : "parties.personPresentingGoodsDetails",
+    "wco" : "42A.57B.R123"
+  },
+  {
+    "cds" : "parties.representativeDetails",
+    "wco" : "42A.05A"
+  },
+  {
+    "cds" : "parties.representativeDetails.details",
+    "wco" : "42A.05A"
+  },
+  {
+    "cds" : "parties.representativeDetails.details.eori",
+    "wco" : "42A.05A.R004"
+  },
+  {
+    "cds" : "parties.representativeDetails.statusCode",
+    "wco" : "42A.05A.102"
+  },
+  {
+    "cds" : "previousDocuments.documents.$1",
+    "wco" : "42A.67A.99A.$1"
+  },
+  {
+    "cds" : "totalNumberOfItems.exchangeRate",
+    "wco" : "42A.40A.118"
+  },
+  {
+    "cds" : "totalNumberOfItems.totalAmountInvoiced",
+    "wco" : "42A.109"
+  },
+  {
+    "cds" : "totalNumberOfItems.totalAmountInvoicedCurrency",
+    "wco" : "42A.109"
+  },
+  {
+    "cds" : "totalNumberOfItems.totalPackage",
+    "wco" : "42A.146"
+  },
+  {
+    "cds" : "transport.borderModeOfTransportCode.code",
+    "wco" : "42A.15A.T022"
+  },
+  {
+    "cds" : "transport.containers",
+    "wco" : "42A.67A.28A.096"
+  },
+  {
+    "cds" : "transport.containers.$1",
+    "wco" : "42A.67A.28A.31B.$1"
+  },
+  {
+    "cds" : "transport.containers.$1.seals.$2",
+    "wco" : "42A.67A.28A.31B.$1.44B.$2"
+  },
+  {
+    "cds" : "transport.expressConsignment",
+    "wco" : "42A.504"
+  },
+  {
+    "cds" : "transport.meansOfTransportCrossingTheBorderIDNumber",
+    "wco" : "42A.15A.T006"
+  },
+  {
+    "cds" : "transport.meansOfTransportCrossingTheBorderNationality",
+    "wco" : "42A.15A.T014"
+  },
+  {
+    "cds" : "transport.meansOfTransportCrossingTheBorderType",
+    "wco" : "42A.15A.T018"
+  },
+  {
+    "cds" : "transport.meansOfTransportOnDepartureIDNumber",
+    "wco" : "42A.67A.28A.46A.T002"
+  },
+  {
+    "cds" : "transport.meansOfTransportOnDepartureType",
+    "wco" : "42A.67A.28A.46A.T029"
+  },
+  {
+    "cds" : "transport.transportPayment.paymentMethod",
+    "wco" : "42A.28A.62A.098"
+  },
+  {
+    "cds" : "type",
+    "wco" : "42A.D013"
+  }
+]
