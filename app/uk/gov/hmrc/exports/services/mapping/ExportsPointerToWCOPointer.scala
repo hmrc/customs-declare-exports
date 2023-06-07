@@ -33,14 +33,16 @@ class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
 
     Try(Json.parse(stream)) match {
       case Success(JsArray(jsValues)) =>
-        val allItems: Seq[Option[Pointers]] = jsValues.toList.map { jsValue =>
-          reader.reads(jsValue).asOpt
+        val allItems: Seq[JsResult[Pointers]] = jsValues.toList.map { jsValue =>
+          reader.reads(jsValue)
         }
 
         val items = allItems map {
-          case Some(pointers) => pointers
-          case None =>
-            throw new IllegalArgumentException(s"One or more entries could not be parsed in JSON file: '$pointerFile'")
+          case JsSuccess(pointers, _) => pointers
+          case JsError(errors) =>
+            throw new IllegalArgumentException(
+              s"One or more entries could not be parsed in JSON file: '$pointerFile' ${errors.head._2.head.message} "
+            )
         }
 
         items.groupMap(_.cds)(_.wco)
@@ -110,9 +112,9 @@ class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
   private def isSequenceNumber(segment: String): Boolean = segment.startsWith("#") && segment.drop(1).toIntOption.nonEmpty
 }
 
-sealed case class Pointers(cds: String, wco: String)
+private[mapping] case class Pointers(cds: String, wco: String)
 
-object PointersReads extends ConstraintReads {
+private[mapping] object PointersReads extends ConstraintReads {
 
   private val regex = "^(?!declaration\\.).+".r
 
@@ -125,8 +127,8 @@ object PointersReads extends ConstraintReads {
     else pointer
 
   val cdsReads: Reads[String] =
-    filter(JsonValidationError(s"Pointers is malformed. Expecting non empty rows NOT starting with 'declaration.'")) { cds =>
-      regex.matches(cds) || cds.nonEmpty
+    filter(JsonValidationError(s"Expecting non empty rows NOT starting with 'declaration.'")) { cds =>
+      regex.matches(cds) && cds.nonEmpty
     }
 
   val wcoReads: Reads[String] =
@@ -134,7 +136,7 @@ object PointersReads extends ConstraintReads {
 
 }
 
-object Pointers {
+private[mapping] object Pointers {
 
   import PointersReads._
 
@@ -146,7 +148,7 @@ object Pointers {
 
       if (convertManyToOnePointers(cds).count(_ == '$') == wco.count(_ == '$')) {
         JsSuccess(removeDollarSign(cds, wco))
-      } else JsError(s"File is malformed. Not matching '$$' for $cds | $wco ")
+      } else JsError(s"Not matching '$$' for $cds -> $wco ")
 
     }
   }
