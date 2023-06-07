@@ -17,9 +17,8 @@
 package uk.gov.hmrc.exports.services.mapping
 
 import play.api.Environment
-import play.api.libs.json.{Format, JsArray, Json, Reads}
+import play.api.libs.json._
 
-import java.io.IOException
 import javax.inject.{Inject, Singleton}
 import scala.util.{Failure, Success, Try}
 
@@ -27,9 +26,6 @@ import scala.util.{Failure, Success, Try}
 class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
 
   private val pointerFile = "exports-wco-mapping.json"
-
-  // Negative look-ahead. Line must not start with "declaration." as it's added while building the mapping.
-  private val regex = "^(?!declaration\\.).+".r
 
   protected[this] def mapping(implicit reader: Reads[Pointers]): Map[String, Seq[String]] = {
 
@@ -42,31 +38,18 @@ class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
         }
 
         val items = allItems map {
+          case Some(pointers) => pointers
           case None =>
             throw new IllegalArgumentException(s"One or more entries could not be parsed in JSON file: '$pointerFile'")
-          case Some(Pointers(cds, _)) if !regex.matches(cds) =>
-            throw new IOException(s"File $pointerFile is malformed. Expecting rows NOT starting with 'declaration.'")
-          case Some(Pointers(cds, wco)) if !(convertManyToOnePointers(cds).count(_ == '$') == wco.count(_ == '$')) || cds.isEmpty || wco.isEmpty =>
-            throw new IOException(s"File $pointerFile is malformed. Not matching '$$'")
-          case Some(Pointers(cds, wco)) =>
-            removeDollarSign(cds, wco)
         }
 
-        items.groupMap(_._1)(_._2)
+        items.groupMap(_.cds)(_.wco)
 
       case Success(_)  => throw new IllegalArgumentException(s"Could not read JSON array from file: '$pointerFile'")
       case Failure(ex) => throw new IllegalArgumentException(s"Failed to read JSON file: '$pointerFile'", ex)
     }
 
   }
-
-  private def convertManyToOnePointers(pointer: String): String =
-    if (Seq("items.$1.nactCode.$2", "items.$1.taricCode.$2", "items.$1.procedureCodes.additionalProcedureCodes.$2").contains(pointer))
-      pointer.dropRight(3)
-    else pointer
-
-  private def removeDollarSign(exportsPointer: String, wcoPointer: String): (String, String) =
-    s"declaration.$exportsPointer".replace("$", "") -> wcoPointer
 
   def getWCOPointers(exportsPointer: String): Either[MappingError, Seq[String]] = {
     val segments = exportsPointer.split("\\.")
@@ -129,6 +112,43 @@ class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
 
 sealed case class Pointers(cds: String, wco: String)
 
+object PointersReads extends ConstraintReads {
+
+  private val regex = "^(?!declaration\\.).+".r
+
+  def removeDollarSign(exportsPointer: String, wcoPointer: String): Pointers =
+    Pointers(s"declaration.$exportsPointer".replace("$", ""), wcoPointer)
+
+  def convertManyToOnePointers(pointer: String): String =
+    if (Seq("items.$1.nactCode.$2", "items.$1.taricCode.$2", "items.$1.procedureCodes.additionalProcedureCodes.$2").contains(pointer))
+      pointer.dropRight(3)
+    else pointer
+
+  val cdsReads: Reads[String] =
+    filter(JsonValidationError(s"Pointers is malformed. Expecting non empty rows NOT starting with 'declaration.'")) { cds =>
+      regex.matches(cds) || cds.nonEmpty
+    }
+
+  val wcoReads: Reads[String] =
+    filter(JsonValidationError("Empty WCO pointer"))(_.nonEmpty)
+
+}
+
 object Pointers {
-  implicit val format: Format[Pointers] = Json.format[Pointers]
+
+  import PointersReads._
+
+  implicit val reads: Reads[Pointers] = new Reads[Pointers] {
+    override def reads(json: JsValue): JsResult[Pointers] = {
+
+      val cds: String = (json \ "cds").as[String](cdsReads)
+      val wco: String = (json \ "wco").as[String](wcoReads)
+
+      if (convertManyToOnePointers(cds).count(_ == '$') == wco.count(_ == '$')) {
+        JsSuccess(removeDollarSign(cds, wco))
+      } else JsError(s"File is malformed. Not matching '$$' for $cds | $wco ")
+
+    }
+  }
+
 }
