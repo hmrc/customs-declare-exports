@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.services.mapping
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Environment
-import play.api.libs.json.{JsSuccess, Json, Reads}
+import play.api.libs.json.{JsResultException, JsSuccess, JsValue, Json, Reads}
 
 class ExportsPointerToWCOPointerSpec extends AnyWordSpec with Matchers {
 
@@ -82,6 +82,42 @@ class ExportsPointerToWCOPointerSpec extends AnyWordSpec with Matchers {
           )
         )
       }
+    }
+    "throw an error" when {
+      "fields are empty" when {
+        "cds" in {
+          val json = Json.arr(Json.obj("cds" -> "", "wco" -> "42A.228"))
+
+          assertErrorMessage(json, "Expecting non empty rows NOT starting with 'declaration.'")
+        }
+        "wco" in {
+          val json = Json.arr(Json.obj("cds" -> "items.$1.commodityDetails.combinedNomenclatureCode", "wco" -> ""))
+
+          assertErrorMessage(json, "Empty WCO pointer")
+        }
+      }
+      "cds has 'declaration.' prefix" in {
+        val json = Json.arr(Json.obj("cds" -> "declaration.consignmentReferences.lrn", "wco" -> "42A.228"))
+
+        assertErrorMessage(json, "Expecting non empty rows NOT starting with 'declaration.'")
+      }
+      "cds and wco do not have matching count of $" in {
+
+        val cds = "items.$$1.commodityDetails.combinedNomenclatureCode"
+        val wco = "42A.67A.68A.$1.23A"
+
+        val json = Json.arr(Json.obj("cds" -> cds, "wco" -> wco))
+
+        assertErrorMessage(json, s"Not matching '$$' for $cds -> $wco")
+      }
+
+      def assertErrorMessage(json: JsValue, msg: String) = {
+        val result = intercept[JsResultException] {
+          Json.fromJson[Seq[Pointers]](json)
+        }
+        result.errors.head._2.head.message mustBe msg
+      }
+
     }
   }
 }

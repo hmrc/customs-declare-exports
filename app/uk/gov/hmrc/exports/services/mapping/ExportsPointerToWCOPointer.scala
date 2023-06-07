@@ -33,19 +33,13 @@ class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
 
     Try(Json.parse(stream)) match {
       case Success(JsArray(jsValues)) =>
-        val allItems: Seq[JsResult[Pointers]] = jsValues.toList.map { jsValue =>
+        val items: Seq[JsResult[Pointers]] = jsValues.toList.map { jsValue =>
           reader.reads(jsValue)
         }
 
-        val items = allItems map {
-          case JsSuccess(pointers, _) => pointers
-          case JsError((_, error :: _) :: _) =>
-            throw new IllegalArgumentException(s"One or more entries could not be parsed in JSON file: '$pointerFile' ${error.message} ")
-          case _ =>
-            throw new IllegalArgumentException(s"One or more entries could not be parsed in JSON file: '$pointerFile'")
-        }
-
-        items.groupMap(_.cds)(_.wco)
+        items
+          .flatMap(_.asOpt)
+          .groupMap(_.cds)(_.wco)
 
       case Success(_)  => throw new IllegalArgumentException(s"Could not read JSON array from file: '$pointerFile'")
       case Failure(ex) => throw new IllegalArgumentException(s"Failed to read JSON file: '$pointerFile'", ex)
@@ -127,7 +121,7 @@ private[mapping] object PointersReads extends ConstraintReads {
     else pointer
 
   val cdsReads: Reads[String] =
-    filter(JsonValidationError(s"Expecting non empty rows NOT starting with 'declaration.'")) { cds =>
+    filter(JsonValidationError("Expecting non empty rows NOT starting with 'declaration.'")) { cds =>
       regex.matches(cds) && cds.nonEmpty
     }
 
@@ -148,7 +142,7 @@ private[mapping] object Pointers {
 
       if (convertManyToOnePointers(cds).count(_ == '$') == wco.count(_ == '$')) {
         JsSuccess(removeDollarSign(cds, wco))
-      } else JsError(s"Not matching '$$' for $cds -> $wco ")
+      } else throw JsResultException(Seq((__, Seq(JsonValidationError(s"Not matching '$$' for $cds -> $wco")))))
 
     }
   }
