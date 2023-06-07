@@ -16,80 +16,49 @@
 
 package uk.gov.hmrc.exports.services
 
+import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.{AMENDMENT_DRAFT, COMPLETE, DRAFT}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.models.declaration.submissions.Submission
-import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
+import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.services.DeclarationService.{CREATED, FOUND}
 
 import java.util.UUID
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class DeclarationService @Inject() (declarationRepository: DeclarationRepository, submissionRepository: SubmissionRepository) {
+class DeclarationService @Inject() (declarationRepository: DeclarationRepository) extends Logging {
 
   def create(declaration: ExportsDeclaration): Future[ExportsDeclaration] =
     declarationRepository.create(declaration)
 
-  def findOrCreateDraftForAmend(eori: Eori, submissionId: String)(implicit ec: ExecutionContext): Future[Option[(Boolean, String)]] = {
-    def findOrCreateDraftFromSubmission(submission: Submission): Future[Option[(Boolean, String)]] = {
-      val filter = Json.obj(
-        "eori" -> eori,
-        "declarationMeta.parentDeclarationId" -> submission.latestDecId,
-        "declarationMeta.status" -> AMENDMENT_DRAFT.toString
-      )
-      declarationRepository.findOne(filter).flatMap {
-        case Some(declaration) => Future.successful(Some(FOUND -> declaration.id))
-
-        case _ =>
-          for {
-            declaration <- declarationRepository.get(Json.obj("eori" -> eori, "id" -> submission.latestDecId))
-            result <- declarationRepository
-              .create(
-                declaration.copy(
-                  id = UUID.randomUUID.toString,
-                  declarationMeta = declaration.declarationMeta.copy(
-                    parentDeclarationId = submission.latestDecId,
-                    parentDeclarationEnhancedStatus = Some(submission.latestEnhancedStatus),
-                    status = AMENDMENT_DRAFT
-                  )
-                )
-              )
-              .map(declaration => Some(CREATED -> declaration.id))
-          } yield result
-      }
-    }
-
-    submissionRepository.findById(eori.value, submissionId).flatMap {
-      case Some(submission) => findOrCreateDraftFromSubmission(submission)
-      case _                => Future.successful(None)
-    }
-  }
-
-  def findOrCreateDraftFromParent(eori: Eori, parentId: String)(implicit ec: ExecutionContext): Future[(Boolean, String)] = {
-    val filter = Json.obj("eori" -> eori, "declarationMeta.parentDeclarationId" -> parentId, "declarationMeta.status" -> DRAFT.toString)
+  def findOrCreateDraftFromParent(eori: Eori, parentId: String, enhancedStatus: EnhancedStatus, isAmendment: Boolean)(
+    implicit ec: ExecutionContext
+  ): Future[Option[(Boolean, String)]] = {
+    val declarationStatus = if (isAmendment) AMENDMENT_DRAFT else DRAFT
+    val filter = Json.obj("eori" -> eori, "declarationMeta.parentDeclarationId" -> parentId, "declarationMeta.status" -> declarationStatus.toString)
     declarationRepository.findOne(filter).flatMap {
-      case Some(declaration) => Future.successful((FOUND, declaration.id))
+      case Some(declaration) => Future.successful(Some(FOUND -> declaration.id))
 
       case _ =>
-        for {
-          declaration <- declarationRepository.get(Json.obj("eori" -> eori, "id" -> parentId))
-          submission <- submissionRepository.findById(eori.value, parentId)
-          result <- declarationRepository
-            .create(
-              declaration.copy(
-                id = UUID.randomUUID.toString,
-                declarationMeta = declaration.declarationMeta.copy(
-                  parentDeclarationId = Some(parentId),
-                  parentDeclarationEnhancedStatus = submission.map(_.latestEnhancedStatus),
-                  status = DRAFT
-                )
-              )
-            )
-            .map(declaration => (CREATED, declaration.id))
-        } yield result
+        declarationRepository.findOne(Json.obj("eori" -> eori, "id" -> parentId)).flatMap {
+          case Some(declaration) if declaration.declarationMeta.status == COMPLETE =>
+            val declarationMeta = declaration.declarationMeta
+              .copy(parentDeclarationId = Some(parentId), parentDeclarationEnhancedStatus = Some(enhancedStatus), status = declarationStatus)
+            declarationRepository
+              .create(declaration.copy(id = UUID.randomUUID.toString, declarationMeta = declarationMeta))
+              .map(declaration => Some(CREATED -> declaration.id))
+
+          case Some(declaration) =>
+            logger.error(s"The declaration($parentId) to create a draft from was found but why was not 'COMPLETE'??")
+            Future.successful(None)
+
+          case _ =>
+            logger.error(s"The declaration($parentId) to create a draft from was not found??")
+            Future.successful(None)
+        }
     }
   }
 

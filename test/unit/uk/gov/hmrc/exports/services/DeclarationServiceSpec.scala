@@ -22,8 +22,8 @@ import play.api.libs.json.JsValue
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.models.declaration.submissions.Submission
-import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.ERRORS
+import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.services.DeclarationService.{CREATED, FOUND}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
@@ -33,8 +33,14 @@ import scala.concurrent.Future
 class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   private val declarationRepository = mock[DeclarationRepository]
-  private val submissionRepository = mock[SubmissionRepository]
-  private val service = new DeclarationService(declarationRepository, submissionRepository)
+  private val service = new DeclarationService(declarationRepository)
+
+  val eori = Eori("eori")
+
+  override def beforeEach(): Unit = {
+    reset(declarationRepository)
+    super.beforeEach()
+  }
 
   "Create" should {
     "delegate to the repository" in {
@@ -83,58 +89,41 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
   "Find by ID & EORI" should {
     "delegate to the repository" in {
       val declaration = mock[ExportsDeclaration]
-      given(declarationRepository.findOne(Eori("eori"), "id")).willReturn(Future.successful(Some(declaration)))
+      given(declarationRepository.findOne(eori, "id")).willReturn(Future.successful(Some(declaration)))
 
-      service.findOne(Eori("eori"), "id").futureValue mustBe Some(declaration)
-    }
-  }
-
-  "findOrCreateDraftForAmend" should {
-    val newId = "newId"
-    val submissionId = "submissionId"
-    val submission = Submission("id", "eori", "lrn", None, "ducr", latestDecId = Some("parentId"))
-
-    "return a value indicating that a draft declaration with 'parentDeclarationId' equal to the given Submission's 'latestDecId' was found" in {
-      when(submissionRepository.findById(any(), any())).thenReturn(Future.successful(Some(submission)))
-      when(declarationRepository.findOne(any[JsValue]())).thenReturn(Future.successful(Some(aDeclaration(withId(newId)))))
-      service.findOrCreateDraftForAmend(Eori("eori"), submissionId)(global).futureValue mustBe Some(FOUND -> newId)
-    }
-
-    "return a value indicating that a draft declaration with 'parentDeclarationId' equal to the given Submission's 'latestDecId' was created" in {
-      when(submissionRepository.findById(any(), any())).thenReturn(Future.successful(Some(submission)))
-      when(declarationRepository.findOne(any[JsValue]())).thenReturn(Future.successful(None))
-
-      val declaration = aDeclaration(withId(newId))
-      when(declarationRepository.get(any[JsValue]())).thenReturn(Future.successful(declaration))
-      when(declarationRepository.create(any[ExportsDeclaration]())).thenReturn(Future.successful(declaration))
-
-      service.findOrCreateDraftForAmend(Eori("eori"), submissionId)(global).futureValue.get._1 mustBe CREATED
-    }
-
-    "return None when a submission with the given id was not found" in {
-      when(submissionRepository.findById(any(), any())).thenReturn(Future.successful(None))
-      service.findOrCreateDraftForAmend(Eori("eori"), submissionId)(global).futureValue mustBe None
+      service.findOne(eori, "id").futureValue mustBe Some(declaration)
     }
   }
 
   "findOrCreateDraftFromParent" should {
-    val newId = "newId"
     val parentId = "parentId"
+    val declarationId = "declarationId"
 
-    "return a value indicating that a draft declaration with 'parentDeclarationId' equal to the given parentId was found" in {
-      when(declarationRepository.findOne(any[JsValue]())).thenReturn(Future.successful(Some(aDeclaration(withId(newId)))))
-      service.findOrCreateDraftFromParent(Eori("eori"), parentId)(global).futureValue mustBe ((FOUND, newId): (Boolean, String))
+    "return a value indicating that a draft declaration with 'parentDeclarationId' equal to provided parentId was found" in {
+      when(declarationRepository.findOne(any[JsValue]())).thenReturn(Future.successful(Some(aDeclaration(withId(declarationId)))))
+
+      val result = service.findOrCreateDraftFromParent(eori, parentId, ERRORS, false)(global).futureValue
+      result mustBe Some(FOUND -> declarationId)
     }
 
-    "return a value indicating that a draft declaration with 'parentDeclarationId' equal to the given parentId was created" in {
-      when(declarationRepository.findOne(any[JsValue]())).thenReturn(Future.successful(None))
-      when(submissionRepository.findById(any(), any())).thenReturn(Future.successful(None))
-
-      val declaration = aDeclaration(withId(newId))
-      when(declarationRepository.get(any[JsValue]())).thenReturn(Future.successful(declaration))
+    "return a value indicating that a draft for the parent declaration, specified by parentId, was created" in {
+      val declaration = aDeclaration(withId(declarationId))
+      when(declarationRepository.findOne(any[JsValue]())).thenReturn(Future.successful(None), Future.successful(Some(declaration)))
       when(declarationRepository.create(any[ExportsDeclaration]())).thenReturn(Future.successful(declaration))
 
-      service.findOrCreateDraftFromParent(Eori("eori"), parentId)(global).futureValue._1 mustBe CREATED
+      val result = service.findOrCreateDraftFromParent(eori, parentId, ERRORS, false)(global).futureValue
+      result mustBe Some(CREATED -> declarationId)
+
+      verify(declarationRepository, times(2)).findOne(any[JsValue])
+    }
+
+    "return None when a parent declaration, specified by parentId, was not found" in {
+      when(declarationRepository.findOne(any[JsValue])).thenReturn(Future.successful(None), Future.successful(None))
+
+      val result = service.findOrCreateDraftFromParent(eori, parentId, ERRORS, false)(global).futureValue
+      result mustBe None
+
+      verify(declarationRepository, times(2)).findOne(any[JsValue])
     }
   }
 }
