@@ -39,10 +39,10 @@ class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
 
         val items = allItems map {
           case JsSuccess(pointers, _) => pointers
-          case JsError(errors) =>
-            throw new IllegalArgumentException(
-              s"One or more entries could not be parsed in JSON file: '$pointerFile' ${errors.head._2.head.message} "
-            )
+          case JsError((_, error :: _) :: _) =>
+            throw new IllegalArgumentException(s"One or more entries could not be parsed in JSON file: '$pointerFile' ${error.message} ")
+          case _ =>
+            throw new IllegalArgumentException(s"One or more entries could not be parsed in JSON file: '$pointerFile'")
         }
 
         items.groupMap(_.cds)(_.wco)

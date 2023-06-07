@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.services.mapping
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Environment
-import play.api.libs.json.Reads
+import play.api.libs.json.{JsSuccess, Json, Reads}
 
 class ExportsPointerToWCOPointerSpec extends AnyWordSpec with Matchers {
 
@@ -64,6 +64,24 @@ class ExportsPointerToWCOPointerSpec extends AnyWordSpec with Matchers {
 
     "return a MappingError when WCO Pointers for the provided Exports Pointer cannot be found" in {
       exportsPointerToWCOPointer.getWCOPointers("declaration.some.field") mustBe Left(NoMappingFoundError("declaration.some.field"))
+    }
+  }
+
+  "Pointers.reads" should {
+    "deserialise a list of json objects with cds and wco properties" which {
+      "strips $ from cds pointer and adds declaration prefix" in {
+        val json = Json.arr(
+          Json.obj("cds" -> "consignmentReferences.lrn", "wco" -> "42A.228"),
+          Json.obj("cds" -> "items.$1.commodityDetails.combinedNomenclatureCode", "wco" -> "42A.67A.68A.$1.23A")
+        )
+
+        Json.fromJson[Seq[Pointers]](json) mustBe JsSuccess(
+          Seq(
+            Pointers("declaration.consignmentReferences.lrn", "42A.228"),
+            Pointers("declaration.items.1.commodityDetails.combinedNomenclatureCode", "42A.67A.68A.$1.23A")
+          )
+        )
+      }
     }
   }
 }
