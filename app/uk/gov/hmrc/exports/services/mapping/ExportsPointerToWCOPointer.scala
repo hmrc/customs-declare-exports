@@ -106,19 +106,11 @@ class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
   private def isSequenceNumber(segment: String): Boolean = segment.startsWith("#") && segment.drop(1).toIntOption.nonEmpty
 }
 
-private[mapping] case class Pointers(cds: String, wco: String)
+private case class Pointers(cds: String, wco: String, flags: Option[Seq[(String, String)]], comments: Option[Seq[String]])
 
-private[mapping] object PointersReads extends ConstraintReads {
+private object PointersReads extends ConstraintReads {
 
   private val regex = "^(?!declaration\\.).+".r
-
-  def removeDollarSign(exportsPointer: String, wcoPointer: String): Pointers =
-    Pointers(s"declaration.$exportsPointer".replace("$", ""), wcoPointer)
-
-  def convertManyToOnePointers(pointer: String): String =
-    if (Seq("items.$1.nactCode.$2", "items.$1.taricCode.$2", "items.$1.procedureCodes.additionalProcedureCodes.$2").contains(pointer))
-      pointer.dropRight(3)
-    else pointer
 
   val cdsReads: Reads[String] =
     filter(JsonValidationError("Expecting non empty rows NOT starting with 'declaration.'")) { cds =>
@@ -128,20 +120,43 @@ private[mapping] object PointersReads extends ConstraintReads {
   val wcoReads: Reads[String] =
     filter(JsonValidationError("Empty WCO pointer"))(_.nonEmpty)
 
+  val flagsReads: Reads[Seq[(String, String)]] = Reads[Seq[(String, String)]] { json =>
+    json.validate[Seq[JsObject]].map { objects =>
+      objects.flatMap(_.fields).map { case (key, value) =>
+        (key, value.as[String])
+      }
+    }
+  }
+
+  // The following method is a temporary hack to handle pointers that come from the frontend as a sequence, but for reasons of expediency we are mapping to the WCO Pointer that is actually a parent of the sequenced elements.
+  // Example: There can be up to 99 taric or nact codes, but we will point to the Commodity element if any of these change.
+  // These are handled by removing the final sequence id so that this class will parse them.
+  def convertManyToOnePointers(pointer: String): String =
+    if (Seq("items.$1.nactCode.$2", "items.$1.taricCode.$2", "items.$1.procedureCodes.additionalProcedureCodes.$2").contains(pointer))
+      pointer.dropRight(3)
+    else pointer
+
 }
 
-private[mapping] object Pointers {
+private object Pointers {
 
-  import PointersReads._
+  def apply(cds: String, wco: String, flags: Option[Seq[(String, String)]] = None, comments: Option[Seq[String]] = None): Pointers =
+    new Pointers(s"declaration.$cds".replace("$", ""), wco, flags, comments)
 
   implicit val reads: Reads[Pointers] = new Reads[Pointers] {
+
+    import PointersReads._
+
     override def reads(json: JsValue): JsResult[Pointers] = {
 
       val cds: String = (json \ "cds").as[String](cdsReads)
       val wco: String = (json \ "wco").as[String](wcoReads)
 
+      val flags: Option[Seq[(String, String)]] = (json \ "flags").asOpt[Seq[(String, String)]](flagsReads)
+      val comments: Option[Seq[String]] = (json \ "comments").asOpt[Seq[String]]
+
       if (convertManyToOnePointers(cds).count(_ == '$') == wco.count(_ == '$')) {
-        JsSuccess(removeDollarSign(cds, wco))
+        JsSuccess(Pointers(cds, wco, flags, comments))
       } else throw JsResultException(Seq((__, Seq(JsonValidationError(s"Not matching '$$' for $cds -> $wco")))))
 
     }

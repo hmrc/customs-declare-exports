@@ -72,15 +72,20 @@ class ExportsPointerToWCOPointerSpec extends AnyWordSpec with Matchers {
       "strips $ from cds pointer and adds declaration prefix" in {
         val json = Json.arr(
           Json.obj("cds" -> "consignmentReferences.lrn", "wco" -> "42A.228"),
-          Json.obj("cds" -> "items.$1.commodityDetails.combinedNomenclatureCode", "wco" -> "42A.67A.68A.$1.23A")
+          Json.obj("cds" -> "items.$1.commodityDetails.combinedNomenclatureCode", "wco" -> "42A.67A.68A.$1.23A"),
+          Json.obj("cds" -> "natureOfTransaction.natureType", "wco" -> "42A.67A.103", "flags" -> Json.arr(Json.obj("flag1" -> "val1"))),
+          Json.obj("cds" -> "transport.transportPayment.paymentMethod", "wco" -> "42A.28A.62A.098", "comments" -> Json.arr("thisComment"))
         )
 
         Json.fromJson[Seq[Pointers]](json) mustBe JsSuccess(
           Seq(
-            Pointers("declaration.consignmentReferences.lrn", "42A.228"),
-            Pointers("declaration.items.1.commodityDetails.combinedNomenclatureCode", "42A.67A.68A.$1.23A")
+            Pointers("consignmentReferences.lrn", "42A.228"),
+            Pointers("items.1.commodityDetails.combinedNomenclatureCode", "42A.67A.68A.$1.23A"),
+            Pointers("natureOfTransaction.natureType", "42A.67A.103", Some(Seq(("flag1", "val1")))),
+            Pointers("transport.transportPayment.paymentMethod", "42A.28A.62A.098", None, Some(Seq("thisComment")))
           )
         )
+
       }
     }
     "throw an error" when {
