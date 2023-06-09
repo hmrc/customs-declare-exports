@@ -80,14 +80,14 @@
   },
   {
     "cds" : "items.$1.procedureCodes.procedure.code",
+    "wco" : "42A.67A.68A.$1"
+  },
+  {
+    "cds" : "items.$1.procedureCodes.additionalProcedureCodes.$2",
     "wco" : "42A.67A.68A.$1",
     "comments" : [
       "CDS pointer refers to one in a sequence of codes, but WCO pointer points to the parent level element"
     ]
-  },
-  {
-    "cds" : "items.$1.procedureCodes.additionalProcedureCodes.$2",
-    "wco" : "42A.67A.68A.$1"
   },
   {
     "cds" : "items.$1.statisticalValue.statisticalValue",
