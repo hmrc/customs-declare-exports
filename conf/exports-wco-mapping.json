@@ -45,7 +45,10 @@
   },
   {
     "cds" : "items.$1.nactCode.$2",
-    "wco" : "42A.67A.68A.$1.23A"
+    "wco" : "42A.67A.68A.$1.23A",
+    "comments" : [
+      "CDS pointer refers to one in a sequence of codes, but WCO pointer points to the parent level element"
+    ]
   },
   {
     "cds" : "items.$1.taricCode.$2",
@@ -77,7 +80,10 @@
   },
   {
     "cds" : "items.$1.procedureCodes.procedure.code",
-    "wco" : "42A.67A.68A.$1"
+    "wco" : "42A.67A.68A.$1",
+    "comments" : [
+      "CDS pointer refers to one in a sequence of codes, but WCO pointer points to the parent level element"
+    ]
   },
   {
     "cds" : "items.$1.procedureCodes.additionalProcedureCodes.$2",
