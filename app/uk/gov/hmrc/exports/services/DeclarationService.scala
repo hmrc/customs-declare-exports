@@ -51,8 +51,12 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
               .create(declaration.copy(id = UUID.randomUUID.toString, declarationMeta = declarationMeta))
               .map(declaration => Some(CREATED -> declaration.id))
 
+          case Some(declaration) if isAlreadyDraft(declaration, isAmendment) =>
+            Future.successful(Some(FOUND -> declaration.id))
+
           case Some(declaration) =>
-            logger.error(s"The declaration($parentId) to create a draft from was found but why was not 'COMPLETE'??")
+            val status = s"an unexpected status(${declaration.declarationMeta.status.toString})"
+            logger.error(s"The declaration($parentId) to create a draft from was found but why it was in $status??")
             Future.successful(None)
 
           case _ =>
@@ -61,6 +65,13 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
         }
     }
   }
+
+  private def isAlreadyDraft(declaration: ExportsDeclaration, isAmendment: Boolean): Boolean =
+    (declaration.declarationMeta.status, isAmendment) match {
+      case (AMENDMENT_DRAFT, true) => true
+      case (DRAFT, false)          => true
+      case _                       => false
+    }
 
   def find(search: DeclarationSearch, pagination: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] =
     declarationRepository.find(search, pagination, sort)
