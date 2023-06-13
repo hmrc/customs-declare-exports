@@ -137,6 +137,11 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     BsonDocument(filter)
   }
 
+  def findAction(eori: String, actionId: String): Future[Option[Action]] = {
+    val filter = and(equal("actions.id", actionId), equal("eori", eori))
+    findOne(filter).map(_.flatMap(_.actions.find(_.id == actionId)))
+  }
+
   def findAll(eori: String): Future[Seq[Submission]] =
     collection
       .find(equal("eori", eori))
