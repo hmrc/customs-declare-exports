@@ -63,6 +63,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
       _ <- notificationRepository.bulkInsert(session, notifications)
     } yield submission
 
+  // scalastyle:off
   private def addNotificationSummariesToSubmissionAndUpdate(
     session: ClientSession,
     actionId: String,
@@ -119,6 +120,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
       case _ => Future.failed(throw new InternalServerException(s"Failed to update Submission(${submission.uuid}) with Action(${action.id})"))
     }
   }
+  // scalastyle:on
 
   private def updateSubmissionRequest(
     session: ClientSession,

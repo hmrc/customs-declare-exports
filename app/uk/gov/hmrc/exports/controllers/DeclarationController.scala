@@ -23,6 +23,7 @@ import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, Mrn, Page}
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
@@ -49,21 +50,14 @@ class DeclarationController @Inject() (
       .map(declaration => Created(declaration))
   }
 
-  def findOrCreateDraftForAmend(submissionId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    declarationService.findOrCreateDraftForAmend(request.eori, submissionId).map {
-      case Some(DeclarationService.CREATED -> declarationId) => Created(JsString(declarationId))
-      case Some(DeclarationService.FOUND -> id)              => Ok(JsString(id))
-      case _                                                 => NotFound
+  def findOrCreateDraftFromParent(parentId: String, enhancedStatus: String, isAmendment: Boolean): Action[AnyContent] =
+    authenticator.authorisedAction(parse.default) { implicit request =>
+      declarationService.findOrCreateDraftFromParent(request.eori, parentId, EnhancedStatus.withName(enhancedStatus), isAmendment).map {
+        case Some(DeclarationService.CREATED -> declarationId) => Created(JsString(declarationId))
+        case Some(DeclarationService.FOUND -> declarationId)   => Ok(JsString(declarationId))
+        case _                                                 => NotFound
+      }
     }
-  }
-
-  def findOrCreateDraftFromParent(parentId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    declarationService.findOrCreateDraftFromParent(request.eori, parentId).map {
-      case (DeclarationService.CREATED, id) => Created(JsString(id))
-      /* FOUND */
-      case (_, id) => Ok(JsString(id))
-    }
-  }
 
   def findAll(statuses: Seq[String], pagination: Page, sort: DeclarationSort): Action[AnyContent] =
     authenticator.authorisedAction(parse.default) { implicit request =>

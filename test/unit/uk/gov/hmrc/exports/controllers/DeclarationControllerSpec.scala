@@ -33,6 +33,7 @@ import uk.gov.hmrc.exports.models.DeclarationType.STANDARD
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.INITIAL
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, ExternalAmendmentRequest, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.models.declaration.{DeclarationMeta, DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
@@ -53,9 +54,9 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
   private val controller = new DeclarationController(declarationService, mockSubmissionService, authenticator, cc)
 
   override def beforeEach(): Unit = {
-    super.beforeEach()
     reset(mockAuthConnector, declarationService, mockSubmissionService)
     withAuthorizedUser()
+    super.beforeEach()
   }
 
   private val body =
@@ -334,73 +335,43 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
     }
   }
 
-  "DeclarationController.findOrCreateDraftForAmend" should {
-    val newId = "newId"
-    val submissionId = "submissionId"
-    val getRequest = FakeRequest("GET", "/amend-declaration/parentId")
+  "DeclarationController.findOrCreateDraftFromParent" should {
+    val parentId = "parentId"
+    val declarationId = "declarationId"
+    val getRequest = FakeRequest()
 
     "return 200" when {
-      "a draft declaration with 'parentDeclarationId' equal to 'latestDecId' of the given Submission is found" in {
-        when(declarationService.findOrCreateDraftForAmend(any[Eori](), refEq(submissionId))(any()))
-          .thenReturn(Future.successful(Some(DeclarationService.FOUND -> newId)))
+      "a draft declaration with 'parentDeclarationId' equal to provided parentId was found" in {
+        when(declarationService.findOrCreateDraftFromParent(any[Eori], refEq(parentId), any[EnhancedStatus], anyBoolean)(any()))
+          .thenReturn(Future.successful(Some(DeclarationService.FOUND -> declarationId)))
 
-        val result = controller.findOrCreateDraftForAmend(submissionId)(getRequest)
+        val result = controller.findOrCreateDraftFromParent(parentId, "ERRORS", false)(getRequest)
 
         status(result) must be(OK)
-        contentAsJson(result).as[String] mustBe newId
+        contentAsJson(result).as[String] mustBe declarationId
       }
     }
 
     "return 201" when {
-      "a draft declaration with 'parentDeclarationId' equal to 'latestDecId' of the given Submission is created" in {
-        when(declarationService.findOrCreateDraftForAmend(any[Eori](), refEq(submissionId))(any()))
-          .thenReturn(Future.successful(Some(DeclarationService.CREATED -> newId)))
+      "a draft for the parent declaration, specified by parentId, was created" in {
+        when(declarationService.findOrCreateDraftFromParent(any[Eori], refEq(parentId), any[EnhancedStatus], anyBoolean)(any()))
+          .thenReturn(Future.successful(Some(DeclarationService.CREATED -> declarationId)))
 
-        val result = controller.findOrCreateDraftForAmend(submissionId)(getRequest)
+        val result = controller.findOrCreateDraftFromParent(parentId, "ERRORS", false)(getRequest)
 
         status(result) must be(CREATED)
-        contentAsJson(result).as[String] mustBe newId
+        contentAsJson(result).as[String] mustBe declarationId
       }
     }
 
     "return 404" when {
-      "a Submission document with the givenm submissionId is not found" in {
-        when(declarationService.findOrCreateDraftForAmend(any[Eori](), refEq(submissionId))(any()))
+      "a parent declaration, specified by parentId, was not found" in {
+        when(declarationService.findOrCreateDraftFromParent(any[Eori], refEq(parentId), any[EnhancedStatus], anyBoolean)(any()))
           .thenReturn(Future.successful(None))
 
-        val result = controller.findOrCreateDraftForAmend(submissionId)(getRequest)
+        val result = controller.findOrCreateDraftFromParent(parentId, "ERRORS", false)(getRequest)
 
         status(result) must be(NOT_FOUND)
-      }
-    }
-  }
-
-  "DeclarationController.findOrCreateDraftFromParent" should {
-    val newId = "newId"
-    val parentId = "parentId"
-    val getRequest = FakeRequest("GET", "/draft-declaration/parentId")
-
-    "return 200" when {
-      "a draft declaration with 'parentDeclarationId' equal to the given parentId is found" in {
-        when(declarationService.findOrCreateDraftFromParent(any[Eori](), refEq(parentId))(any()))
-          .thenReturn(Future.successful((DeclarationService.FOUND, newId)))
-
-        val result = controller.findOrCreateDraftFromParent(parentId)(getRequest)
-
-        status(result) must be(OK)
-        contentAsJson(result).as[String] mustBe newId
-      }
-    }
-
-    "return 201" when {
-      "a draft declaration with 'parentDeclarationId' equal to the given parentId is created" in {
-        when(declarationService.findOrCreateDraftFromParent(any[Eori](), refEq(parentId))(any()))
-          .thenReturn(Future.successful((DeclarationService.CREATED, newId)))
-
-        val result = controller.findOrCreateDraftFromParent(parentId)(getRequest)
-
-        status(result) must be(CREATED)
-        contentAsJson(result).as[String] mustBe newId
       }
     }
   }
