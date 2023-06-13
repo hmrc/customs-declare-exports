@@ -34,14 +34,20 @@ object WorkItemTestData {
   ): WorkItem[SendEmailDetails] =
     buildTestWorkItem(status, updatedAt, availableAt, item = buildTestSendEmailDetails)
 
-  def buildTestWorkItem[T](status: ProcessingStatus, updatedAt: Instant = Instant.now, availableAt: Instant = Instant.now, item: T): WorkItem[T] =
+  def buildTestWorkItem[T](
+    status: ProcessingStatus,
+    updatedAt: Instant = Instant.now,
+    availableAt: Instant = Instant.now,
+    failureCount: Int = 0,
+    item: T
+  ): WorkItem[T] =
     WorkItem[T](
       id = ObjectId.get,
       receivedAt = Instant.now,
       updatedAt = updatedAt,
       availableAt = availableAt,
       status = status,
-      failureCount = 0,
+      failureCount = failureCount,
       item = item
     )
 }

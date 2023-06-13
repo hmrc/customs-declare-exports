@@ -110,6 +110,8 @@ class AppConfig @Inject() (val configuration: Configuration, servicesConfig: Ser
   lazy val replaceIndexesOfDeclarationRepository: Boolean = configuration.get[Boolean]("declarations.repository.replace.indexes")
 
   lazy val useTransactionalDBOps: Boolean = configuration.get[Boolean]("mongodb.transactional.operations")
+
+  lazy val parsingWorkItemsRetryLimit =  configuration.get[Int]("scheduler.parsing.maxRetries")
 }
 
 object AppConfig {
