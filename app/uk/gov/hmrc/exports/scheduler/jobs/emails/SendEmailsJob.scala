@@ -97,20 +97,29 @@ class SendEmailsJob @Inject() (
 
       case Success(MissingData) =>
         logger.warn(s"Could not send email because some data is missing")
-        failSingle(workItem)
+        failOrCancelSingle(workItem)
 
       case Success(BadEmailRequest(msg)) =>
         logger.warn(s"Email service returned Bad Request response: [$msg]")
-        failSingle(workItem)
+        failOrCancelSingle(workItem)
 
       case Success(InternalEmailServiceError(msg)) =>
         logger.warn(s"Email service returned Internal Service Error response: [$msg]")
         logger.warn(s"Will try again in ${interval.toMinutes} minutes")
-        failSingle(workItem)
+        failOrCancelSingle(workItem)
     }
 
-  private def failSingle(workItem: WorkItem[SendEmailDetails]): Future[Unit] =
-    sendEmailWorkItemRepository.markAs(workItem.id, Failed).flatMap { _ =>
+  private def failOrCancelSingle(workItem: WorkItem[SendEmailDetails]): Future[Unit] = {
+    val status =
+      if (workItem.failureCount >= appConfig.parsingWorkItemsRetryLimit) {
+        logger.error(s"[Email parsing error] parsing id:${workItem.id}' Cancelled! Max retries reached!")
+        Cancelled
+      } else {
+        Failed
+      }
+
+    sendEmailWorkItemRepository.markAs(workItem.id, status).flatMap { _ =>
       pagerDutyAlertManager.managePagerDutyAlert(workItem.id).map(_ => ())
     }
+  }
 }
