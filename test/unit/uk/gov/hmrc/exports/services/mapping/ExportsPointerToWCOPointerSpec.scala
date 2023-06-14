@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.services.mapping
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Environment
+import play.api.libs.json.{JsResultException, JsSuccess, JsValue, Json, Reads}
 
 class ExportsPointerToWCOPointerSpec extends AnyWordSpec with Matchers {
 
@@ -26,7 +27,7 @@ class ExportsPointerToWCOPointerSpec extends AnyWordSpec with Matchers {
 
   private val exportsPointerToWCOPointer = new ExportsPointerToWCOPointer(environment) {
 
-    override protected[this] val mapping: Map[String, Seq[String]] =
+    override protected[this] def mapping(implicit reader: Reads[Pointers]): Map[String, Seq[String]] =
       Map(
         "declaration.parties.declarationHoldersData.holders.1" -> List("42A.17C.$1"),
         "declaration.mucr.1.test" -> List("42A.67A.99A.$1.171", "42A.67A.99A.$1.D018", "42A.67A.99A.#5.D019", "42A.67A.99A.#6.D031"),
@@ -63,6 +64,65 @@ class ExportsPointerToWCOPointerSpec extends AnyWordSpec with Matchers {
 
     "return a MappingError when WCO Pointers for the provided Exports Pointer cannot be found" in {
       exportsPointerToWCOPointer.getWCOPointers("declaration.some.field") mustBe Left(NoMappingFoundError("declaration.some.field"))
+    }
+  }
+
+  "Pointers.reads" should {
+    "deserialise a list of json objects with cds and wco properties" which {
+      "strips $ from cds pointer and adds declaration prefix" in {
+        val json = Json.arr(
+          Json.obj("cds" -> "consignmentReferences.lrn", "wco" -> "42A.228"),
+          Json.obj("cds" -> "items.$1.commodityDetails.combinedNomenclatureCode", "wco" -> "42A.67A.68A.$1.23A"),
+          Json.obj("cds" -> "natureOfTransaction.natureType", "wco" -> "42A.67A.103", "flags" -> Json.arr(Json.obj("flag1" -> "val1"))),
+          Json.obj("cds" -> "transport.transportPayment.paymentMethod", "wco" -> "42A.28A.62A.098", "comments" -> Json.arr("thisComment"))
+        )
+
+        Json.fromJson[Seq[Pointers]](json) mustBe JsSuccess(
+          Seq(
+            Pointers("consignmentReferences.lrn", "42A.228"),
+            Pointers("items.1.commodityDetails.combinedNomenclatureCode", "42A.67A.68A.$1.23A"),
+            Pointers("natureOfTransaction.natureType", "42A.67A.103", Some(Seq(("flag1", "val1")))),
+            Pointers("transport.transportPayment.paymentMethod", "42A.28A.62A.098", None, Some(Seq("thisComment")))
+          )
+        )
+
+      }
+    }
+    "throw an error" when {
+      "fields are empty" when {
+        "cds" in {
+          val json = Json.arr(Json.obj("cds" -> "", "wco" -> "42A.228"))
+
+          assertErrorMessage(json, "Expecting non empty rows NOT starting with 'declaration.'")
+        }
+        "wco" in {
+          val json = Json.arr(Json.obj("cds" -> "items.$1.commodityDetails.combinedNomenclatureCode", "wco" -> ""))
+
+          assertErrorMessage(json, "Empty WCO pointer")
+        }
+      }
+      "cds has 'declaration.' prefix" in {
+        val json = Json.arr(Json.obj("cds" -> "declaration.consignmentReferences.lrn", "wco" -> "42A.228"))
+
+        assertErrorMessage(json, "Expecting non empty rows NOT starting with 'declaration.'")
+      }
+      "cds and wco do not have matching count of $" in {
+
+        val cds = "items.$$1.commodityDetails.combinedNomenclatureCode"
+        val wco = "42A.67A.68A.$1.23A"
+
+        val json = Json.arr(Json.obj("cds" -> cds, "wco" -> wco))
+
+        assertErrorMessage(json, s"Not matching '$$' for $cds -> $wco")
+      }
+
+      def assertErrorMessage(json: JsValue, msg: String) = {
+        val result = intercept[JsResultException] {
+          Json.fromJson[Seq[Pointers]](json)
+        }
+        result.errors.head._2.head.message mustBe msg
+      }
+
     }
   }
 }

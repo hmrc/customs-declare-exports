@@ -17,50 +17,35 @@
 package uk.gov.hmrc.exports.services.mapping
 
 import play.api.Environment
+import play.api.libs.json._
 
-import java.io.IOException
 import javax.inject.{Inject, Singleton}
-import scala.io.Source
+import scala.util.{Failure, Success, Try}
 
 @Singleton
 class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
 
-  private val pointerFile = "exports-wco-mapping.csv"
+  private val pointerFile = "exports-wco-mapping.json"
 
-  // Negative look-ahead. Line must not start with "declaration." as it's added while building the mapping.
-  private val regex = "^(?!declaration\\.).+".r
+  protected[this] def mapping(implicit reader: Reads[Pointers]): Map[String, Seq[String]] = {
 
-  protected[this] val mapping: Map[String, Seq[String]] = {
     val stream = environment.resourceAsStream(pointerFile).getOrElse(throw new Exception(s"$pointerFile could not be read!"))
-    val allLines = Source.fromInputStream(stream).getLines().toList
-    stream.close()
-    val lines = allLines.filter(line => line.count(_ == '|') == 1 && regex.matches(line))
-    if (lines.size != allLines.size)
-      throw new IOException(s"File $pointerFile is malformed. Expecting rows NOT starting with 'declaration.' and with 2 values separated by '|'")
 
-    // The following method is a temporary hack to handle pointers that come from the frontend as a sequence, but for reasons of expediency we are mapping to the WCO Pointer that is actually a parent of the sequenced elements.
-    // Example: There can be up to 99 taric or nact codes, but we will point to the Commodity element if any of these change.
-    // These are handled by removing the final sequence id so that this class will parse them.
-    def convertManyToOnePointers(pointer: String): String =
-      if (Seq("items.$1.nactCode.$2", "items.$1.taricCode.$2", "items.$1.procedureCodes.additionalProcedureCodes.$2").contains(pointer))
-        pointer.dropRight(3)
-      else pointer
+    Try(Json.parse(stream)) match {
+      case Success(JsArray(jsValues)) =>
+        val items: Seq[JsResult[Pointers]] = jsValues.toList.map { jsValue =>
+          reader.reads(jsValue)
+        }
 
-    val tuples = lines.map(_.split('|').map(_.trim).toList) collect {
-      case List(exportsPointer, wcoPointer) if exportsPointer.nonEmpty && wcoPointer.nonEmpty =>
-        if (convertManyToOnePointers(exportsPointer).count(_ == '$') == wcoPointer.count(_ == '$')) removeDollarSign(exportsPointer, wcoPointer)
-        else throw new IOException(s"File $pointerFile is malformed. Not matching '$$' for $exportsPointer")
+        items
+          .flatMap(_.asOpt)
+          .groupMap(_.cds)(_.wco)
 
-      case line =>
-        throw new IOException(s"File $pointerFile is malformed. Empty value(s) in line ($line)")
+      case Success(_)  => throw new IllegalArgumentException(s"Could not read JSON array from file: '$pointerFile'")
+      case Failure(ex) => throw new IllegalArgumentException(s"Failed to read JSON file: '$pointerFile'", ex)
     }
 
-    // Group by Exports Pointer. Result is (Exports Pointer -> List of WCO Pointers) (1 to many)
-    tuples.groupMap(_._1)(_._2)
   }
-
-  private def removeDollarSign(exportsPointer: String, wcoPointer: String): (String, String) =
-    s"declaration.$exportsPointer".replace("$", "") -> wcoPointer
 
   def getWCOPointers(exportsPointer: String): Either[MappingError, Seq[String]] = {
     val segments = exportsPointer.split("\\.")
@@ -119,4 +104,62 @@ class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
       ._2
 
   private def isSequenceNumber(segment: String): Boolean = segment.startsWith("#") && segment.drop(1).toIntOption.nonEmpty
+}
+
+private case class Pointers(cds: String, wco: String, flags: Option[Seq[(String, String)]], comments: Option[Seq[String]])
+
+private object PointersReads extends ConstraintReads {
+
+  private val regex = "^(?!declaration\\.).+".r
+
+  val cdsReads: Reads[String] =
+    filter(JsonValidationError("Expecting non empty rows NOT starting with 'declaration.'")) { cds =>
+      regex.matches(cds) && cds.nonEmpty
+    }
+
+  val wcoReads: Reads[String] =
+    filter(JsonValidationError("Empty WCO pointer"))(_.nonEmpty)
+
+  val flagsReads: Reads[Seq[(String, String)]] = Reads[Seq[(String, String)]] { json =>
+    json.validate[Seq[JsObject]].map { objects =>
+      objects.flatMap(_.fields).map { case (key, value) =>
+        (key, value.as[String])
+      }
+    }
+  }
+
+  // The following method is a temporary hack to handle pointers that come from the frontend as a sequence, but for reasons of expediency we are mapping to the WCO Pointer that is actually a parent of the sequenced elements.
+  // Example: There can be up to 99 taric or nact codes, but we will point to the Commodity element if any of these change.
+  // These are handled by removing the final sequence id so that this class will parse them.
+  def convertManyToOnePointers(pointer: String): String =
+    if (Seq("items.$1.nactCode.$2", "items.$1.taricCode.$2", "items.$1.procedureCodes.additionalProcedureCodes.$2").contains(pointer))
+      pointer.dropRight(3)
+    else pointer
+
+}
+
+private object Pointers {
+
+  def apply(cds: String, wco: String, flags: Option[Seq[(String, String)]] = None, comments: Option[Seq[String]] = None): Pointers =
+    new Pointers(s"declaration.$cds".replace("$", ""), wco, flags, comments)
+
+  implicit val reads: Reads[Pointers] = new Reads[Pointers] {
+
+    import PointersReads._
+
+    override def reads(json: JsValue): JsResult[Pointers] = {
+
+      val cds: String = (json \ "cds").as[String](cdsReads)
+      val wco: String = (json \ "wco").as[String](wcoReads)
+
+      val flags: Option[Seq[(String, String)]] = (json \ "flags").asOpt[Seq[(String, String)]](flagsReads)
+      val comments: Option[Seq[String]] = (json \ "comments").asOpt[Seq[String]]
+
+      if (convertManyToOnePointers(cds).count(_ == '$') == wco.count(_ == '$')) {
+        JsSuccess(Pointers(cds, wco, flags, comments))
+      } else throw JsResultException(Seq((__, Seq(JsonValidationError(s"Not matching '$$' for $cds -> $wco")))))
+
+    }
+  }
+
 }
