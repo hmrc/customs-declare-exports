@@ -111,7 +111,7 @@ class SendEmailsJob @Inject() (
 
   private def failOrCancelSingle(workItem: WorkItem[SendEmailDetails]): Future[Unit] = {
     val status =
-      if (workItem.failureCount > appConfig.parsingWorkItemsRetryLimit) {
+      if (workItem.failureCount >= appConfig.parsingWorkItemsRetryLimit) {
         logger.error(s"[Email parsing error] parsing id:${workItem.id}' Cancelled! Max retries reached!")
         Cancelled
       } else {

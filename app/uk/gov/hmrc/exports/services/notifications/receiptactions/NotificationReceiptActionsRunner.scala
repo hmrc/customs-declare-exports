@@ -61,7 +61,7 @@ class NotificationReceiptActionsRunner @Inject() (
       }
       .recoverWith { case e =>
         val status =
-          if (unparsedNotificationWorkItem.failureCount > config.parsingWorkItemsRetryLimit) {
+          if (unparsedNotificationWorkItem.failureCount >= config.parsingWorkItemsRetryLimit) {
             logger.error(s"[Notification parsing error] parsing id:${unparsedNotificationWorkItem.item.id}' Cancelled! Max retries reached!", e)
             Cancelled
           } else {

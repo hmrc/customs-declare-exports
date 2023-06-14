@@ -32,6 +32,9 @@ class NotificationReceiptActionsRunnerSpec extends IntegrationTestSpec with Expo
 
   "NotificationReceiptActionsRunner" should {
 
+    // note: the tests rely on the failure down the line at ParseAndSaveAction.findAndUpdateSubmission
+    // where it will not find a record in the submissions collection where actions.id will match
+    // an actionId insert in the tests below
     "check the retry limit set in config" when {
       "work item has failed to parse notification" which {
         "updates status to cancelled" when {
@@ -46,8 +49,6 @@ class NotificationReceiptActionsRunnerSpec extends IntegrationTestSpec with Expo
               unparsed.head.status mustBe Cancelled
             }
           }
-        }
-        "increases failed count but leaves status as failed" when {
           "equals limit" in {
             whenReady {
               for {
@@ -56,10 +57,11 @@ class NotificationReceiptActionsRunnerSpec extends IntegrationTestSpec with Expo
                 un <- unparsedNotificationRepository.findAll()
               } yield un
             } { unparsed =>
-              unparsed.head.status mustBe Failed
-              unparsed.head.failureCount mustBe limit + 1
+              unparsed.head.status mustBe Cancelled
             }
           }
+        }
+        "increases failed count but leaves status as failed" when {
           "below limit" in {
             whenReady {
               for {
