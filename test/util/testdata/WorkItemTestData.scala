@@ -17,15 +17,22 @@
 package testdata
 
 import org.bson.types.ObjectId
+import testdata.ExportsTestData.mrn
+import testdata.notifications.ExampleXmlAndNotificationDetailsPair.exampleReceivedNotification
+import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem}
 
 import java.time.Instant
+import java.util.UUID
 
 object WorkItemTestData {
 
   def buildTestSendEmailDetails: SendEmailDetails =
     SendEmailDetails(notificationId = ObjectId.get, mrn = ExportsTestData.mrn, actionId = "actionId")
+
+  def buildTestUnparsedNotification(unparsedNotificationId: String, actionId: String): UnparsedNotification =
+    UnparsedNotification(id = UUID.fromString(unparsedNotificationId), actionId = actionId, payload = exampleReceivedNotification(mrn).asXml.toString)
 
   def buildTestSendEmailWorkItem(
     status: ProcessingStatus,
