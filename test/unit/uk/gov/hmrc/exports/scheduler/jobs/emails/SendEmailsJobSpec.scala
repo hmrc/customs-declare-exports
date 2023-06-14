@@ -231,7 +231,7 @@ class SendEmailsJobSpec extends UnitSpec {
               verify(sendEmailWorkItemRepository).markAs(eqTo(workItem.id), eqTo(Failed), any)
             }
             "marks the WorkItem as Cancelled" in {
-              val workItem = prepareTestScenarioWithWorkItem(10)
+              val workItem = prepareTestScenarioWithWorkItem(11)
               sendEmailsJob.execute().futureValue
               verify(sendEmailWorkItemRepository).markAs(eqTo(workItem.id), eqTo(Cancelled), any)
             }
@@ -272,7 +272,7 @@ class SendEmailsJobSpec extends UnitSpec {
               verify(sendEmailWorkItemRepository).markAs(eqTo(workItem.id), eqTo(Failed), any)
             }
             "marks the WorkItem as Cancelled" in {
-              val workItem = prepareTestScenarioWithWorkItem(10)
+              val workItem = prepareTestScenarioWithWorkItem(11)
               sendEmailsJob.execute().futureValue
               verify(sendEmailWorkItemRepository).markAs(eqTo(workItem.id), eqTo(Cancelled), any)
             }
@@ -312,7 +312,7 @@ class SendEmailsJobSpec extends UnitSpec {
               verify(sendEmailWorkItemRepository).markAs(eqTo(workItem.id), eqTo(Failed), any)
             }
             "marks the WorkItem as Cancelled" in {
-              val workItem = prepareTestScenarioWithWorkItem(10)
+              val workItem = prepareTestScenarioWithWorkItem(11)
               sendEmailsJob.execute().futureValue
               verify(sendEmailWorkItemRepository).markAs(eqTo(workItem.id), eqTo(Cancelled), any)
             }

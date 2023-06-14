@@ -174,7 +174,7 @@ class NotificationReceiptActionsRunnerSpec extends UnitSpec {
 
         "call UnparsedNotificationWorkItemRepository.markAs with Cancelled ProcessingStatus" when {
           "max retries have been attempted" in {
-            val workItem = prepareTestScenarioWithWorkItem(10)
+            val workItem = prepareTestScenarioWithWorkItem(11)
 
             notificationReceiptActionsRunner.runNow().futureValue
 
