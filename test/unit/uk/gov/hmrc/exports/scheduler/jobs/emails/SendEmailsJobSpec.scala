@@ -53,7 +53,7 @@ class SendEmailsJobSpec extends UnitSpec {
     reset(appConfig, sendEmailWorkItemRepository, emailCancellationValidator, emailSender, pagerDutyAlertManager)
     when(appConfig.sendEmailsJobInterval).thenReturn(5.minutes)
     when(appConfig.consideredFailedBeforeWorkItem).thenReturn(4.minutes)
-    when(pagerDutyAlertManager.managePagerDutyAlert(any[ObjectId])).thenReturn(Future.successful(false))
+    when(pagerDutyAlertManager.managePagerDutyAlert(any[WorkItem[SendEmailDetails]])).thenReturn(Future.successful(false))
   }
 
   private val testWorkItem: WorkItem[SendEmailDetails] = buildTestSendEmailWorkItem(status = InProgress)
@@ -240,7 +240,7 @@ class SendEmailsJobSpec extends UnitSpec {
           "call PagerDutyAlertManager" in {
             prepareTestScenarioWithWorkItem()
             sendEmailsJob.execute().futureValue
-            verify(pagerDutyAlertManager).managePagerDutyAlert(eqTo(testWorkItem.id))
+            verify(pagerDutyAlertManager).managePagerDutyAlert(eqTo(testWorkItem))
           }
 
           "call SendEmailWorkItemRepository again for the next WorkItem" in {
@@ -281,7 +281,7 @@ class SendEmailsJobSpec extends UnitSpec {
           "call PagerDutyAlertManager" in {
             prepareTestScenarioWithWorkItem()
             sendEmailsJob.execute().futureValue
-            verify(pagerDutyAlertManager).managePagerDutyAlert(eqTo(testWorkItem.id))
+            verify(pagerDutyAlertManager).managePagerDutyAlert(eqTo(testWorkItem))
           }
 
           "call SendEmailWorkItemRepository again for the next WorkItem" in {
@@ -321,7 +321,7 @@ class SendEmailsJobSpec extends UnitSpec {
           "call PagerDutyAlertManager" in {
             val workItem = prepareTestScenarioWithWorkItem()
             sendEmailsJob.execute().futureValue
-            verify(pagerDutyAlertManager).managePagerDutyAlert(eqTo(workItem.id))
+            verify(pagerDutyAlertManager).managePagerDutyAlert(eqTo(workItem))
           }
 
           "NOT call SendEmailWorkItemRepository again for the next WorkItem" in {

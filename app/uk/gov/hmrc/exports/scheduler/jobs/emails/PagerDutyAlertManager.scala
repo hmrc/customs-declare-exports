@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
-import org.bson.types.ObjectId
 import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
@@ -24,28 +23,20 @@ import uk.gov.hmrc.exports.repositories.SendEmailWorkItemRepository
 import uk.gov.hmrc.mongo.workitem.WorkItem
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
 class PagerDutyAlertManager @Inject() (
   appConfig: AppConfig,
   sendEmailWorkItemRepository: SendEmailWorkItemRepository,
   pagerDutyAlertValidator: PagerDutyAlertValidator
-)(implicit ec: ExecutionContext)
-    extends Logging {
+) extends Logging {
 
-  def managePagerDutyAlert(id: ObjectId): Future[Boolean] =
-    sendEmailWorkItemRepository.findById(id).flatMap {
-      case Some(workItem) =>
-        if (pagerDutyAlertValidator.isPagerDutyAlertRequiredFor(workItem)) {
-          triggerPagerDutyAlert(workItem)
-          sendEmailWorkItemRepository.markAlertTriggered(workItem.id)
-        } else Future.successful(false)
-
-      case None =>
-        logger.warn(s"Cannot find WorkItem with SendEmailDetails for id: [$id]")
-        Future.successful(false)
-    }
+  def managePagerDutyAlert(workItem: WorkItem[SendEmailDetails]): Future[Boolean] =
+    if (pagerDutyAlertValidator.isPagerDutyAlertRequiredFor(workItem)) {
+      triggerPagerDutyAlert(workItem)
+      sendEmailWorkItemRepository.markAlertTriggered(workItem.id)
+    } else Future.successful(false)
 
   private def triggerPagerDutyAlert(workItem: WorkItem[SendEmailDetails]): Unit =
     logger.warn(

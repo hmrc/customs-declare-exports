@@ -90,36 +90,33 @@ class SendEmailsJob @Inject() (
   }
 
   private def sendEmail(workItem: WorkItem[SendEmailDetails]): Future[SendEmailResult] =
-    emailSender.sendEmailForDmsDocNotification(workItem.item).andThen {
+    emailSender.sendEmailForDmsDocNotification(workItem.item) andThen {
       case Success(EmailAccepted) =>
         logger.info(s"Email sent for MRN: ${workItem.item.mrn}")
         sendEmailWorkItemRepository.complete(workItem.id, Succeeded)
 
       case Success(MissingData) =>
-        logger.warn(s"Could not send email because some data is missing")
-        failOrCancelSingle(workItem)
+        failOrCancelSingle(workItem, s"Could not send email because some data is missing")
 
       case Success(BadEmailRequest(msg)) =>
-        logger.warn(s"Email service returned Bad Request response: [$msg]")
-        failOrCancelSingle(workItem)
+        failOrCancelSingle(workItem, s"Email service returned Bad Request response: [$msg]")
 
       case Success(InternalEmailServiceError(msg)) =>
-        logger.warn(s"Email service returned Internal Service Error response: [$msg]")
-        logger.warn(s"Will try again in ${interval.toMinutes} minutes")
-        failOrCancelSingle(workItem)
+        failOrCancelSingle(workItem, s"Email service returned Internal Service Error response: [$msg]")
     }
 
-  private def failOrCancelSingle(workItem: WorkItem[SendEmailDetails]): Future[Unit] = {
+  private def failOrCancelSingle(workItem: WorkItem[SendEmailDetails], message: String): Future[Unit] = {
     val status =
-      if (workItem.failureCount >= appConfig.parsingWorkItemsRetryLimit) {
-        logger.error(s"[Email parsing error] parsing id:${workItem.id}' Cancelled! Max retries reached!")
+      if (workItem.failureCount + 1 >= appConfig.parsingWorkItemsRetryLimit) {
+        logger.error(s"[Send Email job processing error] parsing id:${workItem.id}' Cancelled! Max retries reached! $message")
         Cancelled
       } else {
+        logger.warn(message)
         Failed
       }
 
     sendEmailWorkItemRepository.markAs(workItem.id, status).flatMap { _ =>
-      pagerDutyAlertManager.managePagerDutyAlert(workItem.id).map(_ => ())
+      pagerDutyAlertManager.managePagerDutyAlert(workItem).map(_ => ())
     }
   }
 }

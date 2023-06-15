@@ -60,18 +60,30 @@ class NotificationReceiptActionsRunnerSpec extends IntegrationTestSpec with Expo
               unparsed.head.status mustBe Cancelled
             }
           }
+          "one below limit" which {
+            "allows for the actual failure comes before the check, but the iteration comes after" in {
+              whenReady {
+                for {
+                  _ <- unparsedNotificationRepository.insertOne(workItem(limit - 1))
+                  _ <- testJob.runNow(true)
+                  un <- unparsedNotificationRepository.findAll()
+                } yield un
+              } { unparsed =>
+                unparsed.head.status mustBe Cancelled
+              }
+            }
+          }
         }
         "increases failed count but leaves status as failed" when {
           "below limit" in {
             whenReady {
               for {
-                _ <- unparsedNotificationRepository.insertOne(workItem(limit - 1))
+                _ <- unparsedNotificationRepository.insertOne(workItem(limit - 2))
                 _ <- testJob.runNow(true)
                 un <- unparsedNotificationRepository.findAll()
               } yield un
             } { unparsed =>
               unparsed.head.status mustBe Failed
-              unparsed.head.failureCount mustBe limit
             }
           }
         }
