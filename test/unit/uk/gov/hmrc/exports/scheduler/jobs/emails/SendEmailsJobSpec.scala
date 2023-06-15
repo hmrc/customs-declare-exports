@@ -39,10 +39,9 @@ class SendEmailsJobSpec extends UnitSpec {
   private val sendEmailWorkItemRepository = mock[SendEmailWorkItemRepository]
   private val emailCancellationValidator = mock[EmailCancellationValidator]
   private val emailSender = mock[EmailSender]
-  private val pagerDutyAlertManager = mock[PagerDutyAlertManager]
 
   private val sendEmailsJob =
-    new SendEmailsJob(appConfig, sendEmailWorkItemRepository, emailCancellationValidator, emailSender, pagerDutyAlertManager)
+    new SendEmailsJob(appConfig, sendEmailWorkItemRepository, emailCancellationValidator, emailSender)
 
   private val zone = ZoneOffset.UTC
   private def instant(datetime: String): Instant = LocalDateTime.parse(datetime).atZone(zone).toInstant
@@ -50,10 +49,9 @@ class SendEmailsJobSpec extends UnitSpec {
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(appConfig, sendEmailWorkItemRepository, emailCancellationValidator, emailSender, pagerDutyAlertManager)
+    reset(appConfig, sendEmailWorkItemRepository, emailCancellationValidator, emailSender)
     when(appConfig.sendEmailsJobInterval).thenReturn(5.minutes)
     when(appConfig.consideredFailedBeforeWorkItem).thenReturn(4.minutes)
-    when(pagerDutyAlertManager.managePagerDutyAlert(any[WorkItem[SendEmailDetails]])).thenReturn(Future.successful(false))
   }
 
   private val testWorkItem: WorkItem[SendEmailDetails] = buildTestSendEmailWorkItem(status = InProgress)
@@ -90,9 +88,6 @@ class SendEmailsJobSpec extends UnitSpec {
       }
     }
 
-    "have 'interval' configured" in {
-      sendEmailsJob.interval mustBe 5.minutes
-    }
   }
 
   "SendEmailsJob on execute" when {
@@ -116,11 +111,6 @@ class SendEmailsJobSpec extends UnitSpec {
         verifyZeroInteractions(emailSender)
       }
 
-      "not call PagerDutyAlertManager" in {
-        when(sendEmailWorkItemRepository.pullOutstanding(any[Instant], any[Instant])).thenReturn(Future.successful(None))
-        sendEmailsJob.execute().futureValue
-        verifyZeroInteractions(pagerDutyAlertManager)
-      }
     }
 
     "SendEmailWorkItemRepository returns WorkItem" should {
@@ -153,12 +143,6 @@ class SendEmailsJobSpec extends UnitSpec {
           prepareTestScenario()
           sendEmailsJob.execute().futureValue
           verifyZeroInteractions(emailSender)
-        }
-
-        "not call PagerDutyAlertManager" in {
-          prepareTestScenario()
-          sendEmailsJob.execute().futureValue
-          verifyZeroInteractions(pagerDutyAlertManager)
         }
 
         "call SendEmailWorkItemRepository to cancel the WorkItem" in {
@@ -201,11 +185,6 @@ class SendEmailsJobSpec extends UnitSpec {
             verify(sendEmailWorkItemRepository, times(2)).pullOutstanding(any[Instant], any[Instant])
           }
 
-          "not call PagerDutyAlertManager" in {
-            prepareTestScenario()
-            sendEmailsJob.execute().futureValue
-            verifyZeroInteractions(pagerDutyAlertManager)
-          }
         }
 
         "EmailSender returns BadEmailRequest" should {
@@ -235,12 +214,6 @@ class SendEmailsJobSpec extends UnitSpec {
               sendEmailsJob.execute().futureValue
               verify(sendEmailWorkItemRepository).markAs(eqTo(workItem.id), eqTo(Cancelled), any)
             }
-          }
-
-          "call PagerDutyAlertManager" in {
-            prepareTestScenarioWithWorkItem()
-            sendEmailsJob.execute().futureValue
-            verify(pagerDutyAlertManager).managePagerDutyAlert(eqTo(testWorkItem))
           }
 
           "call SendEmailWorkItemRepository again for the next WorkItem" in {
@@ -278,12 +251,6 @@ class SendEmailsJobSpec extends UnitSpec {
             }
           }
 
-          "call PagerDutyAlertManager" in {
-            prepareTestScenarioWithWorkItem()
-            sendEmailsJob.execute().futureValue
-            verify(pagerDutyAlertManager).managePagerDutyAlert(eqTo(testWorkItem))
-          }
-
           "call SendEmailWorkItemRepository again for the next WorkItem" in {
             prepareTestScenarioWithWorkItem()
             sendEmailsJob.execute().futureValue
@@ -316,12 +283,6 @@ class SendEmailsJobSpec extends UnitSpec {
               sendEmailsJob.execute().futureValue
               verify(sendEmailWorkItemRepository).markAs(eqTo(workItem.id), eqTo(Cancelled), any)
             }
-          }
-
-          "call PagerDutyAlertManager" in {
-            val workItem = prepareTestScenarioWithWorkItem()
-            sendEmailsJob.execute().futureValue
-            verify(pagerDutyAlertManager).managePagerDutyAlert(eqTo(workItem))
           }
 
           "NOT call SendEmailWorkItemRepository again for the next WorkItem" in {

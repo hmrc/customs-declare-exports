@@ -37,8 +37,7 @@ class SendEmailsJob @Inject() (
   appConfig: AppConfig,
   sendEmailWorkItemRepository: SendEmailWorkItemRepository,
   emailCancellationValidator: EmailCancellationValidator,
-  emailSender: EmailSender,
-  pagerDutyAlertManager: PagerDutyAlertManager
+  emailSender: EmailSender
 )(implicit @Named("backgroundTasksExecutionContext") ec: ExecutionContext)
     extends ScheduledJob with Logging {
 
@@ -105,18 +104,16 @@ class SendEmailsJob @Inject() (
         failOrCancelSingle(workItem, s"Email service returned Internal Service Error response: [$msg]")
     }
 
-  private def failOrCancelSingle(workItem: WorkItem[SendEmailDetails], message: String): Future[Unit] = {
+  private def failOrCancelSingle(workItem: WorkItem[SendEmailDetails], message: String): Future[Boolean] = {
     val status =
       if (workItem.failureCount + 1 >= appConfig.parsingWorkItemsRetryLimit) {
-        logger.error(s"[Send Email job processing error] parsing id:${workItem.id}' Cancelled! Max retries reached! $message")
+        logger.error(s"[Send Email job processing error] Cancelled! Max retries reached! Parsing id:${workItem.id}' $message")
         Cancelled
       } else {
         logger.warn(message)
         Failed
       }
 
-    sendEmailWorkItemRepository.markAs(workItem.id, status).flatMap { _ =>
-      pagerDutyAlertManager.managePagerDutyAlert(workItem).map(_ => ())
-    }
+    sendEmailWorkItemRepository.markAs(workItem.id, status)
   }
 }
