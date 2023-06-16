@@ -37,7 +37,7 @@ class AppConfigISpec extends IntegrationTestSpec {
   private val developerHubClientId = "customs-declare-exports"
   private val draftTimeToLive: FiniteDuration = 30.days
   private val purgeDraftDeclarations = JobConfig(LocalTime.of(23, 30), 1.day)
-  private val sendEmailsJobInterval: FiniteDuration = 10.hours
+  private val sendEmailsJobInterval: FiniteDuration = 1.hours
   private val notificationReattemptInterval: FiniteDuration = 60.seconds
   private val consideredFailedBeforeWorkItem: FiniteDuration = 4.minutes
   private val customsDeclarationsInformationBaseUrl = "http://localhost:9834"
