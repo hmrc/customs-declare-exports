@@ -42,7 +42,6 @@ object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
     withRepresentativeDetails(Some(EntityDetails(Some("GB717572504502809"), None)), Some("3")),
     withDeclarationHolders(DeclarationHolder(Some("AEOC"), Some("GB717572504502811"), Some(EoriSource.OtherEori))),
     withCarrierDetails(None, Some(Address("XYZ Carrier", "School Road", "London", "WS1 2AB", "United Kingdom"))),
-    withOriginationCountry(),
     withDestinationCountry(),
     withoutRoutingCountries(),
     withGoodsLocation(
