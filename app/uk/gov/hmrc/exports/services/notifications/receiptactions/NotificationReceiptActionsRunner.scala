@@ -17,10 +17,11 @@
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 
 import play.api.Logging
+import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import uk.gov.hmrc.exports.repositories.UnparsedNotificationWorkItemRepository
 import uk.gov.hmrc.exports.util.TimeUtils.defaultTimeZone
-import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Failed, Succeeded}
+import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Cancelled, Failed, Succeeded}
 import uk.gov.hmrc.mongo.workitem.WorkItem
 
 import java.time.{Instant, LocalDateTime}
@@ -30,7 +31,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class NotificationReceiptActionsRunner @Inject() (
   unparsedNotificationWorkItemRepository: UnparsedNotificationWorkItemRepository,
-  notificationReceiptActionsExecutor: NotificationReceiptActionsExecutor
+  notificationReceiptActionsExecutor: NotificationReceiptActionsExecutor,
+  config: AppConfig
 )(implicit @Named("backgroundTasksExecutionContext") ec: ExecutionContext)
     extends Logging {
 
@@ -43,8 +45,9 @@ class NotificationReceiptActionsRunner @Inject() (
 
     def process(): Future[Unit] =
       unparsedNotificationWorkItemRepository.pullOutstanding(failedBefore = failedBefore, availableBefore = now).flatMap {
-        case None                               => Future.unit
-        case Some(unparsedNotificationWorkItem) => executeNotificationReceiptActions(unparsedNotificationWorkItem).flatMap(_ => process())
+        case None => Future.unit
+        case Some(unparsedNotificationWorkItem) =>
+          executeNotificationReceiptActions(unparsedNotificationWorkItem).flatMap(_ => process())
       }
 
     process()
@@ -57,7 +60,17 @@ class NotificationReceiptActionsRunner @Inject() (
         unparsedNotificationWorkItemRepository.complete(unparsedNotificationWorkItem.id, Succeeded)
       }
       .recoverWith { case e =>
-        logger.warn(s"[Notification parsing error] parsing id:${unparsedNotificationWorkItem.item.id}' Failed!", e)
-        unparsedNotificationWorkItemRepository.markAs(unparsedNotificationWorkItem.id, Failed)
+        val status =
+          if (unparsedNotificationWorkItem.failureCount + 1 >= config.parsingWorkItemsRetryLimit) {
+            logger.error(
+              s"[UnparsedNotification processing error] Cancelled! Max retries reached! Parsing id:${unparsedNotificationWorkItem.item.id}'",
+              e
+            )
+            Cancelled
+          } else {
+            logger.warn(s"[UnparsedNotification processing error] parsing id:${unparsedNotificationWorkItem.item.id}' Failed!", e)
+            Failed
+          }
+        unparsedNotificationWorkItemRepository.markAs(unparsedNotificationWorkItem.id, status)
       }
 }

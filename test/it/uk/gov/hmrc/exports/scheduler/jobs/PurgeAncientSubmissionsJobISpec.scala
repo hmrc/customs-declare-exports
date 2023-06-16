@@ -15,6 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class PurgeAncientSubmissionsJobISpec extends IntegrationTestPurgeSubmissionsToolSpec with ExportsDeclarationBuilder {
 
   import PurgeAncientSubmissionsJobISpec._
+  import testdata.WorkItemTestData._
 
   val testJob: PurgeAncientSubmissionsJob = instanceOf[PurgeAncientSubmissionsJob]
 
@@ -82,10 +83,10 @@ class PurgeAncientSubmissionsJobISpec extends IntegrationTestPurgeSubmissionsToo
           notification(unparsedNotificationId = unparsedNotificationIds(3), actionId = actionIds(3))
         )
         val unparsedNotifications: List[UnparsedNotification] = List(
-          unparsedNotification(unparsedNotificationIds(0), actionIds(0)),
-          unparsedNotification(unparsedNotificationIds(1), actionIds(1)),
-          unparsedNotification(unparsedNotificationIds(2), actionIds(2)),
-          unparsedNotification(unparsedNotificationIds(3), actionIds(3))
+          buildTestUnparsedNotification(unparsedNotificationIds(0), actionIds(0)),
+          buildTestUnparsedNotification(unparsedNotificationIds(1), actionIds(1)),
+          buildTestUnparsedNotification(unparsedNotificationIds(2), actionIds(2)),
+          buildTestUnparsedNotification(unparsedNotificationIds(3), actionIds(3))
         )
 
         whenReady {
@@ -165,7 +166,7 @@ class PurgeAncientSubmissionsJobISpec extends IntegrationTestPurgeSubmissionsToo
 
         val declarations: List[ExportsDeclaration] = List(aDeclaration(withId(uuids(0)), withEori(eori)))
         val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds(0), actionId = actionIds(0)))
-        val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds(0), actionIds(0)))
+        val unparsedNotifications = List(buildTestUnparsedNotification(unparsedNotificationIds(0), actionIds(0)))
 
         whenReady {
           for {
@@ -277,7 +278,7 @@ class PurgeAncientSubmissionsJobISpec extends IntegrationTestPurgeSubmissionsToo
 
         val declarations: List[ExportsDeclaration] = List(aDeclaration(withId(uuids(0)), withEori(eori)))
         val notifications = List(notification(unparsedNotificationId = unparsedNotificationIds(0), actionId = actionIds(0)))
-        val unparsedNotifications = List(unparsedNotification(unparsedNotificationIds(0), actionIds(0)))
+        val unparsedNotifications = List(buildTestUnparsedNotification(unparsedNotificationIds(0), actionIds(0)))
 
         whenReady {
           for {
@@ -395,6 +396,4 @@ object PurgeAncientSubmissionsJobISpec {
       )
     )
 
-  def unparsedNotification(unparsedNotificationId: String, actionId: String): UnparsedNotification =
-    UnparsedNotification(id = UUID.fromString(unparsedNotificationId), actionId = actionId, payload = "payload")
 }

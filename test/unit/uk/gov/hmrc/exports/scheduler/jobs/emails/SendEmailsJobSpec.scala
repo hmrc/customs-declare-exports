@@ -39,10 +39,9 @@ class SendEmailsJobSpec extends UnitSpec {
   private val sendEmailWorkItemRepository = mock[SendEmailWorkItemRepository]
   private val emailCancellationValidator = mock[EmailCancellationValidator]
   private val emailSender = mock[EmailSender]
-  private val pagerDutyAlertManager = mock[PagerDutyAlertManager]
 
   private val sendEmailsJob =
-    new SendEmailsJob(appConfig, sendEmailWorkItemRepository, emailCancellationValidator, emailSender, pagerDutyAlertManager)
+    new SendEmailsJob(appConfig, sendEmailWorkItemRepository, emailCancellationValidator, emailSender)
 
   private val zone = ZoneOffset.UTC
   private def instant(datetime: String): Instant = LocalDateTime.parse(datetime).atZone(zone).toInstant
@@ -50,16 +49,15 @@ class SendEmailsJobSpec extends UnitSpec {
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(appConfig, sendEmailWorkItemRepository, emailCancellationValidator, emailSender, pagerDutyAlertManager)
+    reset(appConfig, sendEmailWorkItemRepository, emailCancellationValidator, emailSender)
     when(appConfig.sendEmailsJobInterval).thenReturn(5.minutes)
     when(appConfig.consideredFailedBeforeWorkItem).thenReturn(4.minutes)
-    when(pagerDutyAlertManager.managePagerDutyAlert(any[ObjectId])).thenReturn(Future.successful(false))
   }
 
   private val testWorkItem: WorkItem[SendEmailDetails] = buildTestSendEmailWorkItem(status = InProgress)
-  private def whenThereIsWorkItemAvailable(): Unit =
+  private def whenThereIsWorkItemAvailable(workItem: WorkItem[SendEmailDetails] = testWorkItem): Unit =
     when(sendEmailWorkItemRepository.pullOutstanding(any[Instant], any[Instant]))
-      .thenReturn(Future.successful(Some(testWorkItem)), Future.successful(None))
+      .thenReturn(Future.successful(Some(workItem)), Future.successful(None))
 
   "SendEmailsJob" should {
 
@@ -90,9 +88,6 @@ class SendEmailsJobSpec extends UnitSpec {
       }
     }
 
-    "have 'interval' configured" in {
-      sendEmailsJob.interval mustBe 5.minutes
-    }
   }
 
   "SendEmailsJob on execute" when {
@@ -116,11 +111,6 @@ class SendEmailsJobSpec extends UnitSpec {
         verifyZeroInteractions(emailSender)
       }
 
-      "not call PagerDutyAlertManager" in {
-        when(sendEmailWorkItemRepository.pullOutstanding(any[Instant], any[Instant])).thenReturn(Future.successful(None))
-        sendEmailsJob.execute().futureValue
-        verifyZeroInteractions(pagerDutyAlertManager)
-      }
     }
 
     "SendEmailWorkItemRepository returns WorkItem" should {
@@ -153,12 +143,6 @@ class SendEmailsJobSpec extends UnitSpec {
           prepareTestScenario()
           sendEmailsJob.execute().futureValue
           verifyZeroInteractions(emailSender)
-        }
-
-        "not call PagerDutyAlertManager" in {
-          prepareTestScenario()
-          sendEmailsJob.execute().futureValue
-          verifyZeroInteractions(pagerDutyAlertManager)
         }
 
         "call SendEmailWorkItemRepository to cancel the WorkItem" in {
@@ -201,17 +185,14 @@ class SendEmailsJobSpec extends UnitSpec {
             verify(sendEmailWorkItemRepository, times(2)).pullOutstanding(any[Instant], any[Instant])
           }
 
-          "not call PagerDutyAlertManager" in {
-            prepareTestScenario()
-            sendEmailsJob.execute().futureValue
-            verifyZeroInteractions(pagerDutyAlertManager)
-          }
         }
 
         "EmailSender returns BadEmailRequest" should {
 
-          def prepareTestScenario(): Unit = {
-            whenThereIsWorkItemAvailable()
+          def prepareTestScenarioWithWorkItem(retries: Int = 0): WorkItem[SendEmailDetails] = {
+            val workItem = testWorkItem.copy(failureCount = retries)
+            whenThereIsWorkItemAvailable(workItem)
+            when(appConfig.parsingWorkItemsRetryLimit).thenReturn(10)
             when(emailSender.sendEmailForDmsDocNotification(any[SendEmailDetails])(any[ExecutionContext]))
               .thenReturn(Future.successful(BadEmailRequest("Test BadEmailRequest message")))
 
@@ -219,22 +200,24 @@ class SendEmailsJobSpec extends UnitSpec {
               .thenReturn(Future.successful(true))
 
             when(emailCancellationValidator.isEmailSendingCancelled(any[SendEmailDetails])(any)).thenReturn(Future.successful(false))
+            workItem
           }
 
-          "call SendEmailWorkItemRepository to mark the WorkItem as Failed" in {
-            prepareTestScenario()
-            sendEmailsJob.execute().futureValue
-            verify(sendEmailWorkItemRepository).markAs(eqTo(testWorkItem.id), eqTo(Failed), any)
-          }
-
-          "call PagerDutyAlertManager" in {
-            prepareTestScenario()
-            sendEmailsJob.execute().futureValue
-            verify(pagerDutyAlertManager).managePagerDutyAlert(eqTo(testWorkItem.id))
+          "call SendEmailWorkItemRepository" which {
+            "marks the WorkItem as Failed" in {
+              val workItem = prepareTestScenarioWithWorkItem()
+              sendEmailsJob.execute().futureValue
+              verify(sendEmailWorkItemRepository).markAs(eqTo(workItem.id), eqTo(Failed), any)
+            }
+            "marks the WorkItem as Cancelled" in {
+              val workItem = prepareTestScenarioWithWorkItem(11)
+              sendEmailsJob.execute().futureValue
+              verify(sendEmailWorkItemRepository).markAs(eqTo(workItem.id), eqTo(Cancelled), any)
+            }
           }
 
           "call SendEmailWorkItemRepository again for the next WorkItem" in {
-            prepareTestScenario()
+            prepareTestScenarioWithWorkItem()
             sendEmailsJob.execute().futureValue
             verify(sendEmailWorkItemRepository, times(2)).pullOutstanding(any[Instant], any[Instant])
           }
@@ -242,30 +225,34 @@ class SendEmailsJobSpec extends UnitSpec {
 
         "EmailSender returns MissingData" should {
 
-          def prepareTestScenario(): Unit = {
-            whenThereIsWorkItemAvailable()
+          def prepareTestScenarioWithWorkItem(retries: Int = 0): WorkItem[SendEmailDetails] = {
+            val workItem = testWorkItem.copy(failureCount = retries)
+            whenThereIsWorkItemAvailable(workItem)
+            when(appConfig.parsingWorkItemsRetryLimit).thenReturn(10)
             when(emailSender.sendEmailForDmsDocNotification(any[SendEmailDetails])(any[ExecutionContext])).thenReturn(Future.successful(MissingData))
 
             when(sendEmailWorkItemRepository.markAs(any[ObjectId], any[ResultStatus], any[Option[Instant]]))
               .thenReturn(Future.successful(true))
 
             when(emailCancellationValidator.isEmailSendingCancelled(any[SendEmailDetails])(any)).thenReturn(Future.successful(false))
+            workItem
           }
 
-          "call SendEmailWorkItemRepository to mark the WorkItem as Failed" in {
-            prepareTestScenario()
-            sendEmailsJob.execute().futureValue
-            verify(sendEmailWorkItemRepository).markAs(eqTo(testWorkItem.id), eqTo(Failed), any)
-          }
-
-          "call PagerDutyAlertManager" in {
-            prepareTestScenario()
-            sendEmailsJob.execute().futureValue
-            verify(pagerDutyAlertManager).managePagerDutyAlert(eqTo(testWorkItem.id))
+          "call SendEmailWorkItemRepository" which {
+            "marks the WorkItem as Failed" in {
+              val workItem = prepareTestScenarioWithWorkItem()
+              sendEmailsJob.execute().futureValue
+              verify(sendEmailWorkItemRepository).markAs(eqTo(workItem.id), eqTo(Failed), any)
+            }
+            "marks the WorkItem as Cancelled" in {
+              val workItem = prepareTestScenarioWithWorkItem(11)
+              sendEmailsJob.execute().futureValue
+              verify(sendEmailWorkItemRepository).markAs(eqTo(workItem.id), eqTo(Cancelled), any)
+            }
           }
 
           "call SendEmailWorkItemRepository again for the next WorkItem" in {
-            prepareTestScenario()
+            prepareTestScenarioWithWorkItem()
             sendEmailsJob.execute().futureValue
             verify(sendEmailWorkItemRepository, times(2)).pullOutstanding(any[Instant], any[Instant])
           }
@@ -273,29 +260,33 @@ class SendEmailsJobSpec extends UnitSpec {
 
         "EmailSender returns InternalEmailServiceError" should {
 
-          def prepareTestScenario(): Unit = {
-            whenThereIsWorkItemAvailable()
+          def prepareTestScenarioWithWorkItem(retries: Int = 0): WorkItem[SendEmailDetails] = {
+            val workItem = testWorkItem.copy(failureCount = retries)
+            whenThereIsWorkItemAvailable(workItem)
+            when(appConfig.parsingWorkItemsRetryLimit).thenReturn(10)
             when(emailSender.sendEmailForDmsDocNotification(any[SendEmailDetails])(any[ExecutionContext]))
               .thenReturn(Future.successful(InternalEmailServiceError("Test InternalEmailServiceError message")))
             when(sendEmailWorkItemRepository.markAs(any[ObjectId], any[ResultStatus], any[Option[Instant]]))
               .thenReturn(Future.successful(true))
             when(emailCancellationValidator.isEmailSendingCancelled(any[SendEmailDetails])(any)).thenReturn(Future.successful(false))
+            workItem
           }
 
-          "call SendEmailWorkItemRepository to mark the WorkItem as Failed" in {
-            prepareTestScenario()
-            sendEmailsJob.execute().futureValue
-            verify(sendEmailWorkItemRepository).markAs(eqTo(testWorkItem.id), eqTo(Failed), any)
-          }
-
-          "call PagerDutyAlertManager" in {
-            prepareTestScenario()
-            sendEmailsJob.execute().futureValue
-            verify(pagerDutyAlertManager).managePagerDutyAlert(eqTo(testWorkItem.id))
+          "call SendEmailWorkItemRepository" which {
+            "marks the WorkItem as Failed" in {
+              val workItem = prepareTestScenarioWithWorkItem()
+              sendEmailsJob.execute().futureValue
+              verify(sendEmailWorkItemRepository).markAs(eqTo(workItem.id), eqTo(Failed), any)
+            }
+            "marks the WorkItem as Cancelled" in {
+              val workItem = prepareTestScenarioWithWorkItem(11)
+              sendEmailsJob.execute().futureValue
+              verify(sendEmailWorkItemRepository).markAs(eqTo(workItem.id), eqTo(Cancelled), any)
+            }
           }
 
           "NOT call SendEmailWorkItemRepository again for the next WorkItem" in {
-            prepareTestScenario()
+            prepareTestScenarioWithWorkItem()
             sendEmailsJob.execute().futureValue
             verify(sendEmailWorkItemRepository).pullOutstanding(any[Instant], any[Instant])
           }

@@ -17,15 +17,22 @@
 package testdata
 
 import org.bson.types.ObjectId
+import testdata.ExportsTestData.mrn
+import testdata.notifications.ExampleXmlAndNotificationDetailsPair.exampleReceivedNotification
+import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem}
 
 import java.time.Instant
+import java.util.UUID
 
 object WorkItemTestData {
 
   def buildTestSendEmailDetails: SendEmailDetails =
     SendEmailDetails(notificationId = ObjectId.get, mrn = ExportsTestData.mrn, actionId = "actionId")
+
+  def buildTestUnparsedNotification(unparsedNotificationId: String, actionId: String): UnparsedNotification =
+    UnparsedNotification(id = UUID.fromString(unparsedNotificationId), actionId = actionId, payload = exampleReceivedNotification(mrn).asXml.toString)
 
   def buildTestSendEmailWorkItem(
     status: ProcessingStatus,
@@ -34,14 +41,20 @@ object WorkItemTestData {
   ): WorkItem[SendEmailDetails] =
     buildTestWorkItem(status, updatedAt, availableAt, item = buildTestSendEmailDetails)
 
-  def buildTestWorkItem[T](status: ProcessingStatus, updatedAt: Instant = Instant.now, availableAt: Instant = Instant.now, item: T): WorkItem[T] =
+  def buildTestWorkItem[T](
+    status: ProcessingStatus,
+    updatedAt: Instant = Instant.now,
+    availableAt: Instant = Instant.now,
+    failureCount: Int = 0,
+    item: T
+  ): WorkItem[T] =
     WorkItem[T](
       id = ObjectId.get,
       receivedAt = Instant.now,
       updatedAt = updatedAt,
       availableAt = availableAt,
       status = status,
-      failureCount = 0,
+      failureCount = failureCount,
       item = item
     )
 }

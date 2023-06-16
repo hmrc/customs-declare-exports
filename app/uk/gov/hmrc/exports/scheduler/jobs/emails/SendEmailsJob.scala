@@ -37,8 +37,7 @@ class SendEmailsJob @Inject() (
   appConfig: AppConfig,
   sendEmailWorkItemRepository: SendEmailWorkItemRepository,
   emailCancellationValidator: EmailCancellationValidator,
-  emailSender: EmailSender,
-  pagerDutyAlertManager: PagerDutyAlertManager
+  emailSender: EmailSender
 )(implicit @Named("backgroundTasksExecutionContext") ec: ExecutionContext)
     extends ScheduledJob with Logging {
 
@@ -90,27 +89,31 @@ class SendEmailsJob @Inject() (
   }
 
   private def sendEmail(workItem: WorkItem[SendEmailDetails]): Future[SendEmailResult] =
-    emailSender.sendEmailForDmsDocNotification(workItem.item).andThen {
+    emailSender.sendEmailForDmsDocNotification(workItem.item) andThen {
       case Success(EmailAccepted) =>
         logger.info(s"Email sent for MRN: ${workItem.item.mrn}")
         sendEmailWorkItemRepository.complete(workItem.id, Succeeded)
 
       case Success(MissingData) =>
-        logger.warn(s"Could not send email because some data is missing")
-        failSingle(workItem)
+        failOrCancelSingle(workItem, s"Could not send email because some data is missing")
 
       case Success(BadEmailRequest(msg)) =>
-        logger.warn(s"Email service returned Bad Request response: [$msg]")
-        failSingle(workItem)
+        failOrCancelSingle(workItem, s"Email service returned Bad Request response: [$msg]")
 
       case Success(InternalEmailServiceError(msg)) =>
-        logger.warn(s"Email service returned Internal Service Error response: [$msg]")
-        logger.warn(s"Will try again in ${interval.toMinutes} minutes")
-        failSingle(workItem)
+        failOrCancelSingle(workItem, s"Email service returned Internal Service Error response: [$msg]")
     }
 
-  private def failSingle(workItem: WorkItem[SendEmailDetails]): Future[Unit] =
-    sendEmailWorkItemRepository.markAs(workItem.id, Failed).flatMap { _ =>
-      pagerDutyAlertManager.managePagerDutyAlert(workItem.id).map(_ => ())
-    }
+  private def failOrCancelSingle(workItem: WorkItem[SendEmailDetails], message: String): Future[Boolean] = {
+    val status =
+      if (workItem.failureCount + 1 >= appConfig.parsingWorkItemsRetryLimit) {
+        logger.error(s"[Send Email job processing error] Cancelled! Max retries reached! Parsing id:${workItem.id}' $message")
+        Cancelled
+      } else {
+        logger.warn(message)
+        Failed
+      }
+
+    sendEmailWorkItemRepository.markAs(workItem.id, status)
+  }
 }

@@ -22,10 +22,11 @@ import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import testdata.WorkItemTestData
 import testdata.notifications.NotificationTestData.notificationUnparsed
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import uk.gov.hmrc.exports.repositories.UnparsedNotificationWorkItemRepository
-import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Failed, InProgress, Succeeded}
-import uk.gov.hmrc.mongo.workitem.ResultStatus
+import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Cancelled, Failed, InProgress, Succeeded}
+import uk.gov.hmrc.mongo.workitem.{ResultStatus, WorkItem}
 
 import java.time.{Instant, LocalDateTime, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -35,9 +36,10 @@ class NotificationReceiptActionsRunnerSpec extends UnitSpec {
 
   private val unparsedNotificationWorkItemRepository = mock[UnparsedNotificationWorkItemRepository]
   private val notificationReceiptActionsExecutor = mock[NotificationReceiptActionsExecutor]
+  private val config = mock[AppConfig]
 
   private val notificationReceiptActionsRunner =
-    new NotificationReceiptActionsRunner(unparsedNotificationWorkItemRepository, notificationReceiptActionsExecutor)
+    new NotificationReceiptActionsRunner(unparsedNotificationWorkItemRepository, notificationReceiptActionsExecutor, config)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -47,9 +49,9 @@ class NotificationReceiptActionsRunnerSpec extends UnitSpec {
 
   private val testWorkItem = WorkItemTestData.buildTestWorkItem(status = InProgress, item = notificationUnparsed)
 
-  private def whenThereIsWorkItemAvailable(): Unit =
+  private def whenThereIsWorkItemAvailable(workItem: WorkItem[UnparsedNotification] = testWorkItem): Unit =
     when(unparsedNotificationWorkItemRepository.pullOutstanding(any[Instant], any[Instant]))
-      .thenReturn(Future.successful(Some(testWorkItem)), Future.successful(None))
+      .thenReturn(Future.successful(Some(workItem)), Future.successful(None))
 
   "NotificationReceiptActionsRunner on runNow" when {
 
@@ -150,23 +152,38 @@ class NotificationReceiptActionsRunnerSpec extends UnitSpec {
 
       "NotificationReceiptActionsExecutor returns failed Future" should {
 
-        def prepareTestScenario(): Unit = {
+        def prepareTestScenarioWithWorkItem(retries: Int = 0): WorkItem[UnparsedNotification] = {
+          val workItem = testWorkItem.copy(failureCount = retries)
           val testException = new RuntimeException("Test Exception")
-          whenThereIsWorkItemAvailable()
+          whenThereIsWorkItemAvailable(workItem)
+          when(config.parsingWorkItemsRetryLimit).thenReturn(10)
           when(notificationReceiptActionsExecutor.executeActions(any[UnparsedNotification])(any)).thenReturn(Future.failed(testException))
           when(unparsedNotificationWorkItemRepository.markAs(any[ObjectId], any[ResultStatus], any)).thenReturn(Future.successful(true))
+          workItem
         }
 
-        "call UnparsedNotificationWorkItemRepository.markAs with Failed ProcessingStatus" in {
-          prepareTestScenario()
+        "call UnparsedNotificationWorkItemRepository.markAs with Failed ProcessingStatus" when {
+          "max retries have not been attempted" in {
+            val workItem = prepareTestScenarioWithWorkItem()
 
-          notificationReceiptActionsRunner.runNow().futureValue
+            notificationReceiptActionsRunner.runNow().futureValue
 
-          verify(unparsedNotificationWorkItemRepository).markAs(eqTo(testWorkItem.id), eqTo(Failed), any)
+            verify(unparsedNotificationWorkItemRepository).markAs(eqTo(workItem.id), eqTo(Failed), any)
+          }
+        }
+
+        "call UnparsedNotificationWorkItemRepository.markAs with Cancelled ProcessingStatus" when {
+          "max retries have been attempted" in {
+            val workItem = prepareTestScenarioWithWorkItem(11)
+
+            notificationReceiptActionsRunner.runNow().futureValue
+
+            verify(unparsedNotificationWorkItemRepository).markAs(eqTo(workItem.id), eqTo(Cancelled), any)
+          }
         }
 
         "call UnparsedNotificationWorkItemRepository again for the next WorkItem" in {
-          prepareTestScenario()
+          prepareTestScenarioWithWorkItem()
 
           notificationReceiptActionsRunner.runNow().futureValue
 
