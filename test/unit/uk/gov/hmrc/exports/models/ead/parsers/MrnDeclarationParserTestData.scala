@@ -137,9 +137,6 @@ object MrnDeclarationParserTestData {
                 <p:Destination>
                   <p:CountryCode>GB</p:CountryCode>
                 </p:Destination>
-                <p:ExportCountry>
-                  <p:ID>GB</p:ID>
-                </p:ExportCountry>
                 <p:GovernmentAgencyGoodsItem>
                   <p:SequenceNumeric>1</p:SequenceNumeric>
                   <p:StatisticalValueAmount currencyID="GBP">1000.0</p:StatisticalValueAmount>
