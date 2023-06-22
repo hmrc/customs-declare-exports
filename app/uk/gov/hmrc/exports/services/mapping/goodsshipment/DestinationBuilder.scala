@@ -26,9 +26,9 @@ import wco.datamodel.wco.declaration_ds.dms._2.DestinationCountryCodeType
 class DestinationBuilder @Inject() (countriesService: CountriesService) extends ModifyingBuilder[String, GoodsShipment] {
 
   override def buildThenAdd(country: String, goodsShipment: GoodsShipment): Unit =
-    if (country.nonEmpty) goodsShipment.setDestination(createExportCountry(country))
+    if (country.nonEmpty) goodsShipment.setDestination(createDestinationCountry(country))
 
-  private def createExportCountry(countryOfDestination: String): GoodsShipment.Destination = {
+  private def createDestinationCountry(countryOfDestination: String): GoodsShipment.Destination = {
 
     val countryCode = new DestinationCountryCodeType()
     countryCode.setValue(
