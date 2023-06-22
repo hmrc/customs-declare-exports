@@ -38,6 +38,7 @@ class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
   private val mockConsigneeBuilder = mock[ConsigneeBuilder]
   private val mockConsignmentBuilder = mock[ConsignmentBuilder]
   private val mockDestinationBuilder = mock[DestinationBuilder]
+  private val mockExportCountryBuilder = mock[ExportCountryBuilder]
   private val mockUcrBuilder = mock[UCRBuilder]
   private val mockWarehouseBuilder = mock[WarehouseBuilder]
   private val mockPreviousDocumentBuilder = mock[PreviousDocumentsBuilder]
@@ -50,6 +51,7 @@ class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       mockConsigneeBuilder,
       mockConsignmentBuilder,
       mockDestinationBuilder,
+      mockExportCountryBuilder,
       governmentAgencyItemBuilder,
       mockUcrBuilder,
       mockWarehouseBuilder,
@@ -62,6 +64,7 @@ class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
     mockConsigneeBuilder,
     mockConsignmentBuilder,
     mockDestinationBuilder,
+    mockExportCountryBuilder,
     governmentAgencyItemBuilder,
     mockUcrBuilder,
     mockWarehouseBuilder,
@@ -98,7 +101,7 @@ class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
     }
   }
 
-  private def verifyInterations(model: ExportsDeclaration): Unit = {
+  private def verifyInterations(model: ExportsDeclaration) = {
     if (model.`type` == STANDARD || model.`type` == SUPPLEMENTARY)
       verify(mockGoodsShipmentNatureOfTransactionBuilder)
         .buildThenAdd(refEq(NatureOfTransaction("1")), any[Declaration.GoodsShipment])
@@ -110,6 +113,9 @@ class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       .buildThenAdd(refEq(model), any[Declaration.GoodsShipment])
 
     verify(mockDestinationBuilder)
+      .buildThenAdd(refEq(VALID_COUNTRY), any[Declaration.GoodsShipment])
+
+    verify(mockExportCountryBuilder)
       .buildThenAdd(refEq(VALID_COUNTRY), any[Declaration.GoodsShipment])
 
     verify(mockUcrBuilder)
@@ -142,6 +148,7 @@ class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       withConsignorDetails(eori = Some(VALID_EORI), address = Some(ConsignmentConsignorBuilderSpec.correctAddress)),
       withDeclarationAdditionalActors(correctAdditionalActors1, correctAdditionalActors2),
       withGoodsLocation(GoodsLocationBuilderSpec.validGoodsLocation),
+      withOriginationCountry(),
       withDestinationCountry(),
       withoutRoutingCountries(),
       withWarehouseIdentification(WAREHOUSE_ID),

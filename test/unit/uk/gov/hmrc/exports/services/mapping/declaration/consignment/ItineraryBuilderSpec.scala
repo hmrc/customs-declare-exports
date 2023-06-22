@@ -29,7 +29,7 @@ class ItineraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
       "no destination countries" in {
         // Given
-        val declaration = aDeclaration(withoutDestinationCountry(), withoutRoutingCountries())
+        val declaration = aDeclaration(withoutOriginationCountry(), withoutDestinationCountry(), withoutRoutingCountries())
         val consignment = new Declaration.Consignment()
 
         // When
@@ -41,7 +41,7 @@ class ItineraryBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
       "with empty destination country" in {
         // Given
-        val declaration = aDeclaration(withEmptyDestinationCountry(), withoutRoutingCountries())
+        val declaration = aDeclaration(withoutOriginationCountry(), withEmptyDestinationCountry(), withoutRoutingCountries())
         val consignment = new Declaration.Consignment()
 
         // When
