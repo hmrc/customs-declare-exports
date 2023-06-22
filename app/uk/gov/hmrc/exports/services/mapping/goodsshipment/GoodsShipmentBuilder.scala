@@ -30,6 +30,7 @@ class GoodsShipmentBuilder @Inject() (
   consigneeBuilder: ConsigneeBuilder,
   consignmentBuilder: ConsignmentBuilder,
   destinationBuilder: DestinationBuilder,
+  exportCountryBuilder: ExportCountryBuilder,
   governmentAgencyGoodsItemBuilder: GovernmentAgencyGoodsItemBuilder,
   ucrBuilder: UCRBuilder,
   warehouseBuilder: WarehouseBuilder,
@@ -52,6 +53,8 @@ class GoodsShipmentBuilder @Inject() (
     consignmentBuilder.buildThenAdd(exportsCacheModel, goodsShipment)
 
     exportsCacheModel.locations.destinationCountry.flatMap(_.code).foreach(destinationBuilder.buildThenAdd(_, goodsShipment))
+
+    exportsCacheModel.locations.originationCountry.flatMap(_.code).foreach(exportCountryBuilder.buildThenAdd(_, goodsShipment))
 
     exportsCacheModel.consignmentReferences.foreach(ucrBuilder.buildThenAdd(_, goodsShipment))
 
