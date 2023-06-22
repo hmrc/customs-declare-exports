@@ -139,6 +139,7 @@ object GenerateSubmittedDecController extends ExportsDeclarationBuilder {
       withDeclarationAdditionalActors(DeclarationAdditionalActor(Some("AD166297284288300"), Some("WH"))),
       withDeclarationHolders(DeclarationHolder(Some("EXEE"), Some("AD166297284288100"), Some(EoriSource.UserEori))),
       withAuthorisationProcedureCodeChoice(Some(AuthorisationProcedureCodeChoice(CodeOther))),
+      withOriginationCountry(),
       withDestinationCountry(Country(Some("SE"))),
       withRoutingCountries(Seq(Country(Some("AM")))),
       withGoodsLocation(

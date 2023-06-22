@@ -232,6 +232,12 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
   ): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(authorisationProcedureCodeChoice = authorisationProcedureCodeChoice))
 
+  def withoutOriginationCountry(): ExportsDeclarationModifier =
+    cache => cache.copy(locations = cache.locations.copy(originationCountry = None))
+
+  def withOriginationCountry(country: Country = Country(Some("GB"))): ExportsDeclarationModifier =
+    cache => cache.copy(locations = cache.locations.copy(originationCountry = Some(country)))
+
   def withoutDestinationCountry(): ExportsDeclarationModifier =
     cache => cache.copy(locations = cache.locations.copy(destinationCountry = None))
 

@@ -245,6 +245,9 @@ object AmendmentMetaDataBuilderISpec {
       |            <ns3:Destination>
       |                <ns3:CountryCode>US</ns3:CountryCode>
       |            </ns3:Destination>
+      |            <ns3:ExportCountry>
+      |                <ns3:ID>GB</ns3:ID>
+      |            </ns3:ExportCountry>
       |            <ns3:GovernmentAgencyGoodsItem>
       |                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
       |                <ns3:StatisticalValueAmount currencyID="GBP">1000</ns3:StatisticalValueAmount>
@@ -473,6 +476,9 @@ object AmendmentMetaDataBuilderISpec {
       |            <ns3:Destination>
       |                <ns3:CountryCode>US</ns3:CountryCode>
       |            </ns3:Destination>
+      |            <ns3:ExportCountry>
+      |                <ns3:ID>GB</ns3:ID>
+      |            </ns3:ExportCountry>
       |            <ns3:GovernmentAgencyGoodsItem>
       |                <ns3:SequenceNumeric>1</ns3:SequenceNumeric>
       |                <ns3:StatisticalValueAmount currencyID="GBP">1000</ns3:StatisticalValueAmount>
