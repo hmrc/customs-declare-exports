@@ -138,6 +138,8 @@ object ExportsMetrics {
     val amendmentProduceMetaDataTimer: Timer = Timer(AmendmentMetric.produceMetaData)
     val amendmentConvertToXmlTimer: Timer = Timer(AmendmentMetric.convertToXml)
     val amendmentSendToDecApiTimer: Timer = Timer(AmendmentMetric.sendToDecApi)
+    val amendmentUpdateDeclarationStatusTimer: Timer = Timer(AmendmentMetric.updateDeclarationStatus)
+    val amendmentAddSubmissionActionTimer: Timer = Timer(AmendmentMetric.addSubmissionAction)
   }
 
   object Counters {

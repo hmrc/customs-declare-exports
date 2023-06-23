@@ -274,10 +274,10 @@ class SubmissionService @Inject() (
 
     logProgress(declaration.id, "Submitting amendment request to the Declaration API")
     for {
-      actionId <- metrics.timeCall(Timers.amendmentSendToDecApiTimer)(customsDeclarationsConnector.submitAmendment(declaration.eori, xml))
+      actionId <- metrics.timeAsyncCall(Timers.amendmentSendToDecApiTimer)(customsDeclarationsConnector.submitAmendment(declaration.eori, xml))
       _ = logProgress(declaration.id, "Submitted amendment request to the Declaration API Successfully")
       _ = logProgress(declaration.id, "Appending amendment action to submission...")
-      _ <- updateSubmissionWithAmendmentAction(actionId, declaration.id, submission)
+      _ <- metrics.timeAsyncCall(Timers.amendmentAddSubmissionActionTimer)(updateSubmissionWithAmendmentAction(actionId, declaration.id, submission))
     } yield actionId
   }
 

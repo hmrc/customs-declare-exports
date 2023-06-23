@@ -18,6 +18,8 @@ package uk.gov.hmrc.exports.controllers
 
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
+import uk.gov.hmrc.exports.metrics.ExportsMetrics
+import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timers
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.AMENDMENT_DRAFT
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionAmendment
 import uk.gov.hmrc.exports.services.SubmissionService
@@ -26,20 +28,26 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class AmendmentController @Inject() (authenticator: Authenticator, submissionService: SubmissionService, cc: ControllerComponents)(
-  implicit executionContext: ExecutionContext
-) extends RESTController(cc) with JSONResponses {
+class AmendmentController @Inject() (
+  authenticator: Authenticator,
+  submissionService: SubmissionService,
+  cc: ControllerComponents,
+  metrics: ExportsMetrics
+)(implicit executionContext: ExecutionContext)
+    extends RESTController(cc) with JSONResponses {
 
   val create: Action[SubmissionAmendment] = authenticator.authorisedAction(parsingJson[SubmissionAmendment]) { implicit request =>
-    submissionService.markCompleted(request.eori, request.request.body.declarationId).flatMap {
-      case Some(declaration) if declaration.isCompleted => Future.successful(Conflict("Amendment has already been submitted."))
+    metrics
+      .timeAsyncCall(Timers.amendmentUpdateDeclarationStatusTimer)(submissionService.markCompleted(request.eori, request.request.body.declarationId))
+      .flatMap {
+        case Some(declaration) if declaration.isCompleted => Future.successful(Conflict("Amendment has already been submitted."))
 
-      case Some(declaration) if declaration.declarationMeta.status != AMENDMENT_DRAFT =>
-        Future.successful(Conflict(s"Attempted to submit declaration with status ${declaration.declarationMeta.status} as an amendment."))
+        case Some(declaration) if declaration.declarationMeta.status != AMENDMENT_DRAFT =>
+          Future.successful(Conflict(s"Attempted to submit declaration with status ${declaration.declarationMeta.status} as an amendment."))
 
-      case Some(declaration) => submissionService.amend(request.eori, request.body, declaration).map(Ok(_))
+        case Some(declaration) => submissionService.amend(request.eori, request.body, declaration).map(Ok(_))
 
-      case _ => Future.successful(NotFound("Declaration not found."))
-    }
+        case _ => Future.successful(NotFound("Declaration not found."))
+      }
   }
 }
