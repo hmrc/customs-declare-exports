@@ -148,6 +148,11 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
       .sort(BsonDocument(Json.obj("actions.requestTimestamp" -> -1).toString))
       .toFuture()
 
+  def findByAction(eori: String, actionId: String): Future[Option[Submission]] = {
+    val filter = and(equal("actions.id", actionId), equal("eori", eori))
+    findOne(filter)
+  }
+
   def findById(eori: String, id: String): Future[Option[Submission]] =
     collection
       .find(and(equal("eori", eori), equal("uuid", id)))

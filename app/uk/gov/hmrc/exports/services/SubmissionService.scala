@@ -120,6 +120,9 @@ class SubmissionService @Inject() (
   def findSubmission(eori: String, id: String): Future[Option[Submission]] =
     submissionRepository.findById(eori, id)
 
+  def findSubmissionByAction(eori: Eori, actionId: String): Future[Option[Submission]] =
+    submissionRepository.findByAction(eori.value, actionId)
+
   def findSubmissionsByLrn(eori: String, lrn: String): Future[Seq[Submission]] =
     submissionRepository.findByLrn(eori, lrn)
 

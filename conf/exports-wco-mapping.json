@@ -56,14 +56,6 @@
     "wco" : "42A.67A.68A.$1.55B.$2"
   },
   {
-    "cds" : "items.$1.additionalFiscalReferencesData.references.$2.country",
-    "wco" : "42A.67A.68A.$1.55B.$2"
-  },
-  {
-    "cds" : "items.$1.additionalFiscalReferencesData.references.$2.reference",
-    "wco" : "42A.67A.68A.$1.55B.$2"
-  },
-  {
     "cds" : "items.$1.additionalInformation.items.$2",
     "wco" : "42A.67A.68A.$1.03A.$2"
   },
@@ -162,20 +154,16 @@
     "wco" : "42A.67A.68A.$1.114"
   },
   {
+    "cds" : "locations.destinationCountry",
+    "wco" : "42A.67A.99B.465"
+  },
+  {
     "cds" : "locations.destinationCountry.code",
     "wco" : "42A.67A.99B.465"
   },
   {
-    "cds" : "locations.goodsLocation.country",
-    "wco" : "42A.67A.28A.64A.L016"
-  },
-  {
-    "cds" : "locations.goodsLocation.identificationOfLocation",
-    "wco" : "42A.67A.28A.64A.L017"
-  },
-  {
-    "cds" : "locations.goodsLocation.typeOfLocation",
-    "wco" : "42A.67A.28A.64A.L110"
+    "cds" : "locations.goodsLocation",
+    "wco" : "42A.67A.28A.64A"
   },
   {
     "cds" : "locations.inlandModeOfTransportCode.inlandModeOfTransportCode",
@@ -366,39 +354,35 @@
     "wco" : "42A.57A.04A"
   },
   {
-    "cds" : "parties.exporterDetails",
-    "wco" : "42A.57A.R031"
-  },
-  {
-    "cds" : "parties.exporterDetails",
+    "cds" : "parties.exporterDetails.eori",
     "wco" : "42A.57A.R032"
   },
   {
-    "cds" : "parties.exporterDetails.details.address",
+    "cds" : "parties.exporterDetails.address",
     "wco" : "42A.57A.04A"
   },
   {
-    "cds" : "parties.exporterDetails.details.address",
+    "cds" : "parties.exporterDetails.address",
     "wco" : "42A.57A.R031"
   },
   {
-    "cds" : "parties.exporterDetails.details.address.addressLine",
+    "cds" : "parties.exporterDetails.address.addressLine",
     "wco" : "42A.57A.04A.239"
   },
   {
-    "cds" : "parties.exporterDetails.details.address.country",
+    "cds" : "parties.exporterDetails.address.country",
     "wco" : "42A.57A.04A.242"
   },
   {
-    "cds" : "parties.exporterDetails.details.address.fullName",
+    "cds" : "parties.exporterDetails.address.fullName",
     "wco" : "42A.57A.R031"
   },
   {
-    "cds" : "parties.exporterDetails.details.address.postCode",
+    "cds" : "parties.exporterDetails.address.postCode",
     "wco" : "42A.57A.04A.245"
   },
   {
-    "cds" : "parties.exporterDetails.details.address.townOrCity",
+    "cds" : "parties.exporterDetails.address.townOrCity",
     "wco" : "42A.57A.04A.241"
   },
   {
@@ -418,11 +402,7 @@
     "wco" : "42A.05A"
   },
   {
-    "cds" : "parties.representativeDetails.details",
-    "wco" : "42A.05A"
-  },
-  {
-    "cds" : "parties.representativeDetails.details.eori",
+    "cds" : "parties.representativeDetails.eori",
     "wco" : "42A.05A.R004"
   },
   {
