@@ -13,6 +13,8 @@ object AppDependencies {
     "uk.gov.hmrc" %% "wco-dec" % "0.37.0",
     "com.github.tototoshi" %% "scala-csv" % "1.3.10",
     "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
+    "com.fasterxml.jackson.dataformat" % "jackson-dataformat-xml" % jacksonVersion,
+    "com.fasterxml.jackson.dataformat" % "jackson-dataformat-properties" % jacksonVersion,
     // Used by the Migration tool. Keep this library's version to the same major.minor version as the mongo-scala-driver.
     "org.mongodb" % "mongodb-driver-sync" % "4.6.1",
     // Added to replace javax.xml.bind (removed in Java 11)
