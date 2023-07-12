@@ -38,7 +38,10 @@ class GoodsShipmentBuilder @Inject() (
   aeoMutualRecognitionPartiesBuilder: AEOMutualRecognitionPartiesBuilder
 ) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
-  private val journeyThatRequireNatureOfTransaction = Set(DeclarationType.STANDARD, DeclarationType.SUPPLEMENTARY)
+  private val journeyThatRequireNatureOfTransaction =
+    Set(DeclarationType.STANDARD, DeclarationType.SUPPLEMENTARY)
+  private val journeyThatRequireExportCountry =
+    Set(DeclarationType.STANDARD, DeclarationType.SUPPLEMENTARY, DeclarationType.SIMPLIFIED, DeclarationType.CLEARANCE)
 
   override def buildThenAdd(exportsCacheModel: ExportsDeclaration, declaration: Declaration): Unit = {
     val goodsShipment = new GoodsShipment()
@@ -54,7 +57,9 @@ class GoodsShipmentBuilder @Inject() (
 
     exportsCacheModel.locations.destinationCountry.flatMap(_.code).foreach(destinationBuilder.buildThenAdd(_, goodsShipment))
 
-    exportsCacheModel.locations.originationCountry.flatMap(_.code).foreach(exportCountryBuilder.buildThenAdd(_, goodsShipment))
+    if (journeyThatRequireExportCountry.contains(exportsCacheModel.`type`)) {
+      exportsCacheModel.locations.originationCountry.flatMap(_.code).foreach(exportCountryBuilder.buildThenAdd(_, goodsShipment))
+    }
 
     exportsCacheModel.consignmentReferences.foreach(ucrBuilder.buildThenAdd(_, goodsShipment))
 
