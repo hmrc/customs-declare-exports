@@ -4,15 +4,13 @@ object AppDependencies {
 
   val bootstrapPlayVersion = "7.13.0"
   val hmrcMongoVersion = "0.74.0"
-  val jacksonVersion = "2.14.2"
   val testScope = "test,it"
 
   val compile = Seq(
     "uk.gov.hmrc" %% "bootstrap-backend-play-28" % bootstrapPlayVersion,
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-work-item-repo-play-28" % hmrcMongoVersion,
-    "uk.gov.hmrc" %% "wco-dec" % "0.37.0",
+    "uk.gov.hmrc" %% "wco-dec" % "0.39.0",
     "com.github.tototoshi" %% "scala-csv" % "1.3.10",
-    "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
     // Used by the Migration tool. Keep this library's version to the same major.minor version as the mongo-scala-driver.
     "org.mongodb" % "mongodb-driver-sync" % "4.6.1",
     // Added to replace javax.xml.bind (removed in Java 11)
