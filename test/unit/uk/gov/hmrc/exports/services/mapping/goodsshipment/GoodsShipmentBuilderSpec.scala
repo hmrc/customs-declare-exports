@@ -84,8 +84,21 @@ class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
         verifyInterations(model)
 
-        verify(mockGoodsShipmentNatureOfTransactionBuilder)
-          .buildThenAdd(refEq(NatureOfTransaction("1")), any[Declaration.GoodsShipment])
+        verifyGoodsShipmentNatureOfTransactionBuilder()
+
+        verifyExportCountryBuilder()
+      }
+
+      "Occasional declaration" in {
+        val model: ExportsDeclaration = createDeclaration(OCCASIONAL)
+        val declaration = new Declaration()
+
+        builder.buildThenAdd(model, declaration)
+
+        verifyInterations(model)
+
+        verifyNoInteractions(mockExportCountryBuilder, mockGoodsShipmentNatureOfTransactionBuilder)
+
       }
 
       "Simplified declaration" in {
@@ -97,9 +110,19 @@ class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         verifyInterations(model)
 
         verifyNoInteractions(mockGoodsShipmentNatureOfTransactionBuilder)
+
+        verifyExportCountryBuilder()
       }
     }
   }
+
+  private def verifyExportCountryBuilder(): Unit =
+    verify(mockExportCountryBuilder)
+      .buildThenAdd(refEq(VALID_COUNTRY), any[Declaration.GoodsShipment])
+
+  private def verifyGoodsShipmentNatureOfTransactionBuilder(): Unit =
+    verify(mockGoodsShipmentNatureOfTransactionBuilder)
+      .buildThenAdd(refEq(NatureOfTransaction("1")), any[Declaration.GoodsShipment])
 
   private def verifyInterations(model: ExportsDeclaration): Unit = {
     if (model.`type` == STANDARD || model.`type` == SUPPLEMENTARY)
@@ -113,9 +136,6 @@ class GoodsShipmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       .buildThenAdd(refEq(model), any[Declaration.GoodsShipment])
 
     verify(mockDestinationBuilder)
-      .buildThenAdd(refEq(VALID_COUNTRY), any[Declaration.GoodsShipment])
-
-    verify(mockExportCountryBuilder)
       .buildThenAdd(refEq(VALID_COUNTRY), any[Declaration.GoodsShipment])
 
     verify(mockUcrBuilder)
