@@ -64,7 +64,7 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
     } { statusGroup =>
       if (fetchData.statusGroups.size > 1)
         submissionService.fetchFirstPage(request.eori.value, fetchData.statusGroups, fetchData.limit).map(Ok(_))
-      else if (fetchData.page.exists(_ == 1))
+      else if (fetchData.page.contains(1))
         submissionService.fetchFirstPage(request.eori.value, statusGroup, fetchData.limit).map(Ok(_))
       else if (fetchData.page.exists(_ < 1)) Future.successful(BadRequest("Illegal 'page' parameter. Must be >= 1"))
       else submissionService.fetchPage(request.eori.value, statusGroup, fetchData).map(Ok(_))
@@ -73,6 +73,13 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
 
   def find(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     submissionService.findSubmission(request.eori.value, id).map {
+      case Some(submission) => Ok(submission)
+      case _                => NotFound
+    }
+  }
+
+  def findByLatestDecId(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    submissionService.findSubmissionsByLatestDecId(request.eori.value, id).map {
       case Some(submission) => Ok(submission)
       case _                => NotFound
     }

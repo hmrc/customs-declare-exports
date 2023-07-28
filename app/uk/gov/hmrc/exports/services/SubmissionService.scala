@@ -123,6 +123,9 @@ class SubmissionService @Inject() (
   def findSubmissionsByLrn(eori: String, lrn: String): Future[Seq[Submission]] =
     submissionRepository.findByLrn(eori, lrn)
 
+  def findSubmissionsByLatestDecId(eori: String, lrn: String): Future[Option[Submission]] =
+    submissionRepository.findByLatestDecId(eori, lrn)
+
   def markCompleted(eori: Eori, id: String): Future[Option[ExportsDeclaration]] =
     declarationRepository.markStatusAsComplete(eori, id)
 

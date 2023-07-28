@@ -26,6 +26,8 @@ GET         /submission/action/:actionId                            uk.gov.hmrc.
 GET         /submission/:id                                         uk.gov.hmrc.exports.controllers.SubmissionController.find(id: String)
 POST        /submission/:id                                         uk.gov.hmrc.exports.controllers.SubmissionController.create(id: String)
 
+GET         /submissionByLatestDecId/:id                            uk.gov.hmrc.exports.controllers.SubmissionController.findByLatestDecId(id: String)
+
 GET         /submission/notifications/:id                           uk.gov.hmrc.exports.controllers.NotificationController.findAll(id: String)
 
 GET         /latest-notification/:actionId                          uk.gov.hmrc.exports.controllers.NotificationController.findLatestNotification(actionId: String)
