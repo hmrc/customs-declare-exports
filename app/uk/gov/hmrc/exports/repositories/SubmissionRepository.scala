@@ -158,6 +158,11 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     collection
       .find(and(equal("eori", eori), equal("lrn", lrn)))
       .toFuture()
+  def findByLatestDecId(eori: String, latestDecId: String): Future[Option[Submission]] =
+    collection
+      .find(and(equal("eori", eori), equal("latestDecId", latestDecId)))
+      .toFuture()
+      .map(_.headOption)
 }
 
 object SubmissionRepository {
