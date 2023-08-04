@@ -2,8 +2,8 @@ import sbt._
 
 object AppDependencies {
 
-  val bootstrapPlayVersion = "7.13.0"
-  val hmrcMongoVersion = "0.74.0"
+  val bootstrapPlayVersion = "7.20.0"
+  val hmrcMongoVersion = "1.3.0"
   val testScope = "test,it"
 
   val compile = Seq(
@@ -12,7 +12,7 @@ object AppDependencies {
     "uk.gov.hmrc" %% "wco-dec" % "0.39.0",
     "com.github.tototoshi" %% "scala-csv" % "1.3.10",
     // Used by the Migration tool. Keep this library's version to the same major.minor version as the mongo-scala-driver.
-    "org.mongodb" % "mongodb-driver-sync" % "4.6.1",
+    "org.mongodb" % "mongodb-driver-sync" % "4.8.2",
     // Added to replace javax.xml.bind (removed in Java 11)
     "org.glassfish.jaxb" % "jaxb-runtime" % "2.3.8"
   )

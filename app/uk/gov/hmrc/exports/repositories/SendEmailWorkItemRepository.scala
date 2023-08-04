@@ -43,7 +43,7 @@ class SendEmailWorkItemRepository @Inject() (config: Configuration, mongoCompone
   override def classTag: ClassTag[WorkItem[SendEmailDetails]] = implicitly[ClassTag[WorkItem[SendEmailDetails]]]
   override val executionContext = ec
 
-  override def ensureIndexes: Future[Seq[String]] = {
+  override def ensureIndexes(): Future[Seq[String]] = {
     val workItemIndexes: Seq[IndexModel] =
       indexes ++ List(IndexModel(ascending("item.notificationId"), IndexOptions().name("sendEmailDetailsNotificationIdIdx").unique(true)))
     MongoUtils.ensureIndexes(collection, workItemIndexes, replaceIndexes = true)

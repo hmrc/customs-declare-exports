@@ -41,7 +41,7 @@ class UnparsedNotificationWorkItemRepository @Inject() (config: Configuration, m
   override def classTag: ClassTag[WorkItem[UnparsedNotification]] = implicitly[ClassTag[WorkItem[UnparsedNotification]]]
   override val executionContext = ec
 
-  override def ensureIndexes: Future[Seq[String]] = {
+  override def ensureIndexes(): Future[Seq[String]] = {
     val workItemIndexes: Seq[IndexModel] = indexes ++ List(IndexModel(ascending("item.id"), IndexOptions().name("itemIdIdx").unique(true)))
     MongoUtils.ensureIndexes(collection, workItemIndexes, replaceIndexes = true)
   }
