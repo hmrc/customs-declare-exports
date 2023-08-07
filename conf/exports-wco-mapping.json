@@ -16,12 +16,60 @@
     "wco" : "42A.67A.68A.$1.02A.$2"
   },
   {
+    "cds" : "items.$1.additionalDocuments.documents.$2.documentTypeCode",
+    "wco" : "42A.67A.68A.$1.02A.$2"
+  },
+  {
+    "cds" : "items.$1.additionalDocuments.documents.$2.documentIdentifier",
+    "wco" : "42A.67A.68A.$1.02A.$2"
+  },
+  {
+    "cds" : "items.$1.additionalDocuments.documents.$2.documentStatus",
+    "wco" : "42A.67A.68A.$1.02A.$2"
+  },
+  {
+    "cds" : "items.$1.additionalDocuments.documents.$2.documentStatusReason",
+    "wco" : "42A.67A.68A.$1.02A.$2"
+  },
+  {
+    "cds" : "items.$1.additionalDocuments.documents.$2.issuingAuthorityName",
+    "wco" : "42A.67A.68A.$1.02A.$2"
+  },
+  {
+    "cds" : "items.$1.additionalDocuments.documents.$2.dateOfValidity",
+    "wco" : "42A.67A.68A.$1.02A.$2"
+  },
+  {
+    "cds" : "items.$1.additionalDocuments.documents.$2.documentWriteOff",
+    "wco" : "42A.67A.68A.$1.02A.$2"
+  },
+  {
+    "cds" : "items.$1.additionalDocuments.documents.$2.documentWriteOff.measurementUnit",
+    "wco" : "42A.67A.68A.$1.02A.$2"
+  },
+  {
+    "cds" : "items.$1.additionalDocuments.documents.$2.documentWriteOff.documentQuantity",
+    "wco" : "42A.67A.68A.$1.02A.$2"
+  },
+  {
     "cds" : "items.$1.additionalFiscalReferencesData.references.$2",
     "wco" : "42A.67A.68A.$1.55B.$2"
   },
   {
     "cds" : "items.$1.additionalInformation.items.$2",
     "wco" : "42A.67A.68A.$1.03A.$2"
+  },
+  {
+    "cds" : "items.$1.additionalInformation.items.$2.code",
+    "wco" : "42A.67A.68A.$1.03A.$2"
+  },
+  {
+    "cds" : "items.$1.additionalInformation.items.$2.description",
+    "wco" : "42A.67A.68A.$1.03A.$2"
+  },
+  {
+    "cds" : "items.$1.commodityDetails",
+    "wco" : "42A.67A.68A.$1.23A"
   },
   {
     "cds" : "items.$1.commodityDetails.combinedNomenclatureCode",
@@ -44,11 +92,23 @@
     "wco" : "42A.67A.68A.$1.23A.65A.130"
   },
   {
+    "cds" : "items.$1.nactCode",
+    "wco" : "42A.67A.68A.$1.23A"
+  },
+  {
     "cds" : "items.$1.nactCode.$2",
     "wco" : "42A.67A.68A.$1.23A",
     "comments" : [
       "CDS pointer refers to one in a sequence of codes, but WCO pointer points to the parent level element"
     ]
+  },
+  {
+    "cds" : "items.$1.nactExemptionCode",
+    "wco" : "42A.67A.68A.$1.23A"
+  },
+  {
+    "cds" : "items.$1.taricCode",
+    "wco" : "42A.67A.68A.$1.23A"
   },
   {
     "cds" : "items.$1.taricCode.$2",
@@ -94,20 +154,16 @@
     "wco" : "42A.67A.68A.$1.114"
   },
   {
+    "cds" : "locations.destinationCountry",
+    "wco" : "42A.67A.99B.465"
+  },
+  {
     "cds" : "locations.destinationCountry.code",
     "wco" : "42A.67A.99B.465"
   },
   {
-    "cds" : "locations.goodsLocation.country",
-    "wco" : "42A.67A.28A.64A.L016"
-  },
-  {
-    "cds" : "locations.goodsLocation.identificationOfLocation",
-    "wco" : "42A.67A.28A.64A.L017"
-  },
-  {
-    "cds" : "locations.goodsLocation.typeOfLocation",
-    "wco" : "42A.67A.28A.64A.L110"
+    "cds" : "locations.goodsLocation",
+    "wco" : "42A.67A.28A.64A"
   },
   {
     "cds" : "locations.inlandModeOfTransportCode.inlandModeOfTransportCode",
@@ -143,6 +199,14 @@
   },
   {
     "cds" : "parties.actors.declarationAdditionalActorsData.$1",
+    "wco" : "42A.67A.16C.$1"
+  },
+  {
+    "cds" : "parties.actors.declarationAdditionalActorsData.$1.eori",
+    "wco" : "42A.67A.16C.$1"
+  },
+  {
+    "cds" : "parties.actors.declarationAdditionalActorsData.$1.partyType",
     "wco" : "42A.67A.16C.$1"
   },
   {
@@ -266,7 +330,23 @@
     "wco" : "42A.67A.16C.$1"
   },
   {
+    "cds" : "parties.declarationAdditionalActorsData.actors.$1.eori",
+    "wco" : "42A.67A.16C.$1"
+  },
+  {
+    "cds" : "parties.declarationAdditionalActorsData.actors.$1.partyType",
+    "wco" : "42A.67A.16C.$1"
+  },
+  {
     "cds" : "parties.declarationHoldersData.holders.$1",
+    "wco" : "42A.17C.$1"
+  },
+  {
+    "cds" : "parties.declarationHoldersData.holders.$1.eori",
+    "wco" : "42A.17C.$1"
+  },
+  {
+    "cds" : "parties.declarationHoldersData.holders.$1.authorisationTypeCode",
     "wco" : "42A.17C.$1"
   },
   {
@@ -274,39 +354,35 @@
     "wco" : "42A.57A.04A"
   },
   {
-    "cds" : "parties.exporterDetails",
-    "wco" : "42A.57A.R031"
-  },
-  {
-    "cds" : "parties.exporterDetails",
+    "cds" : "parties.exporterDetails.eori",
     "wco" : "42A.57A.R032"
   },
   {
-    "cds" : "parties.exporterDetails.details.address",
+    "cds" : "parties.exporterDetails.address",
     "wco" : "42A.57A.04A"
   },
   {
-    "cds" : "parties.exporterDetails.details.address",
+    "cds" : "parties.exporterDetails.address",
     "wco" : "42A.57A.R031"
   },
   {
-    "cds" : "parties.exporterDetails.details.address.addressLine",
+    "cds" : "parties.exporterDetails.address.addressLine",
     "wco" : "42A.57A.04A.239"
   },
   {
-    "cds" : "parties.exporterDetails.details.address.country",
+    "cds" : "parties.exporterDetails.address.country",
     "wco" : "42A.57A.04A.242"
   },
   {
-    "cds" : "parties.exporterDetails.details.address.fullName",
+    "cds" : "parties.exporterDetails.address.fullName",
     "wco" : "42A.57A.R031"
   },
   {
-    "cds" : "parties.exporterDetails.details.address.postCode",
+    "cds" : "parties.exporterDetails.address.postCode",
     "wco" : "42A.57A.04A.245"
   },
   {
-    "cds" : "parties.exporterDetails.details.address.townOrCity",
+    "cds" : "parties.exporterDetails.address.townOrCity",
     "wco" : "42A.57A.04A.241"
   },
   {
@@ -326,11 +402,7 @@
     "wco" : "42A.05A"
   },
   {
-    "cds" : "parties.representativeDetails.details",
-    "wco" : "42A.05A"
-  },
-  {
-    "cds" : "parties.representativeDetails.details.eori",
+    "cds" : "parties.representativeDetails.eori",
     "wco" : "42A.05A.R004"
   },
   {
@@ -339,6 +411,18 @@
   },
   {
     "cds" : "previousDocuments.documents.$1",
+    "wco" : "42A.67A.99A.$1"
+  },
+  {
+    "cds" : "previousDocuments.documents.$1.documentType",
+    "wco" : "42A.67A.99A.$1"
+  },
+  {
+    "cds" : "previousDocuments.documents.$1.documentReference",
+    "wco" : "42A.67A.99A.$1"
+  },
+  {
+    "cds" : "previousDocuments.documents.$1.goodsItemIdentifier",
     "wco" : "42A.67A.99A.$1"
   },
   {
