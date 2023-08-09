@@ -56,6 +56,13 @@ class SubmissionController @Inject() (authenticator: Authenticator, submissionSe
     }
   }
 
+  def findSubmission(actionId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    submissionService.findSubmissionByAction(request.eori, actionId).map {
+      case Some(action) => Ok(action)
+      case _            => NotFound
+    }
+  }
+
   val fetchPage: Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     val fetchData = genFetchSubmissionPageData
 

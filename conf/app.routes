@@ -22,6 +22,7 @@ GET         /lrn-already-used/:lrn                                  uk.gov.hmrc.
 GET         /paginated-submissions                                  uk.gov.hmrc.exports.controllers.SubmissionController.fetchPage
 
 GET         /submission/action/:actionId                            uk.gov.hmrc.exports.controllers.SubmissionController.findAction(actionId: String)
+GET         /submission/by-action/:actionId                         uk.gov.hmrc.exports.controllers.SubmissionController.findSubmission(actionId: String)
 
 GET         /submission/:id                                         uk.gov.hmrc.exports.controllers.SubmissionController.find(id: String)
 POST        /submission/:id                                         uk.gov.hmrc.exports.controllers.SubmissionController.create(id: String)
