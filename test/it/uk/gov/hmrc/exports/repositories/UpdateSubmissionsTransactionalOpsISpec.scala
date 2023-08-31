@@ -151,6 +151,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
 
       "an 'amendment' Notification is given" should {
         "Store a NotificationSummary record for the notification against the correct AmendmentRequest action" when {
+
           "CUSTOMS_POSITION_GRANTED (DMSREQ and code 39) notification status" which {
             "updates the latestEnhancedStatus field to equal the latest notification status received against the current SubmissionRequest action" in {
               val notifications = Seq(
@@ -301,6 +302,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
       }
 
       "raise exception" when {
+
         "a ParsedNotification is given without a stored Submission document (because it was removed in the meanwhile)" in {
           val result = intercept[InternalServerException] {
             await {
@@ -310,7 +312,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
           result.message mustBe s"Failed to update Submission(${submission.uuid}) with Action($actionId)"
         }
 
-        "amendmentRequest" when {
+        "on AmendmentRequest" when {
           "status is other than CUSTOMS_POSITION_GRANTED, CUSTOMS_POSITION_DENIED, REJECTED, RECEIVED" in {
             val status = Gen.oneOf(codesMap removedAll List("1139", "1141", "03", "02")).sample.get._2
 
@@ -345,7 +347,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
 
           }
 
-          "SubmissionRequest of Submission is without notifications" in {
+          "the relative Action is without notifications" in {
             val submissionAction = action.copy(notifications = None)
             val amendmentAction = action_2.copy(versionNo = 2, requestType = AmendmentRequest)
 
@@ -374,9 +376,8 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
                   .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
               }
             }
-            result.message mustBe s"Cannot find latest notification on submission request for Submission(${testSubmission.uuid})"
+            result.message mustBe s"Cannot find latest notification on AmendmentRequest for Submission(${testSubmission.uuid})"
           }
-
         }
       }
     }

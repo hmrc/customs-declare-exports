@@ -1,31 +1,21 @@
 package uk.gov.hmrc.exports.services
 
 import org.mockito.ArgumentMatchers.any
-import play.api.libs.json.JsValue
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import org.mongodb.scala.model.Filters
+import play.api.libs.json.JsValue
 import play.api.test.Helpers._
 import uk.gov.hmrc.exports.base.{IntegrationTestSpec, MockMetrics}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
-import uk.gov.hmrc.exports.models.Mrn
+import uk.gov.hmrc.exports.models.{Eori, Mrn}
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
-import uk.gov.hmrc.exports.models.declaration.submissions.{AmendmentRequest, Submission, SubmissionAmendment}
-import uk.gov.hmrc.exports.models.declaration.submissions.{Action, ExternalAmendmentRequest, SubmissionRequest}
+import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.ead.parsers.MrnDeclarationParserTestData
 import uk.gov.hmrc.exports.models.ead.parsers.MrnDeclarationParserTestData.{badTestSample, mrnDeclarationTestSample}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.mapping.{
-  AmendmentMetaDataBuilder,
-  CancellationMetaDataBuilder,
-  ExportsPointerToWCOPointer,
-  NoMappingFoundError,
-  PointerMappingException
-}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.exports.services.mapping._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParser
-import uk.gov.hmrc.http.InternalServerException
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import java.util.UUID
@@ -88,6 +78,8 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
   private val xml = "xml"
   private val metadata = mock[MetaData]
 
+  private val eori = "GB167676"
+
   "SubmissionService.submit" should {
     "revert a declaration to a draft status" when {
       "the submission to the Dec API fails on submit" in {
@@ -113,12 +105,33 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
     }
   }
 
-  "SubmissionService.amend" should {
-    val eori = "eori"
+  "SubmissionService.cancelAmendment" should {
     val mrn = Some("mrn")
     val amendmentId = "amendmentId"
     val actionId = "actionId"
-    val submissionAmendment = SubmissionAmendment(id, amendmentId, Seq(""))
+    val submission = Submission(id, eori, "lrn", mrn, "ducr", latestDecId = Some(amendmentId))
+    val declaration = aDeclaration(withId(amendmentId), withEori(eori), withConsignmentReferences(mrn = mrn))
+
+    "add an Amendment action to the submission on amend" in {
+      when(amendmentMetaDataBuilder.buildRequest(any(), any(), any())).thenReturn(metadata)
+      when(wcoMapperService.toXml(any())).thenReturn(xml)
+      when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
+      await(submissionRepository.insertOne(submission))
+
+      await(submissionService.cancelAmendment(Eori(eori), id, declaration)(HeaderCarrier()))
+
+      val expectedAction = await(submissionRepository.findAction(eori, actionId)).value
+      expectedAction.decId.get mustBe amendmentId
+      expectedAction.requestType mustBe AmendmentCancellationRequest
+      expectedAction.versionNo mustBe submission.latestVersionNo + 1
+    }
+  }
+
+  "SubmissionService.submitAmendment" should {
+    val mrn = Some("mrn")
+    val amendmentId = "amendmentId"
+    val actionId = "actionId"
+    val submissionAmendment = SubmissionAmendment(id, amendmentId, false, Seq(""))
     val submission = Submission(id, eori, "lrn", mrn, "ducr", latestDecId = Some(amendmentId))
     val declaration = aDeclaration(withId(amendmentId), withEori(eori), withConsignmentReferences(mrn = mrn))
 
@@ -129,7 +142,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
       when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
       await(submissionRepository.insertOne(submission))
 
-      await(submissionService.amend(Eori(eori), submissionAmendment, declaration)(HeaderCarrier()))
+      await(submissionService.submitAmendment(Eori(eori), submissionAmendment, declaration)(HeaderCarrier()))
 
       val expectedAction = await(submissionRepository.findById(eori, id)).get.actions.head
       expectedAction.decId.get mustBe amendmentId
@@ -149,7 +162,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
       declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
 
       intercept[RuntimeException] {
-        submissionServiceWithMockRepo.amend(Eori(eori), submissionAmendment, declaration)(HeaderCarrier()).futureValue
+        submissionServiceWithMockRepo.submitAmendment(Eori(eori), submissionAmendment, declaration)(HeaderCarrier()).futureValue
       }
 
       val resultingDeclaration = declarationRepository.findOne(id, amendmentId).futureValue.value
@@ -161,7 +174,7 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
       await(submissionRepository.insertOne(submission))
 
       val caught = intercept[PointerMappingException] {
-        await(submissionService.amend(Eori(eori), submissionAmendment, declaration)(HeaderCarrier()))
+        await(submissionService.submitAmendment(Eori(eori), submissionAmendment, declaration)(HeaderCarrier()))
       }
 
       assert(caught.getMessage === "Unable to map [some.broken.pointer] to any value.")
@@ -170,7 +183,6 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
 
   "fetchExternalAmendmentToUpdateSubmission" should {
     val mrn = "MyMucrValue1234"
-    val eori = "GB167676"
     val submissionActionId = "b1c09f1b-7c94-4e90-b754-7c5c71c44e01"
     val externalActionId2 = "b1c09f1b-7c94-4e90-b754-7c5c71c44e02"
     val externalActionId3 = "b1c09f1b-7c94-4e90-b754-7c5c71c44e03"
@@ -189,10 +201,11 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
 
       "is persisted with a new `declarationId`" which {
         "has an updated action where decId is updated" which {
+
           "update submission.latestDecId" when {
             "action.versionNo equals submission.latestVersionNo" when {
-              "there is a single ExternalAmendment" in {
 
+              "there is a single ExternalAmendment" in {
                 getFromDownstreamService(mrnDeclarationUrl, OK, Some(MrnDeclarationParserTestData.mrnDeclarationTestSample(mrn, None).toString))
 
                 val submission =
@@ -216,10 +229,9 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
 
                 result.latestDecId.value mustBe savedDec.id
                 result.actions(1).decId.value mustBe savedDec.id
-
               }
-              "there are more ExternalAmendments" in {
 
+              "there are more ExternalAmendments" in {
                 getFromDownstreamService(mrnDeclarationUrl, OK, Some(MrnDeclarationParserTestData.mrnDeclarationTestSample(mrn, None).toString))
 
                 val submission =
@@ -243,22 +255,19 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
 
                 result.latestDecId.value mustBe savedDec.id
                 result.actions(2).decId.value mustBe savedDec.id
-
               }
             }
           }
 
           "does not update submission.latestDecId" when {
             "action.versionNo is not submission.latestVersionNo" in {
-
               getFromDownstreamService(mrnDeclarationUrl, OK, Some(mrnDeclarationTestSample(mrn, None).toString))
 
-              val submission =
-                Submission(declaration, "lrn", "ducr", submissionAction).copy(
-                  latestVersionNo = 3,
-                  latestDecId = None,
-                  actions = List(submissionAction, externalActionVersion2, externalActionVersion3)
-                )
+              val submission = Submission(declaration, "lrn", "ducr", submissionAction).copy(
+                latestVersionNo = 3,
+                latestDecId = None,
+                actions = List(submissionAction, externalActionVersion2, externalActionVersion3)
+              )
 
               submissionRepository.insertOne(submission).futureValue.isRight mustBe true
 
@@ -274,7 +283,6 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
 
               result.latestDecId mustBe None
               result.actions(1).decId.value mustBe savedDec.id
-
             }
           }
         }
@@ -283,15 +291,13 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
 
     "return without submission" when {
       "declaration cannot be parsed from DIS" in {
-
         getFromDownstreamService(mrnDeclarationUrl, OK, Some(badTestSample.toString))
 
-        val submission =
-          Submission(declaration, "lrn", "ducr", submissionAction).copy(
-            latestVersionNo = 3,
-            latestDecId = None,
-            actions = List(submissionAction, externalActionVersion2, externalActionVersion3)
-          )
+        val submission = Submission(declaration, "lrn", "ducr", submissionAction).copy(
+          latestVersionNo = 3,
+          latestDecId = None,
+          actions = List(submissionAction, externalActionVersion2, externalActionVersion3)
+        )
 
         submissionRepository.insertOne(submission).futureValue.isRight mustBe true
 
@@ -300,18 +306,16 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
           .futureValue
 
         result mustBe None
-
       }
-      "submission cannot be updated" in {
 
+      "submission cannot be updated" in {
         getFromDownstreamService(mrnDeclarationUrl, OK, Some(MrnDeclarationParserTestData.mrnDeclarationTestSample(mrn, None).toString))
 
-        val submission =
-          Submission(declaration, "lrn", "ducr", submissionAction).copy(
-            latestVersionNo = 3,
-            latestDecId = None,
-            actions = List(submissionAction, externalActionVersion2, externalActionVersion3)
-          )
+        val submission = Submission(declaration, "lrn", "ducr", submissionAction).copy(
+          latestVersionNo = 3,
+          latestDecId = None,
+          actions = List(submissionAction, externalActionVersion2, externalActionVersion3)
+        )
 
         submissionRepository.insertOne(submission).futureValue.isRight mustBe true
 
@@ -320,27 +324,23 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
           .futureValue
 
         result mustBe None
-
       }
     }
 
     "throw exception" when {
       "no declaration is returned from DIS" in {
-
         getFromDownstreamService(mrnDeclarationUrl, NOT_FOUND)
 
-        val submission =
-          Submission(declaration, "lrn", "ducr", submissionAction).copy(
-            latestVersionNo = 3,
-            latestDecId = None,
-            actions = List(submissionAction, externalActionVersion2, externalActionVersion3)
-          )
+        val submission = Submission(declaration, "lrn", "ducr", submissionAction).copy(
+          latestVersionNo = 3,
+          latestDecId = None,
+          actions = List(submissionAction, externalActionVersion2, externalActionVersion3)
+        )
 
         intercept[InternalServerException] {
           await(submissionService.fetchExternalAmendmentToUpdateSubmission(mrn = Mrn(mrn), Eori(eori), externalActionId3, submission.uuid)(hc))
         }
       }
     }
-
   }
 }

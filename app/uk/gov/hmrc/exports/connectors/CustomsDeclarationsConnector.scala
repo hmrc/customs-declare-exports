@@ -50,7 +50,7 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: 
     post(submission.eori, appConfig.cancelDeclarationUri, xml)(headerCarrier).map(handleResponse)
   }
 
-  private def handleResponse(response: CustomsDeclarationsResponse) = {
+  private def handleResponse(response: CustomsDeclarationsResponse): String = {
     logger.debug(s"CUSTOMS_DECLARATIONS response is  --> ${response.toString}")
     response match {
       case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) => conversationId

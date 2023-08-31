@@ -95,7 +95,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
           .flatMap(_.latestNotificationSummary.map(_.enhancedStatus))
           .map(updateAmendmentRequest(session, action, summary, updatedActions, submissionStatus, _))
           .getOrElse {
-            throw new InternalServerException(s"Cannot find latest notification on submission request for Submission(${submission.uuid})")
+            throw new InternalServerException(s"Cannot find latest notification on AmendmentRequest for Submission(${submission.uuid})")
           }
 
       case ExternalAmendmentRequest =>
@@ -105,14 +105,16 @@ class UpdateSubmissionsTransactionalOps @Inject() (
             deleteAnyAmendmentDraftDecs(session, submission, _)
           }
         } else {
-          logger.info(
-            s"AMENDED notification ignored as its version number is <= to the submission's current latestVersion number of ${submission.latestVersionNo}"
-          )
+          val version = s"version(${firstNotificationDetails.version.getOrElse(0)})"
+          val latestVersionNo = s"latestVersionNo(${submission.latestVersionNo})"
+          val msg = s"AMENDED notification ignored for submission(${submission.uuid}) as its $version is <= to submission's $latestVersionNo"
+          logger.info(msg)
           Future.successful(Some(submission))
         }
 
-      case CancellationRequest => updateCancellationRequest(session, action, updatedActions)
-      case _                   => Future.successful(None)
+      case CancellationRequest | AmendmentCancellationRequest => updateCancellationRequest(session, action, updatedActions)
+
+      case _ => Future.successful(None)
     }
 
     update flatMap {
