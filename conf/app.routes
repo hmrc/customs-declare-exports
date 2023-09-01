@@ -5,7 +5,7 @@ PUT         /declarations/:id                                       uk.gov.hmrc.
 GET         /declarations/:id                                       uk.gov.hmrc.exports.controllers.DeclarationController.findById(id: String)
 DELETE      /declarations/:id                                       uk.gov.hmrc.exports.controllers.DeclarationController.deleteById(id: String)
 
-POST        /amendments                                             uk.gov.hmrc.exports.controllers.AmendmentController.create
+POST        /amendments                                             uk.gov.hmrc.exports.controllers.AmendmentController.handler
 
 # Draft for both accepted and rejected amended declarations
 GET         /amendment-draft/:parentId/:enhancedStatus              uk.gov.hmrc.exports.controllers.DeclarationController.findOrCreateDraftFromParent(parentId: String, enhancedStatus: String, isAmendment: Boolean ?= true)

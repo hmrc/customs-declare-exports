@@ -56,6 +56,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
   private val sendEmailForDmsDocAction: SendEmailForDmsDocAction = mock[SendEmailForDmsDocAction]
   private val mockCustomsDeclarationsInformationConnector = mock[CustomsDeclarationsInformationConnector]
   private val mockExportsDeclarationXmlParser = mock[ExportsDeclarationXmlParser]
+  private val metadata = mock[MetaData]
 
   private val submissionService = new SubmissionService(
     customsDeclarationsConnector = customsDeclarationsConnector,
@@ -111,7 +112,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
       "submission exists" which {
         "copies version number to cancel action from submission" in {
-          when(cancelMetaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
+          when(cancelMetaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(metadata)
           when(wcoMapperService.toXml(any())).thenReturn(xml)
           when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
           when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
@@ -130,7 +131,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       }
 
       "submission is missing" in {
-        when(cancelMetaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
+        when(cancelMetaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(metadata)
         when(wcoMapperService.toXml(any())).thenReturn(xml)
         when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(None))
@@ -139,7 +140,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       }
 
       "submission exists and previously cancelled" in {
-        when(cancelMetaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(mock[MetaData])
+        when(cancelMetaDataBuilder.buildRequest(any(), any(), any(), any(), any())).thenReturn(metadata)
         when(wcoMapperService.toXml(any())).thenReturn(xml)
         when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submissionCancelled)))
@@ -264,7 +265,6 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
   }
 
   "SubmissionService.submit" should {
-
     def theSubmissionCreated(): Submission = {
       val captor: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
       verify(submissionRepository).create(captor.capture())
@@ -283,7 +283,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
       "declaration is valid" in {
         // Given
-        when(wcoMapperService.produceMetaData(any())).thenReturn(mock[MetaData])
+        when(wcoMapperService.produceMetaData(any())).thenReturn(metadata)
         when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
         when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
         when(wcoMapperService.toXml(any())).thenReturn(xml)
@@ -312,7 +312,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
     "throw exception" when {
       "missing LRN" in {
-        when(wcoMapperService.produceMetaData(any())).thenReturn(mock[MetaData])
+        when(wcoMapperService.produceMetaData(any())).thenReturn(metadata)
         when(wcoMapperService.declarationLrn(any())).thenReturn(None)
         when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
 
@@ -322,7 +322,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       }
 
       "missing DUCR" in {
-        when(wcoMapperService.produceMetaData(any())).thenReturn(mock[MetaData])
+        when(wcoMapperService.produceMetaData(any())).thenReturn(metadata)
         when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
         when(wcoMapperService.declarationDucr(any())).thenReturn(None)
 
@@ -333,16 +333,16 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     }
   }
 
-  "SubmissionService.amend" should {
+  "SubmissionService.submitAmendment" should {
     val fieldPointers = Seq("pointers")
     val wcoPointers = Seq("wco")
     val amendmentId = "amendmentId"
     val actionId = "actionId"
-    val submissionAmendment = SubmissionAmendment(id, amendmentId, fieldPointers)
+    val submissionAmendment = SubmissionAmendment(id, amendmentId, false, fieldPointers)
     val dec = aDeclaration(withId(amendmentId), withEori(eori), withConsignmentReferences(mrn = Some("mrn")))
-    val metadata = mock[MetaData]
 
     "throw appropriate exception and revert the status of the amendment to AMENDMENT_DRAFT" when {
+
       "initial submission lookup does not return a submission" in {
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(None))
         when(amendMetaDataBuilder.buildRequest(any(), any(), any())).thenReturn(metadata)
@@ -351,10 +351,11 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(declarationRepository.revertStatusToAmendmentDraft(any())).thenReturn(Future.successful(Some(dec)))
 
         assertThrows[java.util.NoSuchElementException] {
-          await(submissionService.amend(Eori(eori), submissionAmendment, dec))
+          await(submissionService.submitAmendment(Eori(eori), submissionAmendment, dec))
         }
         verify(declarationRepository).revertStatusToAmendmentDraft(meq(dec))
       }
+
       "updating submission with amendment action fails" in {
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
         when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Right(wcoPointers))
@@ -366,7 +367,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(declarationRepository.revertStatusToAmendmentDraft(any())).thenReturn(Future.successful(Some(dec)))
 
         assertThrows[java.util.NoSuchElementException] {
-          await(submissionService.amend(Eori(eori), submissionAmendment, dec))
+          await(submissionService.submitAmendment(Eori(eori), submissionAmendment, dec))
         }
         verify(declarationRepository).revertStatusToAmendmentDraft(meq(dec))
       }
@@ -380,7 +381,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
       when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(Some(submission)))
 
-      await(submissionService.amend(Eori(eori), submissionAmendment, dec)) mustBe actionId
+      await(submissionService.submitAmendment(Eori(eori), submissionAmendment, dec)) mustBe actionId
 
       verify(submissionRepository).findOne(meq(Json.obj("eori" -> eori, "uuid" -> submission.uuid)))
       verify(exportsPointerToWCOPointer).getWCOPointers(meq(fieldPointers.head))
@@ -394,6 +395,18 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       captor.getValue.requestType mustBe AmendmentRequest
       captor.getValue.decId mustBe Some(amendmentId)
       captor.getValue.versionNo mustBe submission.latestVersionNo + 1
+    }
+  }
+
+  "SubmissionService.cancelAmendment" should {
+    "throw an exception" when {
+      "the associate Submission cannot be found" in {
+        when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(None))
+
+        assertThrows[java.util.NoSuchElementException] {
+          await(submissionService.cancelAmendment(Eori(eori), id, aDeclaration()))
+        }
+      }
     }
   }
 }

@@ -248,18 +248,28 @@ class SubmissionService @Inject() (
     }
   }
 
-  def amend(eori: Eori, amendment: SubmissionAmendment, declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[String] =
+  def cancelAmendment(eori: Eori, submissionId: String, declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[String] =
+    for {
+      submission <- submissionLookup(eori, submissionId)
+      actionId <- cancelAmendmentRequest(declaration, submission)
+    } yield actionId
+
+  private def cancelAmendmentRequest(declaration: ExportsDeclaration, submission: Submission)(implicit hc: HeaderCarrier): Future[String] = {
+    val metadata = amendmentMetaDataBuilder.buildRequest(submission.mrn, declaration, List.empty)
+    val xml = wcoMapperService.toXml(metadata)
+    for {
+      actionId <- customsDeclarationsConnector.submitAmendment(declaration.eori, xml)
+      _ <- addActionToSubmission(actionId, declaration.id, submission, AmendmentCancellationRequest)
+    } yield actionId
+  }
+
+  def submitAmendment(eori: Eori, amendment: SubmissionAmendment, declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[String] =
     metrics.timeAsyncCall(ExportsMetrics.amendmentMonitor) {
       logProgress(amendment.declarationId, "Beginning Amend Submission.")
 
-      val submissionLookup = submissionRepository.findOne(Json.obj("eori" -> eori, "uuid" -> amendment.submissionId)) map {
-        case Some(submission) => submission
-        case _                => throw new NoSuchElementException("No submission matching eori and id was found.")
-      }
-
       (for {
-        submission <- submissionLookup
-        actionId <- sendAmendmentRequest(declaration, submission, amendment.fieldPointers)
+        submission <- submissionLookup(eori, amendment.submissionId)
+        actionId <- submitAmendmentRequest(declaration, submission, amendment.fieldPointers)
       } yield actionId).recoverWith { case throwable: Throwable =>
         logProgress(declaration.id, "Amendment failed")
         declarationRepository.revertStatusToAmendmentDraft(declaration) flatMap { _ =>
@@ -269,7 +279,7 @@ class SubmissionService @Inject() (
       }
     }
 
-  private def sendAmendmentRequest(declaration: ExportsDeclaration, submission: Submission, fieldPointers: Seq[String])(
+  private def submitAmendmentRequest(declaration: ExportsDeclaration, submission: Submission, fieldPointers: Seq[String])(
     implicit hc: HeaderCarrier
   ): Future[String] = {
     val wcoPointers = processPointers(fieldPointers, declaration.id)
@@ -283,17 +293,25 @@ class SubmissionService @Inject() (
       actionId <- metrics.timeAsyncCall(Timers.amendmentSendToDecApiTimer)(customsDeclarationsConnector.submitAmendment(declaration.eori, xml))
       _ = logProgress(declaration.id, "Submitted amendment request to the Declaration API Successfully")
       _ = logProgress(declaration.id, "Appending amendment action to submission...")
-      _ <- metrics.timeAsyncCall(Timers.amendmentAddSubmissionActionTimer)(updateSubmissionWithAmendmentAction(actionId, declaration.id, submission))
+      _ <- metrics.timeAsyncCall(Timers.amendmentAddSubmissionActionTimer)(
+        addActionToSubmission(actionId, declaration.id, submission, AmendmentRequest)
+      )
     } yield actionId
   }
 
-  private def updateSubmissionWithAmendmentAction(actionId: String, decId: String, submission: Submission): Future[Unit] = {
-    val newAction = Action(id = actionId, AmendmentRequest, decId = Some(decId), versionNo = submission.latestVersionNo + 1)
-    submissionRepository.addAction(submission.uuid, newAction).map {
-      case Some(_) => logProgress(decId, s"Updated submission with id ${submission.uuid} successfully with amendment action.")
-      case _       => throw new NoSuchElementException(s"Failed to find submission with id ${submission.uuid} to update with amendment action.")
+  private def addActionToSubmission(actionId: String, decId: String, submission: Submission, requestType: RequestType): Future[Unit] = {
+    val action = Action(id = actionId, requestType, decId = Some(decId), versionNo = submission.latestVersionNo + 1)
+    submissionRepository.addAction(submission.uuid, action).map {
+      case Some(_) => logger.info(s"Added '$requestType' action($actionId) to submission(${submission.uuid}).")
+      case _       => throw new NoSuchElementException(s"Submission(${submission.uuid}) not found while adding '$requestType' action($actionId).")
     }
   }
+
+  private def submissionLookup(eori: Eori, submissionId: String): Future[Submission] =
+    submissionRepository.findOne(Json.obj("eori" -> eori, "uuid" -> submissionId)) map {
+      case Some(submission) => submission
+      case _ => throw new NoSuchElementException(s"No submission matching eori($eori) and id(${submissionId}) was found on submitAmendment.")
+    }
 
   private def processPointers(fieldPointers: Seq[String], decId: String): Seq[String] = {
     logProgress(decId, s"Field pointers received from frontend:\n$fieldPointers")

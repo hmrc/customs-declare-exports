@@ -23,6 +23,7 @@ sealed trait RequestType
 case object SubmissionRequest extends RequestType
 case object CancellationRequest extends RequestType
 case object AmendmentRequest extends RequestType
+case object AmendmentCancellationRequest extends RequestType
 case object ExternalAmendmentRequest extends RequestType
 
 object RequestType {
@@ -31,11 +32,12 @@ object RequestType {
     override def writes(requestType: RequestType): JsValue = JsString(requestType.toString)
 
     override def reads(json: JsValue): JsResult[RequestType] = json match {
-      case JsString("SubmissionRequest")        => JsSuccess(SubmissionRequest)
-      case JsString("CancellationRequest")      => JsSuccess(CancellationRequest)
-      case JsString("AmendmentRequest")         => JsSuccess(AmendmentRequest)
-      case JsString("ExternalAmendmentRequest") => JsSuccess(ExternalAmendmentRequest)
-      case _                                    => JsError(s"Could not read Request Type from: $json")
+      case JsString("SubmissionRequest")            => JsSuccess(SubmissionRequest)
+      case JsString("CancellationRequest")          => JsSuccess(CancellationRequest)
+      case JsString("AmendmentRequest")             => JsSuccess(AmendmentRequest)
+      case JsString("AmendmentCancellationRequest") => JsSuccess(AmendmentCancellationRequest)
+      case JsString("ExternalAmendmentRequest")     => JsSuccess(ExternalAmendmentRequest)
+      case _                                        => JsError(s"Could not read Action.RequestType from: $json")
     }
   }
 }

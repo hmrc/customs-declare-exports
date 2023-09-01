@@ -36,18 +36,26 @@ class AmendmentController @Inject() (
 )(implicit executionContext: ExecutionContext)
     extends RESTController(cc) with JSONResponses {
 
-  val create: Action[SubmissionAmendment] = authenticator.authorisedAction(parsingJson[SubmissionAmendment]) { implicit request =>
+  val handler: Action[SubmissionAmendment] = authenticator.authorisedAction(parsingJson[SubmissionAmendment]) { implicit request =>
+    val submissionAmendment = request.body
+    val declarationId = submissionAmendment.declarationId
     metrics
-      .timeAsyncCall(Timers.amendmentUpdateDeclarationStatusTimer)(submissionService.markCompleted(request.eori, request.request.body.declarationId))
+      .timeAsyncCall(Timers.amendmentUpdateDeclarationStatusTimer)(submissionService.markCompleted(request.eori, declarationId))
       .flatMap {
-        case Some(declaration) if declaration.isCompleted => Future.successful(Conflict("Amendment has already been submitted."))
+        case Some(declaration) if declaration.isCompleted =>
+          val message = s"Amendment for declaration(${declarationId}) has already been submitted."
+          Future.successful(Conflict(message))
 
         case Some(declaration) if declaration.declarationMeta.status != AMENDMENT_DRAFT =>
-          Future.successful(Conflict(s"Attempted to submit declaration with status ${declaration.declarationMeta.status} as an amendment."))
+          val message = s"Attempted to submit declaration(${declarationId}) with status ${declaration.declarationMeta.status} as an amendment."
+          Future.successful(Conflict(message))
 
-        case Some(declaration) => submissionService.amend(request.eori, request.body, declaration).map(Ok(_))
+        case Some(declaration) =>
+          if (submissionAmendment.isCancellation) {
+            submissionService.cancelAmendment(request.eori, submissionAmendment.submissionId, declaration).map(Ok(_))
+          } else submissionService.submitAmendment(request.eori, submissionAmendment, declaration).map(Ok(_))
 
-        case _ => Future.successful(NotFound("Declaration not found."))
+        case _ => Future.successful(NotFound(s"Declaration(${declarationId}) not found while submitting an amendment."))
       }
   }
 }
