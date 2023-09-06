@@ -103,7 +103,7 @@ class DeclarationBuilder @Inject() (
 
     functionCodeBuilder.buildThenAdd("13", declaration)
     functionalReferenceIdBuilder.buildThenAdd(model, declaration)
-    mrn.map(mrn => identificationBuilder.buildThenAdd(mrn, declaration))
+    mrn.foreach(mrn => identificationBuilder.buildThenAdd(mrn, declaration))
     typeCodeBuilder.buildThenAdd("COR", declaration)
     invoiceAmountBuilder.buildThenAdd(model, declaration)
     additionalInformationBuilder.buildThenAdd(model, declaration)
@@ -125,6 +125,7 @@ class DeclarationBuilder @Inject() (
     declarantBuilder.buildThenAdd(model, declaration)
     specificCircumstancesCodeBuilder.buildThenAdd(model, declaration)
     supervisingOfficeBuilder.buildThenAdd(model, declaration)
+    totalPackageQuantityBuilder.buildThenAdd(model, declaration)
     declarationConsignmentBuilder.buildThenAdd(model, declaration)
     authorisationHoldersBuilder.buildThenAdd(model, declaration)
     currencyExchangeBuilder.buildThenAdd(model, declaration)
