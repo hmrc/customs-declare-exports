@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.controllers
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchersSugar.eqTo
-import play.api.http.Status.{CONFLICT, NOT_FOUND}
+import play.api.http.Status.{BAD_REQUEST, CONFLICT, NOT_FOUND}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
@@ -28,7 +28,7 @@ import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timer
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus._
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionAmendment
-import uk.gov.hmrc.exports.services.SubmissionService
+import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,34 +38,34 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
 
   private val cc = stubControllerComponents()
   private val authenticator = new Authenticator(mockAuthConnector, cc)
-  private val mockSubmissionService = mock[SubmissionService]
+  private val declarationService = mock[DeclarationService]
+  private val submissionService = mock[SubmissionService]
   private val mockMetrics = mock[ExportsMetrics]
 
-  private val controller = new AmendmentController(authenticator, mockSubmissionService, cc, mockMetrics)
+  private val controller = new AmendmentController(authenticator, declarationService, submissionService, cc, mockMetrics)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(mockAuthConnector, mockSubmissionService)
+    reset(mockAuthConnector, declarationService, submissionService)
     withAuthorizedUser()
   }
 
-  val postRequest = FakeRequest("POST", "/amend")
-
-  "AmendmentController.handler" when {
+  "AmendmentController.submission" when {
     val submissionAmendment = SubmissionAmendment("subId", "decId", false, Seq("pointer"))
+    val postRequest = FakeRequest("POST", "/amendments")
     val request = postRequest.withBody(submissionAmendment)
 
     "an amended declaration is not found" should {
       "return 404 NOT_FOUND" in {
-        when(mockSubmissionService.markCompleted(any(), any())).thenReturn(Future.successful(None))
+        when(declarationService.markCompleted(any(), any())).thenReturn(Future.successful(None))
         when(mockMetrics.timeAsyncCall(any[Timer])(any[Future[Option[_]]])(any())).thenReturn(Future.successful(None))
 
-        val result = controller.handler(request)
+        val result = controller.submission(request)
 
         status(result) mustBe NOT_FOUND
-        verifyZeroInteractions(mockSubmissionService.cancelAmendment(any(), any(), any())(any()))
-        verifyZeroInteractions(mockSubmissionService.submitAmendment(any(), any(), any())(any()))
+        verifyZeroInteractions(submissionService.cancelAmendment(any(), any(), any())(any()))
+        verifyZeroInteractions(submissionService.submitAmendment(any(), any(), any())(any()))
       }
     }
 
@@ -73,14 +73,14 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
       s"the declaration has $decStatus status" should {
         "return 409 CONFLICT" in {
           val declaration = aDeclaration(withStatus(decStatus))
-          when(mockSubmissionService.markCompleted(any(), any())).thenReturn(Future.successful(Some(declaration)))
+          when(declarationService.markCompleted(any(), any())).thenReturn(Future.successful(Some(declaration)))
           when(mockMetrics.timeAsyncCall(any[Timer])(any[Future[Option[_]]])(any())).thenReturn(Future.successful(Some(declaration)))
 
-          val result = controller.handler(request)
+          val result = controller.submission(request)
 
           status(result) mustBe CONFLICT
-          verifyZeroInteractions(mockSubmissionService.cancelAmendment(any(), any(), any())(any()))
-          verifyZeroInteractions(mockSubmissionService.submitAmendment(any(), any(), any())(any()))
+          verifyZeroInteractions(submissionService.cancelAmendment(any(), any(), any())(any()))
+          verifyZeroInteractions(submissionService.submitAmendment(any(), any(), any())(any()))
         }
       }
     }
@@ -91,33 +91,83 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
       "return 200 with actionId" when {
 
         "the op is a submission" in {
-          when(mockSubmissionService.markCompleted(any(), any())).thenReturn(Future.successful(Some(declaration)))
+          when(declarationService.markCompleted(any(), any())).thenReturn(Future.successful(Some(declaration)))
           when(mockMetrics.timeAsyncCall(any[Timer])(any[Future[Option[_]]])(any())).thenReturn(Future.successful(Some(declaration)))
-          when(mockSubmissionService.submitAmendment(any(), any(), any())(any())).thenReturn(Future("actionId"))
+          when(submissionService.submitAmendment(any(), any(), any())(any())).thenReturn(Future("actionId"))
 
-          val result = controller.handler(request)
+          val result = controller.submission(request)
 
           status(result) mustBe 200
           contentAsString(result) mustBe "\"actionId\""
 
-          verify(mockSubmissionService).submitAmendment(any(), eqTo(submissionAmendment), eqTo(declaration))(any())
-          verifyZeroInteractions(mockSubmissionService.cancelAmendment(any(), any(), any())(any()))
+          verify(submissionService).submitAmendment(any(), eqTo(submissionAmendment), eqTo(declaration))(any())
+          verifyZeroInteractions(submissionService.cancelAmendment(any(), any(), any())(any()))
         }
 
         "the op is a cancellation" in {
-          when(mockSubmissionService.markCompleted(any(), any())).thenReturn(Future.successful(Some(declaration)))
-          when(mockSubmissionService.cancelAmendment(any(), any(), any())(any())).thenReturn(Future("actionId"))
+          when(declarationService.markCompleted(any(), any())).thenReturn(Future.successful(Some(declaration)))
+          when(submissionService.cancelAmendment(any(), any(), any())(any())).thenReturn(Future("actionId"))
           when(mockMetrics.timeAsyncCall(any[Timer])(any[Future[Option[_]]])(any())).thenReturn(Future.successful(Some(declaration)))
 
           val request = postRequest.withBody(submissionAmendment.copy(isCancellation = true, fieldPointers = List("")))
-          val result = controller.handler(request)
+          val result = controller.submission(request)
 
           status(result) mustBe 200
           contentAsString(result) mustBe "\"actionId\""
 
-          verify(mockSubmissionService).cancelAmendment(any(), eqTo(submissionAmendment.submissionId), eqTo(declaration))(any())
-          verifyZeroInteractions(mockSubmissionService.submitAmendment(any(), any(), any())(any()))
+          verify(submissionService).cancelAmendment(any(), eqTo(submissionAmendment.submissionId), eqTo(declaration))(any())
+          verifyZeroInteractions(submissionService.submitAmendment(any(), any(), any())(any()))
         }
+      }
+    }
+  }
+
+  "AmendmentController.resubmission" when {
+    val submissionAmendment = SubmissionAmendment("subId", "decId", false, Seq("pointer"))
+    val postRequest = FakeRequest("POST", "/amendment-resubmission")
+    val request = postRequest.withBody(submissionAmendment)
+
+    "an amended declaration is not found" should {
+      "return 404 NOT_FOUND" in {
+        when(declarationService.findOne(any(), any())).thenReturn(Future.successful(None))
+        when(mockMetrics.timeAsyncCall(any[Timer])(any[Future[Option[_]]])(any())).thenReturn(Future.successful(None))
+
+        val result = controller.resubmission(request)
+
+        status(result) mustBe NOT_FOUND
+        verifyZeroInteractions(submissionService.resubmitAmendment(any(), any(), any())(any()))
+      }
+    }
+
+    DeclarationStatus.values.excl(COMPLETE).foreach { decStatus =>
+      s"the declaration has $decStatus status" should {
+        "return 400 BAD_REQUEST" in {
+          val declaration = aDeclaration(withStatus(decStatus))
+          when(declarationService.findOne(any(), any())).thenReturn(Future.successful(Some(declaration)))
+          when(mockMetrics.timeAsyncCall(any[Timer])(any[Future[Option[_]]])(any())).thenReturn(Future.successful(Some(declaration)))
+
+          val result = controller.resubmission(request)
+
+          status(result) mustBe BAD_REQUEST
+          verifyZeroInteractions(submissionService.resubmitAmendment(any(), any(), any())(any()))
+        }
+      }
+    }
+
+    "the declaration has COMPLETE status" should {
+      val declaration = aDeclaration(withStatus(COMPLETE))
+
+      "return 200 with actionId" in {
+        when(declarationService.findOne(any(), any())).thenReturn(Future.successful(Some(declaration)))
+        when(mockMetrics.timeAsyncCall(any[Timer])(any[Future[Option[_]]])(any())).thenReturn(Future.successful(Some(declaration)))
+        when(submissionService.resubmitAmendment(any(), any(), any())(any())).thenReturn(Future("actionId"))
+
+        val result = controller.resubmission(request)
+
+        status(result) mustBe 200
+        contentAsString(result) mustBe "\"actionId\""
+
+        verify(submissionService).resubmitAmendment(any(), eqTo(submissionAmendment), eqTo(declaration))(any())
       }
     }
   }

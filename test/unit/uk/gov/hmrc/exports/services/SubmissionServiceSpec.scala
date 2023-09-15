@@ -339,21 +339,18 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     val amendmentId = "amendmentId"
     val actionId = "actionId"
     val submissionAmendment = SubmissionAmendment(id, amendmentId, false, fieldPointers)
-    val dec = aDeclaration(withId(amendmentId), withEori(eori), withConsignmentReferences(mrn = Some("mrn")))
+    val declaration = aDeclaration(withId(amendmentId), withEori(eori), withConsignmentReferences(mrn = Some("mrn")))
 
     "throw appropriate exception and revert the status of the amendment to AMENDMENT_DRAFT" when {
 
       "initial submission lookup does not return a submission" in {
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(None))
-        when(amendMetaDataBuilder.buildRequest(any(), any(), any())).thenReturn(metadata)
-        when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
-        when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(Some(submission)))
-        when(declarationRepository.revertStatusToAmendmentDraft(any())).thenReturn(Future.successful(Some(dec)))
+        when(declarationRepository.revertStatusToAmendmentDraft(any())).thenReturn(Future.successful(Some(declaration)))
 
         assertThrows[java.util.NoSuchElementException] {
-          await(submissionService.submitAmendment(Eori(eori), submissionAmendment, dec))
+          await(submissionService.submitAmendment(Eori(eori), submissionAmendment, declaration))
         }
-        verify(declarationRepository).revertStatusToAmendmentDraft(meq(dec))
+        verify(declarationRepository).revertStatusToAmendmentDraft(meq(declaration))
       }
 
       "updating submission with amendment action fails" in {
@@ -364,12 +361,12 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
         // The following triggers an error
         when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(None))
-        when(declarationRepository.revertStatusToAmendmentDraft(any())).thenReturn(Future.successful(Some(dec)))
+        when(declarationRepository.revertStatusToAmendmentDraft(any())).thenReturn(Future.successful(Some(declaration)))
 
         assertThrows[java.util.NoSuchElementException] {
-          await(submissionService.submitAmendment(Eori(eori), submissionAmendment, dec))
+          await(submissionService.submitAmendment(Eori(eori), submissionAmendment, declaration))
         }
-        verify(declarationRepository).revertStatusToAmendmentDraft(meq(dec))
+        verify(declarationRepository).revertStatusToAmendmentDraft(meq(declaration))
       }
     }
 
@@ -381,11 +378,69 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
       when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(Some(submission)))
 
-      await(submissionService.submitAmendment(Eori(eori), submissionAmendment, dec)) mustBe actionId
+      await(submissionService.submitAmendment(Eori(eori), submissionAmendment, declaration)) mustBe actionId
 
       verify(submissionRepository).findOne(meq(Json.obj("eori" -> eori, "uuid" -> submission.uuid)))
       verify(exportsPointerToWCOPointer).getWCOPointers(meq(fieldPointers.head))
-      verify(amendMetaDataBuilder).buildRequest(meq(submission.mrn), meq(dec), meq(wcoPointers))
+      verify(amendMetaDataBuilder).buildRequest(meq(submission.mrn), meq(declaration), meq(wcoPointers))
+      verify(wcoMapperService).toXml(meq(metadata))
+      verify(customsDeclarationsConnector).submitAmendment(meq(eori), meq(xml))(any())
+      val captor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])
+      verify(submissionRepository).addAction(meq(id), captor.capture())
+
+      captor.getValue.id mustBe actionId
+      captor.getValue.requestType mustBe AmendmentRequest
+      captor.getValue.decId mustBe Some(amendmentId)
+      captor.getValue.versionNo mustBe submission.latestVersionNo + 1
+    }
+  }
+
+  "SubmissionService.resubmitAmendment" should {
+    val fieldPointers = Seq("pointers")
+    val wcoPointers = Seq("wco")
+    val amendmentId = "amendmentId"
+    val actionId = "actionId"
+    val submissionAmendment = SubmissionAmendment(id, amendmentId, false, fieldPointers)
+    val declaration = aDeclaration(withId(amendmentId), withEori(eori), withConsignmentReferences(mrn = Some("mrn")))
+
+    "throw appropriate exception" when {
+
+      "initial submission lookup does not return a submission" in {
+        when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(None))
+
+        assertThrows[java.util.NoSuchElementException] {
+          await(submissionService.resubmitAmendment(Eori(eori), submissionAmendment, declaration))
+        }
+      }
+
+      "updating submission with amendment action fails" in {
+        when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
+        when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Right(wcoPointers))
+        when(amendMetaDataBuilder.buildRequest(any(), any(), any())).thenReturn(metadata)
+        when(wcoMapperService.toXml(any())).thenReturn(xml)
+        when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
+        // The following triggers an error
+        when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(None))
+
+        assertThrows[java.util.NoSuchElementException] {
+          await(submissionService.resubmitAmendment(Eori(eori), submissionAmendment, declaration))
+        }
+      }
+    }
+
+    "call expected methods and return an actionId" in {
+      when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
+      when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Right(wcoPointers))
+      when(amendMetaDataBuilder.buildRequest(any(), any(), any())).thenReturn(metadata)
+      when(wcoMapperService.toXml(any())).thenReturn(xml)
+      when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
+      when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(Some(submission)))
+
+      await(submissionService.resubmitAmendment(Eori(eori), submissionAmendment, declaration)) mustBe actionId
+
+      verify(submissionRepository).findOne(meq(Json.obj("eori" -> eori, "uuid" -> submission.uuid)))
+      verify(exportsPointerToWCOPointer).getWCOPointers(meq(fieldPointers.head))
+      verify(amendMetaDataBuilder).buildRequest(meq(submission.mrn), meq(declaration), meq(wcoPointers))
       verify(wcoMapperService).toXml(meq(metadata))
       verify(customsDeclarationsConnector).submitAmendment(meq(eori), meq(xml))(any())
       val captor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])

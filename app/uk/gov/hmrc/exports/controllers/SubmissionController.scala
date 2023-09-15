@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData.DEFAULT_LIMIT
 import uk.gov.hmrc.exports.models.declaration.submissions.{EnhancedStatus, StatusGroup, Submission, SubmissionRequest}
-import uk.gov.hmrc.exports.services.SubmissionService
+import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
 import uk.gov.hmrc.exports.util.TimeUtils
 import uk.gov.hmrc.exports.util.TimeUtils.defaultTimeZone
 
@@ -31,12 +31,16 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SubmissionController @Inject() (authenticator: Authenticator, submissionService: SubmissionService, cc: ControllerComponents)(
-  implicit executionContext: ExecutionContext
-) extends RESTController(cc) with JSONResponses {
+class SubmissionController @Inject() (
+  authenticator: Authenticator,
+  declarationService: DeclarationService,
+  submissionService: SubmissionService,
+  cc: ControllerComponents
+)(implicit executionContext: ExecutionContext)
+    extends RESTController(cc) with JSONResponses {
 
   def create(declarationId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    submissionService.markCompleted(request.eori, declarationId).flatMap {
+    declarationService.markCompleted(request.eori, declarationId).flatMap {
 
       case Some(declarationBeforeUpdate) =>
         if (declarationBeforeUpdate.isCompleted) {

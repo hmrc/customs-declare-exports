@@ -82,6 +82,9 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
   def deleteOne(declaration: ExportsDeclaration): Future[Boolean] =
     declarationRepository.removeOne(Json.obj("id" -> declaration.id, "eori" -> declaration.eori))
 
+  def markCompleted(eori: Eori, id: String): Future[Option[ExportsDeclaration]] =
+    declarationRepository.markStatusAsComplete(eori, id)
+
   def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
     declarationRepository.findOneAndReplace(
       Json.obj("id" -> declaration.id, "eori" -> declaration.eori, "status" -> Json.obj("$ne" -> COMPLETE.toString)),

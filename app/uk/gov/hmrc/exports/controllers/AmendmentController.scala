@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timers
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.AMENDMENT_DRAFT
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionAmendment
-import uk.gov.hmrc.exports.services.SubmissionService
+import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,17 +30,18 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class AmendmentController @Inject() (
   authenticator: Authenticator,
+  declarationService: DeclarationService,
   submissionService: SubmissionService,
   cc: ControllerComponents,
   metrics: ExportsMetrics
 )(implicit executionContext: ExecutionContext)
     extends RESTController(cc) with JSONResponses {
 
-  val handler: Action[SubmissionAmendment] = authenticator.authorisedAction(parsingJson[SubmissionAmendment]) { implicit request =>
+  val submission: Action[SubmissionAmendment] = authenticator.authorisedAction(parsingJson[SubmissionAmendment]) { implicit request =>
     val submissionAmendment = request.body
     val declarationId = submissionAmendment.declarationId
     metrics
-      .timeAsyncCall(Timers.amendmentUpdateDeclarationStatusTimer)(submissionService.markCompleted(request.eori, declarationId))
+      .timeAsyncCall(Timers.amendmentUpdateDeclarationStatusTimer)(declarationService.markCompleted(request.eori, declarationId))
       .flatMap {
         case Some(declaration) if declaration.isCompleted =>
           val message = s"Amendment for declaration(${declarationId}) has already been submitted."
@@ -56,6 +57,26 @@ class AmendmentController @Inject() (
           } else submissionService.submitAmendment(request.eori, submissionAmendment, declaration).map(Ok(_))
 
         case _ => Future.successful(NotFound(s"Declaration(${declarationId}) not found while submitting an amendment."))
+      }
+  }
+
+  val resubmission: Action[SubmissionAmendment] = authenticator.authorisedAction(parsingJson[SubmissionAmendment]) { implicit request =>
+    val submissionAmendment = request.body
+    val declarationId = submissionAmendment.declarationId
+    metrics
+      .timeAsyncCall(Timers.amendmentUpdateDeclarationStatusTimer)(declarationService.findOne(request.eori, declarationId))
+      .flatMap {
+        case Some(declaration) if declaration.isCompleted =>
+          submissionService.resubmitAmendment(request.eori, submissionAmendment, declaration).map(Ok(_))
+
+        case Some(declaration) =>
+          val message =
+            if (declaration.declarationMeta.status == AMENDMENT_DRAFT) s"Amendment for declaration(${declarationId}) has never been submitted."
+            else s"Attempted to resubmit declaration(${declarationId}) with status ${declaration.declarationMeta.status} as an amendment."
+
+          Future.successful(BadRequest(message))
+
+        case _ => Future.successful(NotFound(s"Declaration(${declarationId}) not found while trying to resubmit an amendment."))
       }
   }
 }

@@ -32,7 +32,7 @@ import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.{FetchSubmissionPageData, PageOfSubmissions}
-import uk.gov.hmrc.exports.services.SubmissionService
+import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
 import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, TimeUtils}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -42,14 +42,15 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
 
   private val cc = stubControllerComponents()
   private val authenticator = new Authenticator(mockAuthConnector, cc)
-  private val submissionService: SubmissionService = mock[SubmissionService]
+  private val declarationService = mock[DeclarationService]
+  private val submissionService = mock[SubmissionService]
 
-  private val controller = new SubmissionController(authenticator, submissionService, cc)
+  private val controller = new SubmissionController(authenticator, declarationService, submissionService, cc)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(mockAuthConnector, submissionService)
+    reset(mockAuthConnector, declarationService, submissionService)
     withAuthorizedUser()
   }
 
@@ -64,14 +65,14 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
         val result = controller.create("id")(postRequest)
 
         status(result) mustBe UNAUTHORIZED
-        verifyNoInteractions(submissionService)
+        verifyNoInteractions(declarationService, submissionService)
       }
     }
 
     "request is correct" should {
       "return 201 (Created)" in {
         val declaration = aDeclaration(withId("id"), withStatus(DeclarationStatus.DRAFT))
-        when(submissionService.markCompleted(any(), anyString())).thenReturn(Future.successful(Some(declaration)))
+        when(declarationService.markCompleted(any(), anyString())).thenReturn(Future.successful(Some(declaration)))
         when(submissionService.submit(any())(any())).thenReturn(Future.successful(submission))
 
         val result = controller.create("id")(postRequest)
@@ -84,7 +85,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
     "DeclarationService returns completed Declaration" should {
       "return 409 (Conflict)" in {
         val declaration = aDeclaration(withId("id"), withStatus(DeclarationStatus.COMPLETE))
-        when(submissionService.markCompleted(any(), anyString())).thenReturn(Future.successful(Some(declaration)))
+        when(declarationService.markCompleted(any(), anyString())).thenReturn(Future.successful(Some(declaration)))
         when(submissionService.submit(any())(any())).thenReturn(Future.successful(submission))
 
         val result = controller.create("id")(postRequest)
@@ -96,7 +97,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
 
     "DeclarationService returns no Declaration for given UUID" should {
       "return 404 (NotFound)" in {
-        when(submissionService.markCompleted(any(), anyString())).thenReturn(Future.successful(None))
+        when(declarationService.markCompleted(any(), anyString())).thenReturn(Future.successful(None))
 
         val result = controller.create("id")(postRequest)
 
@@ -163,7 +164,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
         val result = controller.find("id")(getRequest)
 
         status(result) mustBe UNAUTHORIZED
-        verifyNoInteractions(submissionService)
+        verifyNoInteractions(declarationService, submissionService)
       }
     }
 
@@ -196,7 +197,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
         val result = controller.isLrnAlreadyUsed("lrn")(getRequest)
 
         status(result) mustBe UNAUTHORIZED
-        verifyNoInteractions(submissionService)
+        verifyNoInteractions(declarationService, submissionService)
       }
     }
 
