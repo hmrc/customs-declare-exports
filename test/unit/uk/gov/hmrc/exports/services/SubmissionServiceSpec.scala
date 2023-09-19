@@ -373,29 +373,61 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       }
     }
 
-    "call expected methods and return an actionId" in {
-      when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
-      when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Right(wcoPointers))
-      when(amendMetaDataBuilder.buildRequest(any(), any(), any())).thenReturn(metadata)
-      when(wcoMapperService.toXml(any())).thenReturn(xml)
-      when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
-      when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(Some(submission)))
+    "not throw exceptions" when {
 
-      await(submissionService.submitAmendment(Eori(eori), submissionAmendment, dec)) mustBe actionId
+      def setupMocks(): Unit = {
+        when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submission)))
+        when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Right(wcoPointers))
+        when(amendMetaDataBuilder.buildRequest(any(), any(), any())).thenReturn(metadata)
+        when(wcoMapperService.toXml(any())).thenReturn(xml)
+        when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
+        when(submissionRepository.addAction(any(), any())).thenReturn(Future.successful(Some(submission)))
+      }
 
-      verify(submissionRepository).findOne(meq(Json.obj("eori" -> eori, "uuid" -> submission.uuid)))
-      verify(exportsPointerToWCOPointer).getWCOPointers(meq(fieldPointers.head))
-      verify(amendMetaDataBuilder).buildRequest(meq(submission.mrn), meq(dec), meq(wcoPointers))
-      verify(wcoMapperService).toXml(meq(metadata))
-      verify(customsDeclarationsConnector).submitAmendment(meq(eori), meq(xml))(any())
-      val captor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])
-      verify(submissionRepository).addAction(meq(id), captor.capture())
+      "calling expected methods to return an actionId" in {
 
-      captor.getValue.id mustBe actionId
-      captor.getValue.requestType mustBe AmendmentRequest
-      captor.getValue.decId mustBe Some(amendmentId)
-      captor.getValue.versionNo mustBe submission.latestVersionNo + 1
+        setupMocks()
+
+        await(submissionService.submitAmendment(Eori(eori), submissionAmendment, dec)) mustBe actionId
+
+        verify(submissionRepository).findOne(meq(Json.obj("eori" -> eori, "uuid" -> submission.uuid)))
+        verify(exportsPointerToWCOPointer).getWCOPointers(meq(fieldPointers.head))
+        verify(amendMetaDataBuilder).buildRequest(meq(submission.mrn), meq(dec), meq(wcoPointers))
+        verify(wcoMapperService).toXml(meq(metadata))
+        verify(customsDeclarationsConnector).submitAmendment(meq(eori), meq(xml))(any())
+
+        val captor: ArgumentCaptor[Action] = ArgumentCaptor.forClass(classOf[Action])
+        verify(submissionRepository).addAction(meq(id), captor.capture())
+
+        captor.getValue.id mustBe actionId
+        captor.getValue.requestType mustBe AmendmentRequest
+        captor.getValue.decId mustBe Some(amendmentId)
+        captor.getValue.versionNo mustBe submission.latestVersionNo + 1
+
+      }
+
+      "converting multiple Routing Country pointers to 1 Consignment pointer" in {
+
+        setupMocks()
+
+        val submissionAmendmentWithRoutingCountries = submissionAmendment.copy(fieldPointers =
+          Seq(
+            "declaration.locations.routingCountries.#8",
+            "declaration.locations.routingCountries.#9",
+            "declaration.locations.routingCountries.#10",
+            "declaration.locations.routingCountries.#11"
+          )
+        )
+
+        whenReady {
+          submissionService.submitAmendment(Eori(eori), submissionAmendmentWithRoutingCountries, dec)
+        } { _ =>
+          verify(exportsPointerToWCOPointer).getWCOPointers(meq("declaration.consignment"))
+        }
+
+      }
     }
+
   }
 
   "SubmissionService.cancelAmendment" should {
