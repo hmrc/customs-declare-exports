@@ -33,11 +33,8 @@ class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
 
     Try(Json.parse(stream)) match {
       case Success(JsArray(jsValues)) =>
-        val items: Seq[JsResult[Pointers]] = jsValues.toList.map { jsValue =>
-          reader.reads(jsValue)
-        }
-
-        items
+        jsValues.toList
+          .map(reader.reads)
           .flatMap(_.asOpt)
           .groupMap(_.cds)(_.wco)
 
@@ -134,7 +131,10 @@ private object PointersReads extends ConstraintReads {
   def convertManyToOnePointers(pointer: String): String =
     if (Seq("items.$1.nactCode.$2", "items.$1.taricCode.$2", "items.$1.procedureCodes.additionalProcedureCodes.$2").contains(pointer))
       pointer.dropRight(3)
-    else pointer
+    else if (pointer.split(".").take(3).toSeq == Seq("42A", "28A", "62A"))
+      pointer.take(7)
+    else
+      pointer
 
 }
 

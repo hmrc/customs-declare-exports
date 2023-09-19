@@ -182,6 +182,10 @@
     "wco" : "42A.28A.62A.$1"
   },
   {
+    "cds" : "consignment",
+    "wco" : "42A.28A"
+  },
+  {
     "cds" : "locations.warehouseIdentification.identificationNumber",
     "wco" : "42A.67A.43B.L019"
   },
