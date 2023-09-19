@@ -315,7 +315,8 @@ class SubmissionService @Inject() (
 
   private def processPointers(fieldPointers: Seq[String], decId: String): Seq[String] = {
     logProgress(decId, s"Field pointers received from frontend:\n$fieldPointers")
-    val results = fieldPointers.map(exportsPointerToWCOPointer.getWCOPointers)
+
+    val results = pointersAfterRoutingCountriesToParent(fieldPointers, decId).map(exportsPointerToWCOPointer.getWCOPointers)
 
     val (errors, values) = results.partition(_.isLeft)
     val flattenedErrors = errors.collect { case Left(err) => err }
@@ -331,5 +332,18 @@ class SubmissionService @Inject() (
       logProgress(decId, s"Processed WCO pointers:\n$wcoPointers")
       wcoPointers
     }
+  }
+
+  private def pointersAfterRoutingCountriesToParent(fieldPointers: Seq[String], decId: String): Seq[String] = {
+
+    val routingCountriesPredicate = "declaration.locations.routingCountries"
+    val consignmentPointer = "declaration.consignment"
+
+    val (matches, unmatches) = fieldPointers.partition(_.contains(routingCountriesPredicate))
+
+    if (matches.nonEmpty) {
+      logProgress(decId, s"Converted ${matches.length} Routing Country pointers to 1 Consignment pointer")
+      unmatches :+ consignmentPointer
+    } else fieldPointers
   }
 }
