@@ -129,9 +129,6 @@ class SubmissionService @Inject() (
   def findSubmissionsByLatestDecId(eori: String, lrn: String): Future[Option[Submission]] =
     submissionRepository.findByLatestDecId(eori, lrn)
 
-  def markCompleted(eori: Eori, id: String): Future[Option[ExportsDeclaration]] =
-    declarationRepository.markStatusAsComplete(eori, id)
-
   def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] =
     metrics.timeAsyncCall(ExportsMetrics.submissionMonitor) {
       logProgress(declaration.id, "Beginning Declaration Submission")
@@ -265,17 +262,30 @@ class SubmissionService @Inject() (
 
   def submitAmendment(eori: Eori, amendment: SubmissionAmendment, declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[String] =
     metrics.timeAsyncCall(ExportsMetrics.amendmentMonitor) {
-      logProgress(amendment.declarationId, "Beginning Amend Submission.")
+      logProgress(amendment.declarationId, "Beginning amendment submission.")
 
       (for {
         submission <- submissionLookup(eori, amendment.submissionId)
         actionId <- submitAmendmentRequest(declaration, submission, amendment.fieldPointers)
       } yield actionId).recoverWith { case throwable: Throwable =>
-        logProgress(declaration.id, "Amendment failed")
+        logProgress(declaration.id, "Amendment submission failed")
         declarationRepository.revertStatusToAmendmentDraft(declaration) flatMap { _ =>
-          logProgress(declaration.id, "Reverted amendment to AMENDMENT_DRAFT")
+          logProgress(declaration.id, "Reverted status of the amendment to AMENDMENT_DRAFT")
           Future.failed[String](throwable)
         }
+      }
+    }
+
+  def resubmitAmendment(eori: Eori, amendment: SubmissionAmendment, declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[String] =
+    metrics.timeAsyncCall(ExportsMetrics.amendmentMonitor) {
+      logProgress(amendment.declarationId, "Beginning amendment resubmission.")
+
+      (for {
+        submission <- submissionLookup(eori, amendment.submissionId)
+        actionId <- submitAmendmentRequest(declaration, submission, amendment.fieldPointers)
+      } yield actionId).recoverWith { case throwable: Throwable =>
+        logProgress(declaration.id, "Amendment resubmission failed")
+        Future.failed[String](throwable)
       }
     }
 
@@ -283,8 +293,9 @@ class SubmissionService @Inject() (
     implicit hc: HeaderCarrier
   ): Future[String] = {
     val wcoPointers = processPointers(fieldPointers, declaration.id)
-    val metadata =
-      metrics.timeCall(Timers.amendmentProduceMetaDataTimer)(amendmentMetaDataBuilder.buildRequest(submission.mrn, declaration, wcoPointers))
+    val metadata = metrics.timeCall(Timers.amendmentProduceMetaDataTimer) {
+      amendmentMetaDataBuilder.buildRequest(submission.mrn, declaration, wcoPointers)
+    }
     val xml = metrics.timeCall(Timers.amendmentConvertToXmlTimer)(wcoMapperService.toXml(metadata))
     logProgress(declaration.id, s"Generated amendment XML:\n$xml")
 
