@@ -181,6 +181,42 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
     }
   }
 
+  "SubmissionService.resubmitAmendment" should {
+    val mrn = Some("mrn")
+    val amendmentId = "amendmentId"
+    val actionId = "actionId"
+    val submissionAmendment = SubmissionAmendment(id, amendmentId, false, Seq(""))
+    val submission = Submission(id, eori, "lrn", mrn, "ducr", latestDecId = Some(amendmentId))
+    val declaration = aDeclaration(withId(amendmentId), withEori(eori), withConsignmentReferences(mrn = mrn))
+
+    "add an Amendment action to the submission on amend" in {
+      when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Right(Seq("")))
+      when(amendmentMetaDataBuilder.buildRequest(any(), any(), any())).thenReturn(metadata)
+      when(wcoMapperService.toXml(any())).thenReturn(xml)
+      when(customsDeclarationsConnector.submitAmendment(any(), any())(any())).thenReturn(Future.successful(actionId))
+      await(submissionRepository.insertOne(submission))
+
+      await(submissionService.resubmitAmendment(Eori(eori), submissionAmendment, declaration)(HeaderCarrier()))
+
+      val expectedAction = await(submissionRepository.findById(eori, id)).get.actions.head
+      expectedAction.decId.get mustBe amendmentId
+      expectedAction.id mustBe actionId
+      expectedAction.requestType mustBe AmendmentRequest
+      expectedAction.versionNo mustBe submission.latestVersionNo + 1
+    }
+
+    "throw an exception that details the erroneous pointers" in {
+      when(exportsPointerToWCOPointer.getWCOPointers(any())).thenReturn(Left(NoMappingFoundError("some.broken.pointer")))
+      await(submissionRepository.insertOne(submission))
+
+      val caught = intercept[PointerMappingException] {
+        await(submissionService.resubmitAmendment(Eori(eori), submissionAmendment, declaration)(HeaderCarrier()))
+      }
+
+      assert(caught.getMessage === "Unable to map [some.broken.pointer] to any value.")
+    }
+  }
+
   "fetchExternalAmendmentToUpdateSubmission" should {
     val mrn = "MyMucrValue1234"
     val submissionActionId = "b1c09f1b-7c94-4e90-b754-7c5c71c44e01"
