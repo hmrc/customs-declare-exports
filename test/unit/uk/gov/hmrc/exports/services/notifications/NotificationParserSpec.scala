@@ -87,6 +87,16 @@ class NotificationParserSpec extends UnitSpec {
           compareNotificationSequences(result, testNotification.asDomainModel)
         }
       }
+
+      "contains child description element in parent error element" should {
+        "return single NotificationDetails with errors populated with a smartErrorDescription" in {
+          val testNotification = exampleRejectNotification(mrn, withErrorDescription = true)
+
+          val result = notificationParser.parse(testNotification.asXml)
+
+          compareNotificationSequences(result, testNotification.asDomainModel)
+        }
+      }
     }
 
     "provided with notification containing multiple Response elements" should {

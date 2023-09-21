@@ -57,10 +57,11 @@ class NotificationParser extends Logging {
     if ((singleResponseXml \ "Error").nonEmpty) {
       val errorsXml = singleResponseXml \ "Error"
       errorsXml.map { singleErrorXml =>
+        val description = if ((singleErrorXml \ "Description").nonEmpty) Some((singleErrorXml \ "Description").text) else None
         val validationCode = (singleErrorXml \ "ValidationCode").text
         val pointer =
           if ((singleErrorXml \ "Pointer").nonEmpty) buildErrorPointer(singleErrorXml) else None
-        NotificationError(validationCode, pointer)
+        NotificationError(validationCode, pointer, description)
       }
     } else Seq.empty
 

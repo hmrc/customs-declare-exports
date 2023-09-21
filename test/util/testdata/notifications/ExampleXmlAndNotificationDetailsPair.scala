@@ -101,76 +101,84 @@ object ExampleXmlAndNotificationDetailsPair {
   def exampleRejectNotification(
     mrn: String,
     dateTime: String = TimeUtils.now().format(formatter304),
-    with67ASequenceNo: Boolean = false
-  ): ExampleXmlAndNotificationDetailsPair = ExampleXmlAndNotificationDetailsPair(
-    asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
-      <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
-      <WCOTypeName>RES</WCOTypeName>
-      <ResponsibleCountryCode/>
-      <ResponsibleAgencyName/>
-      <AgencyAssignedCustomizationCode/>
-      <AgencyAssignedCustomizationVersionCode/>
-      <Response>
-        <FunctionCode>03</FunctionCode>
-        <FunctionalReferenceID>6be6c6f61f0346748016b823eeda669d</FunctionalReferenceID>
-        <IssueDateTime>
-          <DateTimeString formatCode="304">{dateTime}</DateTimeString>
-        </IssueDateTime>
-        <Error>
-          <ValidationCode>CDS10020</ValidationCode>
-          <Pointer>
-            <DocumentSectionCode>42A</DocumentSectionCode>
-          </Pointer>
-          <Pointer>
-            {if (with67ASequenceNo) <SequenceNumeric>1</SequenceNumeric>}
-            <DocumentSectionCode>67A</DocumentSectionCode>
-          </Pointer>
-          <Pointer>
-            <SequenceNumeric>1</SequenceNumeric>
-            <DocumentSectionCode>68A</DocumentSectionCode>
-          </Pointer>
-          <Pointer>
-            <SequenceNumeric>2</SequenceNumeric>
-            <DocumentSectionCode>02A</DocumentSectionCode>
-            <TagID>360</TagID>
-          </Pointer>
-        </Error>
-        <Declaration>
-          <FunctionalReferenceID>NotificationTest</FunctionalReferenceID>
-          <ID>{mrn}</ID>
-          <RejectionDateTime>
-            <DateTimeString formatCode="304">20190328092916Z</DateTimeString>
-          </RejectionDateTime>
-          <VersionID>1</VersionID>
-        </Declaration>
-      </Response>
-    </MetaData>,
-    asDomainModel = Seq(
-      NotificationDetails(
-        mrn = mrn,
-        dateTimeIssued = ZonedDateTime.parse(dateTime, formatter304),
-        status = SubmissionStatus.REJECTED,
-        Some(1),
-        errors = Seq(
-          NotificationError(
-            validationCode = "CDS10020",
-            pointer = Some(
-              Pointer(
-                Seq(
-                  PointerSection("declaration", FIELD),
-                  PointerSection("items", FIELD),
-                  PointerSection("1", SEQUENCE),
-                  PointerSection("additionalDocument", FIELD),
-                  PointerSection("2", SEQUENCE),
-                  PointerSection("documentStatus", FIELD)
+    with67ASequenceNo: Boolean = false,
+    withErrorDescription: Boolean = false
+  ): ExampleXmlAndNotificationDetailsPair = {
+
+    val errorDescription = if (withErrorDescription) Some("Extra description") else None
+
+    ExampleXmlAndNotificationDetailsPair(
+      asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+        <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
+        <WCOTypeName>RES</WCOTypeName>
+        <ResponsibleCountryCode/>
+        <ResponsibleAgencyName/>
+        <AgencyAssignedCustomizationCode/>
+        <AgencyAssignedCustomizationVersionCode/>
+        <Response>
+          <FunctionCode>03</FunctionCode>
+          <FunctionalReferenceID>6be6c6f61f0346748016b823eeda669d</FunctionalReferenceID>
+          <IssueDateTime>
+            <DateTimeString formatCode="304">{dateTime}</DateTimeString>
+          </IssueDateTime>
+          <Error>
+            {if (withErrorDescription) <Description>{errorDescription.get}</Description>}
+            <ValidationCode>CDS10020</ValidationCode>
+            <Pointer>
+              <DocumentSectionCode>42A</DocumentSectionCode>
+            </Pointer>
+            <Pointer>
+              {if (with67ASequenceNo) <SequenceNumeric>1</SequenceNumeric>}
+              <DocumentSectionCode>67A</DocumentSectionCode>
+            </Pointer>
+            <Pointer>
+              <SequenceNumeric>1</SequenceNumeric>
+              <DocumentSectionCode>68A</DocumentSectionCode>
+            </Pointer>
+            <Pointer>
+              <SequenceNumeric>2</SequenceNumeric>
+              <DocumentSectionCode>02A</DocumentSectionCode>
+              <TagID>360</TagID>
+            </Pointer>
+          </Error>
+          <Declaration>
+            <FunctionalReferenceID>NotificationTest</FunctionalReferenceID>
+            <ID>{mrn}</ID>
+            <RejectionDateTime>
+              <DateTimeString formatCode="304">20190328092916Z</DateTimeString>
+            </RejectionDateTime>
+            <VersionID>1</VersionID>
+          </Declaration>
+        </Response>
+      </MetaData>,
+      asDomainModel = Seq(
+        NotificationDetails(
+          mrn = mrn,
+          dateTimeIssued = ZonedDateTime.parse(dateTime, formatter304),
+          status = SubmissionStatus.REJECTED,
+          Some(1),
+          errors = Seq(
+            NotificationError(
+              validationCode = "CDS10020",
+              pointer = Some(
+                Pointer(
+                  Seq(
+                    PointerSection("declaration", FIELD),
+                    PointerSection("items", FIELD),
+                    PointerSection("1", SEQUENCE),
+                    PointerSection("additionalDocument", FIELD),
+                    PointerSection("2", SEQUENCE),
+                    PointerSection("documentStatus", FIELD)
+                  )
                 )
-              )
+              ),
+              errorDescription
             )
           )
         )
       )
     )
-  )
+  }
 
   def exampleNotificationWithMultipleResponses(
     mrn: String,
@@ -328,5 +336,4 @@ object ExampleXmlAndNotificationDetailsPair {
     </MetaData>,
       asDomainModel = Seq.empty
     )
-
 }
