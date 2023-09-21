@@ -28,14 +28,17 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
 
   private val builder = new AdditionalInformationBuilder()
 
-  "build then add from ExportsDeclaration" should {
-    "no additional information" in {
-      val exportItem = anItem(withoutAdditionalInformation())
-      val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
+  "AdditionalInformationBuilder" should {
 
-      builder.buildThenAdd(exportItem, governmentAgencyGoodsItem)
+    "not populate the relative section" when {
+      "no additional information are present" in {
+        val exportItem = anItem(withoutAdditionalInformation())
+        val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
 
-      governmentAgencyGoodsItem.getAdditionalInformation mustBe empty
+        builder.buildThenAdd(exportItem, governmentAgencyGoodsItem)
+
+        governmentAgencyGoodsItem.getAdditionalInformation mustBe empty
+      }
     }
 
     "populated additional information" in {
@@ -55,33 +58,35 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
         .getValue mustBe additionalInformation.description
     }
 
-    "populate additional information given declarantIsExporter when user has NOT already given additional info" in {
-      val declaration = aDeclaration(withDeclarantIsExporter())
-      val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
+    "populate additional information given declarantIsExporter" when {
+      "the user has NOT already given additional info" in {
+        val declaration = aDeclaration(withDeclarantIsExporter())
+        val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
 
-      builder.buildThenAdd(anItem(), declaration.parties.declarantIsExporter, governmentAgencyGoodsItem)
+        builder.buildThenAdd(anItem(), declaration.parties.declarantIsExporter, governmentAgencyGoodsItem)
 
-      governmentAgencyGoodsItem.getAdditionalInformation.size must be(1)
-      governmentAgencyGoodsItem.getAdditionalInformation
-        .get(0)
-        .getStatementCode
-        .getValue mustBe additionalInformationForExporter.code
-      governmentAgencyGoodsItem.getAdditionalInformation
-        .get(0)
-        .getStatementDescription
-        .getValue mustBe additionalInformationForExporter.description
-
+        governmentAgencyGoodsItem.getAdditionalInformation.size must be(1)
+        governmentAgencyGoodsItem.getAdditionalInformation
+          .get(0)
+          .getStatementCode
+          .getValue mustBe additionalInformationForExporter.code
+        governmentAgencyGoodsItem.getAdditionalInformation
+          .get(0)
+          .getStatementDescription
+          .getValue mustBe additionalInformationForExporter.description
+      }
     }
 
-    "NOT populate additional information given declarantIsExporter when user has already given additional info" in {
-      val exportItem = anItem(withAdditionalInformation(additionalInformationForExporter))
-      val declaration = aDeclaration(withDeclarantIsExporter())
-      val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
+    "NOT populate additional information given declarantIsExporter" when {
+      "user has already given additional info" in {
+        val exportItem = anItem(withAdditionalInformation(additionalInformationForExporter))
+        val declaration = aDeclaration(withDeclarantIsExporter())
+        val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
 
-      builder.buildThenAdd(exportItem, declaration.parties.declarantIsExporter, governmentAgencyGoodsItem)
+        builder.buildThenAdd(exportItem, declaration.parties.declarantIsExporter, governmentAgencyGoodsItem)
 
-      governmentAgencyGoodsItem.getAdditionalInformation mustBe empty
-
+        governmentAgencyGoodsItem.getAdditionalInformation mustBe empty
+      }
     }
 
     "remove new-lines from additional information description" in {

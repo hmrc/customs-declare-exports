@@ -160,7 +160,6 @@ object AmendmentMetaDataBuilderISpec {
       |        <ns3:GoodsItemQuantity>1</ns3:GoodsItemQuantity>
       |        <ns3:AdditionalInformation>
       |            <ns3:StatementCode>RRS01</ns3:StatementCode>
-      |            <ns3:StatementDescription>Unknown</ns3:StatementDescription>
       |        </ns3:AdditionalInformation>
       |        <ns3:AdditionalInformation>
       |            <ns3:StatementDescription>None</ns3:StatementDescription>
@@ -307,7 +306,6 @@ object AmendmentMetaDataBuilderISpec {
       |        <ns3:GoodsItemQuantity>1</ns3:GoodsItemQuantity>
       |        <ns3:AdditionalInformation>
       |            <ns3:StatementCode>RRS01</ns3:StatementCode>
-      |            <ns3:StatementDescription>Unknown</ns3:StatementDescription>
       |        </ns3:AdditionalInformation>
       |        <ns3:AdditionalInformation>
       |            <ns3:StatementDescription>None</ns3:StatementDescription>

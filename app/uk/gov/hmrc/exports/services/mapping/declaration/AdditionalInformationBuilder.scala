@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import uk.gov.hmrc.exports.models.declaration.{EntityDetails, ExportsDeclaration}
+import uk.gov.hmrc.exports.models.declaration.AdditionalInformation.codeForGVMS
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.AdditionalInformation.Pointer
@@ -31,32 +32,19 @@ import javax.inject.Inject
 
 class AdditionalInformationBuilder @Inject() () extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
-  override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit = {
-    val isGVMPort = model.locations.goodsLocation.flatMap(_.identificationOfLocation).exists(_.takeRight(3).toUpperCase == "GVM")
-    if (isGVMPort) declaration.getAdditionalInformation.add(buildAdditionalInformation(model))
-  }
-
-  private def buildAdditionalInformation(model: ExportsDeclaration): Declaration.AdditionalInformation = {
+  private lazy val additionalInformationForGMVS = {
     val additionalInformation = new Declaration.AdditionalInformation()
 
     val statementCode = new AdditionalInformationStatementCodeType()
-    statementCode.setValue("RRS01")
-
-    val maybeCarrierDetails = model.parties.carrierDetails.map(_.details)
-
-    val description = maybeCarrierDetails match {
-      case Some(EntityDetails(Some(eori), _))    => eori
-      case Some(EntityDetails(_, Some(address))) => address.fullName
-      case _                                     => "Unknown"
-    }
-
-    val statementDescription = new AdditionalInformationStatementDescriptionTextType()
-    statementDescription.setValue(description)
+    statementCode.setValue(codeForGVMS)
 
     additionalInformation.setStatementCode(statementCode)
-    additionalInformation.setStatementDescription(statementDescription)
-
     additionalInformation
+  }
+
+  override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit = {
+    val isGVMPort = model.locations.goodsLocation.flatMap(_.identificationOfLocation).exists(_.takeRight(3).toUpperCase == "GVM")
+    if (isGVMPort) declaration.getAdditionalInformation.add(additionalInformationForGMVS)
   }
 
   def buildThenAdd(statementDescription: String, declaration: Declaration, sequenceIndex: Int = 1): Unit = {
