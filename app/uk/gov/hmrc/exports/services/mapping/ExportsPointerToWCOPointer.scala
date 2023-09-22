@@ -137,7 +137,7 @@ private object PointersReads extends ConstraintReads {
         "items.$1.nactCode.$2",
         "items.$1.taricCode.$2",
         "items.$1.procedureCodes.additionalProcedureCodes.$2",
-        "locations.destinationCountries.countriesOfRouting.$1"
+        "locations.routingCountries.$1"
       ) contains pointer
     ) pointer.dropRight(3)
     else pointer
