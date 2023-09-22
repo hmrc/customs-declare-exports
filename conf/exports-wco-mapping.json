@@ -179,7 +179,7 @@
   },
   {
     "cds" : "locations.routingCountries.$1",
-    "wco" : "42A.28A.62A.$1"
+    "wco" : "42A.28A.$1"
   },
   {
     "cds" : "locations.warehouseIdentification.identificationNumber",
