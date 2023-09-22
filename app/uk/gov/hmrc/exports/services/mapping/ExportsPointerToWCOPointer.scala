@@ -132,8 +132,14 @@ private object PointersReads extends ConstraintReads {
   // Example: There can be up to 99 taric or nact codes, but we will point to the Commodity element if any of these change.
   // These are handled by removing the final sequence id so that this class will parse them.
   def convertManyToOnePointers(pointer: String): String =
-    if (Seq("items.$1.nactCode.$2", "items.$1.taricCode.$2", "items.$1.procedureCodes.additionalProcedureCodes.$2").contains(pointer))
-      pointer.dropRight(3)
+    if (
+      Seq(
+        "items.$1.nactCode.$2",
+        "items.$1.taricCode.$2",
+        "items.$1.procedureCodes.additionalProcedureCodes.$2",
+        "locations.routingCountries.$1"
+      ) contains pointer
+    ) pointer.dropRight(3)
     else pointer
 
 }
