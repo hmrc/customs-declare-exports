@@ -139,6 +139,8 @@ case class AdditionalInformation(code: String, description: String)
 
 object AdditionalInformation {
   implicit val format: OFormat[AdditionalInformation] = Json.format[AdditionalInformation]
+
+  val codeForGVMS = "RRS01"
 }
 
 case class AdditionalInformations(isRequired: Option[YesNoAnswer], items: Seq[AdditionalInformation])

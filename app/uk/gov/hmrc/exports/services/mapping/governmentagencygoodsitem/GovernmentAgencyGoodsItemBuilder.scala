@@ -39,8 +39,8 @@ class GovernmentAgencyGoodsItemBuilder @Inject() (
 
   private val journeysWithCommodityMeasurements = Set(DeclarationType.STANDARD, DeclarationType.SUPPLEMENTARY, DeclarationType.CLEARANCE)
 
-  override def buildThenAdd(exportsCacheModel: ExportsDeclaration, goodsShipment: Declaration.GoodsShipment): Unit =
-    exportsCacheModel.items.foreach { exportItem =>
+  override def buildThenAdd(declaration: ExportsDeclaration, goodsShipment: Declaration.GoodsShipment): Unit =
+    declaration.items.foreach { exportItem =>
       val wcoGovernmentAgencyGoodsItem = new WCOGovernmentAgencyGoodsItem
       wcoGovernmentAgencyGoodsItem.setSequenceNumeric(new java.math.BigDecimal(exportItem.sequenceId))
 
@@ -48,10 +48,10 @@ class GovernmentAgencyGoodsItemBuilder @Inject() (
       packagingBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
       governmentProcedureBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
       additionalInformationBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
-      additionalInformationBuilder.buildThenAdd(exportItem, exportsCacheModel.parties.declarantIsExporter, wcoGovernmentAgencyGoodsItem)
+      additionalInformationBuilder.buildThenAdd(exportItem, declaration.parties.declarantIsExporter, wcoGovernmentAgencyGoodsItem)
       additionalDocumentsBuilder.buildThenAdd(exportItem, wcoGovernmentAgencyGoodsItem)
 
-      buildCommodityMeasurements(exportItem, wcoGovernmentAgencyGoodsItem, exportsCacheModel.`type`)
+      buildCommodityMeasurements(exportItem, wcoGovernmentAgencyGoodsItem, declaration.`type`)
 
       exportItem.additionalFiscalReferencesData.foreach(
         _.references

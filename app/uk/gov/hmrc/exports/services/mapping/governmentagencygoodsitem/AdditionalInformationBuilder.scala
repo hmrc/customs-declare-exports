@@ -53,16 +53,16 @@ class AdditionalInformationBuilder @Inject() () extends ModifyingBuilder[ExportI
     }
   }
 
-  private def buildAdditionalInformation(info: AdditionalInformation): WCOAdditionalInformation = {
+  private def buildAdditionalInformation(additionalInformation: AdditionalInformation): WCOAdditionalInformation = {
     val wcoAdditionalInformation = new WCOAdditionalInformation
 
     val additionalInformationStatementCodeType = new AdditionalInformationStatementCodeType
-    additionalInformationStatementCodeType.setValue(info.code)
+    additionalInformationStatementCodeType.setValue(additionalInformation.code)
     wcoAdditionalInformation.setStatementCode(additionalInformationStatementCodeType)
 
-    if (info.description.nonEmpty) {
+    if (additionalInformation.description.nonEmpty) {
       val additionalInformationStatementDescriptionTextType = new AdditionalInformationStatementDescriptionTextType
-      additionalInformationStatementDescriptionTextType.setValue(stripCarriageReturns(info.description))
+      additionalInformationStatementDescriptionTextType.setValue(stripCarriageReturns(additionalInformation.description))
       wcoAdditionalInformation.setStatementDescription(additionalInformationStatementDescriptionTextType)
     }
 

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.declaration.Address
+import uk.gov.hmrc.exports.models.declaration.AdditionalInformation.codeForGVMS
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.GoodsLocationBuilderSpec.{gvmGoodsLocation, validGoodsLocation}
 import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, ExportsItemBuilder}
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -25,8 +25,6 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder with ExportsDeclarationBuilder {
 
   private val builder = new AdditionalInformationBuilder()
-
-  private val RRS01 = "RRS01"
 
   "buildThenAdd from ExportsDeclaration" should {
 
@@ -63,46 +61,21 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
         builder.buildThenAdd(model, declaration)
         declaration.getAdditionalInformation.size() mustBe 0
       }
+    }
 
-      s"add an AdditionalInformation element at header level with 'StatementCode' value of '$RRS01'" when {
-        "GoodsLocation code ends with 'GVM'" which {
-          "has a 'StatementDescription' value that equals the carrier's EORI number when user supplied the carrier's EORI number" in {
-            val model = aDeclaration(withGoodsLocation(gvmGoodsLocation), withCarrierDetails(eori = Some(VALID_EORI), address = None))
-            val declaration = new Declaration()
-            builder.buildThenAdd(model, declaration)
+    s"add an AdditionalInformation element at header level with StatementCode as '$codeForGVMS' and no StatementDescription" when {
+      "GoodsLocation code ends with 'GVM'" in {
+        val model = aDeclaration(withGoodsLocation(gvmGoodsLocation))
+        val declaration = new Declaration()
+        builder.buildThenAdd(model, declaration)
 
-            validateAdditionalInformationAtHeaderLevel(declaration, VALID_EORI)
-          }
+        declaration.getAdditionalInformation.size() mustBe 1
 
-          "has a 'StatementDescription' value that equals the carrier's 'full name' when user supplied the carrier's address" in {
-            val carrierName = "XYZ Carrier"
-            val model = aDeclaration(
-              withGoodsLocation(gvmGoodsLocation),
-              withCarrierDetails(eori = None, Some(Address(carrierName, "School Road", "London", "WS1 2AB", "United Kingdom")))
-            )
-            val declaration = new Declaration()
-            builder.buildThenAdd(model, declaration)
-
-            validateAdditionalInformationAtHeaderLevel(declaration, carrierName)
-          }
-
-          "has a 'StatementDescription' value that equals 'Unknown' when user does not supply any carrier details" in {
-            val model = aDeclaration(withGoodsLocation(gvmGoodsLocation), withoutCarrierDetails())
-            val declaration = new Declaration()
-            builder.buildThenAdd(model, declaration)
-
-            validateAdditionalInformationAtHeaderLevel(declaration, "Unknown")
-          }
-        }
+        val additionalInformationOnGVMS = declaration.getAdditionalInformation.get(0)
+        additionalInformationOnGVMS.getStatementCode.getValue mustBe codeForGVMS
+        Option(additionalInformationOnGVMS.getStatementDescription) mustBe None
       }
     }
-  }
-
-  private def validateAdditionalInformationAtHeaderLevel(declaration: Declaration, expectedStatementDescription: String) = {
-    val additionalInformationElementsAtHeader = declaration.getAdditionalInformation
-    additionalInformationElementsAtHeader.size() mustBe 1
-    additionalInformationElementsAtHeader.get(0).getStatementCode.getValue mustBe RRS01
-    additionalInformationElementsAtHeader.get(0).getStatementDescription.getValue mustBe expectedStatementDescription
   }
 
   "buildThenAdd from just a description" should {
