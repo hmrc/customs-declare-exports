@@ -73,6 +73,13 @@ class DeclarationController @Inject() (
     }
   }
 
+  def findDraftByParent(parentId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    declarationService.findDraftByParent(request.eori, parentId).map {
+      case Some(declaration) => Ok(declaration)
+      case None              => NotFound
+    }
+  }
+
   def deleteById(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     declarationService.findOne(request.eori, id).flatMap {
       case Some(declaration) if declaration.status == DeclarationStatus.COMPLETE =>

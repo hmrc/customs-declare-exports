@@ -2,8 +2,9 @@ package uk.gov.hmrc.exports.services
 
 import uk.gov.hmrc.exports.base.{IntegrationTestSpec, MockMetrics}
 import uk.gov.hmrc.exports.models.Eori
-import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.{AMENDMENT_DRAFT, DRAFT}
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{CLEARED, ERRORS}
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus._
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.services.DeclarationService.{CREATED, FOUND}
 
@@ -89,6 +90,83 @@ class DeclarationServiceISpec extends IntegrationTestSpec with MockMetrics {
         meta.parentDeclarationEnhancedStatus.value mustBe ERRORS
         meta.status mustBe AMENDMENT_DRAFT
       }
+    }
+  }
+
+  "DeclarationService.findDraftByParent" should {
+    "return None" when {
+      "a draft declaration with 'parentDeclarationId' equal to the given parentId was NOT found" in {
+        val result = declarationService.findDraftByParent(eori, parentId)
+        result.futureValue mustBe None
+      }
+
+      "a draft declaration with 'parentDeclarationId' equal to the given parentId was found BUT " when {
+        for (
+          enhancedStaus <- Seq(
+            ADDITIONAL_DOCUMENTS_REQUIRED,
+            AMENDED,
+            AWAITING_EXIT_RESULTS,
+            CANCELLED,
+            CLEARED,
+            CUSTOMS_POSITION_DENIED,
+            CUSTOMS_POSITION_GRANTED,
+            DECLARATION_HANDLED_EXTERNALLY,
+            EXPIRED_NO_ARRIVAL,
+            EXPIRED_NO_DEPARTURE,
+            GOODS_ARRIVED,
+            GOODS_ARRIVED_MESSAGE,
+            GOODS_HAVE_EXITED,
+            QUERY_NOTIFICATION_MESSAGE,
+            RECEIVED,
+            RELEASED,
+            UNDERGOING_PHYSICAL_CHECK,
+            WITHDRAWN,
+            PENDING,
+            REQUESTED_CANCELLATION,
+            ON_HOLD,
+            UNKNOWN
+          )
+        )
+          s"declaration's ParentDeclarationEnhancedStatus is not 'ERROR' but '$enhancedStaus'" in {
+            val declaration = aDeclaration(withEori(eori), withParentDeclarationId(parentId), withParentDeclarationEnhancedStatus(enhancedStaus))
+            declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
+
+            val result = declarationService.findDraftByParent(eori, parentId)
+            result.futureValue mustBe None
+          }
+      }
+
+      "a draft declaration with 'parentDeclarationId' equal to the given parentId was found BUT " when {
+        for (status <- Seq(INITIAL, COMPLETE))
+          s"declaration's status is not 'DRAFT' or 'AMENDMENT_DRAFT' but '$status'" in {
+            val declaration = aDeclaration(
+              withEori(eori),
+              withParentDeclarationId(parentId),
+              withParentDeclarationEnhancedStatus(EnhancedStatus.ERRORS),
+              withStatus(status)
+            )
+            declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
+
+            val result = declarationService.findDraftByParent(eori, parentId)
+            result.futureValue mustBe None
+          }
+      }
+    }
+
+    "return Some declaration" when {
+      for (status <- Seq(DRAFT, AMENDMENT_DRAFT))
+        s"a draft declaration with a matching 'parentDeclarationId' and a parentEnhanced status of 'ERROR' and parentDeclarationEnhancedStatus of '$status' existis" in {
+          val declaration = aDeclaration(
+            withEori(eori),
+            withParentDeclarationId(parentId),
+            withParentDeclarationEnhancedStatus(EnhancedStatus.ERRORS),
+            withStatus(status)
+          )
+          declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
+
+          val result = declarationService.findDraftByParent(eori, parentId)
+          result.futureValue mustBe Some(declaration)
+        }
     }
   }
 }
