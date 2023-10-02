@@ -22,6 +22,7 @@ import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.{ContainerKey, Rou
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
 
 import java.time.{Instant, ZoneOffset, ZonedDateTime}
 
@@ -73,6 +74,9 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
   def withParentDeclarationId(parentId: String): ExportsDeclarationModifier =
     cache => cache.copy(declarationMeta = cache.declarationMeta.copy(parentDeclarationId = Some(parentId)))
+
+  def withParentDeclarationEnhancedStatus(status: EnhancedStatus): ExportsDeclarationModifier =
+    cache => cache.copy(declarationMeta = cache.declarationMeta.copy(parentDeclarationEnhancedStatus = Some(status)))
 
   def withEori(eori: String): ExportsDeclarationModifier = _.copy(eori = eori)
 

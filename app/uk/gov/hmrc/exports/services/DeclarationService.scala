@@ -21,6 +21,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.{AMENDMENT_DRAFT, COMPLETE, DRAFT}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.services.DeclarationService.{CREATED, FOUND}
@@ -75,6 +76,16 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
 
   def find(search: DeclarationSearch, pagination: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] =
     declarationRepository.find(search, pagination, sort)
+
+  def findDraftByParent(eori: Eori, parentId: String): Future[Option[ExportsDeclaration]] = {
+    val filter = Json.obj(
+      "eori" -> eori,
+      "declarationMeta.parentDeclarationId" -> parentId,
+      "declarationMeta.status" -> Json.obj("$in" -> Json.arr(AMENDMENT_DRAFT.toString, DRAFT.toString)),
+      "declarationMeta.parentDeclarationEnhancedStatus" -> EnhancedStatus.ERRORS.toString
+    )
+    declarationRepository.findOne(filter)
+  }
 
   def findOne(eori: Eori, id: String): Future[Option[ExportsDeclaration]] =
     declarationRepository.findOne(eori, id)

@@ -444,6 +444,47 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
     }
   }
 
+  "DeclarationController.findDraftByParent" should {
+    val parentId = "parentId"
+    val getRequest = FakeRequest()
+
+    val declaration = aDeclaration(withId("id"), withEori(userEori), withStatus(DeclarationStatus.COMPLETE))
+
+    "return 200" when {
+      "request is valid" in {
+        when(declarationService.findDraftByParent(any[Eori], refEq(parentId)))
+          .thenReturn(Future.successful(Some(declaration)))
+
+        val result = controller.findDraftByParent(parentId)(getRequest)
+
+        status(result) must be(OK)
+        contentAsJson(result) mustBe toJson(declaration)
+      }
+    }
+
+    "return 404" when {
+      "id is not found" in {
+        when(declarationService.findDraftByParent(any[Eori], refEq(parentId)))
+          .thenReturn(Future.successful(None))
+
+        val result = controller.findDraftByParent(parentId)(getRequest)
+
+        status(result) must be(NOT_FOUND)
+      }
+    }
+
+    "return 401" when {
+      "unauthorized" in {
+        withUnauthorizedUser(InsufficientEnrolments())
+
+        val result = controller.findDraftByParent(parentId)(getRequest)
+
+        status(result) must be(UNAUTHORIZED)
+        verifyNoInteractions(declarationService)
+      }
+    }
+  }
+
   def theDeclarationCreated: ExportsDeclaration = {
     val captor: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
     verify(declarationService).create(captor.capture)
