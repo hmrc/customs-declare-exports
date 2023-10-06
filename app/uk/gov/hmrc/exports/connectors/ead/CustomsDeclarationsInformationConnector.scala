@@ -47,7 +47,7 @@ class CustomsDeclarationsInformationConnector @Inject() (mrnStatusParser: MrnSta
             logger.debug(s"CUSTOMS_DECLARATIONS_INFORMATION: fetch MRN full declaration response ${response.body}")
             xml.XML.loadString(response.body)
           case status =>
-            logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION: fetch MRN status response ${response.body}")
+            logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION: fetch MRN full declaration response ${response.body}")
             throw new InternalServerException(s"Customs Declarations Information Service (DIS) returned [$status]")
         }
       } recoverWith { case _: org.xml.sax.SAXParseException =>
