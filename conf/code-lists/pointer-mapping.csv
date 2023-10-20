@@ -43,7 +43,7 @@
 42A.67A.28A.46A.T020,declaration.departureTransport.meansOfTransportOnDepartureType
 42A.67A.28A.64A.L016,declaration.locations.goodsLocation.nameOfLocation
 42A.67A.28A.64A.L017,declaration.locations.goodsLocation.identificationOfLocation
-42A.67A.28A.64A.L110,declaration.locations.goodsLocation.qualifierOfIdentification
+42A.67A.28A.64A.L110,declaration.locations.goodsLocation.identificationOfLocation
 42A.67A.28A.64A.04A.410,declaration.locations.goodsLocation.typeOfLocation
 42A.67A.28A.64A.04A.241,declaration.locations.goodsLocation.city
 42A.67A.28A.64A.04A.242,declaration.locations.goodsLocation.country
@@ -53,6 +53,7 @@
 42A.67A.28A.31B.$1.44B.$2.165,declaration.containers.container.$1.seals.seal.$2.id
 42A.67A.99B.465,declaration.locations.destinationCountries.countryOfDestination
 42A.67A.95B.062,declaration.locations.destinationCountries.countryOfDispatch
+42A.67A.68A.$1,declaration.items.$1
 42A.67A.68A.$1.114,declaration.items.$1.statisticalValue.statisticalValue
 42A.67A.68A.$1.02A,declaration.items.$1.additionalDocument
 42A.67A.68A.$1.02A.$2.D005,declaration.items.$1.additionalDocument.$2.documentIdentifier
@@ -67,7 +68,7 @@
 42A.67A.68A.$1.23A.137,declaration.items.$1.commodityDetails.descriptionOfGoods
 42A.67A.68A.$1.23A.21A,declaration.items.$1.commodityDetails
 42A.67A.68A.$1.23A.21A.145,declaration.items.$1.cusCode.id
-42A.67A.68A.$1.23A.337,declaration.items.$1.cusCode.cusCode
+42A.67A.68A.$1.23A.337,declaration.items.$1.cusCode.id
 42A.67A.68A.$1.23A.12C.506,declaration.items.$1.dangerousGoodsCode.dangerousGoodsCode
 42A.67A.68A.$1.23A.65A.126,declaration.items.$1.commodityMeasure.grossMass
 42A.67A.68A.$1.23A.65A.128,declaration.items.$1.commodityMeasure.netMass
@@ -75,7 +76,7 @@
 42A.67A.68A.$1.23A.65A.55B.$2.R119,declaration.items.$1.additionalFiscalReferences.$2.id
 42A.67A.68A.$1.23A.55B.$2.R005,declaration.items.$1.additionalFiscalReferences.$2.roleCode
 42A.67A.68A.$1.23A.70A.166,declaration.items.$1.procedureCodes.procedureCode.current
-42A.67A.68A.$1.23A.70A.161,declaration.items.$1.procedureCodes.procedureCode.previous
+42A.67A.68A.$1.23A.70A.161,declaration.items.$1.procedureCodes.procedureCode.current
 42A.67A.68A.$1.23A.93A.$2.142,declaration.items.$1.packageInformation.$2.shippingMarks
 42A.67A.68A.$1.23A.93A.$2.144,declaration.items.$1.packageInformation.$2.numberOfPackages
 42A.67A.68A.$1.23A.93A.$2.141,declaration.items.$1.packageInformation.$2.typesOfPackages
@@ -84,6 +85,6 @@
 42A.67A.99A.$1.D019,declaration.previousDocuments.$1.documentType
 42A.67A.99A.$1.171,declaration.previousDocuments.$1.goodsItemIdentifier
 42A.67A.43B.L019,declaration.locations.warehouseIdentification.identificationNumber
-42A.67A.43B.L112,declaration.locations.warehouseIdentification.identificationType
+42A.67A.43B.L112,declaration.locations.warehouseIdentification.identificationNumber
 42A.97B.G012,declaration.locations.warehouseIdentification.supervisingCustomsOffice
 42A.67A.68A.$1.35B.009,declaration.consignmentReferences.ucr
