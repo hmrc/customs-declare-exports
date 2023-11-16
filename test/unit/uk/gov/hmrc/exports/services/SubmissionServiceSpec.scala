@@ -27,6 +27,7 @@ import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData.DEFAULT_LIMIT
+import uk.gov.hmrc.exports.models.declaration.submissions.CancellationStatus.CancellationResult
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{CUSTOMS_POSITION_GRANTED, PENDING, WITHDRAWN}
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
 import uk.gov.hmrc.exports.models.declaration.submissions._
@@ -121,7 +122,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
           when(submissionRepository.addAction(any[String](), any[Action]())).thenReturn(Future.successful(Some(submission)))
 
-          submissionService.cancel(eori, cancellation).futureValue mustBe CancellationRequestSent
+          submissionService.cancel(eori, cancellation).futureValue mustBe CancellationResult(CancellationRequestSent, Some("conv-id"))
 
           verify(submissionRepository).addAction(any[String](), captor.capture())
 
@@ -136,7 +137,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(None))
 
-        submissionService.cancel(eori, cancellation).futureValue mustBe NotFound
+        submissionService.cancel(eori, cancellation).futureValue mustBe CancellationResult(NotFound, None)
       }
 
       "submission exists and previously cancelled" in {
@@ -145,7 +146,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submissionCancelled)))
 
-        submissionService.cancel(eori, cancellation).futureValue mustBe CancellationAlreadyRequested
+        submissionService.cancel(eori, cancellation).futureValue mustBe CancellationResult(CancellationAlreadyRequested, None)
       }
     }
   }
