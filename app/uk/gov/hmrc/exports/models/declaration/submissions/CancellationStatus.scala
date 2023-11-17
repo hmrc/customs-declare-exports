@@ -71,7 +71,7 @@ object CancellationStatus {
 
       def writes(result: CancellationResult): JsValue = {
         val baseJson = Json.obj("status" -> Json.toJson(result.status))
-        result.conversationId.map(msg => baseJson ++ Json.obj("conversationId" -> Json.toJson(msg))).getOrElse(baseJson)
+        result.conversationId.map(msg => baseJson ++ Json.obj("conversationId" -> msg)).getOrElse(baseJson)
       }
     }
   }
