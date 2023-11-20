@@ -122,7 +122,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
           when(submissionRepository.addAction(any[String](), any[Action]())).thenReturn(Future.successful(Some(submission)))
 
-          submissionService.cancel(eori, cancellation).futureValue mustBe CancellationResult(CancellationRequestSent, Some("conv-id"))
+          submissionService.cancelDeclaration(eori, cancellation).futureValue mustBe CancellationResult(CancellationRequestSent, Some("conv-id"))
 
           verify(submissionRepository).addAction(any[String](), captor.capture())
 
@@ -137,7 +137,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(None))
 
-        submissionService.cancel(eori, cancellation).futureValue mustBe CancellationResult(NotFound, None)
+        submissionService.cancelDeclaration(eori, cancellation).futureValue mustBe CancellationResult(NotFound, None)
       }
 
       "submission exists and previously cancelled" in {
@@ -146,7 +146,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(customsDeclarationsConnector.submitCancellation(any(), any())(any())).thenReturn(Future.successful("conv-id"))
         when(submissionRepository.findOne(any[JsValue])).thenReturn(Future.successful(Some(submissionCancelled)))
 
-        submissionService.cancel(eori, cancellation).futureValue mustBe CancellationResult(CancellationAlreadyRequested, None)
+        submissionService.cancelDeclaration(eori, cancellation).futureValue mustBe CancellationResult(CancellationAlreadyRequested, None)
       }
     }
   }
