@@ -20,6 +20,8 @@ GET         /fetch-dis-declaration/:mrn/:actionId/:submissionId     uk.gov.hmrc.
 
 POST        /cancellations                                          uk.gov.hmrc.exports.controllers.CancellationController.create
 
+POST        /cancellation-request                                  uk.gov.hmrc.exports.controllers.CancellationController.createCancellation
+
 GET         /lrn-already-used/:lrn                                  uk.gov.hmrc.exports.controllers.SubmissionController.isLrnAlreadyUsed(lrn: String)
 
 GET         /paginated-submissions                                  uk.gov.hmrc.exports.controllers.SubmissionController.fetchPage

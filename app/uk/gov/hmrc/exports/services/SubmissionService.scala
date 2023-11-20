@@ -24,6 +24,7 @@ import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnecto
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timers
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
+import uk.gov.hmrc.exports.models.declaration.submissions.CancellationStatus.CancellationResult
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.{StatusGroup, SubmittedStatuses}
 import uk.gov.hmrc.exports.models.declaration.submissions._
@@ -215,13 +216,20 @@ class SubmissionService @Inject() (
   def cancel(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationStatus] =
     submissionRepository.findOne(Json.obj("eori" -> eori, "uuid" -> cancellation.submissionId)).flatMap {
       case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationAlreadyRequested)
-      case Some(submission)                                             => sendCancellationRequest(submission, cancellation)
+      case Some(submission)                                             => sendCancellationRequest(submission, cancellation).map(_.status)
       case _                                                            => Future.successful(NotFound)
+    }
+
+  def cancelDeclaration(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationResult] =
+    submissionRepository.findOne(Json.obj("eori" -> eori, "uuid" -> cancellation.submissionId)).flatMap {
+      case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationResult(CancellationAlreadyRequested, None))
+      case Some(submission)                                             => sendCancellationRequest(submission, cancellation)
+      case _                                                            => Future.successful(CancellationResult(NotFound, None))
     }
 
   private def sendCancellationRequest(submission: Submission, cancellation: SubmissionCancellation)(
     implicit hc: HeaderCarrier
-  ): Future[CancellationStatus] = {
+  ): Future[CancellationResult] = {
     val metadata: MetaData = cancelMetaDataBuilder.buildRequest(
       cancellation.functionalReferenceId,
       cancellation.mrn,
@@ -236,12 +244,14 @@ class SubmissionService @Inject() (
     }
   }
 
-  private def updateSubmissionWithCancellationAction(actionId: String, submission: Submission): Future[CancellationStatus] = {
+  private def updateSubmissionWithCancellationAction(actionId: String, submission: Submission): Future[CancellationResult] = {
     val newAction =
       Action(id = actionId, CancellationRequest, decId = submission.latestDecId.orElse(Some(submission.uuid)), versionNo = submission.latestVersionNo)
     submissionRepository.addAction(submission.uuid, newAction).map {
-      case Some(_) => CancellationRequestSent
-      case None    => NotFound
+      case Some(_) =>
+        CancellationResult(CancellationRequestSent, Some(actionId))
+      case None =>
+        CancellationResult(NotFound, None)
     }
   }
 

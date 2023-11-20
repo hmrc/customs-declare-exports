@@ -35,4 +35,11 @@ class CancellationController @Inject() (authenticator: Authenticator, submission
         Ok(cancellationStatus)
       }
     }
+
+  val createCancellation: Action[SubmissionCancellation] =
+    authenticator.authorisedAction(parsingJson[SubmissionCancellation]) { implicit request =>
+      submissionService.cancelDeclaration(request.eori.value, request.body).map { cancellationStatus =>
+        Ok(cancellationStatus)
+      }
+    }
 }

@@ -25,6 +25,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.InsufficientEnrolments
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
+import uk.gov.hmrc.exports.models.declaration.submissions.CancellationStatus.CancellationResult
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.services.SubmissionService
 
@@ -53,33 +54,35 @@ class CancellationControllerSpec extends UnitSpec with AuthTestSupport {
     "return 200" when {
 
       "request is valid" in {
-        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(CancellationRequestSent))
+        given(submissionService.cancelDeclaration(any(), any())(any()))
+          .willReturn(Future.successful(CancellationResult(CancellationRequestSent, Some("conversationId"))))
 
-        val result = controller.create(postRequest)
+        val result = controller.createCancellation(postRequest)
 
         status(result) mustBe OK
-        contentAsJson(result) mustBe Json.toJson(CancellationRequestSent.toString)
-        verify(submissionService).cancel(refEq(userEori.value), refEq(body))(any())
+        contentAsJson(result) mustBe Json.toJson(CancellationResult(CancellationRequestSent, Some("conversationId")))
+        verify(submissionService).cancelDeclaration(refEq(userEori.value), refEq(body))(any())
       }
 
       "cancellation exists" in {
-        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(CancellationAlreadyRequested))
+        given(submissionService.cancelDeclaration(any(), any())(any()))
+          .willReturn(Future.successful(CancellationResult(CancellationAlreadyRequested, None)))
 
-        val result = controller.create(postRequest)
+        val result = controller.createCancellation(postRequest)
 
         status(result) mustBe OK
-        contentAsJson(result) mustBe Json.toJson(CancellationAlreadyRequested.toString)
-        verify(submissionService).cancel(refEq(userEori.value), refEq(body))(any())
+        contentAsJson(result) mustBe Json.toJson(CancellationResult(CancellationAlreadyRequested, None))
+        verify(submissionService).cancelDeclaration(refEq(userEori.value), refEq(body))(any())
       }
 
       "declaration doesnt exist" in {
-        given(submissionService.cancel(any(), any())(any())).willReturn(Future.successful(NotFound))
+        given(submissionService.cancelDeclaration(any(), any())(any())).willReturn(Future.successful(CancellationResult(NotFound, None)))
 
-        val result = controller.create(postRequest)
+        val result = controller.createCancellation(postRequest)
 
         status(result) mustBe OK
-        contentAsJson(result) mustBe Json.toJson(NotFound.toString)
-        verify(submissionService).cancel(refEq(userEori.value), refEq(body))(any())
+        contentAsJson(result) mustBe Json.toJson(CancellationResult(NotFound, None))
+        verify(submissionService).cancelDeclaration(refEq(userEori.value), refEq(body))(any())
       }
     }
 
@@ -87,7 +90,7 @@ class CancellationControllerSpec extends UnitSpec with AuthTestSupport {
       "unauthorized" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result = controller.create(postRequest)
+        val result = controller.createCancellation(postRequest)
 
         status(result) mustBe UNAUTHORIZED
         verifyNoInteractions(submissionService)
