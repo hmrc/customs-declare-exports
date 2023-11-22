@@ -18,8 +18,9 @@ package uk.gov.hmrc.exports.services.notifications.receiptactions
 
 import play.api.Logging
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
-import uk.gov.hmrc.exports.models.declaration.submissions.Submission
+import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionStatus}
 import uk.gov.hmrc.exports.repositories.{SubmissionRepository, UpdateSubmissionsTransactionalOps}
+import uk.gov.hmrc.exports.services.audit.{AuditNotifications, AuditService}
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
 import uk.gov.hmrc.http.InternalServerException
 
@@ -30,14 +31,39 @@ import scala.concurrent.{ExecutionContext, Future}
 class ParseAndSaveAction @Inject() (
   notificationFactory: NotificationFactory,
   submissionRepository: SubmissionRepository,
-  transactionalOps: UpdateSubmissionsTransactionalOps
+  transactionalOps: UpdateSubmissionsTransactionalOps,
+  auditService: AuditService
 )(implicit executionContext: ExecutionContext)
     extends Logging {
 
   def execute(notification: UnparsedNotification): Future[Unit] =
-    save(notificationFactory.buildNotifications(notification)).map(_ => ())
+    save(notificationFactory.buildNotifications(notification)).map { case (submissions, parsedNotifications) =>
+      auditProcessing(submissions.headOption, parsedNotifications)
+    }
 
-  def save(notifications: Seq[ParsedNotification]): Future[Seq[Submission]] =
+  private def auditProcessing(maybeSubmission: Option[Submission], parsedNotifications: Seq[ParsedNotification]) = {
+    val result = for {
+      firstNotification <- parsedNotifications.headOption
+      conversationId = firstNotification.actionId
+      submission <- maybeSubmission
+      action <- submission.actions.filter(_.id == conversationId).headOption
+      declarationId <- action.decId
+    } yield {
+      val errorCodes = parsedNotifications.flatMap(_.details.errors.map(_.validationCode)).distinct
+      val submissionStatus = parsedNotifications.map(_.details.status).distinct
+
+      val functionCodesAsString = submissionStatus.map { subStatus =>
+        val functionCode = SubmissionStatus.statusMap.get(subStatus).getOrElse("??")
+        s"$functionCode $subStatus"
+      }
+
+      AuditNotifications.audit(submission, declarationId, functionCodesAsString, errorCodes, conversationId, auditService)
+    }
+
+    result.getOrElse(())
+  }
+
+  def save(notifications: Seq[ParsedNotification]): Future[(Seq[Submission], Seq[ParsedNotification])] =
     Future
       .sequence(
         notifications
@@ -48,25 +74,7 @@ class ParseAndSaveAction @Inject() (
           }
           .toList
       )
-
-  /* Do not remove. It provides an example of a potential implementation in case we are notified that we could
-   receive from the parsing a list of notifications with different actionIds for the same Submission document.
-
-   This behaviour can be tested uncommenting the integration tests in ParseAndSaveActionISpec.scala
-
-  def save(notifications: Seq[ParsedNotification]): Future[Seq[Submission]] = {
-
-    def loop(list: List[(String, Seq[ParsedNotification])], maybeSubmissions: List[Option[Submission]]): Future[List[Option[Submission]]] =
-      list match {
-        case Nil => Future.successful(maybeSubmissions)
-        case head :: tail =>
-          val actionId = head._1
-          findAndUpdateSubmission(actionId, head._2).flatMap(maybeSubmission => loop(tail, maybeSubmissions :+ maybeSubmission))
-      }
-
-    loop(notifications.groupBy(_.actionId).toList, Nil).map(_.flatten)
-  }
-   */
+      .map(submissions => (submissions, notifications))
 
   private def findAndUpdateSubmission(actionId: String, notifications: Seq[ParsedNotification]): Future[Submission] =
     submissionRepository

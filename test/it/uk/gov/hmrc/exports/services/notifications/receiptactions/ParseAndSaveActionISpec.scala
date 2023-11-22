@@ -22,9 +22,10 @@ import testdata.SubmissionTestData.{action_2, notificationSummary_1, notificatio
 import testdata.notifications.NotificationTestData.{errors, notification_2, notification_3}
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.UNKNOWN
+import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.RECEIVED
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionStatus}
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, UpdateSubmissionsTransactionalOps}
+import uk.gov.hmrc.exports.services.audit.AuditService
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
 import uk.gov.hmrc.exports.services.notifications.receiptactions.ParseAndSaveActionISpec._
 
@@ -38,8 +39,9 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
   private val notificationRepository = instanceOf[ParsedNotificationRepository]
   private val submissionRepository = instanceOf[SubmissionRepository]
   private val transactionalOps = instanceOf[UpdateSubmissionsTransactionalOps]
+  private val auditService = instanceOf[AuditService]
 
-  private val parseAndSaveAction = new ParseAndSaveAction(notificationFactory, submissionRepository, transactionalOps)
+  private val parseAndSaveAction = new ParseAndSaveAction(notificationFactory, submissionRepository, transactionalOps, auditService)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -57,13 +59,13 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
           submissionRepository.insertOne(submission.copy(actions = List(action_2))).futureValue
 
           val notification3 = notification_3.copy(actionId = actionId_2)
-          val submissions = parseAndSaveAction.save(List(notification2, notification3)).futureValue
+          val submissions = parseAndSaveAction.save(List(notification2, notification3)).futureValue._1
           submissions.size mustBe 1
 
           val submission1 = submissions.head
 
           submission1.mrn.value mustBe notification2.details.mrn
-          submission1.latestEnhancedStatus mustBe UNKNOWN
+          submission1.latestEnhancedStatus mustBe RECEIVED
           submission1.enhancedStatusLastUpdated mustBe notification3.details.dateTimeIssued
 
           submission1.actions.size mustBe 1
@@ -81,13 +83,13 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
           submissionRepository.insertOne(submission.copy(actions = List(action2))).futureValue
 
           val notification3 = notification_3.copy(actionId = actionId_2)
-          val submissions = parseAndSaveAction.save(List(notification2, notification3)).futureValue
+          val submissions = parseAndSaveAction.save(List(notification2, notification3)).futureValue._1
           submissions.size mustBe 1
 
           val submission1 = submissions.head
 
           submission1.mrn.value mustBe notification2.details.mrn
-          submission1.latestEnhancedStatus mustBe UNKNOWN
+          submission1.latestEnhancedStatus mustBe RECEIVED
           submission1.enhancedStatusLastUpdated mustBe notification3.details.dateTimeIssued
 
           submission1.actions.size mustBe 1
@@ -109,7 +111,7 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
             val submission = Json.parse(submissionWithoutNotificationSummaries).as[Submission]
             submissionRepository.insertOne(submission).futureValue
             parseAndSaveAction.save(List(submissionNotification)).futureValue
-            val submissions = parseAndSaveAction.save(List(cancellationNotification)).futureValue
+            val submissions = parseAndSaveAction.save(List(cancellationNotification)).futureValue._1
             submissions.size mustBe 1
 
             val actualSubmission = Json.toJson(submissions.head)
@@ -118,76 +120,6 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
         }
       }
     }
-
-    /* Do not remove. It provides an example of a potential implementation in case we are notified that we could
-   receive from the parsing a list of notifications with different actionIds for the same Submission document.
-
-   This behaviour can be tested uncommenting the 'save' (loop) method in ParseAndSaveAction.scala
-
-    "provided with multiple ParsedNotifications with different actionIds but related to the same Submission, and" when {
-      "the Submission's actions DO NOT CONTAIN yet any NotificationSummary" should {
-        "return the Submission with the actions including the new NotificationSummaries in desc order" in {
-          submissionRepository.create(submission.copy(actions = List(action_2, action_3))).futureValue
-
-          val notification3 =  notification_3.copy(actionId = actionId_3)
-          val submissions = parseAndSaveAction.save(List(notification2, notification3)).futureValue
-          submissions.size mustBe 2
-
-          val submission1 = submissions.head
-          val submission2 = submissions.last
-
-          submission1.uuid mustBe submission2.uuid
-          submission1.mrn.value mustBe notification2.details.mrn
-          submission1.mrn.value mustBe submission2.mrn.value
-
-          submission1.latestEnhancedStatus mustBe GOODS_ARRIVED
-          submission2.latestEnhancedStatus mustBe UNKNOWN
-          submission1.enhancedStatusLastUpdated mustBe notification2.details.dateTimeIssued
-          submission2.enhancedStatusLastUpdated mustBe notification3.details.dateTimeIssued
-
-          submission1.actions.size mustBe 2
-          submission1.actions.size mustBe submission2.actions.size
-          submission1.actions(0).notifications.value.size mustBe 1
-          submission1.actions(1).notifications mustBe None
-          submission2.actions(0).notifications.value.size mustBe 1
-          submission2.actions(1).notifications.value.size mustBe 1
-        }
-      }
-    }
-
-    "provided with multiple ParsedNotifications with different actionIds but related to the same Submission, and" when {
-      "the Submission's actions DO CONTAIN already NotificationSummaries" should {
-        "return the Submission with the actions including the new NotificationSummaries in desc order" in {
-          val action2 = action_2.copy(notifications = Some(List(notificationSummary_1)))
-          val action3 = action_3.copy(notifications = Some(List(notificationSummary_2)))
-          submissionRepository.create(submission.copy(actions = List(action2, action3))).futureValue
-
-          val notification3 =  notification_3.copy(actionId = actionId_3)
-          val submissions = parseAndSaveAction.save(List(notification2, notification3)).futureValue
-          submissions.size mustBe 2
-
-          val submission1 = submissions.head
-          val submission2 = submissions.last
-
-          submission1.uuid mustBe submission2.uuid
-          submission1.mrn.value mustBe notification2.details.mrn
-          submission1.mrn.value mustBe submission2.mrn.value
-
-          submission1.latestEnhancedStatus mustBe GOODS_ARRIVED_MESSAGE
-          submission2.latestEnhancedStatus mustBe UNKNOWN
-          submission1.enhancedStatusLastUpdated mustBe notification2.details.dateTimeIssued
-          submission2.enhancedStatusLastUpdated mustBe notification3.details.dateTimeIssued
-
-          submission1.actions.size mustBe 2
-          submission1.actions.size mustBe submission2.actions.size
-          submission1.actions(0).notifications.value.size mustBe 2
-          submission1.actions(1).notifications.value.size mustBe 1
-          submission2.actions(0).notifications.value.size mustBe 2
-          submission2.actions(1).notifications.value.size mustBe 2
-        }
-      }
-    }
-     */
   }
 }
 
