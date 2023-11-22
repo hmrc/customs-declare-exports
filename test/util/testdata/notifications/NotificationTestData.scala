@@ -93,6 +93,7 @@ object NotificationTestData {
   val functionCode_3: String = randomResponseFunctionCode
   val nameCode: Option[String] = None
   val errors = Seq(NotificationError(validationCode = "CDS12056", pointer = Some(Pointer(Seq(PointerSection("42A", PointerSectionType.FIELD))))))
+  val errors2 = Seq(NotificationError(validationCode = "CDS12010", pointer = Some(Pointer(Seq(PointerSection("42A", PointerSectionType.FIELD))))))
 
   private val payloadExemplaryLength = 300
   val payload = TestDataHelper.randomAlphanumericString(payloadExemplaryLength)
@@ -100,17 +101,17 @@ object NotificationTestData {
   val notification = ParsedNotification(
     unparsedNotificationId = UUID.randomUUID,
     actionId = actionId,
-    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = UNKNOWN, version = Some(1), errors = errors)
+    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued, status = REJECTED, version = Some(1), errors = errors)
   )
   val notification_2 = ParsedNotification(
     unparsedNotificationId = UUID.randomUUID,
     actionId = actionId,
-    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = UNKNOWN, version = Some(1), errors = errors)
+    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = REJECTED, version = Some(1), errors = errors2)
   )
   val notification_3 = ParsedNotification(
     unparsedNotificationId = UUID.randomUUID,
     actionId = actionId_2,
-    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = UNKNOWN, version = Some(1), errors = Seq.empty)
+    details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_3, status = RECEIVED, version = Some(1), errors = Seq.empty)
   )
 
   val notificationForExternalAmendment = ParsedNotification(

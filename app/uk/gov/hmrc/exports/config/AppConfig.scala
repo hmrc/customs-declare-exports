@@ -22,10 +22,11 @@ import uk.gov.hmrc.exports.config.AppConfig.JobConfig
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.time.{Clock, LocalTime}
+import javax.inject.Named
 import scala.concurrent.duration.FiniteDuration
 
 @Singleton
-class AppConfig @Inject() (val configuration: Configuration, servicesConfig: ServicesConfig) {
+class AppConfig @Inject() (val configuration: Configuration, servicesConfig: ServicesConfig, @Named("appName") val appName: String) {
 
   lazy val clock: Clock = Clock.systemUTC()
 

@@ -22,10 +22,11 @@ import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.invocation.InvocationOnMock
 import play.api.test.Helpers._
 import testdata.SubmissionTestData.{submission, submission_2, submission_3}
-import testdata.notifications.NotificationTestData.{notification, notification_2, notification_3}
+import testdata.notifications.NotificationTestData.{notification, notificationUnparsed, notification_2, notification_3}
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{SubmissionRepository, UpdateSubmissionsTransactionalOps}
+import uk.gov.hmrc.exports.services.audit.AuditService
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
 import uk.gov.hmrc.http.InternalServerException
 
@@ -36,19 +37,35 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
   private val submissionRepository = mock[SubmissionRepository]
   private val transactionalOps = mock[UpdateSubmissionsTransactionalOps]
+  private val mockNotificationFactory = mock[NotificationFactory]
+  private val mockAuditService = mock[AuditService]
 
-  private val parseAndSaveAction = new ParseAndSaveAction(mock[NotificationFactory], submissionRepository, transactionalOps)
+  private val parseAndSaveAction = new ParseAndSaveAction(mockNotificationFactory, submissionRepository, transactionalOps, mockAuditService)
 
   override def afterEach(): Unit = {
-    reset(submissionRepository, transactionalOps)
+    reset(submissionRepository, transactionalOps, mockAuditService, mockNotificationFactory)
     super.afterEach()
+  }
+
+  "ParseAndSaveAction.execute" when {
+    "provided with an UnparsedNotification" should {
+      "call audit service" in {
+        when(submissionRepository.findOne(any, any)).thenReturn(Future.successful(Some(submission)))
+        when(transactionalOps.updateSubmissionAndNotifications(any, any, any)).thenReturn(Future.successful(submission))
+        when(mockNotificationFactory.buildNotifications(any)).thenReturn(List(notification, notification_2))
+
+        await(parseAndSaveAction.execute(notificationUnparsed))
+
+        verify(mockAuditService).auditNotificationProcessed(any, any)
+      }
+    }
   }
 
   "ParseAndSaveAction.save" when {
 
     "provided with no ParsedNotification instances" should {
       "return a list with no submissions (empty)" in {
-        parseAndSaveAction.save(List.empty).futureValue mustBe List.empty
+        parseAndSaveAction.save(List.empty).futureValue mustBe (List.empty, List.empty)
         verifyNoInteractions(submissionRepository)
         verifyNoInteractions(transactionalOps)
       }
@@ -70,7 +87,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
         when(submissionRepository.findOne(any, any)).thenReturn(Future.successful(Some(submission)))
         when(transactionalOps.updateSubmissionAndNotifications(any, any, any)).thenReturn(Future.successful(submission))
 
-        parseAndSaveAction.save(List(notification)).futureValue mustBe List(submission)
+        parseAndSaveAction.save(List(notification)).futureValue._1 mustBe List(submission)
 
         verify(transactionalOps).updateSubmissionAndNotifications(eqTo(notification.actionId), any, eqTo(submission))
       }
@@ -90,7 +107,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
         when(submissionRepository.findOne(any[String], captor.capture())).thenAnswer(withResult andThen toOptionFuture)
         when(transactionalOps.updateSubmissionAndNotifications(captor.capture(), any, any)).thenAnswer(withResult andThen toFuture)
 
-        parseAndSaveAction.save(List(notification_2, notification_3)).futureValue must contain theSameElementsAs (List(submission_2, submission_3))
+        parseAndSaveAction.save(List(notification_2, notification_3)).futureValue._1 must contain theSameElementsAs (List(submission_2, submission_3))
 
         verify(transactionalOps, times(2)).updateSubmissionAndNotifications(any, any, any)
       }

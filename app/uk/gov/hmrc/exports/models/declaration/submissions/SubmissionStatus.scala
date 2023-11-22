@@ -52,6 +52,8 @@ object SubmissionStatus extends Enumeration {
     "UnknownStatus" -> UNKNOWN
   )
 
+  val statusMap = codesMap.map(_.swap)
+
   def retrieve(functionCode: String, nameCode: Option[String] = None): SubmissionStatus =
     getStatusOrUnknown(buildSearchKey(functionCode, nameCode))
 
