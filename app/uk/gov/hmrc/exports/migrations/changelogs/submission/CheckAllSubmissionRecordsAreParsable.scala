@@ -17,19 +17,18 @@
 package uk.gov.hmrc.exports.migrations.changelogs.submission
 
 import com.mongodb.client.MongoDatabase
-import play.api.Logging
 import play.api.libs.json._
-import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
+import uk.gov.hmrc.exports.migrations.changelogs.{DeleteRecords, MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.migrations.TimeUtils.jsonWriter
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
-class CheckAllSubmissionRecordsAreParsable extends MigrationDefinition with Logging {
+class CheckAllSubmissionRecordsAreParsable extends MigrationDefinition with DeleteRecords {
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(id = s"CEDS-4523 Validate that all Submission records in mongo are parsable", order = 25, author = "Tim Wilkins")
+    MigrationInformation(id = s"CEDS-4523 Validate that all Submission records in mongo are parsable", order = 25, author = "Tim Wilkins", true)
 
   override def migrationFunction(db: MongoDatabase): Unit = {
     logger.info(s"Applying '${migrationInformation.id}' db migration...")
@@ -48,8 +47,9 @@ class CheckAllSubmissionRecordsAreParsable extends MigrationDefinition with Logg
       Try(Json.parse(document.toJson(jsonWriter)).as[Submission]) match {
         case Failure(exc) =>
           val id = document.get("_id")
-          val error = exc.getMessage
-          logger.error(s"Error parsing document with _id($id): $error")
+          logger.error(s"Error parsing document with _id($id): ${exc.getMessage}")
+
+          removeFromCollection(collection, id)
           (totalsCounter + 1, errorCounter + 1)
 
         case Success(_) =>

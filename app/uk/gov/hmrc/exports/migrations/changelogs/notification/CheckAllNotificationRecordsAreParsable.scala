@@ -17,19 +17,18 @@
 package uk.gov.hmrc.exports.migrations.changelogs.notification
 
 import com.mongodb.client.MongoDatabase
-import play.api.Logging
 import play.api.libs.json._
-import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
+import uk.gov.hmrc.exports.migrations.changelogs.{DeleteRecords, MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.migrations.TimeUtils.jsonWriter
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
 
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
-class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with Logging {
+class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with DeleteRecords {
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(id = s"CEDS-4523 Validate that all ParsedNotification records in mongo are parsable", order = 24, author = "Tim Wilkins")
+    MigrationInformation(id = s"CEDS-4523 Validate that all Notification records in mongo are parsable", order = 24, author = "Tim Wilkins", true)
 
   override def migrationFunction(db: MongoDatabase): Unit = {
     logger.info(s"Applying '${migrationInformation.id}' db migration...")
@@ -53,9 +52,10 @@ class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with Lo
       .foldLeft((0,0)) { case ((totalsCounter, errorCounter), document) =>
       Try((Json.parse(document.toJson(jsonWriter)) \ "item").as[UnparsedNotification]) match {
         case Failure(exc) =>
-          val id = document.get("_id")
-          val error = exc.getMessage
-          logger.error(s"Error parsing document with _id($id): $error")
+          val id = document.get(IndexId)
+          logger.error(s"Error parsing document with $IndexId($id): ${exc.getMessage}")
+
+          removeFromCollection(collection, id)
           (totalsCounter + 1, errorCounter + 1)
 
         case Success(_) =>
@@ -80,9 +80,11 @@ class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with Lo
       .foldLeft((0,0)) { case ((totalsCounter, errorCounter), document) =>
         Try(Json.parse(document.toJson(jsonWriter)).as[ParsedNotification]) match {
           case Failure(exc) =>
-            val id = document.get("_id")
+            val id = document.get(IndexId)
             val error = exc.getMessage
-            logger.error(s"Error parsing document with _id($id): $error")
+            logger.error(s"Error parsing document with $IndexId($id): $error")
+
+            removeFromCollection(collection, id)
             (totalsCounter + 1, errorCounter + 1)
 
           case Success(_) =>
