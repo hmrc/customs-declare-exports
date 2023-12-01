@@ -53,7 +53,7 @@ class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with De
         Try((Json.parse(document.toJson(jsonWriter)) \ "item").as[UnparsedNotification]) match {
           case Failure(exc) =>
             val id = document.get(IndexId)
-            logger.error(s"Error parsing document with $IndexId($id): ${exc.getMessage}")
+            //logger.error(s"Error parsing document with $IndexId($id): ${exc.getMessage}")
 
             removeFromCollection(collection, id)
             (totalsCounter + 1, errorCounter + 1)

@@ -47,7 +47,7 @@ class CheckAllSubmissionRecordsAreParsable extends MigrationDefinition with Dele
         Try(Json.parse(document.toJson(jsonWriter)).as[Submission]) match {
           case Failure(exc) =>
             val id = document.get("_id")
-            logger.error(s"Error parsing document with _id($id): ${exc.getMessage}")
+            //logger.error(s"Error parsing document with _id($id): ${exc.getMessage}")
 
             removeFromCollection(collection, id)
             (totalsCounter + 1, errorCounter + 1)
