@@ -40,7 +40,7 @@ class CheckAllDeclarationRecordsAreParsable extends MigrationDefinition with Del
 
     val collection = db.getCollection("declarations")
 
-    val batchSize = 100
+    val batchSize = 10000
 
     implicit val reads = Json.reads[ExportsDeclaration]
 
@@ -49,10 +49,11 @@ class CheckAllDeclarationRecordsAreParsable extends MigrationDefinition with Del
       .batchSize(batchSize)
       .asScala
       .foldLeft((0, 0)) { case ((totalsCounter, errorCounter), document) =>
+        logger.error(s"${errorCounter} ExportsDeclaration documents encountered with parsing errors out of ${totalsCounter}.")
         Try(Json.parse(document.toJson(jsonWriter)).as[ExportsDeclaration]) match {
           case Failure(exc) =>
             val id = document.get("_id")
-            //logger.error(s"Error parsing document with _id($id): ${exc.getMessage}")
+            // logger.error(s"Error parsing document with _id($id): ${exc.getMessage}")
 
             removeFromCollection(collection, id)
             (totalsCounter + 1, errorCounter + 1)

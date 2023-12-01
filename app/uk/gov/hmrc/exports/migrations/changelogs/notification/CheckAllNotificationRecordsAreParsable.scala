@@ -41,7 +41,7 @@ class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with De
   private def checkUnparsedNotifications(db: MongoDatabase) = {
     val collection = db.getCollection("unparsedNotifications")
 
-    val batchSize = 100
+    val batchSize = 10000
 
     implicit val reads = UnparsedNotification.format
 
@@ -50,10 +50,11 @@ class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with De
       .batchSize(batchSize)
       .asScala
       .foldLeft((0, 0)) { case ((totalsCounter, errorCounter), document) =>
+        logger.error(s"${errorCounter} unparsedNotification documents encountered with parsing errors out of ${totalsCounter}.")
         Try((Json.parse(document.toJson(jsonWriter)) \ "item").as[UnparsedNotification]) match {
           case Failure(exc) =>
             val id = document.get(IndexId)
-            //logger.error(s"Error parsing document with $IndexId($id): ${exc.getMessage}")
+            // logger.error(s"Error parsing document with $IndexId($id): ${exc.getMessage}")
 
             removeFromCollection(collection, id)
             (totalsCounter + 1, errorCounter + 1)
@@ -63,7 +64,7 @@ class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with De
         }
       }
 
-    logger.error(s"${result._2} unparsedNotification documents encountered with parsing errors out of ${result._1}.")
+    logger.info(s"${result._2} unparsedNotification documents encountered with parsing errors out of ${result._1}.")
   }
 
   private def checkParsedNotifications(db: MongoDatabase) = {
@@ -78,11 +79,11 @@ class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with De
       .batchSize(batchSize)
       .asScala
       .foldLeft((0, 0)) { case ((totalsCounter, errorCounter), document) =>
+        logger.error(s"${errorCounter} parsedNotification documents encountered with parsing errors out of ${totalsCounter}.")
         Try(Json.parse(document.toJson(jsonWriter)).as[ParsedNotification]) match {
           case Failure(exc) =>
             val id = document.get(IndexId)
-            val error = exc.getMessage
-            logger.error(s"Error parsing document with $IndexId($id): $error")
+//            logger.error(s"Error parsing document with $IndexId($id): ${exc.getMessage}"
 
             removeFromCollection(collection, id)
             (totalsCounter + 1, errorCounter + 1)
@@ -92,7 +93,7 @@ class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with De
         }
       }
 
-    logger.error(s"${result._2} parsedNotification documents encountered with parsing errors out of ${result._1}.")
+    logger.info(s"${result._2} parsedNotification documents encountered with parsing errors out of ${result._1}.")
   }
 
   logger.info(s"Finished applying '${migrationInformation.id}' db migration.")

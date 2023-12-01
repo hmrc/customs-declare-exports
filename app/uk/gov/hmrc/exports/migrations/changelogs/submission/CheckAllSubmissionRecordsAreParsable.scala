@@ -35,7 +35,7 @@ class CheckAllSubmissionRecordsAreParsable extends MigrationDefinition with Dele
 
     val collection = db.getCollection("submissions")
 
-    val batchSize = 100
+    val batchSize = 10000
 
     implicit val reads = Submission.format
 
@@ -44,10 +44,11 @@ class CheckAllSubmissionRecordsAreParsable extends MigrationDefinition with Dele
       .batchSize(batchSize)
       .asScala
       .foldLeft((0, 0)) { case ((totalsCounter, errorCounter), document) =>
+        logger.error(s"${errorCounter} Submission documents encountered with parsing errors out of ${totalsCounter}.")
         Try(Json.parse(document.toJson(jsonWriter)).as[Submission]) match {
           case Failure(exc) =>
             val id = document.get("_id")
-            //logger.error(s"Error parsing document with _id($id): ${exc.getMessage}")
+            // logger.error(s"Error parsing document with _id($id): ${exc.getMessage}")
 
             removeFromCollection(collection, id)
             (totalsCounter + 1, errorCounter + 1)
@@ -57,7 +58,7 @@ class CheckAllSubmissionRecordsAreParsable extends MigrationDefinition with Dele
         }
       }
 
-    logger.error(s"${result._2} Submission documents encountered with parsing errors out of ${result._1}.")
+    logger.info(s"${result._2} Submission documents encountered with parsing errors out of ${result._1}.")
   }
 
   logger.info(s"Finished applying '${migrationInformation.id}' db migration.")
