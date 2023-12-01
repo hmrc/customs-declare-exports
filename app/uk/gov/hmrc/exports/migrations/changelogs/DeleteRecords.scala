@@ -18,15 +18,15 @@ package uk.gov.hmrc.exports.migrations.changelogs
 
 import com.mongodb.client.MongoCollection
 import org.bson.Document
-import org.mongodb.scala.model.Filters.{eq => feq}
+//import org.mongodb.scala.model.Filters.{eq => feq}
 import play.api.Logging
 
 trait DeleteRecords extends Logging {
   protected val IndexId = "_id"
 
   protected def removeFromCollection(collection: MongoCollection[Document], id: AnyRef) = {
-    val filter = feq(IndexId, id)
+    /*val filter = feq(IndexId, id)
     val deleteResult = collection.deleteOne(filter).wasAcknowledged()
-    logger.info(s"Removing: [filter: $filter] success? $deleteResult")
+    logger.info(s"Removing: [filter: $filter] success? $deleteResult")*/
   }
 }

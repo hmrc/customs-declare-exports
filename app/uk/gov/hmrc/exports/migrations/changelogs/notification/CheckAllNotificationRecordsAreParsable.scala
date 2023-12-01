@@ -28,7 +28,7 @@ import scala.util.{Failure, Success, Try}
 class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with DeleteRecords {
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(id = s"CEDS-4523 Validate that all Notification records in mongo are parsable", order = 24, author = "Tim Wilkins", true)
+    MigrationInformation(id = s"CEDS-4523 Validate that all Notification records in mongo are parsable", order = -2, author = "Tim Wilkins", true)
 
   override def migrationFunction(db: MongoDatabase): Unit = {
     logger.info(s"Applying '${migrationInformation.id}' db migration...")
@@ -49,19 +49,19 @@ class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with De
       .find()
       .batchSize(batchSize)
       .asScala
-      .foldLeft((0,0)) { case ((totalsCounter, errorCounter), document) =>
-      Try((Json.parse(document.toJson(jsonWriter)) \ "item").as[UnparsedNotification]) match {
-        case Failure(exc) =>
-          val id = document.get(IndexId)
-          logger.error(s"Error parsing document with $IndexId($id): ${exc.getMessage}")
+      .foldLeft((0, 0)) { case ((totalsCounter, errorCounter), document) =>
+        Try((Json.parse(document.toJson(jsonWriter)) \ "item").as[UnparsedNotification]) match {
+          case Failure(exc) =>
+            val id = document.get(IndexId)
+            logger.error(s"Error parsing document with $IndexId($id): ${exc.getMessage}")
 
-          removeFromCollection(collection, id)
-          (totalsCounter + 1, errorCounter + 1)
+            removeFromCollection(collection, id)
+            (totalsCounter + 1, errorCounter + 1)
 
-        case Success(_) =>
-          (totalsCounter + 1, errorCounter)
+          case Success(_) =>
+            (totalsCounter + 1, errorCounter)
+        }
       }
-    }
 
     logger.error(s"${result._2} unparsedNotification documents encountered with parsing errors out of ${result._1}.")
   }
@@ -77,7 +77,7 @@ class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with De
       .find()
       .batchSize(batchSize)
       .asScala
-      .foldLeft((0,0)) { case ((totalsCounter, errorCounter), document) =>
+      .foldLeft((0, 0)) { case ((totalsCounter, errorCounter), document) =>
         Try(Json.parse(document.toJson(jsonWriter)).as[ParsedNotification]) match {
           case Failure(exc) =>
             val id = document.get(IndexId)
@@ -97,5 +97,3 @@ class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with De
 
   logger.info(s"Finished applying '${migrationInformation.id}' db migration.")
 }
-
-

@@ -28,7 +28,12 @@ import scala.util.{Failure, Success, Try}
 class CheckAllDeclarationRecordsAreParsable extends MigrationDefinition with DeleteRecords {
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(id = s"CEDS-4523 Validate that all ExportsDeclaration records in mongo are parsable", order = 23, author = "Tim Wilkins", true)
+    MigrationInformation(
+      id = s"CEDS-4523 Validate that all ExportsDeclaration records in mongo are parsable",
+      order = -1,
+      author = "Tim Wilkins",
+      true
+    )
 
   override def migrationFunction(db: MongoDatabase): Unit = {
     logger.info(s"Applying '${migrationInformation.id}' db migration...")
@@ -43,7 +48,7 @@ class CheckAllDeclarationRecordsAreParsable extends MigrationDefinition with Del
       .find()
       .batchSize(batchSize)
       .asScala
-      .foldLeft((0,0)) { case ((totalsCounter, errorCounter), document) =>
+      .foldLeft((0, 0)) { case ((totalsCounter, errorCounter), document) =>
         Try(Json.parse(document.toJson(jsonWriter)).as[ExportsDeclaration]) match {
           case Failure(exc) =>
             val id = document.get("_id")
@@ -62,5 +67,3 @@ class CheckAllDeclarationRecordsAreParsable extends MigrationDefinition with Del
 
   logger.info(s"Finished applying '${migrationInformation.id}' db migration.")
 }
-
-

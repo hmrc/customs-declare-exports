@@ -28,7 +28,7 @@ import scala.util.{Failure, Success, Try}
 class CheckAllSubmissionRecordsAreParsable extends MigrationDefinition with DeleteRecords {
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(id = s"CEDS-4523 Validate that all Submission records in mongo are parsable", order = 25, author = "Tim Wilkins", true)
+    MigrationInformation(id = s"CEDS-4523 Validate that all Submission records in mongo are parsable", order = -3, author = "Tim Wilkins", true)
 
   override def migrationFunction(db: MongoDatabase): Unit = {
     logger.info(s"Applying '${migrationInformation.id}' db migration...")
@@ -43,24 +43,22 @@ class CheckAllSubmissionRecordsAreParsable extends MigrationDefinition with Dele
       .find()
       .batchSize(batchSize)
       .asScala
-      .foldLeft((0,0)) { case ((totalsCounter, errorCounter), document) =>
-      Try(Json.parse(document.toJson(jsonWriter)).as[Submission]) match {
-        case Failure(exc) =>
-          val id = document.get("_id")
-          logger.error(s"Error parsing document with _id($id): ${exc.getMessage}")
+      .foldLeft((0, 0)) { case ((totalsCounter, errorCounter), document) =>
+        Try(Json.parse(document.toJson(jsonWriter)).as[Submission]) match {
+          case Failure(exc) =>
+            val id = document.get("_id")
+            logger.error(s"Error parsing document with _id($id): ${exc.getMessage}")
 
-          removeFromCollection(collection, id)
-          (totalsCounter + 1, errorCounter + 1)
+            removeFromCollection(collection, id)
+            (totalsCounter + 1, errorCounter + 1)
 
-        case Success(_) =>
-          (totalsCounter + 1, errorCounter)
+          case Success(_) =>
+            (totalsCounter + 1, errorCounter)
+        }
       }
-    }
 
     logger.error(s"${result._2} Submission documents encountered with parsing errors out of ${result._1}.")
   }
 
   logger.info(s"Finished applying '${migrationInformation.id}' db migration.")
 }
-
-

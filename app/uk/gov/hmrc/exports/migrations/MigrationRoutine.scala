@@ -22,7 +22,11 @@ import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.migrations.changelogs.cache._
 import uk.gov.hmrc.exports.migrations.changelogs.emaildetails.RenameSendEmailDetailsToItem
-import uk.gov.hmrc.exports.migrations.changelogs.notification.{CheckAllNotificationRecordsAreParsable, MakeParsedDetailsOptional, SplitTheNotificationsCollection}
+import uk.gov.hmrc.exports.migrations.changelogs.notification.{
+  CheckAllNotificationRecordsAreParsable,
+  MakeParsedDetailsOptional,
+  SplitTheNotificationsCollection
+}
 import uk.gov.hmrc.exports.migrations.changelogs.submission._
 
 import javax.inject.Inject
