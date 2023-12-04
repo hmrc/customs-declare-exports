@@ -49,7 +49,6 @@ class CheckAllDeclarationRecordsAreParsable extends MigrationDefinition with Del
       .batchSize(batchSize)
       .asScala
       .foldLeft((0, 0)) { case ((totalsCounter, errorCounter), document) =>
-        logger.error(s"${errorCounter} ExportsDeclaration documents encountered with parsing errors out of ${totalsCounter}.")
         Try(Json.parse(document.toJson(jsonWriter)).as[ExportsDeclaration]) match {
           case Failure(exc) =>
             val id = document.get("_id")

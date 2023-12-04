@@ -79,7 +79,6 @@ class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with De
       .batchSize(batchSize)
       .asScala
       .foldLeft((0, 0)) { case ((totalsCounter, errorCounter), document) =>
-        logger.error(s"${errorCounter} parsedNotification documents encountered with parsing errors out of ${totalsCounter}.")
         Try(Json.parse(document.toJson(jsonWriter)).as[ParsedNotification]) match {
           case Failure(exc) =>
             val id = document.get(IndexId)
