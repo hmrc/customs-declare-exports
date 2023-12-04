@@ -28,7 +28,7 @@ import scala.util.{Failure, Success, Try}
 class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with DeleteRecords {
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(id = s"CEDS-4523 Validate that all Notification records in mongo are parsable", order = -2, author = "Tim Wilkins", true)
+    MigrationInformation(id = s"CEDS-4523 Validate that all Notification records in mongo are parsable!", order = -2, author = "Tim Wilkins", true)
 
   override def migrationFunction(db: MongoDatabase): Unit = {
     logger.info(s"Applying '${migrationInformation.id}' db migration...")
