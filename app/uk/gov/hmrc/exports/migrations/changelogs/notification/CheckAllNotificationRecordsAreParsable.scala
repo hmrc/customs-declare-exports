@@ -63,7 +63,7 @@ class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with De
         }
       }
 
-    logger.info(s"${result._2} unparsedNotification documents encountered with parsing errors out of ${result._1}.\n${result._3}")
+    logger.error(s"${result._2} unparsedNotification documents encountered with parsing errors out of ${result._1}.\n${result._3}")
   }
 
   private def checkParsedNotifications(db: MongoDatabase) = {
@@ -91,7 +91,7 @@ class CheckAllNotificationRecordsAreParsable extends MigrationDefinition with De
         }
       }
 
-    logger.info(s"${result._2} parsedNotification documents encountered with parsing errors out of ${result._1}.")
+    logger.error(s"${result._2} parsedNotification documents encountered with parsing errors out of ${result._1}.")
   }
 
   logger.info(s"Finished applying '${migrationInformation.id}' db migration.")

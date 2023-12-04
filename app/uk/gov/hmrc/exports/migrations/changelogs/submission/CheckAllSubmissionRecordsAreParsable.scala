@@ -57,7 +57,7 @@ class CheckAllSubmissionRecordsAreParsable extends MigrationDefinition with Dele
         }
       }
 
-    logger.info(s"${result._2} Submission documents encountered with parsing errors out of ${result._1}.\n${result._3}")
+    logger.error(s"${result._2} Submission documents encountered with parsing errors out of ${result._1}.\n${result._3}")
   }
 
   logger.info(s"Finished applying '${migrationInformation.id}' db migration.")
