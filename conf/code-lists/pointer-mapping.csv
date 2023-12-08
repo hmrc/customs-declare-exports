@@ -31,8 +31,8 @@
 42A.57A.04A.239,declaration.parties.exporterDetails.details.address.addressLine
 42A.57A.04A.245,declaration.parties.exporterDetails.details.address.postCode
 42A.67A.103,declaration.natureOfTransaction.natureType
-42A.67A.16C.R143,declaration.parties.additionalActors.actor.eori
-42A.67A.16C.R005,declaration.parties.additionalActors.actor
+42A.67A.16C.R143,declaration.parties.additionalActors
+42A.67A.16C.R005,declaration.parties.additionalActors
 42A.67A.27A.R014,declaration.parties.consigneeDetails.details.address.fullName
 42A.67A.27A.04A.241,declaration.parties.consigneeDetails.details.address.townOrCity
 42A.67A.27A.04A.242,declaration.parties.consigneeDetails.details.address.country
