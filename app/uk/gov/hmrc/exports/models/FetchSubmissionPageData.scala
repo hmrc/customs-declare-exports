@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.models
 
-import play.api.libs.json.Json
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.StatusGroup
 
 import java.time.ZonedDateTime
@@ -37,12 +36,14 @@ case class FetchSubmissionPageData(
   // Specify what page of Submissions to fetch according to the 'dashboardIdx' index.
   page: Option[Int] = None,
 
+  // false => descending order, true => ascending order
+  reverse: Boolean,
+
   // Specify the max number of Submissions to include in the page/batch.
   limit: Int
 )
 
 object FetchSubmissionPageData {
-  implicit val format = Json.format[FetchSubmissionPageData]
 
   val DEFAULT_LIMIT = 25
 }

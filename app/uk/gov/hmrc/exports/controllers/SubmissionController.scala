@@ -73,10 +73,8 @@ class SubmissionController @Inject() (
     fetchData.statusGroups.headOption.fold {
       Future.successful(BadRequest("'groups' parameter must be specified"))
     } { statusGroup =>
-      if (fetchData.statusGroups.size > 1)
-        submissionService.fetchFirstPage(request.eori.value, fetchData.statusGroups, fetchData.limit).map(Ok(_))
-      else if (fetchData.page.contains(1))
-        submissionService.fetchFirstPage(request.eori.value, statusGroup, fetchData.limit).map(Ok(_))
+      if (fetchData.statusGroups.size > 1) submissionService.fetchFirstPage(request.eori.value, fetchData).map(Ok(_))
+      else if (fetchData.page.contains(1)) submissionService.fetchFirstPage(request.eori.value, statusGroup, fetchData).map(Ok(_))
       else if (fetchData.page.exists(_ < 1)) Future.successful(BadRequest("Illegal 'page' parameter. Must be >= 1"))
       else submissionService.fetchPage(request.eori.value, statusGroup, fetchData).map(Ok(_))
     }
@@ -127,6 +125,7 @@ class SubmissionController @Inject() (
       datetimeForPreviousPage = request.getQueryString("datetimeForPreviousPage").map(parse),
       datetimeForNextPage = request.getQueryString("datetimeForNextPage").map(parse),
       page = request.getQueryString("page").map(_.toInt),
+      reverse = request.getQueryString("reverse").isDefined,
       limit = request.getQueryString("limit").fold(DEFAULT_LIMIT)(_.toInt)
     )
   }

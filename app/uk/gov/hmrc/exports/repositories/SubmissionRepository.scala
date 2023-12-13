@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import com.mongodb.client.model.Indexes.{ascending, compoundIndex, descending}
 import com.mongodb.client.model.Updates.set
 import org.bson.conversions.Bson
 import org.mongodb.scala.bson.BsonDocument
@@ -24,6 +23,7 @@ import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.libs.json.{JsBoolean, Json}
 import repositories.RepositoryOps
+import uk.gov.hmrc.exports.models.FetchSubmissionPageData
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.fromStatusGroup
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.StatusGroup
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission}
@@ -73,48 +73,65 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
   private lazy val ascending = BsonDocument(Json.obj("enhancedStatusLastUpdated" -> 1).toString)
   private lazy val descending = BsonDocument(Json.obj("enhancedStatusLastUpdated" -> -1).toString)
 
-  def fetchFirstPage(eori: String, statusGroup: StatusGroup, limit: Int): Future[Seq[Submission]] =
+  def fetchFirstPage(eori: String, statusGroup: StatusGroup, fetchData: FetchSubmissionPageData): Future[Seq[Submission]] =
     collection
       .find(fetchFilter(eori, statusGroup))
       .hintString(dashBoardIndex)
-      .limit(limit)
-      .sort(descending)
+      .limit(fetchData.limit)
+      .sort(if (fetchData.reverse) ascending else descending)
       .toFuture()
 
-  def fetchLastPage(eori: String, statusGroup: StatusGroup, limit: Int): Future[Seq[Submission]] =
+  def fetchLastPage(eori: String, statusGroup: StatusGroup, fetchData: FetchSubmissionPageData): Future[Seq[Submission]] =
     collection
       .find(fetchFilter(eori, statusGroup))
       .hintString(dashBoardIndex)
-      .limit(limit)
-      .sort(ascending)
+      .limit(fetchData.limit)
+      .sort(if (fetchData.reverse) descending else ascending)
       .toFuture()
       .map(_.reverse)
 
-  def fetchLoosePage(eori: String, statusGroup: StatusGroup, page: Int, limit: Int): Future[Seq[Submission]] =
+  def fetchLoosePage(eori: String, statusGroup: StatusGroup, page: Int, fetchData: FetchSubmissionPageData): Future[Seq[Submission]] =
     collection
       .find(fetchFilter(eori, statusGroup))
       .hintString(dashBoardIndex)
-      .limit(limit)
-      .skip((page - 1).max(0) * limit)
-      .sort(descending)
+      .limit(fetchData.limit)
+      .skip((page - 1).max(0) * fetchData.limit)
+      .sort(if (fetchData.reverse) ascending else descending)
       .toFuture()
 
-  def fetchNextPage(eori: String, statusGroup: StatusGroup, statusLastUpdated: ZonedDateTime, limit: Int): Future[Seq[Submission]] =
-    collection
-      .find(fetchFilter(eori, statusGroup, statusLastUpdated, "lt"))
-      .hintString(dashBoardIndex)
-      .limit(limit)
-      .sort(descending)
-      .toFuture()
+  def fetchNextPage(
+    eori: String,
+    statusGroup: StatusGroup,
+    statusLastUpdated: ZonedDateTime,
+    fetchData: FetchSubmissionPageData
+  ): Future[Seq[Submission]] =
+    if (fetchData.reverse) nextPageAscending(eori, statusGroup, statusLastUpdated, fetchData.limit)
+    else previousPageDescending(eori, statusGroup, statusLastUpdated, fetchData.limit)
 
-  def fetchPreviousPage(eori: String, statusGroup: StatusGroup, statusLastUpdated: ZonedDateTime, limit: Int): Future[Seq[Submission]] =
+  def fetchPreviousPage(
+    eori: String,
+    statusGroup: StatusGroup,
+    statusLastUpdated: ZonedDateTime,
+    fetchData: FetchSubmissionPageData
+  ): Future[Seq[Submission]] =
+    if (fetchData.reverse) previousPageDescending(eori, statusGroup, statusLastUpdated, fetchData.limit)
+    else nextPageAscending(eori, statusGroup, statusLastUpdated, fetchData.limit)
+
+  private def nextPageAscending(eori: String, statusGroup: StatusGroup, statusLastUpdated: ZonedDateTime, limit: Int): Future[Seq[Submission]] =
     collection
       .find(fetchFilter(eori, statusGroup, statusLastUpdated, "gt"))
       .hintString(dashBoardIndex)
       .limit(limit)
       .sort(ascending)
       .toFuture()
-      .map(_.reverse)
+
+  private def previousPageDescending(eori: String, statusGroup: StatusGroup, statusLastUpdated: ZonedDateTime, limit: Int): Future[Seq[Submission]] =
+    collection
+      .find(fetchFilter(eori, statusGroup, statusLastUpdated, "lt"))
+      .hintString(dashBoardIndex)
+      .limit(limit)
+      .sort(descending)
+      .toFuture()
 
   private def fetchFilter(eori: String, statusGroup: StatusGroup): Bson = {
     val filter =
@@ -163,6 +180,7 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     collection
       .find(and(equal("eori", eori), equal("lrn", lrn)))
       .toFuture()
+
   def findByLatestDecId(eori: String, latestDecId: String): Future[Option[Submission]] =
     collection
       .find(and(equal("eori", eori), equal("latestDecId", latestDecId)))
@@ -171,6 +189,8 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
 }
 
 object SubmissionRepository {
+
+  import com.mongodb.client.model.Indexes.{ascending, compoundIndex, descending}
 
   val filter = Json.obj("actions.id" -> Json.obj("$exists" -> JsBoolean(true)))
 
