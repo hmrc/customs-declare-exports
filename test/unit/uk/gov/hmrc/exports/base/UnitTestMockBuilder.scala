@@ -46,7 +46,6 @@ object UnitTestMockBuilder extends MockitoSugar {
   def buildSubmissionRepositoryMock: SubmissionRepository = {
     val submissionRepositoryMock: SubmissionRepository = mock[SubmissionRepository]
     when(submissionRepositoryMock.addAction(any[String](), any())).thenReturn(Future.successful(None))
-    when(submissionRepositoryMock.findAll(any())).thenReturn(Future.successful(Seq.empty))
     when(submissionRepositoryMock.create(any[Submission])).thenReturn(Future.successful(mock[Submission]))
     submissionRepositoryMock
   }

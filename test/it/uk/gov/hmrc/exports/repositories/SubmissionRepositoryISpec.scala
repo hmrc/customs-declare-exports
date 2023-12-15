@@ -81,17 +81,6 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
     }
   }
 
-  "SubmissionRepository.findAll" should {
-    "return all Submissions for the given EORI" in {
-      repository.insertOne(submission).futureValue
-      repository.insertOne(submission_2).futureValue
-      repository.insertOne(submission_3.copy(eori = "GB1234567")).futureValue
-
-      val result = repository.findAll(submission.eori).futureValue
-      result mustBe Seq(submission, submission_2)
-    }
-  }
-
   "SubmissionRepository.findByLrn" should {
 
     "return an empty sequence" when {
@@ -120,7 +109,7 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
       "return true" in {
         repository.insertOne(submission).futureValue.isRight mustBe true
 
-        val submissionInDB = repository.findAll(eori).futureValue
+        val submissionInDB = repository.findAll("eori", eori).futureValue
         submissionInDB.headOption must be(defined)
       }
     }
@@ -140,7 +129,7 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
     "allow to insert two submissions with empty actions" in {
       repository.insertOne(emptySubmission_1).futureValue.isRight mustBe true
       repository.insertOne(emptySubmission_2).futureValue.isRight mustBe true
-      repository.findAll(eori).futureValue must have length 2
+      repository.findAll("eori", eori).futureValue must have length 2
     }
   }
 
