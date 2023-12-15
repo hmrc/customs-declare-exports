@@ -20,9 +20,11 @@ import repositories.DuplicateKey
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
+import uk.gov.hmrc.exports.models.FetchSubmissionPageData
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
 import uk.gov.hmrc.exports.models.declaration.submissions._
+import uk.gov.hmrc.exports.repositories.SubmissionRepositoryISpecHelper.itemsPerPage
 import uk.gov.hmrc.exports.util.TimeUtils
 
 import java.time.ZonedDateTime
@@ -32,6 +34,9 @@ import scala.util.Random
 class SubmissionRepositoryISpec extends IntegrationTestSpec {
 
   private val repository = instanceOf[SubmissionRepository]
+
+  private def fetchData(reverse: Boolean = false): FetchSubmissionPageData =
+    FetchSubmissionPageData(List.empty, reverse = reverse, limit = itemsPerPage)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -141,97 +146,126 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
 
   import uk.gov.hmrc.exports.repositories.SubmissionRepositoryISpecHelper._
 
-  private def genSubmissions(statusGroup: StatusGroup, size: Int = itemsPerPage * 2): Seq[Submission] = {
+  private def genSubmissions(statusGroup: StatusGroup, size: Int = itemsPerPage * 2, descending: Boolean = true): Seq[Submission] = {
     val lastStatusUpdate = TimeUtils.now()
     val statuses = toEnhancedStatus(statusGroup).toList
 
     val submissions = (0 until size).map { seconds =>
-      submission(lastStatusUpdate.minusSeconds(seconds.toLong), statuses(Random.nextInt(statuses.length)))
+      genSubmission(lastStatusUpdate.minusSeconds(seconds.toLong), statuses(Random.nextInt(statuses.length)))
     }.toList
 
     repository.bulkInsert(submissions).futureValue mustBe size
-    submissions.sortWith { case (s1, s2) => s1.enhancedStatusLastUpdated.isAfter(s2.enhancedStatusLastUpdated) }
+    submissions.sortWith { case (s1, s2) =>
+      val date1 = s1.enhancedStatusLastUpdated
+      val date2 = s2.enhancedStatusLastUpdated
+      if (descending) date1.isAfter(date2) else date1.isBefore(date2)
+    }
   }
 
   "SubmissionRepository.fetchFirstPage" should {
 
     "return an empty Sequence when there no Submissions for the given EORI and statusGroup" in {
-      repository.fetchFirstPage("eori", SubmittedStatuses, itemsPerPage).futureValue mustBe Seq.empty
+      repository.fetchFirstPage("eori", SubmittedStatuses, fetchData()).futureValue mustBe Seq.empty
     }
 
-    "return the first page of Submissions for the given EORI, statusGroup and statusLastUpdated in descending order" in {
-      genSubmissions(CancelledStatuses) // don't fetch from these
-      val allSubmissions = genSubmissions(SubmittedStatuses) // fetch the 1st page from these instead
-      val submissions = repository.fetchFirstPage("eori", SubmittedStatuses, itemsPerPage).futureValue
-      (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(ix))
+    List(false, true).foreach { descending =>
+      val order = if (descending) "descending" else "ascending"
+
+      s"return the first page of Submissions for the given EORI, statusGroup and statusLastUpdated in $order order" in {
+        genSubmissions(CancelledStatuses) // don't fetch from these
+        val allSubmissions = genSubmissions(SubmittedStatuses, descending = descending) // fetch the 1st page from these instead
+        val submissions = repository.fetchFirstPage("eori", SubmittedStatuses, fetchData(!descending)).futureValue
+        (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(ix))
+      }
     }
   }
 
   "SubmissionRepository.fetchLastPage" should {
 
     "return an empty Sequence when there no Submissions for the given EORI and statusGroup" in {
-      repository.fetchLastPage("eori", SubmittedStatuses, itemsPerPage).futureValue mustBe Seq.empty
+      repository.fetchLastPage("eori", SubmittedStatuses, fetchData()).futureValue mustBe Seq.empty
     }
 
-    "return the last page of Submissions for the given EORI, statusGroup and statusLastUpdated in descending order" in {
-      genSubmissions(CancelledStatuses) // don't fetch from these
-      val allSubmissions = genSubmissions(SubmittedStatuses, itemsPerPage * 3) // fetch the last page from these instead
-      val submissions = repository.fetchLastPage("eori", SubmittedStatuses, itemsPerPage).futureValue
-      (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(itemsPerPage * 2 + ix))
+    List(false, true).foreach { descending =>
+      val order = if (descending) "descending" else "ascending"
+
+      s"return the last page of Submissions for the given EORI, statusGroup and statusLastUpdated in $order order" in {
+        genSubmissions(CancelledStatuses) // don't fetch from these
+        val allSubmissions = genSubmissions(SubmittedStatuses, itemsPerPage * 3, descending = descending) // fetch the last page from these instead
+        val submissions = repository.fetchLastPage("eori", SubmittedStatuses, fetchData(!descending)).futureValue
+        (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(itemsPerPage * 2 + ix))
+      }
     }
   }
 
   "SubmissionRepository.fetchLoosePage" should {
 
     "return an empty Sequence when there no Submissions for the given EORI and statusGroup" in {
-      repository.fetchLoosePage("eori", SubmittedStatuses, 2, itemsPerPage).futureValue mustBe Seq.empty
+      repository.fetchLoosePage("eori", SubmittedStatuses, 2, fetchData()).futureValue mustBe Seq.empty
     }
 
-    "return a loose page of Submissions for the given EORI, statusGroup and statusLastUpdated in descending order" in {
-      genSubmissions(CancelledStatuses) // don't fetch from these
-      val allSubmissions = genSubmissions(SubmittedStatuses, itemsPerPage * 4) // fetch a loose page from these instead
-      val submissions = repository.fetchLoosePage("eori", SubmittedStatuses, 3, itemsPerPage).futureValue
-      (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(itemsPerPage * 2 + ix))
+    List(false, true).foreach { descending =>
+      val order = if (descending) "descending" else "ascending"
+
+      s"return a loose page of Submissions for the given EORI, statusGroup and statusLastUpdated in $order order" in {
+        genSubmissions(CancelledStatuses) // don't fetch from these
+        val allSubmissions = genSubmissions(SubmittedStatuses, itemsPerPage * 4, descending = descending) // fetch a loose page from these instead
+        val submissions = repository.fetchLoosePage("eori", SubmittedStatuses, 3, fetchData(!descending)).futureValue
+        (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(itemsPerPage * 2 + ix))
+      }
     }
   }
 
   "SubmissionRepository.fetchNextPage" should {
 
     "return an empty Sequence when there no Submissions for the given EORI and statusGroup" in {
-      repository.fetchNextPage("eori", SubmittedStatuses, TimeUtils.now(), itemsPerPage).futureValue mustBe Seq.empty
+      repository.fetchNextPage("eori", SubmittedStatuses, TimeUtils.now(), fetchData()).futureValue mustBe Seq.empty
     }
 
-    "return the next page of Submissions for the given EORI, statusGroup and statusLastUpdated in descending order" in {
-      genSubmissions(CancelledStatuses) // don't fetch from these
-      val allSubmissions = genSubmissions(SubmittedStatuses, itemsPerPage * 4) // fetch the next page from these instead
+    List(false, true).foreach { descending =>
+      val order = if (descending) "descending" else "ascending"
 
-      // Assume current page is 2
-      val dateTimeOfLastSubmissionOfPage2 = allSubmissions(itemsPerPage * 2 - 1).enhancedStatusLastUpdated
+      s"return the next page of Submissions for the given EORI, statusGroup and statusLastUpdated in $order order" in {
+        genSubmissions(CancelledStatuses) // don't fetch from these
+        val allSubmissions = genSubmissions(SubmittedStatuses, itemsPerPage * 4, descending = descending) // fetch the next page from these instead
 
-      val submissions = repository
-        .fetchNextPage("eori", SubmittedStatuses, dateTimeOfLastSubmissionOfPage2, itemsPerPage)
-        .futureValue
-      (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(itemsPerPage * 2 + ix))
+        // Assume current page is 2
+        val dateTimeOfLastSubmissionOfPage2 = allSubmissions(itemsPerPage * 2 - 1).enhancedStatusLastUpdated
+
+        val submissions = repository
+          .fetchNextPage("eori", SubmittedStatuses, dateTimeOfLastSubmissionOfPage2, fetchData(!descending))
+          .futureValue
+        (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(itemsPerPage * 2 + ix))
+      }
     }
   }
 
   "SubmissionRepository.fetchPreviousPage" should {
 
     "return an empty Sequence when there no Submissions for the given EORI and statusGroup" in {
-      repository.fetchPreviousPage("eori", SubmittedStatuses, TimeUtils.now(), itemsPerPage).futureValue mustBe Seq.empty
+      repository.fetchPreviousPage("eori", SubmittedStatuses, TimeUtils.now(), fetchData()).futureValue mustBe Seq.empty
     }
 
-    "return the previous page of Submissions for the given EORI, statusGroup and statusLastUpdated in descending order" in {
-      genSubmissions(CancelledStatuses) // don't fetch from these
-      val allSubmissions = genSubmissions(SubmittedStatuses, itemsPerPage * 4) // fetch the previous page from these instead
+    List(false, true).foreach { descending =>
+      val order = if (descending) "descending" else "ascending"
 
-      // Assume current page is 3
-      val dateTimeOfFirstSubmissionOfPage3 = allSubmissions(itemsPerPage * 2).enhancedStatusLastUpdated
+      s"return the previous page of Submissions for the given EORI, statusGroup and statusLastUpdated in $order order" in {
+        genSubmissions(CancelledStatuses) // don't fetch from these
+        val allSubmissions =
+          genSubmissions(SubmittedStatuses, itemsPerPage * 4, descending = descending) // fetch the previous page from these instead
 
-      val submissions = repository
-        .fetchPreviousPage("eori", SubmittedStatuses, dateTimeOfFirstSubmissionOfPage3, itemsPerPage)
-        .futureValue
-      (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(itemsPerPage + ix))
+        // Assume current page is 3
+        val dateTimeOfFirstSubmissionOfPage3 = allSubmissions(itemsPerPage * 2).enhancedStatusLastUpdated
+
+        val submissions = repository
+          .fetchPreviousPage("eori", SubmittedStatuses, dateTimeOfFirstSubmissionOfPage3, fetchData(!descending))
+          .futureValue
+          // For the 'fetchPreviousPage' test only, it's required to reverse the resulting submissions.
+          // The service does this in SubmissionService.
+          .reverse
+
+        (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(itemsPerPage + ix))
+      }
     }
   }
 }
@@ -246,7 +280,7 @@ object SubmissionRepositoryISpecHelper {
 
   val dateTime = TimeUtils.now().withNano(111000000)
 
-  def submission(lastStatusUpdate: ZonedDateTime, status: EnhancedStatus = RECEIVED): Submission = {
+  def genSubmission(lastStatusUpdate: ZonedDateTime, status: EnhancedStatus = RECEIVED): Submission = {
     val uuid = UUID.randomUUID.toString
     Submission(
       uuid = uuid,

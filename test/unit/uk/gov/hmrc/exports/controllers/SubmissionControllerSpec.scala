@@ -27,7 +27,6 @@ import uk.gov.hmrc.auth.core.InsufficientEnrolments
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
-import uk.gov.hmrc.exports.models.FetchSubmissionPageData.DEFAULT_LIMIT
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
 import uk.gov.hmrc.exports.models.declaration.submissions._
@@ -108,28 +107,28 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
 
   "SubmissionController.fetchPage" should {
 
-    val pageOfSubmissions = PageOfSubmissions(SubmittedStatuses, 0, Seq.empty)
+    val pageOfSubmissions = PageOfSubmissions(SubmittedStatuses, 0, Seq.empty, false)
 
     "call SubmissionService.fetchFirstPage for fetching the 1st page of the 1st StatusGroup containing submissions" in {
-      val statuses: Seq[Value] = List(ActionRequiredStatuses, CancelledStatuses)
-      when(submissionService.fetchFirstPage(any(), any[Seq[StatusGroup]], any[Int])).thenReturn(Future.successful(pageOfSubmissions))
+      when(submissionService.fetchFirstPage(any(), any[FetchSubmissionPageData])).thenReturn(Future.successful(pageOfSubmissions))
 
+      val statuses: Seq[Value] = List(ActionRequiredStatuses, CancelledStatuses)
       val result = controller.fetchPage(FakeRequest("GET", s"/submission-page?groups=${statuses.mkString(",")}"))
 
       status(result) mustBe OK
-      verify(submissionService).fetchFirstPage(any(), eqTo(statuses), eqTo(DEFAULT_LIMIT))
+      verify(submissionService).fetchFirstPage(any(), any[FetchSubmissionPageData])
       verify(submissionService, never).fetchFirstPage(any(), any[StatusGroup], any())
       verify(submissionService, never).fetchPage(any(), any(), any())
     }
 
     "call SubmissionService.fetchFirstPage for fetching the first page of a specific StatusGroup" in {
-      when(submissionService.fetchFirstPage(any(), any[StatusGroup], any[Int])).thenReturn(Future.successful(pageOfSubmissions))
+      when(submissionService.fetchFirstPage(any(), any[StatusGroup], any())).thenReturn(Future.successful(pageOfSubmissions))
 
       val result = controller.fetchPage(FakeRequest("GET", "/submission-page?groups=rejected&page=1"))
 
       status(result) mustBe OK
-      verify(submissionService, never).fetchFirstPage(any(), any[Seq[StatusGroup]], any())
-      verify(submissionService).fetchFirstPage(any(), eqTo(RejectedStatuses), eqTo(DEFAULT_LIMIT))
+      verify(submissionService, never).fetchFirstPage(any(), any[FetchSubmissionPageData])
+      verify(submissionService).fetchFirstPage(any(), eqTo(RejectedStatuses), any[FetchSubmissionPageData])
       verify(submissionService, never).fetchPage(any(), any(), any())
     }
 
@@ -145,10 +144,10 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
 
       status(result) mustBe OK
 
-      verify(submissionService, never).fetchFirstPage(any(), any[Seq[StatusGroup]], any())
+      verify(submissionService, never).fetchFirstPage(any(), any[FetchSubmissionPageData])
       verify(submissionService, never).fetchFirstPage(any(), any[StatusGroup], any())
 
-      val submissionPageData = FetchSubmissionPageData(List(ActionRequiredStatuses), Some(datetime), Some(datetime), Some(2), 2)
+      val submissionPageData = FetchSubmissionPageData(List(ActionRequiredStatuses), Some(datetime), Some(datetime), Some(2), false, 2)
       verify(submissionService).fetchPage(any(), eqTo(ActionRequiredStatuses), eqTo(submissionPageData))
     }
   }
