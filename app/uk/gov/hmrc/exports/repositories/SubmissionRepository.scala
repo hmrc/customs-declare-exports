@@ -159,12 +159,6 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     findOne(filter).map(_.flatMap(_.actions.find(_.id == actionId)))
   }
 
-  def findAll(eori: String): Future[Seq[Submission]] =
-    collection
-      .find(equal("eori", eori))
-      .sort(BsonDocument(Json.obj("actions.requestTimestamp" -> -1).toString))
-      .toFuture()
-
   def findByAction(eori: String, actionId: String): Future[Option[Submission]] = {
     val filter = and(equal("actions.id", actionId), equal("eori", eori))
     findOne(filter)
@@ -205,7 +199,6 @@ object SubmissionRepository {
         .unique(true)
     ),
     IndexModel(ascending("uuid"), IndexOptions().name("uuidIdx").unique(true)),
-    IndexModel(compoundIndex(ascending("eori"), descending("action.requestTimestamp")), IndexOptions().name("actionOrderedEori")),
     IndexModel(compoundIndex(ascending("eori"), descending("lrn")), IndexOptions().name("lrnByEori")),
     IndexModel(
       compoundIndex(ascending("eori"), ascending("latestEnhancedStatus"), descending("enhancedStatusLastUpdated")),

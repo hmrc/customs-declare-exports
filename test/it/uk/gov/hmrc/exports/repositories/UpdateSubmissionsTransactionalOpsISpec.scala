@@ -16,20 +16,19 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import testdata.ExportsTestData._
-import testdata.SubmissionTestData._
 import play.api.test.Helpers._
+import testdata.ExportsTestData.{actionId, eori, mrn}
+import testdata.SubmissionTestData._
 import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.AMENDMENT_DRAFT
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
-import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.mongo.MongoComponent
-import org.scalacheck.Gen
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.codesMap
+import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.http.InternalServerException
+import uk.gov.hmrc.mongo.MongoComponent
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -313,38 +312,39 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
         }
 
         "on AmendmentRequest" when {
-          "status is other than CUSTOMS_POSITION_GRANTED, CUSTOMS_POSITION_DENIED, REJECTED, RECEIVED" in {
-            val status = Gen.oneOf(codesMap removedAll List("1139", "1141", "03", "02")).sample.get._2
 
-            val notifications = Seq(
-              notificationSummary_1,
-              NotificationSummary(notification_2.unparsedNotificationId, notificationSummary_1.dateTimeIssued plusHours 1, GOODS_HAVE_EXITED)
-            )
+          // Exception not raised on these SubmissionStatus values:
+          //   RECEIVED, REJECTED, AMENDED, CUSTOMS_POSITION_GRANTED, CUSTOMS_POSITION_DENIED
+          (codesMap removedAll List("02", "03", "07", "1139", "1141")).values.foreach { status =>
+            s"status is $status" in {
+              val notifications = Seq(
+                notificationSummary_1,
+                NotificationSummary(notification_2.unparsedNotificationId, notificationSummary_1.dateTimeIssued plusHours 1, GOODS_HAVE_EXITED)
+              )
+              val submissionAction = action.copy(notifications = Some(notifications))
+              val amendmentAction = action_2.copy(versionNo = 2, requestType = AmendmentRequest)
 
-            val submissionAction = action.copy(notifications = Some(notifications))
-            val amendmentAction = action_2.copy(versionNo = 2, requestType = AmendmentRequest)
+              val testSubmission = submission.copy(actions = Seq(submissionAction, amendmentAction), latestEnhancedStatus = RECEIVED)
 
-            val testSubmission = submission.copy(actions = Seq(submissionAction, amendmentAction), latestEnhancedStatus = RECEIVED)
+              val notificationForAmendment = ParsedNotification(
+                unparsedNotificationId = UUID.randomUUID,
+                actionId = amendmentAction.id,
+                details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = status, version = Some(1), errors = Seq.empty)
+              )
 
-            val notificationForAmendment = ParsedNotification(
-              unparsedNotificationId = UUID.randomUUID,
-              actionId = amendmentAction.id,
-              details = NotificationDetails(mrn = mrn, dateTimeIssued = dateTimeIssued_2, status = status, version = Some(1), errors = Seq.empty)
-            )
+              submissionRepository
+                .insertOne(testSubmission)
+                .futureValue
+                .isRight mustBe true
 
-            submissionRepository
-              .insertOne(testSubmission)
-              .futureValue
-              .isRight mustBe true
-
-            val result = intercept[InternalServerException] {
-              await {
-                transactionalOps
-                  .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
+              val result = intercept[InternalServerException] {
+                await {
+                  transactionalOps
+                    .updateSubmissionAndNotifications(amendmentAction.id, List(notificationForAmendment), testSubmission)
+                }
               }
+              result.message mustBe s"Cannot update for submission status $status"
             }
-            result.message mustBe s"Cannot update for submission status $status"
-
           }
 
           "the relative Action is without notifications" in {
