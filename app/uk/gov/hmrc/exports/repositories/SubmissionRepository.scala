@@ -43,7 +43,8 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
       mongoComponent = mongoComponent,
       collectionName = "submissions",
       domainFormat = Submission.format,
-      indexes = SubmissionRepository.indexes
+      indexes = SubmissionRepository.indexes,
+      replaceIndexes = true
     ) with RepositoryOps[Submission] {
 
   override def classTag: ClassTag[Submission] = implicitly[ClassTag[Submission]]
