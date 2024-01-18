@@ -29,6 +29,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus._
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.AMENDMENT_DRAFT
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{EnhancedStatus, ON_HOLD}
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.{notificationsToAction, updateActionWithNotificationSummaries}
+import uk.gov.hmrc.exports.repositories.RepositoryOps.doNotUpsertAndReturnAfter
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.transaction.{TransactionConfiguration, Transactions}
@@ -47,13 +48,11 @@ class UpdateSubmissionsTransactionalOps @Inject() (
 )(implicit ec: ExecutionContext)
     extends Transactions with Logging {
 
-  private implicit val tc: TransactionConfiguration = TransactionConfiguration.strict
-
   private lazy val nonTransactionalSession = mongoComponent.client.startSession().toFuture()
 
   def updateSubmissionAndNotifications(actionId: String, notifications: Seq[ParsedNotification], submission: Submission): Future[Submission] =
     if (appConfig.useTransactionalDBOps)
-      withSessionAndTransaction[Submission](startOp(_, actionId, notifications, submission))
+      withSessionAndTransaction[Submission](startOp(_, actionId, notifications, submission))(TransactionConfiguration.strict, ec)
     else
       nonTransactionalSession.flatMap(startOp(_, actionId, notifications, submission))
 
@@ -142,7 +141,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
         "actions" -> actions
       )
     )
-    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
+    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString), doNotUpsertAndReturnAfter)
   }
 
   private def updateAmendmentRequest(
@@ -174,7 +173,8 @@ class UpdateSubmissionsTransactionalOps @Inject() (
       submissionRepository.findOneAndUpdate(
         session,
         BsonDocument(filter.toString),
-        BsonDocument(Json.obj("$set" -> updateFromStatus(decId)).toString)
+        BsonDocument(Json.obj("$set" -> updateFromStatus(decId)).toString),
+        options = doNotUpsertAndReturnAfter
       )
     } getOrElse Future.failed(throw new InternalServerException(s"Action(${action.id}) to amend does not contain a decId"))
   }
@@ -202,13 +202,13 @@ class UpdateSubmissionsTransactionalOps @Inject() (
         "actions" -> (actions :+ newExtAmendAction)
       )
     )
-    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
+    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString), doNotUpsertAndReturnAfter)
   }
 
   private def updateCancellationRequest(session: ClientSession, action: Action, actions: Seq[Action]): Future[Option[Submission]] = {
     val filter = Json.obj("actions.id" -> action.id)
     val update = Json.obj("$set" -> Json.obj("actions" -> actions))
-    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
+    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString), doNotUpsertAndReturnAfter)
   }
 
   private def deleteAnyAmendmentDraftDecs(

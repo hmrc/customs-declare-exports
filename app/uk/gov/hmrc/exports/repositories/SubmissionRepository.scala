@@ -22,11 +22,11 @@ import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.libs.json.{JsBoolean, Json}
-import repositories.RepositoryOps
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.fromStatusGroup
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.StatusGroup
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, Submission}
+import uk.gov.hmrc.exports.repositories.RepositoryOps.doNotUpsertAndReturnAfter
 import uk.gov.hmrc.exports.repositories.SubmissionRepository.dashBoardIndex
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -52,7 +52,7 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
   def addAction(uuid: String, action: Action): Future[Option[Submission]] = {
     val filter = Json.obj("uuid" -> uuid)
     val update = Json.obj("$addToSet" -> Json.obj("actions" -> Json.toJson(action)))
-    findOneAndUpdate(filter, update)
+    findOneAndUpdate(filter, update, options = doNotUpsertAndReturnAfter)
   }
 
   def updateAction(submissionId: String, actionId: String, decId: String): Future[Option[Submission]] =

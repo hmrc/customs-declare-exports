@@ -38,16 +38,15 @@ class PurgeSubmissionsTransactionalOps @Inject() (
 )(implicit ec: ExecutionContext)
     extends Transactions with Logging {
 
-  protected implicit val tc = TransactionConfiguration.strict
-
-  protected lazy val nonTransactionalSession = mongoComponent.client.startSession().toFuture()
+  private lazy val nonTransactionalSession = mongoComponent.client.startSession().toFuture()
 
   def removeSubmissionAndNotifications(submissions: Seq[Submission]): Future[Seq[Long]] =
     if (appConfig.useTransactionalDBOps)
-      withSessionAndTransaction[Seq[Long]](startRemovals(_, submissions)).recover { case e: Exception =>
-        logger.warn(s"There was an error while writing to the DB => ${e.getMessage}", e)
-        Seq.empty
-      }
+      withSessionAndTransaction[Seq[Long]](startRemovals(_, submissions))(TransactionConfiguration.strict, ec)
+        .recover { case e: Exception =>
+          logger.warn(s"There was an error while writing to the DB => ${e.getMessage}", e)
+          Seq.empty
+        }
     else nonTransactionalSession.flatMap(startRemovals(_, submissions))
 
   private def startRemovals(session: ClientSession, submissions: Seq[Submission]): Future[Seq[Long]] =

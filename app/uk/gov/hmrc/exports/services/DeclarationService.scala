@@ -24,6 +24,7 @@ import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
+import uk.gov.hmrc.exports.repositories.RepositoryOps.doNotUpsertAndReturnAfterOnReplace
 import uk.gov.hmrc.exports.services.DeclarationService.{CREATED, FOUND}
 
 import java.util.UUID
@@ -100,7 +101,7 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
     declarationRepository.findOneAndReplace(
       Json.obj("id" -> declaration.id, "eori" -> declaration.eori, "status" -> Json.obj("$ne" -> COMPLETE.toString)),
       declaration,
-      false
+      doNotUpsertAndReturnAfterOnReplace
     )
 }
 

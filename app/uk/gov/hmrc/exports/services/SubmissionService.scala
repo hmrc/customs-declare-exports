@@ -29,6 +29,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.{StatusGroup, SubmittedStatuses}
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.{Eori, FetchSubmissionPageData, Mrn, PageOfSubmissions}
+import uk.gov.hmrc.exports.repositories.RepositoryOps.doNotUpsertAndReturnAfter
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping._
 import uk.gov.hmrc.exports.services.reversemapping.MappingContext
@@ -190,7 +191,9 @@ class SubmissionService @Inject() (
 
     updatedSubmission match {
       case Some(submission) if submission.actions.exists(findAction(submission)) =>
-        submissionRepository.findOneAndUpdate(Filters.eq("uuid", submission.uuid), Updates.set("latestDecId", declarationId))
+        val filter = Filters.eq("uuid", submission.uuid)
+        val update = Updates.set("latestDecId", declarationId)
+        submissionRepository.findOneAndUpdate(filter, update, doNotUpsertAndReturnAfter)
       case submission => Future.successful(submission)
     }
   }

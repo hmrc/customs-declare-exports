@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package repositories
+package uk.gov.hmrc.exports.repositories
 
 import com.mongodb.ErrorCategory.DUPLICATE_KEY
 import com.mongodb.ExplainVerbosity.QUERY_PLANNER
@@ -26,6 +26,7 @@ import org.mongodb.scala.model.{FindOneAndReplaceOptions, FindOneAndUpdateOption
 import org.mongodb.scala.{ClientSession, Document, MongoCollection, MongoWriteException}
 import play.api.libs.json.JsValue
 import play.libs.Json
+import uk.gov.hmrc.exports.repositories.RepositoryOps.upsertAndReturnAfter
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
@@ -103,12 +104,12 @@ trait RepositoryOps[T] {
   def findOneOrCreate(filter: JsValue, document: => T): Future[T] =
     findOneOrCreate(BsonDocument(filter.toString), document)
 
-  private lazy val upsertAndReturnAfter = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-
-  def findOneOrCreate(filter: Bson, document: => T): Future[T] =
+  def findOneOrCreate(filter: Bson, document: => T): Future[T] = {
+    val update = Updates.setOnInsert(BsonDocument(Json.toJson(document).toString))
     collection
-      .findOneAndUpdate(filter = filter, update = Updates.setOnInsert(BsonDocument(Json.toJson(document).toString)), options = upsertAndReturnAfter)
+      .findOneAndUpdate(filter = filter, update = update, options = upsertAndReturnAfter)
       .toFuture()
+  }
 
   def findOneAndRemove[V](keyId: String, keyValue: V): Future[Option[T]] =
     collection.findOneAndDelete(equal(keyId, keyValue)).toFutureOption()
@@ -123,49 +124,116 @@ trait RepositoryOps[T] {
    Find one and replace with "document: T" if a document with keyId=keyValue exists,
    or create "document: T" (if createIfNotExists is true) if a document with keyId=keyValue does NOT exists.
    */
-  def findOneAndReplace[V](keyId: String, keyValue: V, document: => T, createIfNotExists: Boolean): Future[Option[T]] =
-    findOneAndReplace(equal(keyId, keyValue), document, createIfNotExists)
+  def findOneAndReplace[V](
+    keyId: String,
+    keyValue: V,
+    document: => T,
+    options: FindOneAndReplaceOptions
+  ): Future[Option[T]] =
+    findOneAndReplace(equal(keyId, keyValue), document, options)
+
+  def findOneAndReplace[V](
+    session: ClientSession,
+    keyId: String,
+    keyValue: V,
+    document: => T,
+    options: FindOneAndReplaceOptions
+  ): Future[Option[T]] =
+    findOneAndReplace(session, equal(keyId, keyValue), document, options)
 
   /*
    Find one and replace if a document with the given filter exists,
    or create "document: T" (if createIfNotExists is true) if a document with the given filter does NOT exists.
    */
-  def findOneAndReplace(filter: JsValue, document: => T, createIfNotExists: Boolean): Future[Option[T]] =
-    findOneAndReplace(BsonDocument(filter.toString), document, createIfNotExists)
+  def findOneAndReplace(
+    filter: JsValue,
+    document: => T,
+    options: FindOneAndReplaceOptions
+  ): Future[Option[T]] =
+    findOneAndReplace(BsonDocument(filter.toString), document, options)
 
-  def findOneAndReplace(filter: Bson, document: => T, createIfNotExists: Boolean = true): Future[Option[T]] = {
-    val result = collection
-      .findOneAndReplace(
-        filter = filter,
-        replacement = document,
-        options = FindOneAndReplaceOptions().upsert(createIfNotExists).returnDocument(ReturnDocument.AFTER)
-      )
+  def findOneAndReplace(
+    session: ClientSession,
+    filter: JsValue,
+    document: => T,
+    options: FindOneAndReplaceOptions
+  ): Future[Option[T]] =
+    findOneAndReplace(session, BsonDocument(filter.toString), document, options)
 
+  def findOneAndReplace(
+    filter: Bson,
+    document: => T,
+    options: FindOneAndReplaceOptions
+  ): Future[Option[T]] = {
+    val result = collection.findOneAndReplace(filter = filter, replacement = document, options = options)
+    if (result == null) Future.successful(None) else result.toFutureOption()
+  }
+
+  def findOneAndReplace(
+    session: ClientSession,
+    filter: Bson,
+    document: => T,
+    options: FindOneAndReplaceOptions
+  ): Future[Option[T]] = {
+    val result = collection.findOneAndReplace(session, filter = filter, replacement = document, options = options)
     if (result == null) Future.successful(None) else result.toFutureOption()
   }
 
   /*
-   Find and update a document if a document with keyId = keyValue exists. Do not create a new document
+   Find and update a document if a document with keyId = keyValue exists. Do not create a new document by default.
    */
-  def findOneAndUpdate[V](keyId: String, keyValue: V, update: JsValue): Future[Option[T]] =
-    findOneAndUpdate(equal(keyId, keyValue), BsonDocument(update.toString))
+  def findOneAndUpdate[V](
+    keyId: String,
+    keyValue: V,
+    update: JsValue,
+    options: FindOneAndUpdateOptions
+  ): Future[Option[T]] =
+    findOneAndUpdate(equal(keyId, keyValue), BsonDocument(update.toString), options)
+
+  def findOneAndUpdate[V](
+    session: ClientSession,
+    keyId: String,
+    keyValue: V,
+    update: JsValue,
+    options: FindOneAndUpdateOptions
+  ): Future[Option[T]] =
+    findOneAndUpdate(session, equal(keyId, keyValue), BsonDocument(update.toString), options)
 
   /*
-   Find and update a document if a document with the given filter exists. Do not create a new document
+   Find and update a document if a document with the given filter exists. Do not create a new document by default.
    */
-  def findOneAndUpdate(filter: JsValue, update: JsValue): Future[Option[T]] =
-    findOneAndUpdate(BsonDocument(filter.toString), BsonDocument(update.toString))
+  def findOneAndUpdate(
+    filter: JsValue,
+    update: JsValue,
+    options: FindOneAndUpdateOptions
+  ): Future[Option[T]] =
+    findOneAndUpdate(BsonDocument(filter.toString), BsonDocument(update.toString), options)
 
-  protected def doNotUpsertAndReturnAfter = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
+  def findOneAndUpdate(
+    session: ClientSession,
+    filter: JsValue,
+    update: JsValue,
+    options: FindOneAndUpdateOptions
+  ): Future[Option[T]] =
+    findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString), options)
 
-  def findOneAndUpdate(filter: Bson, update: Bson): Future[Option[T]] =
+  def findOneAndUpdate(
+    filter: Bson,
+    update: Bson,
+    options: FindOneAndUpdateOptions
+  ): Future[Option[T]] =
     collection
-      .findOneAndUpdate(filter = filter, update = update, options = doNotUpsertAndReturnAfter)
+      .findOneAndUpdate(filter = filter, update = update, options = options)
       .toFutureOption()
 
-  def findOneAndUpdate(session: ClientSession, filter: Bson, update: Bson): Future[Option[T]] =
+  def findOneAndUpdate(
+    session: ClientSession,
+    filter: Bson,
+    update: Bson,
+    options: FindOneAndUpdateOptions
+  ): Future[Option[T]] =
     collection
-      .findOneAndUpdate(session, filter = filter, update = update, options = doNotUpsertAndReturnAfter)
+      .findOneAndUpdate(session, filter = filter, update = update, options = options)
       .toFutureOption()
 
   def get[V](keyId: String, keyValue: V): Future[T] =
@@ -189,7 +257,7 @@ trait RepositoryOps[T] {
           Left(DuplicateKey(exc.getError.getMessage))
       }
 
-  def removeAll: Future[Long] =
+  def removeAll(): Future[Long] =
     collection.deleteMany(BsonDocument()).toFuture().map(_.getDeletedCount)
 
   def removeEvery[V](keyId: String, keyValue: V): Future[Long] =
@@ -216,6 +284,21 @@ trait RepositoryOps[T] {
   def size: Future[Long] = collection.countDocuments().toFuture()
 }
 // scalastyle:on
+
+object RepositoryOps {
+
+  lazy val upsertAndReturnAfter: FindOneAndUpdateOptions =
+    FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+
+  lazy val doNotUpsertAndReturnAfter: FindOneAndUpdateOptions =
+    FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
+
+  lazy val upsertAndReturnAfterOnReplace: FindOneAndReplaceOptions =
+    FindOneAndReplaceOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+
+  lazy val doNotUpsertAndReturnAfterOnReplace: FindOneAndReplaceOptions =
+    FindOneAndReplaceOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
+}
 
 sealed abstract class WriteError(message: String)
 

@@ -22,13 +22,13 @@ import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.Updates.set
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions}
 import play.api.libs.json.Json
-import repositories.RepositoryOps
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timers
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository.meta
+import uk.gov.hmrc.exports.repositories.RepositoryOps.doNotUpsertAndReturnAfter
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
@@ -89,13 +89,15 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
   def revertStatusToDraft(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
     findOneAndUpdate(
       filter = BsonDocument(Json.obj("eori" -> declaration.eori, "id" -> declaration.id).toString),
-      update = set(s"$meta.status", DeclarationStatus.DRAFT.toString)
+      update = set(s"$meta.status", DeclarationStatus.DRAFT.toString),
+      options = doNotUpsertAndReturnAfter
     )
 
   def revertStatusToAmendmentDraft(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
     findOneAndUpdate(
       filter = BsonDocument(Json.obj("eori" -> declaration.eori, "id" -> declaration.id).toString),
-      update = set(s"$meta.status", DeclarationStatus.AMENDMENT_DRAFT.toString)
+      update = set(s"$meta.status", DeclarationStatus.AMENDMENT_DRAFT.toString),
+      options = doNotUpsertAndReturnAfter
     )
 }
 
