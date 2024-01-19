@@ -21,7 +21,7 @@ import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
-import uk.gov.hmrc.exports.repositories.{PurgeSubmissionsTransactionalOps, SubmissionRepository}
+import uk.gov.hmrc.exports.repositories.{JobRunRepository, PurgeSubmissionsTransactionalOps, SubmissionRepository}
 import uk.gov.hmrc.exports.util.TimeUtils
 
 import java.time.LocalTime
@@ -33,7 +33,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class PurgeAncientSubmissionsJob @Inject() (
   appConfig: AppConfig,
   submissionRepository: SubmissionRepository,
-  transactionalOps: PurgeSubmissionsTransactionalOps
+  transactionalOps: PurgeSubmissionsTransactionalOps,
+  jobRunRepository: JobRunRepository
 )(implicit ec: ExecutionContext)
     extends ScheduledJob with Logging {
 
@@ -51,14 +52,18 @@ class PurgeAncientSubmissionsJob @Inject() (
 
   private lazy val expiryDateAsString = Json.toJson(expiryDate).toString
 
-  override def execute(): Future[Unit] = {
-    logger.info(s"Starting PurgeAncientSubmissionsJob. Removing Submissions having 'enhancedStatusLastUpdated' older than $expiryDate")
-    submissionRepository.findAll(filter) flatMap { submissions =>
-      transactionalOps.removeSubmissionAndNotifications(submissions) map { removed =>
-        logger.info(s"Finishing PurgeAncientSubmissionsJob - ${removed.sum} records removed linked to ancient submissions")
-      }
+  override def execute(): Future[Unit] =
+    jobRunRepository.isFirstRunInTheDay(name).flatMap {
+      case true =>
+        logger.info(s"Starting PurgeAncientSubmissionsJob. Removing Submissions having 'enhancedStatusLastUpdated' older than $expiryDate")
+        submissionRepository.findAll(filter) flatMap { submissions =>
+          transactionalOps.removeSubmissionAndNotifications(submissions) map { removed =>
+            logger.info(s"Finishing PurgeAncientSubmissionsJob - ${removed.sum} records removed linked to ancient submissions")
+          }
+        }
+
+      case false => Future.successful(())
     }
-  }
 
   private lazy val filter = {
     val statusesToRemove =

@@ -7,15 +7,17 @@ import uk.gov.hmrc.exports.repositories._
 
 trait IntegrationTestPurgeSubmissionsToolSpec extends IntegrationTestSpec {
 
-  val submissionRepository = instanceOf[SubmissionRepository]
   val declarationRepository = instanceOf[DeclarationRepository]
+  val jobRunRepository = instanceOf[JobRunRepository]
   val notificationRepository = instanceOf[ParsedNotificationRepository]
+  val submissionRepository = instanceOf[SubmissionRepository]
   val unparsedNotificationRepository = instanceOf[UnparsedNotificationWorkItemRepository]
 
   override def beforeEach(): Unit = {
-    removeAll(submissionRepository.collection)
     removeAll(declarationRepository.collection)
+    removeAll(jobRunRepository.collection)
     removeAll(notificationRepository.collection)
+    removeAll(submissionRepository.collection)
     removeAll(unparsedNotificationRepository.collection)
     super.beforeEach()
   }

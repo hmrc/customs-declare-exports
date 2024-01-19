@@ -39,7 +39,7 @@ class Scheduler @Inject() (
 )(implicit ec: ExecutionContext)
     extends Logging {
 
-  val runningJobs: Iterable[Cancellable] = scheduledJobs.jobs.map { job =>
+  private val runningJobs: Iterable[Cancellable] = scheduledJobs.jobs.map { job =>
     val initialDelay = calcInitialDelay(job)
     val interval = s"${job.interval.length} ${job.interval.unit}"
     logger.info(
@@ -57,12 +57,14 @@ class Scheduler @Inject() (
 
   applicationLifecycle.addStopHook(() => Future.successful(runningJobs.foreach(_.cancel())))
 
-  private def calcInitialDelay(job: ScheduledJob): FiniteDuration = job.firstRunTime match {
-    case Some(firstRunTimeValue) =>
-      val nextRunDate = schedulerDateUtil.nextRun(firstRunTimeValue, job.interval)
-      durationUntil(nextRunDate)
-    case None => FiniteDuration(0, TimeUnit.SECONDS)
-  }
+  private def calcInitialDelay(job: ScheduledJob): FiniteDuration =
+    job.firstRunTime match {
+      case Some(firstRunTimeValue) =>
+        val nextRunDate = schedulerDateUtil.nextRun(firstRunTimeValue, job.interval)
+        durationUntil(nextRunDate)
+
+      case None => FiniteDuration(0, TimeUnit.SECONDS)
+    }
 
   private def durationUntil(datetime: Instant): FiniteDuration = {
     val now = Instant.now(appConfig.clock)

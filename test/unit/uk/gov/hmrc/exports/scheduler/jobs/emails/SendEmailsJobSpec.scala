@@ -55,6 +55,7 @@ class SendEmailsJobSpec extends UnitSpec {
   }
 
   private val testWorkItem: WorkItem[SendEmailDetails] = buildTestSendEmailWorkItem(status = InProgress)
+
   private def whenThereIsWorkItemAvailable(workItem: WorkItem[SendEmailDetails] = testWorkItem): Unit =
     when(sendEmailWorkItemRepository.pullOutstanding(any[Instant], any[Instant]))
       .thenReturn(Future.successful(Some(workItem)), Future.successful(None))
@@ -87,7 +88,6 @@ class SendEmailsJobSpec extends UnitSpec {
         sendEmailsJob.firstRunTime.get mustBe expectedFirstRunTime
       }
     }
-
   }
 
   "SendEmailsJob on execute" when {

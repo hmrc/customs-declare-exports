@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import repositories.DuplicateKey
 import testdata.ExportsTestData._
 import testdata.SubmissionTestData._
 import uk.gov.hmrc.exports.base.IntegrationTestSpec

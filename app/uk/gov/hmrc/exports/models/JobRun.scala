@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.scheduler.jobs
+package uk.gov.hmrc.exports.models
 
-import java.time.LocalTime
-import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
+import play.api.libs.json.{Format, Json}
 
-trait ScheduledJob {
+import java.time.Instant
 
-  def name: String
-  def firstRunTime: Option[LocalTime]
-  def interval: FiniteDuration
+case class JobRun(job: String, lastRun: Instant)
 
-  def execute(): Future[Unit]
+object JobRun {
+
+  implicit val format: Format[JobRun] = Json.format[JobRun]
 }

@@ -45,7 +45,7 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
     }
 
     def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
-      repository.findOneAndReplace(Json.obj("id" -> declaration.id, "eori" -> declaration.eori), declaration, false)
+      repository.findOneAndReplace(Json.obj("id" -> declaration.id, "eori" -> declaration.eori), declaration, false, false)
 
     "update a declaration successfully" in {
       val declaration = aDeclaration(withType(DeclarationType.STANDARD), withId("id"), withEori("eori"))
