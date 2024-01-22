@@ -46,7 +46,7 @@ lazy val microservice = Project(appName, file("."))
 
 lazy val commonSettings = List(
   majorVersion := 0,
-  scalaVersion := "2.13.8",
+  scalaVersion := "2.13.12",
   scalacOptions ++= scalacFlags,
   retrieveManaged := true,
   dependencyOverrides += "commons-codec" % "commons-codec" % "1.15",
@@ -65,6 +65,9 @@ lazy val scalacFlags = List(
   "-Xcheckinit",
   "-Xfatal-warnings",                            // warnings are fatal!!
   "-Ywarn-numeric-widen",
+  "-Wconf:cat=unused&src=.*routes.*:s", // silence private val defaultPrefix in class Routes is never used
+  "-Wconf:msg=eq not selected from this instance:s", // silence eq not selected from this instance warning
+  "-Wconf:msg=While parsing annotations in:s" // silence While parsing annotations in warning
 )
 
 lazy val scoverageSettings: Seq[Setting[_]] = Seq(
