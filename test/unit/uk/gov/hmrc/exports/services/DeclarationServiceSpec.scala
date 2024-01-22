@@ -57,7 +57,7 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
   "Update" should {
     "delegate to the repository" in {
       val persistedDeclaration = mock[ExportsDeclaration]
-      given(declarationRepository.findOneAndReplace(any[JsValue], any[ExportsDeclaration], any[Boolean]))
+      given(declarationRepository.findOneAndReplace(any[JsValue], any[ExportsDeclaration], any[Boolean], any[Boolean]))
         .willReturn(Future.successful(Some(persistedDeclaration)))
 
       service.update(aDeclaration()).futureValue mustBe Some(persistedDeclaration)

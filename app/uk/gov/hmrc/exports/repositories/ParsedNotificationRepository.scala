@@ -19,7 +19,6 @@ package uk.gov.hmrc.exports.repositories
 import com.mongodb.client.model.Indexes.ascending
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.libs.json.{JsString, Json}
-import repositories.RepositoryOps
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository

@@ -100,7 +100,8 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
     declarationRepository.findOneAndReplace(
       Json.obj("id" -> declaration.id, "eori" -> declaration.eori, "status" -> Json.obj("$ne" -> COMPLETE.toString)),
       declaration,
-      false
+      createIfNotExists = false,
+      returnPreviousDocument = false
     )
 }
 

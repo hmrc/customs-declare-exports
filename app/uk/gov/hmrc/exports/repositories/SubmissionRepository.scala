@@ -22,7 +22,6 @@ import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.libs.json.{JsBoolean, Json}
-import repositories.RepositoryOps
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.fromStatusGroup
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.StatusGroup

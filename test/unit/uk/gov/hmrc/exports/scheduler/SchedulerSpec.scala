@@ -27,7 +27,7 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.scheduler.jobs.ScheduledJob
 
-import java.time.{LocalTime, _}
+import java.time._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,22 +38,17 @@ class SchedulerSpec extends UnitSpec {
   private val util = mock[SchedulerDateUtil]
   private val actorSystem = mock[ActorSystem]
   private val applicationLifecycle = mock[ApplicationLifecycle]
-  private val config = mock[AppConfig]
+  private val appConfig = mock[AppConfig]
   private val internalScheduler = mock[akka.actor.Scheduler]
   private val zone: ZoneId = ZoneOffset.UTC
-  private val now: Instant = "2018-12-25T12:00:00"
-  private val clock = Clock.fixed(now, zone)
+  private val clock = Clock.fixed(instant("2018-12-25T12:00:00"), zone)
 
   private def instant(datetime: String) =
     LocalDateTime.parse(datetime).atZone(zone).toInstant
 
-  private implicit def string2Instant: String => Instant = { datetime =>
-    instant(datetime)
-  }
-
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    given(config.clock) willReturn clock
+    given(appConfig.clock) willReturn clock
     given(actorSystem.scheduler) willReturn internalScheduler
     given(
       internalScheduler.scheduleWithFixedDelay(any[FiniteDuration], any[FiniteDuration])(any[Runnable])(any[ExecutionContext])
@@ -73,7 +68,7 @@ class SchedulerSpec extends UnitSpec {
       given(job.interval) willReturn 60.seconds
       given(job.firstRunTime) willReturn Some(LocalTime.parse("12:00"))
       given(job.name) willReturn "name"
-      given(util.nextRun(any[LocalTime], any[FiniteDuration])) willReturn "2018-12-25T12:00:30"
+      given(util.nextRun(any[LocalTime], any[FiniteDuration])) willReturn instant("2018-12-25T12:00:30")
 
       // When
       whenTheSchedulerStarts()
@@ -108,7 +103,7 @@ class SchedulerSpec extends UnitSpec {
       given(job.interval) willReturn 3.seconds
       given(job.firstRunTime) willReturn Some(LocalTime.parse("12:00"))
       given(job.name) willReturn "name"
-      given(util.nextRun(any[LocalTime], any[FiniteDuration])).willReturn("2018-12-25T11:59:59")
+      given(util.nextRun(any[LocalTime], any[FiniteDuration])) willReturn instant("2018-12-25T11:59:59")
 
       // When
       whenTheSchedulerStarts()
@@ -136,8 +131,9 @@ class SchedulerSpec extends UnitSpec {
     verify(internalScheduler).scheduleWithFixedDelay(initialDelayCaptor.capture(), intervalCaptor.capture())(any[Runnable])(any[ExecutionContext])
     Schedule(initialDelayCaptor.getValue, intervalCaptor.getValue)
   }
+
   private def whenTheSchedulerStarts(withJobs: Set[ScheduledJob] = Set(job)): Scheduler =
-    new Scheduler(actorSystem, applicationLifecycle, config, util, ScheduledJobs(withJobs))
+    new Scheduler(actorSystem, applicationLifecycle, appConfig, util, ScheduledJobs(withJobs))
 
   private case class Schedule(initialDelay: FiniteDuration, interval: FiniteDuration)
 }

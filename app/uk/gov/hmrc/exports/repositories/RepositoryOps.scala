@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package repositories
+package uk.gov.hmrc.exports.repositories
 
 import com.mongodb.ErrorCategory.DUPLICATE_KEY
 import com.mongodb.ExplainVerbosity.QUERY_PLANNER
@@ -43,6 +43,9 @@ trait RepositoryOps[T] {
 
   def bulkInsert(session: ClientSession, documents: Seq[T]): Future[Int] =
     collection.bulkWrite(session, documents.map(InsertOneModel(_))).toFuture().map(_.getInsertedCount)
+
+  def count(): Future[Long] =
+    collection.countDocuments().toFuture()
 
   def create(document: T): Future[T] =
     collection.insertOne(document).toFuture().map(_ => document)
@@ -123,22 +126,34 @@ trait RepositoryOps[T] {
    Find one and replace with "document: T" if a document with keyId=keyValue exists,
    or create "document: T" (if createIfNotExists is true) if a document with keyId=keyValue does NOT exists.
    */
-  def findOneAndReplace[V](keyId: String, keyValue: V, document: => T, createIfNotExists: Boolean): Future[Option[T]] =
-    findOneAndReplace(equal(keyId, keyValue), document, createIfNotExists)
+  def findOneAndReplace[V](
+    keyId: String,
+    keyValue: V,
+    document: => T,
+    createIfNotExists: Boolean,
+    returnPreviousDocument: Boolean
+  ): Future[Option[T]] =
+    findOneAndReplace(equal(keyId, keyValue), document, createIfNotExists, returnPreviousDocument)
 
   /*
    Find one and replace if a document with the given filter exists,
    or create "document: T" (if createIfNotExists is true) if a document with the given filter does NOT exists.
    */
-  def findOneAndReplace(filter: JsValue, document: => T, createIfNotExists: Boolean): Future[Option[T]] =
-    findOneAndReplace(BsonDocument(filter.toString), document, createIfNotExists)
+  def findOneAndReplace(filter: JsValue, document: => T, createIfNotExists: Boolean, returnPreviousDocument: Boolean): Future[Option[T]] =
+    findOneAndReplace(BsonDocument(filter.toString), document, createIfNotExists, returnPreviousDocument)
 
-  def findOneAndReplace(filter: Bson, document: => T, createIfNotExists: Boolean = true): Future[Option[T]] = {
+  def findOneAndReplace(
+    filter: Bson,
+    document: => T,
+    createIfNotExists: Boolean = true,
+    returnPreviousDocument: Boolean = true
+  ): Future[Option[T]] = {
+    val returnDocument = if (returnPreviousDocument) ReturnDocument.BEFORE else ReturnDocument.AFTER
     val result = collection
       .findOneAndReplace(
         filter = filter,
         replacement = document,
-        options = FindOneAndReplaceOptions().upsert(createIfNotExists).returnDocument(ReturnDocument.AFTER)
+        options = FindOneAndReplaceOptions().upsert(createIfNotExists).returnDocument(returnDocument)
       )
 
     if (result == null) Future.successful(None) else result.toFutureOption()

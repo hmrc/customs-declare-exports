@@ -46,5 +46,4 @@ class SchedulerDateUtil @Inject() (appConfig: AppConfig) {
       .atZone(clock.getZone)
       .toInstant
   }
-
 }
