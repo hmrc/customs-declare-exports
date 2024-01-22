@@ -13,7 +13,6 @@ object AppDependencies {
     "com.github.tototoshi"            %% "scala-csv"                           % "1.3.10",
     // Used by the Migration tool. Keep this library's version to the same major.minor version as the mongo-scala-driver.
     "org.mongodb"                     % "mongodb-driver-sync"                  % "4.11.1",
-    // Added to replace javax.xml.bind (removed in Java 11)
     "org.glassfish.jaxb"              % "jaxb-runtime"                         % "2.3.8",
     "javax.xml.bind"                  % "jaxb-api"                             % "2.3.1"
   )
