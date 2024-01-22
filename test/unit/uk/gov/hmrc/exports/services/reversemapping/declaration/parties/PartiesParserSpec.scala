@@ -33,7 +33,7 @@ class PartiesParserSpec extends UnitSpec with ExportsDeclarationBuilder with Exp
   private val entityDetailsParser = mock[EntityDetailsParser]
   private val functionCodeParser = mock[AgentFunctionCodeParser]
   private val declarationHolderParser = mock[DeclarationHolderParser]
-  private implicit val context = MappingContext("GB111111")
+  private implicit val context: MappingContext = MappingContext("GB111111")
 
   private val partiesParser = new PartiesParser(entityDetailsParser, functionCodeParser, declarationHolderParser)
 

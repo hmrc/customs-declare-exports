@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.models.emails
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat, OWrites}
 
 import java.time.Instant
 
@@ -31,23 +31,23 @@ case class UndeliverableInformationEvent(
 )
 
 object UndeliverableInformationEvent {
-  implicit val format = Json.format[UndeliverableInformationEvent]
+  implicit val format: OFormat[UndeliverableInformationEvent] = Json.format[UndeliverableInformationEvent]
 }
 
 case class UndeliverableInformation(subject: String, eventId: String, groupId: String, timestamp: Instant, event: UndeliverableInformationEvent)
 
 object UndeliverableInformation {
-  implicit val format = Json.format[UndeliverableInformation]
+  implicit val format: OFormat[UndeliverableInformation] = Json.format[UndeliverableInformation]
 }
 
 case class EmailResponse(address: String, timestamp: Option[String], undeliverable: Option[UndeliverableInformation])
 
 object EmailResponse {
-  implicit val format = Json.format[EmailResponse]
+  implicit val format: OFormat[EmailResponse] = Json.format[EmailResponse]
 }
 
 case class Email(address: String, deliverable: Boolean)
 
 object Email {
-  implicit val writes = Json.writes[Email]
+  implicit val writes: OWrites[Email] = Json.writes[Email]
 }

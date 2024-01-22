@@ -32,7 +32,7 @@ class SingleItemParserSpec extends UnitSpec {
 
   private val singleItemParser = new SingleItemParser(packageInformationParser, procedureCodesParser)
 
-  private implicit val context = MappingContext(eori)
+  private implicit val context: MappingContext = MappingContext(eori)
 
   override def beforeEach(): Unit = {
     super.beforeEach()

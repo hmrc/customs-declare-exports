@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 
-import akka.actor.{ActorSystem, Cancellable}
-
+import org.apache.pekko.actor.{ActorSystem, Cancellable}
 import java.util.concurrent.TimeUnit.SECONDS
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext

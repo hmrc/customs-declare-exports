@@ -27,7 +27,7 @@ import scala.xml.Elem
 class ContainersParserSpec extends UnitSpec {
 
   val parser = new ContainersParser()
-  private implicit val context = MappingContext(eori)
+  private implicit val context: MappingContext = MappingContext(eori)
 
   "ContainersParserSpec on parse" should {
     "return Right with empty Seq" when {

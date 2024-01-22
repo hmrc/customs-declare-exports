@@ -22,7 +22,7 @@ import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.sequenceIdPlacehol
 case class Country(code: Option[String])
 
 object Country {
-  implicit val format = Json.format[Country]
+  implicit val format: OFormat[Country] = Json.format[Country]
 }
 
 case class RoutingCountry(
@@ -49,19 +49,19 @@ object OfficeOfExit {
 case class WarehouseIdentification(identificationNumber: Option[String])
 
 object WarehouseIdentification {
-  implicit val format = Json.format[WarehouseIdentification]
+  implicit val format: OFormat[WarehouseIdentification] = Json.format[WarehouseIdentification]
 }
 
 case class SupervisingCustomsOffice(supervisingCustomsOffice: Option[String])
 
 object SupervisingCustomsOffice {
-  implicit val format = Json.format[SupervisingCustomsOffice]
+  implicit val format: OFormat[SupervisingCustomsOffice] = Json.format[SupervisingCustomsOffice]
 }
 
 case class InlandOrBorder(location: String)
 
 object InlandOrBorder {
-  implicit val format = Json.format[InlandOrBorder]
+  implicit val format: OFormat[InlandOrBorder] = Json.format[InlandOrBorder]
 
   val Border = new InlandOrBorder("Border")
   val Inland = new InlandOrBorder("Inland")
@@ -70,7 +70,7 @@ object InlandOrBorder {
 case class InlandModeOfTransportCode(inlandModeOfTransportCode: Option[ModeOfTransportCode])
 
 object InlandModeOfTransportCode {
-  implicit val format = Json.format[InlandModeOfTransportCode]
+  implicit val format: OFormat[InlandModeOfTransportCode] = Json.format[InlandModeOfTransportCode]
 }
 
 case class Locations(

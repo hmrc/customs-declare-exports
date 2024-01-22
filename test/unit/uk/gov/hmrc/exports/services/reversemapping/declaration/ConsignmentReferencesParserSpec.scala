@@ -26,7 +26,7 @@ import uk.gov.hmrc.exports.services.reversemapping.MappingContext
 
 class ConsignmentReferencesParserSpec extends UnitSpec {
 
-  private implicit val context = MappingContext(eori)
+  private implicit val context: MappingContext = MappingContext(eori)
 
   private val adtParser = new AdditionalDeclarationTypeParser
   private val parser = new ConsignmentReferencesParser(adtParser)

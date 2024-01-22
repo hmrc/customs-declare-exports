@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.scheduler
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names
 import play.api.libs.concurrent.CustomExecutionContext

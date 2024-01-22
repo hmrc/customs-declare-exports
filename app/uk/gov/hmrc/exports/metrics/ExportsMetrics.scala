@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.metrics
 
 import com.codahale.metrics.Timer.Context
-import com.kenshoo.play.metrics.Metrics
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.{Counter, Monitor, Timer}
 import uk.gov.hmrc.exports.metrics.MetricIdentifiers._
 

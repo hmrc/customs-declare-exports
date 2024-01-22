@@ -27,7 +27,7 @@ import scala.xml.{Elem, NodeSeq}
 
 class TransportParserSpec extends UnitSpec {
 
-  private implicit val context = MappingContext(eori)
+  private implicit val context: MappingContext = MappingContext(eori)
 
   private val containersParser = mock[ContainersParser]
   private val transportParser = new TransportParser(containersParser)

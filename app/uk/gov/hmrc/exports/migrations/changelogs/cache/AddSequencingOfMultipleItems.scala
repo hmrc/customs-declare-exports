@@ -140,10 +140,10 @@ object AddSequencingOfMultipleItems {
     }
 
   case class FormerSeal(id: String)
-  implicit val sealReads = Json.reads[FormerSeal]
+  implicit val sealReads: Reads[FormerSeal] = Json.reads[FormerSeal]
 
   case class FormerContainer(id: String, seals: Seq[FormerSeal])
-  implicit val containerReads = Json.reads[FormerContainer]
+  implicit val containerReads: Reads[FormerContainer] = Json.reads[FormerContainer]
 
   implicit val readsForTransport: Reads[Transport] =
     ((__ \ "expressConsignment").readNullable[YesNoAnswer] and

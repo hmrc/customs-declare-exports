@@ -26,7 +26,7 @@ import scala.xml.{Elem, NodeSeq}
 class ProcedureCodesParserSpec extends UnitSpec {
 
   private val procedureCodesParser = new ProcedureCodesParser()
-  private implicit val context = MappingContext(eori)
+  private implicit val context: MappingContext = MappingContext(eori)
 
   "ProcedureCodesParser on parse" should {
 

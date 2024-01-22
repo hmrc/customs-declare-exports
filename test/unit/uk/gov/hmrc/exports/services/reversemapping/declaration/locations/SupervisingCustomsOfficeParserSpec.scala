@@ -28,7 +28,7 @@ class SupervisingCustomsOfficeParserSpec extends UnitSpec {
 
   private val parser = new SupervisingCustomsOfficeParser
 
-  private implicit val mappingContext = MappingContext(eori = ExportsTestData.eori)
+  private implicit val mappingContext: MappingContext = MappingContext(eori = ExportsTestData.eori)
 
   "OfficeOfExitParser on parse" should {
 

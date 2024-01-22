@@ -25,7 +25,7 @@ import scala.xml.{Elem, NodeSeq}
 
 class MucrParserSpec extends UnitSpec {
 
-  private implicit val context = MappingContext(eori)
+  private implicit val context: MappingContext = MappingContext(eori)
   private val parser = new MucrParser
 
   "MucrParser on parse" should {

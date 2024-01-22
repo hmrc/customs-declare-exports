@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.scheduler
 
-import akka.actor.{ActorSystem, Cancellable}
+import org.apache.pekko.actor.{ActorSystem, Cancellable}
 import play.api.Logging
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.exports.config.AppConfig

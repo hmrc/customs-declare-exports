@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.models.declaration.submissions
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{EnhancedStatus, PENDING}
 import uk.gov.hmrc.exports.util.TimeUtils
@@ -41,7 +41,7 @@ case class Submission(
 
 object Submission {
 
-  implicit val format = Json.format[Submission]
+  implicit val format: OFormat[Submission] = Json.format[Submission]
 
   def apply(declaration: ExportsDeclaration, lrn: String, ducr: String, action: Action): Submission =
     new Submission(declaration.id, declaration.eori, lrn, None, ducr, actions = List(action), latestDecId = Some(declaration.id))

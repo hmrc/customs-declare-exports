@@ -38,7 +38,7 @@ class PurgeSubmissionsTransactionalOps @Inject() (
 )(implicit ec: ExecutionContext)
     extends Transactions with Logging {
 
-  protected implicit val tc = TransactionConfiguration.strict
+  protected implicit val tc: TransactionConfiguration = TransactionConfiguration.strict
 
   protected lazy val nonTransactionalSession = mongoComponent.client.startSession().toFuture()
 

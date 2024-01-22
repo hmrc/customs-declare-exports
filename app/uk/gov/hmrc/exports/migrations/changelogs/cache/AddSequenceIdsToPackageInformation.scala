@@ -97,7 +97,7 @@ class AddSequenceIdsToPackageInformation extends MigrationDefinition with Loggin
 object AddSequenceIdsToPackageInformation {
 
   case class FormerPackageInformation(id: String, typesOfPackages: Option[String], numberOfPackages: Option[Int], shippingMarks: Option[String])
-  implicit val packageInformationReads = Json.reads[FormerPackageInformation]
+  implicit val packageInformationReads: Reads[FormerPackageInformation] = Json.reads[FormerPackageInformation]
 
   implicit val readsForExportItem: Reads[ExportItem] =
     ((__ \ "id").read[String] and

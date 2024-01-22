@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
-import akka.actor.Cancellable
+import org.apache.pekko.actor.Cancellable
 import org.bson.types.ObjectId
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchersSugar.any

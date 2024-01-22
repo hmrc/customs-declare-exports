@@ -29,7 +29,7 @@ class ItemsParserSpec extends UnitSpec {
 
   private val singleItemParser = mock[SingleItemParser]
   private val itemsParser = new ItemsParser(singleItemParser)
-  private implicit val context = MappingContext(eori)
+  private implicit val context: MappingContext = MappingContext(eori)
 
   override def beforeEach(): Unit = {
     super.beforeEach()

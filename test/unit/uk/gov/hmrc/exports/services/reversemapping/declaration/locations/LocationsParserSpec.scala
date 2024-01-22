@@ -59,7 +59,7 @@ class LocationsParserSpec extends UnitSpec with GivenWhenThen {
     when(inlandModeOfTransportCodeParser.parse(any[NodeSeq])(any[MappingContext])).thenReturn(Right(None))
   }
 
-  private implicit val mappingContext = MappingContext(eori = ExportsTestData.eori)
+  private implicit val mappingContext: MappingContext = MappingContext(eori = ExportsTestData.eori)
 
   "LocationsParser on parse" should {
 
