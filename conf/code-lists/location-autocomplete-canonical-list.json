@@ -1,978 +1,1034 @@
 [
     [
         "Andorra",
-        "country:AD"
+        "AD"
     ],
     [
         "United Arab Emirates (the) - Abu Dhabi, Ajman, Dubai, Fujairah, Ras al Khaimah, Sharjah and Umm al Qaiwain",
-        "country:AE"
+        "AE"
     ],
     [
         "Afghanistan",
-        "country:AF"
+        "AF"
     ],
     [
         "Antigua and Barbuda",
-        "country:AG"
+        "AG"
     ],
     [
         "Anguilla",
-        "country:AI"
+        "AI"
     ],
     [
         "Albania",
-        "country:AL"
+        "AL"
     ],
     [
         "Armenia",
-        "country:AM"
+        "AM"
     ],
     [
         "Angola including Cabinda",
-        "country:AO"
+        "AO"
     ],
     [
         "Antarctica - Territory south of 60 degree south latitude; not including the French Southern Territories (TF), Bouvet Island (BV), South Georgia and South Sandwich Islands (GS)",
-        "country:AQ"
+        "AQ"
     ],
     [
         "Argentina",
-        "country:AR"
+        "AR"
     ],
     [
         "American Samoa",
-        "country:AS"
+        "AS"
     ],
     [
         "Austria",
-        "country:AT"
+        "AT"
     ],
     [
         "Australia",
-        "country:AU"
+        "AU"
     ],
     [
         "Aruba",
-        "country:AW"
+        "AW"
     ],
     [
         "Azerbaijan",
-        "country:AZ"
+        "AZ"
     ],
     [
         "Bosnia and Herzegovina",
-        "country:BA"
+        "BA"
     ],
     [
         "Barbados",
-        "country:BB"
+        "BB"
     ],
     [
         "Bangladesh",
-        "country:BD"
+        "BD"
     ],
     [
         "Belgium",
-        "country:BE"
+        "BE"
     ],
     [
         "Burkina Faso",
-        "country:BF"
+        "BF"
     ],
     [
         "Bulgaria",
-        "country:BG"
+        "BG"
     ],
     [
         "Bahrain",
-        "country:BH"
+        "BH"
     ],
     [
         "Burundi",
-        "country:BI"
+        "BI"
     ],
     [
         "Benin",
-        "country:BJ"
+        "BJ"
     ],
     [
         "Saint Barthelemy",
-        "country:BL"
+        "BL"
     ],
     [
         "Bermuda",
-        "country:BM"
+        "BM"
     ],
     [
         "Brunei Darussalam, Often referred to as Brunei",
-        "country:BN"
+        "BN"
     ],
     [
         "Bolivia (Plurinational State of), Often referred to as Bolivia",
-        "country:BO"
+        "BO"
     ],
     [
         "Bonaire, Sint Eustatius and Saba",
-        "country:BQ"
+        "BQ"
     ],
     [
         "Brazil",
-        "country:BR"
+        "BR"
     ],
     [
         "Bahamas (the)",
-        "country:BS"
+        "BS"
     ],
     [
         "Bhutan",
-        "country:BT"
+        "BT"
     ],
     [
         "Bouvet Island",
-        "country:BV"
+        "BV"
     ],
     [
         "Botswana",
-        "country:BW"
+        "BW"
     ],
     [
         "Belarus, Often referred to as Belorussia",
-        "country:BY"
+        "BY"
     ],
     [
         "Belize",
-        "country:BZ"
+        "BZ"
     ],
     [
         "Canada",
-        "country:CA"
+        "CA"
     ],
     [
         "Cocos (Keeling) Islands (the)",
-        "country:CC"
+        "CC"
     ],
     [
         "Congo (the Democratic Republic of the), Formerly Zaire",
-        "country:CD"
+        "CD"
     ],
     [
         "Central African Republic (the)",
-        "country:CF"
+        "CF"
     ],
     [
         "Congo (the)",
-        "country:CG"
+        "CG"
     ],
     [
         "Switzerland, Including the German territory of Busingen and the Italian municipality of Campione d’Italia",
-        "country:CH"
+        "CH"
     ],
     [
         "Cote d’Ivoire, Often referred to as Ivory Coast",
-        "country:CI"
+        "CI"
     ],
     [
         "Cook Islands (the)",
-        "country:CK"
+        "CK"
     ],
     [
         "Chile",
-        "country:CL"
+        "CL"
     ],
     [
         "Cameroon",
-        "country:CM"
+        "CM"
     ],
     [
         "China",
-        "country:CN"
+        "CN"
     ],
     [
         "Colombia",
-        "country:CO"
+        "CO"
     ],
     [
         "Costa Rica",
-        "country:CR"
+        "CR"
     ],
     [
         "Cuba",
-        "country:CU"
+        "CU"
     ],
     [
         "Cape Verde",
-        "country:CV"
+        "CV"
     ],
     [
         "Curacao",
-        "country:CW"
+        "CW"
     ],
     [
         "Christmas Island",
-        "country:CX"
+        "CX"
     ],
     [
         "Cyprus",
-        "country:CY"
+        "CY"
     ],
     [
         "Czech Republic",
-        "country:CZ"
+        "CZ"
     ],
     [
         "Germany, Including the island of Heligoland; excluding the territory of Busingen",
-        "country:DE"
+        "DE"
     ],
     [
         "Djibouti",
-        "country:DJ"
+        "DJ"
     ],
     [
         "Denmark",
-        "country:DK"
+        "DK"
     ],
     [
         "Dominica",
-        "country:DM"
+        "DM"
     ],
     [
         "Dominican Republic (the)",
-        "country:DO"
+        "DO"
     ],
     [
         "Algeria",
-        "country:DZ"
+        "DZ"
     ],
     [
         "Ecuador, Including the Galapagos Islands",
-        "country:EC"
+        "EC"
     ],
     [
         "Estonia",
-        "country:EE"
+        "EE"
     ],
     [
         "Egypt",
-        "country:EG"
+        "EG"
     ],
     [
         "Western Sahara",
-        "country:EH"
+        "EH"
     ],
     [
         "Eritrea",
-        "country:ER"
+        "ER"
     ],
     [
         "Spain, Including the Balearic Islands and the Canary Islands; excluding Ceuta (XC) and Melilla (XL)",
-        "country:ES"
+        "ES"
     ],
     [
         "Ethiopia",
-        "country:ET"
+        "ET"
     ],
     [
         "European Union",
-        "country:EU"
+        "EU"
     ],
     [
         "Finland, Including the Aland Islands",
-        "country:FI"
+        "FI"
     ],
     [
         "Fiji",
-        "country:FJ"
+        "FJ"
     ],
     [
         "Falkland Islands (the)",
-        "country:FK"
+        "FK"
     ],
     [
         "Micronesia (Federated States of), Chuuk, Kosrae, Pohnpei and Yap",
-        "country:FM"
+        "FM"
     ],
     [
         "Faroe Islands (the)",
-        "country:FO"
+        "FO"
     ],
     [
         "France, Including Monaco, the French overseas departments (French Guiana, Guadeloupe, Martinique and Reunion) and the French northern part of St Martin",
-        "country:FR"
+        "FR"
     ],
     [
         "Gabon",
-        "country:GA"
+        "GA"
     ],
     [
         "United Kingdom, Great Britain, Northern Ireland",
-        "country:GB"
+        "GB"
     ],
     [
         "Grenada, Including Southern Grenadines",
-        "country:GD"
+        "GD"
     ],
     [
         "Georgia",
-        "country:GE"
+        "GE"
     ],
     [
         "Guernsey",
-        "country:GG"
+        "GG"
     ],
     [
         "Ghana",
-        "country:GH"
+        "GH"
     ],
     [
         "Gibraltar",
-        "country:GI"
+        "GI"
     ],
     [
         "Greenland",
-        "country:GL"
+        "GL"
     ],
     [
         "Gambia (the)",
-        "country:GM"
+        "GM"
     ],
     [
         "Guinea",
-        "country:GN"
+        "GN"
+    ],
+    [
+        "Desirade",
+        "GP"
     ],
     [
         "Equatorial Guinea",
-        "country:GQ"
+        "GQ"
     ],
     [
         "Greece",
-        "country:GR"
+        "GR"
     ],
     [
         "South Georgia and the South Sandwich Islands",
-        "country:GS"
+        "GS"
     ],
     [
         "Guatemala",
-        "country:GT"
+        "GT"
     ],
     [
         "Guam",
-        "country:GU"
+        "GU"
     ],
     [
         "Guinea-Bissau",
-        "country:GW"
+        "GW"
     ],
     [
         "Guyana",
-        "country:GY"
+        "GY"
     ],
     [
         "Hong Kong, Hong Kong Special Administrative Region of the People’s Republic of China",
-        "country:HK"
+        "HK"
     ],
     [
         "Heard Island and McDonald Islands",
-        "country:HM"
+        "HM"
     ],
     [
         "Honduras, Including Swan Islands",
-        "country:HN"
+        "HN"
     ],
     [
         "Croatia",
-        "country:HR"
+        "HR"
     ],
     [
         "Haiti",
-        "country:HT"
+        "HT"
     ],
     [
         "Hungary",
-        "country:HU"
+        "HU"
     ],
     [
         "Indonesia",
-        "country:ID"
+        "ID"
     ],
     [
         "Ireland",
-        "country:IE"
+        "IE"
     ],
     [
         "Israel",
-        "country:IL"
+        "IL"
     ],
     [
         "Isle of Man",
-        "country:IM"
+        "IM"
     ],
     [
         "India",
-        "country:IN"
+        "IN"
     ],
     [
         "British Indian Ocean Territory (the), Chagos Archipelago",
-        "country:IO"
+        "IO"
     ],
     [
         "Iraq",
-        "country:IQ"
+        "IQ"
     ],
     [
         "Iran (Islamic Republic of)",
-        "country:IR"
+        "IR"
     ],
     [
         "Iceland",
-        "country:IS"
+        "IS"
     ],
     [
         "Italy, Including Livigno; excluding the municipality of Campione d’Italia",
-        "country:IT"
+        "IT"
     ],
     [
         "Jersey",
-        "country:JE"
+        "JE"
     ],
     [
         "Jamaica",
-        "country:JM"
+        "JM"
     ],
     [
         "Jordan",
-        "country:JO"
+        "JO"
     ],
     [
         "Japan",
-        "country:JP"
+        "JP"
     ],
     [
         "Kenya",
-        "country:KE"
+        "KE"
     ],
     [
         "Kyrgyz Republic",
-        "country:KG"
+        "KG"
     ],
     [
         "Cambodia",
-        "country:KH"
+        "KH"
     ],
     [
         "Kiribati",
-        "country:KI"
+        "KI"
     ],
     [
         "Comoros (the), Anjouan, Grande Comore and Moheli",
-        "country:KM"
+        "KM"
     ],
     [
         "Saint Kitts and Nevis",
-        "country:KN"
+        "KN"
     ],
     [
         "Korea (the Democratic People’s Republic of), Often referred to as North Korea",
-        "country:KP"
+        "KP"
     ],
     [
         "Korea (the Republic of), Often referred to as South Korea",
-        "country:KR"
+        "KR"
     ],
     [
         "Kuwait",
-        "country:KW"
+        "KW"
     ],
     [
         "Cayman Islands (the)",
-        "country:KY"
+        "KY"
     ],
     [
         "Kazakhstan",
-        "country:KZ"
+        "KZ"
     ],
     [
         "Lao People’s Democratic Republic (the), Often referred to as Laos",
-        "country:LA"
+        "LA"
     ],
     [
         "Lebanon",
-        "country:LB"
+        "LB"
     ],
     [
         "Saint Lucia",
-        "country:LC"
+        "LC"
     ],
     [
         "Liechtenstein",
-        "country:LI"
+        "LI"
     ],
     [
         "Sri Lanka",
-        "country:LK"
+        "LK"
     ],
     [
         "Liberia",
-        "country:LR"
+        "LR"
     ],
     [
         "Lesotho",
-        "country:LS"
+        "LS"
     ],
     [
         "Lithuania",
-        "country:LT"
+        "LT"
     ],
     [
         "Luxembourg",
-        "country:LU"
+        "LU"
     ],
     [
         "Latvia",
-        "country:LV"
+        "LV"
     ],
     [
         "Libya",
-        "country:LY"
+        "LY"
     ],
     [
         "Morocco",
-        "country:MA"
+        "MA"
     ],
     [
         "Moldova (the Republic of)",
-        "country:MD"
+        "MD"
     ],
     [
         "Montenegro",
-        "country:ME"
+        "ME"
     ],
     [
         "Madagascar",
-        "country:MG"
+        "MG"
     ],
     [
         "Marshall Islands (the)",
-        "country:MH"
+        "MH"
     ],
     [
         "Macedonia (the former Yugoslav Republic of)",
-        "country:MK"
+        "MK"
     ],
     [
         "Mali",
-        "country:ML"
+        "ML"
     ],
     [
         "Myanmar, Often referred to as Burma",
-        "country:MM"
+        "MM"
     ],
     [
         "Mongolia",
-        "country:MN"
+        "MN"
     ],
     [
         "Macao, Special Administrative Region of the People’s Republic of China",
-        "country:MO"
+        "MO"
     ],
     [
         "Northern Mariana Islands (the)",
-        "country:MP"
+        "MP"
     ],
     [
         "Mauritania",
-        "country:MR"
+        "MR"
     ],
     [
         "Montserrat",
-        "country:MS"
+        "MS"
     ],
     [
         "Malta, Including Gozo and Comino",
-        "country:MT"
+        "MT"
     ],
     [
         "Mauritius - Mauritius, Rodrigues Island, Agalega Islands and Cargados Carajos Shoals (St Brandon Islands)",
-        "country:MU"
+        "MU"
     ],
     [
         "Maldives",
-        "country:MV"
+        "MV"
     ],
     [
         "Malawi",
-        "country:MW"
+        "MW"
     ],
     [
         "Mexico",
-        "country:MX"
+        "MX"
     ],
     [
         "Malaysia - Peninsular Malaysia and Eastern Malaysia (Labuan, Sabah and Sarawak)",
-        "country:MY"
+        "MY"
     ],
     [
         "Mozambique",
-        "country:MZ"
+        "MZ"
     ],
     [
         "Namibia",
-        "country:NA"
+        "NA"
     ],
     [
         "New Caledonia, Including Loyalty Islands (Lifou, Mare and Ouvea)",
-        "country:NC"
+        "NC"
     ],
     [
         "Niger (the)",
-        "country:NE"
+        "NE"
     ],
     [
         "Norfolk Island",
-        "country:NF"
+        "NF"
     ],
     [
         "Nigeria",
-        "country:NG"
+        "NG"
     ],
     [
         "Nicaragua, Including Corn Islands",
-        "country:NI"
+        "NI"
     ],
     [
         "Netherlands (the)",
-        "country:NL"
+        "NL"
     ],
     [
         "Norway, Including Svalbard Archipelago and Jan Mayen Island",
-        "country:NO"
+        "NO"
     ],
     [
         "Nepal",
-        "country:NP"
+        "NP"
     ],
     [
         "Nauru",
-        "country:NR"
+        "NR"
     ],
     [
         "Niue",
-        "country:NU"
+        "NU"
     ],
     [
         "New Zealand, Excluding Ross Dependency (Antarctica)",
-        "country:NZ"
+        "NZ"
     ],
     [
         "Oman",
-        "country:OM"
+        "OM"
     ],
     [
         "Panama, Including former Canal Zone",
-        "country:PA"
+        "PA"
     ],
     [
         "Peru",
-        "country:PE"
+        "PE"
     ],
     [
         "French Polynesia - Marquesas Islands, Society Islands (including Tahiti), Tuamotu Islands, Gambier Islands and Austral Islands",
-        "country:PF"
+        "PF"
     ],
     [
         "Papua New Guinea - Eastern part of New Guinea; Bismarck Archipelago (including New Britain, New Ireland, Lavongai (New Hanover) and Admiralty Islands); Northern Solomon Islands (Bougainville and Buka); Trobriand Islands, Woodlark Island; d’Entrecasteaux Islands and Louisiade Archipelago",
-        "country:PG"
+        "PG"
     ],
     [
         "Philippines (the)",
-        "country:PH"
+        "PH"
     ],
     [
         "Pakistan",
-        "country:PK"
+        "PK"
     ],
     [
         "Poland",
-        "country:PL"
+        "PL"
     ],
     [
         "Saint Pierre and Miquelon",
-        "country:PM"
+        "PM"
     ],
     [
         "Pitcairn, Including the Ducie, Henderson and Oeno Islands",
-        "country:PN"
+        "PN"
     ],
     [
         "Occupied Palestinian Territory - West Bank (including East Jerusalem) and Gaza Strip",
-        "country:PS"
+        "PS"
     ],
     [
         "Portugal, Including Azores and Madeira",
-        "country:PT"
+        "PT"
     ],
     [
         "Palau",
-        "country:PW"
+        "PW"
     ],
     [
         "Paraguay",
-        "country:PY"
+        "PY"
     ],
     [
         "Qatar",
-        "country:QA"
+        "QA"
     ],
     [
         "Romania",
-        "country:RO"
+        "RO"
     ],
     [
         "Russian Federation (the), Often referred to as Russia",
-        "country:RU"
+        "RU"
     ],
     [
         "Rwanda",
-        "country:RW"
+        "RW"
     ],
     [
         "Saudi Arabia",
-        "country:SA"
+        "SA"
     ],
     [
         "Solomon Islands",
-        "country:SB"
+        "SB"
     ],
     [
         "Seychelles - Mahe Island, Praslin Island, La Digue, Fregate and Silhouette; Amirante Islands (including Desroches, Alphonse, Platte and Coetivy); Farquhar Islands (including Providence); Aldabra Islands and Cosmoledo Islands",
-        "country:SC"
+        "SC"
     ],
     [
         "Sudan (the)",
-        "country:SD"
+        "SD"
     ],
     [
         "Sweden",
-        "country:SE"
+        "SE"
     ],
     [
         "Singapore",
-        "country:SG"
+        "SG"
     ],
     [
         "Saint Helena, Ascension and Tristan da Cunha",
-        "country:SH"
+        "SH"
     ],
     [
         "Slovenia",
-        "country:SI"
+        "SI"
     ],
     [
         "Slovakia",
-        "country:SK"
+        "SK"
     ],
     [
         "Sierra Leone",
-        "country:SL"
+        "SL"
     ],
     [
         "San Marino",
-        "country:SM"
+        "SM"
     ],
     [
         "Senegal",
-        "country:SN"
+        "SN"
     ],
     [
         "Somalia",
-        "country:SO"
+        "SO"
     ],
     [
         "Suriname",
-        "country:SR"
+        "SR"
     ],
     [
         "South Sudan",
-        "country:SS"
+        "SS"
     ],
     [
         "Sao Tome and Principe",
-        "country:ST"
+        "ST"
     ],
     [
         "El Salvador",
-        "country:SV"
+        "SV"
     ],
     [
         "Sint Maarten (Dutch part) - The island of Saint Martin is divided into the French northern part and the Dutch southern part",
-        "country:SX"
+        "SX"
     ],
     [
         "Syrian Arab Republic, Often referred to as Syria",
-        "country:SY"
+        "SY"
     ],
     [
         "Swaziland",
-        "country:SZ"
+        "SZ"
     ],
     [
         "Turks and Caicos Islands (the)",
-        "country:TC"
+        "TC"
     ],
     [
         "Chad",
-        "country:TD"
+        "TD"
     ],
     [
         "French Southern Territories (the) - Including Kerguelen Islands, Amsterdam Island, Saint-Paul Island, Crozet Archipelago and French scattered Indian Ocean Islands formed by Bassas da India, Europa Island, Glorioso Islands, Juan de Nova Island and Tromelin Island",
-        "country:TF"
+        "TF"
     ],
     [
         "Togo",
-        "country:TG"
+        "TG"
     ],
     [
         "Thailand",
-        "country:TH"
+        "TH"
     ],
     [
         "Tajikistan",
-        "country:TJ"
+        "TJ"
     ],
     [
         "Tokelau",
-        "country:TK"
+        "TK"
     ],
     [
         "Timor-Leste",
-        "country:TL"
+        "TL"
     ],
     [
         "Turkmenistan",
-        "country:TM"
+        "TM"
     ],
     [
         "Tunisia",
-        "country:TN"
+        "TN"
     ],
     [
         "Tonga",
-        "country:TO"
+        "TO"
     ],
     [
         "Turkey",
-        "country:TR"
+        "TR"
     ],
     [
         "Trinidad and Tobago",
-        "country:TT"
+        "TT"
     ],
     [
         "Tuvalu",
-        "country:TV"
+        "TV"
     ],
     [
         "Taiwan - Separate customs territory of Taiwan, Penghu, Kinmen and Matsu",
-        "country:TW"
+        "TW"
     ],
     [
         "Tanzania, United Republic of - Pemba, Zanzibar Island and Tanganyika",
-        "country:TZ"
+        "TZ"
     ],
     [
         "Ukraine",
-        "country:UA"
+        "UA"
     ],
     [
         "Uganda",
-        "country:UG"
+        "UG"
     ],
     [
         "United States Minor Outlying Islands (the), Including Baker Island, Howland Island, Jarvis Island, Johnston Atoll, Kingman Reef, Midway Islands, Navassa Island, Palmyra Atoll and Wake Island",
-        "country:UM"
+        "UM"
     ],
     [
         "United States of America (the), Including Puerto Rico",
-        "country:US"
+        "US"
     ],
     [
         "Uruguay",
-        "country:UY"
+        "UY"
     ],
     [
         "Uzbekistan",
-        "country:UZ"
+        "UZ"
     ],
     [
         "Holy See (Vatican City State)",
-        "country:VA"
+        "VA"
     ],
     [
         "Saint Vincent and the Grenadines",
-        "country:VC"
+        "VC"
     ],
     [
         "Venezuela (Bolivarian Republic of), Often referred to as Venezuela",
-        "country:VE"
+        "VE"
     ],
     [
         "Virgin Islands (British)",
-        "country:VG"
+        "VG"
     ],
     [
         "Virgin Islands (U.S.)",
-        "country:VI"
+        "VI"
     ],
     [
         "Vietnam",
-        "country:VN"
+        "VN"
     ],
     [
         "Vanuatu",
-        "country:VU"
+        "VU"
     ],
     [
         "Wallis and Futuna, Including Alofi Island",
-        "country:WF"
+        "WF"
     ],
     [
         "Samoa, Formerly known as Western Samoa",
-        "country:WS"
+        "WS"
     ],
     [
         "Ceuta",
-        "country:XC"
+        "XC"
     ],
     [
         "Kosovo - As defined by United Nations Security Council Resolution 1244 of 10 June 1999",
-        "country:XK"
+        "XK"
     ],
     [
         "Melilla, Including Penon de Velez de la Gomera,Penon de Alhucemas and Chafarinas Islands",
-        "country:XL"
+        "XL"
     ],
     [
         "Serbia",
-        "country:XS"
+        "XS"
     ],
     [
         "Yemen, Formerly North Yemen and South Yemen",
-        "country:YE"
+        "YE"
     ],
     [
         "Mayotte - Grande-Terre and Pamandzi",
-        "country:YT"
+        "YT"
     ],
     [
         "South Africa",
-        "country:ZA"
+        "ZA"
+    ],
+    [
+        "Continental Shelf (NW European) - Belgian Sector",
+        "ZB"
+    ],
+    [
+        "Continental Shelf (NW European) - Greece Sector",
+        "ZC"
+    ],
+    [
+        "Continental Shelf (NW European) - Danish Sector",
+        "ZD"
+    ],
+    [
+        "Continental Shelf (NW European) - Irish Sector",
+        "ZE"
+    ],
+    [
+        "Continental Shelf (NW European) - French Sector",
+        "ZF"
+    ],
+    [
+        "Continental Shelf (NW European) - German Sector",
+        "ZG"
+    ],
+    [
+        "Continental Shelf (NW European) - Netherlands Sector",
+        "ZH"
+    ],
+    [
+        "Continental Shelf (NW European) - Cyprus Sector",
+        "ZJ"
+    ],
+    [
+        "Continental Shelf (NW European) - Finland Sector",
+        "ZK"
+    ],
+    [
+        "Continental Shelf (NW European) - Italy Sector",
+        "ZL"
     ],
     [
         "Zambia",
-        "country:ZM"
+        "ZM"
+    ],
+    [
+        "Continental Shelf (NW European) - Norwegian Sector",
+        "ZN"
+    ],
+    [
+        "Continental Shelf (NW European) - Sweden Sector",
+        "ZS"
+    ],
+    [
+        "Continental Shelf (NW European) - United Kingdom Sector",
+        "ZU"
     ],
     [
         "Zimbabwe",
-        "country:ZW"
+        "ZW"
     ]
 ]
