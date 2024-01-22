@@ -19,32 +19,24 @@ package uk.gov.hmrc.exports.services
 import play.api.libs.json._
 import uk.gov.hmrc.exports.models.Country
 
-import java.util
-import javax.inject.Inject
-import scala.jdk.CollectionConverters._
+class CountriesService {
 
-class CountriesService @Inject() () {
-
-  private val countries: List[Country] = {
+  val allCountries: List[Country] = {
     val jsonFile = getClass.getResourceAsStream("/code-lists/location-autocomplete-canonical-list.json")
 
     def fromJsonFile: List[Country] =
       Json.parse(jsonFile) match {
-        case JsArray(cs) =>
-          cs.toList.collect { case JsArray(scala.collection.Seq(c: JsString, cc: JsString)) =>
-            Country(c.value, countryCode(cc.value))
+        case JsArray(countries) =>
+          countries.toList.collect { case JsArray(scala.collection.Seq(name: JsString, code: JsString)) =>
+            Country(name.value, code.value)
           }
-        case _ =>
-          throw new IllegalArgumentException("Could not read JSON array of countries from : " + jsonFile)
+
+        case _ => throw new IllegalArgumentException("Could not read JSON array of countries from : " + jsonFile)
       }
 
     fromJsonFile.sortBy(_.countryName)
   }
 
-  private def countryCode: String => String = cc => cc.split(":")(1).trim
-
-  def getCountryCode(name: String): Option[String] = countries.find(country => country.countryName == name).map(_.countryCode)
-
-  val allCountries: List[Country] = countries
-  val allCountriesAsJava: util.List[Country] = countries.asJava
+  def getCountryCode(name: String): Option[String] =
+    allCountries.find(country => country.countryName == name).map(_.countryCode)
 }
