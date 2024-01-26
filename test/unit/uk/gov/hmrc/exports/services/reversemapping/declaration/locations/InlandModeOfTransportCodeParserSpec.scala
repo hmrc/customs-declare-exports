@@ -28,7 +28,7 @@ class InlandModeOfTransportCodeParserSpec extends UnitSpec {
 
   private val parser = new InlandModeOfTransportCodeParser
 
-  private implicit val mappingContext = MappingContext(eori = ExportsTestData.eori)
+  private implicit val mappingContext: MappingContext = MappingContext(eori = ExportsTestData.eori)
 
   "InlandModeOfTransportCodeParser on parse" should {
 

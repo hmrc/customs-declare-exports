@@ -40,7 +40,7 @@ object Action {
   implicit val readLocalDateTimeFromString: Reads[ZonedDateTime] = implicitly[Reads[LocalDateTime]]
     .map(ZonedDateTime.of(_, defaultTimeZone))
 
-  implicit val writes = Json.writes[Action]
+  implicit val writes: OWrites[Action] = Json.writes[Action]
   implicit val reads: Reads[Action] =
     ((__ \ "id").read[String] and
       (__ \ "requestType").read[RequestType] and

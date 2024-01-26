@@ -24,7 +24,7 @@ import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, eq => feq, exists, not}
 import org.mongodb.scala.model.Updates.{combine, set, unset}
 import play.api.Logging
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.exports.migrations.changelogs.notification.SplitTheNotificationsCollection._
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
@@ -68,7 +68,7 @@ class SplitTheNotificationsCollection extends MigrationDefinition with Logging {
   private val UnparsedNotificationId = "unparsedNotificationId"
   private val ActionId = "actionId"
 
-  implicit private val workItemFormat = WorkItem.formatForFields[UnparsedNotification](WorkItemFields.default)
+  implicit private val workItemFormat: Format[WorkItem[UnparsedNotification]] = WorkItem.formatForFields[UnparsedNotification](WorkItemFields.default)
 
   private val NotificationIsAlreadyMigrated = true
   private val NotificationIsNotMigrated = false

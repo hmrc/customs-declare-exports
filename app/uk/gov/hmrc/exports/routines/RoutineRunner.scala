@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.routines
 
-import akka.actor.{ActorSystem, Cancellable}
+import org.apache.pekko.actor.{ActorSystem, Cancellable}
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.exports.config.AppConfig
 

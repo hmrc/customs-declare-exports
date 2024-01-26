@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.base
 
 import com.codahale.metrics.MetricRegistry
-import com.kenshoo.play.metrics.Metrics
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 
 trait MockMetrics {
@@ -27,10 +27,6 @@ trait MockMetrics {
   val metrics: Metrics = new Metrics {
     override def defaultRegistry: MetricRegistry = metricRegistry
 
-    /**
-     * This method is used on metric reporting - is not require for this mock/stub and intentionally not implement
-     */
-    override def toJson: String = ???
   }
 
   val exportsMetrics = new ExportsMetrics(metrics)

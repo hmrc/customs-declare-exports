@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.exports.models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.StatusGroup
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 
 case class PageOfSubmissions(statusGroup: StatusGroup, totalSubmissionsInGroup: Int, submissions: Seq[Submission], reverse: Boolean)
 
 object PageOfSubmissions {
-  implicit val format = Json.format[PageOfSubmissions]
+  implicit val format: OFormat[PageOfSubmissions] = Json.format[PageOfSubmissions]
 }

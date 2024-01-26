@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.exports.models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 
 case class CustomsDeclareExportsResponse(status: Int, message: String)
 
 object CustomsDeclareExportsResponse {
-  implicit val formats = Json.format[CustomsDeclareExportsResponse]
+  implicit val formats: OFormat[CustomsDeclareExportsResponse] = Json.format[CustomsDeclareExportsResponse]
 }

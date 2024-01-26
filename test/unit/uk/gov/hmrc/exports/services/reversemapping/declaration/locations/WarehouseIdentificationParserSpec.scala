@@ -28,7 +28,7 @@ class WarehouseIdentificationParserSpec extends UnitSpec {
 
   private val parser = new WarehouseIdentificationParser
 
-  private implicit val mappingContext = MappingContext(eori = ExportsTestData.eori)
+  private implicit val mappingContext: MappingContext = MappingContext(eori = ExportsTestData.eori)
 
   "WarehouseIdentificationParser on parse" should {
 

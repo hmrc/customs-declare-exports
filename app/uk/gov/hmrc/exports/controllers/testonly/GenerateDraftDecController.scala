@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.controllers.testonly
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 import play.api.mvc.{Action, ControllerComponents, Request}
 import uk.gov.hmrc.exports.controllers.RESTController
 import uk.gov.hmrc.exports.models.declaration.AuthorisationProcedureCode.CodeOther
@@ -35,7 +35,7 @@ class GenerateDraftDecController @Inject() (declarationRepository: DeclarationRe
 ) extends RESTController(cc) {
   import GenerateDraftDecController._
 
-  implicit val format = Json.format[CreateDraftDecDocumentsRequest]
+  implicit val format: OFormat[CreateDraftDecDocumentsRequest] = Json.format[CreateDraftDecDocumentsRequest]
 
   val createDraftDec: Action[CreateDraftDecDocumentsRequest] = Action.async(parsingJson[CreateDraftDecDocumentsRequest]) { implicit request =>
     for {

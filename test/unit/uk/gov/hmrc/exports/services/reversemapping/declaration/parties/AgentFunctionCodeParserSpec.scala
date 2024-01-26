@@ -25,7 +25,7 @@ import scala.xml.NodeSeq
 class AgentFunctionCodeParserSpec extends UnitSpec {
 
   private val parser = new AgentFunctionCodeParser()
-  private implicit val context = MappingContext(eori)
+  private implicit val context: MappingContext = MappingContext(eori)
 
   "AgentFunctionCodeParser on parse" should {
     "return Right with None" when {

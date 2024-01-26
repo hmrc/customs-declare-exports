@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 
-import akka.actor.{ActorSystem, Cancellable, Scheduler}
+import org.apache.pekko.actor.{ActorSystem, Cancellable, Scheduler}
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import uk.gov.hmrc.exports.base.UnitSpec
 

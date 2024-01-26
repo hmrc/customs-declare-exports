@@ -22,7 +22,7 @@ import org.bson.Document
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Filters.{and, elemMatch, equal, exists, or}
 import play.api.Logging
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
@@ -112,5 +112,5 @@ private case class Submission(
 )
 
 private object Submission {
-  implicit val format = Json.format[Submission]
+  implicit val format: OFormat[Submission] = Json.format[Submission]
 }

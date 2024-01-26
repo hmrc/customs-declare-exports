@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.exports.models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 
 case class CustomsDeclarationsResponse(status: Int, conversationId: Option[String] = None)
 
 object CustomsDeclarationsResponse {
-  implicit val format = Json.format[CustomsDeclarationsResponse]
+  implicit val format: OFormat[CustomsDeclarationsResponse] = Json.format[CustomsDeclarationsResponse]
 
   lazy val empty = CustomsDeclarationsResponse(0, None)
 }

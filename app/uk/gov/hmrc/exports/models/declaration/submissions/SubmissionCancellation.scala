@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.models.declaration.submissions
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 
 case class SubmissionCancellation(
   submissionId: String,
@@ -27,5 +27,5 @@ case class SubmissionCancellation(
 )
 
 object SubmissionCancellation {
-  implicit val format = Json.format[SubmissionCancellation]
+  implicit val format: OFormat[SubmissionCancellation] = Json.format[SubmissionCancellation]
 }

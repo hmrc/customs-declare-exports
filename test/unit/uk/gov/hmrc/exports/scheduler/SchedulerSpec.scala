@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.scheduler
 
-import akka.actor.{ActorSystem, Cancellable}
+import org.apache.pekko.actor.{ActorSystem, Cancellable}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchersSugar.any
 import org.mockito.BDDMockito.given
@@ -39,7 +39,7 @@ class SchedulerSpec extends UnitSpec {
   private val actorSystem = mock[ActorSystem]
   private val applicationLifecycle = mock[ApplicationLifecycle]
   private val appConfig = mock[AppConfig]
-  private val internalScheduler = mock[akka.actor.Scheduler]
+  private val internalScheduler = mock[org.apache.pekko.actor.Scheduler]
   private val zone: ZoneId = ZoneOffset.UTC
   private val clock = Clock.fixed(instant("2018-12-25T12:00:00"), zone)
 

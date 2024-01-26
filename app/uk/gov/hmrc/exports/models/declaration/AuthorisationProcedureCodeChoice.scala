@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.models.declaration
 
-import play.api.libs.json.{JsString, Json, JsonValidationError, Reads, Writes}
+import play.api.libs.json.{JsString, Json, JsonValidationError, OFormat, Reads, Writes}
 
 trait AuthorisationProcedureCode
 
@@ -36,5 +36,5 @@ object AuthorisationProcedureCode {
 case class AuthorisationProcedureCodeChoice(code: AuthorisationProcedureCode)
 
 object AuthorisationProcedureCodeChoice {
-  implicit val format = Json.format[AuthorisationProcedureCodeChoice]
+  implicit val format: OFormat[AuthorisationProcedureCodeChoice] = Json.format[AuthorisationProcedureCodeChoice]
 }

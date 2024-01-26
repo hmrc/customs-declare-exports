@@ -26,7 +26,7 @@ import scala.xml.NodeSeq
 class EntityDetailsParserSpec extends UnitSpec {
 
   private val parser = new EntityDetailsParser()
-  private implicit val context = MappingContext(eori)
+  private implicit val context: MappingContext = MappingContext(eori)
 
   "EntityDetailsParser on parse" should {
     "return Right with None" when {

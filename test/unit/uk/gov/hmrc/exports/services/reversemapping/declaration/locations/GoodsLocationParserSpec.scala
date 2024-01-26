@@ -28,7 +28,7 @@ class GoodsLocationParserSpec extends UnitSpec {
 
   private val parser = new GoodsLocationParser
 
-  private implicit val mappingContext = MappingContext(eori = ExportsTestData.eori)
+  private implicit val mappingContext: MappingContext = MappingContext(eori = ExportsTestData.eori)
 
   "GoodsLocationParser on parse" should {
 

@@ -26,7 +26,7 @@ import scala.xml.{Elem, NodeSeq}
 class PackageInformationParserSpec extends UnitSpec {
 
   private val packageInformationParser = new PackageInformationParser()
-  private implicit val context = MappingContext(eori)
+  private implicit val context: MappingContext = MappingContext(eori)
 
   "PackageInformationParser on parse" should {
 

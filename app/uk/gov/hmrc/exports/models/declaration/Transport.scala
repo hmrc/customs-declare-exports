@@ -21,7 +21,7 @@ import play.api.libs.json.{Json, OFormat}
 case class TransportLeavingTheBorder(code: Option[ModeOfTransportCode] = None)
 
 object TransportLeavingTheBorder {
-  implicit val format = Json.format[TransportLeavingTheBorder]
+  implicit val format: OFormat[TransportLeavingTheBorder] = Json.format[TransportLeavingTheBorder]
 }
 
 case class Transport(

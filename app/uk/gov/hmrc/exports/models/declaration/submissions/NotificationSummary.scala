@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.models.declaration.submissions
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
 
@@ -30,7 +30,7 @@ case class NotificationSummary(notificationId: UUID, dateTimeIssued: ZonedDateTi
 
 object NotificationSummary {
 
-  implicit val formats = Json.format[NotificationSummary]
+  implicit val formats: OFormat[NotificationSummary] = Json.format[NotificationSummary]
 
   def apply(notification: ParsedNotification, actions: Seq[Action], notificationSummaries: Seq[NotificationSummary]): NotificationSummary =
     new NotificationSummary(

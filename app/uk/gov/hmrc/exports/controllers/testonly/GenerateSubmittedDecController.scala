@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.controllers.testonly
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 import play.api.mvc.{Action, ControllerComponents, Request}
 import uk.gov.hmrc.exports.controllers.RESTController
 import uk.gov.hmrc.exports.models.declaration.AuthorisationProcedureCode.CodeOther
@@ -46,7 +46,7 @@ class GenerateSubmittedDecController @Inject() (
     extends RESTController(cc) {
   import GenerateSubmittedDecController._
 
-  implicit val format = Json.format[CreateSubmitDecDocumentsRequest]
+  implicit val format: OFormat[CreateSubmitDecDocumentsRequest] = Json.format[CreateSubmitDecDocumentsRequest]
 
   val createSubmittedDecDocuments: Action[CreateSubmitDecDocumentsRequest] = Action.async(parsingJson[CreateSubmitDecDocumentsRequest]) {
     implicit request =>

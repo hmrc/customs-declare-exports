@@ -26,7 +26,7 @@ import scala.xml.NodeSeq
 class DeclarationHolderParserSpec extends UnitSpec {
 
   private val parser = new DeclarationHolderParser()
-  private implicit val context = MappingContext(eori)
+  private implicit val context: MappingContext = MappingContext(eori)
 
   private val catCode1 = "ABC"
 

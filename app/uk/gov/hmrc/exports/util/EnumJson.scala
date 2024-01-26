@@ -17,10 +17,24 @@
 package uk.gov.hmrc.exports.util
 
 import play.api.libs.json._
+import scala.language.postfixOps
+import scala.util.{Failure, Try}
 
 object EnumJson {
 
-  def format[E <: Enumeration](`enum`: E): Format[E#Value] =
-    Format(Reads.enumNameReads(`enum`), Writes.enumNameWrites)
+  private def enumReads[E <: Enumeration](anEnum: E): Reads[E#Value] = {
+    case JsString(s) =>
+      Try(JsSuccess(anEnum.withName(s))) recoverWith { case _: NoSuchElementException =>
+        Failure(new InvalidEnumException(anEnum.getClass.getSimpleName, s))
+      } get
+    case _ => JsError("String value expected")
+  }
 
+  implicit def enumWrites[E <: Enumeration]: Writes[E#Value] = (v: E#Value) => JsString(v.toString)
+
+  implicit def format[E <: Enumeration](anEnum: E): Format[E#Value] =
+    Format(enumReads(anEnum), enumWrites)
 }
+
+class InvalidEnumException(className: String, input: String)
+    extends RuntimeException(s"Enumeration expected of type: '$className', but it does not contain '$input'")

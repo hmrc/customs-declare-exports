@@ -25,7 +25,7 @@ import scala.xml.NodeSeq
 class DeclarationAdditionalActorParserSpec extends UnitSpec {
 
   private val parser = new DeclarationAdditionalActorParser()
-  private implicit val context = MappingContext(eori)
+  private implicit val context: MappingContext = MappingContext(eori)
 
   private val roleCode1 = "CS"
   private val roleCode2 = "MF"
