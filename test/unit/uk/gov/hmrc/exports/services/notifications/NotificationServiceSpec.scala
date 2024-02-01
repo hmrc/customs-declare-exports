@@ -34,6 +34,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, UnparsedNotificationWorkItemRepository}
 import uk.gov.hmrc.exports.services.notifications.receiptactions.NotificationReceiptActionsScheduler
 import uk.gov.hmrc.exports.util.TimeUtils
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.ToDo
 import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem}
 
@@ -117,9 +118,9 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       val testNotificationUnparsed = UnparsedNotification(actionId = actionId, payload = inputXml.toString)
       val testWorkItem = WorkItem(
         id = ObjectId.get,
-        receivedAt = Instant.now,
-        updatedAt = Instant.now,
-        availableAt = Instant.now,
+        receivedAt = instant(),
+        updatedAt = instant(),
+        availableAt = instant(),
         status = ToDo,
         failureCount = 0,
         item = testNotificationUnparsed

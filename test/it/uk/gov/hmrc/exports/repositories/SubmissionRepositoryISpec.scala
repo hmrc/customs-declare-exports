@@ -26,7 +26,8 @@ import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.SubmissionRepositoryISpecHelper.itemsPerPage
 import uk.gov.hmrc.exports.util.TimeUtils
 
-import java.time.ZonedDateTime
+import java.time.{Instant, ZonedDateTime}
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import scala.util.Random
 
@@ -55,10 +56,10 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
       "return the Submission updated" in {
         repository.insertOne(submission).futureValue.isRight mustBe true
         val newAction = Action(actionId_2, CancellationRequest, submission.latestDecId, submission.latestVersionNo + 1)
-        val expectedUpdatedSubmission = submission.copy(actions = submission.actions :+ newAction)
 
         val updatedSubmission = repository.addAction(submission.uuid, newAction).futureValue
 
+        val expectedUpdatedSubmission = submission.copy(actions = submission.actions :+ newAction, lastUpdated = updatedSubmission.value.lastUpdated)
         updatedSubmission.value must equal(expectedUpdatedSubmission)
       }
     }
@@ -254,6 +255,15 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
 
         (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(itemsPerPage + ix))
       }
+    }
+  }
+
+  "SubmissionRepository.createdAt" should {
+    "provide the insertion time of a Document" in {
+      repository.insertOne(submission).futureValue.isRight mustBe true
+
+      val createdAt = repository.createdAt("uuid", submission.uuid).futureValue
+      createdAt.value.truncatedTo(ChronoUnit.DAYS) mustBe Instant.now.truncatedTo(ChronoUnit.DAYS)
     }
   }
 }

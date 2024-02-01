@@ -24,6 +24,7 @@ import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.RECEIVED
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionStatus}
+import uk.gov.hmrc.exports.repositories.RepositoryOps.mongoDateOfMillis
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SubmissionRepository, UpdateSubmissionsTransactionalOps}
 import uk.gov.hmrc.exports.services.audit.AuditService
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
@@ -41,7 +42,7 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
   private val transactionalOps = instanceOf[UpdateSubmissionsTransactionalOps]
   private val auditService = instanceOf[AuditService]
 
-  private val parseAndSaveAction = new ParseAndSaveAction(notificationFactory, submissionRepository, transactionalOps, auditService)
+  private val parseAndSaveAction = new ParseAndSaveAction(notificationFactory, transactionalOps, auditService)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -114,8 +115,8 @@ class ParseAndSaveActionISpec extends IntegrationTestSpec {
             val submissions = parseAndSaveAction.save(List(cancellationNotification)).futureValue._1
             submissions.size mustBe 1
 
-            val actualSubmission = Json.toJson(submissions.head)
-            actualSubmission mustBe Json.parse(submissionWithNotificationSummaries)
+            val actualSubmission = submissions.head
+            actualSubmission mustBe submissionWithNotificationSummaries.copy(lastUpdated = actualSubmission.lastUpdated)
           }
         }
       }
@@ -182,6 +183,7 @@ object ParseAndSaveActionISpec {
       |      "versionNo" : 1
       |    }
       |  ],
+      |  "lastUpdated": ${mongoDateOfMillis()},
       |  "latestEnhancedStatus": "PENDING",
       |  "enhancedStatusLastUpdated": "${submissionDateTime}",
       |  "latestDecId" : "62b088b16a76c36b550804ab",
@@ -190,8 +192,8 @@ object ParseAndSaveActionISpec {
       |}
       |""".stripMargin
 
-  val submissionWithNotificationSummaries =
-    s"""{
+  val submissionWithNotificationSummaries = Json
+    .parse(s"""{
       |  "uuid": "9f324b20-71bf-4c70-ae8d-aa53f81a99ff",
       |  "eori": "GB239355053000",
       |  "lrn": "QSLRN2341102",
@@ -229,8 +231,10 @@ object ParseAndSaveActionISpec {
       |      "versionNo" : 1
       |    }
       |  ],
+      |  "lastUpdated": ${mongoDateOfMillis()},
       |  "latestDecId" : "62b088b16a76c36b550804ab",
       |  "latestVersionNo" : 1
       |}
-      |""".stripMargin
+      |""".stripMargin)
+    .as[Submission]
 }

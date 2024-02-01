@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.migrations.repositories
 import org.bson.Document
 import uk.gov.hmrc.exports.migrations.changelogs.MigrationDefinition
 import uk.gov.hmrc.exports.migrations.repositories.ChangeEntry._
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 
 import java.time.Instant
 
@@ -31,7 +32,7 @@ object ChangeEntry {
   def apply(migrationDefinition: MigrationDefinition): ChangeEntry = ChangeEntry(
     changeId = migrationDefinition.migrationInformation.id,
     author = migrationDefinition.migrationInformation.author,
-    timestamp = Instant.now,
+    timestamp = instant(),
     changeLogClass = migrationDefinition.getClass.getSimpleName
   )
 }

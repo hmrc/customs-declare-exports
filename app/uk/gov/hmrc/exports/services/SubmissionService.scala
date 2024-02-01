@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.services
 
-import org.mongodb.scala.model.{Filters, Updates}
 import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
@@ -169,31 +168,15 @@ class SubmissionService @Inject() (
     customsDeclarationsInformationConnector.fetchMrnFullDeclaration(mrn.value, None) flatMap { xml =>
       exportsDeclarationXmlParser.fromXml(MappingContext(eori.value), xml.toString).toOption match {
         case Some(declaration) =>
-          val update = for {
+          for {
             _ <- declarationRepository.create(declaration)
-            submission <- submissionRepository.updateAction(submissionId, actionId, declaration.id)
+            submission <- submissionRepository.updateExternalAmendmentAction(submissionId, actionId, declaration.id)
           } yield submission
 
-          update flatMap { submission =>
-            updateDecId(submission, actionId, declaration.id)
-          }
         case _ =>
           Future.successful(None)
       }
     }
-
-  private def updateDecId(updatedSubmission: Option[Submission], actionId: String, declarationId: String): Future[Option[Submission]] = {
-
-    def findAction(submission: Submission): Action => Boolean = { action =>
-      action.id == actionId && action.versionNo == submission.latestVersionNo
-    }
-
-    updatedSubmission match {
-      case Some(submission) if submission.actions.exists(findAction(submission)) =>
-        submissionRepository.findOneAndUpdate(Filters.eq("uuid", submission.uuid), Updates.set("latestDecId", declarationId))
-      case submission => Future.successful(submission)
-    }
-  }
 
   private def isSubmissionAlreadyCancelled(submission: Submission): Boolean =
     submission.actions.find(_.requestType == CancellationRequest) match {

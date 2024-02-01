@@ -30,6 +30,7 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.migrations.exceptions.LockPersistenceException
 import uk.gov.hmrc.exports.migrations.repositories.LockEntry._
 import uk.gov.hmrc.exports.migrations.repositories.TestObjectsBuilder.buildMongoCursor
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 
 import java.time.Instant
 import scala.jdk.CollectionConverters._
@@ -52,7 +53,7 @@ class LockRepositorySpec extends UnitSpec {
   private val lockKey = "lockKeyValue"
   private val status = LockStatus.LockHeld.name
   private val owner = "ownerValue"
-  private val date = Instant.now
+  private val date = instant()
   private val lockEntry = LockEntry(lockKey, status, owner, date)
 
   override def beforeEach(): Unit = {

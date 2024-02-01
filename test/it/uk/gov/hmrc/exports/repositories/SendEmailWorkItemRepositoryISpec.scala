@@ -22,6 +22,7 @@ import testdata.ExportsTestData
 import testdata.WorkItemTestData._
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Failed, InProgress, Succeeded, ToDo}
 
 import java.time.Instant
@@ -35,7 +36,7 @@ class SendEmailWorkItemRepositoryISpec extends IntegrationTestSpec {
     repository.removeAll.futureValue
   }
 
-  def now: Instant = Instant.now
+  def now: Instant = instant()
   val seconds = 2 * 60L
 
   "SendEmailWorkItemRepository on pushNew" should {

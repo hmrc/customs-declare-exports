@@ -25,8 +25,8 @@ import org.bson.Document
 import org.bson.conversions.Bson
 import uk.gov.hmrc.exports.migrations.exceptions.LockPersistenceException
 import uk.gov.hmrc.exports.migrations.repositories.LockEntry.{ExpiresAtField, KeyField, OwnerField, StatusField}
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 
-import java.time.Instant
 import scala.jdk.CollectionConverters._
 
 class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRepository(db, collectionName, Array(KeyField)) {
@@ -95,7 +95,7 @@ class LockRepository(collectionName: String, db: MongoDatabase) extends MongoRep
     }
 
   private def getAcquireLockQuery(lockKey: String, owner: String, onlyIfSameOwner: Boolean): Bson = {
-    val expiresAtCond: Bson = lt(ExpiresAtField, Instant.now)
+    val expiresAtCond: Bson = lt(ExpiresAtField, instant())
     val ownerCond: Bson = feq(OwnerField, owner)
     val orCond: Bson = if (onlyIfSameOwner) {
       or(ownerCond)

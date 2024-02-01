@@ -16,12 +16,15 @@
 
 package uk.gov.hmrc.exports.models.declaration.submissions
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{EnhancedStatus, PENDING}
+import uk.gov.hmrc.exports.repositories.RepositoryOps
 import uk.gov.hmrc.exports.util.TimeUtils
+import uk.gov.hmrc.exports.util.TimeUtils.instant
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.instantWrites
 
-import java.time.ZonedDateTime
+import java.time.{Instant, ZonedDateTime}
 import java.util.UUID
 
 case class Submission(
@@ -34,12 +37,15 @@ case class Submission(
   enhancedStatusLastUpdated: ZonedDateTime = TimeUtils.now(),
   actions: Seq[Action] = Seq.empty,
   latestDecId: Option[String], // Initial value => always as 'uuid' field
-  latestVersionNo: Int = 1
+  latestVersionNo: Int = 1,
+  lastUpdated: Instant = instant()
 ) {
   val blockAmendments: Boolean = latestDecId.isEmpty
 }
 
 object Submission {
+
+  implicit val instantFormat: Format[Instant] = Format(RepositoryOps.instantReads, instantWrites)
 
   implicit val format: OFormat[Submission] = Json.format[Submission]
 
@@ -58,5 +64,4 @@ object Submission {
       actions = List(action),
       latestDecId = Some(uuid)
     )
-
 }

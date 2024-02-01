@@ -28,7 +28,6 @@ import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{SubmissionRepository, UpdateSubmissionsTransactionalOps}
 import uk.gov.hmrc.exports.services.audit.AuditService
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
-import uk.gov.hmrc.http.InternalServerException
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -40,7 +39,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
   private val mockNotificationFactory = mock[NotificationFactory]
   private val mockAuditService = mock[AuditService]
 
-  private val parseAndSaveAction = new ParseAndSaveAction(mockNotificationFactory, submissionRepository, transactionalOps, mockAuditService)
+  private val parseAndSaveAction = new ParseAndSaveAction(mockNotificationFactory, transactionalOps, mockAuditService)
 
   override def afterEach(): Unit = {
     reset(submissionRepository, transactionalOps, mockAuditService, mockNotificationFactory)
@@ -51,7 +50,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
     "provided with an UnparsedNotification" should {
       "call audit service" in {
         when(submissionRepository.findOne(any, any)).thenReturn(Future.successful(Some(submission)))
-        when(transactionalOps.updateSubmissionAndNotifications(any, any, any)).thenReturn(Future.successful(submission))
+        when(transactionalOps.updateSubmissionAndNotifications(any, any)).thenReturn(Future.successful(submission))
         when(mockNotificationFactory.buildNotifications(any)).thenReturn(List(notification, notification_2))
 
         await(parseAndSaveAction.execute(notificationUnparsed))
@@ -71,25 +70,14 @@ class ParseAndSaveActionSpec extends UnitSpec {
       }
     }
 
-    "provided with a ParsedNotification without a stored Submission document" should {
-      "return a list with no submissions (empty)" in {
-        when(submissionRepository.findOne(any, any)).thenReturn(Future.successful(None))
-
-        intercept[InternalServerException] {
-          await(parseAndSaveAction.save(List(notification)))
-        }
-        verifyNoInteractions(transactionalOps)
-      }
-    }
-
     "provided with a single ParsedNotification with a stored Submission document and" should {
       "return a List with a single Submission" in {
         when(submissionRepository.findOne(any, any)).thenReturn(Future.successful(Some(submission)))
-        when(transactionalOps.updateSubmissionAndNotifications(any, any, any)).thenReturn(Future.successful(submission))
+        when(transactionalOps.updateSubmissionAndNotifications(any, any)).thenReturn(Future.successful(submission))
 
         parseAndSaveAction.save(List(notification)).futureValue._1 mustBe List(submission)
 
-        verify(transactionalOps).updateSubmissionAndNotifications(eqTo(notification.actionId), any, eqTo(submission))
+        verify(transactionalOps).updateSubmissionAndNotifications(eqTo(notification.actionId), any)
       }
     }
 
@@ -105,11 +93,11 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
         val captor = ArgumentCaptor.forClass(classOf[String])
         when(submissionRepository.findOne(any[String], captor.capture())).thenAnswer(withResult andThen toOptionFuture)
-        when(transactionalOps.updateSubmissionAndNotifications(captor.capture(), any, any)).thenAnswer(withResult andThen toFuture)
+        when(transactionalOps.updateSubmissionAndNotifications(captor.capture(), any)).thenAnswer(withResult andThen toFuture)
 
         parseAndSaveAction.save(List(notification_2, notification_3)).futureValue._1 must contain theSameElementsAs (List(submission_2, submission_3))
 
-        verify(transactionalOps, times(2)).updateSubmissionAndNotifications(any, any, any)
+        verify(transactionalOps, times(2)).updateSubmissionAndNotifications(any, any)
       }
     }
   }

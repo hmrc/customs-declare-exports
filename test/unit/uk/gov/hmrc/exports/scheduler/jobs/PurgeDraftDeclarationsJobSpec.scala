@@ -23,6 +23,7 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.config.AppConfig.JobConfig
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, JobRunRepository}
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 
 import java.time._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,7 +33,7 @@ import scala.concurrent.duration._
 class PurgeDraftDeclarationsJobSpec extends UnitSpec {
 
   private val zone = ZoneOffset.UTC
-  private val clock: Clock = Clock.fixed(Instant.now(), zone)
+  private val clock: Clock = Clock.fixed(instant(), zone)
   private val appConfig = mock[AppConfig]
   private val declarationRepository = mock[DeclarationRepository]
   private val jobRunRepository = mock[JobRunRepository]

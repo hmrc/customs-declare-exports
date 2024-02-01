@@ -26,7 +26,7 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timers
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
+import uk.gov.hmrc.exports.models.declaration.{DeclarationMeta, DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository.meta
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -47,10 +47,10 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
     ) with RepositoryOps[ExportsDeclaration] {
 
   override def classTag: ClassTag[ExportsDeclaration] = implicitly[ClassTag[ExportsDeclaration]]
-  override val executionContext = ec
+  override val executionContext: ExecutionContext = ec
 
   def deleteExpiredDraft(expiryDate: Instant): Future[Long] = {
-    import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.Mongo.formatInstant
+    import DeclarationMeta.Mongo.instantFormat
     removeEvery(Json.obj(s"$meta.status" -> DeclarationStatus.DRAFT.toString, s"$meta.updatedDateTime" -> Json.obj("$lte" -> expiryDate)))
   }
 

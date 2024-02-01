@@ -279,18 +279,18 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
 
                 submissionRepository.insertOne(submission).futureValue.isRight mustBe true
 
-                val result: Submission = submissionService
+                val updatedSubmission: Submission = submissionService
                   .fetchExternalAmendmentToUpdateSubmission(mrn = Mrn(mrn), Eori(eori), externalActionId3, submission.uuid)(hc)
                   .futureValue
                   .value
 
-                val savedDec = declarationRepository
+                val newDeclaration = declarationRepository
                   .findOne(Filters.equal("eori", eori))
                   .futureValue
                   .value
 
-                result.latestDecId.value mustBe savedDec.id
-                result.actions(2).decId.value mustBe savedDec.id
+                updatedSubmission.latestDecId.value mustBe newDeclaration.id
+                updatedSubmission.actions(2).decId.value mustBe newDeclaration.id
               }
             }
           }

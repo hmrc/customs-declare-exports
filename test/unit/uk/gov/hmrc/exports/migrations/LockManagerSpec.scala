@@ -23,8 +23,7 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.migrations.LockManager.DefaultKey
 import uk.gov.hmrc.exports.migrations.exceptions.{LockManagerException, LockPersistenceException}
 import uk.gov.hmrc.exports.migrations.repositories.{LockEntry, LockRefreshChecker, LockRepository, LockStatus}
-
-import java.time.Instant
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 
 class LockManagerSpec extends UnitSpec {
 
@@ -36,7 +35,6 @@ class LockManagerSpec extends UnitSpec {
     super.beforeEach()
 
     reset(lockRepository, lockRefreshChecker, timeUtils)
-    when(timeUtils.currentTime).thenCallRealMethod()
     when(timeUtils.minutesToMillis(any())).thenCallRealMethod()
     when(timeUtils.millisToMinutes(any())).thenCallRealMethod()
   }
@@ -67,7 +65,7 @@ class LockManagerSpec extends UnitSpec {
     lockAcquiredForMillis = lockAliveTimeMillis,
     minimumSleepThreadMillis = 100L
   )
-  private val newLockExpiryDate = Instant.now.plusMillis(lockAliveTimeMillis)
+  private val newLockExpiryDate = instant().plusMillis(lockAliveTimeMillis)
   private val currentLockExpiryDate = newLockExpiryDate
 
   "LockManager on acquireLockDefault" should {

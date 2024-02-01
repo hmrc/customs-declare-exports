@@ -23,6 +23,7 @@ import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatu
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 
 import java.time.{Instant, ZoneOffset, ZonedDateTime}
 
@@ -390,7 +391,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
   def withReadyForSubmission(): ExportsDeclarationModifier =
     cache => cache.copy(declarationMeta = cache.declarationMeta.copy(summaryWasVisited = Some(true), readyForSubmission = Some(true)))
 
-  def withUpdatedDateTime(updatedDateTime: Instant = Instant.now()): ExportsDeclarationModifier =
+  def withUpdatedDateTime(updatedDateTime: Instant = instant()): ExportsDeclarationModifier =
     cache => cache.copy(declarationMeta = cache.declarationMeta.copy(updatedDateTime = updatedDateTime))
 
   def withMaxSequenceIdFor(key: String, value: Int): ExportsDeclarationModifier =

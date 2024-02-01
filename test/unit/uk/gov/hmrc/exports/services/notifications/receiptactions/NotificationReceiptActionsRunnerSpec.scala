@@ -25,6 +25,7 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import uk.gov.hmrc.exports.repositories.UnparsedNotificationWorkItemRepository
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Cancelled, Failed, InProgress, Succeeded}
 import uk.gov.hmrc.mongo.workitem.{ResultStatus, WorkItem}
 
@@ -65,7 +66,7 @@ class NotificationReceiptActionsRunnerSpec extends UnitSpec {
         verify(unparsedNotificationWorkItemRepository).pullOutstanding(captor.capture(), any[Instant])
 
         val minimumYearsDifference = 10L
-        val now = LocalDateTime.ofInstant(Instant.now, ZoneOffset.UTC)
+        val now = LocalDateTime.ofInstant(instant(), ZoneOffset.UTC)
         val maximumFailedBeforeDate = now.minusYears(minimumYearsDifference).toInstant(ZoneOffset.UTC)
 
         captor.getValue.isBefore(maximumFailedBeforeDate)
@@ -75,7 +76,7 @@ class NotificationReceiptActionsRunnerSpec extends UnitSpec {
     "provided with parseFailed = true" should {
       "call UnparsedNotificationWorkItemRepository with failedBefore parameter being current time" in {
         when(unparsedNotificationWorkItemRepository.pullOutstanding(any[Instant], any[Instant])).thenReturn(Future.successful(None))
-        val now = Instant.now
+        val now = instant()
 
         notificationReceiptActionsRunner.runNow().futureValue
 

@@ -16,11 +16,15 @@
 
 package uk.gov.hmrc.exports.util
 
-import java.time.{ZoneId, ZonedDateTime}
+import java.time.temporal.ChronoUnit
+import java.time.{Instant, ZoneId, ZonedDateTime}
 
 object TimeUtils {
 
   val defaultTimeZone: ZoneId = ZoneId.of("UTC")
 
   def now(): ZonedDateTime = ZonedDateTime.now(defaultTimeZone)
+
+  // Remove the microseconds to avoid a String comparison mismatch.
+  def instant(): Instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
 }

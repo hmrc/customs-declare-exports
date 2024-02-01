@@ -7,8 +7,8 @@ import testdata.ExportsTestData.{actionId, actionId_2}
 import testdata.notifications.NotificationTestData
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 
-import java.time.Instant
 import java.util.UUID
 import scala.concurrent.duration._
 
@@ -29,7 +29,7 @@ class UnparsedNotificationWorkItemRepositoryISpec extends IntegrationTestSpec wi
       repository.pushNew(testUnparsedNotification).futureValue
 
       eventually(timeout(2.seconds), interval(100.millis)) {
-        val result = repository.pullOutstanding(failedBefore = Instant.now.minusSeconds(2 * 60), availableBefore = Instant.now).futureValue
+        val result = repository.pullOutstanding(failedBefore = instant().minusSeconds(2 * 60), availableBefore = instant()).futureValue
 
         result mustBe defined
         result.get.item mustBe testUnparsedNotification

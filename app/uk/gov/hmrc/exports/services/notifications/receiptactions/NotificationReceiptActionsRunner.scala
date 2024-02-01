@@ -20,11 +20,11 @@ import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import uk.gov.hmrc.exports.repositories.UnparsedNotificationWorkItemRepository
-import uk.gov.hmrc.exports.util.TimeUtils.defaultTimeZone
+import uk.gov.hmrc.exports.util.TimeUtils.{defaultTimeZone, instant}
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Cancelled, Failed, Succeeded}
 import uk.gov.hmrc.mongo.workitem.WorkItem
 
-import java.time.{Instant, LocalDateTime}
+import java.time.LocalDateTime
 import javax.inject.{Inject, Named, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,7 +39,7 @@ class NotificationReceiptActionsRunner @Inject() (
   val year = 2010
 
   def runNow(parseFailed: Boolean = false): Future[Unit] = {
-    val now = Instant.now
+    val now = instant()
     val defaultFailedBefore = LocalDateTime.of(year, 1, 1, 1, 0, 0)
     val failedBefore = if (parseFailed) now else defaultFailedBefore.atZone(defaultTimeZone).toInstant
 

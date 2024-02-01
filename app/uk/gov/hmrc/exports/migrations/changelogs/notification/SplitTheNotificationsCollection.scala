@@ -28,6 +28,7 @@ import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.exports.migrations.changelogs.notification.SplitTheNotificationsCollection._
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Succeeded, ToDo}
 import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem, WorkItemFields}
 
@@ -139,7 +140,7 @@ class SplitTheNotificationsCollection extends MigrationDefinition with Logging {
   private def insertIntoUnparsedNotificationCollection(newUnparsedNotification: UnparsedNotification, status: ProcessingStatus)(
     implicit db: MongoDatabase
   ): Unit = {
-    val workItem = newWorkItem(Instant.now, status, newUnparsedNotification)
+    val workItem = newWorkItem(instant(), status, newUnparsedNotification)
     val workItemDocument = Document.parse(Json.toJson(workItem).toString)
 
     getUnparsedNotificationsCollection.insertOne(workItemDocument)

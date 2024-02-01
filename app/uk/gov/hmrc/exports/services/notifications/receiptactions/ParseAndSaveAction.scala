@@ -19,10 +19,9 @@ package uk.gov.hmrc.exports.services.notifications.receiptactions
 import play.api.Logging
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionStatus}
-import uk.gov.hmrc.exports.repositories.{SubmissionRepository, UpdateSubmissionsTransactionalOps}
+import uk.gov.hmrc.exports.repositories.UpdateSubmissionsTransactionalOps
 import uk.gov.hmrc.exports.services.audit.{AuditNotifications, AuditService}
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
-import uk.gov.hmrc.http.InternalServerException
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,7 +29,6 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ParseAndSaveAction @Inject() (
   notificationFactory: NotificationFactory,
-  submissionRepository: SubmissionRepository,
   transactionalOps: UpdateSubmissionsTransactionalOps,
   auditService: AuditService
 )(implicit executionContext: ExecutionContext)
@@ -41,19 +39,19 @@ class ParseAndSaveAction @Inject() (
       auditProcessing(submissions.headOption, parsedNotifications)
     }
 
-  private def auditProcessing(maybeSubmission: Option[Submission], parsedNotifications: Seq[ParsedNotification]) = {
+  private def auditProcessing(maybeSubmission: Option[Submission], parsedNotifications: Seq[ParsedNotification]): Unit = {
     val result = for {
       firstNotification <- parsedNotifications.headOption
       conversationId = firstNotification.actionId
       submission <- maybeSubmission
-      action <- submission.actions.filter(_.id == conversationId).headOption
+      action <- submission.actions.find(_.id == conversationId)
       declarationId <- action.decId
     } yield {
       val errorCodes = parsedNotifications.flatMap(_.details.errors.map(_.validationCode)).distinct
       val submissionStatus = parsedNotifications.map(_.details.status).distinct
 
       val functionCodesAsString = submissionStatus.map { subStatus =>
-        val functionCode = SubmissionStatus.statusMap.get(subStatus).getOrElse("??")
+        val functionCode = SubmissionStatus.statusMap.getOrElse(subStatus, "??")
         s"$functionCode $subStatus"
       }
 
@@ -69,20 +67,10 @@ class ParseAndSaveAction @Inject() (
         notifications
           .groupBy(_.actionId)
           .map { case (actionId, notificationsWithSameActionId) =>
-            // Add the notification group to the action (with the given actionId) of the including Submission document, if any
-            findAndUpdateSubmission(actionId, notificationsWithSameActionId)
+            // Add the notification group to the action (with the given actionId) of the including Submission document
+            transactionalOps.updateSubmissionAndNotifications(actionId, notificationsWithSameActionId)
           }
           .toList
       )
       .map(submissions => (submissions, notifications))
-
-  private def findAndUpdateSubmission(actionId: String, notifications: Seq[ParsedNotification]): Future[Submission] =
-    submissionRepository
-      .findOne("actions.id", actionId)
-      .flatMap {
-        case Some(submission) =>
-          transactionalOps.updateSubmissionAndNotifications(actionId, notifications, submission)
-        case _ =>
-          Future.failed(throw new InternalServerException(s"No submission record was found for (parsed) notifications with actionId($actionId)"))
-      }
 }

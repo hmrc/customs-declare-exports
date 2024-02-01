@@ -22,6 +22,7 @@ import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.Configuration
 import play.api.libs.json._
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 import uk.gov.hmrc.mongo.workitem.{WorkItem, WorkItemFields, WorkItemRepository}
 import uk.gov.hmrc.mongo.{MongoComponent, MongoUtils}
 
@@ -51,7 +52,7 @@ class SendEmailWorkItemRepository @Inject() (config: Configuration, mongoCompone
   override lazy val inProgressRetryAfter: Duration =
     Duration.ofMillis(config.getMillis("workItem.sendEmail.retryAfterMillis"))
 
-  override def now(): Instant = Instant.now()
+  override def now(): Instant = instant()
 
   def markAlertTriggered(id: ObjectId): Future[Boolean] = {
     val fields = Json.obj("item.alertTriggered" -> true)

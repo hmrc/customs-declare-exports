@@ -67,7 +67,7 @@ class Scheduler @Inject() (
     }
 
   private def durationUntil(datetime: Instant): FiniteDuration = {
-    val now = Instant.now(appConfig.clock)
+    val now = Instant.now(appConfig.clock).truncatedTo(ChronoUnit.MILLIS)
 
     if (datetime.isBefore(now)) FiniteDuration(now.until(now.plusSeconds(1), ChronoUnit.SECONDS), TimeUnit.SECONDS)
     else FiniteDuration(now.until(datetime, ChronoUnit.SECONDS), TimeUnit.SECONDS)
