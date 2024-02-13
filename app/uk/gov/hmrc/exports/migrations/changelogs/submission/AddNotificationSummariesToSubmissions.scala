@@ -20,16 +20,17 @@ import com.mongodb.client.result.UpdateResult
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
 import org.mongodb.scala.model.Filters
-import org.mongodb.scala.model.Filters.{and, elemMatch, equal, exists, or}
+import org.mongodb.scala.model.Filters._
 import play.api.Logging
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Json, OFormat, Reads}
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper._
+import uk.gov.hmrc.exports.repositories.RepositoryOps
 
-import java.time.ZonedDateTime
+import java.time.{Instant, ZonedDateTime}
 import scala.jdk.CollectionConverters._
 
 class AddNotificationSummariesToSubmissions extends MigrationDefinition with Logging {
@@ -108,9 +109,13 @@ private case class Submission(
   enhancedStatusLastUpdated: Option[ZonedDateTime],
   actions: Seq[Action],
   latestDecId: Option[String],
-  latestVersionNo: Int
+  latestVersionNo: Int,
+  lastUpdated: Instant
 )
 
 private object Submission {
+
+  implicit val instantReads: Reads[Instant] = RepositoryOps.instantReads
+
   implicit val format: OFormat[Submission] = Json.format[Submission]
 }

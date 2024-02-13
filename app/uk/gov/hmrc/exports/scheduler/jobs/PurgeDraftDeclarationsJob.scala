@@ -21,6 +21,7 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, JobRunRepository}
 
 import java.time._
+import java.time.temporal.ChronoUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -41,7 +42,7 @@ class PurgeDraftDeclarationsJob @Inject() (appConfig: AppConfig, declarationRepo
     jobRunRepository.isFirstRunInTheDay(name).flatMap {
       case true =>
         logger.info("Starting PurgeDraftDeclarationsJob execution...")
-        val expiryDate = Instant.now(appConfig.clock).minusSeconds(expireDuration.toSeconds)
+        val expiryDate = Instant.now(appConfig.clock).truncatedTo(ChronoUnit.MILLIS).minusSeconds(expireDuration.toSeconds)
         for {
           count <- declarationRepository.deleteExpiredDraft(expiryDate)
           _ = logger.info(s"Finishing ${name}Job: Purged $count items updated before $expiryDate")

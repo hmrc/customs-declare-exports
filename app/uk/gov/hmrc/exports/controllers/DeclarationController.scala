@@ -101,6 +101,8 @@ class DeclarationController @Inject() (
         }
     }
 
+  // This method is currently not used as we do not have permission to call the DIS API at this point.
+  // If/when we do then we will need to review this code to check that the updates to the mongoDB are atomic operations
   def fetchExternalAmendmentDecId(mrn: String, actionId: String, submissionId: String): Action[AnyContent] =
     authenticator.authorisedAction(parse.default) { implicit request =>
       submissionService.fetchExternalAmendmentToUpdateSubmission(Mrn(mrn), request.eori, actionId, submissionId) map {

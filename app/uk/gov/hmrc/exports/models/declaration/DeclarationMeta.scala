@@ -20,7 +20,8 @@ import play.api.libs.json._
 import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.sequenceIdPlaceholder
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
-import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
+import uk.gov.hmrc.exports.repositories.RepositoryOps
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.instantWrites
 
 import java.time.Instant
 
@@ -52,7 +53,8 @@ object DeclarationMeta {
 
   object Mongo {
 
-    implicit val formatInstant: Format[Instant] = MongoJavatimeFormats.instantFormat
+    implicit val instantFormat: Format[Instant] = Format(RepositoryOps.instantReads, instantWrites)
+
     implicit val format: OFormat[DeclarationMeta] = Json.format[DeclarationMeta]
   }
 

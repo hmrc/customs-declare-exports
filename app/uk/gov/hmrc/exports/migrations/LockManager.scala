@@ -20,6 +20,7 @@ import play.api.Logging
 import uk.gov.hmrc.exports.migrations.LockManager._
 import uk.gov.hmrc.exports.migrations.exceptions.{LockManagerException, LockPersistenceException}
 import uk.gov.hmrc.exports.migrations.repositories.{LockEntry, LockRefreshChecker, LockRepository, LockStatus}
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 
 import java.time.Instant
 import java.util.UUID
@@ -106,7 +107,7 @@ class LockManager(val repository: LockRepository, val lockRefreshChecker: LockRe
   }
 
   private def waitForLock(expiresAtMillis: Instant): Unit = {
-    val diffMillis = expiresAtMillis.minusMillis(timeUtils.currentTime.toEpochMilli).toEpochMilli
+    val diffMillis = expiresAtMillis.minusMillis(instant().toEpochMilli).toEpochMilli
     val sleepingMillis = (if (diffMillis > 0) diffMillis else 0) + config.minimumSleepThreadMillis
     try {
       if (sleepingMillis > config.lockMaxWaitMillis)

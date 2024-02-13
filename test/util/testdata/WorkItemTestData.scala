@@ -21,6 +21,7 @@ import testdata.ExportsTestData.mrn
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair.exampleReceivedNotification
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem}
 
 import java.time.Instant
@@ -36,21 +37,21 @@ object WorkItemTestData {
 
   def buildTestSendEmailWorkItem(
     status: ProcessingStatus,
-    updatedAt: Instant = Instant.now,
-    availableAt: Instant = Instant.now
+    updatedAt: Instant = instant(),
+    availableAt: Instant = instant()
   ): WorkItem[SendEmailDetails] =
     buildTestWorkItem(status, updatedAt, availableAt, item = buildTestSendEmailDetails)
 
   def buildTestWorkItem[T](
     status: ProcessingStatus,
-    updatedAt: Instant = Instant.now,
-    availableAt: Instant = Instant.now,
+    updatedAt: Instant = instant(),
+    availableAt: Instant = instant(),
     failureCount: Int = 0,
     item: T
   ): WorkItem[T] =
     WorkItem[T](
       id = ObjectId.get,
-      receivedAt = Instant.now,
+      receivedAt = instant(),
       updatedAt = updatedAt,
       availableAt = availableAt,
       status = status,

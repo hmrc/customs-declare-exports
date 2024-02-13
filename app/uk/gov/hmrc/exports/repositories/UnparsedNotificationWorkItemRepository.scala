@@ -20,6 +20,7 @@ import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.Configuration
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 import uk.gov.hmrc.mongo.workitem.{WorkItem, WorkItemFields, WorkItemRepository}
 import uk.gov.hmrc.mongo.{MongoComponent, MongoUtils}
 
@@ -48,6 +49,6 @@ class UnparsedNotificationWorkItemRepository @Inject() (config: Configuration, m
   override lazy val inProgressRetryAfter: Duration =
     Duration.ofMillis(config.getMillis("workItem.unparsedNotification.retryAfterMillis"))
 
-  override def now(): Instant = Instant.now()
+  override def now(): Instant = instant()
 
 }

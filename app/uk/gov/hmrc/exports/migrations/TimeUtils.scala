@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.migrations
 
 import org.bson.json.{Converter, JsonWriterSettings, StrictJsonWriter}
-import uk.gov.hmrc.exports.util.TimeUtils.defaultTimeZone
+import uk.gov.hmrc.exports.util.TimeUtils.{defaultTimeZone, instant}
 
 import java.lang
 import java.time.Instant
@@ -25,9 +25,7 @@ import java.time.format.DateTimeFormatter
 
 class TimeUtils {
 
-  private[migrations] def currentTimePlusMillis(millis: Long): Instant = Instant.now.plusMillis(millis)
-
-  private[migrations] def currentTime: Instant = Instant.now
+  private[migrations] def currentTimePlusMillis(millis: Long): Instant = instant().plusMillis(millis)
 
   private[migrations] def minutesToMillis(minutes: Long): Long = minutes * 60 * 1000
 

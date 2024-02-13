@@ -18,11 +18,12 @@ package uk.gov.hmrc.exports.migrations.repositories
 
 import uk.gov.hmrc.exports.migrations.LockManager.LockRefreshMarginMillis
 import uk.gov.hmrc.exports.migrations.TimeUtils
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 
 import java.time.Instant
 
 class LockRefreshChecker(private val timeUtils: TimeUtils) {
 
   def needsRefreshLock(lockExpiresAt: Instant): Boolean =
-    timeUtils.currentTime.compareTo(lockExpiresAt.minusMillis(timeUtils.minutesToMillis(LockRefreshMarginMillis))) >= 0
+    instant().compareTo(lockExpiresAt.minusMillis(timeUtils.minutesToMillis(LockRefreshMarginMillis))) >= 0
 }

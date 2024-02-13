@@ -19,14 +19,19 @@ package uk.gov.hmrc.exports.repositories
 import com.mongodb.ErrorCategory.DUPLICATE_KEY
 import com.mongodb.ExplainVerbosity.QUERY_PLANNER
 import com.mongodb.client.model.{ReturnDocument, Updates}
-import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.bson.{BsonBoolean, BsonDocument}
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.{FindOneAndReplaceOptions, FindOneAndUpdateOptions, InsertOneModel}
 import org.mongodb.scala.{ClientSession, Document, MongoCollection, MongoWriteException}
-import play.api.libs.json.JsValue
+import play.api.libs.functional.syntax.toAlternativeOps
+import play.api.libs.json.{__, JsValue, Reads}
 import play.libs.Json
+import uk.gov.hmrc.exports.util.TimeUtils.instant
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
+import java.time.Instant
+import java.time.format.DateTimeFormatter.ISO_INSTANT
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
@@ -37,6 +42,16 @@ trait RepositoryOps[T] {
   implicit val executionContext: ExecutionContext
 
   val collection: MongoCollection[T]
+
+  // Name of the field, if any, of the collection used to annotate the time, a java.time.Instant,
+  // of the last update (only, not used for document insertions and replacements).
+  val lastUpdatedField: Option[String] = None
+
+  protected def withCurrentDate(update: Bson): Bson =
+    lastUpdatedField.fold(update) { field =>
+      val result = update.toBsonDocument.append("$currentDate", BsonDocument(field -> BsonBoolean(true)))
+      result
+    }
 
   def bulkInsert(documents: Seq[T]): Future[Int] =
     collection.bulkWrite(documents.map(InsertOneModel(_))).toFuture().map(_.getInsertedCount)
@@ -50,13 +65,28 @@ trait RepositoryOps[T] {
   def create(document: T): Future[T] =
     collection.insertOne(document).toFuture().map(_ => document)
 
+  def createdAt[V](keyId: String, keyValue: V): Future[Option[Instant]] =
+    createdAt(equal(keyId, keyValue))
+
+  def createdAt(filter: JsValue): Future[Option[Instant]] =
+    createdAt(BsonDocument(filter.toString))
+
+  def createdAt(filter: Bson): Future[Option[Instant]] =
+    collection.withDocumentClass[Document]().find(filter).limit(1).toFuture().map(_.headOption).map {
+      case Some(document: Document) =>
+        val secondsFromEpoch = document.getObjectId("_id").getTimestamp.toLong
+        Some(Instant.ofEpochMilli(secondsFromEpoch * 1000L))
+
+      case _ => None
+    }
+
   def explain(filter: Bson): Future[String] =
     collection
       .find(filter)
       .explain(QUERY_PLANNER)
       .toFuture()
-      .map {
-        _.toList.map { t =>
+      .map { plan =>
+        plan.toList.map { t =>
           if (t._1 != "operationTime") s"\"${t._1}\" : ${t._2}"
           else t._2.toString.replace("Timestamp", "\"Timestamp\" : ")
         }.mkString("{", ",", "}")
@@ -108,10 +138,10 @@ trait RepositoryOps[T] {
 
   private lazy val upsertAndReturnAfter = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
 
-  def findOneOrCreate(filter: Bson, document: => T): Future[T] =
-    collection
-      .findOneAndUpdate(filter = filter, update = Updates.setOnInsert(BsonDocument(Json.toJson(document).toString)), options = upsertAndReturnAfter)
-      .toFuture()
+  def findOneOrCreate(filter: Bson, document: => T): Future[T] = {
+    val update = Updates.setOnInsert(BsonDocument(Json.toJson(document).toString))
+    collection.findOneAndUpdate(filter, update, options = upsertAndReturnAfter).toFuture()
+  }
 
   def findOneAndRemove[V](keyId: String, keyValue: V): Future[Option[T]] =
     collection.findOneAndDelete(equal(keyId, keyValue)).toFutureOption()
@@ -171,17 +201,17 @@ trait RepositoryOps[T] {
   def findOneAndUpdate(filter: JsValue, update: JsValue): Future[Option[T]] =
     findOneAndUpdate(BsonDocument(filter.toString), BsonDocument(update.toString))
 
-  protected def doNotUpsertAndReturnAfter = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
+  def findOneAndUpdate(session: ClientSession, filter: JsValue, update: JsValue): Future[Option[T]] =
+    findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
+
+  protected lazy val doNotUpsertAndReturnAfter: FindOneAndUpdateOptions =
+    FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
 
   def findOneAndUpdate(filter: Bson, update: Bson): Future[Option[T]] =
-    collection
-      .findOneAndUpdate(filter = filter, update = update, options = doNotUpsertAndReturnAfter)
-      .toFutureOption()
+    collection.findOneAndUpdate(filter, withCurrentDate(update), doNotUpsertAndReturnAfter).toFutureOption()
 
   def findOneAndUpdate(session: ClientSession, filter: Bson, update: Bson): Future[Option[T]] =
-    collection
-      .findOneAndUpdate(session, filter = filter, update = update, options = doNotUpsertAndReturnAfter)
-      .toFutureOption()
+    collection.findOneAndUpdate(session, filter, withCurrentDate(update), doNotUpsertAndReturnAfter).toFutureOption()
 
   def get[V](keyId: String, keyValue: V): Future[T] =
     get(equal(keyId, keyValue))
@@ -231,6 +261,37 @@ trait RepositoryOps[T] {
   def size: Future[Long] = collection.countDocuments().toFuture()
 }
 // scalastyle:on
+
+object RepositoryOps {
+
+  private val readFromIsoString: Reads[Instant] =
+    implicitly[Reads[String]].map(s => Instant.from(ISO_INSTANT.parse(s)))
+
+  // Extends the Reads format provided by MongoJavatimeFormats, in order to be
+  // able to also parse formats as used in our unit and integration tests.
+  val instantReads: Reads[Instant] =
+    MongoJavatimeFormats.instantReads or
+      (__ \ "$date").read[Instant](readFromIsoString) or
+      __.read[Instant](readFromIsoString)
+
+  // Avoid the "MILLISECONDS" mismatch caused by comparing 2 dates in ISO format.
+  // e.g. "2024-02-06T09:40:58.7Z" and ""2024-02-06T09:40:58.700Z"
+  private def removeFinalZeroes(instant: Instant): String = {
+    val result = instant.toString
+    if (result.endsWith("00Z")) s"${result.substring(0, result.length - 3)}Z"
+    else if (result.endsWith("0Z")) s"${result.substring(0, result.length - 2)}Z"
+    else result
+  }
+
+  // For the time being only useful for unit and integration tests
+  def mongoDate(value: Instant = instant()): String = s"""{"$$date":"${removeFinalZeroes(value)}"}"""
+
+  // For the time being only useful for unit and integration tests
+  def mongoDateOfMillis(value: Instant = instant()): String = s"""{"$$date":{"$$numberLong":"${value.toEpochMilli}"}}"""
+
+  // For the "filter" parameter in findOneAndUpdate
+  def mongoDateInQuery(value: Instant = instant()): String = s"""{"$$eq":ISODate("${removeFinalZeroes(value)}")}"""
+}
 
 sealed abstract class WriteError(message: String)
 

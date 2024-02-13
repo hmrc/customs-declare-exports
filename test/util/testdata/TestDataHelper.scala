@@ -16,9 +16,18 @@
 
 package testdata
 
+import uk.gov.hmrc.exports.util.TimeUtils.instant
+
+import scala.annotation.tailrec
 import scala.util.Random
 
 object TestDataHelper {
+
+  @tailrec
+  final def isoDate: String = {
+    val s = instant().toString
+    if (s.endsWith("0Z")) isoDate else s
+  }
 
   def randomAlphanumericString(length: Int): String = Random.alphanumeric.take(length).mkString
 }

@@ -19,11 +19,10 @@ package uk.gov.hmrc.exports.repositories
 import com.mongodb.client.model.Indexes.ascending
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import uk.gov.hmrc.exports.models.JobRun
-import uk.gov.hmrc.exports.util.TimeUtils.defaultTimeZone
+import uk.gov.hmrc.exports.util.TimeUtils.{defaultTimeZone, instant}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
-import java.time.Instant
 import java.time.temporal.ChronoField.DAY_OF_MONTH
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -42,7 +41,7 @@ class JobRunRepository @Inject() (mongoComponent: MongoComponent)(implicit ec: E
   override val executionContext: ExecutionContext = ec
 
   def isFirstRunInTheDay(job: String): Future[Boolean] = {
-    val replacement = JobRun(job, Instant.now)
+    val replacement = JobRun(job, instant())
     findOneAndReplace("job", job, replacement, createIfNotExists = true, returnPreviousDocument = true).map {
       _.fold(true)(_.lastRun.atZone(defaultTimeZone).get(DAY_OF_MONTH) != replacement.lastRun.atZone(defaultTimeZone).get(DAY_OF_MONTH))
     }

@@ -1,4 +1,4 @@
-package uk.gov.hmrc.exports.services.notifications.receiptactions.notifications.receiptactions
+package uk.gov.hmrc.exports.services.notifications.receiptactions
 
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.BsonDocument
@@ -8,16 +8,15 @@ import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import uk.gov.hmrc.exports.repositories.UnparsedNotificationWorkItemRepository
-import uk.gov.hmrc.exports.services.notifications.receiptactions.NotificationReceiptActionsRunner
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Cancelled, Failed}
 import uk.gov.hmrc.mongo.workitem.WorkItem
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class NotificationReceiptActionsRunnerSpec extends IntegrationTestSpec with ExportsDeclarationBuilder {
+class NotificationReceiptActionsRunnerISpec extends IntegrationTestSpec with ExportsDeclarationBuilder {
 
-  import NotificationReceiptActionsRunnerSpec._
+  import NotificationReceiptActionsRunnerISpec._
 
   val unparsedNotificationRepository = instanceOf[UnparsedNotificationWorkItemRepository]
 
@@ -94,7 +93,7 @@ class NotificationReceiptActionsRunnerSpec extends IntegrationTestSpec with Expo
 
 }
 
-object NotificationReceiptActionsRunnerSpec {
+object NotificationReceiptActionsRunnerISpec {
 
   import testdata.WorkItemTestData._
 

@@ -67,12 +67,9 @@ class AddActionFieldsForAmend extends MigrationDefinition with Logging {
               )
           )
           .getModifiedCount
-
       }
       .sum
 
     logger.info(s"Finished applying '${migrationInformation.id}' db migration with $updated updates.")
-
   }
-
 }

@@ -1,7 +1,7 @@
 package uk.gov.hmrc.exports.base
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.codahale.metrics.MetricRegistry
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.mongodb.client.{MongoClients, MongoCollection, MongoDatabase}
 import org.bson.Document
 import org.mongodb.scala.bson.BsonDocument

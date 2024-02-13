@@ -18,9 +18,8 @@ package uk.gov.hmrc.exports.repositories
 
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.util.TimeUtils.defaultTimeZone
+import uk.gov.hmrc.exports.util.TimeUtils.{defaultTimeZone, instant}
 
-import java.time.Instant
 import java.time.temporal.{ChronoField, ChronoUnit}
 
 class JobRunRepositoryISpec extends IntegrationTestSpec {
@@ -44,7 +43,7 @@ class JobRunRepositoryISpec extends IntegrationTestSpec {
       }
 
       "the last run of the job took place on the previous day" in {
-        val now = Instant.now
+        val now = instant()
         repository.insertOne(JobRun(jobName, now.minus(1, ChronoUnit.DAYS))).futureValue
         repository.isFirstRunInTheDay(jobName).futureValue mustBe true
         val jobRuns = repository.findAll().futureValue
@@ -57,7 +56,7 @@ class JobRunRepositoryISpec extends IntegrationTestSpec {
 
     "return false" when {
       "the last run of the job took place on the same day" in {
-        val now = Instant.now
+        val now = instant()
         repository.insertOne(JobRun(jobName, now)).futureValue
         repository.isFirstRunInTheDay(jobName).futureValue mustBe false
       }

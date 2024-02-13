@@ -22,8 +22,7 @@ import org.bson.Document
 import org.mockito.ArgumentMatchers.{any, anyString, eq => meq}
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.migrations.repositories.TestObjectsBuilder.buildMongoCursor
-
-import java.time.Instant
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 
 class ChangeEntryRepositorySpec extends UnitSpec {
 
@@ -111,7 +110,7 @@ class ChangeEntryRepositorySpec extends UnitSpec {
     }
 
     "provide MongoCollection with Document from provided ChangeEntry" in {
-      val changeEntry = ChangeEntry("changeIdValue", "authorValue", Instant.now, "changeLogClassValue")
+      val changeEntry = ChangeEntry("changeIdValue", "authorValue", instant(), "changeLogClassValue")
 
       repo.save(changeEntry)
 

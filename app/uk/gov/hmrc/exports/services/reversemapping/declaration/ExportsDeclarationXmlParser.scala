@@ -26,8 +26,8 @@ import uk.gov.hmrc.exports.services.reversemapping.declaration.items.ItemsParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.locations.LocationsParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.parties.PartiesParser
 import uk.gov.hmrc.exports.services.reversemapping.declaration.transport.TransportParser
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 
-import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
 import scala.xml.NodeSeq
@@ -64,8 +64,8 @@ class ExportsDeclarationXmlParser @Inject() (
       eori = context.eori,
       declarationMeta = DeclarationMeta(
         status = DeclarationStatus.COMPLETE,
-        createdDateTime = Instant.now(),
-        updatedDateTime = Instant.now(),
+        createdDateTime = instant(),
+        updatedDateTime = instant(),
         summaryWasVisited = Some(true),
         readyForSubmission = Some(true),
         maxSequenceIds = deriveSequenceIds(items, locations, transport)

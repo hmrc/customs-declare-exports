@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.exports.migrations.changelogs.submission
 
+import testdata.TestDataHelper.isoDate
 import uk.gov.hmrc.exports.base.IntegrationTestMigrationToolSpec
 import uk.gov.hmrc.exports.migrations.changelogs.submission.SetEnhancedStatusAsNonOptionalISpec._
 
@@ -56,8 +57,10 @@ class SetEnhancedStatusAsNonOptionalISpec extends IntegrationTestMigrationToolSp
 
 object SetEnhancedStatusAsNonOptionalISpec {
 
+  val lastUpdated = isoDate
+
   val submission1BeforeMigration =
-    """{
+    s"""{
       |  "_id" : "641c64334daf2e3a502ab42d",
       |  "uuid" : "d7f6c303-95fd-4b45-9673-5868d9ae0990",
       |  "eori" : "GB7172755067703",
@@ -72,12 +75,13 @@ object SetEnhancedStatusAsNonOptionalISpec {
       |      "requestTimestamp" : "2023-03-23T14:37:39.146Z[UTC]"
       |    }
       |  ],
+      |  "lastUpdated" : "$lastUpdated",
       |  "latestDecId" : "d7f6c303-95fd-4b45-9673-5868d9ae0990",
       |  "latestVersionNo" : 1
       |}""".stripMargin
 
   val submission1AfterMigration =
-    """{
+    s"""{
       |  "_id" : "641c64334daf2e3a502ab42d",
       |  "uuid" : "d7f6c303-95fd-4b45-9673-5868d9ae0990",
       |  "eori" : "GB7172755067703",
@@ -92,6 +96,7 @@ object SetEnhancedStatusAsNonOptionalISpec {
       |      "requestTimestamp" : "2023-03-23T14:37:39.146Z[UTC]"
       |    }
       |  ],
+      |  "lastUpdated" : "$lastUpdated",
       |  "latestDecId" : "d7f6c303-95fd-4b45-9673-5868d9ae0990",
       |  "latestVersionNo" : 1,
       |  "latestEnhancedStatus" : "PENDING",
@@ -99,13 +104,14 @@ object SetEnhancedStatusAsNonOptionalISpec {
       }""".stripMargin
 
   val submission2BeforeMigration =
-    """{
+    s"""{
       |  "_id" : "641c64334daf2e3a502ab42e",
       |  "uuid" : "d7f6c303-95fd-4b45-9673-5868d9ae0991",
       |  "eori" : "GB7172755067703",
       |  "lrn" : "MN46S1LKKONrtmPx",
       |  "ducr" : "3GH548549755733-I72O",
       |  "actions" : [],
+      |  "lastUpdated" : "$lastUpdated",
       |  "latestDecId" : "d7f6c303-95fd-4b45-9673-5868d9ae0991",
       |  "latestVersionNo" : 1
       |}""".stripMargin
@@ -118,6 +124,7 @@ object SetEnhancedStatusAsNonOptionalISpec {
       |  "lrn" : "MN46S1LKKONrtmPx",
       |  "ducr" : "3GH548549755733-I72O",
       |  "actions" : [],
+      |  "lastUpdated" : "$lastUpdated",
       |  "latestDecId" : "d7f6c303-95fd-4b45-9673-5868d9ae0991",
       |  "latestVersionNo" : 1,
       |  "latestEnhancedStatus" : "PENDING",
@@ -125,7 +132,7 @@ object SetEnhancedStatusAsNonOptionalISpec {
       |}""".stripMargin
 
   val submission3BeforeMigration =
-    """{
+    s"""{
       |  "_id" : "641c64334daf2e3a502ab42d",
       |  "uuid" : "d7f6c303-95fd-4b45-9673-5868d9ae0990",
       |  "eori" : "GB7172755067703",
@@ -147,12 +154,13 @@ object SetEnhancedStatusAsNonOptionalISpec {
       |      ]
       |     }
       |  ],
+      |  "lastUpdated" : "$lastUpdated",
       |  "latestDecId" : "d7f6c303-95fd-4b45-9673-5868d9ae0990",
       |  "latestVersionNo" : 1
       |}""".stripMargin
 
   val submission3AfterMigration =
-    """{
+    s"""{
       |  "_id" : "641c64334daf2e3a502ab42d",
       |  "uuid" : "d7f6c303-95fd-4b45-9673-5868d9ae0990",
       |  "eori" : "GB7172755067703",
@@ -174,6 +182,7 @@ object SetEnhancedStatusAsNonOptionalISpec {
       |      ]
       |    }
       |  ],
+      |  "lastUpdated" : "$lastUpdated",
       |  "latestDecId" : "d7f6c303-95fd-4b45-9673-5868d9ae0990",
       |  "latestVersionNo" : 1,
       |  "latestEnhancedStatus" : "ERRORS",
@@ -181,7 +190,7 @@ object SetEnhancedStatusAsNonOptionalISpec {
       }""".stripMargin
 
   val submissionOutOfScope =
-    """{
+    s"""{
       |  "_id" : "62a719953e0e9418e3a638b9",
       |  "uuid" : "TEST-I6Zjj-RXX0VYH2",
       |  "eori" : "XL165511818906900",
@@ -201,6 +210,7 @@ object SetEnhancedStatusAsNonOptionalISpec {
       |      ]
       |    }
       |  ],
+      |  "lastUpdated" : "$lastUpdated",
       |  "enhancedStatusLastUpdated" : "2022-06-13T09:11:09Z[UTC]",
       |  "latestEnhancedStatus" : "GOODS_ARRIVED",
       |  "latestDecId" : "62a719953e0e9418e3a638b9",

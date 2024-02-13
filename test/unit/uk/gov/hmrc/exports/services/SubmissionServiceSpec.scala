@@ -302,7 +302,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         val actionGenerated = submissionCreated.actions.head
 
         val submissionExpected = Submission(declaration, "lrn", "ducr", newAction.copy(requestTimestamp = actionGenerated.requestTimestamp))
-          .copy(enhancedStatusLastUpdated = submissionCreated.enhancedStatusLastUpdated)
+          .copy(enhancedStatusLastUpdated = submissionCreated.enhancedStatusLastUpdated, lastUpdated = submissionCreated.lastUpdated)
 
         submissionCreated mustBe submissionExpected
 

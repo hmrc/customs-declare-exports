@@ -38,9 +38,9 @@ import uk.gov.hmrc.exports.models.declaration.submissions.{Action, ExternalAmend
 import uk.gov.hmrc.exports.models.declaration.{DeclarationMeta, DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.Instant.now
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -59,8 +59,10 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
     super.beforeEach()
   }
 
-  private val body =
-    ExportsDeclarationRequest(declarationMeta = DeclarationMeta(status = INITIAL, createdDateTime = now, updatedDateTime = now), `type` = STANDARD)
+  private val body = ExportsDeclarationRequest(
+    declarationMeta = DeclarationMeta(status = INITIAL, createdDateTime = instant(), updatedDateTime = instant()),
+    `type` = STANDARD
+  )
 
   "DeclarationController.create" should {
     val postRequest = FakeRequest("POST", "/declarations")

@@ -23,6 +23,7 @@ import uk.gov.hmrc.exports.base.{AuthTestSupport, IntegrationTestSpec}
 import uk.gov.hmrc.exports.controllers.SubmissionControllerISpec.submission
 import uk.gov.hmrc.exports.controllers.routes.SubmissionController
 import uk.gov.hmrc.exports.models.declaration.submissions._
+import uk.gov.hmrc.exports.repositories.RepositoryOps.mongoDateOfMillis
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.exports.util.TimeUtils
 
@@ -121,6 +122,7 @@ object SubmissionControllerISpec extends IntegrationTestSpec {
        |      ]
        |    }
        |  ],
+       |  "lastUpdated" : ${mongoDateOfMillis()},
        |  "enhancedStatusLastUpdated" : "2020-12-01T17:33:31Z[UTC]",
        |  "latestEnhancedStatus" : "AMENDED",
        |  "mrn" : "22GB9515JH78573779",

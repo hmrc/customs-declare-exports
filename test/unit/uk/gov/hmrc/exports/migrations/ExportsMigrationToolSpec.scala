@@ -24,8 +24,7 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.migrations.exceptions.{ExportsMigrationException, LockManagerException}
 import uk.gov.hmrc.exports.migrations.repositories.{ChangeEntry, ChangeEntryRepository}
-
-import java.time.Instant
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 
 class ExportsMigrationToolSpec extends UnitSpec {
 
@@ -123,7 +122,7 @@ class ExportsMigrationToolSpec extends UnitSpec {
       val currentChangeEntry = ChangeEntry(
         changeId = testMigrationInformation.id,
         author = testMigrationInformation.author,
-        timestamp = Instant.now,
+        timestamp = instant(),
         changeLogClass = "testChangeLogClass"
       )
 

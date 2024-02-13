@@ -18,15 +18,15 @@ package uk.gov.hmrc.exports.migrations.repositories
 
 import org.bson.Document
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 
-import java.time.Instant
 import scala.jdk.CollectionConverters._
 
 class ChangeEntrySpec extends UnitSpec {
 
   "ChangeEntry on buildFullDBObject" should {
     "convert to correct Document" in {
-      val date = Instant.now
+      val date = instant()
       val expectedOutput = new Document(
         Map[String, AnyRef](
           "changeId" -> "changeIdValue",

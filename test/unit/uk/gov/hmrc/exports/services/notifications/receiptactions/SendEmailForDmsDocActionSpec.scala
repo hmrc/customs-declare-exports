@@ -24,6 +24,7 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SendEmailWorkItemRepository}
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.ToDo
 import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem}
 
@@ -71,9 +72,9 @@ class SendEmailForDmsDocActionSpec extends UnitSpec {
 
       val testWorkItem = WorkItem(
         id = ObjectId.get,
-        receivedAt = Instant.now,
-        updatedAt = Instant.now,
-        availableAt = Instant.now,
+        receivedAt = instant(),
+        updatedAt = instant(),
+        availableAt = instant(),
         status = ToDo,
         failureCount = 0,
         item = testSendEmailDetails

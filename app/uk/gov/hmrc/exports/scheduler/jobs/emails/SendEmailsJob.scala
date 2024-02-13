@@ -23,6 +23,7 @@ import uk.gov.hmrc.exports.models.emails.{SendEmailDetails, SendEmailResult}
 import uk.gov.hmrc.exports.repositories.SendEmailWorkItemRepository
 import uk.gov.hmrc.exports.scheduler.jobs.ScheduledJob
 import uk.gov.hmrc.exports.services.email.EmailSender
+import uk.gov.hmrc.exports.util.TimeUtils.instant
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Cancelled, Failed, Succeeded}
 import uk.gov.hmrc.mongo.workitem.WorkItem
 
@@ -61,7 +62,7 @@ class SendEmailsJob @Inject() (
 
   override def execute(): Future[Unit] = {
     logger.info("Starting SendEmailsJob execution...")
-    process(Instant.now).map { _ =>
+    process(instant()).map { _ =>
       logger.info("Finishing SendEmailsJob execution")
     }
   }

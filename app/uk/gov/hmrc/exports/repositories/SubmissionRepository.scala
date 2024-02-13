@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import com.mongodb.client.model.Updates.set
+import com.mongodb.client.model.ReturnDocument
 import org.bson.conversions.Bson
-import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.bson.{BsonDocument, BsonString}
 import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.{IndexModel, IndexOptions}
-import play.api.libs.json.{JsBoolean, Json}
+import org.mongodb.scala.model.{Filters, FindOneAndUpdateOptions, IndexModel, IndexOptions}
+import play.api.libs.json.{JsBoolean, JsObject, Json}
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.fromStatusGroup
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.StatusGroup
@@ -31,10 +31,10 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.time.ZonedDateTime
+import java.util.Arrays.{asList => ArrayList}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
-import java.util.Arrays.{asList => ArrayList}
 
 @Singleton
 class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
@@ -46,22 +46,36 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     ) with RepositoryOps[Submission] {
 
   override def classTag: ClassTag[Submission] = implicitly[ClassTag[Submission]]
-  override val executionContext = ec
+  override val executionContext: ExecutionContext = ec
+
+  override val lastUpdatedField: Option[String] = Some("lastUpdated")
 
   def addAction(uuid: String, action: Action): Future[Option[Submission]] = {
     val filter = Json.obj("uuid" -> uuid)
     val update = Json.obj("$addToSet" -> Json.obj("actions" -> Json.toJson(action)))
+
     findOneAndUpdate(filter, update)
   }
 
-  def updateAction(submissionId: String, actionId: String, decId: String): Future[Option[Submission]] =
+  def updateExternalAmendmentAction(uuid: String, actionId: String, declarationId: String): Future[Option[Submission]] = {
+    val update = BsonDocument("$set" -> BsonDocument("actions.$[itemNo].decId" -> BsonString(declarationId)))
+    val options = doNotUpsertAndReturnAfter.arrayFilters(ArrayList(equal("itemNo.id", actionId)))
+
+    def findAction(submission: Submission): Action => Boolean =
+      action => action.id == actionId && action.versionNo == submission.latestVersionNo
+
     collection
-      .findOneAndUpdate(
-        equal("uuid", submissionId),
-        set("actions.$[itemNo].decId", decId),
-        doNotUpsertAndReturnAfter.arrayFilters(ArrayList(equal("itemNo.id", actionId)))
-      )
+      .findOneAndUpdate(equal("uuid", uuid), withCurrentDate(update), options)
       .toFutureOption()
+      .flatMap {
+        case Some(submission) if submission.actions.exists(findAction(submission)) =>
+          val update = BsonDocument("$set" -> BsonDocument("latestDecId" -> BsonString(declarationId)))
+          val options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
+          collection.findOneAndUpdate(Filters.eq("uuid", submission.uuid), withCurrentDate(update), options).toFutureOption()
+
+        case maybeSubmission => Future.successful(maybeSubmission)
+      }
+  }
 
   def countSubmissionsInGroup(eori: String, statusGroup: StatusGroup): Future[Int] =
     collection
@@ -185,7 +199,7 @@ object SubmissionRepository {
 
   import com.mongodb.client.model.Indexes.{ascending, compoundIndex, descending}
 
-  val filter = Json.obj("actions.id" -> Json.obj("$exists" -> JsBoolean(true)))
+  val filter: JsObject = Json.obj("actions.id" -> Json.obj("$exists" -> JsBoolean(true)))
 
   val dashBoardIndex = "dashboardIdx"
 

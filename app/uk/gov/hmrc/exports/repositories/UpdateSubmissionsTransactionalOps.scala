@@ -23,17 +23,19 @@ import org.mongodb.scala.model.Filters.equal
 import play.api.Logging
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus._
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.AMENDMENT_DRAFT
+import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{EnhancedStatus, ON_HOLD}
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus._
+import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper.{notificationsToAction, updateActionWithNotificationSummaries}
+import uk.gov.hmrc.exports.repositories.RepositoryOps.mongoDateInQuery
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.transaction.{TransactionConfiguration, Transactions}
 
-import java.util.UUID
+import java.time.Instant
+import java.util.UUID.randomUUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -51,17 +53,32 @@ class UpdateSubmissionsTransactionalOps @Inject() (
 
   private lazy val nonTransactionalSession = mongoComponent.client.startSession().toFuture()
 
-  def updateSubmissionAndNotifications(actionId: String, notifications: Seq[ParsedNotification], submission: Submission): Future[Submission] =
-    if (appConfig.useTransactionalDBOps)
-      withSessionAndTransaction[Submission](startOp(_, actionId, notifications, submission))
-    else
-      nonTransactionalSession.flatMap(startOp(_, actionId, notifications, submission))
+  // An update op use 'lastUpdated' to ensure the document under update is not modified concurrently outside the current transaction.
+  // The update will fail if the document has a 'lastUpdated' more recent than it was at transaction start.
+  // The failing update op will still be retried via scheduler a few seconds later.
 
-  private def startOp(session: ClientSession, actionId: String, notifications: Seq[ParsedNotification], submission: Submission): Future[Submission] =
+  def updateSubmissionAndNotifications(actionId: String, notifications: Seq[ParsedNotification]): Future[Submission] =
+    if (appConfig.useTransactionalDBOps)
+      withSessionAndTransaction[Submission](startOp(_, actionId, notifications))
+    else
+      nonTransactionalSession.flatMap(startOp(_, actionId, notifications))
+
+  private def startOp(session: ClientSession, actionId: String, notifications: Seq[ParsedNotification]): Future[Submission] =
     for {
-      submission <- addNotificationSummariesToSubmissionAndUpdate(session, actionId, notifications, submission)
+      submission <- findSubmissionByActionId(actionId)
+      result <- addNotificationSummariesToSubmissionAndUpdate(session, actionId, notifications, submission)
       _ <- notificationRepository.bulkInsert(session, notifications)
-    } yield submission
+    } yield result
+
+  private def findSubmissionByActionId(actionId: String): Future[Submission] =
+    submissionRepository
+      .findOne("actions.id", actionId)
+      .flatMap {
+        case Some(submission) => Future.successful(submission)
+        case _ =>
+          val error = s"No submission record was found for (parsed) notifications with actionId($actionId)"
+          Future.failed(throw new InternalServerException(error))
+      }
 
   // scalastyle:off
   private def addNotificationSummariesToSubmissionAndUpdate(
@@ -70,6 +87,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
     notifications: Seq[ParsedNotification],
     submission: Submission
   ): Future[Submission] = {
+    val lastUpdated = submission.lastUpdated
     val index = submission.actions.indexWhere(_.id == actionId)
     val action = submission.actions(index)
     val seed = action.notifications.fold(Seq.empty[NotificationSummary])(identity)
@@ -85,7 +103,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
 
     val update = requestType match {
       case SubmissionRequest =>
-        updateSubmissionRequest(session, action, firstNotificationDetails.mrn, summary, updatedActions)
+        updateSubmissionRequest(session, lastUpdated, action, firstNotificationDetails.mrn, summary, updatedActions)
 
       case AmendmentRequest =>
         val submissionStatus = firstNotificationDetails.status
@@ -93,16 +111,16 @@ class UpdateSubmissionsTransactionalOps @Inject() (
         submission.actions
           .find(_.requestType == SubmissionRequest)
           .flatMap(_.latestNotificationSummary.map(_.enhancedStatus))
-          .map(updateAmendmentRequest(session, action, summary, updatedActions, submissionStatus, _))
+          .map(updateAmendmentRequest(session, lastUpdated, action, summary, updatedActions, submissionStatus, _))
           .getOrElse {
             throw new InternalServerException(s"Cannot find latest notification on AmendmentRequest for Submission(${submission.uuid})")
           }
 
       case ExternalAmendmentRequest =>
-        // if this 'AMENDED' type notification relates to a later dec version than the current latestVersion then process, else ignore it
+        // if this 'AMENDED' notification relates to a later dec version than the current latestVersion then process, else ignore it
         if (firstNotificationDetails.version.getOrElse(0) > submission.latestVersionNo) {
-          updateExternalAmendmentRequest(session, submission, action, firstNotificationDetails.mrn, summary, updatedActions) flatMap {
-            deleteAnyAmendmentDraftDecs(session, submission, _)
+          updateExternalAmendmentRequest(session, lastUpdated, submission, action, firstNotificationDetails.mrn, summary, updatedActions) flatMap {
+            deleteAnyAmendmentDraftDeclaration(session, submission, _)
           }
         } else {
           val version = s"version(${firstNotificationDetails.version.getOrElse(0)})"
@@ -112,27 +130,34 @@ class UpdateSubmissionsTransactionalOps @Inject() (
           Future.successful(Some(submission))
         }
 
-      case CancellationRequest | AmendmentCancellationRequest => updateCancellationRequest(session, action, updatedActions)
+      case CancellationRequest | AmendmentCancellationRequest => updateCancellationRequest(session, lastUpdated, action, updatedActions)
 
       case _ => Future.successful(None)
     }
 
     update flatMap {
       case Some(submission) => Future.successful(submission)
-      case _ => Future.failed(throw new InternalServerException(s"Failed to update Submission(${submission.uuid}) with Action(${action.id})"))
+
+      case _ =>
+        val exception = new InternalServerException(s"Failed to update Submission(${submission.uuid}) with Action(${action.id})")
+        Future.failed(throw exception)
     }
   }
   // scalastyle:on
 
   private def updateSubmissionRequest(
     session: ClientSession,
+    lastUpdated: Instant,
     action: Action,
     mrn: String,
     summary: NotificationSummary,
     actions: Seq[Action]
   ): Future[Option[Submission]] = {
 
-    val filter = Json.obj("actions.id" -> action.id)
+    val filter = s"""{
+        |"actions.id" : "${action.id}",
+        |"lastUpdated" : ${mongoDateInQuery(lastUpdated)}
+        |}""".stripMargin
 
     val update = Json.obj(
       "$set" -> Json.obj(
@@ -142,11 +167,12 @@ class UpdateSubmissionsTransactionalOps @Inject() (
         "actions" -> actions
       )
     )
-    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
+    submissionRepository.findOneAndUpdate(session, BsonDocument(filter), BsonDocument(update.toString))
   }
 
   private def updateAmendmentRequest(
     session: ClientSession,
+    lastUpdated: Instant,
     action: Action,
     summary: NotificationSummary,
     actions: Seq[Action],
@@ -158,6 +184,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
       submissionStatus match {
         case RECEIVED | REJECTED | CUSTOMS_POSITION_DENIED =>
           Json.obj("latestEnhancedStatus" -> ON_HOLD, "enhancedStatusLastUpdated" -> summary.dateTimeIssued, "actions" -> actions)
+
         case CUSTOMS_POSITION_GRANTED =>
           Json.obj(
             "latestDecId" -> decId,
@@ -169,18 +196,24 @@ class UpdateSubmissionsTransactionalOps @Inject() (
         case status => throw new InternalServerException(s"Cannot update for submission status $status")
       }
 
-    action.decId map { decId =>
-      val filter = Json.obj("actions.id" -> action.id)
-      submissionRepository.findOneAndUpdate(
-        session,
-        BsonDocument(filter.toString),
-        BsonDocument(Json.obj("$set" -> updateFromStatus(decId)).toString)
-      )
-    } getOrElse Future.failed(throw new InternalServerException(s"Action(${action.id}) to amend does not contain a decId"))
+    action.decId.fold {
+      val exception = new InternalServerException(s"Action(${action.id}) to amend does not have a 'decId' field")
+      Future.failed[Option[Submission]](throw exception)
+    } { declarationId =>
+      val filter = s"""{
+          |"actions.id" : "${action.id}",
+          |"lastUpdated" : ${mongoDateInQuery(lastUpdated)}
+          |}""".stripMargin
+
+      val update = Json.obj("$set" -> updateFromStatus(declarationId)).toString
+
+      submissionRepository.findOneAndUpdate(session, BsonDocument(filter), BsonDocument(update))
+    }
   }
 
   private def updateExternalAmendmentRequest(
     session: ClientSession,
+    lastUpdated: Instant,
     submission: Submission,
     action: Action,
     mrn: String,
@@ -188,9 +221,12 @@ class UpdateSubmissionsTransactionalOps @Inject() (
     actions: Seq[Action]
   ): Future[Option[Submission]] = {
 
-    val filter = Json.obj("actions.id" -> action.id)
+    val filter = s"""{
+        |"actions.id" : "${action.id}",
+        |"lastUpdated" : ${mongoDateInQuery(lastUpdated)}
+        |}""".stripMargin
 
-    val newExtAmendAction = Action(UUID.randomUUID().toString, ExternalAmendmentRequest, None, submission.latestVersionNo + 1)
+    val newExtAmendAction = Action(randomUUID().toString, ExternalAmendmentRequest, None, submission.latestVersionNo + 1)
 
     val update = Json.obj(
       "$inc" -> Json.obj("latestVersionNo" -> 1),
@@ -202,16 +238,27 @@ class UpdateSubmissionsTransactionalOps @Inject() (
         "actions" -> (actions :+ newExtAmendAction)
       )
     )
-    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
+    submissionRepository.findOneAndUpdate(session, BsonDocument(filter), BsonDocument(update.toString))
   }
 
-  private def updateCancellationRequest(session: ClientSession, action: Action, actions: Seq[Action]): Future[Option[Submission]] = {
-    val filter = Json.obj("actions.id" -> action.id)
+  private def updateCancellationRequest(
+    session: ClientSession,
+    lastUpdated: Instant,
+    action: Action,
+    actions: Seq[Action]
+  ): Future[Option[Submission]] = {
+
+    val filter = s"""{
+        |"actions.id" : "${action.id}",
+        |"lastUpdated" : ${mongoDateInQuery(lastUpdated)}
+        |}""".stripMargin
+
     val update = Json.obj("$set" -> Json.obj("actions" -> actions))
-    submissionRepository.findOneAndUpdate(session, BsonDocument(filter.toString), BsonDocument(update.toString))
+
+    submissionRepository.findOneAndUpdate(session, BsonDocument(filter), BsonDocument(update.toString))
   }
 
-  private def deleteAnyAmendmentDraftDecs(
+  private def deleteAnyAmendmentDraftDeclaration(
     session: ClientSession,
     submission: Submission,
     optSubmission: Option[Submission]
@@ -225,9 +272,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
               equal("declarationMeta.parentDeclarationId", latestDecId),
               equal("declarationMeta.status", AMENDMENT_DRAFT.toString)
             )
-            declarationRepository.removeEvery(session, filter).map { _ =>
-              Some(submissionWithNewAction)
-            }
+            declarationRepository.removeEvery(session, filter).map(_ => Some(submissionWithNewAction))
 
           case _ => Future.successful(Some(submissionWithNewAction))
         }
@@ -236,7 +281,6 @@ class UpdateSubmissionsTransactionalOps @Inject() (
         logger.error(s"Cannot add an (external amendment) 'Action' to Submission(${submission.uuid})")
         Future.successful(None)
     }
-
 }
 
 object ActionWithNotificationSummariesHelper {

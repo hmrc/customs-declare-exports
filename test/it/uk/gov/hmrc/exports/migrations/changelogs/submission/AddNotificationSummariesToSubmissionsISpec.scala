@@ -17,6 +17,7 @@
 package uk.gov.hmrc.exports.migrations.changelogs.submission
 
 import org.bson.Document
+import testdata.TestDataHelper.isoDate
 import uk.gov.hmrc.exports.base.IntegrationTestMigrationToolSpec
 import uk.gov.hmrc.exports.migrations.changelogs.submission.AddNotificationSummariesToSubmissionsISpec._
 
@@ -68,8 +69,10 @@ class AddNotificationSummariesToSubmissionsISpec extends IntegrationTestMigratio
 
 object AddNotificationSummariesToSubmissionsISpec {
 
+  val lastUpdated = isoDate
+
   val submission1BeforeMigration =
-    """{
+    s"""{
       |  "_id" : "62a719953e0e9418e3a638b9",
       |  "uuid" : "TEST-I6Zjj-RXX0VYH2",
       |  "eori" : "XL165511818906900",
@@ -92,6 +95,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |        "versionNo" : 1
       |      }
       |  ],
+      |  "lastUpdated" : "$lastUpdated",
       |  "latestEnhancedStatus" : "PENDING",
       |  "enhancedStatusLastUpdated" : "2022-06-13T11:03:49.488Z[UTC]",
       |  "latestDecId" : "62a719953e0e9418e3a638b9",
@@ -99,7 +103,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |}""".stripMargin
 
   val submission1AfterMigration =
-    """{
+    s"""{
       |  "_id" : "62a719953e0e9418e3a638b9",
       |  "uuid" : "TEST-I6Zjj-RXX0VYH2",
       |  "eori" : "XL165511818906900",
@@ -146,6 +150,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |          "versionNo" : 1
       |      }
       |  ],
+      |  "lastUpdated" : "$lastUpdated",
       |  "enhancedStatusLastUpdated" : "2022-06-13T09:11:09Z[UTC]",
       |  "latestEnhancedStatus" : "GOODS_ARRIVED",
       |  "latestDecId" : "62a719953e0e9418e3a638b9",
@@ -153,7 +158,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       }""".stripMargin
 
   val submission2BeforeMigration =
-    """{
+    s"""{
       |  "_id" : "62a719953e0e9418e3a638b9",
       |  "uuid" : "TEST-I6Zjj-RXX0VYH2",
       |  "eori" : "XL165511818906900",
@@ -178,12 +183,13 @@ object AddNotificationSummariesToSubmissionsISpec {
       |          "versionNo" : 1
       |      }
       |  ],
+      |  "lastUpdated" : "$lastUpdated",
       |  "latestDecId" : "62a719953e0e9418e3a638b9",
       |  "latestVersionNo" : 1
       |}""".stripMargin
 
   val submission2AfterMigration =
-    """{
+    s"""{
       |  "_id" : "62a719953e0e9418e3a638b9",
       |  "uuid" : "TEST-I6Zjj-RXX0VYH2",
       |  "eori" : "XL165511818906900",
@@ -225,12 +231,13 @@ object AddNotificationSummariesToSubmissionsISpec {
       |          "versionNo" : 1
       |      }
       |  ],
+      |  "lastUpdated" : "$lastUpdated",
       |  "latestDecId" : "62a719953e0e9418e3a638b9",
       |  "latestVersionNo" : 1
       }""".stripMargin
 
   val submissionOutOfScope1 =
-    """{
+    s"""{
       |  "_id" : "62a719953e0e9418e3a638b9",
       |  "uuid" : "TEST-I6Zjj-RXX0VYH2",
       |  "eori" : "XL165511818906900",
@@ -250,6 +257,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |          ]
       |      }
       |  ],
+      |  "lastUpdated" : "$lastUpdated",
       |  "enhancedStatusLastUpdated" : "2022-06-13T09:11:09Z[UTC]",
       |  "latestEnhancedStatus" : "GOODS_ARRIVED",
       |  "latestDecId" : "62a719953e0e9418e3a638b9",
@@ -257,7 +265,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |}""".stripMargin
 
   val submissionOutOfScope2 =
-    """{
+    s"""{
       |  "_id" : "62a719953e0e9418e3a638b9",
       |  "uuid" : "TEST-I6Zjj-RXX0VYH2",
       |  "eori" : "XL165511818906900",
@@ -274,6 +282,7 @@ object AddNotificationSummariesToSubmissionsISpec {
       |          "versionNo" : 1
       |      }
       |  ],
+      |  "lastUpdated" : "$lastUpdated",
       |  "enhancedStatusLastUpdated" : "2022-06-13T11:03:49.488Z[UTC]",
       |  "latestEnhancedStatus" : "PENDING",
       |  "latestDecId" : "62a719953e0e9418e3a638b9",
