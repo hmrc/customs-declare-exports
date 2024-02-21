@@ -19,18 +19,16 @@ package uk.gov.hmrc.exports.migrations.changelogs.submission
 import com.mongodb.client.result.UpdateResult
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
-import org.mongodb.scala.model.Filters
+import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonString}
 import org.mongodb.scala.model.Filters._
 import play.api.Logging
-import play.api.libs.json.{Json, OFormat, Reads}
+import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.exports.migrations.changelogs.{MigrationDefinition, MigrationInformation}
 import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
-import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.ActionWithNotificationSummariesHelper._
-import uk.gov.hmrc.exports.repositories.RepositoryOps
 
-import java.time.{Instant, ZonedDateTime}
+import java.time.ZonedDateTime
 import scala.jdk.CollectionConverters._
 
 class AddNotificationSummariesToSubmissions extends MigrationDefinition with Logging {
@@ -42,41 +40,45 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
       author = "Lucio Biondi"
     )
 
+  private case class OldAction(id: String, requestType: RequestType, requestTimestamp: ZonedDateTime)
+
   override def migrationFunction(db: MongoDatabase): Unit = {
     logger.info(s"Applying '${migrationInformation.id}' db migration...")
 
     val notificationCollection = db.getCollection("notifications")
     val submissionCollection = db.getCollection("submissions")
 
-    val findFilter = or(
-      exists("latestEnhancedStatus", false),
-      exists("enhancedStatusLastUpdated", false),
-      elemMatch("actions", and(Filters.eq("requestType", "SubmissionRequest"), exists("notifications", false)))
-    )
+    // Notification summaries are added to all types of Action, regardless their requestType.
+    // Of course as long as there is a related notification.
+    val findFilter =
+      and(exists("latestEnhancedStatus", false), exists("enhancedStatusLastUpdated", false), elemMatch("actions", exists("notifications", false)))
 
     val results: Iterable[UpdateResult] = submissionCollection
       .find(findFilter)
       .asScala
       .map { document =>
-        val submission = Json.parse(document.toJson).as[Submission](Submission.format)
+        val oldActions = document.getList("actions", classOf[Document]).asScala.toList.flatMap(toCurrentAction)
+        val actions = oldActions.map(updateSubmission(notificationCollection, _, oldActions))
 
-        val actions = submission.actions.map {
-          case action if action.notifications.isDefined => action
-          case action                                   => updateSubmission(notificationCollection, action, submission)
-        }
-
-        val updatedSubmission = actions.collect { case action =>
+        val maybeNotificationSummary = actions.collect { case action =>
+          // We extract here the most recent NotificationSummary of a 'SubmissionRequest' Action, if any,
+          // which will be used to set "latestEnhancedStatus" and ""enhancedStatusLastUpdated".
           if (action.requestType == SubmissionRequest) action.notifications.flatMap(_.headOption) else None
-        }.flatten.headOption.fold(submission.copy(actions = actions)) { notificationSummary =>
-          submission.copy(
-            latestEnhancedStatus = Some(notificationSummary.enhancedStatus),
-            enhancedStatusLastUpdated = Some(notificationSummary.dateTimeIssued),
-            actions = actions
+        }.flatten.headOption
+
+        maybeNotificationSummary.fold(document.put("actions", toBsonArray(actions))) { notificationSummary =>
+          document.putAll(
+            Map(
+              "latestEnhancedStatus" -> BsonString(notificationSummary.enhancedStatus.toString),
+              "enhancedStatusLastUpdated" -> BsonString(notificationSummary.dateTimeIssued.toString),
+              "actions" -> toBsonArray(actions)
+            ).asJava
           )
+          document
         }
 
         val replaceFilter = equal("uuid", document.get("uuid"))
-        submissionCollection.replaceOne(replaceFilter, Document.parse(Json.toJson(updatedSubmission)(Submission.format).toString))
+        submissionCollection.replaceOne(replaceFilter, document)
       }
 
     val updates = results.foldLeft(0L)((acc, result) => acc + result.getModifiedCount)
@@ -84,8 +86,28 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
     logger.info(s"Applying '${migrationInformation.id}' db migration... Done.")
   }
 
-  private def updateSubmission(notificationCollection: MongoCollection[Document], action: Action, submission: Submission): Action = {
-    implicit val format = ParsedNotification.format
+  // This method should always be updated after every change to the "Action" case class, since
+  // 'updateActionWithNotificationSummaries' needs to receive Action(s) in their current format.
+  private def toCurrentAction(action: Document): Option[Action] = {
+    val actionId = action.get("id").toString
+    val requestTimestamp = ZonedDateTime.parse(action.get("requestTimestamp").toString)
+    val maybeRequestType = action.get("requestType").toString
+    RequestType
+      .from(maybeRequestType)
+      .map { requestType =>
+        Some(Action(actionId, requestType, decId = None, versionNo = 1, None, requestTimestamp))
+      }
+      .getOrElse {
+        logger.warn(s"Action($actionId) with unexpected requestType($maybeRequestType)")
+        None
+      }
+  }
+
+  private def toBsonArray(actions: List[Action]): BsonArray =
+    BsonArray.fromIterable(actions.map(action => BsonDocument(Json.toJson(action).toString)))
+
+  private def updateSubmission(notificationCollection: MongoCollection[Document], action: Action, actions: List[Action]): Action = {
+    implicit val format: Format[ParsedNotification] = ParsedNotification.format
     val notifications = notificationCollection
       .find(equal("actionId", action.id))
       .asScala
@@ -93,29 +115,6 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
       .toList
 
     if (notifications.isEmpty) action
-    else {
-      updateActionWithNotificationSummaries(notificationsToAction(action), submission.actions, notifications, Seq.empty[NotificationSummary])._1
-    }
+    else updateActionWithNotificationSummaries(notificationsToAction(action), actions, notifications, Seq.empty[NotificationSummary])._1
   }
-}
-
-private case class Submission(
-  uuid: String,
-  eori: String,
-  lrn: String,
-  mrn: Option[String],
-  ducr: String,
-  latestEnhancedStatus: Option[EnhancedStatus],
-  enhancedStatusLastUpdated: Option[ZonedDateTime],
-  actions: Seq[Action],
-  latestDecId: Option[String],
-  latestVersionNo: Int,
-  lastUpdated: Instant
-)
-
-private object Submission {
-
-  implicit val instantReads: Reads[Instant] = RepositoryOps.instantReads
-
-  implicit val format: OFormat[Submission] = Json.format[Submission]
 }
