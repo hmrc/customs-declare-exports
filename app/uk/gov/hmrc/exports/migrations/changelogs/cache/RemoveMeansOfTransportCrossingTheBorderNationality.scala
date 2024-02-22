@@ -44,28 +44,30 @@ class RemoveMeansOfTransportCrossingTheBorderNationality extends MigrationDefini
     logger.info(s"Applying '${migrationInformation.id}' db migration...")
 
     val declarationsCollection = db.getCollection("declarations")
+
+    val batchSize = 100
+
     val filterForOldField = exists(s"$transportObject.$oldField")
 
-    getDocumentsToUpdate.toList.map { document =>
-      val transportDocument = document.get(transportObject, classOf[Document])
-      val oldFieldValue = transportDocument.get(oldField)
+    declarationsCollection
+      .find(filterForOldField)
+      .batchSize(batchSize)
+      .asScala
+      .map { document =>
+        val transportDocument = document.get(transportObject, classOf[Document])
+        val oldFieldValue = transportDocument.get(oldField)
 
-      val isNewFieldAbsent = !transportDocument.containsKey(newSubObject)
+        val isNewFieldAbsent = !transportDocument.containsKey(newSubObject)
 
-      val documentId = document.get(docId)
-      val docFilter = equal(docId, documentId)
+        val documentId = document.get(docId)
+        val docFilter = equal(docId, documentId)
 
-      val updates =
-        if (isNewFieldAbsent) combine(set(s"$transportObject.$newSubObject.$newField", oldFieldValue), unset(s"$transportObject.$oldField"))
-        else unset(s"$transportObject.$oldField")
+        val updates =
+          if (isNewFieldAbsent) combine(set(s"$transportObject.$newSubObject.$newField", oldFieldValue), unset(s"$transportObject.$oldField"))
+          else unset(s"$transportObject.$oldField")
 
-      declarationsCollection.updateOne(docFilter, updates)
-    }
-
-    def getDocumentsToUpdate: Iterable[Document] =
-      declarationsCollection
-        .find(filterForOldField)
-        .asScala
+        declarationsCollection.updateOne(docFilter, updates)
+      }
 
     logger.info(s"Applying '${migrationInformation.id}' db migration complete.")
   }

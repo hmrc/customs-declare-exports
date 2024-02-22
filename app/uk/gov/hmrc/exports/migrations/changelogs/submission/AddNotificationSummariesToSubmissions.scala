@@ -48,6 +48,8 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
     val notificationCollection = db.getCollection("notifications")
     val submissionCollection = db.getCollection("submissions")
 
+    val batchSize = 100
+
     // Notification summaries are added to all types of Action, regardless their requestType.
     // Of course as long as there is a related notification.
     val findFilter =
@@ -55,6 +57,7 @@ class AddNotificationSummariesToSubmissions extends MigrationDefinition with Log
 
     val results: Iterable[UpdateResult] = submissionCollection
       .find(findFilter)
+      .batchSize(batchSize)
       .asScala
       .map { document =>
         val oldActions = document.getList("actions", classOf[Document]).asScala.toList.flatMap(toCurrentAction)
