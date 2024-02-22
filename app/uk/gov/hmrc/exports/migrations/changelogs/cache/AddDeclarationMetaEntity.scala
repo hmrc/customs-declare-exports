@@ -50,29 +50,30 @@ class AddDeclarationMetaEntity extends MigrationDefinition with Logging {
     logger.info(s"Applying '${migrationInformation.id}' db migration...")
 
     val declarationsCollection = db.getCollection("declarations")
+
+    val batchSize = 100
+
     val filterForAbsenceOfDeclarationMeta = not(exists(declarationMeta))
 
-    getDocumentsToUpdate.foreach { document =>
-      def addToDocumentIfPresent(newMetaDoc: Document, field: String): Document = {
-        val fieldValue = Option(document.get(field))
-        fieldValue.fold(newMetaDoc)(value => newMetaDoc.append(field, value))
+    declarationsCollection
+      .find(filterForAbsenceOfDeclarationMeta)
+      .batchSize(batchSize)
+      .asScala
+      .map { document =>
+        def addToDocumentIfPresent(newMetaDoc: Document, field: String): Document = {
+          val fieldValue = Option(document.get(field))
+          fieldValue.fold(newMetaDoc)(value => newMetaDoc.append(field, value))
+        }
+
+        val declarationMetaDoc: Document = allFields.map(field => addToDocumentIfPresent(_, field)).foldLeft(new Document())((doc, f) => f(doc))
+
+        val update = combine(allFields.map(unset) :+ set(declarationMeta, declarationMetaDoc): _*)
+
+        val documentId = document.get(docId)
+        val docFilter = equal(docId, documentId)
+
+        declarationsCollection.updateOne(docFilter, update)
       }
-
-      val declarationMetaDoc: Document = allFields.map(field => addToDocumentIfPresent(_, field)).foldLeft(new Document())((doc, f) => f(doc))
-
-      val update = combine(allFields.map(unset) :+ set(declarationMeta, declarationMetaDoc): _*)
-
-      val documentId = document.get(docId)
-      val docFilter = equal(docId, documentId)
-
-      declarationsCollection.updateOne(docFilter, update)
-    }
-
-    def getDocumentsToUpdate: Iterable[Document] =
-      declarationsCollection
-        .find(filterForAbsenceOfDeclarationMeta)
-        .asScala
-        .toList
   }
 
   logger.info(s"Finished applying '${migrationInformation.id}' db migration.")

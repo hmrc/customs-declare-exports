@@ -40,8 +40,11 @@ class AddActionFieldsForAmend extends MigrationDefinition with Logging {
 
     val submissionCollection = db.getCollection("submissions")
 
+    val batchSize = 100
+
     val updated = submissionCollection
       .find(Filters.elemMatch("actions", Filters.and(Filters.exists("versionNo", false), Filters.exists("decId", false))))
+      .batchSize(batchSize)
       .asScala
       .map { document =>
         val submissionId = document.getString(uuid)

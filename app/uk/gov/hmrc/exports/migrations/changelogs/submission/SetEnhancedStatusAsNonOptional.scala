@@ -49,10 +49,13 @@ class SetEnhancedStatusAsNonOptional extends MigrationDefinition with Logging {
 
     val submissionCollection = db.getCollection("submissions")
 
+    val batchSize = 100
+
     val filter = or(exists(latestStatus, false), exists(latestUpdate, false))
 
     val results: Iterable[UpdateResult] = submissionCollection
       .find(filter)
+      .batchSize(batchSize)
       .asScala
       .map { document =>
         val maybeLatestStatus = Option(document.getString(latestStatus))
