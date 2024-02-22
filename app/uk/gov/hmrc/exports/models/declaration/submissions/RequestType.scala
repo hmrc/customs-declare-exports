@@ -28,6 +28,15 @@ case object ExternalAmendmentRequest extends RequestType
 
 object RequestType {
 
+  def from(value: String): Option[RequestType] = value match {
+    case "SubmissionRequest"            => Some(SubmissionRequest)
+    case "CancellationRequest"          => Some(CancellationRequest)
+    case "AmendmentRequest"             => Some(AmendmentRequest)
+    case "AmendmentCancellationRequest" => Some(AmendmentCancellationRequest)
+    case "ExternalAmendmentRequest"     => Some(ExternalAmendmentRequest)
+    case _                              => None
+  }
+
   implicit object RequestTypeFormat extends Format[RequestType] {
     override def writes(requestType: RequestType): JsValue = JsString(requestType.toString)
 
