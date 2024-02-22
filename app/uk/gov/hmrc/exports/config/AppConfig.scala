@@ -30,16 +30,9 @@ class AppConfig @Inject() (val configuration: Configuration, servicesConfig: Ser
 
   lazy val clock: Clock = Clock.systemUTC()
 
-  private def loadConfig(key: String): String =
-    configuration
-      .getOptional[String](key)
-      .getOrElse(throw new Exception(s"Missing configuration key: $key"))
-
   lazy val mongodbUri: String = configuration.get[String]("mongodb.uri")
 
   lazy val authUrl: String = servicesConfig.baseUrl("auth")
-
-  lazy val loginUrl: String = loadConfig("urls.login")
 
   lazy val customsDeclarationsBaseUrl: String = servicesConfig.baseUrl("customs-declarations")
 
