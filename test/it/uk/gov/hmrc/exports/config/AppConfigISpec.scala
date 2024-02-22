@@ -27,7 +27,6 @@ class AppConfigISpec extends IntegrationTestSpec {
 
   private val mongodbUri = "mongodb://localhost:27017/customs-declare-exports"
   private val authUrl = "http://localhost:8500"
-  private val loginUrl = "http://localhost:9949/auth-login-stub/gg-sign-in"
   private val customsDeclarationsBaseUrl = "http://localhost:6790"
   private val customsDeclarationsApiVersion = "1.0"
   private val submitDeclarationUri = "/"
@@ -57,8 +56,6 @@ class AppConfigISpec extends IntegrationTestSpec {
   assert(appConfig.mongodbUri == mongodbUri, s"mongodbUri must be $mongodbUri")
 
   assert(appConfig.authUrl == authUrl, s"authUrl must be $authUrl")
-
-  assert(appConfig.loginUrl == loginUrl, s"loginUrl must be $loginUrl")
 
   assert(appConfig.customsDeclarationsBaseUrl == customsDeclarationsBaseUrl, s"customsDeclarationsBaseUrl must be $customsDeclarationsBaseUrl")
 
