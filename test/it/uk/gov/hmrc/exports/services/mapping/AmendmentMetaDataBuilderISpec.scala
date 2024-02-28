@@ -196,6 +196,7 @@ object AmendmentMetaDataBuilderISpec {
       |        <ns3:BorderTransportMeans>
       |            <ns3:ID>Unknown</ns3:ID>
       |            <ns3:IdentificationTypeCode>11</ns3:IdentificationTypeCode>
+      |            <ns3:RegistrationNationalityCode>ZA</ns3:RegistrationNationalityCode>
       |            <ns3:ModeCode>1</ns3:ModeCode>
       |        </ns3:BorderTransportMeans>
       |        <ns3:Consignment>
@@ -426,6 +427,7 @@ object AmendmentMetaDataBuilderISpec {
       |        <ns3:BorderTransportMeans>
       |            <ns3:ID>Unknown</ns3:ID>
       |            <ns3:IdentificationTypeCode>11</ns3:IdentificationTypeCode>
+      |            <ns3:RegistrationNationalityCode>ZA</ns3:RegistrationNationalityCode>
       |            <ns3:ModeCode>1</ns3:ModeCode>
       |        </ns3:BorderTransportMeans>
       |        <ns3:Consignment>

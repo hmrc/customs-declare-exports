@@ -16,13 +16,18 @@
 
 package uk.gov.hmrc.exports.services
 
+import play.api.Environment
 import play.api.libs.json._
 import uk.gov.hmrc.exports.models.Country
 
-class CountriesService {
+import javax.inject.{Inject, Singleton}
+
+@Singleton
+class CountriesService @Inject() (environment: Environment) {
 
   val allCountries: List[Country] = {
-    val jsonFile = getClass.getResourceAsStream("/code-lists/location-autocomplete-canonical-list.json")
+    val countriesFile = "/code-lists/location-autocomplete-canonical-list.json"
+    val jsonFile = environment.resourceAsStream(countriesFile).getOrElse(throw new Exception(s"$countriesFile could not be read!"))
 
     def fromJsonFile: List[Country] =
       Json.parse(jsonFile) match {

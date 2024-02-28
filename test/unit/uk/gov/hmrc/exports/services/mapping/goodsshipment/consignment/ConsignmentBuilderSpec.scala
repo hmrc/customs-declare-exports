@@ -16,17 +16,19 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
-import com.google.inject.Guice
-import uk.gov.hmrc.exports.base.UnitSpec
+import play.api.Environment
+import play.api.inject.bind
+import uk.gov.hmrc.exports.base.{OverridableInjector, UnitSpec}
 import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class ConsignmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
-  private val injector = Guice.createInjector()
+  private val environment = Environment.simple()
+  private val injector = new OverridableInjector(bind[Environment].toInstance(environment))
 
-  private val builder = injector.getInstance(classOf[ConsignmentBuilder])
+  private val builder = injector.instanceOf[ConsignmentBuilder]
 
   "ConsignmentBuilder" should {
 

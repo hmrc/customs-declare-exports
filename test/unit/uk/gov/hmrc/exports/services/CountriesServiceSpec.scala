@@ -21,10 +21,12 @@ import uk.gov.hmrc.exports.models.Country
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAll
 import org.scalatestplus.scalacheck.Checkers.check
+import play.api.Environment
 
 class CountriesServiceSpec extends UnitSpec {
 
-  val countriesService = new CountriesService()
+  private val environment = Environment.simple()
+  val countriesService = new CountriesService(environment)
 
   "Countries" should {
 
