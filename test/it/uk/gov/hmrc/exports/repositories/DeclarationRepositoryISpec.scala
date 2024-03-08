@@ -150,6 +150,25 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
       dec.get.transport.transportCrossingTheBorderNationality.get.countryName.get mustBe country.countryCode
     }
 
+    "find must pass through TransportCountry field unchanged if already a code" in {
+      val country = countriesService.allCountries(0)
+      val declaration = aDeclaration(withEori(eori), withTransportCountry(Some(country.countryCode)))
+      givenADeclarationExists(declaration)
+
+      val page = Page(index = 1, size = 10)
+      val paginatedDecs = repository.find(DeclarationSearch(eori), page, DeclarationSort()).futureValue
+      paginatedDecs.currentPageElements.head.transport.transportCrossingTheBorderNationality.get.countryName.get mustBe country.countryCode
+    }
+
+    "findOne must pass through TransportCountry field unchanged if already a code" in {
+      val country = countriesService.allCountries(0)
+      val declaration = aDeclaration(withEori(eori), withId("id"), withTransportCountry(Some(country.countryCode)))
+      givenADeclarationExists(declaration)
+
+      val dec = repository.findOne(eori, "id").futureValue
+      dec.get.transport.transportCrossingTheBorderNationality.get.countryName.get mustBe country.countryCode
+    }
+
     "retrieve all existing declarations in ascending order" in {
       val declaration1 = aDeclaration(withUpdateDate(year, 1, 1))
       val declaration2 = aDeclaration(withUpdateDate(year, 1, 2))

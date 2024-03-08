@@ -105,6 +105,7 @@ class DeclarationRepository @Inject() (
       update = set(s"$meta.status", DeclarationStatus.AMENDMENT_DRAFT.toString)
     )
 
+  // TODO Remove once migration has been performed for TransportCountry field in CEDS-5606
   private def convertTransportCountryToCode(declaration: ExportsDeclaration): ExportsDeclaration = {
     val potentialNameOrCode = declaration.transport.transportCrossingTheBorderNationality.flatMap(_.countryName)
     val maybeCode = potentialNameOrCode.flatMap(countriesService.getCountryCode)
