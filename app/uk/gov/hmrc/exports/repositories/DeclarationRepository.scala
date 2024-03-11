@@ -26,8 +26,9 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timers
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.{DeclarationMeta, DeclarationStatus, ExportsDeclaration}
+import uk.gov.hmrc.exports.models.declaration.{DeclarationMeta, DeclarationStatus, ExportsDeclaration, TransportCountry}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository.meta
+import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
@@ -37,7 +38,12 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 @Singleton
-class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoComponent, metrics: ExportsMetrics)(implicit ec: ExecutionContext)
+class DeclarationRepository @Inject() (
+  appConfig: AppConfig,
+  mongoComponent: MongoComponent,
+  metrics: ExportsMetrics,
+  countriesService: CountriesService
+)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[ExportsDeclaration](
       mongoComponent = mongoComponent,
       collectionName = "declarations",
@@ -67,7 +73,7 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
           .limit(page.size)
           .toFuture()
         total <- collection.countDocuments(filter).toFuture()
-      } yield Paginated(currentPageElements = results, page = page, total = total)
+      } yield Paginated(currentPageElements = results.map(convertTransportCountryToCode), page = page, total = total)
     }
   }
 
@@ -81,9 +87,11 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
       .toFutureOption()
 
   def findOne(eori: Eori, id: String): Future[Option[ExportsDeclaration]] =
-    metrics.timeAsyncCall(Timers.declarationFindSingleTimer) {
-      findOne(Json.obj("eori" -> eori, "id" -> id))
-    }
+    metrics
+      .timeAsyncCall(Timers.declarationFindSingleTimer) {
+        findOne(Json.obj("eori" -> eori, "id" -> id))
+      }
+      .map(_.map(convertTransportCountryToCode))
 
   def revertStatusToDraft(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
     findOneAndUpdate(
@@ -96,6 +104,15 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
       filter = BsonDocument(Json.obj("eori" -> declaration.eori, "id" -> declaration.id).toString),
       update = set(s"$meta.status", DeclarationStatus.AMENDMENT_DRAFT.toString)
     )
+
+  // TODO Remove once migration has been performed for TransportCountry field in CEDS-5606
+  private def convertTransportCountryToCode(declaration: ExportsDeclaration): ExportsDeclaration = {
+    val potentialNameOrCode = declaration.transport.transportCrossingTheBorderNationality.flatMap(_.countryName)
+    val maybeCode = potentialNameOrCode.flatMap(countriesService.getCountryCode)
+    maybeCode.fold(declaration)(code =>
+      declaration.copy(transport = declaration.transport.copy(transportCrossingTheBorderNationality = Some(TransportCountry(Some(code)))))
+    )
+  }
 }
 
 object DeclarationRepository {

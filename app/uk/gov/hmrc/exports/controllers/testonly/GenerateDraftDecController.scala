@@ -124,7 +124,7 @@ object GenerateDraftDecController extends ExportsDeclarationBuilder {
       withTotalNumberOfItems(Some("805.4"), Some("GBP"), Some("No"), None, "62584234"),
       withNatureOfTransaction("1"),
       withBorderTransport(Some("41"), Some("WZ9qi2ISJa")),
-      withTransportCountry(Some("Finland, Including the Aland Islands")),
+      withTransportCountry(Some("FI")),
       withReadyForSubmission()
     )
   }
