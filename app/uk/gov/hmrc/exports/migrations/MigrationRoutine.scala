@@ -58,6 +58,7 @@ class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
     .register(new RemoveBlockAmendmentsField())
     .register(new SetEnhancedStatusAsNonOptional())
     .register(new AddLastUpdatedToSubmissions())
+    .register(new AddAssociatedSubmissionIdToDeclarations())
 
   ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute()
 

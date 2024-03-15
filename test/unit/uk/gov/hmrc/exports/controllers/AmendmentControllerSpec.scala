@@ -58,7 +58,7 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
 
     "an amended declaration is not found" should {
       "return 404 NOT_FOUND" in {
-        when(declarationService.markCompleted(any(), any())).thenReturn(Future.successful(None))
+        when(declarationService.markCompleted(any(), any(), any())).thenReturn(Future.successful(None))
         when(mockMetrics.timeAsyncCall(any[Timer])(any[Future[Option[_]]])(any())).thenReturn(Future.successful(None))
 
         val result = controller.submission(request)
@@ -73,7 +73,7 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
       s"the declaration has $decStatus status" should {
         "return 409 CONFLICT" in {
           val declaration = aDeclaration(withStatus(decStatus))
-          when(declarationService.markCompleted(any(), any())).thenReturn(Future.successful(Some(declaration)))
+          when(declarationService.markCompleted(any(), any(), any())).thenReturn(Future.successful(Some(declaration)))
           when(mockMetrics.timeAsyncCall(any[Timer])(any[Future[Option[_]]])(any())).thenReturn(Future.successful(Some(declaration)))
 
           val result = controller.submission(request)
@@ -91,7 +91,7 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
       "return 200 with actionId" when {
 
         "the op is a submission" in {
-          when(declarationService.markCompleted(any(), any())).thenReturn(Future.successful(Some(declaration)))
+          when(declarationService.markCompleted(any(), any(), any())).thenReturn(Future.successful(Some(declaration)))
           when(mockMetrics.timeAsyncCall(any[Timer])(any[Future[Option[_]]])(any())).thenReturn(Future.successful(Some(declaration)))
           when(submissionService.submitAmendment(any(), any(), any())(any())).thenReturn(Future("actionId"))
 
@@ -105,7 +105,7 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
         }
 
         "the op is a cancellation" in {
-          when(declarationService.markCompleted(any(), any())).thenReturn(Future.successful(Some(declaration)))
+          when(declarationService.markCompleted(any(), any(), any())).thenReturn(Future.successful(Some(declaration)))
           when(submissionService.cancelAmendment(any(), any(), any())(any())).thenReturn(Future("actionId"))
           when(mockMetrics.timeAsyncCall(any[Timer])(any[Future[Option[_]]])(any())).thenReturn(Future.successful(Some(declaration)))
 

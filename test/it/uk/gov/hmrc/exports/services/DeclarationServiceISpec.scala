@@ -76,10 +76,12 @@ class DeclarationServiceISpec extends IntegrationTestSpec with MockMetrics {
         meta.parentDeclarationId.value mustBe declaration.id
         meta.parentDeclarationEnhancedStatus.value mustBe CLEARED
         meta.status mustBe DRAFT
+        meta.associatedSubmissionId mustBe None
       }
 
       "a declaration has been amended" in {
-        val declaration = aDeclaration(withEori(eori))
+        val submissionId = "123445667"
+        val declaration = aDeclaration(withEori(eori), withAssociatedSubmissionId(Some(submissionId)))
         declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
 
         val result = declarationService.findOrCreateDraftFromParent(eori, declaration.id, ERRORS, true)(global).futureValue.value
@@ -89,6 +91,7 @@ class DeclarationServiceISpec extends IntegrationTestSpec with MockMetrics {
         meta.parentDeclarationId.value mustBe declaration.id
         meta.parentDeclarationEnhancedStatus.value mustBe ERRORS
         meta.status mustBe AMENDMENT_DRAFT
+        meta.associatedSubmissionId mustBe Some(submissionId)
       }
     }
   }
