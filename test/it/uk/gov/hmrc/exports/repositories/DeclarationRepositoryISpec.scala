@@ -198,14 +198,18 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
       repository.create(declaration).futureValue.status mustBe DeclarationStatus.DRAFT
 
       val eori = Eori(declaration.eori)
-      repository.markStatusAsComplete(eori, declaration.id).futureValue.value.status mustBe DeclarationStatus.DRAFT
-      repository.findOne("id", declaration.id).futureValue.value.status mustBe DeclarationStatus.COMPLETE
+      repository.markStatusAsComplete(eori, declaration.id, declaration.id).futureValue.value.status mustBe DeclarationStatus.DRAFT
+      val updatedRec = repository.findOne("id", declaration.id).futureValue.value
+      updatedRec.status mustBe DeclarationStatus.COMPLETE
+      updatedRec.declarationMeta.associatedSubmissionId mustBe Some(declaration.id)
     }
 
     "be able to revert a COMPLETE declaration to DRAFT" in {
       val declaration = aDeclaration()
       repository.create(declaration).futureValue.status mustBe DeclarationStatus.COMPLETE
-      repository.revertStatusToDraft(declaration).futureValue.value.status mustBe DeclarationStatus.DRAFT
+      val updatedRec = repository.revertStatusToDraft(declaration).futureValue.value
+      updatedRec.status mustBe DeclarationStatus.DRAFT
+      updatedRec.declarationMeta.associatedSubmissionId mustBe None
     }
 
     "return an empty Option" when {
@@ -226,7 +230,7 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
       }
 
       "attempting to mark as completed a non-existing declaration" in {
-        repository.markStatusAsComplete(Eori("eori"), "id").futureValue mustBe empty
+        repository.markStatusAsComplete(Eori("eori"), "id", "id").futureValue mustBe empty
       }
     }
 

@@ -41,7 +41,9 @@ class AmendmentController @Inject() (
     val submissionAmendment = request.body
     val declarationId = submissionAmendment.declarationId
     metrics
-      .timeAsyncCall(Timers.amendmentUpdateDeclarationStatusTimer)(declarationService.markCompleted(request.eori, declarationId))
+      .timeAsyncCall(Timers.amendmentUpdateDeclarationStatusTimer)(
+        declarationService.markCompleted(request.eori, declarationId, submissionAmendment.submissionId)
+      )
       .flatMap {
         case Some(declaration) if declaration.isCompleted =>
           val message = s"Amendment for declaration(${declarationId}) has already been submitted."

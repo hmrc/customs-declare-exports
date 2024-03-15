@@ -46,8 +46,14 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
       case _ =>
         declarationRepository.findOne(Json.obj("eori" -> eori, "id" -> parentId)).flatMap {
           case Some(declaration) if declaration.declarationMeta.status == COMPLETE =>
+            val associatedSubmissionId = if (isAmendment) declaration.declarationMeta.associatedSubmissionId else None
             val declarationMeta = declaration.declarationMeta
-              .copy(parentDeclarationId = Some(parentId), parentDeclarationEnhancedStatus = Some(enhancedStatus), status = declarationStatus)
+              .copy(
+                parentDeclarationId = Some(parentId),
+                parentDeclarationEnhancedStatus = Some(enhancedStatus),
+                status = declarationStatus,
+                associatedSubmissionId = associatedSubmissionId
+              )
             declarationRepository
               .create(declaration.copy(id = UUID.randomUUID.toString, declarationMeta = declarationMeta))
               .map(declaration => Some(CREATED -> declaration.id))
@@ -93,8 +99,8 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
   def deleteOne(declaration: ExportsDeclaration): Future[Boolean] =
     declarationRepository.removeOne(Json.obj("id" -> declaration.id, "eori" -> declaration.eori))
 
-  def markCompleted(eori: Eori, id: String): Future[Option[ExportsDeclaration]] =
-    declarationRepository.markStatusAsComplete(eori, id)
+  def markCompleted(eori: Eori, id: String, submissionId: String): Future[Option[ExportsDeclaration]] =
+    declarationRepository.markStatusAsComplete(eori, id, submissionId)
 
   def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
     declarationRepository.findOneAndReplace(

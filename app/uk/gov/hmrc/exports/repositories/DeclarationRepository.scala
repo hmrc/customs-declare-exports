@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.repositories
 import com.mongodb.client.model.Indexes.{ascending, compoundIndex, descending}
 import com.mongodb.client.model.ReturnDocument
 import org.mongodb.scala.bson.BsonDocument
-import org.mongodb.scala.model.Updates.set
+import org.mongodb.scala.model.Updates.{combine, set, unset}
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions}
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.config.AppConfig
@@ -77,11 +77,11 @@ class DeclarationRepository @Inject() (
     }
   }
 
-  def markStatusAsComplete(eori: Eori, id: String): Future[Option[ExportsDeclaration]] =
+  def markStatusAsComplete(eori: Eori, id: String, submissionId: String): Future[Option[ExportsDeclaration]] =
     collection
       .findOneAndUpdate(
         filter = BsonDocument(Json.obj("eori" -> eori.value, "id" -> id).toString),
-        update = set(s"$meta.status", DeclarationStatus.COMPLETE.toString),
+        update = combine(set(s"$meta.status", DeclarationStatus.COMPLETE.toString), set(s"$meta.associatedSubmissionId", submissionId)),
         options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.BEFORE)
       )
       .toFutureOption()
@@ -96,7 +96,7 @@ class DeclarationRepository @Inject() (
   def revertStatusToDraft(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
     findOneAndUpdate(
       filter = BsonDocument(Json.obj("eori" -> declaration.eori, "id" -> declaration.id).toString),
-      update = set(s"$meta.status", DeclarationStatus.DRAFT.toString)
+      update = combine(set(s"$meta.status", DeclarationStatus.DRAFT.toString), unset(s"$meta.associatedSubmissionId"))
     )
 
   def revertStatusToAmendmentDraft(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =

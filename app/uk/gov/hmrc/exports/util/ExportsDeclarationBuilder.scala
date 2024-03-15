@@ -79,6 +79,9 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
   def withParentDeclarationEnhancedStatus(status: EnhancedStatus): ExportsDeclarationModifier =
     cache => cache.copy(declarationMeta = cache.declarationMeta.copy(parentDeclarationEnhancedStatus = Some(status)))
 
+  def withAssociatedSubmissionId(submissionId: Option[String]): ExportsDeclarationModifier =
+    cache => cache.copy(declarationMeta = cache.declarationMeta.copy(associatedSubmissionId = submissionId))
+
   def withEori(eori: String): ExportsDeclarationModifier = _.copy(eori = eori)
 
   def withEori(eori: Eori): ExportsDeclarationModifier = _.copy(eori = eori.value)
