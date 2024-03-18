@@ -51,6 +51,10 @@ class AddAssociatedSubmissionIdToDeclarationsISpec extends IntegrationTestMigrat
     }
 
     "Does not set the declaration's associatedSubmissionId value" when {
+      "declaration's status is INITIAL" in {
+        setupSubmissions(submissionWithMultipleActions)
+        runTest(declarationBeforeMigration(INITIAL), declarationBeforeMigration(INITIAL))
+      }
       "declaration's status is DRAFT" in {
         setupSubmissions(submissionWithMultipleActions)
         runTest(declarationBeforeMigration(DRAFT), declarationBeforeMigration(DRAFT))
