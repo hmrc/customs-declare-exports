@@ -57,7 +57,7 @@ class AddAssociatedSubmissionIdToDeclarations extends MigrationDefinition with L
         }
       }
 
-    val filter = not(feq("declarationMeta.status", "DRAFT"))
+    val filter = and(not(feq("declarationMeta.status", "INITIAL")), not(feq("declarationMeta.status", "DRAFT")))
 
     declarationCollection
       .find(filter)
