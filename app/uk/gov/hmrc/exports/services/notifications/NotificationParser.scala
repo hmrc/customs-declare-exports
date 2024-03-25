@@ -60,14 +60,14 @@ class NotificationParser extends Logging {
         val description = if ((singleErrorXml \ "Description").nonEmpty) Some((singleErrorXml \ "Description").text) else None
         val validationCode = (singleErrorXml \ "ValidationCode").text
         val pointer =
-          if ((singleErrorXml \ "Pointer").nonEmpty) buildErrorPointer(singleErrorXml) else None
+          if ((singleErrorXml \ "Pointer").nonEmpty) buildErrorPointer(singleErrorXml, validationCode) else None
         NotificationError(validationCode, pointer, description)
       }
     } else Seq.empty
 
   private val pointerSection67A = Some(PointerSection("67A", PointerSectionType.FIELD))
 
-  private def buildErrorPointer(singleErrorXml: Node): Option[Pointer] = {
+  private def buildErrorPointer(singleErrorXml: Node, validationCode: String): Option[Pointer] = {
     val pointersXml = singleErrorXml \ "Pointer"
 
     val pointerSections = pointersXml.flatMap { singlePointerXml =>
@@ -100,7 +100,7 @@ class NotificationParser extends Logging {
 
     val wcoPointer = Pointer(pointerSections)
     val exportsPointer = WCOPointerMappingService.mapWCOPointerToExportsPointer(wcoPointer)
-    if (exportsPointer.isEmpty) logger.warn(s"Missing pointer mapping for [${wcoPointer}]")
+    if (exportsPointer.isEmpty) logger.warn(s"Missing pointer mapping for [${wcoPointer}] found with error code [$validationCode]")
     exportsPointer
   }
 }
