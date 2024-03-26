@@ -39,12 +39,7 @@ object WCOPointerMappingService extends Logging {
   }
 
   def mapWCOPointerToExportsPointer(pointer: Pointer): Option[Pointer] =
-    mappings.find(_.wcoPattern matches pointer.pattern) match {
-      case Some(pointerMapping) => Some(pointerMapping.applyToWCOPointer(pointer))
-      case _ =>
-        logger.warn("There is no exports pointer for: " + Pointer)
-        None
-    }
+    mappings.find(_.wcoPattern matches pointer.pattern).map(_.applyToWCOPointer(pointer))
 
   def mapWCOPointerToExportsPointer(pointers: Iterable[Pointer]): Iterable[Pointer] =
     pointers.map(mapWCOPointerToExportsPointer).filter(_.isDefined).flatten
