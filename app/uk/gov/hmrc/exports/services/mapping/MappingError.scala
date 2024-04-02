@@ -19,4 +19,4 @@ package uk.gov.hmrc.exports.services.mapping
 sealed trait MappingError
 case class NoMappingFoundError(pointer: String) extends MappingError
 
-class PointerMappingException(message: String) extends Exception(message)
+class PointerMappingException(message: String) extends RuntimeException(message)

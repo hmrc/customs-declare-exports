@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 
-import play.api.Logging
 import uk.gov.hmrc.exports.models.declaration.notifications.{ParsedNotification, UnparsedNotification}
 import uk.gov.hmrc.exports.models.declaration.submissions.{Submission, SubmissionStatus}
 import uk.gov.hmrc.exports.repositories.UpdateSubmissionsTransactionalOps
@@ -31,8 +30,7 @@ class ParseAndSaveAction @Inject() (
   notificationFactory: NotificationFactory,
   transactionalOps: UpdateSubmissionsTransactionalOps,
   auditService: AuditService
-)(implicit executionContext: ExecutionContext)
-    extends Logging {
+)(implicit executionContext: ExecutionContext) {
 
   def execute(notification: UnparsedNotification): Future[Unit] =
     save(notificationFactory.buildNotifications(notification)).map { case (submissions, parsedNotifications) =>

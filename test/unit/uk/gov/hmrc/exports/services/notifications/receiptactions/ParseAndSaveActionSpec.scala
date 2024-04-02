@@ -20,29 +20,33 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.invocation.InvocationOnMock
+import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.{ClientSession, MongoClient, SingleObservable}
 import play.api.test.Helpers._
 import testdata.SubmissionTestData.{submission, submission_2, submission_3}
-import testdata.notifications.NotificationTestData.{notification, notificationUnparsed, notification_2, notification_3}
+import testdata.notifications.NotificationTestData._
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
-import uk.gov.hmrc.exports.repositories.{SubmissionRepository, UpdateSubmissionsTransactionalOps}
+import uk.gov.hmrc.exports.repositories._
 import uk.gov.hmrc.exports.services.audit.AuditService
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
+import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ParseAndSaveActionSpec extends UnitSpec {
 
+  private val auditService = mock[AuditService]
+  private val notificationFactory = mock[NotificationFactory]
   private val submissionRepository = mock[SubmissionRepository]
-  private val transactionalOps = mock[UpdateSubmissionsTransactionalOps]
-  private val mockNotificationFactory = mock[NotificationFactory]
-  private val mockAuditService = mock[AuditService]
+  private val updateSubmissionOps = mock[UpdateSubmissionsTransactionalOps]
 
-  private val parseAndSaveAction = new ParseAndSaveAction(mockNotificationFactory, transactionalOps, mockAuditService)
+  private val parseAndSaveAction = new ParseAndSaveAction(notificationFactory, updateSubmissionOps, auditService)
 
   override def afterEach(): Unit = {
-    reset(submissionRepository, transactionalOps, mockAuditService, mockNotificationFactory)
+    reset(auditService, notificationFactory, submissionRepository, updateSubmissionOps)
     super.afterEach()
   }
 
@@ -50,12 +54,12 @@ class ParseAndSaveActionSpec extends UnitSpec {
     "provided with an UnparsedNotification" should {
       "call audit service" in {
         when(submissionRepository.findOne(any, any)).thenReturn(Future.successful(Some(submission)))
-        when(transactionalOps.updateSubmissionAndNotifications(any, any)).thenReturn(Future.successful(submission))
-        when(mockNotificationFactory.buildNotifications(any)).thenReturn(List(notification, notification_2))
+        when(updateSubmissionOps.updateSubmissionAndNotifications(any, any)).thenReturn(Future.successful(submission))
+        when(notificationFactory.buildNotifications(any)).thenReturn(List(notification, notification_2))
 
         await(parseAndSaveAction.execute(notificationUnparsed))
 
-        verify(mockAuditService).auditNotificationProcessed(any, any)
+        verify(auditService).auditNotificationProcessed(any, any)
       }
     }
   }
@@ -66,18 +70,18 @@ class ParseAndSaveActionSpec extends UnitSpec {
       "return a list with no submissions (empty)" in {
         parseAndSaveAction.save(List.empty).futureValue mustBe (List.empty, List.empty)
         verifyNoInteractions(submissionRepository)
-        verifyNoInteractions(transactionalOps)
+        verifyNoInteractions(updateSubmissionOps)
       }
     }
 
     "provided with a single ParsedNotification with a stored Submission document and" should {
       "return a List with a single Submission" in {
         when(submissionRepository.findOne(any, any)).thenReturn(Future.successful(Some(submission)))
-        when(transactionalOps.updateSubmissionAndNotifications(any, any)).thenReturn(Future.successful(submission))
+        when(updateSubmissionOps.updateSubmissionAndNotifications(any, any)).thenReturn(Future.successful(submission))
 
         parseAndSaveAction.save(List(notification)).futureValue._1 mustBe List(submission)
 
-        verify(transactionalOps).updateSubmissionAndNotifications(eqTo(notification.actionId), any)
+        verify(updateSubmissionOps).updateSubmissionAndNotifications(eqTo(notification.actionId), any)
       }
     }
 
@@ -93,11 +97,43 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
         val captor = ArgumentCaptor.forClass(classOf[String])
         when(submissionRepository.findOne(any[String], captor.capture())).thenAnswer(withResult andThen toOptionFuture)
-        when(transactionalOps.updateSubmissionAndNotifications(captor.capture(), any)).thenAnswer(withResult andThen toFuture)
+        when(updateSubmissionOps.updateSubmissionAndNotifications(captor.capture(), any)).thenAnswer(withResult andThen toFuture)
 
         parseAndSaveAction.save(List(notification_2, notification_3)).futureValue._1 must contain theSameElementsAs (List(submission_2, submission_3))
 
-        verify(transactionalOps, times(2)).updateSubmissionAndNotifications(any, any)
+        verify(updateSubmissionOps, times(2)).updateSubmissionAndNotifications(any, any)
+      }
+    }
+
+    "provided with an 'external amendment' notification" that {
+      "conflicts with a concurrent notification for a common Submission" should {
+        "trigger an ExternalAmendmentException" in {
+          val mongoClient = mock[MongoClient]
+          val mongoComponent = mock[MongoComponent]
+          val mongoSession = mock[SingleObservable[ClientSession]]
+          val appConfig = mock[AppConfig]
+
+          val updateSubmissionOps = new UpdateSubmissionsTransactionalOps(
+            mongoComponent,
+            mock[DeclarationRepository],
+            submissionRepository,
+            mock[ParsedNotificationRepository],
+            appConfig
+          )
+          when(appConfig.useTransactionalDBOps).thenReturn(false)
+          when(mongoComponent.client).thenReturn(mongoClient)
+          when(mongoClient.startSession()).thenReturn(mongoSession)
+          when(mongoSession.toFuture()).thenReturn(Future.successful(mock[ClientSession]))
+
+          when(submissionRepository.findOne(any, any)).thenReturn(Future.successful(Some(submission)))
+          when(submissionRepository.findOneAndUpdate(any[ClientSession], any[Bson], any[Bson])).thenReturn(Future.successful(None))
+
+          val parseAndSaveAction = new ParseAndSaveAction(notificationFactory, updateSubmissionOps, auditService)
+
+          intercept[ExternalAmendmentException] {
+            await(parseAndSaveAction.save(List(notificationForExternalAmendment)))
+          }
+        }
       }
     }
   }
