@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.migrations.changelogs.submission
+package uk.gov.hmrc.exports.migrations.changelogs.cache
 
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import org.bson.Document
@@ -28,7 +28,7 @@ import scala.jdk.CollectionConverters._
 class AddAssociatedSubmissionIdToDeclarations extends MigrationDefinition with Logging {
 
   override val migrationInformation: MigrationInformation =
-    MigrationInformation(id = s"CEDS-5583 Add AssociatedSubmissionId to declaration meta data", order = 24, author = "Tim Wilkins")
+    MigrationInformation(id = s"CEDS-5583_2 Add AssociatedSubmissionId to declaration meta data", order = 24, author = "Tim Wilkins")
 
   private val declarationMeta = "declarationMeta"
   private val status = "status"

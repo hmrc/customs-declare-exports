@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.migrations.changelogs.submission
 
 import org.bson.Document
 import uk.gov.hmrc.exports.base.IntegrationTestMigrationToolSpec
+import uk.gov.hmrc.exports.migrations.changelogs.cache.AddAssociatedSubmissionIdToDeclarations
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus._
 
 class AddAssociatedSubmissionIdToDeclarationsISpec extends IntegrationTestMigrationToolSpec {
