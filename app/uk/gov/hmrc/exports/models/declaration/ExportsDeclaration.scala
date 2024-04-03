@@ -63,16 +63,8 @@ object ExportsDeclaration {
     val meta = declarationRequest.declarationMeta
     ExportsDeclaration(
       id = id,
-      declarationMeta = DeclarationMeta(
-        parentDeclarationId = meta.parentDeclarationId,
-        parentDeclarationEnhancedStatus = meta.parentDeclarationEnhancedStatus,
-        status = declarationRequest.consignmentReferences.map(_ => if (meta.status == INITIAL) DRAFT else meta.status).getOrElse(INITIAL),
-        createdDateTime = meta.createdDateTime,
-        updatedDateTime = meta.updatedDateTime,
-        summaryWasVisited = meta.summaryWasVisited,
-        readyForSubmission = meta.readyForSubmission,
-        maxSequenceIds = meta.maxSequenceIds
-      ),
+      declarationMeta =
+        meta.copy(status = declarationRequest.consignmentReferences.map(_ => if (meta.status == INITIAL) DRAFT else meta.status).getOrElse(INITIAL)),
       eori = eori.value,
       `type` = declarationRequest.`type`,
       dispatchLocation = declarationRequest.dispatchLocation,
