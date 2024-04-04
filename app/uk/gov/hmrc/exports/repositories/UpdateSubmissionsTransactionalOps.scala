@@ -39,6 +39,8 @@ import java.util.UUID.randomUUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+final class ExternalAmendmentException(message: String) extends RuntimeException(message)
+
 @Singleton
 class UpdateSubmissionsTransactionalOps @Inject() (
   val mongoComponent: MongoComponent,
@@ -139,7 +141,11 @@ class UpdateSubmissionsTransactionalOps @Inject() (
       case Some(submission) => Future.successful(submission)
 
       case _ =>
-        val exception = new InternalServerException(s"Failed to update Submission(${submission.uuid}) with Action(${action.id})")
+        val message = s"Failed to update Submission(${submission.uuid}) with Action(${action.id}) on a $requestType"
+        val exception =
+          if (requestType == ExternalAmendmentRequest) new ExternalAmendmentException(message)
+          else new InternalServerException(message)
+
         Future.failed(throw exception)
     }
   }
