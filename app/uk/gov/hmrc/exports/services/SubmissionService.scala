@@ -165,17 +165,19 @@ class SubmissionService @Inject() (
   def fetchExternalAmendmentToUpdateSubmission(mrn: Mrn, eori: Eori, actionId: String, submissionId: String)(
     implicit hc: HeaderCarrier
   ): Future[Option[Submission]] =
-    customsDeclarationsInformationConnector.fetchMrnFullDeclaration(mrn.value, None) flatMap { xml =>
-      exportsDeclarationXmlParser.fromXml(MappingContext(eori.value), xml.toString).toOption match {
-        case Some(declaration) =>
-          for {
-            _ <- declarationRepository.create(declaration)
-            submission <- submissionRepository.updateExternalAmendmentAction(submissionId, actionId, declaration.id)
-          } yield submission
+    customsDeclarationsInformationConnector.fetchMrnFullDeclaration(mrn.value, None) flatMap {
+      case Some(xml) =>
+        exportsDeclarationXmlParser.fromXml(MappingContext(eori.value), xml.toString).toOption match {
+          case Some(declaration) =>
+            for {
+              _ <- declarationRepository.create(declaration)
+              submission <- submissionRepository.updateExternalAmendmentAction(submissionId, actionId, declaration.id)
+            } yield submission
 
-        case _ =>
-          Future.successful(None)
-      }
+          case _ =>
+            Future.successful(None)
+        }
+      case _ => Future.successful(None)
     }
 
   private def isSubmissionAlreadyCancelled(submission: Submission): Boolean =
