@@ -15,7 +15,7 @@ import uk.gov.hmrc.exports.models.ead.parsers.MrnDeclarationParserTestData.{badT
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping._
 import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParser
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
+import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import java.util.UUID
@@ -373,9 +373,8 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
           actions = List(submissionAction, externalActionVersion2, externalActionVersion3)
         )
 
-        intercept[InternalServerException] {
-          await(submissionService.fetchExternalAmendmentToUpdateSubmission(mrn = Mrn(mrn), Eori(eori), externalActionId3, submission.uuid)(hc))
-        }
+        await(submissionService.fetchExternalAmendmentToUpdateSubmission(mrn = Mrn(mrn), Eori(eori), externalActionId3, submission.uuid)(hc))
+        // Check for warning in logs from test run emitted by CustomsDeclarationsInformationConnector
       }
     }
   }
