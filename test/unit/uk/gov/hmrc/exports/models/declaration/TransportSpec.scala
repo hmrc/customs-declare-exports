@@ -65,7 +65,7 @@ class TransportSpec extends UnitSpec {
 
     "convert Transport object to JSON" in {
       val resultJson = Transport.format.writes(transport)
-      resultJson mustBe pre5606Json
+      resultJson mustBe json
     }
 
     "convert JSON to Transport object" in {

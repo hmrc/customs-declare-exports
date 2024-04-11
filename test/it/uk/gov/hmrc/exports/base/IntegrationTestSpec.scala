@@ -72,7 +72,7 @@ trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSui
     super.afterEach()
   }
 
-  override protected def afterAll(): Unit = {
+  override def afterAll(): Unit = {
     stopMockServer()
     super.afterAll()
   }

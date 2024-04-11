@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.models.declaration
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json._
 
-case class TransportCountry(countryName: Option[String])
+case class TransportCountry(countryCode: Option[String])
 
 object TransportCountry {
   // TODO remove resilient reads once 5606 migration has been deployed successfully
