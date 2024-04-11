@@ -34,7 +34,7 @@ class CustomsDeclarationsInformationConnector @Inject() (mrnStatusParser: MrnSta
   implicit ec: ExecutionContext
 ) extends Logging {
 
-  def fetchMrnFullDeclaration(mrn: String, declarationVersion: Option[String])(implicit hc: HeaderCarrier): Future[Elem] =
+  def fetchMrnFullDeclaration(mrn: String, declarationVersion: Option[String])(implicit hc: HeaderCarrier): Future[Option[Elem]] =
     httpClient
       .GET(
         url = s"${appConfig.customsDeclarationsInformationBaseUrl}${appConfig.fetchMrnFullDeclaration.replace(XmlTags.id, mrn)}",
@@ -44,14 +44,14 @@ class CustomsDeclarationsInformationConnector @Inject() (mrnStatusParser: MrnSta
       .map { response =>
         response.status match {
           case OK =>
-            logger.debug(s"CUSTOMS_DECLARATIONS_INFORMATION: fetch MRN full declaration response ${response.body}")
-            xml.XML.loadString(response.body)
-          case status =>
-            logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION: fetch MRN full declaration response ${response.body}")
-            throw new InternalServerException(s"Customs Declarations Information Service (DIS) returned [$status]")
+            logger.debug(s"CUSTOMS_DECLARATIONS_INFORMATION: fetch MRN $mrn full declaration response: ${response.body}")
+            Some(xml.XML.loadString(response.body))
+          case _ =>
+            logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION: failed to fetch XML for MRN $mrn full declaration response: ${response.body}")
+            None
         }
       } recoverWith { case _: org.xml.sax.SAXParseException =>
-      logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION cannot parse response into valid xml")
+      logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION: cannot parse response for MRN  $mrn into valid xml")
       throw new InternalServerException(s"Customs Declarations cannot parse response into valid xml")
     }
 
@@ -61,11 +61,11 @@ class CustomsDeclarationsInformationConnector @Inject() (mrnStatusParser: MrnSta
       .map { response =>
         response.status match {
           case OK =>
-            logger.debug(s"CUSTOMS_DECLARATIONS_INFORMATION fetch MRN status response ${response.body}")
+            logger.debug(s"CUSTOMS_DECLARATIONS_INFORMATION: fetch MRN $mrn status response: ${response.body}")
             Some(mrnStatusParser.parse(xml.XML.loadString(response.body)))
-          case status =>
-            logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION fetch MRN status response ${response.body}")
-            throw new InternalServerException(s"Customs Declarations Service returned [$status]")
+          case _ =>
+            logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION: failed to fetch XML for MRN $mrn status response: ${response.body}")
+            None
         }
       }
 

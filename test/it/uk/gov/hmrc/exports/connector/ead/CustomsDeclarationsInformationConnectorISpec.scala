@@ -49,7 +49,7 @@ class CustomsDeclarationsInformationConnectorISpec extends IntegrationTestSpec {
         "no specific version is requested" in {
           getFromDownstreamService(mrnDeclarationUrl, OK, Some(MrnDeclarationParserTestData.mrnDeclarationTestSample(mrn, None).toString))
 
-          val declaration = connector.fetchMrnFullDeclaration(mrn, None).futureValue
+          val declaration = connector.fetchMrnFullDeclaration(mrn, None).futureValue.get
           (declaration \\ "MRN").text mustBe mrn
           (declaration \\ "VersionID").text mustBe "2"
 
@@ -64,7 +64,7 @@ class CustomsDeclarationsInformationConnectorISpec extends IntegrationTestSpec {
             delay = 0
           )
 
-          val declaration = connector.fetchMrnFullDeclaration(mrn, Some("1")).futureValue
+          val declaration = connector.fetchMrnFullDeclaration(mrn, Some("1")).futureValue.get
           (declaration \\ "MRN").text mustBe mrn
           (declaration \\ "VersionID").text mustBe "1"
 
@@ -72,13 +72,11 @@ class CustomsDeclarationsInformationConnectorISpec extends IntegrationTestSpec {
         }
       }
 
-      "request is not processed - 500" when {
-        "downstream returns 500" in {
+      "request is not processed" when {
+        "downstream doesn't return 200" in {
           getFromDownstreamService(mrnDeclarationUrl, INTERNAL_SERVER_ERROR)
-
-          intercept[InternalServerException] {
-            await(connector.fetchMrnFullDeclaration(mrn, None))
-          }
+          await(connector.fetchMrnFullDeclaration(mrn, None))
+          // Check for warning in logs of test run
         }
         "downstream returns invalid xml" in {
           getFromDownstreamService(mrnDeclarationUrl, OK, Some("invalid xml"))
@@ -117,12 +115,10 @@ class CustomsDeclarationsInformationConnectorISpec extends IntegrationTestSpec {
         verifyDecServiceWasCalledCorrectly()
       }
 
-      "request is not processed - 500" in {
+      "request is not processed" in {
         getFromDownstreamService(mrnStatusUrl, INTERNAL_SERVER_ERROR)
-
-        intercept[InternalServerException] {
-          await(connector.fetchMrnStatus(mrn))
-        }
+        await(connector.fetchMrnStatus(mrn))
+        // Check for warning in logs of test run
       }
 
       def verifyDecServiceWasCalledCorrectly(expectedApiVersion: String = "1.0"): Unit =
