@@ -31,7 +31,7 @@ class RemoveMeansOfTransportCrossingTheBorderNationality extends MigrationDefini
   private val transportObject = "transport"
   private val oldField = "meansOfTransportCrossingTheBorderNationality"
   private val newSubObject = "transportCrossingTheBorderNationality"
-  private val newField = "countryName"
+  private val newField = "countryCode"
 
   override val migrationInformation: MigrationInformation =
     MigrationInformation(

@@ -138,7 +138,7 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
 
       val page = Page(index = 1, size = 10)
       val paginatedDecs = repository.find(DeclarationSearch(eori), page, DeclarationSort()).futureValue
-      paginatedDecs.currentPageElements.head.transport.transportCrossingTheBorderNationality.get.countryName.get mustBe country.countryCode
+      paginatedDecs.currentPageElements.head.transport.transportCrossingTheBorderNationality.get.countryCode.get mustBe country.countryCode
     }
 
     "findOne must convert TransportCountry field to a code" in {
@@ -147,7 +147,7 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
       givenADeclarationExists(declaration)
 
       val dec = repository.findOne(eori, "id").futureValue
-      dec.get.transport.transportCrossingTheBorderNationality.get.countryName.get mustBe country.countryCode
+      dec.get.transport.transportCrossingTheBorderNationality.get.countryCode.get mustBe country.countryCode
     }
 
     "find must pass through TransportCountry field unchanged if already a code" in {
@@ -157,7 +157,7 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
 
       val page = Page(index = 1, size = 10)
       val paginatedDecs = repository.find(DeclarationSearch(eori), page, DeclarationSort()).futureValue
-      paginatedDecs.currentPageElements.head.transport.transportCrossingTheBorderNationality.get.countryName.get mustBe country.countryCode
+      paginatedDecs.currentPageElements.head.transport.transportCrossingTheBorderNationality.get.countryCode.get mustBe country.countryCode
     }
 
     "findOne must pass through TransportCountry field unchanged if already a code" in {
@@ -166,7 +166,7 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
       givenADeclarationExists(declaration)
 
       val dec = repository.findOne(eori, "id").futureValue
-      dec.get.transport.transportCrossingTheBorderNationality.get.countryName.get mustBe country.countryCode
+      dec.get.transport.transportCrossingTheBorderNationality.get.countryCode.get mustBe country.countryCode
     }
 
     "retrieve all existing declarations in ascending order" in {
