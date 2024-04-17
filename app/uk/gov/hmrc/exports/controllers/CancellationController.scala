@@ -29,13 +29,6 @@ class CancellationController @Inject() (authenticator: Authenticator, submission
   implicit executionContext: ExecutionContext
 ) extends RESTController(cc) with JSONResponses {
 
-  val create: Action[SubmissionCancellation] =
-    authenticator.authorisedAction(parsingJson[SubmissionCancellation]) { implicit request =>
-      submissionService.cancel(request.eori.value, request.body).map { cancellationStatus =>
-        Ok(cancellationStatus)
-      }
-    }
-
   val createCancellation: Action[SubmissionCancellation] =
     authenticator.authorisedAction(parsingJson[SubmissionCancellation]) { implicit request =>
       submissionService.cancelDeclaration(request.eori.value, request.body).map { cancellationStatus =>
