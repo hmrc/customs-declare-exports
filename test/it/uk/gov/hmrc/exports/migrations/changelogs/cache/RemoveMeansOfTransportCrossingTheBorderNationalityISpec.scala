@@ -63,7 +63,7 @@ object RemoveMeansOfTransportCrossingTheBorderNationalityISpec {
       |    },
       |    "meansOfTransportOnDepartureType": "11",
       |    "meansOfTransportOnDepartureIDNumber": "BLUE MASTER II",
-      |    "transportCrossingTheBorderNationality": { "countryCode": "Marshall Islands (the)" },
+      |    "transportCrossingTheBorderNationality": { "countryName": "Marshall Islands (the)" },
       |    "meansOfTransportCrossingTheBorderType": "11",
       |    "meansOfTransportCrossingTheBorderIDNumber": "BLUE MASTER II"
       |  }
@@ -84,7 +84,7 @@ object RemoveMeansOfTransportCrossingTheBorderNationalityISpec {
       |    "meansOfTransportOnDepartureType": "11",
       |    "meansOfTransportOnDepartureIDNumber": "BLUE MASTER II",
       |    "meansOfTransportCrossingTheBorderNationality": "Marshall Islands (the)",
-      |    "transportCrossingTheBorderNationality": { "countryCode": "Marshall Islands (the)" },
+      |    "transportCrossingTheBorderNationality": { "countryName": "Marshall Islands (the)" },
       |    "meansOfTransportCrossingTheBorderType": "11",
       |    "meansOfTransportCrossingTheBorderIDNumber": "BLUE MASTER II"
       |  }
