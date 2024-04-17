@@ -10,7 +10,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.exports.migrations.changelogs.MigrationDefinition
 
-trait IntegrationTestMigrationToolSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSuite {
+trait IntegrationTestMigrationToolSpec extends IntegrationTestSpec with GuiceOneAppPerSuite {
 
   val collectionUnderTest: String
   val changeLog: MigrationDefinition
