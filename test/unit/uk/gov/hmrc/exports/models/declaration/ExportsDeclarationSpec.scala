@@ -196,7 +196,7 @@ object ExportsDeclarationSpec {
       |      }
       |    ],
       |    "inlandModeOfTransportCode": "1",
-      |    "transportCrossingTheBorderNationality": { "countryName": "United Kingdom" },
+      |    "transportCrossingTheBorderNationality": { "countryCode": "United Kingdom" },
       |    "meansOfTransportCrossingTheBorderType": "11",
       |    "meansOfTransportCrossingTheBorderIDNumber": "Boaty McBoatface",
       |    "borderModeOfTransportCode": {

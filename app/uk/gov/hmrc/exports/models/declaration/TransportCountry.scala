@@ -16,17 +16,10 @@
 
 package uk.gov.hmrc.exports.models.declaration
 
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json._
 
-case class TransportCountry(countryName: Option[String])
+case class TransportCountry(countryCode: Option[String])
 
 object TransportCountry {
-  // TODO remove resilient reads once 5606 migration has been deployed successfully
-  private val reads: Reads[TransportCountry] = (
-    (__ \ "countryName").readNullable[String] and
-      (__ \ "countryCode").readNullable[String]
-  )((name, code) => TransportCountry(code.orElse(name)))
-  private val writes: Writes[TransportCountry] = Json.writes[TransportCountry]
-  implicit val format: Format[TransportCountry] = Format(reads, writes)
+  implicit val format: OFormat[TransportCountry] = Json.format[TransportCountry]
 }

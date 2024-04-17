@@ -60,7 +60,7 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
       "no departure transport, only border transport" in {
         val model = aDeclaration(
           withBorderTransport(meansOfTransportCrossingTheBorderType = Some("type"), meansOfTransportCrossingTheBorderIDNumber = Some("id")),
-          withTransportCountry(Some("United Kingdom")),
+          withTransportCountry(Some("GB")),
           withoutDepartureTransport()
         )
         val declaration = new Declaration()
@@ -76,7 +76,7 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
         val declaration = new Declaration()
 
         val model = aDeclaration(
-          withTransportCountry(Some("United Kingdom")),
+          withTransportCountry(Some("GB")),
           withDepartureTransport(meansOfTransportOnDepartureType = "type", meansOfTransportOnDepartureIDNumber = "id")
         )
         builder.buildThenAdd(model, declaration)
@@ -84,15 +84,6 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
         declaration.getBorderTransportMeans.getID.getValue must be("id")
         declaration.getBorderTransportMeans.getIdentificationTypeCode.getValue must be("type")
         declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue must be("GB")
-      }
-
-      "border transport nationality is a country code" in {
-        val model = aDeclaration(withTransportCountry(Some("PL")))
-        val declaration = new Declaration()
-
-        builder.buildThenAdd(model, declaration)
-
-        declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue must be("PL")
       }
 
       "unknown border transport nationality" in {
@@ -134,7 +125,7 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
       "fully populated" in {
         val model = aDeclaration(
           withBorderTransport(meansOfTransportCrossingTheBorderType = Some("type"), meansOfTransportCrossingTheBorderIDNumber = Some("id")),
-          withTransportCountry(Some("United Kingdom")),
+          withTransportCountry(Some("GB")),
           withDepartureTransport(borderModeOfTransportCode = ModeOfTransportCode.Road)
         )
         val declaration = new Declaration()
