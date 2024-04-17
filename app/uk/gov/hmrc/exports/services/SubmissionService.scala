@@ -198,13 +198,6 @@ class SubmissionService @Inject() (
       }
     }
 
-  def cancel(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationStatus] =
-    submissionRepository.findOne(Json.obj("eori" -> eori, "uuid" -> cancellation.submissionId)).flatMap {
-      case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationAlreadyRequested)
-      case Some(submission)                                             => sendCancellationRequest(submission, cancellation).map(_.status)
-      case _                                                            => Future.successful(NotFound)
-    }
-
   def cancelDeclaration(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationResult] =
     submissionRepository.findOne(Json.obj("eori" -> eori, "uuid" -> cancellation.submissionId)).flatMap {
       case Some(submission) if isSubmissionAlreadyCancelled(submission) => Future.successful(CancellationResult(CancellationAlreadyRequested, None))

@@ -46,7 +46,7 @@ class CancellationControllerSpec extends UnitSpec with AuthTestSupport {
     withAuthorizedUser()
   }
 
-  "CancellationController.create" should {
+  "CancellationController.createCancellation" should {
     val body = SubmissionCancellation("id", "ref", "mrn", "statement", "reason")
 
     val postRequest = FakeRequest("POST", "/cancellations").withBody(body)
