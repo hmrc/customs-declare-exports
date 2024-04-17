@@ -167,7 +167,7 @@ class TransportParserSpec extends UnitSpec {
       "the '/ BorderTransportMeans / RegistrationNationalityCode' element is present" in {
         val expectedValue = Some("GB")
         val result = transportParser.parse(transportCrossingTheBorderNationality(expectedValue))
-        result.toOption.get.transportCrossingTheBorderNationality.value.countryCode mustBe expectedValue
+        result.toOption.get.transportCrossingTheBorderNationality.value.countryName mustBe expectedValue
       }
     }
 

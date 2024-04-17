@@ -37,6 +37,20 @@ class TransportSpec extends UnitSpec {
       "meansOfTransportCrossingTheBorderIDNumber" -> "crossing-the-border-id-number"
     )
 
+    val pre5606Json = Json.obj(
+      "expressConsignment" -> Json.obj("answer" -> "Yes"),
+      "transportPayment" -> Json.obj("paymentMethod" -> "payment-method"),
+      "containers" -> Json.arr(
+        Json.obj("sequenceId" -> 1, "id" -> "container-id", "seals" -> Json.arr(Json.obj("sequenceId" -> 1, "id" -> "seal-id")))
+      ),
+      "borderModeOfTransportCode" -> Json.obj("code" -> "3"),
+      "meansOfTransportOnDepartureType" -> "means-of-transport-on-departure",
+      "meansOfTransportOnDepartureIDNumber" -> "means-of-transport-on-departure-id-number",
+      "transportCrossingTheBorderNationality" -> Json.obj("countryName" -> "crossing-the-border-nationality"),
+      "meansOfTransportCrossingTheBorderType" -> "crossing-the-border-type",
+      "meansOfTransportCrossingTheBorderIDNumber" -> "crossing-the-border-id-number"
+    )
+
     val transport = Transport(
       expressConsignment = Some(YesNoAnswer.yes),
       transportPayment = Some(TransportPayment(paymentMethod = "payment-method")),
@@ -51,11 +65,17 @@ class TransportSpec extends UnitSpec {
 
     "convert Transport object to JSON" in {
       val resultJson = Transport.format.writes(transport)
-      resultJson mustBe json
+      resultJson mustBe pre5606Json
     }
 
     "convert JSON to Transport object" in {
       val resultTransport = Transport.format.reads(json)
+      resultTransport mustBe JsSuccess(transport)
+    }
+
+    // TODO remove after 5606 migration
+    "convert pre-5606 JSON to Transport object" in {
+      val resultTransport = Transport.format.reads(pre5606Json)
       resultTransport mustBe JsSuccess(transport)
     }
   }

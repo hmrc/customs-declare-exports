@@ -76,7 +76,7 @@ object AddSequenceIdsToPackageInformationISpec {
       |      "meansOfTransportOnDepartureType": "10",
       |      "meansOfTransportOnDepartureIDNumber": "8888",
       |      "transportCrossingTheBorderNationality": {
-      |          "countryCode": "South Africa"
+      |          "countryName": "South Africa"
       |      },
       |      "meansOfTransportCrossingTheBorderType": "11",
       |      "meansOfTransportCrossingTheBorderIDNumber": "Superfast Hawk Millenium"
@@ -457,7 +457,7 @@ object AddSequenceIdsToPackageInformationISpec {
       |      "meansOfTransportOnDepartureType": "10",
       |      "meansOfTransportOnDepartureIDNumber": "8888",
       |      "transportCrossingTheBorderNationality": {
-      |          "countryCode": "South Africa"
+      |          "countryName": "South Africa"
       |      },
       |      "meansOfTransportCrossingTheBorderType": "11",
       |      "meansOfTransportCrossingTheBorderIDNumber": "Superfast Hawk Millenium"
