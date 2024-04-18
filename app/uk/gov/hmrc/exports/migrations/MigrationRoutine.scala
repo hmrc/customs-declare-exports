@@ -24,11 +24,12 @@ import uk.gov.hmrc.exports.migrations.changelogs.cache._
 import uk.gov.hmrc.exports.migrations.changelogs.emaildetails.RenameSendEmailDetailsToItem
 import uk.gov.hmrc.exports.migrations.changelogs.notification.{MakeParsedDetailsOptional, SplitTheNotificationsCollection}
 import uk.gov.hmrc.exports.migrations.changelogs.submission._
+import uk.gov.hmrc.exports.services.CountriesService
 
 import javax.inject.Inject
 
 @Singleton
-class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
+class MigrationRoutine @Inject() (appConfig: AppConfig, countriesService: CountriesService) extends Logging {
 
   logger.info("Starting migration with ExportsMigrationTool")
 
@@ -59,6 +60,7 @@ class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
     .register(new SetEnhancedStatusAsNonOptional())
     .register(new AddLastUpdatedToSubmissions())
     .register(new AddAssociatedSubmissionIdToDeclarations())
+    .register(new LogUnmappableCountryValues(countriesService))
 
   ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute()
 
