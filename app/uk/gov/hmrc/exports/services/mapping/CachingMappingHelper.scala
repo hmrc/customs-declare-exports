@@ -83,7 +83,7 @@ object CachingMappingHelper {
 
     def nationalExemptionCodeToClassification: Option[Classification] =
       nationalExemptionCode.flatMap(code =>
-        if (nationalAdditionalCodes.contains(code)) None
+        if (nationalAdditionalCodes.contains(code) || code == "VAT_NO") None
         else Some(toClassification(code, NationalAdditionalCode.value))
       )
 
