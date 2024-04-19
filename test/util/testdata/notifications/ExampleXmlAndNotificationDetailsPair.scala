@@ -336,4 +336,50 @@ object ExampleXmlAndNotificationDetailsPair {
     </MetaData>,
       asDomainModel = Seq.empty
     )
+
+  def exampleRejectNotificationWithSuppressedPointers(
+    mrn: String,
+    dateTime: String = TimeUtils.now().format(formatter304)
+  ): ExampleXmlAndNotificationDetailsPair =
+    ExampleXmlAndNotificationDetailsPair(
+      asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+        <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
+        <WCOTypeName>RES</WCOTypeName>
+        <ResponsibleCountryCode/>
+        <ResponsibleAgencyName/>
+        <AgencyAssignedCustomizationCode/>
+        <AgencyAssignedCustomizationVersionCode/>
+        <Response>
+          <FunctionCode>03</FunctionCode>
+          <FunctionalReferenceID>6be6c6f61f0346748016b823eeda669d</FunctionalReferenceID>
+          <IssueDateTime>
+            <DateTimeString formatCode="304">{dateTime}</DateTimeString>
+          </IssueDateTime>
+          <Error>
+            <ValidationCode>CDS10020</ValidationCode>
+            <Pointer>
+              <DocumentSectionCode>42A</DocumentSectionCode>
+            </Pointer>
+          </Error>
+          <Declaration>
+            <FunctionalReferenceID>NotificationTest</FunctionalReferenceID>
+            <ID>{mrn}</ID>
+            <RejectionDateTime>
+              <DateTimeString formatCode="304">20190328092916Z</DateTimeString>
+            </RejectionDateTime>
+            <VersionID>1</VersionID>
+          </Declaration>
+        </Response>
+      </MetaData>,
+      asDomainModel = Seq(
+        NotificationDetails(
+          mrn = mrn,
+          dateTimeIssued = ZonedDateTime.parse(dateTime, formatter304),
+          status = SubmissionStatus.REJECTED,
+          Some(1),
+          errors = Seq(NotificationError(validationCode = "CDS10020", pointer = None, None))
+        )
+      )
+    )
+
 }

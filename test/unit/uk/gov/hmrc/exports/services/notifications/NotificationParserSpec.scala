@@ -97,6 +97,16 @@ class NotificationParserSpec extends UnitSpec {
           compareNotificationSequences(result, testNotification.asDomainModel)
         }
       }
+
+      "contains error element with a suppressed pointer" should {
+        "ignore the pointer" in {
+          val testNotification = exampleRejectNotificationWithSuppressedPointers(mrn)
+
+          val result = notificationParser.parse(testNotification.asXml)
+
+          compareNotificationSequences(result, testNotification.asDomainModel)
+        }
+      }
     }
 
     "provided with notification containing multiple Response elements" should {
