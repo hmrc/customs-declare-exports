@@ -101,6 +101,7 @@ class NotificationParser extends Logging {
     val wcoPointer = Pointer(pointerSections)
     val exportsPointer = WCOPointerMappingService.mapWCOPointerToExportsPointer(wcoPointer)
     if (exportsPointer.isEmpty) logger.warn(s"Missing pointer mapping for [${wcoPointer}] found with error code [$validationCode]")
-    exportsPointer
+
+    if (exportsPointer.toString == "Some(suppressed)") None else exportsPointer
   }
 }
