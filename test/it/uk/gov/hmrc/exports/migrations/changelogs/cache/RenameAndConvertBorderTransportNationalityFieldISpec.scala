@@ -1,13 +1,11 @@
 package uk.gov.hmrc.exports.migrations.changelogs.cache
 
 import uk.gov.hmrc.exports.base.IntegrationTestMigrationToolSpec
-import uk.gov.hmrc.exports.services.CountriesService
 
 class RenameAndConvertBorderTransportNationalityFieldISpec extends IntegrationTestMigrationToolSpec {
 
-  private val countriesService = app.injector.instanceOf[CountriesService]
   override val collectionUnderTest = "declarations"
-  override val changeLog = new RenameAndConvertBorderTransportNationalityField(countriesService)
+  override val changeLog = new RenameAndConvertBorderTransportNationalityField
 
   "RenameAndConvertBorderTransportNationalityField migration" should {
 
@@ -84,7 +82,7 @@ object RenameAndConvertBorderTransportNationalityFieldISpec {
       |      "meansOfTransportOnDepartureType": "10",
       |      "meansOfTransportOnDepartureIDNumber": "8888",
       |      "transportCrossingTheBorderNationality": {
-      |          "countryName": "South Africa"
+      |          "countryName": "Norway"
       |      },
       |      "meansOfTransportCrossingTheBorderType": "11",
       |      "meansOfTransportCrossingTheBorderIDNumber": "Superfast Hawk Millenium"
@@ -852,7 +850,7 @@ object RenameAndConvertBorderTransportNationalityFieldISpec {
       |      "meansOfTransportOnDepartureType": "10",
       |      "meansOfTransportOnDepartureIDNumber": "8888",
       |      "transportCrossingTheBorderNationality": {
-      |          "countryName": "ZA"
+      |          "countryName": "NO"
       |      },
       |      "meansOfTransportCrossingTheBorderType": "11",
       |      "meansOfTransportCrossingTheBorderIDNumber": "Superfast Hawk Millenium"
@@ -1236,7 +1234,7 @@ object RenameAndConvertBorderTransportNationalityFieldISpec {
       |      "meansOfTransportOnDepartureType": "10",
       |      "meansOfTransportOnDepartureIDNumber": "8888",
       |      "transportCrossingTheBorderNationality": {
-      |          "countryCode": "ZA"
+      |          "countryCode": "NO"
       |      },
       |      "meansOfTransportCrossingTheBorderType": "11",
       |      "meansOfTransportCrossingTheBorderIDNumber": "Superfast Hawk Millenium"
