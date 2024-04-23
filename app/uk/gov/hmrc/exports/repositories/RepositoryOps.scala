@@ -275,10 +275,11 @@ object RepositoryOps {
       __.read[Instant](readFromIsoString)
 
   // Avoid the "MILLISECONDS" mismatch caused by comparing 2 dates in ISO format.
-  // e.g. "2024-02-06T09:40:58.7Z" and ""2024-02-06T09:40:58.700Z"
+  // e.g. "2024-02-06T09:40:58.7Z" and "2024-02-06T09:40:58.700Z"
   private def removeFinalZeroes(instant: Instant): String = {
     val result = instant.toString
-    if (result.endsWith("00Z")) s"${result.substring(0, result.length - 3)}Z"
+    if (!result.contains(".")) result // date without milliseconds, e.g. "2024-02-06T09:40:58Z"
+    else if (result.endsWith("00Z")) s"${result.substring(0, result.length - 3)}Z"
     else if (result.endsWith("0Z")) s"${result.substring(0, result.length - 2)}Z"
     else result
   }

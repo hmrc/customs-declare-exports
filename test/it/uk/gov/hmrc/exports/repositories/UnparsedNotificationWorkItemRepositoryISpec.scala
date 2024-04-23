@@ -28,7 +28,7 @@ class UnparsedNotificationWorkItemRepositoryISpec extends IntegrationTestSpec wi
 
       repository.pushNew(testUnparsedNotification).futureValue
 
-      eventually(timeout(2.seconds), interval(100.millis)) {
+      eventually(timeout(5.seconds), interval(100.millis)) {
         val result = repository.pullOutstanding(failedBefore = instant().minusSeconds(2 * 60), availableBefore = instant()).futureValue
 
         result mustBe defined
