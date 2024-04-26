@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.services.notifications.receiptactions
 import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
-import uk.gov.hmrc.exports.repositories.{ExternalAmendmentException, UnparsedNotificationWorkItemRepository}
+import uk.gov.hmrc.exports.repositories.UnparsedNotificationWorkItemRepository
 import uk.gov.hmrc.exports.util.TimeUtils.{defaultTimeZone, instant}
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Cancelled, Failed, Succeeded}
 import uk.gov.hmrc.mongo.workitem.WorkItem
@@ -60,18 +60,13 @@ class NotificationReceiptActionsRunner @Inject() (
         unparsedNotificationWorkItemRepository.complete(workItem.id, Succeeded)
       }
       .recoverWith { case throwable =>
-        val isExternalAmendmentException = throwable.isInstanceOf[ExternalAmendmentException]
-        if (isExternalAmendmentException) logger.warn(throwable.getMessage)
-
         if (workItem.failureCount + 1 >= config.parsingWorkItemsRetryLimit) {
           val msg = s"[UnparsedNotification parsing] Processing of id(${workItem.item.id}) cancelled as max retries reached!"
-          if (isExternalAmendmentException) logger.error(msg) else logger.error(msg, throwable)
+          logger.error(msg, throwable)
 
           unparsedNotificationWorkItemRepository.markAs(workItem.id, Cancelled)
         } else {
-          if (!isExternalAmendmentException)
-            logger.warn(s"[UnparsedNotification parsing] Processing of id(${workItem.item.id}) failed!", throwable)
-
+          logger.warn(s"[UnparsedNotification parsing] Processing of id(${workItem.item.id}) failed! Error is:\n\t${throwable.getMessage}")
           unparsedNotificationWorkItemRepository.markAs(workItem.id, Failed)
         }
       }

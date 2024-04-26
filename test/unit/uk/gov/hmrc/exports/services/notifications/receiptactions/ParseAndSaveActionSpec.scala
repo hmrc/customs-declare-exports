@@ -31,6 +31,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories._
 import uk.gov.hmrc.exports.services.audit.AuditService
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
+import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.mongo.MongoComponent
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -107,7 +108,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
     "provided with an 'external amendment' notification" that {
       "conflicts with a concurrent notification for a common Submission" should {
-        "trigger an ExternalAmendmentException" in {
+        "trigger an InternalServerException" in {
           val mongoClient = mock[MongoClient]
           val mongoComponent = mock[MongoComponent]
           val mongoSession = mock[SingleObservable[ClientSession]]
@@ -130,7 +131,7 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
           val parseAndSaveAction = new ParseAndSaveAction(notificationFactory, updateSubmissionOps, auditService)
 
-          intercept[ExternalAmendmentException] {
+          intercept[InternalServerException] {
             await(parseAndSaveAction.save(List(notificationForExternalAmendment)))
           }
         }
