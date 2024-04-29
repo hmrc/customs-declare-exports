@@ -127,6 +127,10 @@
     "wco" : "42A.67A.68A.$1.93A.$2"
   },
   {
+    "cds" : "items.$1.packageInformation.$2.id",
+    "wco" : "42A.67A.68A.$1.93A.$2"
+  },
+  {
     "cds" : "items.$1.packageInformation.$2.numberOfPackages",
     "wco" : "42A.67A.68A.$1.93A.$2.144"
   },
