@@ -84,9 +84,9 @@ class BorderTransportMeansBuilder @Inject() (countriesService: CountriesService)
 
     transport.transportCrossingTheBorderNationality.foreach {
       _.countryCode match {
-        case Some(countryName) =>
+        case Some(countryCode) =>
           countriesService.allCountries
-            .find(country => country.countryName == countryName || country.countryCode == countryName)
+            .find(country => country.countryCode == countryCode)
             .foreach(country => sendRegistrationNationalityCode(country.countryCode))
 
         case _ => sendRegistrationNationalityCode("GB")
