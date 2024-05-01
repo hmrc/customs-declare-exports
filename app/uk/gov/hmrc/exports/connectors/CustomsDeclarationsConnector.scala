@@ -54,10 +54,10 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: 
     logger.debug(s"CUSTOMS_DECLARATIONS response is  --> ${response.toString}")
     response match {
       case CustomsDeclarationsResponse(ACCEPTED, Some(conversationId)) => conversationId
-      case CustomsDeclarationsResponse(status, Some(message)) =>
-        throw new InternalServerException(s"Customs Declarations Service returned [$status] with error message: $message")
+      case CustomsDeclarationsResponse(status, Some(conversationId)) =>
+        throw new InternalServerException(s"Customs Declarations Service returned [$status] with conversationId: $conversationId")
       case CustomsDeclarationsResponse(status, _) =>
-        throw new InternalServerException(s"Customs Declarations Service returned [$status]")
+        throw new InternalServerException(s"Customs Declarations Service returned [$status] with no conversationId")
     }
   }
 
@@ -72,12 +72,10 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: 
 
           error match {
             case response: UpstreamErrorResponse if is4xx(response.statusCode) =>
-              val conversationId = response.headers.get("X-Conversation-ID") match {
-                case Some(data) => data.head
-                case None       => "No conversation ID found"
-              }
+              val conversationId = response.headers.get("X-Conversation-ID").map(_.head)
+              CustomsDeclarationsResponse(response.statusCode, conversationId)
+            case response: UpstreamErrorResponse => CustomsDeclarationsResponse(response.statusCode, Some(error.getMessage))
 
-              CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, Some(conversationId))
             case _ => CustomsDeclarationsResponse(Status.INTERNAL_SERVER_ERROR, Some(error.getMessage))
           }
         }
@@ -102,7 +100,7 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClient: 
         getHttpResponseStatusType(response) match {
           case ApplicationErrorStatus =>
             throw UpstreamErrorResponse(
-              message = s"Invalid request made to Customs Declarations API ${getHttpResponseStatusType(response)}",
+              message = s"Invalid request made to Customs Declarations API ${response.status}",
               statusCode = response.status,
               reportAs = Status.INTERNAL_SERVER_ERROR,
               headers = response.headers
