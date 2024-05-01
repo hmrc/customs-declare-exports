@@ -260,12 +260,12 @@ class UpdateSubmissionsTransactionalOps @Inject() (
 
   private def deleteAnyAmendmentDraftDeclaration(
     session: ClientSession,
-    submission: Submission,
-    optSubmission: Option[Submission]
+    preUpdateSubmission: Submission,
+    postUpdateSubmission: Option[Submission]
   ): Future[Option[Submission]] =
-    optSubmission match {
+    postUpdateSubmission match {
       case Some(submissionWithNewAction) =>
-        submission.latestDecId match {
+        preUpdateSubmission.latestDecId match {
           case Some(latestDecId) =>
             val filter = and(
               equal("eori", submissionWithNewAction.eori),
@@ -278,7 +278,6 @@ class UpdateSubmissionsTransactionalOps @Inject() (
         }
 
       case _ =>
-        logger.error(s"Cannot add an (external amendment) 'Action' to Submission(${submission.uuid})")
         Future.successful(None)
     }
 }

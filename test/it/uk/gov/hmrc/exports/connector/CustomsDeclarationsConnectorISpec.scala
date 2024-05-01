@@ -108,6 +108,15 @@ class CustomsDeclarationsConnectorISpec extends IntegrationTestSpec with Exports
         }
       }
 
+      "request is bad - 400" in {
+        val headers = Map("X-Conversation-ID" -> UUID.randomUUID.toString)
+        postToDownstreamService(appConfig.amendDeclarationUri, BAD_REQUEST, None, headers)
+
+        intercept[InternalServerException] {
+          await(connector.submitAmendment(declarantEoriValue, expectedSubmissionRequestPayload(id)))
+        }
+      }
+
       "request is not processed - 500" in {
         val headers = Map("X-Conversation-ID" -> UUID.randomUUID.toString)
         postToDownstreamService(appConfig.amendDeclarationUri, INTERNAL_SERVER_ERROR, None, headers)
