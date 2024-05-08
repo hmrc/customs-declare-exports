@@ -28,6 +28,8 @@ class ConsignmentConsignorBuilderSpec extends UnitSpec with ExportsDeclarationBu
 
   val mockCountriesService = mock[CountriesService]
   when(mockCountriesService.getCountryCode(any())).thenReturn(Some("GB"))
+  // TODO Resilient code to handle names and ISO codes to be removed in CEDS-5776
+  when(mockCountriesService.getOrPassCountryCode(any())).thenReturn(Some("GB"))
 
   Seq(DeclarationType.CLEARANCE).map { declarationType =>
     "ConsignorBuilder" should {
@@ -89,7 +91,7 @@ class ConsignmentConsignorBuilderSpec extends UnitSpec with ExportsDeclarationBu
         }
 
         "'address.fullname' is not supplied" in {
-          when(mockCountriesService.getCountryCode(any())).thenReturn(Some("PL"))
+          when(mockCountriesService.getOrPassCountryCode(any())).thenReturn(Some("PL"))
           val builder = new ConsignmentConsignorBuilder(mockCountriesService)
 
           val model =

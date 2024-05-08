@@ -69,7 +69,9 @@ class ExporterBuilder @Inject() (countriesService: CountriesService) extends Mod
     addressPostcodeIDType.setValue(address.postCode)
 
     val addressCountryCodeType = new AddressCountryCodeType
-    addressCountryCodeType.setValue(countriesService.getCountryCode(address.country).getOrElse(""))
+    // TODO Resilient code to handle names and ISO codes to be removed in CEDS-5776
+    val valueToSet = countriesService.getOrPassCountryCode(address.country).getOrElse("")
+    addressCountryCodeType.setValue(valueToSet)
 
     declarantAddress.setLine(addressLineTextType)
     declarantAddress.setCityName(addressCityNameTextType)

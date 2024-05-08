@@ -82,7 +82,9 @@ class ConsignmentConsignorBuilder @Inject() (countriesService: CountriesService)
 
     if (address.country.nonEmpty) {
       val countryCode = new AddressCountryCodeType
-      countryCode.setValue(countriesService.getCountryCode(address.country).getOrElse(""))
+      // TODO Resilient code to handle names and ISO codes to be removed in CEDS-5776
+      val valueToSet = countriesService.getOrPassCountryCode(address.country).getOrElse("")
+      countryCode.setValue(valueToSet)
       consignorAddress.setCountryCode(countryCode)
 
     }

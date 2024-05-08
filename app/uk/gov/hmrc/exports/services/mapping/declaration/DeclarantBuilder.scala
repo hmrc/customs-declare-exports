@@ -85,7 +85,9 @@ class DeclarantBuilder @Inject() (countriesService: CountriesService) extends Mo
     addressPostcodeIDType.setValue(address.postCode)
 
     val addressCountryCodeType = new AddressCountryCodeType
-    addressCountryCodeType.setValue(deriveCountryCode(address.country))
+    // TODO Resilient code to handle names and ISO codes to be removed in CEDS-5776
+    val valueToSet = countriesService.getOrPassCountryCode(address.country).getOrElse("")
+    addressCountryCodeType.setValue(valueToSet)
 
     declarantAddress.setLine(addressLineTextType)
     declarantAddress.setCityName(addressCityNameTextType)
@@ -94,12 +96,6 @@ class DeclarantBuilder @Inject() (countriesService: CountriesService) extends Mo
 
     declarantAddress
   }
-
-  private def deriveCountryCode(addressCountry: String): String =
-    countriesService.allCountries
-      .find(country => addressCountry.contains(country.countryName))
-      .map(_.countryCode)
-      .getOrElse("")
 
   private def isDefined(declarantDetails: DeclarantDetails): Boolean =
     declarantDetails.details.eori.isDefined || declarantDetails.details.address.isDefined
