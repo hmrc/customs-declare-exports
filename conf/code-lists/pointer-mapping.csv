@@ -60,13 +60,14 @@
 42A.67A.68A.$1.02A,declaration.items.$1.additionalDocument
 42A.67A.68A.$1.02A.$2.D005,declaration.items.$1.additionalDocument.$2.documentIdentifier
 42A.67A.68A.$1.02A.D031,declaration.items.$1.additionalDocument.documentTypeCode
+42A.67A.68A.$1.02A.$2.D031,declaration.items.$1.additionalDocument.$2.documentTypeCode
 42A.67A.68A.$1.02A.D006,declaration.items.$1.additionalDocument.documentTypeCode
 42A.67A.68A.$1.02A.$2.D006,declaration.items.$1.additionalDocument.$2.documentTypeCode
 42A.67A.68A.$1.02A.$2.276.276,declaration.items.$1.additionalDocument.$2.dateOfValidity
 42A.67A.68A.$1.02A.$2.360,declaration.items.$1.additionalDocument.$2.documentStatus
 42A.67A.68A.$1.02A.$2.D028,declaration.items.$1.additionalDocument.$2.documentStatusReason
 42A.67A.68A.$1.02A.$2.17B.R058,declaration.items.$1.additionalDocument.$2.issuingAuthorityName
-42A.67A.68A.$1.02A.$2.22C.145,declaration.items.$1.additionalDocument.$2.documentWriteOff.documentQuantity
+42A.67A.68A.$1.02A.$2.22C.502,declaration.items.$1.additionalDocument.$2.documentWriteOff.documentQuantity
 42A.67A.68A.$1.03A.226,declaration.items.$1.additionalInformation.code
 42A.67A.68A.$1.03A.$2.226,declaration.items.$1.additionalInformation.$2.code
 42A.67A.68A.$1.03A.$2.225,declaration.items.$1.additionalInformation.$2.description
@@ -99,3 +100,6 @@
 42A.06A,suppressed
 42A.06A.$1.97A,suppressed
 42A.D014,suppressed
+42A.67A.68A.02A.D031,suppressed
+42A.67A.68A.02A.D006,suppressed
+42A.03A.$1.226,suppressed
