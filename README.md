@@ -39,7 +39,7 @@ This repository contains unit and integration tests for the service. In order to
 ## Test Only endpoints
 To enable these endpoint you must specify at startup the test-only conf file like this:
 
-`sbt run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes`
+`sbt run -Dplay.http.router=testOnlyDoNotUseInAppConf.Routes`
 
 ### /test-only/create-submitted-dec-record
 This endpoint is designed to quickly insert all the required db documents into the collections to represent a new accepted declaration submission. It does not make any downstream requests or auth checks
