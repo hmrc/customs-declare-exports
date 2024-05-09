@@ -27,6 +27,8 @@ class AgentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   val mockCountriesService = mock[CountriesService]
   when(mockCountriesService.getCountryCode(any())).thenReturn(Some("GB"))
+  // TODO Resilient code to handle names and ISO codes to be removed in CEDS-5776
+  when(mockCountriesService.getOrPassCountryCode(any())).thenReturn(Some("GB"))
 
   val representativeEori = "9GB1234567ABCDEF"
   val declarantEori = "DEC_EORI"

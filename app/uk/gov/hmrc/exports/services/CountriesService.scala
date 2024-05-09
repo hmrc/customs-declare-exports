@@ -44,4 +44,10 @@ class CountriesService @Inject() (environment: Environment) {
 
   def getCountryCode(name: String): Option[String] =
     allCountries.find(country => country.countryName == name).map(_.countryCode)
+
+  // TODO Resilient code to handle names and ISO codes to be removed in CEDS-5776
+  def getOrPassCountryCode(name: String): Option[String] = getCountryCode(name).fold {
+    if (allCountries.exists(_.countryCode == name)) Some(name)
+    else None
+  }(Some(_))
 }
