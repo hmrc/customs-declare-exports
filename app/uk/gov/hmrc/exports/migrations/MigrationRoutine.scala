@@ -61,6 +61,7 @@ class MigrationRoutine @Inject() (appConfig: AppConfig) extends Logging {
     .register(new AddAssociatedSubmissionIdToDeclarations())
     .register(new RenameAndConvertBorderTransportNationalityField())
     .register(new LogUnmappableCountryValues())
+    .register(new ConvertDetailsCountryValuesToIsoCodes())
 
   ExportsMigrationTool(db, migrationsRegistry, lockManagerConfig).execute()
 
