@@ -85,13 +85,10 @@ class ConsignmentCarrierBuilder @Inject() (countriesService: CountriesService) e
     postcode.setValue(address.postCode)
     carrierAddress.setPostcodeID(postcode)
 
-    if (address.country.nonEmpty) {
-      val countryCode = new AddressCountryCodeType
-      // TODO Resilient code to handle names and ISO codes to be removed in CEDS-5776
-      val valueToSet = countriesService.getOrPassCountryCode(address.country).getOrElse("")
-      countryCode.setValue(valueToSet)
-      carrierAddress.setCountryCode(countryCode)
-    }
+    val countryCode = new AddressCountryCodeType
+    countryCode.setValue(address.country)
+    carrierAddress.setCountryCode(countryCode)
+
     carrierAddress
   }
 }

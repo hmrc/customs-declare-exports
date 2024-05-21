@@ -66,39 +66,5 @@ class CountriesServiceSpec extends UnitSpec {
         })
       }
     }
-
-    // TODO Resilient code to handle names and ISO codes to be removed in CEDS-5776
-    "getOrPassCountryCode" should {
-      val validCountryCodes = validCountries.map(_.countryCode)
-      val validCountryCodeGen = Gen.oneOf(validCountryCodes)
-      val invalidCountryCodesGen = Gen.alphaStr.suchThat(str => !validCountryNames.contains(str) && !validCountryCodes.contains(str) && str.nonEmpty)
-
-      "return expected code when name is valid" in {
-        check(forAll(validCountriesGen) { expectedCountryName =>
-          val code = countriesService.getOrPassCountryCode(expectedCountryName)
-          val returnedCountryName = validCountries.find(_.countryCode == code.get).map(_.countryName)
-          returnedCountryName contains expectedCountryName
-        })
-      }
-
-      "pass through when code is valid" in {
-        check(forAll(validCountryCodeGen) { expectedCountryCode =>
-          val code = countriesService.getOrPassCountryCode(expectedCountryCode)
-          code contains expectedCountryCode
-        })
-      }
-
-      "return None when input is invalid" in {
-        check(forAll(invalidCountryCodesGen) { countryName =>
-          countriesService.getOrPassCountryCode(countryName).isEmpty
-        })
-      }
-
-      "return None even when a substring is a valid country name" in {
-        check(forAll(invalidCountryCodesGen, validCountriesGen) { (invalidCountryName, validCountryName) =>
-          countriesService.getOrPassCountryCode(invalidCountryName + validCountryName).isEmpty
-        })
-      }
-    }
   }
 }

@@ -28,8 +28,7 @@ import wco.datamodel.wco.dec_dms._2.Declaration
 class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   private val mockCountriesService = mock[CountriesService]
-  // TODO Resilient code to handle names and ISO codes to be removed in CEDS-5776
-  when(mockCountriesService.getOrPassCountryCode(any())).thenReturn(Some("GB"))
+  when(mockCountriesService.getCountryCode(any())).thenReturn(Some("GB"))
 
   "ConsignmentCarrierBuilderSpec" should {
 
@@ -69,13 +68,10 @@ class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuil
           }
 
           "eori is empty" in {
-            when(mockCountriesService.getOrPassCountryCode(any())).thenReturn(Some("GB"))
+            when(mockCountriesService.getCountryCode(any())).thenReturn(Some("GB"))
             // Given
             val model = aDeclaration(
-              withCarrierDetails(
-                eori = None,
-                address = Some(Address("name", "line", "city", "postcode", "United Kingdom, Great Britain, Northern Ireland"))
-              ),
+              withCarrierDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "GB"))),
               withType(declarationType)
             )
             val consignment = new Declaration.Consignment()
@@ -121,10 +117,10 @@ class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuil
           }
 
           "invalid country" in {
-            when(mockCountriesService.getOrPassCountryCode(any())).thenReturn(None)
+            when(mockCountriesService.getCountryCode(any())).thenReturn(None)
             // Given
             val model = aDeclaration(
-              withCarrierDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "other"))),
+              withCarrierDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", ""))),
               withType(declarationType)
             )
             val consignment = new Declaration.Consignment()
