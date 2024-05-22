@@ -24,7 +24,7 @@ object Paginated {
 
   def apply[T](results: T*): Paginated[T] = Paginated[T](results, Page(), results.size.toLong)
 
-  def empty[T](page: Page): Paginated[T] = Paginated(Seq.empty[T], page, 0L)
+  def empty[T](page: Page): Paginated[T] = Paginated(List.empty[T], page, 0L)
 
   implicit def writes[T](implicit fmt: Writes[T]): Writes[Paginated[T]] = new Writes[Paginated[T]] {
     override def writes(paged: Paginated[T]): JsValue =

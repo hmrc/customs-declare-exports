@@ -40,7 +40,6 @@ trait HasMrn {
 }
 
 case class LocalReferenceNumber(value: String) extends AnyVal
-case class Ducr(value: String) extends AnyVal
 case class Mrn(value: String)
 
 case class Eori(value: String)

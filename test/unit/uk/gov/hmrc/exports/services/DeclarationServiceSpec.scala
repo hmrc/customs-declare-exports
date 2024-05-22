@@ -27,7 +27,7 @@ import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.services.DeclarationService.{CREATED, FOUND}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 
-import scala.concurrent.ExecutionContext.global
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
@@ -74,18 +74,6 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
     }
   }
 
-  "Find" should {
-    "delegate to the repository" in {
-      val declaration = mock[ExportsDeclaration]
-      val search = mock[DeclarationSearch]
-      val page = mock[Page]
-      val sort = mock[DeclarationSort]
-      given(declarationRepository.find(search, page, sort)).willReturn(Future.successful(Paginated(declaration)))
-
-      service.find(search, page, sort).futureValue mustBe Paginated(declaration)
-    }
-  }
-
   "Find by ID & EORI" should {
     "delegate to the repository" in {
       val declaration = mock[ExportsDeclaration]
@@ -102,7 +90,7 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
     "return a value indicating that a draft declaration with 'parentDeclarationId' equal to provided parentId was found" in {
       when(declarationRepository.findOne(any[JsValue]())).thenReturn(Future.successful(Some(aDeclaration(withId(declarationId)))))
 
-      val result = service.findOrCreateDraftFromParent(eori, parentId, ERRORS, false)(global).futureValue
+      val result = service.findOrCreateDraftFromParent(eori, parentId, ERRORS, false).futureValue
       result mustBe Some(FOUND -> declarationId)
     }
 
@@ -111,7 +99,7 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
       when(declarationRepository.findOne(any[JsValue]())).thenReturn(Future.successful(None), Future.successful(Some(declaration)))
       when(declarationRepository.create(any[ExportsDeclaration]())).thenReturn(Future.successful(declaration))
 
-      val result = service.findOrCreateDraftFromParent(eori, parentId, ERRORS, false)(global).futureValue
+      val result = service.findOrCreateDraftFromParent(eori, parentId, ERRORS, false).futureValue
       result mustBe Some(CREATED -> declarationId)
 
       verify(declarationRepository, times(2)).findOne(any[JsValue])
@@ -120,7 +108,7 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
     "return None when a parent declaration, specified by parentId, was not found" in {
       when(declarationRepository.findOne(any[JsValue])).thenReturn(Future.successful(None), Future.successful(None))
 
-      val result = service.findOrCreateDraftFromParent(eori, parentId, ERRORS, false)(global).futureValue
+      val result = service.findOrCreateDraftFromParent(eori, parentId, ERRORS, false).futureValue
       result mustBe None
 
       verify(declarationRepository, times(2)).findOne(any[JsValue])

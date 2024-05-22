@@ -54,12 +54,12 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
     removeEvery(Json.obj(s"$meta.status" -> DeclarationStatus.DRAFT.toString, s"$meta.updatedDateTime" -> Json.obj("$lte" -> expiryDate)))
   }
 
-  def find(search: DeclarationSearch, page: Page, sort: DeclarationSort): Future[Paginated[ExportsDeclaration]] = {
+  def fetchPage(search: DeclarationSearch, page: Page, sort: DeclarationSort): Future[(Seq[ExportsDeclaration], Long)] = {
     val filter = BsonDocument(Json.toJson(search).toString)
 
     metrics.timeAsyncCall(Timers.declarationFindAllTimer) {
       for {
-        results <- collection
+        declarations <- collection
           .find(filter)
           .sort(BsonDocument(Json.obj(sort.by.toString -> sort.direction.id).toString))
           .skip((page.index - 1) * page.size)
@@ -67,7 +67,7 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
           .limit(page.size)
           .toFuture()
         total <- collection.countDocuments(filter).toFuture()
-      } yield Paginated(currentPageElements = results, page = page, total = total)
+      } yield (declarations, total)
     }
   }
 

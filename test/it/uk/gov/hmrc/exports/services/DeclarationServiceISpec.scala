@@ -14,7 +14,7 @@ class DeclarationServiceISpec extends IntegrationTestSpec with MockMetrics {
 
   private val declarationRepository = instanceOf[DeclarationRepository]
 
-  private val declarationService = new DeclarationService(declarationRepository)
+  private val declarationService = new DeclarationService(declarationRepository)(global)
 
   val eori = Eori("eori")
   val parentId = "parentId"
@@ -30,7 +30,7 @@ class DeclarationServiceISpec extends IntegrationTestSpec with MockMetrics {
 
       "a draft declaration with 'parentDeclarationId' equal to the given parentId was NOT found and" when {
         "a 'parent' declaration was NOT found too" in {
-          val result = declarationService.findOrCreateDraftFromParent(eori, parentId, ERRORS, false)(global)
+          val result = declarationService.findOrCreateDraftFromParent(eori, parentId, ERRORS, false)
           result.futureValue mustBe None
         }
       }
@@ -39,7 +39,7 @@ class DeclarationServiceISpec extends IntegrationTestSpec with MockMetrics {
         val declaration = aDeclaration(withEori(eori), withStatus(DRAFT))
         declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
 
-        val result = declarationService.findOrCreateDraftFromParent(eori, declaration.id, ERRORS, true)(global)
+        val result = declarationService.findOrCreateDraftFromParent(eori, declaration.id, ERRORS, true)
         result.futureValue mustBe None
       }
     }
@@ -50,7 +50,7 @@ class DeclarationServiceISpec extends IntegrationTestSpec with MockMetrics {
         val declaration = aDeclaration(withEori(eori), withParentDeclarationId(parentId), withStatus(DRAFT))
         declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
 
-        val result = declarationService.findOrCreateDraftFromParent(eori, parentId, ERRORS, false)(global)
+        val result = declarationService.findOrCreateDraftFromParent(eori, parentId, ERRORS, false)
         result.futureValue.value mustBe (FOUND, declaration.id)
       }
 
@@ -58,7 +58,7 @@ class DeclarationServiceISpec extends IntegrationTestSpec with MockMetrics {
         val declaration = aDeclaration(withEori(eori), withParentDeclarationId(parentId), withStatus(AMENDMENT_DRAFT))
         declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
 
-        val result = declarationService.findOrCreateDraftFromParent(eori, parentId, ERRORS, true)(global)
+        val result = declarationService.findOrCreateDraftFromParent(eori, parentId, ERRORS, true)
         result.futureValue.value mustBe (FOUND, declaration.id)
       }
     }
@@ -69,7 +69,7 @@ class DeclarationServiceISpec extends IntegrationTestSpec with MockMetrics {
         val declaration = aDeclaration(withEori(eori))
         declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
 
-        val result = declarationService.findOrCreateDraftFromParent(eori, declaration.id, CLEARED, false)(global).futureValue.value
+        val result = declarationService.findOrCreateDraftFromParent(eori, declaration.id, CLEARED, false).futureValue.value
         result._1 mustBe CREATED
 
         val meta = declarationRepository.get("id", result._2).futureValue.declarationMeta
@@ -84,7 +84,7 @@ class DeclarationServiceISpec extends IntegrationTestSpec with MockMetrics {
         val declaration = aDeclaration(withEori(eori), withAssociatedSubmissionId(Some(submissionId)))
         declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
 
-        val result = declarationService.findOrCreateDraftFromParent(eori, declaration.id, ERRORS, true)(global).futureValue.value
+        val result = declarationService.findOrCreateDraftFromParent(eori, declaration.id, ERRORS, true).futureValue.value
         result._1 mustBe CREATED
 
         val meta = declarationRepository.get("id", result._2).futureValue.declarationMeta
@@ -158,7 +158,9 @@ class DeclarationServiceISpec extends IntegrationTestSpec with MockMetrics {
 
     "return Some declaration" when {
       for (status <- Seq(DRAFT, AMENDMENT_DRAFT))
+        // scalastyle:off
         s"a draft declaration with a matching 'parentDeclarationId' and a parentEnhanced status of 'ERROR' and parentDeclarationEnhancedStatus of '$status' existis" in {
+          // scalastyle:on
           val declaration = aDeclaration(
             withEori(eori),
             withParentDeclarationId(parentId),

@@ -20,7 +20,11 @@ import play.api.libs.json.Format
 import uk.gov.hmrc.exports.util.EnumJson
 
 object DeclarationStatus extends Enumeration {
+
   type DeclarationStatus = Value
   implicit val format: Format[DeclarationStatus.Value] = EnumJson.format(DeclarationStatus)
+
   val INITIAL, DRAFT, COMPLETE, AMENDMENT_DRAFT = Value
+
+  val draftStatuses = List(AMENDMENT_DRAFT, DRAFT)
 }

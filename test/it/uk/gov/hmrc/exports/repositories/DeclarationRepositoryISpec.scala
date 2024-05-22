@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.repositories
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DRAFT
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 
 import java.time.{LocalDate, ZoneOffset}
@@ -83,9 +84,8 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
         val declaration3 = aDeclaration(withId("id3"), withEori("eori2"))
         givenADeclarationExists(declaration1, declaration2, declaration3)
 
-        val page = Page(index = 1, size = 10)
-        val paginated = Paginated(Seq(declaration1, declaration2), page, 2)
-        repository.find(DeclarationSearch(eori1), page, DeclarationSort()).futureValue mustBe paginated
+        val result = repository.fetchPage(DeclarationSearch(eori1), Page(), DeclarationSort())
+        result.futureValue mustBe List(declaration1, declaration2) -> 2
       }
 
       "there are multiple pages of results" in {
@@ -98,34 +98,25 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
 
         val expectedTotal = 5L
 
-        val page1 = Page(index = 1, size = 2)
-        repository.find(DeclarationSearch(eori), page1, DeclarationSort()).futureValue mustBe Paginated(
-          Seq(declaration1, declaration2),
-          page1,
-          expectedTotal
-        )
+        val result1 = repository.fetchPage(DeclarationSearch(eori), Page(index = 1, size = 2), DeclarationSort())
+        result1.futureValue mustBe List(declaration1, declaration2) -> expectedTotal
 
-        val page2 = Page(index = 2, size = 2)
-        repository.find(DeclarationSearch(eori), page2, DeclarationSort()).futureValue mustBe Paginated(
-          Seq(declaration3, declaration4),
-          page2,
-          expectedTotal
-        )
+        val result2 = repository.fetchPage(DeclarationSearch(eori), Page(index = 2, size = 2), DeclarationSort())
+        result2.futureValue mustBe List(declaration3, declaration4) -> expectedTotal
 
-        val page3 = Page(index = 3, size = 2)
-        repository.find(DeclarationSearch(eori), page3, DeclarationSort()).futureValue mustBe Paginated(Seq(declaration5), page3, expectedTotal)
+        val result3 = repository.fetchPage(DeclarationSearch(eori), Page(index = 3, size = 2), DeclarationSort())
+        result3.futureValue mustBe List(declaration5) -> expectedTotal
       }
 
       "some exist with status DRAFT" in {
-        val declaration1 = aDeclaration(withId("id1"), withStatus(DeclarationStatus.DRAFT))
-        val declaration2 = aDeclaration(withId("id2"), withStatus(DeclarationStatus.DRAFT))
+        val declaration1 = aDeclaration(withId("id1"), withStatus(DRAFT))
+        val declaration2 = aDeclaration(withId("id2"), withStatus(DRAFT))
         val declaration3 = aDeclaration(withId("id3"), withStatus(DeclarationStatus.COMPLETE))
         givenADeclarationExists(declaration1, declaration2, declaration3)
 
-        val page = Page(index = 1, size = 10)
         repository
-          .find(DeclarationSearch(eori, Seq(DeclarationStatus.DRAFT)), page, DeclarationSort())
-          .futureValue mustBe Paginated(Seq(declaration1, declaration2), page, 2)
+          .fetchPage(DeclarationSearch(eori, List(DRAFT)), Page(), DeclarationSort())
+          .futureValue mustBe List(declaration1, declaration2) -> 2
       }
     }
 
@@ -135,10 +126,9 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
       val declaration3 = aDeclaration(withUpdateDate(year, 1, 3))
       givenADeclarationExists(declaration3, declaration1, declaration2)
 
-      val page = Page(index = 1, size = 10)
       repository
-        .find(DeclarationSearch(eori), page, DeclarationSort(SortBy.UPDATED, SortDirection.ASC))
-        .futureValue mustBe Paginated(Seq(declaration1, declaration2, declaration3), page, 3)
+        .fetchPage(DeclarationSearch(eori), Page(), DeclarationSort(SortBy.UPDATED, SortDirection.ASC))
+        .futureValue mustBe List(declaration1, declaration2, declaration3) -> 3
     }
 
     "retrieve all existing declarations in descending order" in {
@@ -147,18 +137,17 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
       val declaration3 = aDeclaration(withUpdateDate(year, 1, 3))
       givenADeclarationExists(declaration3, declaration1, declaration2)
 
-      val page = Page(index = 1, size = 10)
       repository
-        .find(DeclarationSearch(eori), page, DeclarationSort(SortBy.UPDATED, SortDirection.DES))
-        .futureValue mustBe Paginated(Seq(declaration3, declaration2, declaration1), page, 3)
+        .fetchPage(DeclarationSearch(eori), Page(), DeclarationSort(SortBy.UPDATED, SortDirection.DESC))
+        .futureValue mustBe List(declaration3, declaration2, declaration1) -> 3
     }
 
     "mark as completed a declaration" in {
-      val declaration = aDeclaration(withStatus(DeclarationStatus.DRAFT))
-      repository.create(declaration).futureValue.status mustBe DeclarationStatus.DRAFT
+      val declaration = aDeclaration(withStatus(DRAFT))
+      repository.create(declaration).futureValue.status mustBe DRAFT
 
       val eori = Eori(declaration.eori)
-      repository.markStatusAsComplete(eori, declaration.id, declaration.id).futureValue.value.status mustBe DeclarationStatus.DRAFT
+      repository.markStatusAsComplete(eori, declaration.id, declaration.id).futureValue.value.status mustBe DRAFT
       val updatedRec = repository.findOne("id", declaration.id).futureValue.value
       updatedRec.status mustBe DeclarationStatus.COMPLETE
       updatedRec.declarationMeta.associatedSubmissionId mustBe Some(declaration.id)
@@ -168,7 +157,7 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
       val declaration = aDeclaration()
       repository.create(declaration).futureValue.status mustBe DeclarationStatus.COMPLETE
       val updatedRec = repository.revertStatusToDraft(declaration).futureValue.value
-      updatedRec.status mustBe DeclarationStatus.DRAFT
+      updatedRec.status mustBe DRAFT
       updatedRec.declarationMeta.associatedSubmissionId mustBe None
     }
 
@@ -184,9 +173,7 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
 
       "no declaration exists with the given eori" in {
         givenADeclarationExists(aDeclaration(withId("id"), withEori("some-other-eori")))
-
-        repository.find(DeclarationSearch(eori), Page(), DeclarationSort()).futureValue mustBe Paginated
-          .empty[ExportsDeclaration](Page())
+        repository.fetchPage(DeclarationSearch(eori), Page(), DeclarationSort()).futureValue mustBe List.empty -> 0L
       }
 
       "attempting to mark as completed a non-existing declaration" in {
@@ -218,9 +205,9 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
     }
 
     "remove all expired draft declarations" in {
-      val draftDeclarationExpired1 = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(year, 1, 1))
-      val draftDeclarationExpired2 = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(year, 1, 1))
-      val draftDeclarationOngoing = aDeclaration(withStatus(DeclarationStatus.DRAFT), withUpdateDate(year, 3, 1))
+      val draftDeclarationExpired1 = aDeclaration(withStatus(DRAFT), withUpdateDate(year, 1, 1))
+      val draftDeclarationExpired2 = aDeclaration(withStatus(DRAFT), withUpdateDate(year, 1, 1))
+      val draftDeclarationOngoing = aDeclaration(withStatus(DRAFT), withUpdateDate(year, 3, 1))
       val completedDeclaration = aDeclaration(withStatus(DeclarationStatus.COMPLETE), withUpdateDate(year, 1, 1))
       givenADeclarationExists(draftDeclarationExpired1, draftDeclarationExpired2, draftDeclarationOngoing, completedDeclaration)
 
@@ -230,10 +217,9 @@ class DeclarationRepositoryISpec extends IntegrationTestSpec {
       count mustBe 2
       collectionSize mustBe 2
 
-      val page = Page(index = 1, size = 10)
       repository
-        .find(DeclarationSearch(eori), page, DeclarationSort(SortBy.UPDATED, SortDirection.ASC))
-        .futureValue mustBe Paginated(Seq(completedDeclaration, draftDeclarationOngoing), page, 2)
+        .fetchPage(DeclarationSearch(eori), Page(), DeclarationSort(SortBy.UPDATED, SortDirection.ASC))
+        .futureValue mustBe List(completedDeclaration, draftDeclarationOngoing) -> 2
     }
   }
 

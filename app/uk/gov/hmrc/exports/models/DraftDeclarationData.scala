@@ -16,16 +16,23 @@
 
 package uk.gov.hmrc.exports.models
 
-import play.api.libs.json.{Json, Writes}
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 
-case class DeclarationSearch(eori: Eori, statuses: Seq[DeclarationStatus] = List.empty[DeclarationStatus])
+import java.time.Instant
 
-object DeclarationSearch {
-  // This serializes to a Mongo Query. If the query needs to be more advanced we will need to write a custom writes/reads
-  implicit val writes: Writes[DeclarationSearch] = Writes[DeclarationSearch] {
-    case DeclarationSearch(eori, Seq()) => Json.obj("eori" -> Json.toJson(eori))
-    case DeclarationSearch(eori, statuses) =>
-      Json.obj("eori" -> Json.toJson(eori), "declarationMeta.status" -> Json.obj("$in" -> Json.toJson(statuses)))
-  }
+case class DraftDeclarationData(id: String, ducr: Option[String], status: DeclarationStatus, updatedDateTime: Instant)
+
+object DraftDeclarationData {
+
+  def apply(declaration: ExportsDeclaration): DraftDeclarationData =
+    DraftDeclarationData(
+      declaration.id,
+      declaration.consignmentReferences.flatMap(_.ducr.map(_.ducr)),
+      declaration.status,
+      declaration.declarationMeta.updatedDateTime
+    )
+
+  implicit val format: OFormat[DraftDeclarationData] = Json.format[DraftDeclarationData]
 }
