@@ -93,17 +93,11 @@ object GenerateDraftDecController extends ExportsDeclarationBuilder {
       withDepartureTransport(TransportLeavingTheBorder(Some(Maritime)), "10", "WhTGZVW"),
       withContainerData(Container(1, "container", Seq(Seal(1, "seal1")))),
       withPreviousDocuments(PreviousDocument("271", "zPoj 7Szx1K", None)),
-      withExporterDetails(
-        None,
-        Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "United States of America (the), Including Puerto Rico"))
-      ),
+      withExporterDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "US"))),
       withDeclarantDetails(Some(request.body.eori)),
       withDeclarantIsExporter("No"),
-      withConsigneeDetails(
-        None,
-        Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "United States of America (the), Including Puerto Rico"))
-      ),
-      withCarrierDetails(None, Some(Address("XYZ Carrier", "School Road", "London", "WS1 2AB", "United Kingdom, Great Britain, Northern Ireland"))),
+      withConsigneeDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "US"))),
+      withCarrierDetails(None, Some(Address("XYZ Carrier", "School Road", "London", "WS1 2AB", "GB"))),
       withRepresentativeDetails(Some(EntityDetails(Some("GB717572504502809"), None)), Some("3"), Some("No")),
       withDeclarationAdditionalActors(DeclarationAdditionalActor(Some("AD166297284288300"), Some("WH"))),
       withDeclarationHolders(DeclarationHolder(Some("EXEE"), Some("AD166297284288100"), Some(EoriSource.UserEori))),
