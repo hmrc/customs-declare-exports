@@ -79,9 +79,7 @@ class ConsigneeBuilder @Inject() (countriesService: CountriesService) extends Mo
 
     if (address.country.nonEmpty) {
       val countryCode = new AddressCountryCodeType
-      // TODO Resilient code to handle names and ISO codes to be removed in CEDS-5776
-      val valueToSet = countriesService.getOrPassCountryCode(address.country).getOrElse("")
-      countryCode.setValue(valueToSet)
+      countryCode.setValue(address.country)
       consigneeAddress.setCountryCode(countryCode)
 
     }

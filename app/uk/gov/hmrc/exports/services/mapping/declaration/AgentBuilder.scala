@@ -63,9 +63,7 @@ class AgentBuilder @Inject() (countriesService: CountriesService) extends Modify
             postcode.setValue(address.postCode)
 
             val countryCode = new AddressCountryCodeType
-            // TODO Resilient code to handle names and ISO codes to be removed in CEDS-5776
-            val valueToSet = countriesService.getOrPassCountryCode(address.country).getOrElse("")
-            countryCode.setValue(valueToSet)
+            countryCode.setValue(address.country)
 
             agent.setName(agentName)
             agentAddress.setLine(line)

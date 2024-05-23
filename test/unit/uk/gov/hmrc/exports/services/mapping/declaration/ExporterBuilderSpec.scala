@@ -27,8 +27,6 @@ class ExporterBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   val mockCountriesService = mock[CountriesService]
   when(mockCountriesService.getCountryCode(any())).thenReturn(Some("GB"))
-  // TODO Resilient code to handle names and ISO codes to be removed in CEDS-5776
-  when(mockCountriesService.getOrPassCountryCode(any())).thenReturn(Some("GB"))
 
   "ExporterBuilder" should {
 
@@ -43,12 +41,7 @@ class ExporterBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       }
 
       "no eori" in {
-        val model = aDeclaration(
-          withExporterDetails(
-            eori = None,
-            address = Some(Address("name", "line", "city", "postcode", "United Kingdom, Great Britain, Northern Ireland"))
-          )
-        )
+        val model = aDeclaration(withExporterDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "GB"))))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
@@ -67,8 +60,8 @@ class ExporterBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       }
 
       "unknown country" in {
-        when(mockCountriesService.getOrPassCountryCode(any())).thenReturn(None)
-        val model = aDeclaration(withExporterDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "unknown"))))
+        when(mockCountriesService.getCountryCode(any())).thenReturn(None)
+        val model = aDeclaration(withExporterDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", ""))))
         val declaration = new Declaration()
 
         builder.buildThenAdd(model, declaration)
