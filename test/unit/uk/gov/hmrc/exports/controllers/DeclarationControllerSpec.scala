@@ -31,7 +31,7 @@ import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.DeclarationType.STANDARD
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.INITIAL
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.{draftStatuses, DRAFT, INITIAL}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.{Action, ExternalAmendmentRequest, Submission, SubmissionRequest}
@@ -92,81 +92,59 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
     }
   }
 
-  "DeclarationController.findAll" should {
-    val getRequest = FakeRequest("GET", "/declarations")
+  "DeclarationController.fetchPageOfDraft" should {
+    val getRequest = AuthorizedSubmissionRequest(userEori, FakeRequest("GET", "/declarations"))
+
+    val declaration = aDeclaration(withStatus(DRAFT))
+    val pageOfDeclarations: Future[(Seq[ExportsDeclaration], Long)] = Future.successful(List(declaration) -> 1)
+    val pageOfDraftDeclarationData = toJson(Paginated(DraftDeclarationData(declaration)))
 
     "return 200" when {
-      "valid request" in {
-        val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
-          .willReturn(Future.successful(Paginated(declaration)))
 
-        val result = controller.findAll(Seq(), Page(), DeclarationSort())(getRequest)
+      "valid request" in {
+        given(declarationService.fetchPage(any[DeclarationSearch], any[Page], any[DeclarationSort]))
+          .willReturn(pageOfDeclarations)
+
+        val result = controller.fetchPageOfDraft(Page(), DeclarationSort())(getRequest)
 
         status(result) must be(OK)
-        contentAsJson(result) mustBe toJson(Paginated(declaration))
-        theSearch mustBe DeclarationSearch(eori = userEori, statuses = Seq())
+        contentAsJson(result) mustBe pageOfDraftDeclarationData
+        theSearch mustBe DeclarationSearch(userEori, draftStatuses)
       }
 
       "request has valid pagination" in {
-        val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
-          .willReturn(Future.successful(Paginated(declaration)))
+        given(declarationService.fetchPage(any[DeclarationSearch], any[Page], any[DeclarationSort]))
+          .willReturn(pageOfDeclarations)
 
-        val size = 100
-        val result = controller.findAll(Seq(), Page(1, size), DeclarationSort())(getRequest)
-
-        status(result) must be(OK)
-        contentAsJson(result) mustBe toJson(Paginated(declaration))
-        thePagination mustBe Page(1, size)
-      }
-
-      "request has valid search params" in {
-        val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
-          .willReturn(Future.successful(Paginated(declaration)))
-
-        val result = controller.findAll(Seq("COMPLETE"), Page(), DeclarationSort())(getRequest)
+        val size = Page.DEFAULT_SIZE
+        val result = controller.fetchPageOfDraft(Page(1, size), DeclarationSort())(getRequest)
 
         status(result) must be(OK)
-        contentAsJson(result) mustBe toJson(Paginated(declaration))
-        theSearch mustBe DeclarationSearch(eori = userEori, statuses = Seq(DeclarationStatus.COMPLETE))
-      }
-
-      "request has invalid search params" in {
-        val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
-          .willReturn(Future.successful(Paginated(declaration)))
-
-        val result = controller.findAll(Seq("invalid"), Page(), DeclarationSort())(getRequest)
-
-        status(result) must be(OK)
-        contentAsJson(result) mustBe toJson(Paginated(declaration))
-        theSearch mustBe DeclarationSearch(eori = userEori, statuses = Seq())
+        val body = contentAsJson(result)
+        body mustBe pageOfDraftDeclarationData
+        thePage mustBe Page(1, size)
       }
 
       "request has sorting ascending sort params" in {
-        val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
-          .willReturn(Future.successful(Paginated(declaration)))
+        given(declarationService.fetchPage(any[DeclarationSearch], any[Page], any[DeclarationSort]))
+          .willReturn(pageOfDeclarations)
 
-        val result = controller.findAll(Seq(), Page(), DeclarationSort(SortBy.UPDATED, SortDirection.ASC))(getRequest)
+        val result = controller.fetchPageOfDraft(Page(), DeclarationSort(SortBy.UPDATED, SortDirection.ASC))(getRequest)
 
         status(result) must be(OK)
-        contentAsJson(result) mustBe toJson(Paginated(declaration))
+        contentAsJson(result) mustBe pageOfDraftDeclarationData
         theSort mustBe DeclarationSort(by = SortBy.UPDATED, direction = SortDirection.ASC)
       }
 
       "request has sorting descending sort params" in {
-        val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.find(any[DeclarationSearch], any[Page], any[DeclarationSort]))
-          .willReturn(Future.successful(Paginated(declaration)))
+        given(declarationService.fetchPage(any[DeclarationSearch], any[Page], any[DeclarationSort]))
+          .willReturn(pageOfDeclarations)
 
-        val result = controller.findAll(Seq(), Page(), DeclarationSort(SortBy.CREATED, SortDirection.DES))(getRequest)
+        val result = controller.fetchPageOfDraft(Page(), DeclarationSort(SortBy.CREATED, SortDirection.DESC))(getRequest)
 
         status(result) must be(OK)
-        contentAsJson(result) mustBe toJson(Paginated(declaration))
-        theSort mustBe DeclarationSort(by = SortBy.CREATED, direction = SortDirection.DES)
+        contentAsJson(result) mustBe pageOfDraftDeclarationData
+        theSort mustBe DeclarationSort(by = SortBy.CREATED, direction = SortDirection.DESC)
       }
     }
 
@@ -174,7 +152,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
       "unauthorized" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result = controller.findAll(Seq(), Page(), DeclarationSort())(getRequest)
+        val result = controller.fetchPageOfDraft(Page(), DeclarationSort())(getRequest)
 
         status(result) must be(UNAUTHORIZED)
         verifyNoInteractions(declarationService)
@@ -183,19 +161,19 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
 
     def theSearch: DeclarationSearch = {
       val captor: ArgumentCaptor[DeclarationSearch] = ArgumentCaptor.forClass(classOf[DeclarationSearch])
-      verify(declarationService).find(captor.capture(), any[Page], any[DeclarationSort])
+      verify(declarationService).fetchPage(captor.capture(), any[Page], any[DeclarationSort])
       captor.getValue
     }
 
     def theSort: DeclarationSort = {
       val captor: ArgumentCaptor[DeclarationSort] = ArgumentCaptor.forClass(classOf[DeclarationSort])
-      verify(declarationService).find(any[DeclarationSearch], any[Page], captor.capture())
+      verify(declarationService).fetchPage(any[DeclarationSearch], any[Page], captor.capture())
       captor.getValue
     }
 
-    def thePagination: Page = {
+    def thePage: Page = {
       val captor: ArgumentCaptor[Page] = ArgumentCaptor.forClass(classOf[Page])
-      verify(declarationService).find(any[DeclarationSearch], captor.capture(), any[DeclarationSort])
+      verify(declarationService).fetchPage(any[DeclarationSearch], captor.capture(), any[DeclarationSort])
       captor.getValue
     }
   }
@@ -245,7 +223,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
 
     "return 204" when {
       "request is valid" in {
-        val declaration = aDeclaration(withId("id"), withEori(userEori), withStatus(DeclarationStatus.DRAFT))
+        val declaration = aDeclaration(withId("id"), withEori(userEori), withStatus(DRAFT))
         given(declarationService.findOne(any(), anyString())).willReturn(Future.successful(Some(declaration)))
         given(declarationService.deleteOne(any[ExportsDeclaration])).willReturn(Future.successful(true))
 
@@ -301,7 +279,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
 
     "return 200" when {
       "request is valid" in {
-        val declaration = aDeclaration(withStatus(DeclarationStatus.DRAFT), withType(STANDARD), withId("id"), withEori(userEori))
+        val declaration = aDeclaration(withStatus(DRAFT), withType(STANDARD), withId("id"), withEori(userEori))
         given(declarationService.update(any[ExportsDeclaration])).willReturn(Future.successful(Some(declaration)))
 
         val result = controller.update("id")(putRequest.withBody(body))
@@ -344,7 +322,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
 
     "return 200" when {
       "a draft declaration with 'parentDeclarationId' equal to provided parentId was found" in {
-        when(declarationService.findOrCreateDraftFromParent(any[Eori], refEq(parentId), any[EnhancedStatus], anyBoolean)(any()))
+        when(declarationService.findOrCreateDraftFromParent(any[Eori], refEq(parentId), any[EnhancedStatus], anyBoolean))
           .thenReturn(Future.successful(Some(DeclarationService.FOUND -> declarationId)))
 
         val result = controller.findOrCreateDraftFromParent(parentId, "ERRORS", false)(getRequest)
@@ -356,7 +334,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
 
     "return 201" when {
       "a draft for the parent declaration, specified by parentId, was created" in {
-        when(declarationService.findOrCreateDraftFromParent(any[Eori], refEq(parentId), any[EnhancedStatus], anyBoolean)(any()))
+        when(declarationService.findOrCreateDraftFromParent(any[Eori], refEq(parentId), any[EnhancedStatus], anyBoolean))
           .thenReturn(Future.successful(Some(DeclarationService.CREATED -> declarationId)))
 
         val result = controller.findOrCreateDraftFromParent(parentId, "ERRORS", false)(getRequest)
@@ -368,7 +346,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
 
     "return 404" when {
       "a parent declaration, specified by parentId, was not found" in {
-        when(declarationService.findOrCreateDraftFromParent(any[Eori], refEq(parentId), any[EnhancedStatus], anyBoolean)(any()))
+        when(declarationService.findOrCreateDraftFromParent(any[Eori], refEq(parentId), any[EnhancedStatus], anyBoolean))
           .thenReturn(Future.successful(None))
 
         val result = controller.findOrCreateDraftFromParent(parentId, "ERRORS", false)(getRequest)
@@ -402,7 +380,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
             Future.successful(
               Some(
                 submission
-                  .copy(actions = Seq(submissionAction, externalAmendmentAction.copy(decId = Some("externalAmendmentDecId"))))
+                  .copy(actions = List(submissionAction, externalAmendmentAction.copy(decId = Some("externalAmendmentDecId"))))
               )
             )
           )
@@ -434,7 +412,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
             Future.successful(
               Some(
                 submission
-                  .copy(actions = Seq(submissionAction, externalAmendmentAction))
+                  .copy(actions = List(submissionAction, externalAmendmentAction))
               )
             )
           )
