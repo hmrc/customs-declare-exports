@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.repositories
 import com.mongodb.client.model.Indexes.{ascending, compoundIndex, descending}
 import com.mongodb.client.model.ReturnDocument
 import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.model.Filters.{and, equal, or}
 import org.mongodb.scala.model.Updates.{combine, set, unset}
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions}
 import play.api.libs.json.Json
@@ -26,7 +27,7 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timers
 import uk.gov.hmrc.exports.models._
-import uk.gov.hmrc.exports.models.declaration.{DeclarationMeta, DeclarationStatus, ExportsDeclaration}
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.repositories.DeclarationRepository.meta
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -50,8 +51,11 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
   override val executionContext: ExecutionContext = ec
 
   def deleteExpiredDraft(expiryDate: Instant): Future[Long] = {
-    import DeclarationMeta.Mongo.instantFormat
-    removeEvery(Json.obj(s"$meta.status" -> DeclarationStatus.DRAFT.toString, s"$meta.updatedDateTime" -> Json.obj("$lte" -> expiryDate)))
+    val filter = and(
+      or(equal(s"$meta.status", DeclarationStatus.DRAFT.toString), equal(s"$meta.status", DeclarationStatus.AMENDMENT_DRAFT.toString)),
+      equal(s"$meta.updatedDateTime", equal("$lte", expiryDate))
+    )
+    removeEvery(filter)
   }
 
   def fetchPage(search: DeclarationSearch, page: Page, sort: DeclarationSort): Future[(Seq[ExportsDeclaration], Long)] = {

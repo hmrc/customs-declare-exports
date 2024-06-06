@@ -32,7 +32,7 @@ class PurgeDraftDeclarationsJob @Inject() (appConfig: AppConfig, declarationRepo
 ) extends ScheduledJob with Logging {
 
   private lazy val jobConfig = appConfig.purgeDraftDeclarations
-  private lazy val expireDuration = appConfig.draftTimeToLive
+  private[jobs] lazy val expireDuration = appConfig.draftTimeToLive
 
   override val name: String = "PurgeDraftDeclarations"
   override def interval: FiniteDuration = jobConfig.interval
