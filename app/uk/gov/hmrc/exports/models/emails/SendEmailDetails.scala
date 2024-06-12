@@ -20,7 +20,7 @@ import org.bson.types.ObjectId
 import play.api.libs.json._
 import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
 
-case class SendEmailDetails(notificationId: ObjectId, mrn: String, actionId: String, alertTriggered: Boolean = false)
+case class SendEmailDetails(notificationId: ObjectId, mrn: String, actionId: String)
 
 object SendEmailDetails {
 
