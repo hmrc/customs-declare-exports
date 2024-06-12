@@ -18,8 +18,6 @@ GET         /amendment-draft/:parentId/:enhancedStatus              uk.gov.hmrc.
 # Draft for declarations rejected on initial submission (not amended yet)
 GET         /rejected-submission-draft/:parentId                    uk.gov.hmrc.exports.controllers.DeclarationController.findOrCreateDraftFromParent(parentId: String, enhancedStatus: String ?= "ERRORS", isAmendment: Boolean ?= false)
 
-GET         /fetch-dis-declaration/:mrn/:actionId/:submissionId     uk.gov.hmrc.exports.controllers.DeclarationController.fetchExternalAmendmentDecId(mrn: String, actionId: String, submissionId: String)
-
 POST        /cancellation-request                                  uk.gov.hmrc.exports.controllers.CancellationController.createCancellation
 
 GET         /lrn-already-used/:lrn                                  uk.gov.hmrc.exports.controllers.SubmissionController.isLrnAlreadyUsed(lrn: String)

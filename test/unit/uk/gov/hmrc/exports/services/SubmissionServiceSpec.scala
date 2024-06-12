@@ -25,7 +25,6 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.exports.base.{MockMetrics, UnitSpec}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData.DEFAULT_LIMIT
 import uk.gov.hmrc.exports.models.declaration.submissions.CancellationStatus.CancellationResult
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.{CUSTOMS_POSITION_GRANTED, PENDING, WITHDRAWN}
@@ -35,7 +34,6 @@ import uk.gov.hmrc.exports.models.{Eori, FetchSubmissionPageData, PageOfSubmissi
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, CancellationMetaDataBuilder, ExportsPointerToWCOPointer}
 import uk.gov.hmrc.exports.services.notifications.receiptactions.SendEmailForDmsDocAction
-import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParser
 import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
@@ -55,8 +53,6 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
   private val amendMetaDataBuilder: AmendmentMetaDataBuilder = mock[AmendmentMetaDataBuilder]
   private val wcoMapperService: WcoMapperService = mock[WcoMapperService]
   private val sendEmailForDmsDocAction: SendEmailForDmsDocAction = mock[SendEmailForDmsDocAction]
-  private val mockCustomsDeclarationsInformationConnector = mock[CustomsDeclarationsInformationConnector]
-  private val mockExportsDeclarationXmlParser = mock[ExportsDeclarationXmlParser]
   private val metadata = mock[MetaData]
 
   private val submissionService = new SubmissionService(
@@ -66,8 +62,6 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
     exportsPointerToWCOPointer = exportsPointerToWCOPointer,
     cancelMetaDataBuilder = cancelMetaDataBuilder,
     amendmentMetaDataBuilder = amendMetaDataBuilder,
-    customsDeclarationsInformationConnector = mockCustomsDeclarationsInformationConnector,
-    exportsDeclarationXmlParser = mockExportsDeclarationXmlParser,
     wcoMapperService = wcoMapperService,
     metrics = exportsMetrics
   )(ExecutionContext.global)
