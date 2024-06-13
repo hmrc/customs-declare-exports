@@ -19,7 +19,7 @@ Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oD")
 lazy val IntegrationTest = config("it") extend Test
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(PlayScala, SbtAutoBuildPlugin, SbtDistributablesPlugin)
+  .enablePlugins(PlayScala, SbtDistributablesPlugin)
   .settings(commonSettings: _*)
   .settings(gitStampSettings: _*)
   .configs(IntegrationTest)
@@ -39,7 +39,6 @@ lazy val microservice = Project(appName, file("."))
       (Test / baseDirectory).value / "test/util"
     ),
     addTestReportOption(IntegrationTest, "int-test-reports"),
-    IntegrationTest / testGrouping := oneForkedJvmPerTest((IntegrationTest / definedTests).value),
     IntegrationTest / parallelExecution := false
   )
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427

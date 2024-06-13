@@ -19,7 +19,6 @@ package uk.gov.hmrc.exports.services
 import play.api.Logging
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
-import uk.gov.hmrc.exports.connectors.ead.CustomsDeclarationsInformationConnector
 import uk.gov.hmrc.exports.metrics.ExportsMetrics
 import uk.gov.hmrc.exports.metrics.ExportsMetrics.Timers
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
@@ -27,11 +26,9 @@ import uk.gov.hmrc.exports.models.declaration.submissions.CancellationStatus.Can
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup.{StatusGroup, SubmittedStatuses}
 import uk.gov.hmrc.exports.models.declaration.submissions._
-import uk.gov.hmrc.exports.models.{Eori, FetchSubmissionPageData, Mrn, PageOfSubmissions}
+import uk.gov.hmrc.exports.models.{Eori, FetchSubmissionPageData, PageOfSubmissions}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping._
-import uk.gov.hmrc.exports.services.reversemapping.MappingContext
-import uk.gov.hmrc.exports.services.reversemapping.declaration.ExportsDeclarationXmlParser
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
@@ -42,13 +39,11 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class SubmissionService @Inject() (
   customsDeclarationsConnector: CustomsDeclarationsConnector,
-  customsDeclarationsInformationConnector: CustomsDeclarationsInformationConnector,
   submissionRepository: SubmissionRepository,
   declarationRepository: DeclarationRepository,
   exportsPointerToWCOPointer: ExportsPointerToWCOPointer,
   cancelMetaDataBuilder: CancellationMetaDataBuilder,
   amendmentMetaDataBuilder: AmendmentMetaDataBuilder,
-  exportsDeclarationXmlParser: ExportsDeclarationXmlParser,
   wcoMapperService: WcoMapperService,
   metrics: ExportsMetrics
 )(implicit executionContext: ExecutionContext)
@@ -160,24 +155,6 @@ class SubmissionService @Inject() (
         )
         _ = logProgress(declaration.id, "New submission creation completed")
       } yield submission
-    }
-
-  def fetchExternalAmendmentToUpdateSubmission(mrn: Mrn, eori: Eori, actionId: String, submissionId: String)(
-    implicit hc: HeaderCarrier
-  ): Future[Option[Submission]] =
-    customsDeclarationsInformationConnector.fetchMrnFullDeclaration(mrn.value, None) flatMap {
-      case Some(xml) =>
-        exportsDeclarationXmlParser.fromXml(MappingContext(eori.value), xml.toString).toOption match {
-          case Some(declaration) =>
-            for {
-              _ <- declarationRepository.create(declaration)
-              submission <- submissionRepository.updateExternalAmendmentAction(submissionId, actionId, declaration.id)
-            } yield submission
-
-          case _ =>
-            Future.successful(None)
-        }
-      case _ => Future.successful(None)
     }
 
   private def isSubmissionAlreadyCancelled(submission: Submission): Boolean =

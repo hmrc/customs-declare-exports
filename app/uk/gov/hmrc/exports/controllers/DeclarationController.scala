@@ -26,8 +26,8 @@ import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.draftStatuses
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models.{DeclarationSearch, DeclarationSort, DraftDeclarationData, Mrn, Page, Paginated}
-import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
+import uk.gov.hmrc.exports.models._
+import uk.gov.hmrc.exports.services.DeclarationService
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
@@ -37,7 +37,6 @@ import scala.util.Try
 @Singleton
 class DeclarationController @Inject() (
   declarationService: DeclarationService,
-  submissionService: SubmissionService,
   authenticator: Authenticator,
   override val controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
@@ -108,20 +107,6 @@ class DeclarationController @Inject() (
           case Some(declaration) => Ok(declaration)
           case None              => NotFound
         }
-    }
-
-  // This method is currently not used as we do not have permission to call the DIS API at this point.
-  // If/when we do then we will need to review this code to check that the updates to the mongoDB are atomic operations
-  def fetchExternalAmendmentDecId(mrn: String, actionId: String, submissionId: String): Action[AnyContent] =
-    authenticator.authorisedAction(parse.default) { implicit request =>
-      submissionService.fetchExternalAmendmentToUpdateSubmission(Mrn(mrn), request.eori, actionId, submissionId) map {
-        case Some(submission) =>
-          submission.actions.find(_.id == actionId).flatMap(_.decId) match {
-            case Some(decId) => Ok(decId)
-            case _           => NotFound
-          }
-        case _ => NotFound
-      }
     }
 
   private def logPayload[T](prefix: String, payload: T)(implicit wts: Writes[T]): T = {
