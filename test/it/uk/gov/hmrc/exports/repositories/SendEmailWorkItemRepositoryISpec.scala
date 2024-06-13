@@ -157,25 +157,4 @@ class SendEmailWorkItemRepositoryISpec extends IntegrationTestSpec {
       }
     }
   }
-
-  "SendEmailWorkItemRepository on updateAlertTriggered" when {
-
-    "provided with existing ID parameter" should {
-      "update the document's alertTriggered field" in {
-        val workItem = buildTestSendEmailWorkItem(Failed)
-        repository.insertOne(workItem).futureValue.isRight mustBe true
-
-        repository.markAlertTriggered(workItem.id).futureValue mustBe true
-      }
-    }
-
-    "provided with non-existing ID parameter" should {
-      "not upsert any document" in {
-        val workItem = buildTestSendEmailWorkItem(Failed)
-        repository.insertOne(workItem).futureValue.isRight mustBe true
-
-        repository.markAlertTriggered(ObjectId.get).futureValue mustBe false
-      }
-    }
-  }
 }

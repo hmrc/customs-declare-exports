@@ -16,11 +16,9 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import org.bson.types.ObjectId
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.Configuration
-import play.api.libs.json._
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.exports.util.TimeUtils.instant
 import uk.gov.hmrc.mongo.workitem.{WorkItem, WorkItemFields, WorkItemRepository}
@@ -53,9 +51,4 @@ class SendEmailWorkItemRepository @Inject() (config: Configuration, mongoCompone
     Duration.ofMillis(config.getMillis("workItem.sendEmail.retryAfterMillis"))
 
   override def now(): Instant = instant()
-
-  def markAlertTriggered(id: ObjectId): Future[Boolean] = {
-    val fields = Json.obj("item.alertTriggered" -> true)
-    findOneAndUpdate(workItemFields.id, id, Json.obj("$set" -> fields)).map(_.exists(_.item.alertTriggered))
-  }
 }
