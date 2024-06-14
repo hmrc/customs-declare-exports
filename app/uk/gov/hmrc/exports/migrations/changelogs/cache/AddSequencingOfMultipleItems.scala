@@ -190,7 +190,6 @@ object AddSequencingOfMultipleItems {
       (__ \ "declarationMeta").read[DeclarationMeta] and
       (__ \ "eori").read[String] and
       (__ \ "type").read[DeclarationType] and
-      (__ \ "dispatchLocation").readNullable[DispatchLocation] and
       (__ \ "additionalDeclarationType").readNullable[AdditionalDeclarationType] and
       (__ \ "consignmentReferences").readNullable[ConsignmentReferences] and
       (__ \ "linkDucrToMucr").readNullable[YesNoAnswer] and

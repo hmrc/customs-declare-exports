@@ -79,7 +79,6 @@ object AmendmentMetaDataBuilderISpec {
     ),
     "GB239355053000",
     STANDARD,
-    None,
     Some(STANDARD_FRONTIER),
     Some(ConsignmentReferences(Some(DUCR("1GB121212121212-TOMAMENDTEST")), Some("Toms amend test"), None, None, None)),
     None,

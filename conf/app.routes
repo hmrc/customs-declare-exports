@@ -1,6 +1,7 @@
 # JSON Based
 POST        /declarations                                           uk.gov.hmrc.exports.controllers.DeclarationController.create
-PUT         /declarations/:id                                       uk.gov.hmrc.exports.controllers.DeclarationController.update(id: String)
+PUT         /declarations                                           uk.gov.hmrc.exports.controllers.DeclarationController.update
+PUT         /declarations/:id                                       uk.gov.hmrc.exports.controllers.DeclarationController.deprecatedUpdate(id: String)
 GET         /declarations/:id                                       uk.gov.hmrc.exports.controllers.DeclarationController.findById(id: String)
 DELETE      /declarations/:id                                       uk.gov.hmrc.exports.controllers.DeclarationController.deleteById(id: String)
 

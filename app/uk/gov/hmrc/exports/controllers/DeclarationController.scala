@@ -20,16 +20,13 @@ import play.api.Logging
 import play.api.libs.json.{JsString, Json, Writes}
 import play.api.mvc._
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
-import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
+import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.draftStatuses
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.services.DeclarationService
 
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -42,10 +39,10 @@ class DeclarationController @Inject() (
 )(implicit executionContext: ExecutionContext)
     extends RESTController(controllerComponents) with Logging {
 
-  val create: Action[ExportsDeclarationRequest] = authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { request =>
+  val create: Action[ExportsDeclaration] = authenticator.authorisedAction(parsingJson[ExportsDeclaration]) { request =>
     logPayload("Create Declaration Request Received", request.body)
     declarationService
-      .create(ExportsDeclaration.init(UUID.randomUUID.toString, request.eori, request.body))
+      .create(ExportsDeclaration.init(request.eori, request.body, update = false))
       .map(logPayload("Create Declaration Response", _))
       .map(declaration => Created(declaration))
   }
@@ -97,11 +94,14 @@ class DeclarationController @Inject() (
     }
   }
 
-  def update(id: String): Action[ExportsDeclarationRequest] =
-    authenticator.authorisedAction(parsingJson[ExportsDeclarationRequest]) { request =>
+  // TODO Remove in separate subsequent deployment as part of CEDS-5833
+  def deprecatedUpdate(id: String): Action[ExportsDeclaration] = update
+
+  val update: Action[ExportsDeclaration] =
+    authenticator.authorisedAction(parsingJson[ExportsDeclaration]) { request =>
       logPayload("Update Declaration Request Received", request.body)
       declarationService
-        .update(ExportsDeclaration.init(id, request.eori, request.body))
+        .update(ExportsDeclaration.init(request.eori, request.body, update = true))
         .map(logPayload("Update Declaration Response", _))
         .map {
           case Some(declaration) => Ok(declaration)
