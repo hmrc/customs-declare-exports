@@ -31,6 +31,10 @@ object SubmissionTestData {
   private val instant1971 = ZonedDateTime.of(1971, 1, 1, 1, 1, 0, 0, defaultTimeZone)
   private val instant1972 = ZonedDateTime.of(1972, 1, 1, 1, 1, 0, 0, defaultTimeZone)
 
+  lazy val uuid: String = UUID.randomUUID.toString
+  lazy val uuid_2: String = UUID.randomUUID.toString
+  lazy val uuid_3: String = UUID.randomUUID.toString
+
   lazy val action = Action(id = actionId, requestType = SubmissionRequest, decId = Some(uuid), versionNo = 1)
 
   lazy val action_2 = Action(id = actionId_2, requestType = SubmissionRequest, requestTimestamp = instant1971, decId = Some(uuid), versionNo = 1)
@@ -38,10 +42,6 @@ object SubmissionTestData {
   lazy val action_3 = Action(id = actionId_3, requestType = SubmissionRequest, requestTimestamp = instant1972, decId = Some(uuid), versionNo = 1)
 
   lazy val actionCancellation = Action(actionId, CancellationRequest, Some(uuid), 1, None, action.requestTimestamp.plus(3, HOURS))
-
-  lazy val uuid: String = UUID.randomUUID.toString
-  lazy val uuid_2: String = UUID.randomUUID.toString
-  lazy val uuid_3: String = UUID.randomUUID.toString
 
   lazy val submission: Submission = Submission(uuid, eori, lrn, Some(mrn), ducr, actions = Seq(action), latestDecId = Some(uuid))
 
