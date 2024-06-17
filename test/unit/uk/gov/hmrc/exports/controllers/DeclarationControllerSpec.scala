@@ -24,20 +24,17 @@ import play.api.libs.json.Json
 import play.api.libs.json.Json.toJson
 import play.api.mvc.Result
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{status, _}
+import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.InsufficientEnrolments
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
-import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.DeclarationType.STANDARD
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.{draftStatuses, DRAFT, INITIAL}
-import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.REST.writes
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
-import uk.gov.hmrc.exports.models.declaration.{DeclarationMeta, DeclarationStatus, ExportsDeclaration}
+import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
-import uk.gov.hmrc.exports.util.TimeUtils.instant
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -57,10 +54,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
     super.beforeEach()
   }
 
-  private val body = ExportsDeclarationRequest(
-    declarationMeta = DeclarationMeta(status = INITIAL, createdDateTime = instant(), updatedDateTime = instant()),
-    `type` = STANDARD
-  )
+  private val body = aDeclaration(withId("id"), withStatus(INITIAL), withType(STANDARD), withUpdatedDateTime(), withCreatedDateTime())
 
   "DeclarationController.create" should {
     val postRequest = FakeRequest("POST", "/declarations")
@@ -280,7 +274,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
         val declaration = aDeclaration(withStatus(DRAFT), withType(STANDARD), withId("id"), withEori(userEori))
         given(declarationService.update(any[ExportsDeclaration])).willReturn(Future.successful(Some(declaration)))
 
-        val result = controller.update("id")(putRequest.withBody(body))
+        val result = controller.update(putRequest.withBody(body))
 
         status(result) must be(OK)
         contentAsJson(result) mustBe toJson(declaration)
@@ -294,7 +288,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
       "declaration is not found - on update" in {
         given(declarationService.update(any[ExportsDeclaration])).willReturn(Future.successful(None))
 
-        val result = controller.update("id")(putRequest.withBody(body))
+        val result = controller.update(putRequest.withBody(body))
 
         status(result) must be(NOT_FOUND)
         contentAsString(result) mustBe empty
@@ -305,7 +299,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
       "unauthorized" in {
         withUnauthorizedUser(InsufficientEnrolments())
 
-        val result = controller.update("id")(putRequest.withBody(body))
+        val result = controller.update(putRequest.withBody(body))
 
         status(result) must be(UNAUTHORIZED)
         verifyNoInteractions(declarationService)

@@ -38,11 +38,6 @@ class TypeCodeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder with G
         And("the destination country code is not 'GG' or 'JE'")
         testTypeCode("EX", modifiers)
       }
-
-      "dispatchLocation in ExportsDeclaration is 'EX'" in {
-        And("the destination country code is not 'GG' or 'JE'")
-        testTypeCode("EX", withDispatchLocation("EX") +: modifiers)
-      }
     }
 
     s"set typeCode in Declaration to 'CO${declarationType}'" when {
@@ -50,11 +45,6 @@ class TypeCodeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder with G
       "dispatchLocation in ExportsDeclaration is undefined" in {
         And("the destination country code is 'GG'")
         testTypeCode("CO", withDestinationCountry(Country(Some("GG"))) +: modifiers)
-      }
-
-      "dispatchLocation in ExportsDeclaration is 'EX'" in {
-        And("the destination country code is 'GG'")
-        testTypeCode("CO", withDispatchLocation("EX") +: withDestinationCountry(Country(Some("GG"))) +: modifiers)
       }
 
       "the destination country code is 'JE'" in {

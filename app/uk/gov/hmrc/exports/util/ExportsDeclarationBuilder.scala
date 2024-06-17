@@ -54,7 +54,6 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
       readyForSubmission = None
     ),
     `type` = DeclarationType.STANDARD,
-    dispatchLocation = None,
     additionalDeclarationType = None,
     consignmentReferences = None,
     linkDucrToMucr = None,
@@ -91,17 +90,8 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
   def withType(`type`: DeclarationType): ExportsDeclarationModifier = _.copy(`type` = `type`)
 
-  def withoutAdditionalDeclarationType(): ExportsDeclarationModifier = _.copy(additionalDeclarationType = None)
-
   def withAdditionalDeclarationType(decType: AdditionalDeclarationType = AdditionalDeclarationType.STANDARD_PRE_LODGED): ExportsDeclarationModifier =
     _.copy(additionalDeclarationType = Some(decType))
-
-  def withoutDispatchLocation: ExportsDeclarationModifier = _.copy(dispatchLocation = None)
-
-  def withDispatchLocation(location: String = "GB"): ExportsDeclarationModifier =
-    _.copy(dispatchLocation = Some(DispatchLocation(location)))
-
-  def withoutConsignmentReferences(): ExportsDeclarationModifier = _.copy(consignmentReferences = None)
 
   def withConsignmentReferences(
     ducr: String = VALID_DUCR,
@@ -396,6 +386,9 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
 
   def withUpdatedDateTime(updatedDateTime: Instant = instant()): ExportsDeclarationModifier =
     cache => cache.copy(declarationMeta = cache.declarationMeta.copy(updatedDateTime = updatedDateTime))
+
+  def withCreatedDateTime(createdDateTime: Instant = instant()): ExportsDeclarationModifier =
+    cache => cache.copy(declarationMeta = cache.declarationMeta.copy(createdDateTime = createdDateTime))
 
   def withMaxSequenceIdFor(key: String, value: Int): ExportsDeclarationModifier =
     cache => {

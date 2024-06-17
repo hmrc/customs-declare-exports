@@ -17,30 +17,30 @@
 package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json._
-import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus._
+
+import java.util.UUID
 
 case class ExportsDeclaration(
   id: String,
   declarationMeta: DeclarationMeta,
   eori: String,
   `type`: DeclarationType,
-  dispatchLocation: Option[DispatchLocation],
-  additionalDeclarationType: Option[AdditionalDeclarationType],
-  consignmentReferences: Option[ConsignmentReferences],
-  linkDucrToMucr: Option[YesNoAnswer],
-  mucr: Option[MUCR],
-  transport: Transport,
-  parties: Parties,
-  locations: Locations,
-  items: Seq[ExportItem],
-  totalNumberOfItems: Option[TotalNumberOfItems],
-  previousDocuments: Option[PreviousDocuments],
-  natureOfTransaction: Option[NatureOfTransaction],
-  statementDescription: Option[String]
+  additionalDeclarationType: Option[AdditionalDeclarationType] = None,
+  consignmentReferences: Option[ConsignmentReferences] = None,
+  linkDucrToMucr: Option[YesNoAnswer] = None,
+  mucr: Option[MUCR] = None,
+  transport: Transport = Transport(),
+  parties: Parties = Parties(),
+  locations: Locations = Locations(),
+  items: Seq[ExportItem] = Seq.empty,
+  totalNumberOfItems: Option[TotalNumberOfItems] = None,
+  previousDocuments: Option[PreviousDocuments] = None,
+  natureOfTransaction: Option[NatureOfTransaction] = None,
+  statementDescription: Option[String] = None
 ) {
 
   def status: DeclarationStatus = declarationMeta.status
@@ -49,37 +49,18 @@ case class ExportsDeclaration(
 }
 
 object ExportsDeclaration {
-
-  object REST {
-    implicit val writes: OWrites[ExportsDeclaration] = Json.writes[ExportsDeclaration]
-  }
+  implicit val format: OFormat[ExportsDeclaration] = Json.format[ExportsDeclaration]
 
   object Mongo {
     implicit val declarationMetaFormat: OFormat[DeclarationMeta] = DeclarationMeta.Mongo.format
     implicit val format: OFormat[ExportsDeclaration] = Json.format[ExportsDeclaration]
   }
 
-  def init(id: String, eori: Eori, declarationRequest: ExportsDeclarationRequest): ExportsDeclaration = {
-    val meta = declarationRequest.declarationMeta
-    ExportsDeclaration(
-      id = id,
-      declarationMeta =
-        meta.copy(status = declarationRequest.consignmentReferences.map(_ => if (meta.status == INITIAL) DRAFT else meta.status).getOrElse(INITIAL)),
-      eori = eori.value,
-      `type` = declarationRequest.`type`,
-      dispatchLocation = declarationRequest.dispatchLocation,
-      additionalDeclarationType = declarationRequest.additionalDeclarationType,
-      consignmentReferences = declarationRequest.consignmentReferences,
-      linkDucrToMucr = declarationRequest.linkDucrToMucr,
-      mucr = declarationRequest.mucr,
-      transport = declarationRequest.transport,
-      parties = declarationRequest.parties,
-      locations = declarationRequest.locations,
-      items = declarationRequest.items,
-      totalNumberOfItems = declarationRequest.totalNumberOfItems,
-      previousDocuments = declarationRequest.previousDocuments,
-      natureOfTransaction = declarationRequest.natureOfTransaction,
-      statementDescription = declarationRequest.statementDescription
-    )
+  def init(eori: Eori, declaration: ExportsDeclaration, update: Boolean): ExportsDeclaration = {
+    val oldMeta = declaration.declarationMeta
+    val newMeta =
+      oldMeta.copy(status = declaration.consignmentReferences.map(_ => if (oldMeta.status == INITIAL) DRAFT else oldMeta.status).getOrElse(INITIAL))
+    val newId = if (update) declaration.id else UUID.randomUUID.toString
+    declaration.copy(id = newId, eori = eori.value, declarationMeta = newMeta)
   }
 }

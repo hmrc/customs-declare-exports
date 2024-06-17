@@ -19,10 +19,9 @@ package uk.gov.hmrc.exports.models.declaration
 import org.mockito.MockitoSugar.mock
 import play.api.libs.json.Json
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.controllers.request.ExportsDeclarationRequest
-import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus._
+import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 
 import java.time.Instant
 
@@ -32,33 +31,37 @@ class ExportsDeclarationSpec extends UnitSpec {
 
   "ExportsDeclaration" should {
 
-    "be correctly derived from ExportsDeclarationRequest" in {
-      ExportsDeclaration.init(id, Eori(eori), exportsDeclarationRequest) mustBe exportsDeclaration
+    "be correctly derived on an update operation from an incoming ExportsDeclaration" in {
+      ExportsDeclaration.init(Eori(eori), incomingExportsDeclaration, update = true) mustBe exportsDeclaration
+    }
+
+    "generate a new id on a create operation with an incoming ExportsDeclaration" in {
+      ExportsDeclaration.init(Eori(eori), incomingExportsDeclaration.copy(id = ""), update = false).id mustNot be("")
     }
 
     "be set to initial state when without references" in {
-      val declarationRequest = exportsDeclarationRequest.copy(consignmentReferences = None)
-      ExportsDeclaration.init(id, Eori(eori), declarationRequest).status mustBe INITIAL
+      val declaration = incomingExportsDeclaration.copy(consignmentReferences = None)
+      ExportsDeclaration.init(Eori(eori), declaration, true).status mustBe INITIAL
     }
 
-    "keep the ExportsDeclarationRequest's status" in {
-      val meta = exportsDeclarationRequest.declarationMeta.copy(status = AMENDMENT_DRAFT)
-      val declarationRequest = exportsDeclarationRequest.copy(declarationMeta = meta)
-      ExportsDeclaration.init(id, Eori(eori), declarationRequest).status mustBe AMENDMENT_DRAFT
+    "keep the incoming ExportsDeclaration's status" in {
+      val meta = incomingExportsDeclaration.declarationMeta.copy(status = AMENDMENT_DRAFT)
+      val declarationRequest = incomingExportsDeclaration.copy(declarationMeta = meta)
+      ExportsDeclaration.init(Eori(eori), declarationRequest, true).status mustBe AMENDMENT_DRAFT
     }
   }
 
   "ExportsDeclaration" must {
     "have json writes that produce object which could be parsed by first version of reads" in {
-      val exportsDeclarationRequest = Json
-        .parse(exportsDeclarationRequestAsString)
-        .as(ExportsDeclarationRequest.format)
+      val incomingExportsDeclaration = Json
+        .parse(incomingExportsDeclarationAsString)
+        .as[ExportsDeclaration]
 
-      val declaration = ExportsDeclaration.init("1", Eori("GB12345678"), exportsDeclarationRequest)
+      val declaration = ExportsDeclaration.init(Eori("GB12345678"), incomingExportsDeclaration, true)
 
       Json
-        .toJson(declaration)(ExportsDeclaration.REST.writes)
-        .validate(ExportsDeclarationRequest.format)
+        .toJson(declaration)
+        .validate[ExportsDeclaration]
         .fold(
           error => fail(s"Could not parse - $error"),
           declaration => {
@@ -80,7 +83,6 @@ object ExportsDeclarationSpec {
   private val `type` = DeclarationType.STANDARD
   private val createdDate = Instant.MIN
   private val updatedDate = Instant.MAX
-  private val dispatchLocation = mock[DispatchLocation]
   private val additionalDeclarationType = mock[AdditionalDeclarationType]
   private val consignmentReferences = mock[ConsignmentReferences]
   private val mucr = MUCR("CZYX123A")
@@ -91,7 +93,8 @@ object ExportsDeclarationSpec {
   private val previousDocuments = mock[PreviousDocuments]
   private val natureOfTransaction = mock[NatureOfTransaction]
 
-  val exportsDeclarationRequest = ExportsDeclarationRequest(
+  val incomingExportsDeclaration: ExportsDeclaration = ExportsDeclaration(
+    id = "id",
     declarationMeta = DeclarationMeta(
       parentDeclarationId = Some("parentDeclarationId"),
       parentDeclarationEnhancedStatus = None,
@@ -102,35 +105,8 @@ object ExportsDeclarationSpec {
       readyForSubmission = Some(true),
       maxSequenceIds = Map("dummy" -> -1)
     ),
+    eori = "",
     `type` = `type`,
-    dispatchLocation = Some(dispatchLocation),
-    additionalDeclarationType = Some(additionalDeclarationType),
-    consignmentReferences = Some(consignmentReferences),
-    linkDucrToMucr = Some(YesNoAnswer.yes),
-    mucr = Some(mucr),
-    transport = Transport(),
-    parties = parties,
-    locations = locations,
-    items = Seq(item),
-    totalNumberOfItems = Some(totalNumberOfItems),
-    previousDocuments = Some(previousDocuments),
-    natureOfTransaction = Some(natureOfTransaction)
-  )
-
-  val exportsDeclaration = ExportsDeclaration(
-    id = id,
-    declarationMeta = DeclarationMeta(
-      status = DRAFT,
-      createdDateTime = createdDate,
-      updatedDateTime = updatedDate,
-      parentDeclarationId = Some("parentDeclarationId"),
-      summaryWasVisited = Some(true),
-      readyForSubmission = Some(true),
-      maxSequenceIds = Map("dummy" -> -1)
-    ),
-    eori = eori,
-    `type` = `type`,
-    dispatchLocation = Some(dispatchLocation),
     additionalDeclarationType = Some(additionalDeclarationType),
     consignmentReferences = Some(consignmentReferences),
     linkDucrToMucr = Some(YesNoAnswer.yes),
@@ -145,7 +121,34 @@ object ExportsDeclarationSpec {
     statementDescription = None
   )
 
-  val exportsDeclarationRequestAsString: String =
+  val exportsDeclaration: ExportsDeclaration = ExportsDeclaration(
+    id = id,
+    declarationMeta = DeclarationMeta(
+      status = DRAFT,
+      createdDateTime = createdDate,
+      updatedDateTime = updatedDate,
+      parentDeclarationId = Some("parentDeclarationId"),
+      summaryWasVisited = Some(true),
+      readyForSubmission = Some(true),
+      maxSequenceIds = Map("dummy" -> -1)
+    ),
+    eori = eori,
+    `type` = `type`,
+    additionalDeclarationType = Some(additionalDeclarationType),
+    consignmentReferences = Some(consignmentReferences),
+    linkDucrToMucr = Some(YesNoAnswer.yes),
+    mucr = Some(mucr),
+    transport = Transport(),
+    parties = parties,
+    locations = locations,
+    items = Seq(item),
+    totalNumberOfItems = Some(totalNumberOfItems),
+    previousDocuments = Some(previousDocuments),
+    natureOfTransaction = Some(natureOfTransaction),
+    statementDescription = None
+  )
+
+  val incomingExportsDeclarationAsString: String =
     """{
       |  "id": "6f31582e-bfd5-4b27-90be-2dca6e236b20",
       |  "declarationMeta": {
@@ -162,12 +165,9 @@ object ExportsDeclarationSpec {
       |      "Seals": 0
       |    }
       |  },
+      |  "eori" : "",
       |  "status": "DRAFT",
-      |  "eori": "GB7172755078551",
       |  "type": "STANDARD",
-      |  "dispatchLocation": {
-      |    "dispatchLocation": "EX"
-      |  },
       |  "additionalDeclarationType": "D",
       |  "consignmentReferences": {
       |    "ducr": {
