@@ -119,7 +119,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
       case ExternalAmendmentRequest =>
         // if this 'AMENDED' notification relates to a later dec version than the current latestVersion then process, else ignore it
         if (firstNotificationDetails.version.getOrElse(0) > submission.latestVersionNo) {
-          updateExternalAmendmentRequest(session, lastUpdated, submission, action, firstNotificationDetails.mrn, summary, updatedActions) flatMap {
+          updateExternalAmendmentRequest(session, lastUpdated, submission, action, firstNotificationDetails.mrn, updatedActions) flatMap {
             deleteAnyAmendmentDraftDeclaration(session, submission, _)
           }
         } else {
@@ -217,7 +217,6 @@ class UpdateSubmissionsTransactionalOps @Inject() (
     submission: Submission,
     action: Action,
     mrn: String,
-    summary: NotificationSummary,
     actions: Seq[Action]
   ): Future[Option[Submission]] = {
 
@@ -231,12 +230,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
     val update = Json.obj(
       "$inc" -> Json.obj("latestVersionNo" -> 1),
       "$unset" -> Json.obj("latestDecId" -> ""),
-      "$set" -> Json.obj(
-        "mrn" -> mrn,
-        "latestEnhancedStatus" -> summary.enhancedStatus,
-        "enhancedStatusLastUpdated" -> summary.dateTimeIssued,
-        "actions" -> (actions :+ newExtAmendAction)
-      )
+      "$set" -> Json.obj("mrn" -> mrn, "actions" -> (actions :+ newExtAmendAction))
     )
     submissionRepository.findOneAndUpdate(session, BsonDocument(filter), BsonDocument(update.toString))
   }
