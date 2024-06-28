@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.services.mapping
 import org.scalatest.Assertion
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.STANDARD_FRONTIER
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.YesNo
 import uk.gov.hmrc.exports.models.declaration.{DeclarationHolder, EntityDetails, EoriSource}
 import uk.gov.hmrc.exports.services.mapping.AuthorisationHoldersBuilder.{authCodesForGVMSPorts, EXRR}
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.GoodsLocationBuilderSpec.{gvmGoodsLocation, validGoodsLocation}
@@ -156,7 +157,7 @@ class AuthorisationHoldersBuilderSpec extends UnitSpec with ExportsDeclarationBu
                 val modifiers = List(
                   holders,
                   locationOfGoods,
-                  withDeclarantIsExporter("No"),
+                  withDeclarantIsExporter(YesNo.no),
                   withDeclarantDetails(Some(declarantEori)),
                   withRepresentativeDetails(None, None)
                 )
@@ -170,7 +171,7 @@ class AuthorisationHoldersBuilderSpec extends UnitSpec with ExportsDeclarationBu
                 val modifiers = List(
                   holders,
                   locationOfGoods,
-                  withDeclarantIsExporter("No"),
+                  withDeclarantIsExporter(YesNo.no),
                   withDeclarantDetails(Some(declarantEori)),
                   withExporterDetails(Some(exporterEori))
                 )
@@ -199,10 +200,10 @@ class AuthorisationHoldersBuilderSpec extends UnitSpec with ExportsDeclarationBu
                 val modifiers = List(
                   holders,
                   locationOfGoods,
-                  withDeclarantIsExporter("No"),
+                  withDeclarantIsExporter(YesNo.no),
                   withDeclarantDetails(Some(declarantEori)),
                   withExporterDetails(Some(exporterEori)),
-                  withRepresentativeDetails(Some(EntityDetails(Some(representativeEori), None)), None, Some("No"))
+                  withRepresentativeDetails(Some(EntityDetails(Some(representativeEori), None)), None, Some(YesNo.no))
                 )
                 verifyAuthHolder(modifiers, representativeEori)
               }

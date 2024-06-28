@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.services.mapping.declaration
 
 import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.YesNo
 import uk.gov.hmrc.exports.models.declaration.{Address, EntityDetails, RepresentativeDetails}
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
@@ -100,7 +101,7 @@ class AgentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
       "no RepresentativeDetails are supplied and" when {
 
-        Seq("Yes", "No").foreach { repOtherAgent =>
+        Seq(YesNo.yes, YesNo.no).foreach { repOtherAgent =>
           s"representingAnotherAgent is set to ${repOtherAgent}" in {
             val model =
               aDeclaration(

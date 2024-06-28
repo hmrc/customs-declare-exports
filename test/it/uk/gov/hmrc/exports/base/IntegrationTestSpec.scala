@@ -20,7 +20,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{AnyContentAsEmpty, Call}
-import play.api.test.{FakeRequest, Helpers}
+import play.api.test.FakeRequest
 import stubs.ExternalServicesConfig.{Host, Port}
 import stubs.MockGenericDownstreamService
 import testdata.ExportsTestData.{authToken, eori}
@@ -32,31 +32,32 @@ import scala.reflect.ClassTag
 trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSuite with ExportsDeclarationBuilder with MockGenericDownstreamService {
   val databaseName = "test-customs-declare-exports"
 
+  val configurationMap: Map[String, Any] =
+    Map[String, Any](
+      "microservice.services.auth.host" -> Host,
+      "microservice.services.auth.port" -> Port,
+      "microservice.services.customs-data-store.host" -> Host,
+      "microservice.services.customs-data-store.port" -> Port,
+      "microservice.services.customs-declarations.host" -> Host,
+      "microservice.services.customs-declarations.port" -> Port,
+      "microservice.services.customs-declarations.submit-uri" -> "/",
+      "microservice.services.customs-declarations.bearer-token" -> authToken,
+      "microservice.services.customs-declarations.api-version" -> "1.0",
+      "microservice.services.customs-declarations.cancel-uri" -> "/cancellation-requests",
+      "microservice.services.customs-declarations.is-upstream-stubbed" -> true,
+      "microservice.services.customs-declarations-information.host" -> Host,
+      "microservice.services.customs-declarations-information.port" -> Port,
+      "microservice.services.customs-declarations-information.fetch-mrn-status" -> "/mrn/ID/status",
+      "microservice.services.customs-declarations-information.fetch-mrn-declaration" -> "/mrn/ID/full",
+      "microservice.services.customs-declarations-information.api-version" -> "1.0",
+      "microservice.services.hmrc-email.host" -> Host,
+      "microservice.services.hmrc-email.port" -> Port,
+      "mongodb.uri" -> s"mongodb://localhost:27017/$databaseName"
+    )
+
   override implicit lazy val app: Application =
     GuiceApplicationBuilder(overrides = Seq(TestModule.asGuiceableModule))
-      .configure(
-        Map(
-          "microservice.services.auth.host" -> Host,
-          "microservice.services.auth.port" -> Port,
-          "microservice.services.customs-data-store.host" -> Host,
-          "microservice.services.customs-data-store.port" -> Port,
-          "microservice.services.customs-declarations.host" -> Host,
-          "microservice.services.customs-declarations.port" -> Port,
-          "microservice.services.customs-declarations.submit-uri" -> "/",
-          "microservice.services.customs-declarations.bearer-token" -> authToken,
-          "microservice.services.customs-declarations.api-version" -> "1.0",
-          "microservice.services.customs-declarations.cancel-uri" -> "/cancellation-requests",
-          "microservice.services.customs-declarations.is-upstream-stubbed" -> true,
-          "microservice.services.customs-declarations-information.host" -> Host,
-          "microservice.services.customs-declarations-information.port" -> Port,
-          "microservice.services.customs-declarations-information.fetch-mrn-status" -> "/mrn/ID/status",
-          "microservice.services.customs-declarations-information.fetch-mrn-declaration" -> "/mrn/ID/full",
-          "microservice.services.customs-declarations-information.api-version" -> "1.0",
-          "microservice.services.hmrc-email.host" -> Host,
-          "microservice.services.hmrc-email.port" -> Port,
-          "mongodb.uri" -> s"mongodb://localhost:27017/$databaseName"
-        )
-      )
+      .configure(configurationMap)
       .disable[uk.gov.hmrc.exports.routines.MigrationRunnerModule] // No need to run migrations during integration specs
       .build()
 
@@ -93,7 +94,12 @@ trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSui
       |}""".stripMargin)
 
   def getWithAuth(call: Call): FakeRequest[AnyContentAsEmpty.type] =
-    FakeRequest(Helpers.GET, call.url).withHeaders(HeaderNames.authorisation -> "Bearer some-token")
+    FakeRequest("GET", call.url).withHeaders(HeaderNames.authorisation -> "Bearer some-token")
+
+  def postWithAuth[T](call: Call, body: T): FakeRequest[T] =
+    FakeRequest("POST", call.url)
+      .withHeaders(HeaderNames.authorisation -> "Bearer some-token")
+      .withBody(body)
 
   def instanceOf[T](implicit classTag: ClassTag[T]): T = app.injector.instanceOf[T]
 }

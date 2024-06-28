@@ -18,13 +18,14 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{JsSuccess, Json}
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.YesNo
 
 class TransportSpec extends UnitSpec {
 
   "Transport formats" should {
 
     val json = Json.obj(
-      "expressConsignment" -> Json.obj("answer" -> "Yes"),
+      "expressConsignment" -> Json.obj("answer" -> YesNo.yes),
       "transportPayment" -> Json.obj("paymentMethod" -> "payment-method"),
       "containers" -> Json.arr(
         Json.obj("sequenceId" -> 1, "id" -> "container-id", "seals" -> Json.arr(Json.obj("sequenceId" -> 1, "id" -> "seal-id")))

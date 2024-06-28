@@ -19,6 +19,7 @@ package uk.gov.hmrc.exports.services.mapping.declaration
 import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.Address
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.YesNo
 import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -106,7 +107,7 @@ class ExporterBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
           aDeclaration(
             withExporterDetails(eori = Some("exporter_eori")),
             withDeclarantDetails(eori = Some("dec_eori")),
-            withDeclarantIsExporter("No")
+            withDeclarantIsExporter(YesNo.no)
           )
         val declaration = new Declaration()
 

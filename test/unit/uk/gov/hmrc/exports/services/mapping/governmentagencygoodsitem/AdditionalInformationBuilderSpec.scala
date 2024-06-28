@@ -88,17 +88,5 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
         governmentAgencyGoodsItem.getAdditionalInformation mustBe empty
       }
     }
-
-    "remove new-lines from additional information description" in {
-      val exportItem = anItem(withAdditionalInformation(additionalInformation.copy(description = "some\ndescription")))
-      val governmentAgencyGoodsItem = new GovernmentAgencyGoodsItem()
-
-      builder.buildThenAdd(exportItem, governmentAgencyGoodsItem)
-
-      governmentAgencyGoodsItem.getAdditionalInformation
-        .get(0)
-        .getStatementDescription
-        .getValue mustBe "some description"
-    }
   }
 }

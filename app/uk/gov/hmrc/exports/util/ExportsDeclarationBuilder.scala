@@ -20,6 +20,7 @@ import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.AdditionalDeclarationType
 import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.{ContainerKey, RoutingCountryKey, SealKey}
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DeclarationStatus
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.YesNo
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.models.{DeclarationType, Eori}
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.EnhancedStatus
@@ -50,8 +51,8 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
       status = DeclarationStatus.COMPLETE,
       createdDateTime = ZonedDateTime.of(2019, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC).toInstant,
       updatedDateTime = ZonedDateTime.of(2019, 2, 2, 0, 0, 0, 0, ZoneOffset.UTC).toInstant,
-      summaryWasVisited = None,
-      readyForSubmission = None
+      summaryWasVisited = Some(true),
+      readyForSubmission = Some(true)
     ),
     `type` = DeclarationType.STANDARD,
     additionalDeclarationType = None,
@@ -179,7 +180,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
   def withoutIsEntryIntoDeclarantsRecords(): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(isEntryIntoDeclarantsRecords = None))
 
-  def withIsEntryIntoDeclarantsRecords(answer: String = "Yes"): ExportsDeclarationModifier =
+  def withIsEntryIntoDeclarantsRecords(answer: String = YesNo.yes): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(isEntryIntoDeclarantsRecords = Some(YesNoAnswer(answer))))
 
   def withoutPersonPresentingGoodsDetails(): ExportsDeclarationModifier =
@@ -194,7 +195,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
   def withDeclarantDetails(eori: Option[String] = None, address: Option[Address] = None): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(declarantDetails = Some(DeclarantDetails(EntityDetails(eori, address)))))
 
-  def withDeclarantIsExporter(answer: String = "Yes"): ExportsDeclarationModifier =
+  def withDeclarantIsExporter(answer: String = YesNo.yes): ExportsDeclarationModifier =
     cache => cache.copy(parties = cache.parties.copy(declarantIsExporter = Some(DeclarantIsExporter(answer))))
 
   def withoutRepresentativeDetails(): ExportsDeclarationModifier =
@@ -203,7 +204,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
   def withRepresentativeDetails(
     details: Option[EntityDetails],
     statusCode: Option[String],
-    representingAnotherAgent: Option[String] = Some("Yes")
+    representingAnotherAgent: Option[String] = Some(YesNo.yes)
   ): ExportsDeclarationModifier =
     cache =>
       cache.copy(parties = cache.parties.copy(representativeDetails = Some(RepresentativeDetails(details, statusCode, representingAnotherAgent))))
@@ -215,7 +216,7 @@ trait ExportsDeclarationBuilder extends ExportsItemBuilder {
     cache => cache.copy(parties = cache.parties.copy(declarationHoldersData = None))
 
   def withDeclarationHolders(holders: DeclarationHolder*): ExportsDeclarationModifier = {
-    val isRequired = Some(YesNoAnswer(if (holders.isEmpty) "No" else "Yes"))
+    val isRequired = Some(YesNoAnswer(if (holders.isEmpty) YesNo.no else YesNo.yes))
     cache => cache.copy(parties = cache.parties.copy(declarationHoldersData = Some(DeclarationHolders(holders, isRequired))))
   }
 

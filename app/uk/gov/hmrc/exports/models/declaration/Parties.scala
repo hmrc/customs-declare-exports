@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.exports.models.Eori
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.YesNo
 
 case class EntityDetails(eori: Option[String], address: Option[Address])
 
@@ -61,7 +62,7 @@ object DeclarantDetails {
 }
 
 case class DeclarantIsExporter(answer: String) {
-  def isExporter: Boolean = answer == "Yes"
+  def isExporter: Boolean = answer == YesNo.yes
 }
 
 object DeclarantIsExporter {
@@ -69,7 +70,7 @@ object DeclarantIsExporter {
 }
 
 case class RepresentativeDetails(details: Option[EntityDetails], statusCode: Option[String], representingOtherAgent: Option[String]) {
-  def isRepresentingOtherAgent = representingOtherAgent.contains("Yes")
+  def isRepresentingOtherAgent: Boolean = representingOtherAgent.contains(YesNo.yes)
 }
 
 object RepresentativeDetails {
@@ -117,13 +118,8 @@ case class YesNoAnswer(answer: String)
 object YesNoAnswer {
   implicit val format: OFormat[YesNoAnswer] = Json.format[YesNoAnswer]
 
-  object YesNoStringAnswers {
-    val yes = "Yes"
-    val no = "No"
-  }
-
-  val yes = YesNoAnswer(YesNoStringAnswers.yes)
-  val no = YesNoAnswer(YesNoStringAnswers.no)
+  val yes = YesNoAnswer(YesNo.yes)
+  val no = YesNoAnswer(YesNo.no)
 }
 
 case class PersonPresentingGoodsDetails(eori: Eori)
