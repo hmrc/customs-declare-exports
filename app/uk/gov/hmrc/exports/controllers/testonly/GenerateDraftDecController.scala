@@ -21,6 +21,7 @@ import play.api.mvc.{Action, ControllerComponents, Request}
 import uk.gov.hmrc.exports.controllers.RESTController
 import uk.gov.hmrc.exports.models.declaration.AuthorisationProcedureCode.CodeOther
 import uk.gov.hmrc.exports.models.declaration.DeclarationMeta.PackageInformationKey
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.YesNo
 import uk.gov.hmrc.exports.models.declaration.ModeOfTransportCode.Maritime
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
@@ -95,10 +96,10 @@ object GenerateDraftDecController extends ExportsDeclarationBuilder {
       withPreviousDocuments(PreviousDocument("271", "zPoj 7Szx1K", None)),
       withExporterDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "US"))),
       withDeclarantDetails(Some(request.body.eori)),
-      withDeclarantIsExporter("No"),
+      withDeclarantIsExporter(YesNo.no),
       withConsigneeDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "US"))),
       withCarrierDetails(None, Some(Address("XYZ Carrier", "School Road", "London", "WS1 2AB", "GB"))),
-      withRepresentativeDetails(Some(EntityDetails(Some("GB717572504502809"), None)), Some("3"), Some("No")),
+      withRepresentativeDetails(Some(EntityDetails(Some("GB717572504502809"), None)), Some("3"), Some(YesNo.no)),
       withDeclarationAdditionalActors(DeclarationAdditionalActor(Some("AD166297284288300"), Some("WH"))),
       withDeclarationHolders(DeclarationHolder(Some("EXEE"), Some("AD166297284288100"), Some(EoriSource.UserEori))),
       withAuthorisationProcedureCodeChoice(Some(AuthorisationProcedureCodeChoice(CodeOther))),
@@ -115,7 +116,7 @@ object GenerateDraftDecController extends ExportsDeclarationBuilder {
       withSupervisingCustomsOffice("GBPRE005"),
       withOfficeOfExit(Some("GB003140")),
       withItems(items.head, items.tail: _*),
-      withTotalNumberOfItems(Some("805.4"), Some("GBP"), Some("No"), None, "62584234"),
+      withTotalNumberOfItems(Some("805.4"), Some("GBP"), Some(YesNo.no), None, "62584234"),
       withNatureOfTransaction("1"),
       withBorderTransport(Some("41"), Some("WZ9qi2ISJa")),
       withTransportCountry(Some("FI")),

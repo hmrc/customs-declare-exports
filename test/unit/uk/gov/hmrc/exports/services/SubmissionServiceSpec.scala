@@ -33,7 +33,6 @@ import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.{Eori, FetchSubmissionPageData, PageOfSubmissions}
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, CancellationMetaDataBuilder, ExportsPointerToWCOPointer}
-import uk.gov.hmrc.exports.services.notifications.receiptactions.SendEmailForDmsDocAction
 import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
@@ -52,7 +51,6 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
   private val cancelMetaDataBuilder: CancellationMetaDataBuilder = mock[CancellationMetaDataBuilder]
   private val amendMetaDataBuilder: AmendmentMetaDataBuilder = mock[AmendmentMetaDataBuilder]
   private val wcoMapperService: WcoMapperService = mock[WcoMapperService]
-  private val sendEmailForDmsDocAction: SendEmailForDmsDocAction = mock[SendEmailForDmsDocAction]
   private val metadata = mock[MetaData]
 
   private val submissionService = new SubmissionService(
@@ -76,8 +74,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       exportsPointerToWCOPointer,
       cancelMetaDataBuilder,
       amendMetaDataBuilder,
-      wcoMapperService,
-      sendEmailForDmsDocAction
+      wcoMapperService
     )
 
     when(submissionRepository.countSubmissionsInGroup(any(), any())).thenReturn(Future.successful(1))
@@ -263,48 +260,18 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
   }
 
   "SubmissionService.submit" should {
-    def theSubmissionCreated(): Submission = {
-      val captor: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
-      verify(submissionRepository).create(captor.capture())
-      captor.getValue
-    }
 
     "submit to the Dec API" when {
-      val declaration = aDeclaration()
-
-      val dateTimeIssued = TimeUtils.now()
-
-      val newAction =
-        Action(id = "conv-id", requestType = SubmissionRequest, requestTimestamp = dateTimeIssued, decId = Some(declaration.id), versionNo = 1)
-
-      val submission = Submission(declaration, "lrn", "mrn", newAction)
-
       "declaration is valid" in {
-        // Given
+        val declaration = aDeclaration()
+
         when(wcoMapperService.produceMetaData(any())).thenReturn(metadata)
         when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
         when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
         when(wcoMapperService.toXml(any())).thenReturn(xml)
-        when(submissionRepository.create(any())).thenReturn(Future.successful(submission))
         when(customsDeclarationsConnector.submitDeclaration(any(), any())(any())).thenReturn(Future.successful("conv-id"))
 
-        // When
-        submissionService.submit(declaration).futureValue mustBe submission
-
-        // Then
-        val submissionCreated = theSubmissionCreated()
-        val actionGenerated = submissionCreated.actions.head
-
-        val submissionExpected = Submission(declaration, "lrn", "ducr", newAction.copy(requestTimestamp = actionGenerated.requestTimestamp))
-          .copy(enhancedStatusLastUpdated = submissionCreated.enhancedStatusLastUpdated, lastUpdated = submissionCreated.lastUpdated)
-
-        submissionCreated mustBe submissionExpected
-
-        actionGenerated.id mustBe "conv-id"
-        actionGenerated.requestType mustBe SubmissionRequest
-
-        verify(submissionRepository, never).findOne(any[String], any[String])
-        verify(sendEmailForDmsDocAction, never).execute(any[String])
+        submissionService.submit(declaration).futureValue.uuid mustBe declaration.id
       }
     }
 

@@ -17,7 +17,6 @@
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import uk.gov.hmrc.exports.models.declaration.{AdditionalDocument, _}
-import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper._
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import uk.gov.hmrc.wco.dec._
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
@@ -30,7 +29,7 @@ import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import scala.jdk.CollectionConverters._
 
-class AdditionalDocumentsBuilder @Inject() () extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
+class AdditionalDocumentsBuilder @Inject() extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
 
   def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem): Unit = {
 
@@ -112,7 +111,8 @@ class AdditionalDocumentsBuilder @Inject() () extends ModifyingBuilder[ExportIte
 }
 
 object AdditionalDocumentsBuilder {
-  val dateTimeCode = "102"
+
+  private val dateTimeCode = "102"
 
   def build(procedureCodes: Seq[GovernmentAgencyGoodsItemAdditionalDocument]): java.util.List[WCOAdditionalDocument] =
     procedureCodes
@@ -122,7 +122,7 @@ object AdditionalDocumentsBuilder {
 
   // TODO get rid of the interim model GovernmentAgencyGoodsItemAdditionalDocument and map to wco dec directly
 
-  def createAdditionalDocument(doc: GovernmentAgencyGoodsItemAdditionalDocument): WCOAdditionalDocument = {
+  private def createAdditionalDocument(doc: GovernmentAgencyGoodsItemAdditionalDocument): WCOAdditionalDocument = {
     val additionalDocument = new WCOAdditionalDocument
 
     doc.categoryCode.foreach { categoryCode =>
@@ -208,8 +208,8 @@ object AdditionalDocumentsBuilder {
     submitter
   }
 
-  val documentTypeCodesRequiringOptionalFields = Seq("9101", "9005", "I004", "L001", "9100", "9102", "9104", "9105", "9106", "X001", "X002", "Y100")
-  val documentStatusesRequiringOptionalFields = Seq("UA", "UE", "UP", "US", "XX", "XW")
+  val documentTypeCodesRequiringOptionalFields = List("9101", "9005", "I004", "L001", "9100", "9102", "9104", "9105", "9106", "X001", "X002", "Y100")
+  val documentStatusesRequiringOptionalFields = List("UA", "UE", "UP", "US", "XX", "XW")
 
   private def shouldDefaultValuesBeApplied(additionalDocument: AdditionalDocument): Boolean = {
     val documentTypeCodeMatches = additionalDocument.documentTypeCode.exists(documentTypeCodesRequiringOptionalFields.contains)
@@ -225,7 +225,7 @@ object AdditionalDocumentsBuilder {
       case _                    => value
     }
 
-  def createGoodsItemAdditionalDocument(additionalDocument: AdditionalDocument) = {
+  def createGoodsItemAdditionalDocument(additionalDocument: AdditionalDocument): GovernmentAgencyGoodsItemAdditionalDocument = {
     val applyDefaults = shouldDefaultValuesBeApplied(additionalDocument)
 
     GovernmentAgencyGoodsItemAdditionalDocument(
@@ -235,7 +235,8 @@ object AdditionalDocumentsBuilder {
       lpcoExemptionCode = additionalDocument.documentStatus,
       name = additionalDocument.documentStatusReason,
       submitter = additionalDocument.issuingAuthorityName.map { name =>
-        GovernmentAgencyGoodsItemAdditionalDocumentSubmitter(name = Some(stripCarriageReturns(name)))
+        // GovernmentAgencyGoodsItemAdditionalDocumentSubmitter(name = Some(stripCarriageReturns(name)))
+        GovernmentAgencyGoodsItemAdditionalDocumentSubmitter(Some(name))
       },
       effectiveDateTime = additionalDocument.dateOfValidity
         .map(date =>

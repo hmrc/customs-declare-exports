@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.exports.services
 
+import com.sun.xml.bind.marshaller.CharacterEscapeHandler
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.services.mapping.SubmissionMetaDataBuilder
+import uk.gov.hmrc.exports.services.mapping.{Sanitiser, SubmissionMetaDataBuilder}
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
@@ -27,8 +28,8 @@ import javax.xml.bind.{JAXBContext, JAXBElement, Marshaller}
 
 class WcoMapperService @Inject() (submissionMetadataBuilder: SubmissionMetaDataBuilder) {
 
-  def produceMetaData(exportsCacheModel: ExportsDeclaration): MetaData =
-    submissionMetadataBuilder.build(exportsCacheModel)
+  def produceMetaData(declaration: ExportsDeclaration): MetaData =
+    submissionMetadataBuilder.build(declaration)
 
   def declarationDucr(metaData: MetaData): Option[String] =
     Option(
@@ -51,12 +52,15 @@ class WcoMapperService @Inject() (submissionMetadataBuilder: SubmissionMetaDataB
         .getValue
     ).orElse(None)
 
+  private lazy val sanitiser = new Sanitiser
+
   private lazy val jaxbContext = JAXBContext.newInstance(classOf[MetaData])
 
   def toXml(metaData: MetaData): String = {
     val jaxbMarshaller = jaxbContext.createMarshaller
 
     jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true)
+    jaxbMarshaller.setProperty(classOf[CharacterEscapeHandler].getName, sanitiser)
 
     val sw = new StringWriter
     jaxbMarshaller.marshal(metaData, sw)

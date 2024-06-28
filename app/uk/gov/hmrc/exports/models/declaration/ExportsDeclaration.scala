@@ -63,4 +63,9 @@ object ExportsDeclaration {
     val newId = if (update) declaration.id else UUID.randomUUID.toString
     declaration.copy(id = newId, eori = eori.value, declarationMeta = newMeta)
   }
+
+  object YesNo {
+    val yes = "Yes"
+    val no = "No"
+  }
 }
