@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.services.mapping.declaration
 
 import uk.gov.hmrc.exports.models.DeclarationType._
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
-import uk.gov.hmrc.exports.models.declaration.YesNoAnswer.YesNoStringAnswers
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.YesNo
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.declaration_ds.dms._2._
@@ -36,7 +36,7 @@ class SpecificCircumstancesCodeBuilder @Inject() () extends ModifyingBuilder[Exp
     }
 
   private def isExpressConsignment(exportsDeclaration: ExportsDeclaration): Boolean =
-    exportsDeclaration.transport.expressConsignment.exists(_.answer == YesNoStringAnswers.yes)
+    exportsDeclaration.transport.expressConsignment.exists(_.answer == YesNo.yes)
 
   private def setCircumstancesCode(declaration: Declaration): Unit = {
     val circumstancesCode = new DeclarationSpecificCircumstancesCodeCodeType()
