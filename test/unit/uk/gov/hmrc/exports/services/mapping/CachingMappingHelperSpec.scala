@@ -84,12 +84,6 @@ class CachingMappingHelperSpec extends UnitSpec {
         commodity.classifications.map(c => c.id) mustBe Seq(Some("12345678"))
       }
 
-      "Only commodity description, stripped of new lines, are provided" in {
-        val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(None, Some(s"description with\na new\r\nline"))))
-        val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
-        commodity.description mustBe Some("description with a new line")
-      }
-
       "Only description are provided" in {
         val exportItem = ExportItem("id", commodityDetails = Some(CommodityDetails(None, Some("description"))))
 

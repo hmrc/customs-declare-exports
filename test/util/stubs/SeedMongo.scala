@@ -28,7 +28,7 @@ import scala.concurrent.duration.Duration
 
 object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
 
-  val declaration = aDeclaration(
+  val declaration: ExportsDeclaration = aDeclaration(
     withAdditionalDeclarationType(),
     withConsignmentReferences(),
     withDepartureTransport(ModeOfTransportCode.Maritime, "11", "SHIP1"),
@@ -36,11 +36,11 @@ object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
     withTransportCountry(None),
     withContainerData(),
     withExporterDetails(Some("GB717572504502801")),
-    withConsigneeDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "United States of America"))),
+    withConsigneeDetails(None, Some(Address("Bags Export", "1 Bags Avenue", "New York", "NA", "US"))),
     withDeclarantDetails(Some("GB717572504502811")),
     withRepresentativeDetails(Some(EntityDetails(Some("GB717572504502809"), None)), Some("3")),
     withDeclarationHolders(DeclarationHolder(Some("AEOC"), Some("GB717572504502811"), Some(EoriSource.OtherEori))),
-    withCarrierDetails(None, Some(Address("XYZ Carrier", "School Road", "London", "WS1 2AB", "United Kingdom"))),
+    withCarrierDetails(None, Some(Address("XYZ Carrier", "School Road", "London", "WS1 2AB", "GB"))),
     withOriginationCountry(),
     withDestinationCountry(),
     withoutRoutingCountries(),

@@ -27,7 +27,7 @@ class CachingMappingHelper {
   def commodityFromExportItem(exportItem: ExportItem): Option[Commodity] =
     Some(
       Commodity(
-        description = exportItem.commodityDetails.flatMap(_.descriptionOfGoods.map(stripCarriageReturns)),
+        description = exportItem.commodityDetails.flatMap(_.descriptionOfGoods),
         classifications = classificationMapper(
           exportItem.commodityDetails.flatMap(_.combinedNomenclatureCode),
           exportItem.cusCode.flatMap(_.cusCode),
@@ -101,6 +101,4 @@ object CachingMappingHelper {
     ).toSeq
 
   }
-
-  def stripCarriageReturns(value: String): String = value.replaceAll("(\\r\\n)|\\r|\\n", " ")
 }
