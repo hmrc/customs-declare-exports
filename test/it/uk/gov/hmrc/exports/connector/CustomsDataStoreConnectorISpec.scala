@@ -57,12 +57,12 @@ class CustomsDataStoreConnectorISpec extends IntegrationTestSpec {
                                               |      "subject": "subject-example",
                                               |      "eventId": "example-id",
                                               |      "groupId": "example-group-id",
-                                              |      "timestamp": "2021-05-14T10:59:45.811+01:00",
+                                              |      "timestamp": "2024-06-26T13:39:08.990219239",
                                               |      "event": {
                                               |          "id": "example-id",
                                               |          "event": "someEvent",
                                               |          "emailAddress": "some@email.com",
-                                              |          "detected": "2021-05-14T10:59:45.811+01:00",
+                                              |          "detected": "2024-06-26T14:37:26.906Z",
                                               |          "code": 12,
                                               |          "reason": "Inbox full",
                                               |          "enrolment": "HMRC-CUS-ORG~EORINumber~testEori"
