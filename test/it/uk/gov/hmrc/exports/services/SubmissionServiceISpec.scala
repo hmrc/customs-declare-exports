@@ -67,31 +67,6 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
 
   private val eori = "GB167676"
 
-  "SubmissionService.submit" should {
-    "revert a declaration to a draft status" when {
-      "the submission to the Dec API fails on submit" in {
-        when(wcoMapperService.produceMetaData(any())).thenReturn(metadata)
-        when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
-        when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
-        when(wcoMapperService.toXml(any())).thenReturn(xml)
-        when(customsDeclarationsConnector.submitDeclaration(any[String], any[String])(any[HeaderCarrier]))
-          .thenReturn(Future.failed(new RuntimeException("Some error")))
-
-        val declaration = aDeclaration()
-        declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
-
-        intercept[RuntimeException] {
-          submissionServiceWithMockRepo.submit(declaration)(HeaderCarrier()).futureValue
-        }
-
-        verify(mockSubmissionRepository, never).create(any[Submission])
-
-        val resultingDeclaration = declarationRepository.findOne(id, declaration.id).futureValue.value
-        resultingDeclaration.status mustBe DeclarationStatus.DRAFT
-      }
-    }
-  }
-
   "SubmissionService.cancelAmendment" should {
     val mrn = Some("mrn")
     val amendmentId = "amendmentId"

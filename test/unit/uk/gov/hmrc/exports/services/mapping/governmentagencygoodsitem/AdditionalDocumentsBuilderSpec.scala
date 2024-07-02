@@ -32,7 +32,7 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
     documentIdentifier = Some("idpart"),
     documentStatus = Some("status"),
     documentStatusReason = Some("reason"),
-    issuingAuthorityName = Some("Issuing\nAuthority\rName"),
+    issuingAuthorityName = Some("Issuing Authority Name"),
     dateOfValidity = Some(Date(Some(10), Some(4), Some(2017))),
     documentWriteOff = None
   )

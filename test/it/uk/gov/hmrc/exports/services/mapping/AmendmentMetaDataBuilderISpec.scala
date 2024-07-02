@@ -5,6 +5,7 @@ import uk.gov.hmrc.exports.models.DeclarationType.STANDARD
 import uk.gov.hmrc.exports.models.declaration.AdditionalDeclarationType.STANDARD_FRONTIER
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.COMPLETE
 import uk.gov.hmrc.exports.models.declaration.EoriSource.OtherEori
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.YesNo
 import uk.gov.hmrc.exports.models.declaration.ModeOfTransportCode.{Maritime, Road}
 import uk.gov.hmrc.exports.models.declaration._
 import uk.gov.hmrc.exports.services.mapping.AmendmentMetaDataBuilderISpec.{
@@ -100,10 +101,10 @@ object AmendmentMetaDataBuilderISpec {
       None,
       None,
       Some(DeclarantDetails(EntityDetails(Some("GB239355053000"), None))),
-      Some(DeclarantIsExporter("Yes")),
+      Some(DeclarantIsExporter(YesNo.yes)),
       Some(RepresentativeDetails(Some(EntityDetails(Some("GB239355053000"), None)), None, None)),
       None,
-      Some(DeclarationHolders(List(DeclarationHolder(Some("EXRR"), Some("GB239355053000"), Some(OtherEori))), Some(YesNoAnswer("Yes")))),
+      Some(DeclarationHolders(List(DeclarationHolder(Some("EXRR"), Some("GB239355053000"), Some(OtherEori))), Some(YesNoAnswer(YesNo.yes)))),
       None,
       None,
       None,
@@ -137,7 +138,7 @@ object AmendmentMetaDataBuilderISpec {
         None,
         Some(List(PackageInformation(1, "2b6417ed-ae38-401d-aa70-853baf9d696e", Some("XD"), Some(10), Some("Shipping description")))),
         Some(CommodityMeasure(Some("10"), Some(false), Some("500"), Some("700"))),
-        Some(AdditionalInformations(Some(YesNoAnswer("Yes")), List(AdditionalInformation("00400", "EXPORTER")))),
+        Some(AdditionalInformations(Some(YesNoAnswer(YesNo.yes)), List(AdditionalInformation("00400", "EXPORTER")))),
         None,
         None
       )

@@ -17,15 +17,14 @@
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import uk.gov.hmrc.exports.models.declaration.{AdditionalInformation, DeclarantIsExporter, ExportItem}
-import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper._
-import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
+import uk.gov.hmrc.exports.services.mapping.{ModifyingBuilder, Sanitiser}
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.GovernmentAgencyGoodsItem.{AdditionalInformation => WCOAdditionalInformation}
 import wco.datamodel.wco.declaration_ds.dms._2.{AdditionalInformationStatementCodeType, AdditionalInformationStatementDescriptionTextType}
 
 import javax.inject.Inject
 
-class AdditionalInformationBuilder @Inject() () extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
+class AdditionalInformationBuilder @Inject() extends ModifyingBuilder[ExportItem, GoodsShipment.GovernmentAgencyGoodsItem] {
 
   override def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem): Unit =
     exportItem.additionalInformation.foreach { additionalInformationData =>
@@ -34,20 +33,23 @@ class AdditionalInformationBuilder @Inject() () extends ModifyingBuilder[ExportI
       }
     }
 
+  private val code = "00400"
+  private val description = "EXPORTER"
+
+  private lazy val additionalInformation = AdditionalInformation(code, description)
+
   def buildThenAdd(
     exportItem: ExportItem,
     declarantIsExporter: Option[DeclarantIsExporter],
     wcoGovernmentAgencyGoodsItem: GoodsShipment.GovernmentAgencyGoodsItem
   ): Unit = {
 
-    val additionalInformation = AdditionalInformation(code = "00400", description = "EXPORTER")
-
-    lazy val infoEnteredByUser = exportItem.additionalInformation.exists { additionalInformationData =>
-      additionalInformationData.items.contains(additionalInformation)
+    lazy val hasInfoEnteredByUser = exportItem.additionalInformation.exists { additionalInformationData =>
+      additionalInformationData.items.exists(ai => ai.code == code && Sanitiser.escape(ai.description) == description)
     }
 
     declarantIsExporter match {
-      case Some(isExporter) if isExporter.isExporter && !infoEnteredByUser =>
+      case Some(isExporter) if isExporter.isExporter && !hasInfoEnteredByUser =>
         wcoGovernmentAgencyGoodsItem.getAdditionalInformation.add(buildAdditionalInformation(additionalInformation))
       case _ => ()
     }
@@ -62,7 +64,7 @@ class AdditionalInformationBuilder @Inject() () extends ModifyingBuilder[ExportI
 
     if (additionalInformation.description.nonEmpty) {
       val additionalInformationStatementDescriptionTextType = new AdditionalInformationStatementDescriptionTextType
-      additionalInformationStatementDescriptionTextType.setValue(stripCarriageReturns(additionalInformation.description))
+      additionalInformationStatementDescriptionTextType.setValue(additionalInformation.description)
       wcoAdditionalInformation.setStatementDescription(additionalInformationStatementDescriptionTextType)
     }
 

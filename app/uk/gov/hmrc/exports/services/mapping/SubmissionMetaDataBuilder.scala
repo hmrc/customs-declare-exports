@@ -34,13 +34,13 @@ class SubmissionMetaDataBuilder @Inject() (declarationBuilder: DeclarationBuilde
   val responsibleAgencyName = "HMRC"
   val agencyAssignedCustomizationVersionCode = "v2.1"
 
-  def build(model: ExportsDeclaration): MetaData = {
+  def build(declaration: ExportsDeclaration): MetaData = {
     val metaData = createMetaDataWithConstants()
 
     val element: JAXBElement[Declaration] = new JAXBElement[Declaration](
       new QName("urn:wco:datamodel:WCO:DEC-DMS:2", "Declaration"),
       classOf[Declaration],
-      declarationBuilder.buildDeclaration(model)
+      declarationBuilder.buildDeclaration(declaration)
     )
     metaData.setAny(element)
     metaData
@@ -70,5 +70,4 @@ class SubmissionMetaDataBuilder @Inject() (declarationBuilder: DeclarationBuilde
     metaData.setWCOTypeName(metaDataWCOTypeNameTextType)
     metaData
   }
-
 }

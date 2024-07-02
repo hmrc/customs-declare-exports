@@ -21,6 +21,7 @@ import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData.DEFAULT_LIMIT
+import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.models.declaration.submissions.{EnhancedStatus, StatusGroup, Submission, SubmissionRequest}
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
 import uk.gov.hmrc.exports.util.TimeUtils
@@ -40,14 +41,23 @@ class SubmissionController @Inject() (
     extends RESTController(cc) with JSONResponses {
 
   def create(declarationId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    declarationService.markCompleted(request.eori, declarationId, declarationId).flatMap {
+    def submitDeclaration(declaration: ExportsDeclaration): Future[Submission] =
+      try
+        submissionService.submit(declaration)
+      catch {
+        case throwable: Throwable =>
+          logger.info(s"Declaration [${declaration.id}]: Submission failed")
+          declarationService.revertStatusToDraft(declaration, throwable)
+      }
 
+    declarationService.markCompleted(request.eori, declarationId, declarationId).flatMap {
       case Some(declarationBeforeUpdate) =>
-        if (declarationBeforeUpdate.isCompleted) {
-          Future.successful(Conflict(ErrorResponse("Declaration has already been submitted")))
-        } else {
-          submissionService.submit(declarationBeforeUpdate).map(Created(_))
-        }
+        if (declarationBeforeUpdate.isCompleted) Future.successful(Conflict(ErrorResponse("Declaration has already been submitted")))
+        else
+          for {
+            submissionToSave <- submitDeclaration(declarationBeforeUpdate)
+            submissionToReturn <- submissionService.storeSubmission(submissionToSave)
+          } yield Created(submissionToReturn)
 
       case None => Future.successful(NotFound)
     }
