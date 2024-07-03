@@ -43,11 +43,7 @@ class SubmissionController @Inject() (
     declarationService.markCompleted(request.eori, declarationId, declarationId).flatMap {
       case Some(declarationBeforeUpdate) =>
         if (declarationBeforeUpdate.isCompleted) Future.successful(Conflict(ErrorResponse("Declaration has already been submitted")))
-        else
-          for {
-            submissionToSave <- submissionService.submitDeclaration(declarationBeforeUpdate)
-            submissionToReturn <- submissionService.storeSubmission(submissionToSave)
-          } yield Created(submissionToReturn)
+        else submissionService.submitDeclaration(declarationBeforeUpdate).map(Created(_))
 
       case None => Future.successful(NotFound)
     }

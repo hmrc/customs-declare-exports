@@ -126,7 +126,7 @@ class SubmissionService @Inject() (
 
   def submitDeclaration(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] =
     try
-      submit(declaration)
+      submit(declaration).flatMap(storeSubmission)
     catch {
       case throwable: Throwable =>
         logProgress(declaration.id, "Submission failed")

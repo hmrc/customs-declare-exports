@@ -263,12 +263,13 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
 
     "submit to the Dec API" when {
       "declaration is valid" in {
-        val declaration = aDeclaration()
+        val declaration = aDeclaration(withId(submission.uuid))
 
         when(wcoMapperService.produceMetaData(any())).thenReturn(metadata)
         when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
         when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
         when(wcoMapperService.toXml(any())).thenReturn(xml)
+        when(submissionRepository.create(any())).thenReturn(Future.successful(submission))
         when(customsDeclarationsConnector.submitDeclaration(any(), any())(any())).thenReturn(Future.successful("conv-id"))
 
         submissionService.submitDeclaration(declaration).futureValue.uuid mustBe declaration.id
