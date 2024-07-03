@@ -34,22 +34,29 @@ class Sanitiser extends CharacterEscapeHandler {
    */
   // scalastyle:off cyclomatic.complexity
   override def escape(array: Array[Char], from: Int, length: Int, isAttVal: Boolean, writer: Writer): Unit =
-    if (length == 1) escape(array(from), isAttVal, writer)
+    if (length == 1) escapeSingleChar(array(from), isAttVal, writer)
     else {
       val sb = new StringBuilder(length)
       for (ix <- from until length) {
         val chr = array(ix)
         (chr: @switch) match {
+
+          // Might be used to separate 2 words
           case '\t' => sb += ' '
+
           case '\n' => if (isAttVal) sb ++= "&#10;" else sb += ' '
+
+          // Replaced with a space only if the next char is not a line-feed.
           case '\r' => if ((ix + 1) < length && array(ix + 1) != '\n') sb += ' '
+
           case '\"' => if (isAttVal) sb ++= "&quot;" else sb += '\"'
           case '&'  => sb ++= "&amp;"
           case '<'  => sb ++= "&lt;"
           case '>'  => sb ++= "&gt;"
           case _ =>
             if ((chr > 31 && chr < 127) || isLetterOrDigit(chr)) sb += chr
-            else if (!(isWhitespace(chr) || isISOControl(chr))) sb ++= s"&#${chr.toInt};"
+            else // Whitespace and control chars are ignored. Any other char is escaped.
+            if (!(isWhitespace(chr) || isISOControl(chr))) sb ++= s"&#${chr.toInt};"
         }
       }
 
@@ -57,7 +64,18 @@ class Sanitiser extends CharacterEscapeHandler {
     }
   // scalastyle:on
 
-  private def escape(chr: Char, isAttVal: Boolean, writer: Writer): Unit =
+  /* In order to improve the performance of the conversion process to XML, we handles values
+     consisting of a single character, and we have several of them in a declaration, by using
+     an ad-hoc method.
+
+     Whereas for values with len > 1 most of the whitespace and control chars are just ignored,
+     when they are the unique char of a value escapeSingleChar simply replaces them with a ' ',
+     let aside line-feed chars, so to not write out an empty value.
+
+     In addition to avoiding the creation of an unnecessary StringBuilder instances, we can also
+     take advantage of the improved performance of 'writer.write(Char)' over 'writer.write(String)'.
+   */
+  private def escapeSingleChar(chr: Char, isAttVal: Boolean, writer: Writer): Unit =
     (chr: @switch) match {
       case '\n' => if (isAttVal) writer.write("&#10;") else writer.write('\n')
       case '\"' => if (isAttVal) writer.write("&quot;") else writer.write('\"')
