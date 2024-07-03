@@ -124,12 +124,6 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
   def markCompleted(eori: Eori, id: String, submissionId: String): Future[Option[ExportsDeclaration]] =
     declarationRepository.markStatusAsComplete(eori, id, submissionId)
 
-  def revertStatusToDraft[T](declaration: ExportsDeclaration, throwable: Throwable): Future[T] =
-    declarationRepository.revertStatusToDraft(declaration) flatMap { _ =>
-      logger.info(s"Declaration [${declaration.id}]: Reverted declaration to DRAFT")
-      Future.failed[T](throwable)
-    }
-
   def update(declaration: ExportsDeclaration): Future[Option[ExportsDeclaration]] =
     declarationRepository.findOneAndReplace(
       Json.obj("id" -> declaration.id, "eori" -> declaration.eori, "status" -> Json.obj("$ne" -> COMPLETE.toString)),

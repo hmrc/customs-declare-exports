@@ -124,7 +124,22 @@ class SubmissionService @Inject() (
   def findSubmissionsByLatestDecId(eori: String, lrn: String): Future[Option[Submission]] =
     submissionRepository.findByLatestDecId(eori, lrn)
 
-  def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] =
+  def submitDeclaration(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] =
+    try
+      submit(declaration)
+    catch {
+      case throwable: Throwable =>
+        logProgress(declaration.id, "Submission failed")
+        revertStatusToDraft(declaration, throwable)
+    }
+
+  private def revertStatusToDraft[T](declaration: ExportsDeclaration, throwable: Throwable): Future[T] =
+    declarationRepository.revertStatusToDraft(declaration).flatMap { _ =>
+      logProgress(declaration.id, "Reverted declaration to DRAFT")
+      Future.failed[T](throwable)
+    }
+
+  private def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] =
     metrics.timeAsyncCall(ExportsMetrics.submissionMonitor) {
       logProgress(declaration.id, "Beginning Declaration Submission")
 

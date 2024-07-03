@@ -16,24 +16,18 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import org.mockito.ArgumentMatchers.any
 import play.api.libs.json.Json
-import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import testdata.ExportsTestData.eori
 import uk.gov.hmrc.exports.base.{AuthTestSupport, IntegrationTestSpec}
 import uk.gov.hmrc.exports.controllers.SubmissionControllerISpec.submission
-import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.routes.SubmissionController
-import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DRAFT
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.RepositoryOps.mongoDateOfMillis
-import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
-import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
+import uk.gov.hmrc.exports.repositories.SubmissionRepository
 import uk.gov.hmrc.exports.util.TimeUtils
 
 import java.util.UUID
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class SubmissionControllerISpec extends IntegrationTestSpec with AuthTestSupport {
 
@@ -43,34 +37,6 @@ class SubmissionControllerISpec extends IntegrationTestSpec with AuthTestSupport
     super.beforeEach()
     repository.removeAll.futureValue
     postToDownstreamService("/auth/authorise", OK, enrolments)
-  }
-
-  "SubmissionController.create" when {
-    "the submission is NOT successful (for any reason)" should {
-      "revert the declaration status to 'DRAFT'" in {
-        val cc = stubControllerComponents()
-        val declarationRepository = instanceOf[DeclarationRepository]
-        val submissionService = mock[SubmissionService]
-
-        val controller = new SubmissionController(new Authenticator(mockAuthConnector, cc), instanceOf[DeclarationService], submissionService, cc)
-
-        val draftDeclaration = aDeclaration(withEori(userEori), withStatus(DRAFT))
-
-        when(submissionService.submit(any())(any())).thenThrow(new IllegalArgumentException("A LRN is required"))
-
-        declarationRepository.removeAll.futureValue
-        declarationRepository.create(draftDeclaration).futureValue.id mustBe draftDeclaration.id
-
-        val result = intercept[IllegalArgumentException] {
-          withAuthorizedUser()
-          await(controller.create(draftDeclaration.id)(FakeRequest("POST", "/submission")))
-        }
-        result.getMessage mustBe "A LRN is required"
-
-        val declaration = declarationRepository.findOne(userEori, draftDeclaration.id).futureValue.value
-        declaration.declarationMeta.status mustBe DRAFT
-      }
-    }
   }
 
   "SubmissionController.find" should {

@@ -271,18 +271,21 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(wcoMapperService.toXml(any())).thenReturn(xml)
         when(customsDeclarationsConnector.submitDeclaration(any(), any())(any())).thenReturn(Future.successful("conv-id"))
 
-        submissionService.submit(declaration).futureValue.uuid mustBe declaration.id
+        submissionService.submitDeclaration(declaration).futureValue.uuid mustBe declaration.id
       }
     }
 
     "throw exception" when {
+      val declaration = aDeclaration()
+
       "missing LRN" in {
         when(wcoMapperService.produceMetaData(any())).thenReturn(metadata)
         when(wcoMapperService.declarationLrn(any())).thenReturn(None)
-        when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
+        when(declarationRepository.revertStatusToDraft(any())).thenReturn(Future.successful(Some(declaration)))
 
-        intercept[IllegalArgumentException] {
-          submissionService.submit(aDeclaration()).futureValue
+        whenReady(submissionService.submitDeclaration(declaration).failed) { throwable =>
+          throwable mustBe a[IllegalArgumentException]
+          throwable.getMessage mustBe "A LRN is required"
         }
       }
 
@@ -290,9 +293,11 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
         when(wcoMapperService.produceMetaData(any())).thenReturn(metadata)
         when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
         when(wcoMapperService.declarationDucr(any())).thenReturn(None)
+        when(declarationRepository.revertStatusToDraft(any())).thenReturn(Future.successful(Some(declaration)))
 
-        intercept[IllegalArgumentException] {
-          submissionService.submit(aDeclaration()).futureValue
+        whenReady(submissionService.submitDeclaration(declaration).failed) { throwable =>
+          throwable mustBe a[IllegalArgumentException]
+          throwable.getMessage mustBe "A DUCR is required"
         }
       }
     }

@@ -72,7 +72,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
       "return 201 (Created)" in {
         val declaration = aDeclaration(withStatus(DRAFT))
         when(declarationService.markCompleted(any(), anyString(), any())).thenReturn(Future.successful(Some(declaration)))
-        when(submissionService.submit(any())(any())).thenReturn(Future.successful(submission))
+        when(submissionService.submitDeclaration(any())(any())).thenReturn(Future.successful(submission))
         when(submissionService.storeSubmission(any())).thenReturn(Future.successful(submission))
 
         val result = controller.create(declaration.id)(postRequest)
@@ -86,7 +86,7 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
       "return 409 (Conflict)" in {
         val declaration = aDeclaration(withStatus(COMPLETE))
         when(declarationService.markCompleted(any(), anyString(), any())).thenReturn(Future.successful(Some(declaration)))
-        when(submissionService.submit(any())(any())).thenReturn(Future.successful(submission))
+        when(submissionService.submitDeclaration(any())(any())).thenReturn(Future.successful(submission))
 
         val result = controller.create(declaration.id)(postRequest)
 

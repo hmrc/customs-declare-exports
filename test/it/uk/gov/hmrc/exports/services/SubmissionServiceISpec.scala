@@ -7,6 +7,7 @@ import uk.gov.hmrc.exports.base.{IntegrationTestSpec, MockMetrics}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DRAFT
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping._
@@ -66,6 +67,27 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
   private val metadata = mock[MetaData]
 
   private val eori = "GB167676"
+
+  "SubmissionService.submitDeclaration" when {
+    "the submission is NOT successful (for any reason)" should {
+      "revert the declaration status to 'DRAFT'" in {
+        when(wcoMapperService.declarationLrn(any())).thenThrow(new IllegalArgumentException("A LRN is required"))
+
+        val aCompletedDeclaration = aDeclaration(withEori(eori))
+        val declarationId = aCompletedDeclaration.id
+
+        declarationRepository.removeAll.futureValue
+        declarationRepository.create(aCompletedDeclaration).futureValue.id mustBe declarationId
+
+        intercept[IllegalArgumentException] {
+          await(submissionService.submitDeclaration(aCompletedDeclaration)(HeaderCarrier()))
+        }.getMessage mustBe "A LRN is required"
+
+        val declaration = declarationRepository.findOne(Eori(eori), declarationId).futureValue.value
+        declaration.declarationMeta.status mustBe DRAFT
+      }
+    }
+  }
 
   "SubmissionService.cancelAmendment" should {
     val mrn = Some("mrn")
