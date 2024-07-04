@@ -41,13 +41,9 @@ class SubmissionController @Inject() (
 
   def create(declarationId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
     declarationService.markCompleted(request.eori, declarationId, declarationId).flatMap {
-
       case Some(declarationBeforeUpdate) =>
-        if (declarationBeforeUpdate.isCompleted) {
-          Future.successful(Conflict(ErrorResponse("Declaration has already been submitted")))
-        } else {
-          submissionService.submit(declarationBeforeUpdate).map(Created(_))
-        }
+        if (declarationBeforeUpdate.isCompleted) Future.successful(Conflict(ErrorResponse("Declaration has already been submitted")))
+        else submissionService.submitDeclaration(declarationBeforeUpdate).map(Created(_))
 
       case None => Future.successful(NotFound)
     }

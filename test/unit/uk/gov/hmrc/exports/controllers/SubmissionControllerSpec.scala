@@ -27,7 +27,7 @@ import uk.gov.hmrc.auth.core.InsufficientEnrolments
 import uk.gov.hmrc.exports.base.{AuthTestSupport, UnitSpec}
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.controllers.response.ErrorResponse
-import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.{COMPLETE, DRAFT}
 import uk.gov.hmrc.exports.models.declaration.submissions.StatusGroup._
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.models.{FetchSubmissionPageData, PageOfSubmissions}
@@ -70,11 +70,12 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
 
     "request is correct" should {
       "return 201 (Created)" in {
-        val declaration = aDeclaration(withId("id"), withStatus(DeclarationStatus.DRAFT))
+        val declaration = aDeclaration(withStatus(DRAFT))
         when(declarationService.markCompleted(any(), anyString(), any())).thenReturn(Future.successful(Some(declaration)))
-        when(submissionService.submit(any())(any())).thenReturn(Future.successful(submission))
+        when(submissionService.submitDeclaration(any())(any())).thenReturn(Future.successful(submission))
+        when(submissionService.storeSubmission(any())).thenReturn(Future.successful(submission))
 
-        val result = controller.create("id")(postRequest)
+        val result = controller.create(declaration.id)(postRequest)
 
         status(result) mustBe CREATED
         contentAsJson(result) mustBe toJson(submission)
@@ -83,11 +84,11 @@ class SubmissionControllerSpec extends UnitSpec with AuthTestSupport with Export
 
     "DeclarationService returns completed Declaration" should {
       "return 409 (Conflict)" in {
-        val declaration = aDeclaration(withId("id"), withStatus(DeclarationStatus.COMPLETE))
+        val declaration = aDeclaration(withStatus(COMPLETE))
         when(declarationService.markCompleted(any(), anyString(), any())).thenReturn(Future.successful(Some(declaration)))
-        when(submissionService.submit(any())(any())).thenReturn(Future.successful(submission))
+        when(submissionService.submitDeclaration(any())(any())).thenReturn(Future.successful(submission))
 
-        val result = controller.create("id")(postRequest)
+        val result = controller.create(declaration.id)(postRequest)
 
         status(result) mustBe CONFLICT
         contentAsJson(result) mustBe toJson(ErrorResponse("Declaration has already been submitted"))

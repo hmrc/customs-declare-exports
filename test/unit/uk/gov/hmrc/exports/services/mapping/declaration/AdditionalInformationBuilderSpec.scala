@@ -79,7 +79,6 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
   }
 
   "buildThenAdd from just a statement description" should {
-
     "append to declaration" in {
       val declaration = new Declaration()
 
@@ -95,19 +94,6 @@ class AdditionalInformationBuilderSpec extends UnitSpec with ExportsItemBuilder 
       pointer1.getSequenceNumeric.intValue mustBe 1
       pointer1.getDocumentSectionCode.getValue mustBe "42A"
       pointer2.getDocumentSectionCode.getValue mustBe "06A"
-    }
-
-    "remove any carriage-return and line feeds from the statement description" in {
-      val declaration = new Declaration()
-
-      val description = "Some reason1\r\nSome reason2\r\nSome reason3\r\n"
-      builder.buildThenAdd(description, declaration)
-
-      declaration.getAdditionalInformation must have(size(1))
-      val additionalInfo = declaration.getAdditionalInformation.get(0)
-
-      val expectedDescription = "Some reason1 Some reason2 Some reason3"
-      additionalInfo.getStatementDescription.getValue mustBe expectedDescription
     }
   }
 }

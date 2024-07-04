@@ -124,7 +124,22 @@ class SubmissionService @Inject() (
   def findSubmissionsByLatestDecId(eori: String, lrn: String): Future[Option[Submission]] =
     submissionRepository.findByLatestDecId(eori, lrn)
 
-  def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] =
+  def submitDeclaration(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] =
+    try
+      submit(declaration).flatMap(storeSubmission)
+    catch {
+      case throwable: Throwable =>
+        logProgress(declaration.id, "Submission failed")
+        revertStatusToDraft(declaration, throwable)
+    }
+
+  private def revertStatusToDraft[T](declaration: ExportsDeclaration, throwable: Throwable): Future[T] =
+    declarationRepository.revertStatusToDraft(declaration).flatMap { _ =>
+      logProgress(declaration.id, "Reverted declaration to DRAFT")
+      Future.failed[T](throwable)
+    }
+
+  private def submit(declaration: ExportsDeclaration)(implicit hc: HeaderCarrier): Future[Submission] =
     metrics.timeAsyncCall(ExportsMetrics.submissionMonitor) {
       logProgress(declaration.id, "Beginning Declaration Submission")
 
@@ -138,23 +153,28 @@ class SubmissionService @Inject() (
         .declarationDucr(metaData)
         .getOrElse(throw new IllegalArgumentException("A DUCR is required"))
 
-      val payload = metrics.timeCall(Timers.submissionConvertToXmlTimer)(wcoMapperService.toXml(metaData))
+      val xmlPayload = metrics.timeCall(Timers.submissionConvertToXmlTimer)(wcoMapperService.toXml(metaData))
 
       logProgress(declaration.id, "Submitting new declaration to the Declaration API")
-      for {
+
+      metrics.timeAsyncCall(Timers.submissionSendToDecApiTimer) {
         // Submit the declaration to the Dec API
-        // Revert the declaration status back to DRAFT if it fails
-        actionId: String <- metrics.timeAsyncCall(Timers.submissionSendToDecApiTimer)(submit(declaration, payload))
-        _ = logProgress(declaration.id, "Submitted new declaration to the Declaration API Successfully")
+        customsDeclarationsConnector.submitDeclaration(declaration.eori, xmlPayload) map { actionId =>
+          logProgress(declaration.id, "Submitted new declaration to the Declaration API Successfully")
 
-        // Create the Submission with action
-        action = Action(id = actionId, SubmissionRequest, decId = Some(declaration.id), versionNo = 1)
+          // Gen a new Submission with an initial 'SubmissionRequest' Action
+          val action = Action(id = actionId, SubmissionRequest, decId = Some(declaration.id), versionNo = 1)
+          Submission(declaration, lrn, ducr, action)
+        }
+      }
+    }
 
-        submission <- metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer)(
-          submissionRepository.create(Submission(declaration, lrn, ducr, action))
-        )
-        _ = logProgress(declaration.id, "New submission creation completed")
-      } yield submission
+  def storeSubmission(submission: Submission): Future[Submission] =
+    metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer) {
+      submissionRepository.create(submission) map { submission =>
+        logger.info(s"Submission(${submission.uuid}) creation completed")
+        submission
+      }
     }
 
   private def isSubmissionAlreadyCancelled(submission: Submission): Boolean =
@@ -165,15 +185,6 @@ class SubmissionService @Inject() (
 
   private def logProgress(declarationId: String, message: String): Unit =
     logger.info(s"Declaration [$declarationId]: $message")
-
-  private def submit(declaration: ExportsDeclaration, payload: String)(implicit hc: HeaderCarrier): Future[String] =
-    customsDeclarationsConnector.submitDeclaration(declaration.eori, payload).recoverWith { case throwable: Throwable =>
-      logProgress(declaration.id, "Submission failed")
-      declarationRepository.revertStatusToDraft(declaration) flatMap { _ =>
-        logProgress(declaration.id, "Reverted declaration to DRAFT")
-        Future.failed[String](throwable)
-      }
-    }
 
   def cancelDeclaration(eori: String, cancellation: SubmissionCancellation)(implicit hc: HeaderCarrier): Future[CancellationResult] =
     submissionRepository.findOne(Json.obj("eori" -> eori, "uuid" -> cancellation.submissionId)).flatMap {

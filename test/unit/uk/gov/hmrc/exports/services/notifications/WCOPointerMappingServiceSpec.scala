@@ -21,9 +21,38 @@ import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 
 class WCOPointerMappingServiceSpec extends UnitSpec {
 
-  "Map pointer" should {
-    "find matching pointer" in {
+  "Map to Exports Pointer" should {
 
+    "map valid pointer" in {
+      val pointer = Pointer(
+        // 42A.67A.68A.$1.02A.$2.D005
+        // declaration.items.$1.additionalDocument.$2.documentIdentifier
+        List(
+          PointerSection("42A", PointerSectionType.FIELD),
+          PointerSection("67A", PointerSectionType.FIELD),
+          PointerSection("68A", PointerSectionType.FIELD),
+          PointerSection("1", PointerSectionType.SEQUENCE),
+          PointerSection("02A", PointerSectionType.FIELD),
+          PointerSection("2", PointerSectionType.SEQUENCE),
+          PointerSection("D005", PointerSectionType.FIELD)
+        )
+      )
+
+      val result = WCOPointerMappingService.mapWCOPointerToExportsPointer(pointer)
+      result mustBe defined
+      result.get mustBe Pointer(
+        List(
+          PointerSection("declaration", PointerSectionType.FIELD),
+          PointerSection("items", PointerSectionType.FIELD),
+          PointerSection("1", PointerSectionType.SEQUENCE),
+          PointerSection("additionalDocument", PointerSectionType.FIELD),
+          PointerSection("2", PointerSectionType.SEQUENCE),
+          PointerSection("documentIdentifier", PointerSectionType.FIELD)
+        )
+      )
+    }
+
+    "find matching pointer" in {
       val pointer =
         Pointer(List(PointerSection("42A", PointerSectionType.FIELD), PointerSection("017", PointerSectionType.FIELD)))
 
@@ -35,12 +64,10 @@ class WCOPointerMappingServiceSpec extends UnitSpec {
     }
 
     "not find missing pointer" in {
-
       val pointer =
         Pointer(List(PointerSection("x", PointerSectionType.FIELD), PointerSection("x", PointerSectionType.FIELD)))
 
       WCOPointerMappingService.mapWCOPointerToExportsPointer(pointer) mustBe None
     }
   }
-
 }

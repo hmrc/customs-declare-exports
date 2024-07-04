@@ -7,6 +7,7 @@ import uk.gov.hmrc.exports.base.{IntegrationTestSpec, MockMetrics}
 import uk.gov.hmrc.exports.connectors.CustomsDeclarationsConnector
 import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus
+import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DRAFT
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.services.mapping._
@@ -67,27 +68,23 @@ class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
 
   private val eori = "GB167676"
 
-  "SubmissionService.submit" should {
-    "revert a declaration to a draft status" when {
-      "the submission to the Dec API fails on submit" in {
-        when(wcoMapperService.produceMetaData(any())).thenReturn(metadata)
-        when(wcoMapperService.declarationLrn(any())).thenReturn(Some("lrn"))
-        when(wcoMapperService.declarationDucr(any())).thenReturn(Some("ducr"))
-        when(wcoMapperService.toXml(any())).thenReturn(xml)
-        when(customsDeclarationsConnector.submitDeclaration(any[String], any[String])(any[HeaderCarrier]))
-          .thenReturn(Future.failed(new RuntimeException("Some error")))
+  "SubmissionService.submitDeclaration" when {
+    "the submission is NOT successful (for any reason)" should {
+      "revert the declaration status to 'DRAFT'" in {
+        when(wcoMapperService.declarationLrn(any())).thenThrow(new IllegalArgumentException("A LRN is required"))
 
-        val declaration = aDeclaration()
-        declarationRepository.insertOne(declaration).futureValue.isRight mustBe true
+        val aCompletedDeclaration = aDeclaration(withEori(eori))
+        val declarationId = aCompletedDeclaration.id
 
-        intercept[RuntimeException] {
-          submissionServiceWithMockRepo.submit(declaration)(HeaderCarrier()).futureValue
-        }
+        declarationRepository.removeAll.futureValue
+        declarationRepository.create(aCompletedDeclaration).futureValue.id mustBe declarationId
 
-        verify(mockSubmissionRepository, never).create(any[Submission])
+        intercept[IllegalArgumentException] {
+          await(submissionService.submitDeclaration(aCompletedDeclaration)(HeaderCarrier()))
+        }.getMessage mustBe "A LRN is required"
 
-        val resultingDeclaration = declarationRepository.findOne(id, declaration.id).futureValue.value
-        resultingDeclaration.status mustBe DeclarationStatus.DRAFT
+        val declaration = declarationRepository.findOne(Eori(eori), declarationId).futureValue.value
+        declaration.declarationMeta.status mustBe DRAFT
       }
     }
   }

@@ -46,7 +46,7 @@ class SubmissionControllerISpec extends IntegrationTestSpec with AuthTestSupport
         repository.insertOne(submission).futureValue
 
         val getRequest = getWithAuth(SubmissionController.find(SubmissionControllerISpec.id))
-        val response = route(app, getRequest).get
+        val response = route(app, getRequest).value
         status(response) mustBe OK
         val result = contentAsJson(response).as[Submission]
         result mustBe submission
@@ -56,7 +56,7 @@ class SubmissionControllerISpec extends IntegrationTestSpec with AuthTestSupport
     "return a 400 response" when {
       "no matching submission is found" in {
         val getRequest = getWithAuth(SubmissionController.find(SubmissionControllerISpec.id))
-        val response = route(app, getRequest).get
+        val response = route(app, getRequest).value
         status(response) mustBe NOT_FOUND
       }
     }
@@ -69,7 +69,7 @@ class SubmissionControllerISpec extends IntegrationTestSpec with AuthTestSupport
         repository.insertOne(submission).futureValue
 
         val getRequest = getWithAuth(SubmissionController.isLrnAlreadyUsed(SubmissionControllerISpec.lrn))
-        val response = route(app, getRequest).get
+        val response = route(app, getRequest).value
         status(response) mustBe OK
         val result = contentAsJson(response).as[Boolean]
         result mustBe true
@@ -79,7 +79,7 @@ class SubmissionControllerISpec extends IntegrationTestSpec with AuthTestSupport
     "return a 400 response with 'false'" when {
       "a lrn has not been used within 48hr" in {
         val getRequest = getWithAuth(SubmissionController.isLrnAlreadyUsed("lrn"))
-        val response = route(app, getRequest).get
+        val response = route(app, getRequest).value
         status(response) mustBe OK
         val result = contentAsJson(response).as[Boolean]
         result mustBe false
