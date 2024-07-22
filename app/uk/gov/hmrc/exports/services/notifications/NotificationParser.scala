@@ -20,13 +20,16 @@ import play.api.Logging
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, NotificationError}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType, StringOption}
+import uk.gov.hmrc.exports.services.mapping.WcoToExportsMappingHelper
 import uk.gov.hmrc.exports.util.TimeUtils.defaultTimeZone
 
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import javax.inject.{Inject, Singleton}
 import scala.xml.{Node, NodeSeq}
 
-class NotificationParser extends Logging {
+@Singleton
+class NotificationParser @Inject() (wcoToExportsMappingHelper: WcoToExportsMappingHelper) extends Logging {
 
   private val formatter304 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
 
@@ -99,7 +102,7 @@ class NotificationParser extends Logging {
     }.toList
 
     val wcoPointer = Pointer(pointerSections)
-    val exportsPointer = WCOPointerMappingService.mapWCOPointerToExportsPointer(wcoPointer)
+    val exportsPointer = wcoToExportsMappingHelper.mapWcoPointerToExportsPointer(wcoPointer)
     if (exportsPointer.isEmpty) logger.warn(s"Missing pointer mapping for [${wcoPointer}] found with error code [$validationCode]")
 
     if (exportsPointer.toString == "Some(suppressed)") None else exportsPointer

@@ -1,0 +1,426 @@
+[
+  {
+    "wco": "42A.017",
+    "exports": "declaration.functionCode"
+  },
+  {
+    "wco": "42A.D026",
+    "exports": "declaration.consignmentReferences.lrn"
+  },
+  {
+    "wco": "42A.D013",
+    "exports": "declaration.typeCode"
+  },
+  {
+    "wco": "42A.228",
+    "exports": "declaration.items.size"
+  },
+  {
+    "wco": "42A.109",
+    "exports": "declaration.totalNumberOfItems.totalAmountInvoiced"
+  },
+  {
+    "wco": "42A.149",
+    "exports": "declaration.totalPackageQuantity"
+  },
+  {
+    "wco": "42A.504",
+    "exports": "declaration.locations.officeOfExit.circumstancesCode"
+  },
+  {
+    "wco": "42A.05A.R004",
+    "exports": "declaration.parties.representativeDetails.details.eori"
+  },
+  {
+    "wco": "42A.05A.102",
+    "exports": "declaration.parties.representativeDetails.statusCode"
+  },
+  {
+    "wco": "42A.17C.$1.R144",
+    "exports": "declaration.parties.declarationHolders.$1.eori"
+  },
+  {
+    "wco": "42A.17C.R145",
+    "exports": "declaration.parties.declarationHolders.authorisationTypeCode"
+  },
+  {
+    "wco": "42A.17C.$1.R145",
+    "exports": "declaration.parties.declarationHolders.$1.authorisationTypeCode"
+  },
+  {
+    "wco": "42A.15A.T006",
+    "exports": "declaration.transport.meansOfTransportCrossingTheBorderIDNumber"
+  },
+  {
+    "wco": "42A.15A.T018",
+    "exports": "declaration.transport.meansOfTransportCrossingTheBorderType"
+  },
+  {
+    "wco": "42A.15A.T014",
+    "exports": "declaration.transport.transportCrossingTheBorderNationality.countryCode"
+  },
+  {
+    "wco": "42A.15A.T022",
+    "exports": "declaration.borderTransport.modeCode"
+  },
+  {
+    "wco": "42A.28A.18A.R012",
+    "exports": "declaration.parties.carrierDetails.details.eori"
+  },
+  {
+    "wco": "42A.28A.18A.R011",
+    "exports": "declaration.parties.carrierDetails.details.address.fullName"
+  },
+  {
+    "wco": "42A.28A.18A.04A.241",
+    "exports": "declaration.parties.carrierDetails.details.address.townOrCity"
+  },
+  {
+    "wco": "42A.28A.18A.04A.242",
+    "exports": "declaration.parties.carrierDetails.details.address.country"
+  },
+  {
+    "wco": "42A.28A.18A.04A.239",
+    "exports": "declaration.parties.carrierDetails.details.address.addressLine"
+  },
+  {
+    "wco": "42A.28A.18A.04A.245",
+    "exports": "declaration.parties.carrierDetails.details.address.postCode"
+  },
+  {
+    "wco": "42A.28A.62A.098",
+    "exports": "declaration.transport.transportPayment.paymentMethod"
+  },
+  {
+    "wco": "42A.28A.62A.$1.64",
+    "exports": "declaration.locations.destinationCountries.countriesOfRouting.$1"
+  },
+  {
+    "wco": "42A.28A.81A.064",
+    "exports": "declaration.locations.destinationCountries.countriesOfRouting"
+  },
+  {
+    "wco": "42A.40A.118",
+    "exports": "declaration.totalNumberOfItems.exchangeRate"
+  },
+  {
+    "wco": "42A.57B.R123",
+    "exports": "declaration.declarantDetails.details.eori"
+  },
+  {
+    "wco": "42A.56A.G005",
+    "exports": "declaration.locations.officeOfExit.officeId"
+  },
+  {
+    "wco": "42A.57A.R032",
+    "exports": "declaration.parties.exporterDetails.details.eori"
+  },
+  {
+    "wco": "42A.57A.R031",
+    "exports": "declaration.parties.exporterDetails.details.address.fullName"
+  },
+  {
+    "wco": "42A.57A.04A.241",
+    "exports": "declaration.parties.exporterDetails.details.address.townOrCity"
+  },
+  {
+    "wco": "42A.57A.04A.242",
+    "exports": "declaration.parties.exporterDetails.details.address.country"
+  },
+  {
+    "wco": "42A.57A.04A.239",
+    "exports": "declaration.parties.exporterDetails.details.address.addressLine"
+  },
+  {
+    "wco": "42A.57A.04A.245",
+    "exports": "declaration.parties.exporterDetails.details.address.postCode"
+  },
+  {
+    "wco": "42A.67A.103",
+    "exports": "declaration.natureOfTransaction.natureType"
+  },
+  {
+    "wco": "42A.67A.16C.R143",
+    "exports": "declaration.parties.additionalActors"
+  },
+  {
+    "wco": "42A.67A.16C.R005",
+    "exports": "declaration.parties.additionalActors"
+  },
+  {
+    "wco": "42A.67A.27A.R014",
+    "exports": "declaration.parties.consigneeDetails.details.address.fullName"
+  },
+  {
+    "wco": "42A.67A.27A.04A.241",
+    "exports": "declaration.parties.consigneeDetails.details.address.townOrCity"
+  },
+  {
+    "wco": "42A.67A.27A.04A.242",
+    "exports": "declaration.parties.consigneeDetails.details.address.country"
+  },
+  {
+    "wco": "42A.67A.27A.04A.239",
+    "exports": "declaration.parties.consigneeDetails.details.address.addressLine"
+  },
+  {
+    "wco": "42A.67A.27A.04A.245",
+    "exports": "declaration.parties.consigneeDetails.details.address.postCode"
+  },
+  {
+    "wco": "42A.67A.28A.46A.T004",
+    "exports": "declaration.departureTransport.meansOfTransportOnDepartureIDNumber"
+  },
+  {
+    "wco": "42A.67A.28A.46A.T034",
+    "exports": "declaration.departureTransport.borderModeOfTransportCode"
+  },
+  {
+    "wco": "42A.67A.28A.46A.T020",
+    "exports": "declaration.departureTransport.meansOfTransportOnDepartureType"
+  },
+  {
+    "wco": "42A.67A.28A.64A.L016",
+    "exports": "declaration.locations.goodsLocation.nameOfLocation"
+  },
+  {
+    "wco": "42A.67A.28A.64A.L017",
+    "exports": "declaration.locations.goodsLocation.identificationOfLocation"
+  },
+  {
+    "wco": "42A.67A.28A.64A.L110",
+    "exports": "declaration.locations.goodsLocation.identificationOfLocation"
+  },
+  {
+    "wco": "42A.67A.28A.64A.04A.410",
+    "exports": "declaration.locations.goodsLocation.typeOfLocation"
+  },
+  {
+    "wco": "42A.67A.28A.64A.04A.241",
+    "exports": "declaration.locations.goodsLocation.city"
+  },
+  {
+    "wco": "42A.67A.28A.64A.04A.242",
+    "exports": "declaration.locations.goodsLocation.country"
+  },
+  {
+    "wco": "42A.67A.28A.64A.04A.239",
+    "exports": "declaration.locations.goodsLocation.addressLine"
+  },
+  {
+    "wco": "42A.67A.28A.64A.04A.245",
+    "exports": "declaration.locations.goodsLocation.postCode"
+  },
+  {
+    "wco": "42A.67A.28A.31B.$1.159",
+    "exports": "declaration.containers.container.$1.id"
+  },
+  {
+    "wco": "42A.67A.28A.31B.$1.44B.$2.165",
+    "exports": "declaration.containers.container.$1.seals.seal.$2.id"
+  },
+  {
+    "wco": "42A.67A.99B.465",
+    "exports": "declaration.locations.destinationCountries.countryOfDestination"
+  },
+  {
+    "wco": "42A.67A.95B.062",
+    "exports": "declaration.locations.destinationCountries.countryOfDispatch"
+  },
+  {
+    "wco": "42A.67A.68A.$1",
+    "exports": "declaration.items.$1"
+  },
+  {
+    "wco": "42A.67A.68A.$1.114",
+    "exports": "declaration.items.$1.statisticalValue.statisticalValue"
+  },
+  {
+    "wco": "42A.67A.68A.$1.02A",
+    "exports": "declaration.items.$1.additionalDocument"
+  },
+  {
+    "wco": "42A.67A.68A.$1.02A.$2.D005",
+    "exports": "declaration.items.$1.additionalDocument.$2.documentIdentifier"
+  },
+  {
+    "wco": "42A.67A.68A.$1.02A.D031",
+    "exports": "declaration.items.$1.additionalDocument.documentTypeCode"
+  },
+  {
+    "wco": "42A.67A.68A.$1.02A.$2.D031",
+    "exports": "declaration.items.$1.additionalDocument.$2.documentTypeCode"
+  },
+  {
+    "wco": "42A.67A.68A.$1.02A.D006",
+    "exports": "declaration.items.$1.additionalDocument.documentTypeCode"
+  },
+  {
+    "wco": "42A.67A.68A.$1.02A.$2.D006",
+    "exports": "declaration.items.$1.additionalDocument.$2.documentTypeCode"
+  },
+  {
+    "wco": "42A.67A.68A.$1.02A.$2.276.276",
+    "exports": "declaration.items.$1.additionalDocument.$2.dateOfValidity"
+  },
+  {
+    "wco": "42A.67A.68A.$1.02A.$2.360",
+    "exports": "declaration.items.$1.additionalDocument.$2.documentStatus"
+  },
+  {
+    "wco": "42A.67A.68A.$1.02A.$2.D028",
+    "exports": "declaration.items.$1.additionalDocument.$2.documentStatusReason"
+  },
+  {
+    "wco": "42A.67A.68A.$1.02A.$2.17B.R058",
+    "exports": "declaration.items.$1.additionalDocument.$2.issuingAuthorityName"
+  },
+  {
+    "wco": "42A.67A.68A.$1.02A.$2.22C.502",
+    "exports": "declaration.items.$1.additionalDocument.$2.documentWriteOff.documentQuantity"
+  },
+  {
+    "wco": "42A.67A.68A.$1.03A.226",
+    "exports": "declaration.items.$1.additionalInformation.code"
+  },
+  {
+    "wco": "42A.67A.68A.$1.03A.$2.226",
+    "exports": "declaration.items.$1.additionalInformation.$2.code"
+  },
+  {
+    "wco": "42A.67A.68A.$1.03A.$2.225",
+    "exports": "declaration.items.$1.additionalInformation.$2.description"
+  },
+  {
+    "wco": "42A.67A.68A.$1.23A.137",
+    "exports": "declaration.items.$1.commodityDetails.descriptionOfGoods"
+  },
+  {
+    "wco": "42A.67A.68A.$1.23A.21A",
+    "exports": "declaration.items.$1.commodityDetails"
+  },
+  {
+    "wco": "42A.67A.68A.$1.23A.21A.145",
+    "exports": "declaration.items.$1.cusCode.id"
+  },
+  {
+    "wco": "42A.67A.68A.$1.23A.21A.$2.145",
+    "exports": "declaration.items.$1.cusCode.$2.id"
+  },
+  {
+    "wco": "42A.67A.68A.$1.23A.337",
+    "exports": "declaration.items.$1.cusCode.id"
+  },
+  {
+    "wco": "42A.67A.68A.$1.23A.12C.506",
+    "exports": "declaration.items.$1.dangerousGoodsCode.dangerousGoodsCode"
+  },
+  {
+    "wco": "42A.67A.68A.$1.23A.65A.126",
+    "exports": "declaration.items.$1.commodityMeasure.grossMass"
+  },
+  {
+    "wco": "42A.67A.68A.$1.23A.65A.128",
+    "exports": "declaration.items.$1.commodityMeasure.netMass"
+  },
+  {
+    "wco": "42A.67A.68A.$1.23A.65A.130",
+    "exports": "declaration.items.$1.commodityMeasure.supplementaryUnits"
+  },
+  {
+    "wco": "42A.67A.68A.$1.23A.65A.55B.$2.R119",
+    "exports": "declaration.items.$1.additionalFiscalReferences.$2.id"
+  },
+  {
+    "wco": "42A.67A.68A.$1.23A.55B.$2.R005",
+    "exports": "declaration.items.$1.additionalFiscalReferences.$2.roleCode"
+  },
+  {
+    "wco": "42A.67A.68A.$1.70A.166",
+    "exports": "declaration.items.$1.procedureCodes.procedureCode.current"
+  },
+  {
+    "wco": "42A.67A.68A.$1.70A.161",
+    "exports": "declaration.items.$1.procedureCodes.procedureCode.current"
+  },
+  {
+    "wco": "42A.67A.68A.$1.70A.$2.166",
+    "exports": "declaration.items.$1.procedureCodes.additionalProcedureCodes.$2"
+  },
+  {
+    "wco": "42A.67A.68A.$1.23A.93A.$2.142",
+    "exports": "declaration.items.$1.packageInformation.$2.shippingMarks"
+  },
+  {
+    "wco": "42A.67A.68A.$1.23A.93A.$2.144",
+    "exports": "declaration.items.$1.packageInformation.$2.numberOfPackages"
+  },
+  {
+    "wco": "42A.67A.68A.$1.23A.93A.$2.141",
+    "exports": "declaration.items.$1.packageInformation.$2.typesOfPackages"
+  },
+  {
+    "wco": "42A.67A.99A.$1.D031",
+    "exports": "declaration.previousDocuments.$1.documentCategory"
+  },
+  {
+    "wco": "42A.67A.99A.$1.D018",
+    "exports": "declaration.previousDocuments.$1.documentReference"
+  },
+  {
+    "wco": "42A.67A.99A.$1.D019",
+    "exports": "declaration.previousDocuments.$1.documentType"
+  },
+  {
+    "wco": "42A.67A.99A.$1.171",
+    "exports": "declaration.previousDocuments.$1.goodsItemIdentifier"
+  },
+  {
+    "wco": "42A.67A.43B.L019",
+    "exports": "declaration.locations.warehouseIdentification.identificationNumber"
+  },
+  {
+    "wco": "42A.67A.43B.L112",
+    "exports": "declaration.locations.warehouseIdentification.identificationNumber"
+  },
+  {
+    "wco": "42A.97B",
+    "exports": "declaration.locations.warehouseIdentification.supervisingCustomsOffice"
+  },
+  {
+    "wco": "42A.97B.G012",
+    "exports": "declaration.locations.warehouseIdentification.supervisingCustomsOffice"
+  },
+  {
+    "wco": "42A.67A.68A.$1.35B.009",
+    "exports": "declaration.consignmentReferences.ucr"
+  },
+  {
+    "wco": "42A",
+    "exports": "suppressed"
+  },
+  {
+    "wco": "42A.06A",
+    "exports": "suppressed"
+  },
+  {
+    "wco": "42A.06A.$1.97A",
+    "exports": "suppressed"
+  },
+  {
+    "wco": "42A.D014",
+    "exports": "suppressed"
+  },
+  {
+    "wco": "42A.67A.68A.02A.D031",
+    "exports": "suppressed"
+  },
+  {
+    "wco": "42A.67A.68A.02A.D006",
+    "exports": "suppressed"
+  },
+  {
+    "wco": "42A.03A.$1.226",
+    "exports": "suppressed"
+  }
+]
