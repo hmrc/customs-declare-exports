@@ -16,16 +16,22 @@
 
 package uk.gov.hmrc.exports.services.notifications
 
+import org.mockito.ArgumentMatchers.any
+import org.mockito.MockitoSugar
+import org.scalatest.BeforeAndAfterEach
 import testdata.ExportsTestData.mrn
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.NotificationDetails
+import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
+import uk.gov.hmrc.exports.services.mapping.WcoToExportsMappingHelper
 
 import java.time.ZonedDateTime
 
-class NotificationParserSpec extends UnitSpec {
+class NotificationParserSpec extends UnitSpec with BeforeAndAfterEach with MockitoSugar {
 
-  private val notificationParser = new NotificationParser()
+  private val wcoToExportsPointerMappings = mock[WcoToExportsMappingHelper]
+  private val notificationParser = new NotificationParser(wcoToExportsPointerMappings)
 
   private def compareNotificationSequences(actual: Seq[NotificationDetails], expected: Seq[NotificationDetails]) = {
     actual.size mustBe expected.size
@@ -40,6 +46,22 @@ class NotificationParserSpec extends UnitSpec {
       actual.errors mustBe expected.errors
     }
   }
+
+  override def afterEach(): Unit = {
+    reset(wcoToExportsPointerMappings)
+    super.afterEach()
+  }
+
+  val defaultReturn = Pointer(
+    List(
+      PointerSection("declaration", PointerSectionType.FIELD),
+      PointerSection("items", PointerSectionType.FIELD),
+      PointerSection("1", PointerSectionType.SEQUENCE),
+      PointerSection("additionalDocument", PointerSectionType.FIELD),
+      PointerSection("2", PointerSectionType.SEQUENCE),
+      PointerSection("documentStatus", PointerSectionType.FIELD)
+    )
+  )
 
   "NotificationParser on parse" when {
 
@@ -70,6 +92,8 @@ class NotificationParserSpec extends UnitSpec {
       "contains error elements" should {
 
         "return single NotificationDetails with errors" in {
+          when(wcoToExportsPointerMappings.mapWcoPointerToExportsPointer(any())).thenReturn(Some(defaultReturn))
+
           val testNotification = exampleRejectNotification(mrn)
 
           val result = notificationParser.parse(testNotification.asXml)
@@ -80,6 +104,8 @@ class NotificationParserSpec extends UnitSpec {
 
       "contains error element 67A with a sequence number" should {
         "ignore the sequence number for that section" in {
+          when(wcoToExportsPointerMappings.mapWcoPointerToExportsPointer(any())).thenReturn(Some(defaultReturn))
+
           val testNotification = exampleRejectNotification(mrn, with67ASequenceNo = true)
 
           val result = notificationParser.parse(testNotification.asXml)
@@ -90,6 +116,7 @@ class NotificationParserSpec extends UnitSpec {
 
       "contains child description element in parent error element" should {
         "return single NotificationDetails with errors populated with a smartErrorDescription" in {
+          when(wcoToExportsPointerMappings.mapWcoPointerToExportsPointer(any())).thenReturn(Some(defaultReturn))
           val testNotification = exampleRejectNotification(mrn, withErrorDescription = true)
 
           val result = notificationParser.parse(testNotification.asXml)
@@ -100,6 +127,8 @@ class NotificationParserSpec extends UnitSpec {
 
       "contains error element with a suppressed pointer" should {
         "ignore the pointer" in {
+          val pointerReturn = Pointer(List(PointerSection("suppressed", PointerSectionType.FIELD)))
+          when(wcoToExportsPointerMappings.mapWcoPointerToExportsPointer(any())).thenReturn(Some(pointerReturn))
           val testNotification = exampleRejectNotificationWithSuppressedPointers(mrn)
 
           val result = notificationParser.parse(testNotification.asXml)

@@ -14,15 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.services.notifications
+package uk.gov.hmrc.exports.services.mapping
 
-import uk.gov.hmrc.exports.base.UnitSpec
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import play.api.Environment
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 
-class WCOPointerMappingServiceSpec extends UnitSpec {
+class WcoToExportsMappingHelperSpec extends AnyWordSpec with Matchers {
 
-  "Map to Exports Pointer" should {
+  private val environment = Environment.simple()
 
+  private val exportsAndWcoPointerMappings = new WcoToExportsMappingHelper(environment)
+
+  "ExportsAndWcoPointerMappings.mapWcoPointerToExportsPointer" should {
     "map valid pointer" in {
       val pointer = Pointer(
         // 42A.67A.68A.$1.02A.$2.D005
@@ -38,7 +43,7 @@ class WCOPointerMappingServiceSpec extends UnitSpec {
         )
       )
 
-      val result = WCOPointerMappingService.mapWCOPointerToExportsPointer(pointer)
+      val result = exportsAndWcoPointerMappings.mapWcoPointerToExportsPointer(pointer)
       result mustBe defined
       result.get mustBe Pointer(
         List(
@@ -56,7 +61,7 @@ class WCOPointerMappingServiceSpec extends UnitSpec {
       val pointer =
         Pointer(List(PointerSection("42A", PointerSectionType.FIELD), PointerSection("017", PointerSectionType.FIELD)))
 
-      val result = WCOPointerMappingService.mapWCOPointerToExportsPointer(pointer)
+      val result = exportsAndWcoPointerMappings.mapWcoPointerToExportsPointer(pointer)
       result mustBe defined
       result.get mustBe Pointer(
         List(PointerSection("declaration", PointerSectionType.FIELD), PointerSection("functionCode", PointerSectionType.FIELD))
@@ -67,7 +72,7 @@ class WCOPointerMappingServiceSpec extends UnitSpec {
       val pointer =
         Pointer(List(PointerSection("x", PointerSectionType.FIELD), PointerSection("x", PointerSectionType.FIELD)))
 
-      WCOPointerMappingService.mapWCOPointerToExportsPointer(pointer) mustBe None
+      exportsAndWcoPointerMappings.mapWcoPointerToExportsPointer(pointer) mustBe None
     }
   }
 }

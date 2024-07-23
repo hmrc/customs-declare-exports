@@ -25,7 +25,7 @@ import scala.util.{Failure, Success, Try}
 @Singleton
 class ExportsPointerToWCOPointer @Inject() (environment: Environment) {
 
-  private val pointerFile = "exports-wco-mapping.json"
+  private val pointerFile = "code-lists/exports-wco-mapping.json"
 
   protected[this] def mapping(implicit reader: Reads[Pointers]): Map[String, Seq[String]] = {
 
