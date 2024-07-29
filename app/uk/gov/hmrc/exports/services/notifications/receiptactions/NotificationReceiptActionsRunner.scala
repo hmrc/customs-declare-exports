@@ -66,9 +66,8 @@ class NotificationReceiptActionsRunner @Inject() (
 
           unparsedNotificationWorkItemRepository.markAs(workItem.id, Cancelled)
         } else {
-          logger.warn(
-            s"[UnparsedNotification parsing] Processing of id(${workItem.item.id}) failed! Will reattempt. Error is:\n\t${throwable.getMessage}"
-          )
+          val message = s"[UnparsedNotification parsing] Processing of id(${workItem.item.id}) failed! Will reattempt"
+          logger.info(s"$message. Error is:\n\t${throwable.getMessage}")
           unparsedNotificationWorkItemRepository.markAs(workItem.id, Failed)
         }
       }
