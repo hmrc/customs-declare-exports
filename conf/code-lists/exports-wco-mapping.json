@@ -12,43 +12,43 @@
     "wco" : "42A.67A.68A.$1"
   },
   {
-    "cds" : "items.$1.additionalDocuments.documents.$2",
+    "cds" : "items.$1.additionalDocument.documents.$2",
     "wco" : "42A.67A.68A.$1.02A.$2"
   },
   {
-    "cds" : "items.$1.additionalDocuments.documents.$2.documentTypeCode",
+    "cds" : "items.$1.additionalDocument.documents.$2.documentTypeCode",
     "wco" : "42A.67A.68A.$1.02A.$2"
   },
   {
-    "cds" : "items.$1.additionalDocuments.documents.$2.documentIdentifier",
+    "cds" : "items.$1.additionalDocument.documents.$2.documentIdentifier",
     "wco" : "42A.67A.68A.$1.02A.$2"
   },
   {
-    "cds" : "items.$1.additionalDocuments.documents.$2.documentStatus",
+    "cds" : "items.$1.additionalDocument.documents.$2.documentStatus",
     "wco" : "42A.67A.68A.$1.02A.$2"
   },
   {
-    "cds" : "items.$1.additionalDocuments.documents.$2.documentStatusReason",
+    "cds" : "items.$1.additionalDocument.documents.$2.documentStatusReason",
     "wco" : "42A.67A.68A.$1.02A.$2"
   },
   {
-    "cds" : "items.$1.additionalDocuments.documents.$2.issuingAuthorityName",
+    "cds" : "items.$1.additionalDocument.documents.$2.issuingAuthorityName",
     "wco" : "42A.67A.68A.$1.02A.$2"
   },
   {
-    "cds" : "items.$1.additionalDocuments.documents.$2.dateOfValidity",
+    "cds" : "items.$1.additionalDocument.documents.$2.dateOfValidity",
     "wco" : "42A.67A.68A.$1.02A.$2"
   },
   {
-    "cds" : "items.$1.additionalDocuments.documents.$2.documentWriteOff",
+    "cds" : "items.$1.additionalDocument.documents.$2.documentWriteOff",
     "wco" : "42A.67A.68A.$1.02A.$2"
   },
   {
-    "cds" : "items.$1.additionalDocuments.documents.$2.documentWriteOff.measurementUnit",
+    "cds" : "items.$1.additionalDocument.documents.$2.documentWriteOff.measurementUnit",
     "wco" : "42A.67A.68A.$1.02A.$2"
   },
   {
-    "cds" : "items.$1.additionalDocuments.documents.$2.documentWriteOff.documentQuantity",
+    "cds" : "items.$1.additionalDocument.documents.$2.documentWriteOff.documentQuantity",
     "wco" : "42A.67A.68A.$1.02A.$2"
   },
   {
@@ -147,7 +147,7 @@
     "wco" : "42A.67A.68A.$1"
   },
   {
-    "cds" : "items.$1.procedureCodes.additionalProcedureCodes.$2",
+    "cds" : "items.$1.procedureCodes.additionalPcs.$2",
     "wco" : "42A.67A.68A.$1",
     "comments" : [
       "CDS pointer refers to one in a sequence of codes, but WCO pointer points to the parent level element"
@@ -158,11 +158,11 @@
     "wco" : "42A.67A.68A.$1.114"
   },
   {
-    "cds" : "locations.destinationCountry",
+    "cds" : "locations.destinationCountries.countryOfDestination",
     "wco" : "42A.67A.99B.465"
   },
   {
-    "cds" : "locations.destinationCountry.code",
+    "cds" : "locations.destinationCountries.code",
     "wco" : "42A.67A.99B.465"
   },
   {
@@ -178,11 +178,11 @@
     "wco" : "42A.56A.G005"
   },
   {
-    "cds" : "locations.originationCountry.code",
+    "cds" : "locations.originationCountries.code",
     "wco" : "42A.67A.95B.062"
   },
   {
-    "cds" : "locations.routingCountries.$1",
+    "cds" : "locations.destinationCountries.countriesOfRouting.$1",
     "wco" : "42A.28A.81A"
   },
   {
@@ -202,87 +202,87 @@
     "wco" : "42A.67A.103"
   },
   {
-    "cds" : "parties.actors.declarationAdditionalActorsData.$1",
+    "cds" : "parties.additionalActors.actors.$1",
     "wco" : "42A.67A.16C.$1"
   },
   {
-    "cds" : "parties.actors.declarationAdditionalActorsData.$1.eori",
+    "cds" : "parties.additionalActors.actors.$1.eori",
     "wco" : "42A.67A.16C.$1"
   },
   {
-    "cds" : "parties.actors.declarationAdditionalActorsData.$1.partyType",
+    "cds" : "parties.additionalActors.actors.$1.partyType",
     "wco" : "42A.67A.16C.$1"
   },
   {
-    "cds" : "parties.carrierDetails",
+    "cds" : "parties.carrierDetails.details",
     "wco" : "42A.28A.18A.04A"
   },
   {
-    "cds" : "parties.carrierDetails",
+    "cds" : "parties.carrierDetails.details",
     "wco" : "42A.28A.18A.R011"
   },
   {
-    "cds" : "parties.carrierDetails",
+    "cds" : "parties.carrierDetails.details",
     "wco" : "42A.28A.18A.R012"
   },
   {
-    "cds" : "parties.carrierDetails.address",
+    "cds" : "parties.carrierDetails.details.address",
     "wco" : "42A.28A.18A.04A"
   },
   {
-    "cds" : "parties.carrierDetails.address",
+    "cds" : "parties.carrierDetails.details.address",
     "wco" : "42A.28A.18A.R011"
   },
   {
-    "cds" : "parties.carrierDetails.address.addressLine",
+    "cds" : "parties.carrierDetails.details.address.addressLine",
     "wco" : "42A.28A.18A.04A.239"
   },
   {
-    "cds" : "parties.carrierDetails.address.country",
+    "cds" : "parties.carrierDetails.details.address.country",
     "wco" : "42A.28A.18A.04A.242"
   },
   {
-    "cds" : "parties.carrierDetails.address.fullName",
+    "cds" : "parties.carrierDetails.details.address.fullName",
     "wco" : "42A.28A.18A.R011"
   },
   {
-    "cds" : "parties.carrierDetails.address.postCode",
+    "cds" : "parties.carrierDetails.details.address.postCode",
     "wco" : "42A.28A.18A.04A.245"
   },
   {
-    "cds" : "parties.carrierDetails.address.townOrCity",
+    "cds" : "parties.carrierDetails.details.address.townOrCity",
     "wco" : "42A.28A.18A.04A.241"
   },
   {
-    "cds" : "parties.carrierDetails.eori",
+    "cds" : "parties.carrierDetails.details.eori",
     "wco" : "42A.28A.18A.R012"
   },
   {
-    "cds" : "parties.consigneeDetails.address",
+    "cds" : "parties.consigneeDetails.details.address",
     "wco" : "42A.67A.27A.04A"
   },
   {
-    "cds" : "parties.consigneeDetails.address",
+    "cds" : "parties.consigneeDetails.details.address",
     "wco" : "42A.67A.27A.R014"
   },
   {
-    "cds" : "parties.consigneeDetails.address.addressLine",
+    "cds" : "parties.consigneeDetails.details.address.addressLine",
     "wco" : "42A.67A.27A.04A.239"
   },
   {
-    "cds" : "parties.consigneeDetails.address.country",
+    "cds" : "parties.consigneeDetails.details.address.country",
     "wco" : "42A.67A.27A.04A.242"
   },
   {
-    "cds" : "parties.consigneeDetails.address.fullName",
+    "cds" : "parties.consigneeDetails.details.address.fullName",
     "wco" : "42A.67A.27A.R014"
   },
   {
-    "cds" : "parties.consigneeDetails.address.postCode",
+    "cds" : "parties.consigneeDetails.details.address.postCode",
     "wco" : "42A.67A.27A.04A.245"
   },
   {
-    "cds" : "parties.consigneeDetails.address.townOrCity",
+    "cds" : "parties.consigneeDetails.details.address.townOrCity",
     "wco" : "42A.67A.27A.04A.241"
   },
   {
