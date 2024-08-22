@@ -342,15 +342,15 @@
     "wco" : "42A.67A.16C.$1"
   },
   {
-    "cds" : "parties.declarationHoldersData.holders.$1",
+    "cds" : "parties.declarationHolders.holders.$1",
     "wco" : "42A.17C.$1"
   },
   {
-    "cds" : "parties.declarationHoldersData.holders.$1.eori",
+    "cds" : "parties.declarationHolders.holders.$1.eori",
     "wco" : "42A.17C.$1"
   },
   {
-    "cds" : "parties.declarationHoldersData.holders.$1.authorisationTypeCode",
+    "cds" : "parties.declarationHolders.holders.$1.authorisationTypeCode",
     "wco" : "42A.17C.$1"
   },
   {
