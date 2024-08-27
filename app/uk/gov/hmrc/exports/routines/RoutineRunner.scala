@@ -26,6 +26,7 @@ import scala.concurrent.duration._
 import scala.util.Random
 
 class RoutineRunner @Inject() (
+  deleteMigrationCollectionsRoutine: DeleteMigrationCollectionsRoutine,
   reattemptParsing: ReattemptNotificationParsingRoutine,
   actorSystem: ActorSystem,
   applicationLifecycle: ApplicationLifecycle,
@@ -36,6 +37,7 @@ class RoutineRunner @Inject() (
 
   val initialTask: Cancellable = scheduler.scheduleOnce(0.seconds) {
     for {
+      _ <- deleteMigrationCollectionsRoutine.execute()
       _ <- reattemptParsing.execute()
     } yield (())
   }
