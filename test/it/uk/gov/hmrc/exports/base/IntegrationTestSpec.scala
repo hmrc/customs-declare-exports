@@ -30,6 +30,7 @@ import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames}
 import scala.reflect.ClassTag
 
 trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSuite with ExportsDeclarationBuilder with MockGenericDownstreamService {
+
   val databaseName = "test-customs-declare-exports"
 
   val configurationMap: Map[String, Any] =
@@ -58,7 +59,6 @@ trait IntegrationTestSpec extends IntegrationTestBaseSpec with GuiceOneAppPerSui
   override implicit lazy val app: Application =
     GuiceApplicationBuilder(overrides = Seq(TestModule.asGuiceableModule))
       .configure(configurationMap)
-      .disable[uk.gov.hmrc.exports.routines.MigrationRunnerModule] // No need to run migrations during integration specs
       .build()
 
   implicit val hc: HeaderCarrier = HeaderCarrier(authorization = Some(Authorization("Bearer some-token")))
