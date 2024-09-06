@@ -11,8 +11,6 @@ object Dependencies {
     "uk.gov.hmrc"            %% "wco-dec"                            % "0.39.0",
     "com.github.tototoshi"   %% "scala-csv"                          % "1.4.1",
     "commons-codec"          %  "commons-codec"                      % "1.17.1",
-//    "org.glassfish.jaxb"     %  "jaxb-runtime"                       % "4.0.5",
-//    "jakarta.xml.bind"       %  "jakarta.xml.bind-api"               % "4.0.2",
     "org.glassfish.jaxb"     %  "jaxb-runtime"                       % "2.3.8",
     "javax.xml.bind"         %  "jaxb-api"                           % "2.3.1"
   )

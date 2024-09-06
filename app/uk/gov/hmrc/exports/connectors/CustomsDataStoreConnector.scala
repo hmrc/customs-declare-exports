@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,15 +35,13 @@ class CustomsDataStoreConnector @Inject() (httpClientV2: HttpClientV2)(implicit 
   def getEmailAddress(eori: String)(implicit ec: ExecutionContext): Future[Option[Email]] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    get[EmailResponse](verifiedEmailUrl(eori))
-      .map {
-        case EmailResponse(email, _, None) => Some(Email(email, deliverable = true))
-        case EmailResponse(email, _, _)    => Some(Email(email, deliverable = false))
-        case _                             => None
-      }
-      .recover {
-        case UpstreamErrorResponse(_, NOT_FOUND, _, _) => None
-      }
+    get[EmailResponse](verifiedEmailUrl(eori)).map {
+      case EmailResponse(email, _, None) => Some(Email(email, deliverable = true))
+      case EmailResponse(email, _, _)    => Some(Email(email, deliverable = false))
+      case _                             => None
+    }.recover { case UpstreamErrorResponse(_, NOT_FOUND, _, _) =>
+      None
+    }
   }
 }
 

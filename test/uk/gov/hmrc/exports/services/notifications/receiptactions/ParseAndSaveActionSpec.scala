@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,13 @@ import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.{ClientSession, MongoClient, SingleObservable}
 import play.api.test.Helpers._
 import testdata.SubmissionTestData.{submission, submission_2, submission_3}
-import testdata.notifications.NotificationTestData.{notification, notificationForExternalAmendment, notificationUnparsed, notification_2, notification_3}
+import testdata.notifications.NotificationTestData.{
+  notification,
+  notificationForExternalAmendment,
+  notificationUnparsed,
+  notification_2,
+  notification_3
+}
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission

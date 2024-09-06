@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,14 +38,11 @@ class EmailConnector @Inject() (httpClientV2: HttpClientV2)(implicit appConfig: 
   def sendEmail(sendEmailRequest: SendEmailRequest)(implicit ec: ExecutionContext): Future[SendEmailResult] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    postJson[SendEmailRequest, HttpResponse](sendEmailUrl, sendEmailRequest)
-      .map { response =>
-        if (response.status == ACCEPTED) EmailAccepted else sendEmailError(sendEmailRequest, response.status, response.body)
-      }
-      .recover {
-        case response: UpstreamErrorResponse =>
-          sendEmailError(sendEmailRequest, response.statusCode, response.message)
-      }
+    postJson[SendEmailRequest, HttpResponse](sendEmailUrl, sendEmailRequest).map { response =>
+      if (response.status == ACCEPTED) EmailAccepted else sendEmailError(sendEmailRequest, response.status, response.body)
+    }.recover { case response: UpstreamErrorResponse =>
+      sendEmailError(sendEmailRequest, response.statusCode, response.message)
+    }
   }
 
   private def sendEmailError(sendEmailRequest: SendEmailRequest, status: Int, message: String): SendEmailResult = {

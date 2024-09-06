@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,11 +35,9 @@ import javax.inject.Singleton
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CustomsDeclarationsConnector @Inject() (
-  appConfig: AppConfig,
-  httpClientV2: HttpClientV2,
-  metrics: ExportsMetrics
-)(implicit ec: ExecutionContext) extends Connector with Logging {
+class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClientV2: HttpClientV2, metrics: ExportsMetrics)(
+  implicit ec: ExecutionContext
+) extends Connector with Logging {
 
   protected val httpClient: HttpClientV2 = httpClientV2
 
@@ -59,14 +57,12 @@ class CustomsDeclarationsConnector @Inject() (
     logger.debug(s"CUSTOMS_DECLARATIONS request payload is -> $body")
 
     metrics.timeAsyncCall(Timers.upstreamCustomsDeclarationsTimer) {
-      post[HttpResponse](s"${appConfig.customsDeclarationsBaseUrl}$uri", body, headers(eori))
-        .map { response =>
-          logger.debug(s"Response: ${response.status} with headers:\n\t${response.headers}\n\n\tbody => ${response.body}")
-          handleResponse(response, response.headers.get("X-Conversation-ID").map(_.head))
-        }
-        .recover { case throwable: Throwable =>
-          error(s"${throwable.getClass.getSimpleName} thrown during submitting declaration: ${throwable.getMessage}")
-        }
+      post[HttpResponse](s"${appConfig.customsDeclarationsBaseUrl}$uri", body, headers(eori)).map { response =>
+        logger.debug(s"Response: ${response.status} with headers:\n\t${response.headers}\n\n\tbody => ${response.body}")
+        handleResponse(response, response.headers.get("X-Conversation-ID").map(_.head))
+      }.recover { case throwable: Throwable =>
+        error(s"${throwable.getClass.getSimpleName} thrown during submitting declaration: ${throwable.getMessage}")
+      }
     }
   }
 

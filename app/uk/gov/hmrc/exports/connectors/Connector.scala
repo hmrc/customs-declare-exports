@@ -42,11 +42,11 @@ trait Connector {
     else if (queryParams.nonEmpty) op(httpClient.get(url"${urlWithQuery(url, queryParams)}"), additionalHeaders)
     else op(httpClient.get(url"$url"), additionalHeaders)
 
-  def post[R](
-    url: String,
-    body: String,
-    additionalHeaders: Seq[(String, String)] = List.empty
-  )(implicit ec: ExecutionContext, hc: HeaderCarrier, reads: HttpReads[R]): Future[R] =
+  def post[R](url: String, body: String, additionalHeaders: Seq[(String, String)] = List.empty)(
+    implicit ec: ExecutionContext,
+    hc: HeaderCarrier,
+    reads: HttpReads[R]
+  ): Future[R] =
     transform(httpClient.post(url"$url"), additionalHeaders).withBody(body).execute[R]
 
   def postJson[T, R](
