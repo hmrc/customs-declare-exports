@@ -21,53 +21,66 @@ import play.api.http.{ContentTypes, HeaderNames}
 import play.api.mvc.Codec
 import play.mvc.Http.Status.OK
 import uk.gov.hmrc.exports.config.AppConfig
+import uk.gov.hmrc.exports.connectors.Connector
 import uk.gov.hmrc.exports.models.ead.parsers.MrnStatusParser
 import uk.gov.hmrc.exports.models.ead.{MrnStatus, XmlTags}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, InternalServerException}
+import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, InternalServerException}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.Elem
 
 @Singleton
-class CustomsDeclarationsInformationConnector @Inject() (mrnStatusParser: MrnStatusParser, appConfig: AppConfig, httpClient: HttpClient)(
-  implicit ec: ExecutionContext
-) extends Logging {
+class CustomsDeclarationsInformationConnector @Inject() (
+  mrnStatusParser: MrnStatusParser,
+  appConfig: AppConfig,
+  httpClientV2: HttpClientV2
+) extends Connector with Logging {
 
-  def fetchMrnFullDeclaration(mrn: String, declarationVersion: Option[String])(implicit hc: HeaderCarrier): Future[Option[Elem]] =
-    httpClient
-      .GET(
-        url = s"${appConfig.customsDeclarationsInformationBaseUrl}${appConfig.fetchMrnFullDeclaration.replace(XmlTags.id, mrn)}",
-        headers = headers,
-        queryParams = declarationVersion.fold(Seq.empty[(String, String)])(version => Seq(("declarationVersion", version)))
-      )(uk.gov.hmrc.http.HttpReads.Implicits.readRaw, hc, ec)
-      .map { response =>
-        response.status match {
-          case OK =>
-            logger.debug(s"CUSTOMS_DECLARATIONS_INFORMATION: fetch MRN $mrn full declaration response: ${response.body}")
-            Some(xml.XML.loadString(response.body))
-          case _ =>
-            logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION: failed to fetch XML for MRN $mrn full declaration response: ${response.body}")
-            None
-        }
-      } recoverWith { case _: org.xml.sax.SAXParseException =>
-      logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION: cannot parse response for MRN  $mrn into valid xml")
-      throw new InternalServerException(s"Customs Declarations cannot parse response into valid xml")
+  protected val httpClient: HttpClientV2 = httpClientV2
+
+  def fetchMrnFullDeclaration(mrn: String, declarationVersion: Option[String])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Elem]] =
+    get[HttpResponse](
+        s"${appConfig.customsDeclarationsInformationBaseUrl}${appConfig.fetchMrnFullDeclaration.replace(XmlTags.id, mrn)}",
+        queryParams = declarationVersion.fold(Seq.empty[(String, String)])(version => Seq(("declarationVersion", version))),
+        headers,
+    )
+    .map { response =>
+      response.status match {
+        case OK =>
+          logger.debug(s"CUSTOMS_DECLARATIONS_INFORMATION: fetch MRN $mrn full declaration response: ${response.body}")
+          Some(xml.XML.loadString(response.body))
+
+        case _ =>
+          logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION: failed to fetch XML for MRN $mrn full declaration response: ${response.body}")
+          None
+      }
+    }
+    .recoverWith {
+      case _: org.xml.sax.SAXParseException =>
+        logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION: cannot parse response for MRN  $mrn into valid xml")
+        throw new InternalServerException(s"Customs Declarations cannot parse response into valid xml")
     }
 
-  def fetchMrnStatus(mrn: String)(implicit hc: HeaderCarrier): Future[Option[MrnStatus]] =
-    httpClient
-      .doGet(url = s"${appConfig.customsDeclarationsInformationBaseUrl}${appConfig.fetchMrnStatus.replace(XmlTags.id, mrn)}", headers = headers)
-      .map { response =>
-        response.status match {
-          case OK =>
-            logger.debug(s"CUSTOMS_DECLARATIONS_INFORMATION: fetch MRN $mrn status response: ${response.body}")
-            Some(mrnStatusParser.parse(xml.XML.loadString(response.body)))
-          case _ =>
-            logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION: failed to fetch XML for MRN $mrn status response: ${response.body}")
-            None
-        }
+  def fetchMrnStatus(mrn: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[MrnStatus]] =
+    get[HttpResponse](
+      s"${appConfig.customsDeclarationsInformationBaseUrl}${appConfig.fetchMrnStatus.replace(XmlTags.id, mrn)}",
+      List.empty,
+      headers
+    )
+    .map { response =>
+      response.status match {
+        case OK =>
+          logger.debug(s"CUSTOMS_DECLARATIONS_INFORMATION: fetch MRN $mrn status response: ${response.body}")
+          Some(mrnStatusParser.parse(xml.XML.loadString(response.body)))
+
+        case _ =>
+          logger.warn(s"CUSTOMS_DECLARATIONS_INFORMATION: failed to fetch XML for MRN $mrn status response: ${response.body}")
+          None
       }
+    }
 
   private def headers(implicit hc: HeaderCarrier): Seq[(String, String)] = {
     val headers = Seq(
