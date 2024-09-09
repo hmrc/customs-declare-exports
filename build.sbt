@@ -1,55 +1,36 @@
-import play.sbt.routes.RoutesKeys
-import sbt._
-import uk.gov.hmrc.DefaultBuildSettings._
-import uk.gov.hmrc.SbtAutoBuildPlugin
-import uk.gov.hmrc.gitstamp.GitStampPlugin._
+import uk.gov.hmrc.gitstamp.GitStampPlugin.*
+import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 
 val appName = "customs-declare-exports"
 
-PlayKeys.devSettings := Seq("play.server.http.port" -> "6792")
+ThisBuild / majorVersion := 0
+ThisBuild / scalaVersion := "2.13.12"
 
-RoutesKeys.routesImport ++= Seq(
-  "uk.gov.hmrc.exports.models.DeclarationSort",
-  "uk.gov.hmrc.exports.models.Page"
-)
-
-Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-h", "target/test-reports/html-report")
-Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oD")
-
-lazy val IntegrationTest = config("it") extend Test
+PlayKeys.devSettings := List("play.server.http.port" -> "6792")
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(PlayScala, SbtDistributablesPlugin)
-  .settings(commonSettings: _*)
-  .settings(gitStampSettings: _*)
-  .configs(IntegrationTest)
-  .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
+  .disablePlugins(JUnitXmlReportPlugin) // Required to prevent https://github.com/scalatest/scalatest/issues/1427
+  .settings(commonSettings)
+  .settings(gitStampSettings)
   .settings(scoverageSettings)
+
+lazy val it = (project in file("it"))
+  .enablePlugins(PlayScala)
+  .dependsOn(microservice % "test->test")
   .settings(
-    Test / unmanagedSourceDirectories := Seq((Test / baseDirectory).value / "test/unit", (Test / baseDirectory).value / "test/util"),
-    Test / unmanagedResourceDirectories := Seq(baseDirectory.value / "test" / "resources"),
-    Test / javaOptions ++= Seq("-Dconfig.resource=test.application.conf"),
-    addTestReportOption(Test, "test-reports"),
-    Test / Keys.fork := true
+    publish / skip := true,
+    Test / testOptions += Tests.Argument("-o", "-h", "it/target/html-report")
   )
-  .settings(
-    IntegrationTest / Keys.fork := false,
-    IntegrationTest / unmanagedSourceDirectories := Seq(
-      (IntegrationTest / baseDirectory).value / "test/it",
-      (Test / baseDirectory).value / "test/util"
-    ),
-    addTestReportOption(IntegrationTest, "int-test-reports"),
-    IntegrationTest / parallelExecution := false
-  )
-  .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
 
 lazy val commonSettings = List(
-  majorVersion := 0,
-  scalaVersion := "2.13.12",
   scalacOptions ++= scalacFlags,
   retrieveManaged := true,
-  dependencyOverrides += "commons-codec" % "commons-codec" % "1.15",
-  libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
+  libraryDependencies ++= Dependencies(),
+  routesImport ++= List(
+    "uk.gov.hmrc.exports.models.DeclarationSort",
+    "uk.gov.hmrc.exports.models.Page"
+  )
 )
 
 lazy val scalacFlags = List(
@@ -69,7 +50,10 @@ lazy val scalacFlags = List(
   "-Wconf:msg=While parsing annotations in:s" // silence While parsing annotations in warning
 )
 
-lazy val scoverageSettings: Seq[Setting[_]] = Seq(
+// Prevent the "No processor claimed any of these annotations" warning
+javacOptions ++= List("-Xlint:-processing")
+
+lazy val scoverageSettings: Seq[Setting[?]] = List(
   coverageExcludedPackages := List(
     "<empty>",
     "Reverse.*",
@@ -83,3 +67,7 @@ lazy val scoverageSettings: Seq[Setting[_]] = Seq(
   coverageHighlighting := true,
   Test / parallelExecution := false
 )
+
+addCommandAlias("ucomp", "Test/compile")
+addCommandAlias("icomp", "it/Test/compile")
+addCommandAlias("precommit", ";clean;scalafmt;Test/scalafmt;it/Test/scalafmt;coverage;test;it/test;scalafmtCheckAll;coverageReport")

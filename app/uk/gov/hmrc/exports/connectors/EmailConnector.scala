@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,33 +16,33 @@
 
 package uk.gov.hmrc.exports.connectors
 
-import javax.inject.Inject
 import play.api.Logging
 import play.api.http.Status.ACCEPTED
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.emails.SendEmailResult._
 import uk.gov.hmrc.exports.models.emails.{SendEmailRequest, SendEmailResult}
-import uk.gov.hmrc.http.HttpErrorFunctions._
+import uk.gov.hmrc.http.HttpErrorFunctions.is5xx
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, UpstreamErrorResponse}
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class EmailConnector @Inject() (http: HttpClient)(implicit appConfig: AppConfig) extends Logging {
+class EmailConnector @Inject() (httpClientV2: HttpClientV2)(implicit appConfig: AppConfig) extends Connector with Logging {
 
   import EmailConnector._
+
+  protected val httpClient: HttpClientV2 = httpClientV2
 
   def sendEmail(sendEmailRequest: SendEmailRequest)(implicit ec: ExecutionContext): Future[SendEmailResult] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    http
-      .POST[SendEmailRequest, HttpResponse](sendEmailUrl, sendEmailRequest)
-      .map { response =>
-        if (response.status == ACCEPTED) EmailAccepted else sendEmailError(sendEmailRequest, response.status, response.body)
-      }
-      .recover { case response: UpstreamErrorResponse =>
-        sendEmailError(sendEmailRequest, response.statusCode, response.message)
-      }
+    postJson[SendEmailRequest, HttpResponse](sendEmailUrl, sendEmailRequest).map { response =>
+      if (response.status == ACCEPTED) EmailAccepted else sendEmailError(sendEmailRequest, response.status, response.body)
+    }.recover { case response: UpstreamErrorResponse =>
+      sendEmailError(sendEmailRequest, response.statusCode, response.message)
+    }
   }
 
   private def sendEmailError(sendEmailRequest: SendEmailRequest, status: Int, message: String): SendEmailResult = {

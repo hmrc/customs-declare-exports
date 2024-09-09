@@ -108,7 +108,7 @@ It is a good practise to run it just before pushing to GitHub.
 
 To provide high number of declarations (20 000) in system run
 ```
-sbt test:run util.SeedMongo
+sbt test:run testdata.SeedMongo
 ```
 Output of program looks
 ```
