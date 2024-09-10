@@ -9,7 +9,6 @@ object Dependencies {
     "uk.gov.hmrc"            %% "bootstrap-backend-play-30"          % bootstrapPlayVersion,
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-work-item-repo-play-30"  % hmrcMongoVersion,
     "uk.gov.hmrc"            %% "wco-dec"                            % "0.39.0",
-    "com.github.tototoshi"   %% "scala-csv"                          % "1.4.1",
     "commons-codec"          %  "commons-codec"                      % "1.17.1",
     "org.glassfish.jaxb"     %  "jaxb-runtime"                       % "2.3.8",
     "javax.xml.bind"         %  "jaxb-api"                           % "2.3.1"
