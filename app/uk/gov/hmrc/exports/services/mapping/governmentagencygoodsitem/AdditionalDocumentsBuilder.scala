@@ -120,8 +120,6 @@ object AdditionalDocumentsBuilder {
       .toList
       .asJava
 
-  // TODO get rid of the interim model GovernmentAgencyGoodsItemAdditionalDocument and map to wco dec directly
-
   private def createAdditionalDocument(doc: GovernmentAgencyGoodsItemAdditionalDocument): WCOAdditionalDocument = {
     val additionalDocument = new WCOAdditionalDocument
 

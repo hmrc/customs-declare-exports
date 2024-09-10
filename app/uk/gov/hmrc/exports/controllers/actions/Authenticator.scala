@@ -27,7 +27,6 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-// TODO: This needs to be separated from BackendController and be injected instead of inheriting in other controllers
 @Singleton
 class Authenticator @Inject() (override val authConnector: AuthConnector, cc: ControllerComponents)(implicit ec: ExecutionContext)
     extends BackendController(cc) with AuthorisedFunctions with Logging {

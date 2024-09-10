@@ -41,8 +41,6 @@ class PackagingBuilder @Inject() () extends ModifyingBuilder[ExportItem, GoodsSh
 
     packageInfo.numberOfPackages.map { quantity =>
       val packagingQuantityQuantityType = new PackagingQuantityQuantityType
-      // TODO noticed here that quantity type in old scala wco is not captured.. no cannot set :-
-      // packagingQuantityQuantityType.setUnitCode(????)
       packagingQuantityQuantityType.setValue(new java.math.BigDecimal(quantity))
       wcoPackaging.setQuantityQuantity(packagingQuantityQuantityType)
     }

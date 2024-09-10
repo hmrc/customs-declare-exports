@@ -29,7 +29,6 @@ import uk.gov.hmrc.exports.services.DeclarationService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 @Singleton
 class DeclarationController @Inject() (
@@ -47,14 +46,26 @@ class DeclarationController @Inject() (
       .map(declaration => Created(declaration))
   }
 
-  def fetchPage(statuses: Seq[String], page: Page, sort: DeclarationSort): Action[AnyContent] =
-    authenticator.authorisedAction(parse.default) { request =>
-      val search =
-        DeclarationSearch(eori = request.eori, statuses = statuses.map(str => Try(DeclarationStatus.withName(str))).filter(_.isSuccess).map(_.get))
-      declarationService.fetchPage(search, page, sort).map { case (declarations, total) =>
-        Ok(Paginated(declarations, page, total))
-      }
+  val update: Action[ExportsDeclaration] =
+    authenticator.authorisedAction(parsingJson[ExportsDeclaration]) { request =>
+      logPayload("Update Declaration Request Received", request.body)
+      declarationService
+        .update(ExportsDeclaration.init(request.eori, request.body, update = true))
+        .map(logPayload("Update Declaration Response", _))
+        .map {
+          case Some(declaration) => Ok(declaration)
+          case None              => NotFound
+        }
     }
+
+  def deleteById(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { request =>
+    declarationService.findOne(request.eori, id).flatMap {
+      case Some(declaration) if declaration.status == DeclarationStatus.COMPLETE =>
+        Future.successful(BadRequest(ErrorResponse("Cannot remove a declaration once it is COMPLETE")))
+      case Some(declaration) => declarationService.deleteOne(declaration).map(_ => NoContent)
+      case None              => Future.successful(NoContent)
+    }
+  }
 
   def fetchPageOfDraft(page: Page, sort: DeclarationSort): Action[AnyContent] = authenticator.authorisedAction(parse.default) { request =>
     declarationService.fetchPage(DeclarationSearch(request.eori, draftStatuses), page, sort).map { case (declarations, total) =>
@@ -84,30 +95,6 @@ class DeclarationController @Inject() (
       case None              => NotFound
     }
   }
-
-  def deleteById(id: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { request =>
-    declarationService.findOne(request.eori, id).flatMap {
-      case Some(declaration) if declaration.status == DeclarationStatus.COMPLETE =>
-        Future.successful(BadRequest(ErrorResponse("Cannot remove a declaration once it is COMPLETE")))
-      case Some(declaration) => declarationService.deleteOne(declaration).map(_ => NoContent)
-      case None              => Future.successful(NoContent)
-    }
-  }
-
-  // TODO Remove in separate subsequent deployment as part of CEDS-5833
-  def deprecatedUpdate(id: String): Action[ExportsDeclaration] = update
-
-  val update: Action[ExportsDeclaration] =
-    authenticator.authorisedAction(parsingJson[ExportsDeclaration]) { request =>
-      logPayload("Update Declaration Request Received", request.body)
-      declarationService
-        .update(ExportsDeclaration.init(request.eori, request.body, update = true))
-        .map(logPayload("Update Declaration Response", _))
-        .map {
-          case Some(declaration) => Ok(declaration)
-          case None              => NotFound
-        }
-    }
 
   private def logPayload[T](prefix: String, payload: T)(implicit wts: Writes[T]): T = {
     logger.debug(s"$prefix: ${Json.toJson(payload)}")

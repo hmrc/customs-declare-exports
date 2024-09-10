@@ -41,17 +41,6 @@ class NotificationController @Inject() (
 )(implicit executionContext: ExecutionContext)
     extends RESTController(cc) with JSONResponses {
 
-  def findAll(submissionId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
-    submissionService.findSubmission(request.eori.value, submissionId) flatMap {
-      case None             => Future.successful(NotFound)
-      case Some(submission) => notificationsService.findAllNotificationsSubmissionRelated(submission).map(Ok(_))
-    }
-  }
-
-  def findLatestNotification(actionId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { _ =>
-    notificationsService.findLatestNotification(actionId).map(Ok(_))
-  }
-
   val saveNotification: Action[NodeSeq] = Action.async(parse.xml) { implicit request =>
     metrics.incrementCounter(Counters.notificationCounter)
 
@@ -64,5 +53,16 @@ class NotificationController @Inject() (
         }
       case Left(errorResponse) => Future.successful(errorResponse.XmlResult)
     }
+  }
+
+  def findAll(submissionId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { implicit request =>
+    submissionService.findSubmission(request.eori.value, submissionId) flatMap {
+      case None             => Future.successful(NotFound)
+      case Some(submission) => notificationsService.findAllNotificationsSubmissionRelated(submission).map(Ok(_))
+    }
+  }
+
+  def findLatestNotification(actionId: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { _ =>
+    notificationsService.findLatestNotification(actionId).map(Ok(_))
   }
 }
