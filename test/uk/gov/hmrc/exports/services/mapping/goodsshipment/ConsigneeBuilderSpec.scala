@@ -16,21 +16,16 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
-import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.{Address, ConsigneeDetails, EntityDetails}
-import uk.gov.hmrc.exports.services.CountriesService
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class ConsigneeBuilderSpec extends UnitSpec {
 
-  val mockCountriesService = mock[CountriesService]
-  when(mockCountriesService.getCountryCode(any())).thenReturn(Some("GB"))
-
   "ConsigneeBuilder" should {
     "correctly map to the WCO-DEC GoodsShipment.Consignee instance" when {
       "only eori is supplied " in {
-        val builder = new ConsigneeBuilder(mockCountriesService)
+        val builder = new ConsigneeBuilder()
 
         val goodsShipment = new GoodsShipment
         val details = ConsigneeDetails(EntityDetails(Some("9GB1234567ABCDEF"), None))
@@ -43,7 +38,7 @@ class ConsigneeBuilderSpec extends UnitSpec {
       }
 
       "only address is supplied " in {
-        val builder = new ConsigneeBuilder(mockCountriesService)
+        val builder = new ConsigneeBuilder()
 
         val goodsShipment = new GoodsShipment
         val details = ConsigneeDetails(EntityDetails(None, Some(ConsigneeBuilderSpec.correctAddress)))
@@ -59,7 +54,7 @@ class ConsigneeBuilderSpec extends UnitSpec {
       }
 
       "both eori and address is supplied " in {
-        val builder = new ConsigneeBuilder(mockCountriesService)
+        val builder = new ConsigneeBuilder()
 
         val goodsShipment = new GoodsShipment
         val details = ConsigneeDetails(EntityDetails(Some("9GB1234567ABCDEF"), Some(ConsigneeBuilderSpec.correctAddress)))
@@ -72,7 +67,7 @@ class ConsigneeBuilderSpec extends UnitSpec {
       }
 
       "empty data is supplied " in {
-        val builder = new ConsigneeBuilder(mockCountriesService)
+        val builder = new ConsigneeBuilder()
 
         val goodsShipment = new GoodsShipment
         val details = ConsigneeDetails(EntityDetails(None, None))
@@ -85,8 +80,7 @@ class ConsigneeBuilderSpec extends UnitSpec {
       "unknown country is supplied" in {}
 
       "'address.fullname' is not supplied" in {
-        when(mockCountriesService.getCountryCode(any())).thenReturn(Some("PL"))
-        val builder = new ConsigneeBuilder(mockCountriesService)
+        val builder = new ConsigneeBuilder()
 
         val goodsShipment = new GoodsShipment
         val details = ConsigneeDetails(EntityDetails(None, Some(ConsigneeBuilderSpec.addressWithEmptyFullname)))

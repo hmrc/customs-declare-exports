@@ -16,18 +16,13 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.YesNo
 import uk.gov.hmrc.exports.models.declaration.{Address, EntityDetails, RepresentativeDetails}
-import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class AgentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
-
-  val mockCountriesService = mock[CountriesService]
-  when(mockCountriesService.getCountryCode(any())).thenReturn(Some("GB"))
 
   val representativeEori = "9GB1234567ABCDEF"
   val declarantEori = "DEC_EORI"
@@ -44,7 +39,7 @@ class AgentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
             )
           )
 
-        val agentBuilder = new AgentBuilder(mockCountriesService)
+        val agentBuilder = new AgentBuilder()
         val emptyDeclaration = new Declaration
 
         agentBuilder.buildThenAdd(model, emptyDeclaration)
@@ -64,7 +59,7 @@ class AgentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
               statusCode = Some(RepresentativeDetails.DirectRepresentative)
             )
           )
-        val agentBuilder = new AgentBuilder(mockCountriesService)
+        val agentBuilder = new AgentBuilder()
         val emptyDeclaration = new Declaration
 
         agentBuilder.buildThenAdd(model, emptyDeclaration)
@@ -87,7 +82,7 @@ class AgentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
               statusCode = Some(RepresentativeDetails.DirectRepresentative)
             )
           )
-        val agentBuilder = new AgentBuilder(mockCountriesService)
+        val agentBuilder = new AgentBuilder()
         val emptyDeclaration = new Declaration
 
         agentBuilder.buildThenAdd(model, emptyDeclaration)
@@ -113,7 +108,7 @@ class AgentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
                 withDeclarantDetails(eori = Some(declarantEori))
               )
 
-            val agentBuilder = new AgentBuilder(mockCountriesService)
+            val agentBuilder = new AgentBuilder()
             val emptyDeclaration = new Declaration
 
             agentBuilder.buildThenAdd(model, emptyDeclaration)

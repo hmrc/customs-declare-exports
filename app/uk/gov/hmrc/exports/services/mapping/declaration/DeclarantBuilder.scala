@@ -18,13 +18,13 @@ package uk.gov.hmrc.exports.services.mapping.declaration
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration._
-import uk.gov.hmrc.exports.services.CountriesService
+
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.Declarant
 import wco.datamodel.wco.declaration_ds.dms._2.{DeclarantIdentificationIDType, _}
 
-class DeclarantBuilder @Inject() (countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class DeclarantBuilder @Inject() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
 
   override def buildThenAdd(model: ExportsDeclaration, declaration: Declaration): Unit =
     if (isEidrWithPersonPresentingGoodsDetails(model))

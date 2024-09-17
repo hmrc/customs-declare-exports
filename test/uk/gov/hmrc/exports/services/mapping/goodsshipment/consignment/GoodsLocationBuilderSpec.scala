@@ -18,22 +18,16 @@ package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import org.scalatest.Assertion
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.GoodsLocation
-import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class GoodsLocationBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
-  val mockCountriesService = mock[CountriesService]
-  when(mockCountriesService.allCountries)
-    .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
-
   "GoodsLocationBuilder" must {
     "correctly map GoodsLocation instance for supplementary journey" when {
       "all data is supplied from form model" in {
-        val builder = new GoodsLocationBuilder(mockCountriesService)
+        val builder = new GoodsLocationBuilder()
         val consignment = new GoodsShipment.Consignment
 
         builder.buildThenAdd(GoodsLocationBuilderSpec.validGoodsLocation, consignment)

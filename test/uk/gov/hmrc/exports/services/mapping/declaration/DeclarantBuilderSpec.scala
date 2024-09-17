@@ -17,17 +17,12 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.models.Eori
 import uk.gov.hmrc.exports.models.declaration.Address
-import uk.gov.hmrc.exports.models.{Country, Eori}
-import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class DeclarantBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
-
-  val mockCountriesService = mock[CountriesService]
-  when(mockCountriesService.allCountries)
-    .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
   "DeclarantBuilder" when {
 
@@ -131,5 +126,5 @@ class DeclarantBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
     }
   }
 
-  private def builder = new DeclarantBuilder(mockCountriesService)
+  private def builder = new DeclarantBuilder()
 }

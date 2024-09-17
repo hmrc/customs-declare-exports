@@ -17,22 +17,16 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.Country
-import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class DestinationBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
-  val mockCountriesService = mock[CountriesService]
-  when(mockCountriesService.allCountries)
-    .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
-
   "DestinationBuilder" should {
 
     "correctly map a destinationCountries to the WCO-DEC GoodsShipment.Destination instance" when {
       "countryOfDestination has been supplied" in {
-        val builder = new DestinationBuilder(mockCountriesService)
+        val builder = new DestinationBuilder()
         val goodsShipment = new Declaration.GoodsShipment
         builder.buildThenAdd("PL", goodsShipment)
 
@@ -41,7 +35,7 @@ class DestinationBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       }
 
       "countryOfDestination has not been supplied" in {
-        val builder = new DestinationBuilder(mockCountriesService)
+        val builder = new DestinationBuilder()
         val goodsShipment = new Declaration.GoodsShipment
         builder.buildThenAdd("", goodsShipment)
 

@@ -17,25 +17,20 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.services.CountriesService
+
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.ExportCountry
 import wco.datamodel.wco.declaration_ds.dms._2.ExportCountryCountryCodeType
 
-class ExportCountryBuilder @Inject() (countriesService: CountriesService) extends ModifyingBuilder[String, GoodsShipment] {
-  override def buildThenAdd(originationCountry: String, goodsShipment: GoodsShipment): Unit =
-    if (originationCountry.nonEmpty) goodsShipment.setExportCountry(createExportCountry(originationCountry))
+class ExportCountryBuilder @Inject() extends ModifyingBuilder[String, GoodsShipment] {
+  override def buildThenAdd(originationCountryCode: String, goodsShipment: GoodsShipment): Unit =
+    if (originationCountryCode.nonEmpty) goodsShipment.setExportCountry(createExportCountry(originationCountryCode))
 
-  private def createExportCountry(originationCountry: String): GoodsShipment.ExportCountry = {
+  private def createExportCountry(originationCountryCode: String): GoodsShipment.ExportCountry = {
 
     val id = new ExportCountryCountryCodeType()
-    id.setValue(
-      countriesService.allCountries
-        .find(_.countryCode == originationCountry)
-        .map(_.countryCode)
-        .getOrElse("")
-    )
+    id.setValue(originationCountryCode)
 
     val exportCountry = new ExportCountry()
     exportCountry.setID(id)
