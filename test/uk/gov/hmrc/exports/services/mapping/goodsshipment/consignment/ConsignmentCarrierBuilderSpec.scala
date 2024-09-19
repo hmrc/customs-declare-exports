@@ -16,19 +16,14 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
-import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.DeclarationType.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.Address
-import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
-
-  private val mockCountriesService = mock[CountriesService]
-  when(mockCountriesService.getCountryCode(any())).thenReturn(Some("GB"))
 
   "ConsignmentCarrierBuilderSpec" should {
 
@@ -48,7 +43,7 @@ class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuil
             val consignment = new Declaration.Consignment()
 
             // When
-            new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
+            new ConsignmentCarrierBuilder().buildThenAdd(model, consignment)
 
             // Then
             consignment.getCarrier mustBe null
@@ -61,14 +56,13 @@ class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuil
             val consignment = new Declaration.Consignment()
 
             // When
-            new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
+            new ConsignmentCarrierBuilder().buildThenAdd(model, consignment)
 
             // Then
             consignment.getCarrier.getAddress mustBe null
           }
 
           "eori is empty" in {
-            when(mockCountriesService.getCountryCode(any())).thenReturn(Some("GB"))
             // Given
             val model = aDeclaration(
               withCarrierDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", "GB"))),
@@ -77,7 +71,7 @@ class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuil
             val consignment = new Declaration.Consignment()
 
             // When
-            new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
+            new ConsignmentCarrierBuilder().buildThenAdd(model, consignment)
 
             // Then
             consignment.getCarrier.getID mustBe null
@@ -93,7 +87,7 @@ class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuil
             val consignment = new Declaration.Consignment()
 
             // When
-            new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
+            new ConsignmentCarrierBuilder().buildThenAdd(model, consignment)
 
             // Then
             consignment.getCarrier.getID.getValue mustBe "eori"
@@ -108,7 +102,7 @@ class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuil
             val consignment = new Declaration.Consignment()
 
             // When
-            new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
+            new ConsignmentCarrierBuilder().buildThenAdd(model, consignment)
 
             // Then
             consignment.getCarrier.getID.getValue mustBe "eori"
@@ -117,7 +111,6 @@ class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuil
           }
 
           "invalid country" in {
-            when(mockCountriesService.getCountryCode(any())).thenReturn(None)
             // Given
             val model = aDeclaration(
               withCarrierDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", ""))),
@@ -126,7 +119,7 @@ class ConsignmentCarrierBuilderSpec extends UnitSpec with ExportsDeclarationBuil
             val consignment = new Declaration.Consignment()
 
             // When
-            new ConsignmentCarrierBuilder(mockCountriesService).buildThenAdd(model, consignment)
+            new ConsignmentCarrierBuilder().buildThenAdd(model, consignment)
 
             // Then
             consignment.getCarrier.getAddress.getCountryCode.getValue mustBe ""

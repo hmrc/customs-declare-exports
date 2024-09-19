@@ -17,29 +17,24 @@
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import javax.inject.Inject
-import uk.gov.hmrc.exports.services.CountriesService
+
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Destination
 import wco.datamodel.wco.declaration_ds.dms._2.DestinationCountryCodeType
 
-class DestinationBuilder @Inject() (countriesService: CountriesService) extends ModifyingBuilder[String, GoodsShipment] {
+class DestinationBuilder @Inject() extends ModifyingBuilder[String, GoodsShipment] {
 
-  override def buildThenAdd(country: String, goodsShipment: GoodsShipment): Unit =
-    if (country.nonEmpty) goodsShipment.setDestination(createDestinationCountry(country))
+  override def buildThenAdd(countryCode: String, goodsShipment: GoodsShipment): Unit =
+    if (countryCode.nonEmpty) goodsShipment.setDestination(createDestinationCountry(countryCode))
 
-  private def createDestinationCountry(countryOfDestination: String): GoodsShipment.Destination = {
+  private def createDestinationCountry(countryCode: String): GoodsShipment.Destination = {
 
-    val countryCode = new DestinationCountryCodeType()
-    countryCode.setValue(
-      countriesService.allCountries
-        .find(_.countryCode == countryOfDestination)
-        .map(_.countryCode)
-        .getOrElse("")
-    )
+    val countryCodeType = new DestinationCountryCodeType()
+    countryCodeType.setValue(countryCode)
 
     val destination = new Destination()
-    destination.setCountryCode(countryCode)
+    destination.setCountryCode(countryCodeType)
     destination
   }
 }

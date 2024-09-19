@@ -16,24 +16,19 @@
 
 package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
-import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.DeclarationType
 import uk.gov.hmrc.exports.models.declaration.Address
-import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class ConsignmentConsignorBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
-  val mockCountriesService = mock[CountriesService]
-  when(mockCountriesService.getCountryCode(any())).thenReturn(Some("GB"))
-
   Seq(DeclarationType.CLEARANCE).map { declarationType =>
     "ConsignorBuilder" should {
       "correctly map to the WCO-DEC GoodsShipment.Consignee instance" when {
         "only eori is supplied " in {
-          val builder = new ConsignmentConsignorBuilder(mockCountriesService)
+          val builder = new ConsignmentConsignorBuilder()
 
           val model = aDeclaration(withConsignorDetails(Some("9GB1234567ABCDEG"), None), withType(declarationType))
           val consignment = new Declaration.Consignment()
@@ -46,7 +41,7 @@ class ConsignmentConsignorBuilderSpec extends UnitSpec with ExportsDeclarationBu
         }
 
         "only address is supplied " in {
-          val builder = new ConsignmentConsignorBuilder(mockCountriesService)
+          val builder = new ConsignmentConsignorBuilder()
 
           val model = aDeclaration(withConsignorDetails(None, Some(ConsignmentConsignorBuilderSpec.correctAddress)), withType(declarationType))
           val consignment = new Declaration.Consignment()
@@ -62,7 +57,7 @@ class ConsignmentConsignorBuilderSpec extends UnitSpec with ExportsDeclarationBu
         }
 
         "both eori and address is supplied " in {
-          val builder = new ConsignmentConsignorBuilder(mockCountriesService)
+          val builder = new ConsignmentConsignorBuilder()
 
           val model = aDeclaration(
             withConsignorDetails(Some("9GB1234567ABCDEG"), Some(ConsignmentConsignorBuilderSpec.correctAddress)),
@@ -78,7 +73,7 @@ class ConsignmentConsignorBuilderSpec extends UnitSpec with ExportsDeclarationBu
         }
 
         "empty data is supplied " in {
-          val builder = new ConsignmentConsignorBuilder(mockCountriesService)
+          val builder = new ConsignmentConsignorBuilder()
 
           val model = aDeclaration(withConsignorDetails(None, None), withType(declarationType))
           val consignment = new Declaration.Consignment()
@@ -89,8 +84,7 @@ class ConsignmentConsignorBuilderSpec extends UnitSpec with ExportsDeclarationBu
         }
 
         "'address.fullname' is not supplied" in {
-          when(mockCountriesService.getCountryCode(any())).thenReturn(Some("PL"))
-          val builder = new ConsignmentConsignorBuilder(mockCountriesService)
+          val builder = new ConsignmentConsignorBuilder()
 
           val model =
             aDeclaration(withConsignorDetails(None, Some(ConsignmentConsignorBuilderSpec.addressWithEmptyFullname)), withType(declarationType))

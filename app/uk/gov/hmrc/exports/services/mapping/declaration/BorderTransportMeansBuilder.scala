@@ -18,12 +18,12 @@ package uk.gov.hmrc.exports.services.mapping.declaration
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.{ExportsDeclaration, Transport}
-import uk.gov.hmrc.exports.services.CountriesService
+
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class BorderTransportMeansBuilder @Inject() (countriesService: CountriesService) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class BorderTransportMeansBuilder @Inject() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, t: Declaration): Unit = {
     val transport = model.transport
 
@@ -84,12 +84,8 @@ class BorderTransportMeansBuilder @Inject() (countriesService: CountriesService)
 
     transport.transportCrossingTheBorderNationality.foreach {
       _.countryCode match {
-        case Some(countryCode) =>
-          countriesService.allCountries
-            .find(country => country.countryCode == countryCode)
-            .foreach(country => sendRegistrationNationalityCode(country.countryCode))
-
-        case _ => sendRegistrationNationalityCode("GB")
+        case Some(countryCode) => sendRegistrationNationalityCode(countryCode)
+        case _                 => sendRegistrationNationalityCode("GB")
       }
     }
   }

@@ -16,18 +16,13 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.Address
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration.YesNo
-import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class ExporterBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
-
-  val mockCountriesService = mock[CountriesService]
-  when(mockCountriesService.getCountryCode(any())).thenReturn(Some("GB"))
 
   "ExporterBuilder" should {
 
@@ -61,7 +56,6 @@ class ExporterBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
       }
 
       "unknown country" in {
-        when(mockCountriesService.getCountryCode(any())).thenReturn(None)
         val model = aDeclaration(withExporterDetails(eori = None, address = Some(Address("name", "line", "city", "postcode", ""))))
         val declaration = new Declaration()
 
@@ -118,5 +112,5 @@ class ExporterBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
     }
   }
 
-  private def builder: ExporterBuilder = new ExporterBuilder(mockCountriesService)
+  private def builder: ExporterBuilder = new ExporterBuilder()
 }

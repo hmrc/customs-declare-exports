@@ -17,18 +17,11 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import uk.gov.hmrc.exports.base.UnitSpec
-import uk.gov.hmrc.exports.models.Country
 import uk.gov.hmrc.exports.models.declaration.ModeOfTransportCode
-import uk.gov.hmrc.exports.services.CountriesService
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
 class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
-
-  val mockCountriesService = mock[CountriesService]
-
-  when(mockCountriesService.allCountries)
-    .thenReturn(List(Country("United Kingdom", "GB"), Country("Poland", "PL")))
 
   "BorderTransportMeansBuilder" should {
 
@@ -95,15 +88,6 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
         declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue must be("GB")
       }
 
-      "invalid border transport nationality" in {
-        val model = aDeclaration(withTransportCountry(Some("other")))
-        val declaration = new Declaration()
-
-        builder.buildThenAdd(model, declaration)
-
-        Option(declaration.getBorderTransportMeans.getRegistrationNationalityCode) must be(None)
-      }
-
       "departure transport ModeOfTransportCode only" in {
         val model = aDeclaration(withoutBorderTransport, withDepartureTransport(ModeOfTransportCode.Maritime))
         val declaration = new Declaration()
@@ -140,5 +124,5 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
     }
   }
 
-  private def builder = new BorderTransportMeansBuilder(mockCountriesService)
+  private def builder = new BorderTransportMeansBuilder()
 }

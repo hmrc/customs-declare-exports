@@ -18,12 +18,12 @@ package uk.gov.hmrc.exports.services.mapping.goodsshipment
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.{Address, ConsigneeDetails, EntityDetails}
-import uk.gov.hmrc.exports.services.CountriesService
+
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class ConsigneeBuilder @Inject() (countriesService: CountriesService) extends ModifyingBuilder[ConsigneeDetails, GoodsShipment] {
+class ConsigneeBuilder @Inject() extends ModifyingBuilder[ConsigneeDetails, GoodsShipment] {
 
   override def buildThenAdd(consigneeDetails: ConsigneeDetails, goodsShipment: GoodsShipment) =
     if (isDefined(consigneeDetails))

@@ -18,13 +18,13 @@ package uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment
 
 import javax.inject.Inject
 import uk.gov.hmrc.exports.models.declaration.GoodsLocation
-import uk.gov.hmrc.exports.services.CountriesService
+
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.Consignment
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class GoodsLocationBuilder @Inject() (countriesService: CountriesService) extends ModifyingBuilder[GoodsLocation, GoodsShipment.Consignment] {
+class GoodsLocationBuilder @Inject() extends ModifyingBuilder[GoodsLocation, GoodsShipment.Consignment] {
 
   override def buildThenAdd(goodsLocation: GoodsLocation, consignment: Consignment): Unit =
     if (isDefined(goodsLocation)) {
