@@ -24,8 +24,8 @@ import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus._
 import uk.gov.hmrc.exports.repositories.{JobRunRepository, PurgeSubmissionsTransactionalOps, SubmissionRepository}
 import uk.gov.hmrc.exports.util.TimeUtils
 
-import java.time.LocalTime
-import javax.inject.{Inject, Singleton}
+import java.time.{LocalTime, ZonedDateTime}
+import javax.inject.{Inject, Named, Singleton}
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -35,22 +35,17 @@ class PurgeAncientSubmissionsJob @Inject() (
   submissionRepository: SubmissionRepository,
   transactionalOps: PurgeSubmissionsTransactionalOps,
   jobRunRepository: JobRunRepository
-)(implicit ec: ExecutionContext)
+)(implicit @Named("backgroundTasksExecutionContext") ec: ExecutionContext)
     extends ScheduledJob with Logging {
 
-  override val name: String = "PurgeAncientSubmissions"
-
+  override def firstRunTime: Option[LocalTime] = Some(appConfig.purgeAncientSubmissions.elapseTime)
   override def interval: FiniteDuration = appConfig.purgeAncientSubmissions.interval
 
-  override def firstRunTime: Option[LocalTime] = Some(appConfig.purgeAncientSubmissions.elapseTime)
-
-  lazy val expiryDate = {
+  lazy val expiryDate: ZonedDateTime = {
     val days = 180L
     val oneMilliSec = 1000000
     TimeUtils.now().minusDays(days).withNano(oneMilliSec)
   }
-
-  private lazy val expiryDateAsString = Json.toJson(expiryDate).toString
 
   override def execute(): Future[Unit] =
     jobRunRepository.isFirstRunInTheDay(name).flatMap {
@@ -66,6 +61,7 @@ class PurgeAncientSubmissionsJob @Inject() (
     }
 
   private lazy val filter = {
+    val expiryDateAsString = Json.toJson(expiryDate).toString
     val statusesToRemove =
       List(CANCELLED, DECLARATION_HANDLED_EXTERNALLY, ERRORS, EXPIRED_NO_ARRIVAL, EXPIRED_NO_DEPARTURE, GOODS_HAVE_EXITED, WITHDRAWN)
     val jsonString =

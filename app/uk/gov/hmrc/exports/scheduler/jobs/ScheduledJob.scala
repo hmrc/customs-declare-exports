@@ -22,7 +22,11 @@ import scala.concurrent.duration.FiniteDuration
 
 trait ScheduledJob {
 
-  def name: String
+  val name: String = {
+    val className = this.getClass.getSimpleName
+    if (className.endsWith("Job")) className.dropRight("Job".length) else className
+  }
+
   def firstRunTime: Option[LocalTime]
   def interval: FiniteDuration
 

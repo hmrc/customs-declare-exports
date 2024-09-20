@@ -14,22 +14,32 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.exports.routines
+package uk.gov.hmrc.exports.scheduler.jobs
 
 import play.api.Logging
+import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.services.notifications.receiptactions.NotificationReceiptActionsRunner
 
-import javax.inject.Inject
-import scala.concurrent.Future
+import java.time.LocalTime
+import javax.inject.{Inject, Named}
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{ExecutionContext, Future}
 
-class ReattemptNotificationParsingRoutine @Inject() (notificationReceiptActionsRunner: NotificationReceiptActionsRunner)(
-  implicit mec: RoutinesExecutionContext
-) extends Routine with Logging {
+class ReattemptNotificationParsingJob @Inject() (appConfig: AppConfig, notificationReceiptActionsRunner: NotificationReceiptActionsRunner)(
+  implicit @Named("backgroundTasksExecutionContext") ec: ExecutionContext
+) extends ScheduledJob with Logging {
+
+  override val firstRunTime: Option[LocalTime] = {
+    val delay = 30L
+    Some(LocalTime.now.plusSeconds(delay))
+  }
+
+  override val interval: FiniteDuration = appConfig.parsingReattemptInterval
 
   def execute(): Future[Unit] = {
-    logger.debug("Starting ReattemptNotificationParsingRoutine...")
+    logger.debug("Starting ReattemptNotificationParsingJob...")
     notificationReceiptActionsRunner.runNow(parseFailed = true).map { _ =>
-      logger.debug("Finished ReattemptNotificationParsingRoutine")
+      logger.debug("Finished ReattemptNotificationParsingJob")
     }
   }
 }

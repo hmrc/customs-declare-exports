@@ -87,10 +87,7 @@ class AppConfigISpec extends IntegrationTestSpec {
 
   assert(appConfig.sendEmailsJobInterval == sendEmailsJobInterval, s"sendEmailsJobInterval must be $sendEmailsJobInterval")
 
-  assert(
-    appConfig.notificationReattemptInterval == notificationReattemptInterval,
-    s"notificationReattemptInterval must be $notificationReattemptInterval"
-  )
+  assert(appConfig.parsingReattemptInterval == notificationReattemptInterval, s"notificationReattemptInterval must be $notificationReattemptInterval")
 
   assert(
     appConfig.consideredFailedBeforeWorkItem == consideredFailedBeforeWorkItem,

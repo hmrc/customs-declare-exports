@@ -33,10 +33,10 @@ class PurgeAncientSubmissionsJobISpec extends IntegrationTestPurgeSubmissionsToo
   import PurgeAncientSubmissionsJobISpec._
   import testdata.WorkItemTestData._
 
-  val testJob: PurgeAncientSubmissionsJob = instanceOf[PurgeAncientSubmissionsJob]
+  private val testJob: PurgeAncientSubmissionsJob = instanceOf[PurgeAncientSubmissionsJob]
 
-  val enhancedStatusLastUpdatedOlderThan = testJob.expiryDate
-  val enhancedStatusLastUpdatedRecent = TimeUtils.now().minusDays(1)
+  private val enhancedStatusLastUpdatedOlderThan = testJob.expiryDate
+  private val enhancedStatusLastUpdatedRecent = TimeUtils.now().minusDays(1)
 
   "PurgeAncientSubmissionsJob" should {
 
