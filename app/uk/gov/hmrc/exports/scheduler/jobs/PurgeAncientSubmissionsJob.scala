@@ -41,7 +41,7 @@ class PurgeAncientSubmissionsJob @Inject() (
   override def firstRunTime: Option[LocalTime] = Some(appConfig.purgeAncientSubmissions.elapseTime)
   override def interval: FiniteDuration = appConfig.purgeAncientSubmissions.interval
 
-  lazy val expiryDate: ZonedDateTime = {
+  def expiryDate: ZonedDateTime = {
     val days = 180L
     val oneMilliSec = 1000000
     TimeUtils.now().minusDays(days).withNano(oneMilliSec)
@@ -60,7 +60,7 @@ class PurgeAncientSubmissionsJob @Inject() (
       case false => Future.successful(())
     }
 
-  private lazy val filter = {
+  private def filter = {
     val expiryDateAsString = Json.toJson(expiryDate).toString
     val statusesToRemove =
       List(CANCELLED, DECLARATION_HANDLED_EXTERNALLY, ERRORS, EXPIRED_NO_ARRIVAL, EXPIRED_NO_DEPARTURE, GOODS_HAVE_EXITED, WITHDRAWN)

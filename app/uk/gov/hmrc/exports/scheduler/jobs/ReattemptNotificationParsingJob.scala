@@ -29,7 +29,7 @@ class ReattemptNotificationParsingJob @Inject() (appConfig: AppConfig, notificat
   implicit @Named("backgroundTasksExecutionContext") ec: ExecutionContext
 ) extends ScheduledJob with Logging {
 
-  override val firstRunTime: Option[LocalTime] = {
+  override def firstRunTime: Option[LocalTime] = {
     val delay = 30L
     Some(LocalTime.now.plusSeconds(delay))
   }
