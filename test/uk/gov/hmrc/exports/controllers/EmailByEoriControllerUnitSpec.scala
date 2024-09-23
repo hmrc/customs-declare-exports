@@ -45,7 +45,8 @@ class EmailByEoriControllerUnitSpec extends UnitSpec with AuthTestSupport {
     withAuthorizedUser()
   }
 
-  "GET EmailIfVerified endpoint" should {
+  // TODO remove tests for deprecated endpoint
+  "GET EmailIfVerified deprecated endpoint" should {
 
     "return 200(OK) status and deliverable = true if the email address for the given EORI is verified" in {
       val expectedEmailAddress = Email("some@email.com", deliverable = true)
@@ -91,6 +92,56 @@ class EmailByEoriControllerUnitSpec extends UnitSpec with AuthTestSupport {
       when(connector.getEmailAddress(any[String])(any[ExecutionContext])).thenAnswer(upstreamErrorResponse(BAD_GATEWAY))
 
       val response = controller.getEmailIfVerified(ExportsTestData.eori)(fakeRequest)
+      status(response) mustBe INTERNAL_SERVER_ERROR
+    }
+  }
+
+  "GET EmailIfVerified endpoint" should {
+
+    "return 200(OK) status and deliverable = true if the email address for the given EORI is verified" in {
+      val expectedEmailAddress = Email("some@email.com", deliverable = true)
+
+      when(connector.getEmailAddress(any[String])(any[ExecutionContext]))
+        .thenReturn(Future.successful(Some(expectedEmailAddress)))
+
+      val response = controller.getEmail(fakeRequest)
+      status(response) mustBe OK
+      contentAsJson(response) mustBe Json.toJson(expectedEmailAddress)
+
+      verify(connector).getEmailAddress(eqTo(userEori.value))(any[ExecutionContext])
+    }
+
+    "return 200(OK) status and deliverable = false if the email address for the given EORI is not deliverable" in {
+      val expectedEmailAddress = Email("some@email.com", deliverable = false)
+
+      when(connector.getEmailAddress(any[String])(any[ExecutionContext]))
+        .thenReturn(Future.successful(Some(expectedEmailAddress)))
+
+      val response = controller.getEmail(fakeRequest)
+      status(response) mustBe OK
+      contentAsJson(response) mustBe Json.toJson(expectedEmailAddress)
+
+      verify(connector).getEmailAddress(eqTo(userEori.value))(any[ExecutionContext])
+    }
+
+    "return 404(NOT_FOUND) status if the email address for the given EORI was not provided or was not verified yet" in {
+      when(connector.getEmailAddress(any[String])(any[ExecutionContext])).thenReturn(Future.successful(None))
+
+      val response = controller.getEmail(fakeRequest)
+      status(response) mustBe NOT_FOUND
+    }
+
+    "return 500(INTERNAL_SERVER_ERROR) status for any 4xx returned by the downstream service, let apart 404" in {
+      when(connector.getEmailAddress(any[String])(any[ExecutionContext])).thenAnswer(upstreamErrorResponse(BAD_REQUEST))
+
+      val response = controller.getEmail(fakeRequest)
+      status(response) mustBe INTERNAL_SERVER_ERROR
+    }
+
+    "return 500(INTERNAL_SERVER_ERROR) status for any 5xx http error code returned by the downstream service" in {
+      when(connector.getEmailAddress(any[String])(any[ExecutionContext])).thenAnswer(upstreamErrorResponse(BAD_GATEWAY))
+
+      val response = controller.getEmail(fakeRequest)
       status(response) mustBe INTERNAL_SERVER_ERROR
     }
   }

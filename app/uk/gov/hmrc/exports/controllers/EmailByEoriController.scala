@@ -31,6 +31,17 @@ class EmailByEoriController @Inject() (authenticator: Authenticator, customsData
   implicit ec: ExecutionContext
 ) extends BackendController(cc) {
 
+  def getEmail: Action[AnyContent] = authenticator.authorisedAction(parse.default) { request =>
+    customsDataStoreConnector
+      .getEmailAddress(request.eori.value)
+      .map {
+        case Some(Email(email, deliverable)) => Ok(Json.toJson(Email(email, deliverable)))
+        case _                               => NotFound
+      }
+      .recover { case _ => InternalServerError }
+  }
+
+  // TODO remove this old endpoint method
   def getEmailIfVerified(eori: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { _ =>
     customsDataStoreConnector
       .getEmailAddress(eori)
