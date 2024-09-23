@@ -72,23 +72,25 @@ class AppConfig @Inject() (val configuration: Configuration, servicesConfig: Ser
 
   lazy val sendEmailsJobInterval: FiniteDuration = servicesConfig.getDuration("scheduler.send-emails.interval").asInstanceOf[FiniteDuration]
 
-  lazy val notificationReattemptInterval: FiniteDuration =
-    servicesConfig.getDuration("scheduler.notification-reattempt.interval").asInstanceOf[FiniteDuration]
+  lazy val parsingWorkItemsRetryLimit: Int = configuration.get[Int]("scheduler.parsing.maxRetries")
+
+  lazy val parsingReattemptInterval: FiniteDuration =
+    servicesConfig.getDuration("scheduler.parsing-reattempt.interval").asInstanceOf[FiniteDuration]
 
   lazy val consideredFailedBeforeWorkItem: FiniteDuration =
     servicesConfig.getDuration("workItem.sendEmail.consideredFailedBefore").asInstanceOf[FiniteDuration]
 
-  lazy val customsDeclarationsInformationBaseUrl = servicesConfig.baseUrl("customs-declarations-information")
+  lazy val customsDeclarationsInformationBaseUrl: String = servicesConfig.baseUrl("customs-declarations-information")
 
-  lazy val fetchMrnStatus = servicesConfig.getString("microservice.services.customs-declarations-information.fetch-mrn-status")
+  lazy val fetchMrnStatus: String = servicesConfig.getString("microservice.services.customs-declarations-information.fetch-mrn-status")
 
-  lazy val fetchMrnFullDeclaration = servicesConfig.getString("microservice.services.customs-declarations-information.fetch-mrn-declaration")
+  lazy val fetchMrnFullDeclaration: String = servicesConfig.getString("microservice.services.customs-declarations-information.fetch-mrn-declaration")
 
-  lazy val cdiApiVersion = servicesConfig.getString("microservice.services.customs-declarations-information.api-version")
+  lazy val cdiApiVersion: String = servicesConfig.getString("microservice.services.customs-declarations-information.api-version")
 
-  lazy val cdiClientID = servicesConfig.getString("microservice.services.customs-declarations-information.client-id")
+  lazy val cdiClientID: String = servicesConfig.getString("microservice.services.customs-declarations-information.client-id")
 
-  lazy val cdiBearerToken = servicesConfig.getString("microservice.services.customs-declarations-information.bearer-token")
+  lazy val cdiBearerToken: String = servicesConfig.getString("microservice.services.customs-declarations-information.bearer-token")
 
   lazy val customsDataStoreBaseUrl: String = servicesConfig.baseUrl("customs-data-store")
 
@@ -101,8 +103,6 @@ class AppConfig @Inject() (val configuration: Configuration, servicesConfig: Ser
   lazy val replaceIndexesOfDeclarationRepository: Boolean = configuration.get[Boolean]("declarations.repository.replace.indexes")
 
   lazy val useTransactionalDBOps: Boolean = configuration.get[Boolean]("mongodb.transactional.operations")
-
-  lazy val parsingWorkItemsRetryLimit = configuration.get[Int]("scheduler.parsing.maxRetries")
 }
 
 object AppConfig {

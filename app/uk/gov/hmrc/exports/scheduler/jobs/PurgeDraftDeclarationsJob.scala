@@ -20,23 +20,21 @@ import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, JobRunRepository}
 
-import java.time._
+import java.time.{Instant, LocalTime}
 import java.time.temporal.ChronoUnit
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration._
+import javax.inject.{Inject, Named, Singleton}
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class PurgeDraftDeclarationsJob @Inject() (appConfig: AppConfig, declarationRepository: DeclarationRepository, jobRunRepository: JobRunRepository)(
-  implicit ec: ExecutionContext
+  implicit @Named("backgroundTasksExecutionContext") ec: ExecutionContext
 ) extends ScheduledJob with Logging {
 
-  private lazy val jobConfig = appConfig.purgeDraftDeclarations
   private[jobs] lazy val expireDuration = appConfig.draftTimeToLive
 
-  override val name: String = "PurgeDraftDeclarations"
-  override def interval: FiniteDuration = jobConfig.interval
-  override def firstRunTime: Option[LocalTime] = Some(jobConfig.elapseTime)
+  override def firstRunTime: Option[LocalTime] = Some(appConfig.purgeDraftDeclarations.elapseTime)
+  override def interval: FiniteDuration = appConfig.purgeDraftDeclarations.interval
 
   override def execute(): Future[Unit] =
     jobRunRepository.isFirstRunInTheDay(name).flatMap {

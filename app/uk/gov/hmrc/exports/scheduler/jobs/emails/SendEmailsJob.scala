@@ -42,8 +42,6 @@ class SendEmailsJob @Inject() (
 )(implicit @Named("backgroundTasksExecutionContext") ec: ExecutionContext)
     extends ScheduledJob with Logging {
 
-  override def name: String = "SendEmails"
-
   override def firstRunTime: Option[LocalTime] = {
     val now = LocalTime.now(appConfig.clock).withSecond(0).withNano(0)
     Some(calcRunTime(now))
