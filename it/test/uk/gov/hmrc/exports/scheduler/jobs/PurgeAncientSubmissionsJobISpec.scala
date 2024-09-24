@@ -116,7 +116,7 @@ class PurgeAncientSubmissionsJobISpec extends IntegrationTestPurgeSubmissionsToo
             not <- notificationRepository.findAll()
             dec <- declarationRepository.findAll()
             unt <- unparsedNotificationRepository.count(ProcessingStatus.ToDo)
-          } yield (sub.size, not.size, dec.size, unt)
+          } yield (sub.size, dec.size, not.size, unt)
         } { case (submissions, declarations, notifications, unparsed) =>
           submissions mustBe 0
           declarations mustBe 0
