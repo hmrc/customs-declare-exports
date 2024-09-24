@@ -40,15 +40,4 @@ class EmailByEoriController @Inject() (authenticator: Authenticator, customsData
       }
       .recover { case _ => InternalServerError }
   }
-
-  // TODO remove this old endpoint method
-  def getEmailIfVerified(eori: String): Action[AnyContent] = authenticator.authorisedAction(parse.default) { _ =>
-    customsDataStoreConnector
-      .getEmailAddress(eori)
-      .map {
-        case Some(Email(email, deliverable)) => Ok(Json.toJson(Email(email, deliverable)))
-        case _                               => NotFound
-      }
-      .recover { case _ => InternalServerError }
-  }
 }

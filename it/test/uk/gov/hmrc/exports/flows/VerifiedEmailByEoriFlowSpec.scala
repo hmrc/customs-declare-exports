@@ -27,7 +27,7 @@ class VerifiedEmailByEoriFlowSpec extends IntegrationTestSpec with AuthTestSuppo
 
   implicit val appConfig: AppConfig = instanceOf[AppConfig]
   val customsDataStoreUrl = CustomsDataStoreConnector.verifiedEmailPath(eori)
-  val getRequest = getWithAuth(routes.EmailByEoriController.getEmailIfVerified(eori))
+  val getRequest = getWithAuth(routes.EmailByEoriController.getEmail)
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
