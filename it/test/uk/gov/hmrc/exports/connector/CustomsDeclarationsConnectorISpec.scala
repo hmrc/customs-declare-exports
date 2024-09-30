@@ -48,9 +48,10 @@ class CustomsDeclarationsConnectorISpec extends IntegrationTestSpec with Exports
       "request is processed successfully - 202" in {
         val headers = Map("X-Conversation-ID" -> UUID.randomUUID.toString)
         postToDownstreamService(submissionURL, ACCEPTED, None, headers)
-        await(sendValidXml(expectedSubmissionRequestPayload(id)))
+        val payload = expectedSubmissionRequestPayload(id)
+        await(sendValidXml(payload))
 
-        verifyDecServiceWasCalledCorrectly(requestBody = expectedSubmissionRequestPayload(id), expectedEori = declarantEoriValue, url = submissionURL)
+        verifyDecServiceWasCalledCorrectly(requestBody = payload, expectedEori = declarantEoriValue, url = submissionURL)
       }
 
       "request is processed successfully (external 202), but does not have conversationId - 500" in {
@@ -137,6 +138,6 @@ class CustomsDeclarationsConnectorISpec extends IntegrationTestSpec with Exports
         .withHeader(CONTENT_TYPE, equalTo(ContentTypes.XML(Codec.utf_8)))
         .withHeader(ACCEPT, equalTo(s"application/vnd.hmrc.$expectedApiVersion+xml"))
         .withHeader(CustomsHeaderNames.XEoriIdentifierHeaderName, equalTo(expectedEori))
-        .withRequestBody(equalToXml(requestBody))
+        .withRequestBody(equalTo(requestBody))
     )
 }

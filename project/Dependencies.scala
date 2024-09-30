@@ -2,16 +2,15 @@ import sbt._
 
 object Dependencies {
 
-  val bootstrapPlayVersion = "9.4.0"
+  val bootstrapPlayVersion = "9.5.0"
   val hmrcMongoVersion = "2.2.0"
 
   val compile: Seq[ModuleID] = List(
     "uk.gov.hmrc"            %% "bootstrap-backend-play-30"          % bootstrapPlayVersion,
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-work-item-repo-play-30"  % hmrcMongoVersion,
-    "uk.gov.hmrc"            %% "wco-dec"                            % "0.39.0",
+    "uk.gov.hmrc"            %% "wco-dec"                            % "0.40.0",
     "commons-codec"          %  "commons-codec"                      % "1.17.1",
-    "org.glassfish.jaxb"     %  "jaxb-runtime"                       % "2.3.8",
-    "javax.xml.bind"         %  "jaxb-api"                           % "2.3.1"
+    "org.glassfish.jaxb"     %  "jaxb-runtime"                       % "4.0.5",
   )
 
   val test: Seq[ModuleID] = List(

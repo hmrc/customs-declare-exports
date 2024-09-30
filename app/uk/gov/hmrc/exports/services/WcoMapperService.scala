@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.services
 
-import com.sun.xml.bind.marshaller.CharacterEscapeHandler
+import jakarta.xml.bind.{JAXBContext, JAXBElement, Marshaller}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.mapping.{Sanitiser, SubmissionMetaDataBuilder}
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -24,7 +24,6 @@ import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import java.io.StringWriter
 import javax.inject.Inject
-import javax.xml.bind.{JAXBContext, JAXBElement, Marshaller}
 
 class WcoMapperService @Inject() (submissionMetadataBuilder: SubmissionMetaDataBuilder) {
 
@@ -56,14 +55,19 @@ class WcoMapperService @Inject() (submissionMetadataBuilder: SubmissionMetaDataB
 
   private lazy val jaxbContext = JAXBContext.newInstance(classOf[MetaData])
 
+  // Why is this property not public in org.glassfish.jaxb.runtime.v2.runtime.MarshallerImpl?
+  private val ENCODING_HANDLER = "org.glassfish.jaxb.characterEscapeHandler"
+
   def toXml(metaData: MetaData): String = {
     val jaxbMarshaller = jaxbContext.createMarshaller
 
     jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true)
-    jaxbMarshaller.setProperty(classOf[CharacterEscapeHandler].getName, sanitiser)
+    jaxbMarshaller.setProperty(ENCODING_HANDLER, sanitiser)
 
     val sw = new StringWriter
+
     jaxbMarshaller.marshal(metaData, sw)
+
     sw.toString
   }
 }
