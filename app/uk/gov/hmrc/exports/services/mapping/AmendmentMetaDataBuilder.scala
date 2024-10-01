@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.exports.services.mapping
 
+import jakarta.xml.bind.{JAXBContext, JAXBElement, Marshaller}
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.services.mapping.declaration.DeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
@@ -23,7 +24,6 @@ import wco.datamodel.wco.documentmetadata_dms._2.MetaData
 
 import java.io.StringWriter
 import javax.inject.Inject
-import javax.xml.bind.{JAXBContext, JAXBElement, Marshaller}
 import javax.xml.namespace.QName
 
 class AmendmentMetaDataBuilder @Inject() (declarationBuilder: DeclarationBuilder) {

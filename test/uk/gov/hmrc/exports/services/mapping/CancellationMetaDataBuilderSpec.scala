@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.exports.services.mapping
 
+import jakarta.xml.bind.JAXBElement
 import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.mapping.declaration.DeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
-
-import javax.xml.bind.JAXBElement
 
 class CancellationMetaDataBuilderSpec extends UnitSpec {
 

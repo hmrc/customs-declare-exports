@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.services.mapping
 
-import com.sun.xml.bind.marshaller.CharacterEscapeHandler
+import org.glassfish.jaxb.core.marshaller.CharacterEscapeHandler
 
 import java.io.Writer
 import java.lang.Character.{isISOControl, isLetterOrDigit, isWhitespace}
