@@ -39,9 +39,7 @@ case class Submission(
   latestDecId: Option[String], // Initial value => always as 'uuid' field
   latestVersionNo: Int = 1,
   lastUpdated: Instant = instant()
-) {
-  val blockAmendments: Boolean = latestDecId.isEmpty
-}
+)
 
 object Submission {
 

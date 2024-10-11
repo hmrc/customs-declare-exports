@@ -16,11 +16,10 @@
 
 package uk.gov.hmrc.exports.repositories
 
-import com.mongodb.client.model.ReturnDocument
 import org.bson.conversions.Bson
-import org.mongodb.scala.bson.{BsonDocument, BsonString}
+import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.{Filters, FindOneAndUpdateOptions, IndexModel, IndexOptions}
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.libs.json.{JsBoolean, JsObject, Json}
 import uk.gov.hmrc.exports.models.FetchSubmissionPageData
 import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.fromStatusGroup
@@ -31,7 +30,6 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.time.ZonedDateTime
-import java.util.Arrays.{asList => ArrayList}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
@@ -55,26 +53,6 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     val update = Json.obj("$addToSet" -> Json.obj("actions" -> Json.toJson(action)))
 
     findOneAndUpdate(filter, update)
-  }
-
-  def updateExternalAmendmentAction(uuid: String, actionId: String, declarationId: String): Future[Option[Submission]] = {
-    val update = BsonDocument("$set" -> BsonDocument("actions.$[itemNo].decId" -> BsonString(declarationId)))
-    val options = doNotUpsertAndReturnAfter.arrayFilters(ArrayList(equal("itemNo.id", actionId)))
-
-    def findAction(submission: Submission): Action => Boolean =
-      action => action.id == actionId && action.versionNo == submission.latestVersionNo
-
-    collection
-      .findOneAndUpdate(equal("uuid", uuid), withCurrentDate(update), options)
-      .toFutureOption()
-      .flatMap {
-        case Some(submission) if submission.actions.exists(findAction(submission)) =>
-          val update = BsonDocument("$set" -> BsonDocument("latestDecId" -> BsonString(declarationId)))
-          val options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
-          collection.findOneAndUpdate(Filters.eq("uuid", submission.uuid), withCurrentDate(update), options).toFutureOption()
-
-        case maybeSubmission => Future.successful(maybeSubmission)
-      }
   }
 
   def countSubmissionsInGroup(eori: String, statusGroup: StatusGroup): Future[Int] =
