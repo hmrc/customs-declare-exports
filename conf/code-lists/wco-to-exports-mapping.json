@@ -20,12 +20,16 @@
     "exports": "declaration.totalNumberOfItems.totalAmountInvoiced"
   },
   {
-    "wco": "42A.149",
-    "exports": "declaration.totalPackageQuantity"
+    "wco": "42A.146",
+    "exports": "declaration.totalNumberOfItems.totalPackage"
   },
   {
     "wco": "42A.504",
     "exports": "declaration.locations.officeOfExit.circumstancesCode"
+  },
+  {
+    "wco": "42A.05A",
+    "exports": "declaration.parties.representativeDetails"
   },
   {
     "wco": "42A.05A.R004",
@@ -72,6 +76,10 @@
     "exports": "declaration.parties.carrierDetails.details.address.fullName"
   },
   {
+    "wco": "42A.28A.18A.04A",
+    "exports": "declaration.parties.carrierDetails.details.address"
+  },
+  {
     "wco": "42A.28A.18A.04A.241",
     "exports": "declaration.parties.carrierDetails.details.address.townOrCity"
   },
@@ -110,6 +118,10 @@
   {
     "wco": "42A.56A.G005",
     "exports": "declaration.locations.officeOfExit.officeId"
+  },
+  {
+    "wco": "42A.57A",
+    "exports": "declaration.parties.exporterDetails"
   },
   {
     "wco": "42A.57A.R032",
@@ -166,6 +178,10 @@
   {
     "wco": "42A.67A.27A.04A.245",
     "exports": "declaration.parties.consigneeDetails.details.address.postCode"
+  },
+  {
+    "wco": "42A.67A.28A.46A",
+    "exports": "declaration.departureTransport"
   },
   {
     "wco": "42A.67A.28A.46A.T004",
@@ -376,6 +392,10 @@
     "exports": "declaration.previousDocuments.$1.goodsItemIdentifier"
   },
   {
+    "wco": "42A.67A.43B",
+    "exports": "declaration.locations.warehouseIdentification"
+  },
+  {
     "wco": "42A.67A.43B.L019",
     "exports": "declaration.locations.warehouseIdentification.identificationNumber"
   },
@@ -394,6 +414,18 @@
   {
     "wco": "42A.67A.68A.$1.35B.009",
     "exports": "declaration.consignmentReferences.ucr"
+  },
+  {
+    "wco": "42A.67A.68A.$1.23A",
+    "exports": "declaration.items.$1.commodityDetails"
+  },
+  {
+    "wco": "42A.67A.68A.$1.93A",
+    "exports": "declaration.items.$1.packaging"
+  },
+  {
+    "wco": "42A.67A.68A.$9.006",
+    "exports": "suppressed"
   },
   {
     "wco": "42A",
