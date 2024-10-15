@@ -99,7 +99,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
               val submissionForAmendment =
                 transactionalOps.updateSubmissionAndNotifications(actionId, List(notificationForExternalAmendment)).futureValue
 
-              submissionForAmendment.latestDecId mustBe None
+              submissionForAmendment.latestDecId mustBe Some(submission.uuid)
               submissionForAmendment.latestVersionNo mustBe 2
               submissionForAmendment.actions.size mustBe 2
               val externalAmendAction = submissionForAmendment.actions.find(_.requestType == ExternalAmendmentRequest).value
@@ -136,7 +136,7 @@ class UpdateSubmissionsTransactionalOpsISpec extends IntegrationTestSpec {
               submissionOnAmendment.latestEnhancedStatus mustBe CLEARED
               submissionOnAmendment.enhancedStatusLastUpdated mustBe expectedEnhancedStatusLastUpdated
 
-              submissionOnAmendment.latestDecId mustBe None
+              submissionOnAmendment.latestDecId mustBe Some(submission.uuid)
               submissionOnAmendment.latestVersionNo mustBe 2
               submissionOnAmendment.actions.size mustBe 2
               val externalAmendAction = submissionOnAmendment.actions.find(_.requestType == ExternalAmendmentRequest).value
