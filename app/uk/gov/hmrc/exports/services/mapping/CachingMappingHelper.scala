@@ -17,6 +17,7 @@
 package uk.gov.hmrc.exports.services.mapping
 
 import uk.gov.hmrc.exports.models.declaration.IdentificationTypeCodes.{CUSCode, CombinedNomenclatureCode, NationalAdditionalCode, TARICAdditionalCode}
+import uk.gov.hmrc.exports.models.declaration.ZeroRatedForVat.{VatReportAfterDeclaration, VatZeroRatedPaid}
 import uk.gov.hmrc.exports.models.declaration.{CommodityMeasure, ExportItem}
 import uk.gov.hmrc.wco.dec._
 
@@ -83,7 +84,7 @@ object CachingMappingHelper {
 
     def nationalExemptionCodeToClassification: Option[Classification] =
       nationalExemptionCode.flatMap(code =>
-        if (nationalAdditionalCodes.contains(code) || code == "VAT_NO") None
+        if (nationalAdditionalCodes.contains(code) || code == VatZeroRatedPaid || code == VatReportAfterDeclaration) None
         else Some(toClassification(code, NationalAdditionalCode.value))
       )
 

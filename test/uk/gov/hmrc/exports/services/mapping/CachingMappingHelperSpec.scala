@@ -161,7 +161,28 @@ class CachingMappingHelperSpec extends UnitSpec {
             cusCode = Some(CUSCode(Some("cusCode"))),
             taricCodes = Some(List(TaricCode("taricAdditionalCodes"))),
             nactCodes = Some(List(NactCode("nationalAdditionalCodes"))),
-            nactExemptionCode = Some(NactCode("VAT_NO"))
+            nactExemptionCode = Some(NactCode(ZeroRatedForVat.VatZeroRatedPaid))
+          )
+
+          val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
+
+          commodity.description mustBe Some("description")
+          commodity.dangerousGoods.size mustBe 1
+          commodity.dangerousGoods.head.undgid mustBe Some("unDangerousGoodsCode")
+          commodity.classifications
+            .map(c => c.id) mustBe Seq(Some("12345678"), Some("cusCode"), Some("nationalAdditionalCodes"), Some("taricAdditionalCodes"))
+        }
+
+        "nationalExemptionCode is VAT_RAD" in {
+          val exportItem = ExportItem(
+            "id",
+            statisticalValue = Some(StatisticalValue("10")),
+            commodityDetails = Some(CommodityDetails(Some("1234567890"), Some("description"))),
+            dangerousGoodsCode = Some(UNDangerousGoodsCode(Some("unDangerousGoodsCode"))),
+            cusCode = Some(CUSCode(Some("cusCode"))),
+            taricCodes = Some(List(TaricCode("taricAdditionalCodes"))),
+            nactCodes = Some(List(NactCode("nationalAdditionalCodes"))),
+            nactExemptionCode = Some(NactCode(ZeroRatedForVat.VatReportAfterDeclaration))
           )
 
           val commodity = new CachingMappingHelper().commodityFromExportItem(exportItem).get
