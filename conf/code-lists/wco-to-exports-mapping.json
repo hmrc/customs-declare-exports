@@ -424,6 +424,10 @@
     "exports": "declaration.items.$1.packaging"
   },
   {
+    "wco": "42A.67A.68A.$1.02A.$2",
+    "exports": "declaration.items.$1.additionalDocument.$2"
+  },
+  {
     "wco": "42A.67A.68A.$9.006",
     "exports": "suppressed"
   },
