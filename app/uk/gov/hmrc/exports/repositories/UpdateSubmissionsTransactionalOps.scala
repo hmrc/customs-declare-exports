@@ -227,11 +227,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
 
     val newExtAmendAction = Action(randomUUID().toString, ExternalAmendmentRequest, None, submission.latestVersionNo + 1)
 
-    val update = Json.obj(
-      "$inc" -> Json.obj("latestVersionNo" -> 1),
-      "$unset" -> Json.obj("latestDecId" -> ""),
-      "$set" -> Json.obj("mrn" -> mrn, "actions" -> (actions :+ newExtAmendAction))
-    )
+    val update = Json.obj("$inc" -> Json.obj("latestVersionNo" -> 1), "$set" -> Json.obj("mrn" -> mrn, "actions" -> (actions :+ newExtAmendAction)))
     submissionRepository.findOneAndUpdate(session, BsonDocument(filter), BsonDocument(update.toString))
   }
 
