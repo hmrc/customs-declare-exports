@@ -84,22 +84,10 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
 
         additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
 
-        governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 6
-        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getName.getValue mustBe "CDS WAIVER"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getTypeCode.getValue mustBe "99L"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getCategoryCode.getValue mustBe "9"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(2).getName.getValue mustBe "CULTURAL GOODS - NOT LISTED"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(2).getTypeCode.getValue mustBe "903"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(2).getCategoryCode.getValue mustBe "Y"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(3).getName.getValue mustBe "EXCLUDED PRODUCT"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(3).getTypeCode.getValue mustBe "923"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(3).getCategoryCode.getValue mustBe "Y"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(4).getName.getValue mustBe "EXCLUDED FROM PROHIBITION"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(4).getTypeCode.getValue mustBe "924"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(4).getCategoryCode.getValue mustBe "Y"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(5).getName.getValue mustBe "EXPORT WAIVER"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(5).getTypeCode.getValue mustBe "999"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(5).getCategoryCode.getValue mustBe "Y"
+        governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 1
+        governmentAgencyGoodsItem.getAdditionalDocument.get(0).getName.getValue mustBe "reason"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(0).getTypeCode.getValue mustBe "OC"
+        governmentAgencyGoodsItem.getAdditionalDocument.get(0).getCategoryCode.getValue mustBe "D"
 
       }
 
@@ -111,22 +99,8 @@ class AdditionalDocumentsBuilderSpec extends UnitSpec with GovernmentAgencyGoods
 
         additionalDocumentsBuilder.buildThenAdd(item, governmentAgencyGoodsItem)
 
-        governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 5
-        governmentAgencyGoodsItem.getAdditionalDocument.get(0).getName.getValue mustBe "CDS WAIVER"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(0).getTypeCode.getValue mustBe "99L"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(0).getCategoryCode.getValue mustBe "9"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getName.getValue mustBe "CULTURAL GOODS - NOT LISTED"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getTypeCode.getValue mustBe "903"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(1).getCategoryCode.getValue mustBe "Y"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(2).getName.getValue mustBe "EXCLUDED PRODUCT"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(2).getTypeCode.getValue mustBe "923"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(2).getCategoryCode.getValue mustBe "Y"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(3).getName.getValue mustBe "EXCLUDED FROM PROHIBITION"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(3).getTypeCode.getValue mustBe "924"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(3).getCategoryCode.getValue mustBe "Y"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(4).getName.getValue mustBe "EXPORT WAIVER"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(4).getTypeCode.getValue mustBe "999"
-        governmentAgencyGoodsItem.getAdditionalDocument.get(4).getCategoryCode.getValue mustBe "Y"
+        governmentAgencyGoodsItem.getAdditionalDocument.size() mustBe 0
+
       }
     }
 
