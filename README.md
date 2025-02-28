@@ -7,27 +7,15 @@ It provides functionality to manage declaration-related data before and after it
 
 
 ## Prerequisites
-This service is written in [Scala](http://www.scala-lang.org/) and [Play](http://playframework.com/), so needs at a [JRE](https://www.java.com/en/download/) to run and a JDK for development.
-
-This service does **not** use MongoDB.
 
 This service depends on other services. The easiest way to set up required microservices is to use Service Manager and profiles from [service-manager-config](https://github.com/hmrc/service-manager-config/) repository:
-- CDS_EXPORTS_DECLARATION_DEPS - all services EXCEPT both declarations services
-- CDS_EXPORTS_DECLARATION_ALL - all services together with both declarations services
+- `sm2 --start CDS_EXPORTS_DECLARATION_DEPS` - all services EXCEPT both declarations services
+- `sm2 --start CDS_EXPORTS_DECLARATION_ALL` - all services together with both declarations services
 
 ### Running the application
 In order to run the application you need to have SBT installed. Then, it is enough to start the service with:
 
 `sbt run`
-
-However, note that the first time before starting the service or running the tests, you need to execute the following commands, as the service involves operations that use MongoDB transactions, which require a replica-set MongoDB instance to work successfully.
-Once the replica-set is installed locally, you can then start and stop it with the usual `docker start mongo44-replica` and `docker stop mongo44-replica` commands.  
-
-`cd customs-declare-exports`
-
-`docker build ./ -t mongodb:4.4.14-replica`
-
-`docker run --name mongo44-replica -p 27017:27017 -d mongodb:4.4.14-replica`     # Note that this command already starts the replica-set. You do not need to also run `docker start ...`. 
 
 ### Testing the application
 This repository contains unit and integration tests for the service. In order to run them, simply execute:
