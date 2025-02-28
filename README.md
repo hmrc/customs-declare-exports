@@ -13,8 +13,6 @@ This service depends on other services. The easiest way to set up required micro
 - `sm2 --start CDS_EXPORTS_DECLARATION_ALL` - all services together with both declarations services
 
 ### Running the application
-In order to run the application you need to have SBT installed. Then, it is enough to start the service with:
-
 `sbt run`
 
 ### Testing the application
