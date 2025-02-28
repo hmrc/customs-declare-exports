@@ -55,10 +55,8 @@ class AdditionalDocumentsBuilder @Inject() extends ModifyingBuilder[ExportItem, 
     }
 
   // scalastyle:off
-  private def cdsWaiver(exportItem: ExportItem): Option[Seq[AdditionalDocument]] = exportItem.isLicenceRequired.flatMap {
-    case true => None
-    case false => None
-  }
+  //TODO DCWL-2930 probably remove this.
+  private def cdsWaiver(exportItem: ExportItem): Option[Seq[AdditionalDocument]] = None
 }
 
 object AdditionalDocumentsBuilder {
