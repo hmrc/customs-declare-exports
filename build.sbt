@@ -4,7 +4,7 @@ import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 val appName = "customs-declare-exports"
 
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.15"
+ThisBuild / scalaVersion := "2.13.16"
 
 PlayKeys.devSettings := List("play.server.http.port" -> "6792")
 
