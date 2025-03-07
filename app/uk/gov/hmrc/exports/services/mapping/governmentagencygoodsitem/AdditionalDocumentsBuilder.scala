@@ -35,10 +35,7 @@ class AdditionalDocumentsBuilder @Inject() extends ModifyingBuilder[ExportItem, 
 
     val docs: Option[AdditionalDocuments] => Option[Seq[AdditionalDocument]] = _.map(_.documents)
 
-    val docsWithWaiver: Option[Seq[AdditionalDocument]] => Option[Seq[AdditionalDocument]] =
-      addToDocs(_)(cdsWaiver(exportItem))
-
-    (docs andThen docsWithWaiver)(exportItem.additionalDocuments) foreach {
+    docs(exportItem.additionalDocuments) foreach {
       _ map AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument foreach { goodsItemAdditionalDocument =>
         wcoGovernmentAgencyGoodsItem.getAdditionalDocument
           .add(AdditionalDocumentsBuilder.createAdditionalDocument(goodsItemAdditionalDocument))
@@ -46,17 +43,6 @@ class AdditionalDocumentsBuilder @Inject() extends ModifyingBuilder[ExportItem, 
     }
   }
 
-  private def addToDocs(ifEmpty: Option[Seq[AdditionalDocument]]): Option[Seq[AdditionalDocument]] => Option[Seq[AdditionalDocument]] =
-    _.fold(ifEmpty) { additionalDocs =>
-      ifEmpty match {
-        case Some(docs) => Some(docs ++ additionalDocs)
-        case _          => Some(additionalDocs)
-      }
-    }
-
-  // scalastyle:off
-  // TODO DCWL-2930 probably remove this.
-  private def cdsWaiver(exportItem: ExportItem): Option[Seq[AdditionalDocument]] = None
 }
 
 object AdditionalDocumentsBuilder {
