@@ -17,7 +17,7 @@ object Dependencies {
   private val test = List(
     "uk.gov.hmrc"            %% "bootstrap-test-play-30"             % bootstrapPlayVersion,
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-30"            % hmrcMongoVersion,
-    "com.vladsch.flexmark"   %  flexmark                       % "0.64.8",
+    "com.vladsch.flexmark"   %  flexmark                             % "0.64.8",
     "org.mockito"            %% "mockito-scala-scalatest"            % "1.17.37",
     "org.scalatest"          %% "scalatest"                          % "3.2.19",
     "org.scalatestplus"      %% "scalacheck-1-15"                    % "3.2.11.0"
