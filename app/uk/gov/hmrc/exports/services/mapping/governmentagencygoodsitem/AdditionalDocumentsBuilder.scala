@@ -35,10 +35,7 @@ class AdditionalDocumentsBuilder @Inject() extends ModifyingBuilder[ExportItem, 
 
     val docs: Option[AdditionalDocuments] => Option[Seq[AdditionalDocument]] = _.map(_.documents)
 
-    val docsWithWaiver: Option[Seq[AdditionalDocument]] => Option[Seq[AdditionalDocument]] =
-      addToDocs(_)(cdsWaiver(exportItem))
-
-    (docs andThen docsWithWaiver)(exportItem.additionalDocuments) foreach {
+    docs(exportItem.additionalDocuments) foreach {
       _ map AdditionalDocumentsBuilder.createGoodsItemAdditionalDocument foreach { goodsItemAdditionalDocument =>
         wcoGovernmentAgencyGoodsItem.getAdditionalDocument
           .add(AdditionalDocumentsBuilder.createAdditionalDocument(goodsItemAdditionalDocument))
@@ -46,68 +43,6 @@ class AdditionalDocumentsBuilder @Inject() extends ModifyingBuilder[ExportItem, 
     }
   }
 
-  private def addToDocs(ifEmpty: Option[Seq[AdditionalDocument]]): Option[Seq[AdditionalDocument]] => Option[Seq[AdditionalDocument]] =
-    _.fold(ifEmpty) { additionalDocs =>
-      ifEmpty match {
-        case Some(docs) => Some(docs ++ additionalDocs)
-        case _          => Some(additionalDocs)
-      }
-    }
-
-  // scalastyle:off
-  private def cdsWaiver(exportItem: ExportItem): Option[Seq[AdditionalDocument]] = exportItem.isLicenceRequired.flatMap {
-    case true => None
-    case false =>
-      Some(
-        Seq(
-          AdditionalDocument(
-            documentTypeCode = Some("999L"),
-            documentIdentifier = None,
-            documentStatus = None,
-            documentStatusReason = Some("CDS WAIVER"),
-            issuingAuthorityName = None,
-            dateOfValidity = None,
-            documentWriteOff = None
-          ),
-          AdditionalDocument(
-            documentTypeCode = Some("Y903"),
-            documentIdentifier = None,
-            documentStatus = None,
-            documentStatusReason = Some("CULTURAL GOODS - NOT LISTED"),
-            issuingAuthorityName = None,
-            dateOfValidity = None,
-            documentWriteOff = None
-          ),
-          AdditionalDocument(
-            documentTypeCode = Some("Y923"),
-            documentIdentifier = None,
-            documentStatus = None,
-            documentStatusReason = Some("EXCLUDED PRODUCT"),
-            issuingAuthorityName = None,
-            dateOfValidity = None,
-            documentWriteOff = None
-          ),
-          AdditionalDocument(
-            documentTypeCode = Some("Y924"),
-            documentIdentifier = None,
-            documentStatus = None,
-            documentStatusReason = Some("EXCLUDED FROM PROHIBITION"),
-            issuingAuthorityName = None,
-            dateOfValidity = None,
-            documentWriteOff = None
-          ),
-          AdditionalDocument(
-            documentTypeCode = Some("Y999"),
-            documentIdentifier = None,
-            documentStatus = None,
-            documentStatusReason = Some("EXPORT WAIVER"),
-            issuingAuthorityName = None,
-            dateOfValidity = None,
-            documentWriteOff = None
-          )
-        )
-      )
-  }
 }
 
 object AdditionalDocumentsBuilder {
