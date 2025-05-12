@@ -61,8 +61,8 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
       .toFuture()
       .map(_.toInt)
 
-  private lazy val ascending = BsonDocument(Json.obj("enhancedStatusLastUpdated" -> 1).toString)
-  private lazy val descending = BsonDocument(Json.obj("enhancedStatusLastUpdated" -> -1).toString)
+  private lazy val ascending = BsonDocument(Json.obj("enhancedStatusLastUpdated" -> 1, "uuid" -> 1).toString)
+  private lazy val descending = BsonDocument(Json.obj("enhancedStatusLastUpdated" -> -1, "uuid" -> -1).toString)
 
   def fetchFirstPage(eori: String, statusGroup: StatusGroup, fetchData: FetchSubmissionPageData): Future[Seq[Submission]] =
     collection
@@ -96,8 +96,8 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     statusLastUpdated: ZonedDateTime,
     fetchData: FetchSubmissionPageData
   ): Future[Seq[Submission]] =
-    if (fetchData.reverse) nextPageAscending(eori, statusGroup, statusLastUpdated, fetchData.limit)
-    else previousPageDescending(eori, statusGroup, statusLastUpdated, fetchData.limit)
+    if (fetchData.reverse) nextPageAscending(eori, statusGroup, statusLastUpdated, fetchData.limit, fetchData.uuid)
+    else previousPageDescending(eori, statusGroup, statusLastUpdated, fetchData.limit, fetchData.uuid)
 
   def fetchPreviousPage(
     eori: String,
@@ -105,20 +105,32 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     statusLastUpdated: ZonedDateTime,
     fetchData: FetchSubmissionPageData
   ): Future[Seq[Submission]] =
-    if (fetchData.reverse) previousPageDescending(eori, statusGroup, statusLastUpdated, fetchData.limit)
-    else nextPageAscending(eori, statusGroup, statusLastUpdated, fetchData.limit)
+    if (fetchData.reverse) previousPageDescending(eori, statusGroup, statusLastUpdated, fetchData.limit, fetchData.uuid)
+    else nextPageAscending(eori, statusGroup, statusLastUpdated, fetchData.limit, fetchData.uuid)
 
-  private def nextPageAscending(eori: String, statusGroup: StatusGroup, statusLastUpdated: ZonedDateTime, limit: Int): Future[Seq[Submission]] =
+  private def nextPageAscending(
+    eori: String,
+    statusGroup: StatusGroup,
+    statusLastUpdated: ZonedDateTime,
+    limit: Int,
+    uuid: Option[String]
+  ): Future[Seq[Submission]] =
     collection
-      .find(fetchFilter(eori, statusGroup, statusLastUpdated, "gt"))
+      .find(fetchFilter(eori, statusGroup, statusLastUpdated, "gt", uuid))
       .hintString(dashBoardIndex)
       .limit(limit)
       .sort(ascending)
       .toFuture()
 
-  private def previousPageDescending(eori: String, statusGroup: StatusGroup, statusLastUpdated: ZonedDateTime, limit: Int): Future[Seq[Submission]] =
+  private def previousPageDescending(
+    eori: String,
+    statusGroup: StatusGroup,
+    statusLastUpdated: ZonedDateTime,
+    limit: Int,
+    uuid: Option[String]
+  ): Future[Seq[Submission]] =
     collection
-      .find(fetchFilter(eori, statusGroup, statusLastUpdated, "lt"))
+      .find(fetchFilter(eori, statusGroup, statusLastUpdated, "lt", uuid))
       .hintString(dashBoardIndex)
       .limit(limit)
       .sort(descending)
@@ -134,13 +146,16 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     BsonDocument(filter)
   }
 
-  private def fetchFilter(eori: String, statusGroup: StatusGroup, statusLastUpdated: ZonedDateTime, comp: String): Bson = {
+  private def fetchFilter(eori: String, statusGroup: StatusGroup, statusLastUpdated: ZonedDateTime, comp: String, uuid: Option[String]): Bson = {
     val filter =
       s"""
          |{
          |  "eori": "$eori",
          |  "latestEnhancedStatus": { "$$in": [ ${fromStatusGroup(statusGroup).map(s => s""""$s"""").mkString(",")} ] },
-         |  "enhancedStatusLastUpdated": { "$$$comp": ${Json.toJson(statusLastUpdated)} }
+         |  {"$$or": [
+         |    "enhancedStatusLastUpdated": { "$$$comp": ${Json.toJson(statusLastUpdated)} }
+         |    "enhancedStatusLastUpdated": ${Json.toJson(statusLastUpdated)}, "uuid": {"$$$comp": ${Json.toJson(uuid)}
+         |  }]
          |}""".stripMargin
     BsonDocument(filter)
   }
