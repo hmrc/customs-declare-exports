@@ -43,7 +43,7 @@ case class FetchSubmissionPageData(
   limit: Int,
 
   // Unique Id, used to fetch the next page
-  uuid: Option[String] = None
+  uuid: String = ""
 )
 
 object FetchSubmissionPageData {

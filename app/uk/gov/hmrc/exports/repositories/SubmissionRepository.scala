@@ -113,7 +113,7 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     statusGroup: StatusGroup,
     statusLastUpdated: ZonedDateTime,
     limit: Int,
-    uuid: Option[String]
+    uuid: String
   ): Future[Seq[Submission]] =
     collection
       .find(fetchFilter(eori, statusGroup, statusLastUpdated, "gt", uuid))
@@ -127,7 +127,7 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     statusGroup: StatusGroup,
     statusLastUpdated: ZonedDateTime,
     limit: Int,
-    uuid: Option[String]
+    uuid: String
   ): Future[Seq[Submission]] =
     collection
       .find(fetchFilter(eori, statusGroup, statusLastUpdated, "lt", uuid))
@@ -146,16 +146,16 @@ class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implic
     BsonDocument(filter)
   }
 
-  private def fetchFilter(eori: String, statusGroup: StatusGroup, statusLastUpdated: ZonedDateTime, comp: String, uuid: Option[String]): Bson = {
+  private def fetchFilter(eori: String, statusGroup: StatusGroup, statusLastUpdated: ZonedDateTime, comp: String, uuid: String): Bson = {
     val filter =
       s"""
          |{
          |  "eori": "$eori",
          |  "latestEnhancedStatus": { "$$in": [ ${fromStatusGroup(statusGroup).map(s => s""""$s"""").mkString(",")} ] },
-         |  {"$$or": [
-         |    "enhancedStatusLastUpdated": { "$$$comp": ${Json.toJson(statusLastUpdated)} }
-         |    "enhancedStatusLastUpdated": ${Json.toJson(statusLastUpdated)}, "uuid": {"$$$comp": ${Json.toJson(uuid)}
-         |  }]
+         |  "$$or": [
+         |    { "enhancedStatusLastUpdated": { "$$$comp": ${Json.toJson(statusLastUpdated)} } },
+         |    { "enhancedStatusLastUpdated": ${Json.toJson(statusLastUpdated)}, "uuid": {"$$$comp": "$uuid" } }
+         |  ]
          |}""".stripMargin
     BsonDocument(filter)
   }
