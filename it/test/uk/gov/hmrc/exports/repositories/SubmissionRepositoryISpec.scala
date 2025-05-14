@@ -145,7 +145,7 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
 
     repository.bulkInsert(submissions).futureValue mustBe size
 
-      submissions.sortWith { case (s1, s2) =>
+    submissions.sortWith { case (s1, s2) =>
       val date1 = s1.enhancedStatusLastUpdated
       val date2 = s2.enhancedStatusLastUpdated
       if (date1 != date2) {
