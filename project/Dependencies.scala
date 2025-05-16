@@ -2,8 +2,8 @@ import sbt._
 
 object Dependencies {
 
-  private val bootstrapPlayVersion = "9.10.0"
-  private val hmrcMongoVersion = "2.5.0"
+  private val bootstrapPlayVersion = "9.12.0"
+  private val hmrcMongoVersion = "2.6.0"
   private val flexmark = "flexmark-all"
 
   private val compile = List(
