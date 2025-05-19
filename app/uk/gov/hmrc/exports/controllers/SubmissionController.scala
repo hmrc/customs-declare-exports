@@ -120,6 +120,7 @@ class SubmissionController @Inject() (
       statusGroups = statusGroups,
       datetimeForPreviousPage = request.getQueryString("datetimeForPreviousPage").map(parse),
       datetimeForNextPage = request.getQueryString("datetimeForNextPage").map(parse),
+      uuid = request.getQueryString("uuid").map(_.toString).getOrElse(""),
       page = request.getQueryString("page").map(_.toInt),
       reverse = request.getQueryString("reverse").isDefined,
       limit = request.getQueryString("limit").fold(DEFAULT_LIMIT)(_.toInt)

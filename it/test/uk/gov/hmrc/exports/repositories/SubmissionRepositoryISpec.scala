@@ -26,8 +26,8 @@ import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.repositories.SubmissionRepositoryISpecHelper.itemsPerPage
 import uk.gov.hmrc.exports.util.TimeUtils
 
-import java.time.{Instant, ZonedDateTime}
 import java.time.temporal.ChronoUnit
+import java.time.{Instant, ZonedDateTime}
 import java.util.UUID
 import scala.util.Random
 
@@ -36,7 +36,7 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
   private val repository = instanceOf[SubmissionRepository]
 
   private def fetchData(reverse: Boolean = false): FetchSubmissionPageData =
-    FetchSubmissionPageData(List.empty, reverse = reverse, limit = itemsPerPage)
+    FetchSubmissionPageData(List.empty, reverse = reverse, limit = itemsPerPage, uuid = uuid)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -135,20 +135,32 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
 
   import uk.gov.hmrc.exports.repositories.SubmissionRepositoryISpecHelper._
 
-  private def genSubmissions(statusGroup: StatusGroup, size: Int = itemsPerPage * 2, descending: Boolean = true): Seq[Submission] = {
+  private def genSubmissions(
+    statusGroup: StatusGroup,
+    size: Int = itemsPerPage * 2,
+    descending: Boolean = true,
+    sameTimeStamp: Boolean = false
+  ): Seq[Submission] = {
     val lastStatusUpdate = TimeUtils.now()
     val statuses = toEnhancedStatus(statusGroup).toList
 
     val submissions = (0 until size).map { seconds =>
-      genSubmission(lastStatusUpdate.minusSeconds(seconds.toLong), statuses(Random.nextInt(statuses.length)))
+      val timestamp = if (!sameTimeStamp) lastStatusUpdate.minusSeconds(seconds.toLong) else lastStatusUpdate
+      genSubmission(timestamp, statuses(Random.nextInt(statuses.length)))
     }.toList
 
     repository.bulkInsert(submissions).futureValue mustBe size
+
     submissions.sortWith { case (s1, s2) =>
       val date1 = s1.enhancedStatusLastUpdated
       val date2 = s2.enhancedStatusLastUpdated
-      if (descending) date1.isAfter(date2) else date1.isBefore(date2)
+      if (date1 != date2) {
+        if (descending) date1.isAfter(date2) else date1.isBefore(date2)
+      } else {
+        if (descending) s1.uuid > s2.uuid else s1.uuid < s2.uuid
+      }
     }
+
   }
 
   "SubmissionRepository.fetchFirstPage" should {
@@ -219,13 +231,50 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
         val allSubmissions = genSubmissions(SubmittedStatuses, itemsPerPage * 4, descending = descending) // fetch the next page from these instead
 
         // Assume current page is 2
-        val dateTimeOfLastSubmissionOfPage2 = allSubmissions(itemsPerPage * 2 - 1).enhancedStatusLastUpdated
+        val lastSubmissionOfPage2 = allSubmissions(itemsPerPage * 2 - 1)
+        val dateTimeOfLastSubmissionOfPage2 = lastSubmissionOfPage2.enhancedStatusLastUpdated
+        val uuidOfLastSubmissionOfPage2 = lastSubmissionOfPage2.uuid
 
+        val fetchDataWithUuid = FetchSubmissionPageData(
+          statusGroups = fetchData(!descending).statusGroups,
+          reverse = fetchData(!descending).reverse,
+          limit = fetchData(!descending).limit,
+          uuid = uuidOfLastSubmissionOfPage2
+        )
         val submissions = repository
-          .fetchNextPage("eori", SubmittedStatuses, dateTimeOfLastSubmissionOfPage2, fetchData(!descending))
+          .fetchNextPage("eori", SubmittedStatuses, dateTimeOfLastSubmissionOfPage2, fetchDataWithUuid)
           .futureValue
         (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(itemsPerPage * 2 + ix))
       }
+
+      s"return the next page of Submissions for the given EORI, statusGroup and statusLastUpdated in $order order when " +
+        s"submissions with the same enhancedStatusLastUpdated cross pages" in {
+          genSubmissions(CancelledStatuses) // don't fetch from these
+          val allSubmissions = genSubmissions(
+            SubmittedStatuses,
+            itemsPerPage * 4,
+            descending = descending,
+            sameTimeStamp = true
+          ) // fetch the next page from these instead
+
+          // Assume current page is 2
+          val lastSubmissionOfPage2 = allSubmissions(itemsPerPage * 2 - 1)
+          val dateTimeOfLastSubmissionOfPage2 = lastSubmissionOfPage2.enhancedStatusLastUpdated
+          val uuidOfLastSubmissionOfPage2 = lastSubmissionOfPage2.uuid
+
+          val fetchDataWithUuid = FetchSubmissionPageData(
+            statusGroups = fetchData(!descending).statusGroups,
+            reverse = fetchData(!descending).reverse,
+            limit = fetchData(!descending).limit,
+            uuid = uuidOfLastSubmissionOfPage2
+          )
+
+          val submissions = repository
+            .fetchNextPage("eori", SubmittedStatuses, dateTimeOfLastSubmissionOfPage2, fetchDataWithUuid)
+            .futureValue
+          (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(itemsPerPage * 2 + ix))
+        }
+
     }
   }
 
@@ -244,10 +293,18 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
           genSubmissions(SubmittedStatuses, itemsPerPage * 4, descending = descending) // fetch the previous page from these instead
 
         // Assume current page is 3
-        val dateTimeOfFirstSubmissionOfPage3 = allSubmissions(itemsPerPage * 2).enhancedStatusLastUpdated
+        val firstSubmissionOfPage3 = allSubmissions(itemsPerPage * 2)
+        val dateTimeOfFirstSubmissionOfPage3 = firstSubmissionOfPage3.enhancedStatusLastUpdated
+        val uuidOfFirstSubmissionOfPage3 = firstSubmissionOfPage3.uuid
 
+        val fetchDataWithUuid = FetchSubmissionPageData(
+          statusGroups = fetchData(!descending).statusGroups,
+          reverse = fetchData(!descending).reverse,
+          limit = fetchData(!descending).limit,
+          uuid = uuidOfFirstSubmissionOfPage3
+        )
         val submissions = repository
-          .fetchPreviousPage("eori", SubmittedStatuses, dateTimeOfFirstSubmissionOfPage3, fetchData(!descending))
+          .fetchPreviousPage("eori", SubmittedStatuses, dateTimeOfFirstSubmissionOfPage3, fetchDataWithUuid)
           .futureValue
           // For the 'fetchPreviousPage' test only, it's required to reverse the resulting submissions.
           // The service does this in SubmissionService.
@@ -255,6 +312,38 @@ class SubmissionRepositoryISpec extends IntegrationTestSpec {
 
         (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(itemsPerPage + ix))
       }
+
+      s"return the previous page Submissions for the given EORI, statusGroup and statusLastUpdated in $order order when " +
+        s"submissions with the same enhancedStatusLastUpdated cross pages" in {
+          genSubmissions(CancelledStatuses) // don't fetch from these
+          val allSubmissions =
+            genSubmissions(
+              SubmittedStatuses,
+              itemsPerPage * 4,
+              descending = descending,
+              sameTimeStamp = true
+            ) // fetch the previous page from these instead
+
+          // Assume current page is 3
+          val firstSubmissionOfPage3 = allSubmissions(itemsPerPage * 2)
+          val dateTimeOfFirstSubmissionOfPage3 = firstSubmissionOfPage3.enhancedStatusLastUpdated
+          val uuidOfFirstSubmissionOfPage3 = firstSubmissionOfPage3.uuid
+
+          val fetchDataWithUuid = FetchSubmissionPageData(
+            statusGroups = fetchData(!descending).statusGroups,
+            reverse = fetchData(!descending).reverse,
+            limit = fetchData(!descending).limit,
+            uuid = uuidOfFirstSubmissionOfPage3
+          )
+          val submissions = repository
+            .fetchPreviousPage("eori", SubmittedStatuses, dateTimeOfFirstSubmissionOfPage3, fetchDataWithUuid)
+            .futureValue
+            // For the 'fetchPreviousPage' test only, it's required to reverse the resulting submissions.
+            // The service does this in SubmissionService.
+            .reverse
+
+          (0 until itemsPerPage).foreach(ix => submissions(ix) mustBe allSubmissions(itemsPerPage + ix))
+        }
     }
   }
 

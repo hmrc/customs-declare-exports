@@ -40,7 +40,10 @@ case class FetchSubmissionPageData(
   reverse: Boolean,
 
   // Specify the max number of Submissions to include in the page/batch.
-  limit: Int
+  limit: Int,
+
+  // Unique Id, used to fetch the next page
+  uuid: String = ""
 )
 
 object FetchSubmissionPageData {
