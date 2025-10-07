@@ -77,9 +77,12 @@ class BorderTransportMeansBuilder @Inject() extends ModifyingBuilder[ExportsDecl
   private def appendRegistrationNationalityCode(transport: Transport, transportMeans: Declaration.BorderTransportMeans): Unit = {
 
     def sendRegistrationNationalityCode(countryCode: String): Unit = {
-      val registrationNationalityCode = new BorderTransportMeansRegistrationNationalityCodeType
-      registrationNationalityCode.setValue(countryCode)
-      transportMeans.setRegistrationNationalityCode(registrationNationalityCode)
+      if(countryCode.nonEmpty){
+        val registrationNationalityCode = new BorderTransportMeansRegistrationNationalityCodeType
+        registrationNationalityCode.setValue(countryCode)
+        transportMeans.setRegistrationNationalityCode(registrationNationalityCode)
+      }
+      else(println("Country code empty, skipping"))
     }
 
     transport.transportCrossingTheBorderNationality.foreach {
