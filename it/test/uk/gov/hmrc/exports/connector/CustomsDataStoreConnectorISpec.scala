@@ -29,6 +29,7 @@ class CustomsDataStoreConnectorISpec extends IntegrationTestSpec {
 
   implicit private val appConfig: AppConfig = instanceOf[AppConfig]
   private val connector = instanceOf[CustomsDataStoreConnector]
+  val customsDataStoreUrl = s"${appConfig.verifiedEmailPath}"
 
   "CustomsDataStoreConnector.getEmailAddress" when {
 
@@ -37,13 +38,12 @@ class CustomsDataStoreConnectorISpec extends IntegrationTestSpec {
       "return a valid Email instance" in {
         val testVerifiedEmailJson = """{"address":"some@email.com","timestamp": "2020-03-20T01:02:03Z"}"""
         val testVerifiedEmailAddress = Email("some@email.com", deliverable = true)
-        val path = s"/customs-data-store/eori/${ExportsTestData.eori}/verified-email"
-        getFromDownstreamService(path, OK, Some(testVerifiedEmailJson))
+        postToDownstreamService(customsDataStoreUrl, OK, Some(testVerifiedEmailJson))
 
         val response = connector.getEmailAddress(ExportsTestData.eori).futureValue
 
         response mustBe Some(testVerifiedEmailAddress)
-        verifyGetFromDownStreamService(path)
+        verifyPostFromDownStreamService(customsDataStoreUrl)
       }
     }
 
@@ -71,52 +71,38 @@ class CustomsDataStoreConnectorISpec extends IntegrationTestSpec {
                                               |}""".stripMargin
 
         val testUndeliverableEmailAddress = Email("some@email.com", deliverable = false)
-        val path = s"/customs-data-store/eori/${ExportsTestData.eori}/verified-email"
-        getFromDownstreamService(path, OK, Some(testUndeliverableEmailJson))
+        postToDownstreamService(customsDataStoreUrl, OK, Some(testUndeliverableEmailJson))
 
         val response = connector.getEmailAddress(ExportsTestData.eori).futureValue
 
         response mustBe Some(testUndeliverableEmailAddress)
-        verifyGetFromDownStreamService(path)
+        verifyPostFromDownStreamService(customsDataStoreUrl)
       }
     }
 
     "email service responds with NOT_FOUND (404)" should {
 
       "return empty Option" in {
-        val path = s"/customs-data-store/eori/${ExportsTestData.eori}/verified-email"
-        getFromDownstreamService(path, NOT_FOUND, None)
+        postToDownstreamService(customsDataStoreUrl, NOT_FOUND, None)
 
         val response = connector.getEmailAddress(ExportsTestData.eori).futureValue
 
         response mustBe None
-        verifyGetFromDownStreamService(path)
+        verifyPostFromDownStreamService(customsDataStoreUrl)
       }
     }
 
     "email service responds with any other error code" should {
 
       "return failed Future" in {
-        val path = s"/customs-data-store/eori/${ExportsTestData.eori}/verified-email"
         val errorMsg = "Upstream service test error"
-        getFromDownstreamService(path, BAD_GATEWAY, Some(errorMsg))
+        postToDownstreamService(customsDataStoreUrl, BAD_GATEWAY, Some(errorMsg))
 
         val response = connector.getEmailAddress(ExportsTestData.eori).failed.futureValue
 
         response.getMessage must include(errorMsg)
-        verifyGetFromDownStreamService(path)
+        verifyPostFromDownStreamService(customsDataStoreUrl)
       }
-    }
-  }
-
-  "CustomsDataStoreConnector.verifiedEmailPath" should {
-
-    "return correct path" in {
-      val expectedPath = s"/customs-data-store/eori/${ExportsTestData.eori}/verified-email"
-
-      val actualPath = CustomsDataStoreConnector.verifiedEmailPath(ExportsTestData.eori)
-
-      actualPath mustBe expectedPath
     }
   }
 

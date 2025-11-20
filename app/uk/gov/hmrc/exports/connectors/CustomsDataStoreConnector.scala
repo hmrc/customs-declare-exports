@@ -17,8 +17,9 @@
 package uk.gov.hmrc.exports.connectors
 
 import play.api.http.Status.NOT_FOUND
+import play.api.libs.json.Json
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.emails.{Email, EmailResponse}
+import uk.gov.hmrc.exports.models.emails.{Email, EmailResponse, SendThirdPartyVerifiedEmailRequest}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
@@ -28,14 +29,14 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class CustomsDataStoreConnector @Inject() (httpClientV2: HttpClientV2)(implicit appConfig: AppConfig) extends Connector {
 
-  import CustomsDataStoreConnector._
-
   protected val httpClient: HttpClientV2 = httpClientV2
 
   def getEmailAddress(eori: String)(implicit ec: ExecutionContext): Future[Option[Email]] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    get[EmailResponse](verifiedEmailUrl(eori)).map {
+    val requestBody = Json.toJson(SendThirdPartyVerifiedEmailRequest(eori)).toString()
+
+    post[EmailResponse](s"${appConfig.customsDataStoreBaseUrl}${appConfig.verifiedEmailPath}", requestBody).map {
       case EmailResponse(email, _, None) => Some(Email(email, deliverable = true))
       case EmailResponse(email, _, _)    => Some(Email(email, deliverable = false))
       case _                             => None
@@ -43,13 +44,4 @@ class CustomsDataStoreConnector @Inject() (httpClientV2: HttpClientV2)(implicit 
       None
     }
   }
-}
-
-object CustomsDataStoreConnector {
-
-  def verifiedEmailPath(eori: String)(implicit appConfig: AppConfig): String =
-    s"${appConfig.verifiedEmailPath.replace("EORI", eori)}"
-
-  def verifiedEmailUrl(eori: String)(implicit appConfig: AppConfig): String =
-    s"${appConfig.customsDataStoreBaseUrl}${verifiedEmailPath(eori)}"
 }
