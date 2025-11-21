@@ -17,7 +17,6 @@
 package uk.gov.hmrc.exports.connectors
 
 import play.api.http.Status.NOT_FOUND
-import play.api.libs.json.Json
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.emails.{Email, EmailResponse, SendThirdPartyVerifiedEmailRequest}
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -34,9 +33,10 @@ class CustomsDataStoreConnector @Inject() (httpClientV2: HttpClientV2)(implicit 
   def getEmailAddress(eori: String)(implicit ec: ExecutionContext): Future[Option[Email]] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    val requestBody = Json.toJson(SendThirdPartyVerifiedEmailRequest(eori)).toString()
-
-    post[EmailResponse](s"${appConfig.customsDataStoreBaseUrl}${appConfig.verifiedEmailPath}", requestBody).map {
+    postJson[SendThirdPartyVerifiedEmailRequest, EmailResponse](
+      s"${appConfig.customsDataStoreBaseUrl}${appConfig.verifiedEmailPath}",
+      SendThirdPartyVerifiedEmailRequest(eori)
+    ).map {
       case EmailResponse(email, _, None) => Some(Email(email, deliverable = true))
       case EmailResponse(email, _, _)    => Some(Email(email, deliverable = false))
       case _                             => None

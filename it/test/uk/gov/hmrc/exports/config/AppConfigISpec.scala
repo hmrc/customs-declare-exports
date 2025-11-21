@@ -45,7 +45,7 @@ class AppConfigISpec extends IntegrationTestSpec {
   private val cdiClientID = "customs-declare-exports"
   private val cdiBearerToken = "Bearer customs-declare-exports"
   private val customsDataStoreBaseUrl = "http://localhost:6790"
-  private val verifiedEmailPath = "/customs-data-store/eori/EORI/verified-email"
+  private val verifiedEmailPath = "/customs-data-store/eori/verified-email-third-party"
   private val emailServiceBaseUrl = "http://localhost:8300"
   private val sendEmailPath = "/hmrc/email"
 
