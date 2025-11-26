@@ -2,14 +2,14 @@ import sbt._
 
 object Dependencies {
 
-  private val bootstrapPlayVersion = "9.12.0"
-  private val hmrcMongoVersion = "2.6.0"
+  private val bootstrapPlayVersion = "9.19.0"
+  private val hmrcMongoVersion = "2.10.0"
   private val flexmark = "flexmark-all"
 
   private val compile = List(
     "uk.gov.hmrc"            %% "bootstrap-backend-play-30"          % bootstrapPlayVersion,
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-work-item-repo-play-30"  % hmrcMongoVersion,
-    "uk.gov.hmrc"            %% "wco-dec"                            % "0.40.0",
+    "uk.gov.hmrc"            %% "wco-dec"                            % "0.41.0",
     "commons-codec"          %  "commons-codec"                      % "1.18.0",
     "org.glassfish.jaxb"     %  "jaxb-runtime"                       % "4.0.5",
   )
