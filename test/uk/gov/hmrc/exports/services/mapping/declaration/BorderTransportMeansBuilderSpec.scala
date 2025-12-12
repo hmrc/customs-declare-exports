@@ -79,6 +79,15 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
         declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue must be("GB")
       }
 
+      "unknown border transport nationality" in {
+        val model = aDeclaration(withTransportCountry(None))
+        val declaration = new Declaration()
+
+        builder.buildThenAdd(model, declaration)
+
+        declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue must be("GB")
+      }
+
       "departure transport ModeOfTransportCode only" in {
         val model = aDeclaration(withoutBorderTransport, withDepartureTransport(ModeOfTransportCode.Maritime))
         val declaration = new Declaration()
