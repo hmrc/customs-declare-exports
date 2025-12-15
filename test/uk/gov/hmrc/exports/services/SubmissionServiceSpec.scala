@@ -157,7 +157,7 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       def isCancelledGroup(invocation: InvocationOnMock) =
         invocation.getArgument(1).asInstanceOf[StatusGroup] == CancelledStatuses
 
-      when(submissionRepository.countSubmissionsInGroup(any(), captor.capture())).thenReturn { (invocation: InvocationOnMock) =>
+      when(submissionRepository.countSubmissionsInGroup(any(), captor.capture())).thenAnswer { (invocation: InvocationOnMock) =>
         Future.successful(if (isCancelledGroup(invocation)) 1 else 0)
       }
 

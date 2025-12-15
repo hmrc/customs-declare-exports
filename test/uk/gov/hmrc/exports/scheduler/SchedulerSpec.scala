@@ -54,7 +54,7 @@ class SchedulerSpec extends UnitSpec {
     when(actorSystem.scheduler) thenReturn internalScheduler
     when(
       internalScheduler.scheduleWithFixedDelay(any[FiniteDuration], any[FiniteDuration])(any[Runnable])(any[ExecutionContext])
-    ) thenReturn runTheJobImmediately
+    ) thenAnswer runTheJobImmediately
     when(job.execute()) thenReturn Future.successful(())
   }
 
