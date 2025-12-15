@@ -35,7 +35,7 @@ object NotificationDetails {
   implicit val readLocalDateTimeFromString: Reads[ZonedDateTime] = implicitly[Reads[LocalDateTime]]
     .map(ZonedDateTime.of(_, defaultTimeZone))
 
-  implicit val writes: OWrites[NotificationDetails] = Json.writes[NotificationDetails]
+  implicit val writes: Writes[NotificationDetails] = Json.writes[NotificationDetails]
   implicit val reads: Reads[NotificationDetails] =
     ((__ \ "mrn").read[String] and
       ((__ \ "dateTimeIssued").read[ZonedDateTime] or (__ \ "dateTimeIssued").read[ZonedDateTime](readLocalDateTimeFromString)) and

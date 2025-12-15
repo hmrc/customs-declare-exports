@@ -33,7 +33,7 @@ import uk.gov.hmrc.exports.repositories.RepositoryOps.mongoDateInQuery
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.transaction.{TransactionConfiguration, Transactions}
-
+import org.mongodb.scala.SingleObservableFuture
 import java.time.Instant
 import java.util.UUID.randomUUID
 import javax.inject.{Inject, Singleton}
