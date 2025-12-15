@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
+import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.ModeOfTransportCode
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 
-class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
+class BorderTransportMeansBuilderSpec (implicit appConfig: AppConfig) extends UnitSpec with ExportsDeclarationBuilder {
 
   "BorderTransportMeansBuilder" should {
 
@@ -79,6 +80,18 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
         declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue must be("GB")
       }
 
+      if(!appConfig.isOptionalFieldsEnabled){
+        "unknown border transport nationality" in {
+          val model = aDeclaration(withTransportCountry(None))
+          val declaration = new Declaration()
+
+          builder.buildThenAdd(model, declaration)
+
+          declaration.getBorderTransportMeans.getRegistrationNationalityCode.getValue must be("GB")
+        }
+      }
+
+
       "departure transport ModeOfTransportCode only" in {
         val model = aDeclaration(withoutBorderTransport, withDepartureTransport(ModeOfTransportCode.Maritime))
         val declaration = new Declaration()
@@ -115,5 +128,5 @@ class BorderTransportMeansBuilderSpec extends UnitSpec with ExportsDeclarationBu
     }
   }
 
-  private def builder = new BorderTransportMeansBuilder()
+  private def builder = new BorderTransportMeansBuilder(appConfig)
 }
