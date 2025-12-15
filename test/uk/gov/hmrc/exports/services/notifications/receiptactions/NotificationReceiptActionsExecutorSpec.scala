@@ -16,14 +16,17 @@
 
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import testdata.notifications.NotificationTestData.notificationUnparsed
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
-
+import org.mockito.ArgumentMatchers.eq as eqTo
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.mockito.Mockito.{times, verify, when}
+import org.mockito.Mockito._
+import org.scalatestplus.mockito.MockitoSugar
 
 class NotificationReceiptActionsExecutorSpec extends UnitSpec {
 
@@ -67,7 +70,7 @@ class NotificationReceiptActionsExecutorSpec extends UnitSpec {
 
         notificationReceiptActionsExecutor.executeActions(notificationUnparsed)
 
-        verifyZeroInteractions(sendEmailForDmsDocAction)
+        verifyNoInteractions(sendEmailForDmsDocAction)
       }
     }
   }

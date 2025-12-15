@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.services.notifications
 import org.apache.pekko.actor.Cancellable
 import org.bson.types.ObjectId
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchersSugar.any
+import org.mockito.ArgumentMatchers.any
 import org.scalatest.concurrent.IntegrationPatience
 import testdata.ExportsTestData.{actionId, mrn}
 import testdata.SubmissionTestData.{action, actionCancellation}
@@ -37,11 +37,13 @@ import uk.gov.hmrc.exports.util.TimeUtils
 import uk.gov.hmrc.exports.util.TimeUtils.instant
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.ToDo
 import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem}
-
+import org.mockito.Mockito.{times, verify, when}
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.mockito.Mockito._
+import org.scalatestplus.mockito.MockitoSugar
 
 class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
 
@@ -56,6 +58,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
   val NameCodeGranted = "39"
   val NameCodeDenied = "41"
   val IncorrectNameCode = "15"
+
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -127,21 +130,23 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       )
 
       "call UnparsedNotificationWorkItemRepository" in {
-        when(unparsedNotificationWorkItemRepository.pushNew(any[UnparsedNotification], any[Instant], any[UnparsedNotification => ProcessingStatus]))
+        val pStatus=any[UnparsedNotification => ProcessingStatus]
+        when(unparsedNotificationWorkItemRepository.pushNew(any[UnparsedNotification], any[Instant], pStatus))
           .thenReturn(Future.successful(testWorkItem))
 
         notificationService.handleNewNotification(actionId, inputXml).futureValue
 
         val captor: ArgumentCaptor[UnparsedNotification] = ArgumentCaptor.forClass(classOf[UnparsedNotification])
         verify(unparsedNotificationWorkItemRepository)
-          .pushNew(captor.capture(), any[Instant], any[UnparsedNotification => ProcessingStatus])
+          .pushNew(captor.capture(), any[Instant], pStatus)
 
         captor.getValue.actionId mustBe actionId
         captor.getValue.payload mustBe inputXml.toString
       }
 
       "call NotificationReceiptActionsScheduler" in {
-        when(unparsedNotificationWorkItemRepository.pushNew(any[UnparsedNotification], any[Instant], any[UnparsedNotification => ProcessingStatus]))
+        val status = any[UnparsedNotification => ProcessingStatus]
+        when(unparsedNotificationWorkItemRepository.pushNew(any[UnparsedNotification], any[Instant], status))
           .thenReturn(Future.successful(testWorkItem))
 
         notificationService.handleNewNotification(actionId, inputXml).futureValue

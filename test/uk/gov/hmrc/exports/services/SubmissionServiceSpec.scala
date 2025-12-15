@@ -18,8 +18,9 @@ package uk.gov.hmrc.exports.services
 
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{eq => meq, _}
-import org.mockito.ArgumentMatchersSugar.eqTo
+import org.mockito.ArgumentMatchers.eq as eqTo
 import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 import org.scalatest.Assertion
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
@@ -36,10 +37,14 @@ import uk.gov.hmrc.exports.services.mapping.{AmendmentMetaDataBuilder, Cancellat
 import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
-
+import org.mockito.Mockito.{times, verify, when}
 import java.time.ZonedDateTime
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
+import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers._
+import org.scalatestplus.mockito.MockitoSugar
+
 
 class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with MockMetrics {
 
@@ -152,11 +157,11 @@ class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with
       def isCancelledGroup(invocation: InvocationOnMock) =
         invocation.getArgument(1).asInstanceOf[StatusGroup] == CancelledStatuses
 
-      when(submissionRepository.countSubmissionsInGroup(any(), captor.capture())).thenAnswer { invocation: InvocationOnMock =>
+      when(submissionRepository.countSubmissionsInGroup(any(), captor.capture())).thenReturn { (invocation: InvocationOnMock) =>
         Future.successful(if (isCancelledGroup(invocation)) 1 else 0)
       }
 
-      when(submissionRepository.fetchFirstPage(any(), captor.capture(), any[FetchSubmissionPageData])).thenAnswer { invocation: InvocationOnMock =>
+      when(submissionRepository.fetchFirstPage(any(), captor.capture(), any[FetchSubmissionPageData])).thenAnswer { (invocation: InvocationOnMock) =>
         Future.successful(if (isCancelledGroup(invocation)) cancelledSubmissions else Seq.empty)
       }
 

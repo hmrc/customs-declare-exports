@@ -26,8 +26,10 @@ import testdata.notifications.ExampleXmlAndNotificationDetailsPair.{
 import testdata.notifications.NotificationTestData.{notification, notification_2, notification_3}
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
-
+import org.mockito.Mockito.{times, verify, when}
 import scala.xml.NodeSeq
+import org.mockito.Mockito._
+import org.scalatestplus.mockito.MockitoSugar
 
 class NotificationFactorySpec extends UnitSpec {
 

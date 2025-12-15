@@ -62,7 +62,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
     "return 201" when {
       "request is valid" in {
         val declaration = aDeclaration(withType(STANDARD), withId("id"), withEori(userEori))
-        given(declarationService.create(any[ExportsDeclaration])).willReturn(Future.successful(declaration))
+        when(declarationService.create(any[ExportsDeclaration])).thenReturn(Future.successful(declaration))
 
         val result: Future[Result] = controller.create(postRequest.withBody(body))
 
@@ -94,8 +94,8 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
     "return 200" when {
 
       "valid request" in {
-        given(declarationService.fetchPage(any[DeclarationSearch], any[Page], any[DeclarationSort]))
-          .willReturn(pageOfDeclarations)
+        when(declarationService.fetchPage(any[DeclarationSearch], any[Page], any[DeclarationSort]))
+          .thenReturn(pageOfDeclarations)
 
         val result = controller.fetchPageOfDraft(Page(), DeclarationSort())(getRequest)
 
@@ -105,8 +105,8 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
       }
 
       "request has valid pagination" in {
-        given(declarationService.fetchPage(any[DeclarationSearch], any[Page], any[DeclarationSort]))
-          .willReturn(pageOfDeclarations)
+        when(declarationService.fetchPage(any[DeclarationSearch], any[Page], any[DeclarationSort]))
+          .thenReturn(pageOfDeclarations)
 
         val size = Page.DEFAULT_SIZE
         val result = controller.fetchPageOfDraft(Page(1, size), DeclarationSort())(getRequest)
@@ -118,8 +118,8 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
       }
 
       "request has sorting ascending sort params" in {
-        given(declarationService.fetchPage(any[DeclarationSearch], any[Page], any[DeclarationSort]))
-          .willReturn(pageOfDeclarations)
+        when(declarationService.fetchPage(any[DeclarationSearch], any[Page], any[DeclarationSort]))
+          .thenReturn(pageOfDeclarations)
 
         val result = controller.fetchPageOfDraft(Page(), DeclarationSort(SortBy.UPDATED, SortDirection.ASC))(getRequest)
 
@@ -129,8 +129,8 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
       }
 
       "request has sorting descending sort params" in {
-        given(declarationService.fetchPage(any[DeclarationSearch], any[Page], any[DeclarationSort]))
-          .willReturn(pageOfDeclarations)
+        when(declarationService.fetchPage(any[DeclarationSearch], any[Page], any[DeclarationSort]))
+          .thenReturn(pageOfDeclarations)
 
         val result = controller.fetchPageOfDraft(Page(), DeclarationSort(SortBy.CREATED, SortDirection.DESC))(getRequest)
 
@@ -176,7 +176,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
     "return 200" when {
       "request is valid" in {
         val declaration = aDeclaration(withId("id"), withEori(userEori))
-        given(declarationService.findOne(any[Eori](), anyString())).willReturn(Future.successful(Some(declaration)))
+        when(declarationService.findOne(any[Eori](), anyString())).thenReturn(Future.successful(Some(declaration)))
 
         val result = controller.findById("id")(getRequest)
 
@@ -188,7 +188,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
 
     "return 404" when {
       "id is not found" in {
-        given(declarationService.findOne(any(), anyString())).willReturn(Future.successful(None))
+        when(declarationService.findOne(any(), anyString())).thenReturn(Future.successful(None))
 
         val result = controller.findById("id")(getRequest)
 
@@ -216,8 +216,8 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
     "return 204" when {
       "request is valid" in {
         val declaration = aDeclaration(withId("id"), withEori(userEori), withStatus(DRAFT))
-        given(declarationService.findOne(any(), anyString())).willReturn(Future.successful(Some(declaration)))
-        given(declarationService.deleteOne(any[ExportsDeclaration])).willReturn(Future.successful(true))
+        when(declarationService.findOne(any(), anyString())).thenReturn(Future.successful(Some(declaration)))
+        when(declarationService.deleteOne(any[ExportsDeclaration])).thenReturn(Future.successful(true))
 
         val result = controller.deleteById("id")(deleteRequest)
 
@@ -231,7 +231,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
     "return 400" when {
       "declaration is COMPLETE" in {
         val declaration = aDeclaration(withId("id"), withEori(userEori), withStatus(DeclarationStatus.COMPLETE))
-        given(declarationService.findOne(any(), anyString())).willReturn(Future.successful(Some(declaration)))
+        when(declarationService.findOne(any(), anyString())).thenReturn(Future.successful(Some(declaration)))
 
         val result = controller.deleteById("id")(deleteRequest)
 
@@ -244,7 +244,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
 
     "return 204" when {
       "id is not found" in {
-        given(declarationService.findOne(any(), anyString())).willReturn(Future.successful(None))
+        when(declarationService.findOne(any(), anyString())).thenReturn(Future.successful(None))
 
         val result = controller.deleteById("id")(deleteRequest)
 
@@ -272,7 +272,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
     "return 200" when {
       "request is valid" in {
         val declaration = aDeclaration(withStatus(DRAFT), withType(STANDARD), withId("id"), withEori(userEori))
-        given(declarationService.update(any[ExportsDeclaration])).willReturn(Future.successful(Some(declaration)))
+        when(declarationService.update(any[ExportsDeclaration])).thenReturn(Future.successful(Some(declaration)))
 
         val result = controller.update(putRequest.withBody(body))
 
@@ -286,7 +286,7 @@ class DeclarationControllerSpec extends UnitSpec with AuthTestSupport with Expor
 
     "return 404" when {
       "declaration is not found - on update" in {
-        given(declarationService.update(any[ExportsDeclaration])).willReturn(Future.successful(None))
+        when(declarationService.update(any[ExportsDeclaration])).thenReturn(Future.successful(None))
 
         val result = controller.update(putRequest.withBody(body))
 

@@ -25,9 +25,11 @@ import uk.gov.hmrc.exports.controllers.testonly.GenerateDraftDecController.Creat
 import uk.gov.hmrc.exports.models.declaration.ExportsDeclaration
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
-
+import org.mockito.Mockito.{times, verify, when}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.mockito.Mockito._
+import org.scalatestplus.mockito.MockitoSugar
 
 class GenerateDraftDecControllerSpec extends UnitSpec with ExportsDeclarationBuilder {
 
@@ -49,7 +51,7 @@ class GenerateDraftDecControllerSpec extends UnitSpec with ExportsDeclarationBui
     (1 to 5).foreach { itemCount =>
       s"insert a draft declaration with $itemCount items" in {
         val captorDeclaration: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
-        when(declarationRepository.create(captorDeclaration.capture())).thenAnswer { invocation: InvocationOnMock =>
+        when(declarationRepository.create(captorDeclaration.capture())).thenAnswer { (invocation: InvocationOnMock) =>
           Future.successful(invocation.getArguments.head.asInstanceOf[ExportsDeclaration])
         }
 

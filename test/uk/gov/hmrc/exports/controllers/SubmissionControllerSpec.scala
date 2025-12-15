@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.controllers
 
 import org.mockito.ArgumentMatchers.{any, anyString}
-import org.mockito.ArgumentMatchersSugar.eqTo
+import org.mockito.ArgumentMatchers.eq as eqTo
 import org.mockito.Mockito._
 import play.api.libs.json.Json.toJson
 import play.api.test.FakeRequest

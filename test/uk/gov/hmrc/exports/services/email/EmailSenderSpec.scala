@@ -26,9 +26,11 @@ import uk.gov.hmrc.exports.connectors.{CustomsDataStoreConnector, EmailConnector
 import uk.gov.hmrc.exports.models.emails.SendEmailResult.{BadEmailRequest, EmailAccepted, InternalEmailServiceError, MissingData}
 import uk.gov.hmrc.exports.models.emails._
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
-
+import org.mockito.Mockito.{times, verify, when}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.mockito.Mockito._
+import org.scalatestplus.mockito.MockitoSugar
 
 class EmailSenderSpec extends UnitSpec {
 
@@ -117,7 +119,7 @@ class EmailSenderSpec extends UnitSpec {
 
         emailSender.sendEmailForDmsDocNotification(sendEmailDetails).futureValue
 
-        verifyZeroInteractions(customsDataStoreConnector)
+        verifyNoInteractions(customsDataStoreConnector)
       }
 
       "not call EmailConnector" in {
@@ -125,7 +127,7 @@ class EmailSenderSpec extends UnitSpec {
 
         emailSender.sendEmailForDmsDocNotification(sendEmailDetails).futureValue
 
-        verifyZeroInteractions(emailConnector)
+        verifyNoInteractions(emailConnector)
       }
     }
 
@@ -144,7 +146,7 @@ class EmailSenderSpec extends UnitSpec {
 
         emailSender.sendEmailForDmsDocNotification(sendEmailDetails).futureValue
 
-        verifyZeroInteractions(emailConnector)
+        verifyNoInteractions(emailConnector)
       }
     }
 

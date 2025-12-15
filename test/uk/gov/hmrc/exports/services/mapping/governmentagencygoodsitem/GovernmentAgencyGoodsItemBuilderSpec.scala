@@ -27,6 +27,8 @@ import uk.gov.hmrc.exports.services.mapping.CachingMappingHelper
 import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, ExportsItemBuilder}
 import uk.gov.hmrc.wco.dec.Commodity
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
+import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers._
 
 class GovernmentAgencyGoodsItemBuilderSpec
     extends UnitSpec with GovernmentAgencyGoodsItemData with ExportsItemBuilder with ExportsDeclarationBuilder {

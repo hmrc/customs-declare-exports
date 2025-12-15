@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.controllers
 
 import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
+import org.mockito.ArgumentMatchers.eq as eqTo
 import play.api.http.Status.{BAD_REQUEST, CONFLICT, NOT_FOUND}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status, stubControllerComponents}
@@ -30,9 +30,11 @@ import uk.gov.hmrc.exports.models.declaration.DeclarationStatus._
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionAmendment
 import uk.gov.hmrc.exports.services.{DeclarationService, SubmissionService}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
-
+import org.mockito.Mockito.{times, verify, when}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.mockito.Mockito._
+import org.scalatestplus.mockito.MockitoSugar
 
 class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with ExportsDeclarationBuilder {
 
@@ -64,8 +66,8 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
         val result = controller.submission(request)
 
         status(result) mustBe NOT_FOUND
-        verifyZeroInteractions(submissionService.cancelAmendment(any(), any(), any())(any()))
-        verifyZeroInteractions(submissionService.submitAmendment(any(), any(), any())(any()))
+        verifyNoInteractions(submissionService.cancelAmendment(any(), any(), any())(any()))
+        verifyNoInteractions(submissionService.submitAmendment(any(), any(), any())(any()))
       }
     }
 
@@ -79,8 +81,8 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
           val result = controller.submission(request)
 
           status(result) mustBe CONFLICT
-          verifyZeroInteractions(submissionService.cancelAmendment(any(), any(), any())(any()))
-          verifyZeroInteractions(submissionService.submitAmendment(any(), any(), any())(any()))
+          verifyNoInteractions(submissionService.cancelAmendment(any(), any(), any())(any()))
+          verifyNoInteractions(submissionService.submitAmendment(any(), any(), any())(any()))
         }
       }
     }
@@ -101,7 +103,7 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
           contentAsString(result) mustBe "\"actionId\""
 
           verify(submissionService).submitAmendment(any(), eqTo(submissionAmendment), eqTo(declaration))(any())
-          verifyZeroInteractions(submissionService.cancelAmendment(any(), any(), any())(any()))
+          verifyNoInteractions(submissionService.cancelAmendment(any(), any(), any())(any()))
         }
 
         "the op is a cancellation" in {
@@ -116,7 +118,7 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
           contentAsString(result) mustBe "\"actionId\""
 
           verify(submissionService).cancelAmendment(any(), eqTo(submissionAmendment.submissionId), eqTo(declaration))(any())
-          verifyZeroInteractions(submissionService.submitAmendment(any(), any(), any())(any()))
+          verifyNoInteractions(submissionService.submitAmendment(any(), any(), any())(any()))
         }
       }
     }
@@ -135,7 +137,7 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
         val result = controller.resubmission(request)
 
         status(result) mustBe NOT_FOUND
-        verifyZeroInteractions(submissionService.resubmitAmendment(any(), any(), any())(any()))
+        verifyNoInteractions(submissionService.resubmitAmendment(any(), any(), any())(any()))
       }
     }
 
@@ -149,7 +151,7 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
           val result = controller.resubmission(request)
 
           status(result) mustBe BAD_REQUEST
-          verifyZeroInteractions(submissionService.resubmitAmendment(any(), any(), any())(any()))
+          verifyNoInteractions(submissionService.resubmitAmendment(any(), any(), any())(any()))
         }
       }
     }

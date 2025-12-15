@@ -17,7 +17,8 @@
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
 import org.bson.types.ObjectId
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{eq => eqTo}
 import testdata.WorkItemTestData.buildTestSendEmailWorkItem
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
@@ -27,11 +28,14 @@ import uk.gov.hmrc.exports.repositories.SendEmailWorkItemRepository
 import uk.gov.hmrc.exports.services.email.EmailSender
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Cancelled, Failed, InProgress, Succeeded}
 import uk.gov.hmrc.mongo.workitem.{ResultStatus, WorkItem}
-
+import org.mockito.Mockito.{times, verify, when}
 import java.time._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import org.mockito.Mockito.{times, verify, when}
+import org.mockito.Mockito._
+import org.scalatestplus.mockito.MockitoSugar
 
 class SendEmailsJobSpec extends UnitSpec {
 
@@ -102,13 +106,13 @@ class SendEmailsJobSpec extends UnitSpec {
       "not call EmailCancellationValidator" in {
         when(sendEmailWorkItemRepository.pullOutstanding(any[Instant], any[Instant])).thenReturn(Future.successful(None))
         sendEmailsJob.execute().futureValue
-        verifyZeroInteractions(emailCancellationValidator)
+        verifyNoInteractions(emailCancellationValidator)
       }
 
       "not call EmailSender" in {
         when(sendEmailWorkItemRepository.pullOutstanding(any[Instant], any[Instant])).thenReturn(Future.successful(None))
         sendEmailsJob.execute().futureValue
-        verifyZeroInteractions(emailSender)
+        verifyNoInteractions(emailSender)
       }
 
     }
@@ -142,7 +146,7 @@ class SendEmailsJobSpec extends UnitSpec {
         "not call EmailSender" in {
           prepareTestScenario()
           sendEmailsJob.execute().futureValue
-          verifyZeroInteractions(emailSender)
+          verifyNoInteractions(emailSender)
         }
 
         "call SendEmailWorkItemRepository to cancel the WorkItem" in {

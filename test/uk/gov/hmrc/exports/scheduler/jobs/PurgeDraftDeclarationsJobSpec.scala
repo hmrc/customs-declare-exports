@@ -24,11 +24,13 @@ import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.config.AppConfig.JobConfig
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, JobRunRepository}
 import uk.gov.hmrc.exports.util.TimeUtils.instant
-
+import org.mockito.Mockito.{times, verify, when}
 import java.time._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers._
 
 class PurgeDraftDeclarationsJobSpec extends UnitSpec {
 
@@ -42,7 +44,7 @@ class PurgeDraftDeclarationsJobSpec extends UnitSpec {
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    given(appConfig.clock) willReturn clock
+    when(appConfig.clock) thenReturn clock
   }
 
   override def afterEach(): Unit = {
@@ -58,14 +60,14 @@ class PurgeDraftDeclarationsJobSpec extends UnitSpec {
 
     "Configure 'firstRunTime'" in {
       val runTime = LocalTime.of(14, 0)
-      given(appConfig.purgeDraftDeclarations).willReturn(JobConfig(runTime, 1.day))
+      when(appConfig.purgeDraftDeclarations).thenReturn(JobConfig(runTime, 1.day))
 
       job.firstRunTime mustBe defined
       job.firstRunTime.get mustBe runTime
     }
 
     "Configure 'interval'" in {
-      given(appConfig.purgeDraftDeclarations).willReturn(JobConfig(LocalTime.MIDNIGHT, 1.day))
+      when(appConfig.purgeDraftDeclarations).thenReturn(JobConfig(LocalTime.MIDNIGHT, 1.day))
 
       job.interval mustBe 1.day
     }
@@ -74,9 +76,9 @@ class PurgeDraftDeclarationsJobSpec extends UnitSpec {
   "PurgeDraftDeclarationsJob.execute" should {
 
     "purge expired draft declarations" in {
-      given(appConfig.draftTimeToLive).willReturn(5.days)
-      given(declarationRepository.deleteExpiredDraft(any[Instant])).willReturn(Future.successful(0L))
-      given(jobRunRepository.isFirstRunInTheDay(job.name)).willReturn(Future.successful(true))
+      when(appConfig.draftTimeToLive).thenReturn(5.days)
+      when(declarationRepository.deleteExpiredDraft(any[Instant])).thenReturn(Future.successful(0L))
+      when(jobRunRepository.isFirstRunInTheDay(job.name)).thenReturn(Future.successful(true))
 
       await(job.execute())
 
@@ -85,7 +87,7 @@ class PurgeDraftDeclarationsJobSpec extends UnitSpec {
 
     "not run 'declarationRepository.deleteExpiredDraft'" when {
       "it was already executed in the day" in {
-        given(jobRunRepository.isFirstRunInTheDay(job.name)).willReturn(Future.successful(false))
+        when(jobRunRepository.isFirstRunInTheDay(job.name)).thenReturn(Future.successful(false))
 
         await(job.execute())
 
