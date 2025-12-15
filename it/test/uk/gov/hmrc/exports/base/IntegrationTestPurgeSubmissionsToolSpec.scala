@@ -20,7 +20,7 @@ import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.result.DeleteResult
 import uk.gov.hmrc.exports.repositories._
-
+import org.mongodb.scala.SingleObservableFuture
 trait IntegrationTestPurgeSubmissionsToolSpec extends IntegrationTestSpec {
 
   val declarationRepository = instanceOf[DeclarationRepository]
