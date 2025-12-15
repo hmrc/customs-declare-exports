@@ -104,7 +104,7 @@ class AppConfig @Inject() (val configuration: Configuration, servicesConfig: Ser
 
   lazy val useTransactionalDBOps: Boolean = configuration.get[Boolean]("mongodb.transactional.operations")
 
-  //Features
+  // Features
   lazy val isOptionalFieldsEnabled: Boolean = servicesConfig.getBoolean("features.optionalFields")
 }
 

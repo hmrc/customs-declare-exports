@@ -24,15 +24,14 @@ import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-
-
-class BorderTransportMeansBuilder @Inject()(appConfig: AppConfig) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class BorderTransportMeansBuilder @Inject() (appConfig: AppConfig) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, t: Declaration): Unit = {
     val transport = model.transport
 
     val hasTransportLeavingTheBorder = transport.hasTransportLeavingTheBorder
     val hasBorder = transport.hasBorderTransportDetails
-    val hasTransportCountry = if (appConfig.isOptionalFieldsEnabled){transport.hasTransportCountryOptional} else {transport.hasTransportCountry}
+    val hasTransportCountry = if (appConfig.isOptionalFieldsEnabled) { transport.hasTransportCountryOptional }
+    else { transport.hasTransportCountry }
     val hasDepartureTransport = transport.hasDepartureTransportDetails
 
     if (hasTransportLeavingTheBorder || hasBorder || hasTransportCountry || hasDepartureTransport) {
