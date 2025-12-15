@@ -66,7 +66,7 @@ class AmendmentController @Inject() (
     val submissionAmendment = request.body
     val declarationId = submissionAmendment.declarationId
     metrics
-      .timeAsyncCall(Timers.amendmentUpdateDeclarationStatusTimer)(() =>declarationService.findOne(request.eori, declarationId))
+      .timeAsyncCall(Timers.amendmentUpdateDeclarationStatusTimer)(declarationService.findOne(request.eori, declarationId))
       .flatMap {
         case Some(declaration) if declaration.isCompleted =>
           submissionService.resubmitAmendment(request.eori, submissionAmendment, declaration).map(Ok(_))
