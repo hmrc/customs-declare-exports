@@ -18,6 +18,7 @@ package uk.gov.hmrc.exports.services
 
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers.eq as eqTo
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.exports.base.UnitSpec
@@ -58,7 +59,7 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
   "Update" should {
     "delegate to the repository" in {
       val persistedDeclaration = mock[ExportsDeclaration]
-      when(declarationRepository.findOneAndReplace(any[JsValue], any[ExportsDeclaration], any[Boolean], any[Boolean]))
+      when(declarationRepository.findOneAndReplace(any[JsValue], any[ExportsDeclaration], any[Boolean], eqTo(any[Boolean])))
         .thenReturn(Future.successful(Some(persistedDeclaration)))
 
       service.update(aDeclaration()).futureValue mustBe Some(persistedDeclaration)
