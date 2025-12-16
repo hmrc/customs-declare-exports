@@ -102,7 +102,7 @@ class SendEmailForDmsDocActionSpec extends UnitSpec {
 
           sendEmailForDmsDocAction.execute(testActionId).futureValue
 
-          verify(sendEmailWorkItemRepository).pushNew(eqTo(testSendEmailDetails), any[Instant], status)
+          verify(sendEmailWorkItemRepository).pushNew(eqTo(testSendEmailDetails), any[Instant], eqTo(status))
         }
       }
 
