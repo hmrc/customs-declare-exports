@@ -43,7 +43,7 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import org.mockito.Mockito._
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.ArgumentMatchers.eq as eqTo
 
 class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
 
@@ -138,7 +138,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
 
         val captor: ArgumentCaptor[UnparsedNotification] = ArgumentCaptor.forClass(classOf[UnparsedNotification])
         verify(unparsedNotificationWorkItemRepository)
-          .pushNew(captor.capture(), any[Instant], pStatus)
+          .pushNew(captor.capture(), any[Instant], eqTo(pStatus))
 
         captor.getValue.actionId mustBe actionId
         captor.getValue.payload mustBe inputXml.toString
