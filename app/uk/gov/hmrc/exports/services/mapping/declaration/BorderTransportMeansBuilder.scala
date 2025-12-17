@@ -17,19 +17,21 @@
 package uk.gov.hmrc.exports.services.mapping.declaration
 
 import javax.inject.Inject
+import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.{ExportsDeclaration, Transport}
 
 import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.declaration_ds.dms._2._
 
-class BorderTransportMeansBuilder @Inject() extends ModifyingBuilder[ExportsDeclaration, Declaration] {
+class BorderTransportMeansBuilder @Inject() (appConfig: AppConfig) extends ModifyingBuilder[ExportsDeclaration, Declaration] {
   override def buildThenAdd(model: ExportsDeclaration, t: Declaration): Unit = {
     val transport = model.transport
 
     val hasTransportLeavingTheBorder = transport.hasTransportLeavingTheBorder
     val hasBorder = transport.hasBorderTransportDetails
-    val hasTransportCountry = transport.hasTransportCountry
+    val hasTransportCountry = if (appConfig.isOptionalFieldsEnabled) { transport.hasTransportCountryOptional }
+    else { transport.hasTransportCountry }
     val hasDepartureTransport = transport.hasDepartureTransportDetails
 
     if (hasTransportLeavingTheBorder || hasBorder || hasTransportCountry || hasDepartureTransport) {

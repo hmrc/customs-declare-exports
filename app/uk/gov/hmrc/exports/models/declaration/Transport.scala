@@ -44,6 +44,9 @@ case class Transport(
 
   def hasTransportCountry: Boolean = transportCrossingTheBorderNationality.nonEmpty
 
+  def hasTransportCountryOptional: Boolean = transportCrossingTheBorderNationality.nonEmpty &&
+    transportCrossingTheBorderNationality.exists(_.countryCode.exists(_.nonEmpty))
+
   def hasTransportLeavingTheBorder: Boolean = borderModeOfTransportCode.nonEmpty
 
   def isMeansOfTransportOnDepartureDefined: Boolean = meansOfTransportOnDepartureType.exists(_ != Transport.optionNone)
