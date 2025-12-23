@@ -20,12 +20,12 @@ import org.apache.pekko.actor.{ActorSystem, Cancellable, Scheduler}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.eq as eqTo
 import uk.gov.hmrc.exports.base.UnitSpec
-import org.mockito.Mockito.{times, verify, when}
+import org.mockito.Mockito.{ verify, when}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
 import org.mockito.Mockito._
-import org.mockito.ArgumentMatchers._
+
 
 class NotificationReceiptActionsSchedulerSpec extends UnitSpec {
 
@@ -40,7 +40,7 @@ class NotificationReceiptActionsSchedulerSpec extends UnitSpec {
 
     reset(actorSystem, scheduler, notificationReceiptActionsRunner)
     when(actorSystem.scheduler).thenReturn(scheduler)
-    when(scheduler.scheduleOnce(any)(any[() => Unit])(any)).thenReturn(Cancellable.alreadyCancelled)
+    when(scheduler.scheduleOnce(any)(any[() => Unit])(eqTo(any))).thenReturn(Cancellable.alreadyCancelled)
     when(notificationReceiptActionsRunner.runNow(any[Boolean])).thenReturn(Future.successful((): Unit))
   }
 
