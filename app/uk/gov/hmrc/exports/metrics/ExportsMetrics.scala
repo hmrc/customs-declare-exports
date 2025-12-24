@@ -42,12 +42,12 @@ class ExportsMetrics @Inject() (metrics: Metrics) {
     result
   }
 
-  def timeAsyncCall[A](timer: Timer)(block: => Future[A])(implicit ec: ExecutionContext): Future[A] = {
+  def timeAsyncCall[A](timer: Timer)(block: ()=> Future[A])(implicit ec: ExecutionContext): Future[A] = {
     val timerContext: Context = startTimer(timer)
     val timerRunning: AtomicBoolean = new AtomicBoolean(true)
 
     try {
-      val result = block
+      val result = block()
 
       result.foreach { _ =>
         if (timerRunning.compareAndSet(true, false)) {
