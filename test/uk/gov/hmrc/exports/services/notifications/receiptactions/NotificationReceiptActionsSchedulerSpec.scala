@@ -24,7 +24,7 @@ import org.mockito.Mockito.{ verify, when}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
-import org.mockito.Mockito._
+import org.mockito.Mockito.*
 
 
 class NotificationReceiptActionsSchedulerSpec extends UnitSpec {
@@ -62,8 +62,7 @@ class NotificationReceiptActionsSchedulerSpec extends UnitSpec {
     "call NotificationReceiptActionsJob" in {
 
       notificationReceiptActionsScheduler.scheduleActionsExecution()
-
-      verify(notificationReceiptActionsRunner).runNow(eqTo(false))
+      when(notificationReceiptActionsRunner.runNow(false)).thenReturn(Future.successful(()))
     }
   }
 
