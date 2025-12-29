@@ -98,17 +98,19 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
     "provided with multiple ParsedNotifications with stored Submission documents" should {
       "return a list with multiple Submission documents" in {
-        val withResult = (invocation: InvocationOnMock) => {
-          val actionId = invocation.getArguments.head.asInstanceOf[String]
-          val submission = if (actionId == notification_2.actionId) submission_2 else submission_3
-          submission
-        }
-        val toFuture: Submission => Future[Submission] = Future.successful
-        val toOptionFuture: Submission => Future[Option[Submission]] = sub => Future.successful(Some(sub))
 
         val captor = ArgumentCaptor.forClass(classOf[String])
-        when(submissionRepository.findOne(any[String], captor.capture())).thenReturn(withResult andThen toOptionFuture)
-        when(updateSubmissionOps.updateSubmissionAndNotifications(captor.capture(), any)).thenReturn(withResult andThen toFuture)
+        when(submissionRepository.findOne(any[String], captor.capture())).thenAnswer((invocation: InvocationOnMock) => {
+          val actionId = invocation.getArguments.head.asInstanceOf[String]
+          val submission = if (actionId == notification_2.actionId) submission_2 else submission_3
+          Future.successful(Some(submission))
+        })
+
+        when(updateSubmissionOps.updateSubmissionAndNotifications(captor.capture(), any)).thenAnswer((invocation: InvocationOnMock) => {
+          val actionId = invocation.getArguments.head.asInstanceOf[String]
+          val submission = if (actionId == notification_2.actionId) submission_2 else submission_3
+          Future.successful(submission)
+        })
 
         parseAndSaveAction.save(List(notification_2, notification_3)).futureValue._1 must contain theSameElementsAs (List(submission_2, submission_3))
 
