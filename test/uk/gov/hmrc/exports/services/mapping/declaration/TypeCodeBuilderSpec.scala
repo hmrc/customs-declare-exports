@@ -47,9 +47,8 @@ class TypeCodeBuilderSpec extends UnitSpec with ExportsDeclarationBuilder with G
         testTypeCode("CO", withDestinationCountry(Country(Some("GG"))) +: modifiers)
       }
 
-      "the destination country code is 'JE'" in {
+      "the destination country code is 'JE'" in
         testTypeCode("CO", withDestinationCountry(Country(Some("JE"))) +: modifiers)
-      }
     }
 
     "Build then add from Code" in {

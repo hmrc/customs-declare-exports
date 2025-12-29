@@ -22,8 +22,7 @@ object FeatureStatus extends Enumeration {
   type FeatureStatus = Value
   val enabled, disabled, suspended = Value
 
-  implicit object featureStatusPathStringBinder
-      extends PathBindable.Parsing[FeatureStatus.FeatureStatus](
+  implicit object featureStatusPathStringBinder extends PathBindable.Parsing[FeatureStatus.FeatureStatus](
         withName,
         _.toString,
         (k: String, e: Exception) => "Cannot parse %s as FeatureStatus: %s".format(k, e.getMessage)

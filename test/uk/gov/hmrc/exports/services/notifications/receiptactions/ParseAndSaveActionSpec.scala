@@ -100,17 +100,17 @@ class ParseAndSaveActionSpec extends UnitSpec {
       "return a list with multiple Submission documents" in {
 
         val captor = ArgumentCaptor.forClass(classOf[String])
-        when(submissionRepository.findOne(any[String], captor.capture())).thenAnswer((invocation: InvocationOnMock) => {
+        when(submissionRepository.findOne(any[String], captor.capture())).thenAnswer { (invocation: InvocationOnMock) =>
           val actionId = invocation.getArguments.head.asInstanceOf[String]
           val submission = if (actionId == notification_2.actionId) submission_2 else submission_3
           Future.successful(Some(submission))
-        })
+        }
 
-        when(updateSubmissionOps.updateSubmissionAndNotifications(captor.capture(), any)).thenAnswer((invocation: InvocationOnMock) => {
+        when(updateSubmissionOps.updateSubmissionAndNotifications(captor.capture(), any)).thenAnswer { (invocation: InvocationOnMock) =>
           val actionId = invocation.getArguments.head.asInstanceOf[String]
           val submission = if (actionId == notification_2.actionId) submission_2 else submission_3
           Future.successful(submission)
-        })
+        }
 
         parseAndSaveAction.save(List(notification_2, notification_3)).futureValue._1 must contain theSameElementsAs (List(submission_2, submission_3))
 

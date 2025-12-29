@@ -19,7 +19,6 @@ package uk.gov.hmrc.exports.models
 import play.api.libs.json.{JsString, JsSuccess, Json}
 import uk.gov.hmrc.exports.base.UnitSpec
 
-
 class PointerSpec extends UnitSpec {
 
   implicit val strs2pointerSectionPatterns: List[String] => List[PointerPatternSection] =
@@ -108,7 +107,7 @@ class PointerSpec extends UnitSpec {
 
     "parse Pattern" in {
       val patternFromSections = PointerPattern(List("a", "$1", "c").map(PointerPatternSection.apply))
-      val patternFromSections1 = PointerPattern(List("a", "$", "c").map(PointerPatternSection.apply))    
+      val patternFromSections1 = PointerPattern(List("a", "$", "c").map(PointerPatternSection.apply))
       PointerPattern("a.$1.c") mustBe patternFromSections
       PointerPattern("a.$.c") mustBe patternFromSections1
     }

@@ -29,7 +29,6 @@ import wco.datamodel.wco.dec_dms._2.Declaration.Amendment
 import org.mockito.Mockito._
 import org.mockito.ArgumentMatchers._
 
-
 class DeclarationBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   private val functionCodeBuilder: FunctionCodeBuilder = mock[FunctionCodeBuilder]

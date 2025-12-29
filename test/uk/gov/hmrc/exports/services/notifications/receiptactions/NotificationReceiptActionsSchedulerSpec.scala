@@ -20,12 +20,11 @@ import org.apache.pekko.actor.{ActorSystem, Cancellable, Scheduler}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.eq as eqTo
 import uk.gov.hmrc.exports.base.UnitSpec
-import org.mockito.Mockito.{ verify, when}
+import org.mockito.Mockito.{verify, when}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
 import org.mockito.Mockito.*
-
 
 class NotificationReceiptActionsSchedulerSpec extends UnitSpec {
 

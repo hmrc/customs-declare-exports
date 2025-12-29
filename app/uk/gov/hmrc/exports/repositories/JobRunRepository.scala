@@ -29,8 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 @Singleton
-class JobRunRepository @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
-    extends PlayMongoRepository[JobRun](
+class JobRunRepository @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext) extends PlayMongoRepository[JobRun](
       mongoComponent = mongoComponent,
       collectionName = "scheduledJobs",
       domainFormat = JobRun.format,

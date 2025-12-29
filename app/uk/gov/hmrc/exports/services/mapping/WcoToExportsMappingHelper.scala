@@ -33,7 +33,7 @@ class WcoToExportsMappingHelper @Inject() (environment: Environment) {
 
     json.validate[Seq[MappingEntry]] match {
       case JsSuccess(seqMapEntries, _) => seqMapEntries
-      case JsError(errors) =>
+      case JsError(errors)             =>
         throw new IllegalArgumentException(s"Could not read '$pointerFile'. Errors reported are: $errors")
     }
   }

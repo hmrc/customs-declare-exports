@@ -59,7 +59,6 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
   val NameCodeDenied = "41"
   val IncorrectNameCode = "15"
 
-
   override def beforeEach(): Unit = {
     super.beforeEach()
 
@@ -130,7 +129,7 @@ class NotificationServiceSpec extends UnitSpec with IntegrationPatience {
       )
 
       "call UnparsedNotificationWorkItemRepository" in {
-        val pStatus=any[UnparsedNotification => ProcessingStatus]
+        val pStatus = any[UnparsedNotification => ProcessingStatus]
         when(unparsedNotificationWorkItemRepository.pushNew(any[UnparsedNotification], any[Instant], pStatus))
           .thenReturn(Future.successful(testWorkItem))
 

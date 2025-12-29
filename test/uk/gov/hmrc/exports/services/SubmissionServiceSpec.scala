@@ -45,7 +45,6 @@ import org.mockito.Mockito._
 import org.mockito.ArgumentMatchers._
 import org.scalatestplus.mockito.MockitoSugar
 
-
 class SubmissionServiceSpec extends UnitSpec with ExportsDeclarationBuilder with MockMetrics {
 
   private implicit val hc: HeaderCarrier = mock[HeaderCarrier]

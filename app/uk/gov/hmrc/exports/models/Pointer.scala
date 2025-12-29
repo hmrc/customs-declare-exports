@@ -23,7 +23,8 @@ import uk.gov.hmrc.exports.models.PointerSectionType.PointerSectionType
 object PointerSectionType extends Enumeration {
   type PointerSectionType = Value
   val FIELD, SEQUENCE = Value
-  implicit val format: Format[models.PointerSectionType.Value] = Format(Reads.enumNameReads(PointerSectionType), Writes.enumNameWrites[PointerSectionType.type])
+  implicit val format: Format[models.PointerSectionType.Value] =
+    Format(Reads.enumNameReads(PointerSectionType), Writes.enumNameWrites[PointerSectionType.type])
 }
 
 case class PointerSection(value: String, `type`: PointerSectionType) {

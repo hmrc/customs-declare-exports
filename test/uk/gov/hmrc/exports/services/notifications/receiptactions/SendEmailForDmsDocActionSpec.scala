@@ -87,7 +87,7 @@ class SendEmailForDmsDocActionSpec extends UnitSpec {
 
         "return successful Future" in {
           when(notificationRepository.findAll(any[String], any[String])).thenReturn(Future.successful(Seq(testNotification)))
-          val status= any[SendEmailDetails => ProcessingStatus]
+          val status = any[SendEmailDetails => ProcessingStatus]
           when(sendEmailWorkItemRepository.pushNew(any[SendEmailDetails], any[Instant], status))
             .thenReturn(Future.successful(testWorkItem))
 
@@ -96,7 +96,7 @@ class SendEmailForDmsDocActionSpec extends UnitSpec {
 
         "call EmailSender" in {
           when(notificationRepository.findAll(any[String], any[String])).thenReturn(Future.successful(Seq(testNotification)))
-          val status= any[SendEmailDetails => ProcessingStatus]
+          val status = any[SendEmailDetails => ProcessingStatus]
           when(sendEmailWorkItemRepository.pushNew(any[SendEmailDetails], any[Instant], status))
             .thenReturn(Future.successful(testWorkItem))
 
@@ -110,7 +110,7 @@ class SendEmailForDmsDocActionSpec extends UnitSpec {
         "propagate this exception" in {
           when(notificationRepository.findAll(any[String], any[String])).thenReturn(Future.successful(Seq(testNotification)))
           val exceptionMsg = "Test exception message"
-          val status= any[SendEmailDetails => ProcessingStatus]
+          val status = any[SendEmailDetails => ProcessingStatus]
           when(sendEmailWorkItemRepository.pushNew(any[SendEmailDetails], any[Instant], status))
             .thenThrow(new RuntimeException(exceptionMsg))
 

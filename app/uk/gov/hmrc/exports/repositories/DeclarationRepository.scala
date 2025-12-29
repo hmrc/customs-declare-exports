@@ -61,7 +61,7 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
   def fetchPage(search: DeclarationSearch, page: Page, sort: DeclarationSort): Future[(Seq[ExportsDeclaration], Long)] = {
     val filter = BsonDocument(Json.toJson(search).toString)
 
-    metrics.timeAsyncCall(Timers.declarationFindAllTimer) {() =>
+    metrics.timeAsyncCall(Timers.declarationFindAllTimer) { () =>
       for {
         declarations <- collection
           .find(filter)
@@ -86,7 +86,7 @@ class DeclarationRepository @Inject() (appConfig: AppConfig, mongoComponent: Mon
 
   def findOne(eori: Eori, id: String): Future[Option[ExportsDeclaration]] =
     metrics
-      .timeAsyncCall(Timers.declarationFindSingleTimer) {() =>
+      .timeAsyncCall(Timers.declarationFindSingleTimer) { () =>
         findOne(Json.obj("eori" -> eori, "id" -> id))
       }
 

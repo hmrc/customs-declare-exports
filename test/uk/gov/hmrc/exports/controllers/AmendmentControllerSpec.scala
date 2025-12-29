@@ -62,7 +62,7 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
     "an amended declaration is not found" should {
       "return 404 NOT_FOUND" in {
         when(declarationService.markCompleted(any(), any(), any())).thenReturn(Future.successful(None))
-        when(mockMetrics.timeAsyncCall(any[Timer])(any[ () => Future[Any]]())((any[ExecutionContext]()))).thenReturn(Future.successful(None))
+        when(mockMetrics.timeAsyncCall(any[Timer])(any[() => Future[Any]]())(any[ExecutionContext]())).thenReturn(Future.successful(None))
 
         val result = controller.submission(request)
 
@@ -77,7 +77,8 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
         "return 409 CONFLICT" in {
           val declaration = aDeclaration(withStatus(decStatus))
           when(declarationService.markCompleted(any(), any(), any())).thenReturn(Future.successful(Some(declaration)))
-          when(mockMetrics.timeAsyncCall(any[Timer])(any[ () => Future[Any]]())((any[ExecutionContext]()))).thenReturn(Future.successful(Some(declaration)))
+          when(mockMetrics.timeAsyncCall(any[Timer])(any[() => Future[Any]]())(any[ExecutionContext]()))
+            .thenReturn(Future.successful(Some(declaration)))
 
           val result = controller.submission(request)
 
@@ -95,7 +96,8 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
 
         "the op is a submission" in {
           when(declarationService.markCompleted(any(), any(), any())).thenReturn(Future.successful(Some(declaration)))
-          when(mockMetrics.timeAsyncCall(any[Timer])(any[ () => Future[Any]]())((any[ExecutionContext]()))).thenReturn(Future.successful(Some(declaration)))
+          when(mockMetrics.timeAsyncCall(any[Timer])(any[() => Future[Any]]())(any[ExecutionContext]()))
+            .thenReturn(Future.successful(Some(declaration)))
           when(submissionService.submitAmendment(any(), any(), any())(any())).thenReturn(Future("actionId"))
 
           val result = controller.submission(request)
@@ -110,7 +112,8 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
         "the op is a cancellation" in {
           when(declarationService.markCompleted(any(), any(), any())).thenReturn(Future.successful(Some(declaration)))
           when(submissionService.cancelAmendment(any(), any(), any())(any())).thenReturn(Future("actionId"))
-          when(mockMetrics.timeAsyncCall(any[Timer])(any[ () => Future[Any]]())((any[ExecutionContext]()))).thenReturn(Future.successful(Some(declaration)))
+          when(mockMetrics.timeAsyncCall(any[Timer])(any[() => Future[Any]]())(any[ExecutionContext]()))
+            .thenReturn(Future.successful(Some(declaration)))
 
           val request = postRequest.withBody(submissionAmendment.copy(isCancellation = true, fieldPointers = List("")))
           val result = controller.submission(request)
@@ -133,7 +136,7 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
     "an amended declaration is not found" should {
       "return 404 NOT_FOUND" in {
         when(declarationService.findOne(any(), any())).thenReturn(Future.successful(None))
-        when(mockMetrics.timeAsyncCall(any[Timer])(any[ () => Future[Any]]())((any[ExecutionContext]()))).thenReturn(Future.successful(None))
+        when(mockMetrics.timeAsyncCall(any[Timer])(any[() => Future[Any]]())(any[ExecutionContext]())).thenReturn(Future.successful(None))
         val result = controller.resubmission(request)
 
         status(result) mustBe NOT_FOUND
@@ -146,7 +149,8 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
         "return 400 BAD_REQUEST" in {
           val declaration = aDeclaration(withStatus(decStatus))
           when(declarationService.findOne(any(), any())).thenReturn(Future.successful(Some(declaration)))
-          when(mockMetrics.timeAsyncCall(any[Timer])(any[ () => Future[Any]]())((any[ExecutionContext]()))).thenReturn(Future.successful(Some(declaration)))
+          when(mockMetrics.timeAsyncCall(any[Timer])(any[() => Future[Any]]())(any[ExecutionContext]()))
+            .thenReturn(Future.successful(Some(declaration)))
 
           val result = controller.resubmission(request)
 
@@ -161,7 +165,8 @@ class AmendmentControllerSpec extends UnitSpec with AuthTestSupport with Exports
 
       "return 200 with actionId" in {
         when(declarationService.findOne(any(), any())).thenReturn(Future.successful(Some(declaration)))
-        when(mockMetrics.timeAsyncCall(any[Timer])(any[ () => Future[Any]]())((any[ExecutionContext]()))).thenReturn(Future.successful(Some(declaration)))
+        when(mockMetrics.timeAsyncCall(any[Timer])(any[() => Future[Any]]())(any[ExecutionContext]()))
+          .thenReturn(Future.successful(Some(declaration)))
         when(submissionService.resubmitAmendment(any(), any(), any())(any())).thenReturn(Future("actionId"))
 
         val result = controller.resubmission(request)

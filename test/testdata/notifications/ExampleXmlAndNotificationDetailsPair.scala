@@ -122,7 +122,7 @@ object ExampleXmlAndNotificationDetailsPair {
             <DateTimeString formatCode="304">{dateTime}</DateTimeString>
           </IssueDateTime>
           <Error>
-            {if (withErrorDescription) <Description>{errorDescription.get}</Description> else NodeSeq.Empty }
+            {if (withErrorDescription) <Description>{errorDescription.get}</Description> else NodeSeq.Empty}
             <ValidationCode>CDS10020</ValidationCode>
             <Pointer>
               <DocumentSectionCode>42A</DocumentSectionCode>

@@ -107,8 +107,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
       }
     }
 
-    "return true" when {
-
+    "return true" when
       statusesStoppingEmailSending.foreach { status =>
         s"there is newer Notification with status $status" in {
           val newerNotification = createNotification(firstDate.plusHours(1), status)
@@ -136,6 +135,5 @@ class EmailCancellationValidatorSpec extends UnitSpec {
           emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe true
         }
       }
-    }
   }
 }

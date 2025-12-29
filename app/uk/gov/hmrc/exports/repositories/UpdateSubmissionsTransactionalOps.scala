@@ -75,7 +75,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
       .findOne("actions.id", actionId)
       .flatMap {
         case Some(submission) => Future.successful(submission)
-        case _ =>
+        case _                =>
           val error = s"No submission record was found for (parsed) notifications with actionId($actionId)"
           Future.failed(throw new InternalServerException(error))
       }

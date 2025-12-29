@@ -46,7 +46,7 @@ class NotificationController @Inject() (
 
     headerValidator.validateAndExtractNotificationHeaders(request.headers.toSimpleMap) match {
       case Right(extractedHeaders) =>
-        metrics.timeAsyncCall(Timers.notificationTimer) {() =>
+        metrics.timeAsyncCall(Timers.notificationTimer) { () =>
           notificationsService
             .handleNewNotification(extractedHeaders.conversationId.value, request.body)
             .map(_ => Accepted)

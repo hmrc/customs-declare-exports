@@ -22,8 +22,7 @@ object Feature extends Enumeration {
   type Feature = Value
   val default: Value = Value
 
-  implicit object featurePathStringBinder
-      extends PathBindable.Parsing[Feature.Feature](
+  implicit object featurePathStringBinder extends PathBindable.Parsing[Feature.Feature](
         withName,
         _.toString,
         (k: String, e: Exception) => "Cannot parse %s as Feature: %s".format(k, e.getMessage)
