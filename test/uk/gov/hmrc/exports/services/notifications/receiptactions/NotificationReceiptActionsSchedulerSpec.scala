@@ -56,7 +56,7 @@ class NotificationReceiptActionsSchedulerSpec extends UnitSpec {
       notificationReceiptActionsScheduler.scheduleActionsExecution()
 
       val expectedDelay = FiniteDuration(0, SECONDS)
-      verify(scheduler).scheduleOnce(eqTo(expectedDelay))(any[() => Unit])(any)
+      verify(actorSystem).scheduler.scheduleOnce(expectedDelay)
     }
 
     "call NotificationReceiptActionsJob" in {
