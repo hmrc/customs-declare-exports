@@ -17,10 +17,13 @@
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
 import uk.gov.hmrc.exports.base.UnitSpec
+import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.util.ExportsItemBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment
 
 class StatisticalValueAmountBuilderSpec extends UnitSpec with ExportsItemBuilder {
+
+  implicit val appConfig: AppConfig = mock[AppConfig]
 
   "Statistical Value Amount Builder" should {
     "build then add" when {
@@ -30,10 +33,15 @@ class StatisticalValueAmountBuilderSpec extends UnitSpec with ExportsItemBuilder
 
         builder.buildThenAdd(model, dcoItem)
 
-        dcoItem.getStatisticalValueAmount mustBe null
+        val exception = intercept[NullPointerException] {
+          dcoItem.getStatisticalValueAmount.getValue
+        }
+
+        exception.getMessage startsWith "[Cannot invoke \"wco.datamodel.wco.declaration_ds.dms._2.GovernmentAgencyGoodsItemStatisticalValueAmountType.getValue()\""
       }
 
       "populated item type" in {
+        when(appConfig.isOptionalFieldsEnabled).thenReturn(true)
         val model = anItem(withStatisticalValue(statisticalValue = "123.45"))
         val dcoItem = new GoodsShipment.GovernmentAgencyGoodsItem()
 
@@ -45,5 +53,5 @@ class StatisticalValueAmountBuilderSpec extends UnitSpec with ExportsItemBuilder
     }
   }
 
-  private def builder = new StatisticalValueAmountBuilder()
+  private def builder = new StatisticalValueAmountBuilder(appConfig)
 }
