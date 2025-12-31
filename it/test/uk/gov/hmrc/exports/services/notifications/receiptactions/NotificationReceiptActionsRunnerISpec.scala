@@ -27,7 +27,7 @@ import uk.gov.hmrc.exports.repositories.UnparsedNotificationWorkItemRepository
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Cancelled, Failed}
 import uk.gov.hmrc.mongo.workitem.WorkItem
-
+import org.mongodb.scala.SingleObservableFuture
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class NotificationReceiptActionsRunnerISpec extends IntegrationTestSpec with ExportsDeclarationBuilder {

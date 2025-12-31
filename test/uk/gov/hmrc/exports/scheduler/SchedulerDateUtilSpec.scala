@@ -19,7 +19,7 @@ package uk.gov.hmrc.exports.scheduler
 import java.time._
 
 import scala.concurrent.duration._
-
+import org.mockito.Mockito.{times, verify, when}
 import org.mockito.BDDMockito.given
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
@@ -33,7 +33,7 @@ class SchedulerDateUtilSpec extends UnitSpec {
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    given(config.clock) willReturn clock
+    when(config.clock) thenReturn clock
   }
 
   "Next Run" should {

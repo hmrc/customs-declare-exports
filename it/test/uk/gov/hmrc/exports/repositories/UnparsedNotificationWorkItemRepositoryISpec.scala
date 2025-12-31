@@ -24,7 +24,7 @@ import testdata.notifications.NotificationTestData
 import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import uk.gov.hmrc.exports.util.TimeUtils.instant
-
+import org.mongodb.scala.SingleObservableFuture
 import java.util.UUID
 import scala.concurrent.duration._
 

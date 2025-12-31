@@ -34,6 +34,9 @@ import java.time.Instant
 import java.time.format.DateTimeFormatter.ISO_INSTANT
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
+import org.mongodb.scala.SingleObservableFuture
+import org.mongodb.scala.ObservableFuture
+import org.mongodb.scala.documentToUntypedDocument
 
 // scalastyle:off
 trait RepositoryOps[T] {
@@ -41,7 +44,7 @@ trait RepositoryOps[T] {
   implicit def classTag: ClassTag[T]
   implicit val executionContext: ExecutionContext
 
-  val collection: MongoCollection[T]
+  lazy val collection: MongoCollection[T]
 
   // Name of the field, if any, of the collection used to annotate the time, a java.time.Instant,
   // of the last update (only, not used for document insertions and replacements).

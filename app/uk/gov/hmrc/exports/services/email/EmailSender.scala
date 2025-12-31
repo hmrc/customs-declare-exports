@@ -38,7 +38,7 @@ class EmailSender @Inject() (
       case Some(eori) =>
         obtainEmailAddress(eori).flatMap {
           case Some(email) if email.deliverable => sendEmail(sendEmailDetails.mrn, eori, email)
-          case Some(_) =>
+          case Some(_)                          =>
             logger.warn(s"Email address for EORI: [$eori] was not deliverable")
             Future.successful(MissingData)
           case None =>

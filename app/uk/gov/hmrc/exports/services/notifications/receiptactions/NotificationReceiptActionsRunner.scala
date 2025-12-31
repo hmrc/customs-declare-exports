@@ -45,7 +45,7 @@ class NotificationReceiptActionsRunner @Inject() (
 
     def process(): Future[Unit] =
       unparsedNotificationWorkItemRepository.pullOutstanding(failedBefore = failedBefore, availableBefore = now).flatMap {
-        case None => Future.unit
+        case None                               => Future.unit
         case Some(unparsedNotificationWorkItem) =>
           executeNotificationReceiptActions(unparsedNotificationWorkItem).flatMap(_ => process())
       }

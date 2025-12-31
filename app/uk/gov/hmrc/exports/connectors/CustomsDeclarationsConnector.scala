@@ -56,7 +56,7 @@ class CustomsDeclarationsConnector @Inject() (appConfig: AppConfig, httpClientV2
   private def post(eori: String, uri: String, body: String)(implicit hc: HeaderCarrier): Future[String] = {
     logger.debug(s"CUSTOMS_DECLARATIONS request payload is -> $body")
 
-    metrics.timeAsyncCall(Timers.upstreamCustomsDeclarationsTimer) {
+    metrics.timeAsyncCall(Timers.upstreamCustomsDeclarationsTimer) { () =>
       post[HttpResponse](s"${appConfig.customsDeclarationsBaseUrl}$uri", body, headers(eori)).map { response =>
         logger.debug(s"Response: ${response.status} with headers:\n\t${response.headers}\n\n\tbody => ${response.body}")
         handleResponse(response, response.headers.get("X-Conversation-ID").map(_.head))

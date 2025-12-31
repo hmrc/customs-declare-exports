@@ -24,7 +24,9 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.config.AppConfig.JobConfig
 import uk.gov.hmrc.exports.repositories.{JobRunRepository, PurgeSubmissionsTransactionalOps, SubmissionRepository}
-
+import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers._
+import org.mockito.Mockito.{times, verify, when}
 import java.time.LocalTime
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -52,14 +54,14 @@ class PurgeAncientSubmissionsJobSpec extends UnitSpec {
 
     "Configure 'firstRunTime'" in {
       val runTime = LocalTime.of(14, 0)
-      given(appConfig.purgeAncientSubmissions).willReturn(JobConfig(runTime, 1.day))
+      when(appConfig.purgeAncientSubmissions).thenReturn(JobConfig(runTime, 1.day))
 
       job.firstRunTime mustBe defined
       job.firstRunTime.get mustBe runTime
     }
 
     "Configure 'interval'" in {
-      given(appConfig.purgeAncientSubmissions).willReturn(JobConfig(LocalTime.MIDNIGHT, 1.day))
+      when(appConfig.purgeAncientSubmissions).thenReturn(JobConfig(LocalTime.MIDNIGHT, 1.day))
 
       job.interval mustBe 1.day
     }
@@ -69,7 +71,7 @@ class PurgeAncientSubmissionsJobSpec extends UnitSpec {
   "PurgeAncientSubmissionsJob.execute" should {
     "not run 'submissionRepository.findAll'" when {
       "it was already executed in the day" in {
-        given(jobRunRepository.isFirstRunInTheDay(job.name)).willReturn(Future.successful(false))
+        when(jobRunRepository.isFirstRunInTheDay(job.name)).thenReturn(Future.successful(false))
 
         await(job.execute())
 

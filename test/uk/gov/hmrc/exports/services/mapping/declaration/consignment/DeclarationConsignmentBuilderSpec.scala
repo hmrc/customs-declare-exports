@@ -24,6 +24,8 @@ import uk.gov.hmrc.exports.services.mapping.goodsshipment.ConsignmentConsignorBu
 import uk.gov.hmrc.exports.services.mapping.goodsshipment.consignment.ConsignmentCarrierBuilder
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
+import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers._
 
 class DeclarationConsignmentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 

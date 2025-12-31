@@ -53,7 +53,7 @@ class Sanitiser extends CharacterEscapeHandler {
           case '&'  => sb ++= "&amp;"
           case '<'  => sb ++= "&lt;"
           case '>'  => sb ++= "&gt;"
-          case _ =>
+          case _    =>
             if ((chr > 31 && chr < 127) || isLetterOrDigit(chr)) sb += chr
             else // Whitespace and control chars are ignored. Any other char is escaped.
             if (!(isWhitespace(chr) || isISOControl(chr))) sb ++= s"&#${chr.toInt};"
@@ -82,7 +82,7 @@ class Sanitiser extends CharacterEscapeHandler {
       case '&'  => writer.write("&amp;")
       case '<'  => writer.write("&lt;")
       case '>'  => writer.write("&gt;")
-      case _ =>
+      case _    =>
         if ((chr > 31 && chr < 127) || isLetterOrDigit(chr)) writer.write(chr.toInt)
         else if (isWhitespace(chr) || isISOControl(chr)) writer.write(' ')
         else writer.write(s"&#${chr.toInt};")

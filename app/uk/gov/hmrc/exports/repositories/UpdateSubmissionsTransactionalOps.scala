@@ -33,7 +33,7 @@ import uk.gov.hmrc.exports.repositories.RepositoryOps.mongoDateInQuery
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.transaction.{TransactionConfiguration, Transactions}
-
+import org.mongodb.scala.SingleObservableFuture
 import java.time.Instant
 import java.util.UUID.randomUUID
 import javax.inject.{Inject, Singleton}
@@ -75,7 +75,7 @@ class UpdateSubmissionsTransactionalOps @Inject() (
       .findOne("actions.id", actionId)
       .flatMap {
         case Some(submission) => Future.successful(submission)
-        case _ =>
+        case _                =>
           val error = s"No submission record was found for (parsed) notifications with actionId($actionId)"
           Future.failed(throw new InternalServerException(error))
       }

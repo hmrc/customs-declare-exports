@@ -37,7 +37,7 @@ object AuditNotifications {
       EventData.conversationId.toString -> conversationId
     )
 
-    val optionalKeyValues = Seq((EventData.mrn.toString -> submission.mrn))
+    val optionalKeyValues = Seq(EventData.mrn.toString -> submission.mrn)
 
     val optionalDataElements = optionalKeyValues.foldLeft(Map.empty[String, String]) { (acc, item) =>
       item._2

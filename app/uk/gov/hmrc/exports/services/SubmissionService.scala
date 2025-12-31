@@ -157,7 +157,7 @@ class SubmissionService @Inject() (
 
       logProgress(declaration.id, "Submitting new declaration to the Declaration API")
 
-      metrics.timeAsyncCall(Timers.submissionSendToDecApiTimer) {
+      metrics.timeAsyncCall(Timers.submissionSendToDecApiTimer) { () =>
         // Submit the declaration to the Dec API
         customsDeclarationsConnector.submitDeclaration(declaration.eori, xmlPayload) map { actionId =>
           logProgress(declaration.id, "Submitted new declaration to the Declaration API Successfully")
@@ -170,7 +170,7 @@ class SubmissionService @Inject() (
     }
 
   def storeSubmission(submission: Submission): Future[Submission] =
-    metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer) {
+    metrics.timeAsyncCall(Timers.submissionFindOrCreateSubmissionTimer) { () =>
       submissionRepository.create(submission) map { submission =>
         logger.info(s"Submission(${submission.uuid}) creation completed")
         submission
@@ -277,10 +277,10 @@ class SubmissionService @Inject() (
 
     logProgress(declaration.id, "Submitting amendment request to the Declaration API")
     for {
-      actionId <- metrics.timeAsyncCall(Timers.amendmentSendToDecApiTimer)(customsDeclarationsConnector.submitAmendment(declaration.eori, xml))
+      actionId <- metrics.timeAsyncCall(Timers.amendmentSendToDecApiTimer)(() => customsDeclarationsConnector.submitAmendment(declaration.eori, xml))
       _ = logProgress(declaration.id, "Submitted amendment request to the Declaration API Successfully")
       _ = logProgress(declaration.id, "Appending amendment action to submission...")
-      _ <- metrics.timeAsyncCall(Timers.amendmentAddSubmissionActionTimer)(
+      _ <- metrics.timeAsyncCall(Timers.amendmentAddSubmissionActionTimer)(() =>
         addActionToSubmission(actionId, declaration.id, submission, AmendmentRequest)
       )
     } yield actionId

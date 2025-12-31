@@ -35,8 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 @Singleton
-class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
-    extends PlayMongoRepository[Submission](
+class SubmissionRepository @Inject() (val mongoComponent: MongoComponent)(implicit ec: ExecutionContext) extends PlayMongoRepository[Submission](
       mongoComponent = mongoComponent,
       collectionName = "submissions",
       domainFormat = Submission.format,

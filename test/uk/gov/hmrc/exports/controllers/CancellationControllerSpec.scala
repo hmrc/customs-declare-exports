@@ -17,8 +17,7 @@
 package uk.gov.hmrc.exports.controllers
 
 import org.mockito.ArgumentMatchers._
-import org.mockito.BDDMockito._
-import org.mockito.Mockito._
+
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -28,9 +27,12 @@ import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.models.declaration.submissions.CancellationStatus.CancellationResult
 import uk.gov.hmrc.exports.models.declaration.submissions._
 import uk.gov.hmrc.exports.services.SubmissionService
-
+import org.mockito.Mockito.{doNothing, reset, when}
+import org.scalatestplus.mockito.MockitoSugar.mock
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers._
 
 class CancellationControllerSpec extends UnitSpec with AuthTestSupport {
 
@@ -54,8 +56,8 @@ class CancellationControllerSpec extends UnitSpec with AuthTestSupport {
     "return 200" when {
 
       "request is valid" in {
-        given(submissionService.cancelDeclaration(any(), any())(any()))
-          .willReturn(Future.successful(CancellationResult(CancellationRequestSent, Some("conversationId"))))
+        when(submissionService.cancelDeclaration(any(), any())(any()))
+          .thenReturn(Future.successful(CancellationResult(CancellationRequestSent, Some("conversationId"))))
 
         val result = controller.createCancellation(postRequest)
 
@@ -65,8 +67,8 @@ class CancellationControllerSpec extends UnitSpec with AuthTestSupport {
       }
 
       "cancellation exists" in {
-        given(submissionService.cancelDeclaration(any(), any())(any()))
-          .willReturn(Future.successful(CancellationResult(CancellationAlreadyRequested, None)))
+        when(submissionService.cancelDeclaration(any(), any())(any()))
+          .thenReturn(Future.successful(CancellationResult(CancellationAlreadyRequested, None)))
 
         val result = controller.createCancellation(postRequest)
 
@@ -76,7 +78,7 @@ class CancellationControllerSpec extends UnitSpec with AuthTestSupport {
       }
 
       "declaration doesnt exist" in {
-        given(submissionService.cancelDeclaration(any(), any())(any())).willReturn(Future.successful(CancellationResult(NotFound, None)))
+        when(submissionService.cancelDeclaration(any(), any())(any())).thenReturn(Future.successful(CancellationResult(NotFound, None)))
 
         val result = controller.createCancellation(postRequest)
 

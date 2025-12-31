@@ -22,6 +22,7 @@ import org.mockito.BDDMockito._
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.mapping.declaration.DeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
+import org.mockito.Mockito.{times, verify, when}
 
 class CancellationMetaDataBuilderSpec extends UnitSpec {
 
@@ -32,7 +33,7 @@ class CancellationMetaDataBuilderSpec extends UnitSpec {
     val declaration = mock[Declaration]
 
     "Build MetaData" in {
-      given(declarationBuilder.buildCancellation(any(), any(), any(), any(), any())).willReturn(declaration)
+      when(declarationBuilder.buildCancellation(any(), any(), any(), any(), any())).thenReturn(declaration)
 
       val data = builder.buildRequest("ref", "mrn", "description", "reason", "eori")
 

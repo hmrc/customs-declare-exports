@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.exports.services.mapping.declaration
 
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.eq as eqTo
+import org.mockito.Mockito.verify
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.services.mapping.AuthorisationHoldersBuilder
 import uk.gov.hmrc.exports.services.mapping.declaration.consignment.DeclarationConsignmentBuilder
@@ -24,6 +26,8 @@ import uk.gov.hmrc.exports.services.mapping.goodsshipment.GoodsShipmentBuilder
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration
 import wco.datamodel.wco.dec_dms._2.Declaration.Amendment
+import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers._
 
 class DeclarationBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
 

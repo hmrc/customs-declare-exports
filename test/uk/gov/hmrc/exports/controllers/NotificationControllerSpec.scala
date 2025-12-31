@@ -33,13 +33,15 @@ import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification.R
 import uk.gov.hmrc.exports.services.SubmissionService
 import uk.gov.hmrc.exports.services.notifications.NotificationService
 import uk.gov.hmrc.wco.dec.{DateTimeString, Response, ResponseDateTimeElement}
-
+import org.mockito.Mockito.{times, verify, when}
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Random
 import scala.xml.NodeSeq
+import org.mockito.Mockito._
+import org.scalatestplus.mockito.MockitoSugar
 
 class NotificationControllerSpec extends UnitSpec with AuthTestSupport with MockMetrics {
 

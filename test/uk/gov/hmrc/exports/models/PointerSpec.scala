@@ -61,7 +61,9 @@ class PointerSpec extends UnitSpec {
     val pointer = Pointer(List(field1, sequence1, field2, sequence2))
 
     "map to pattern" in {
-      pointer.pattern mustBe PointerPattern(List("ABC", "$", "000", "$"))
+      val sections = List("ABC", "$", "000", "$").map(PointerPatternSection.apply)
+      val patternFromSections = PointerPattern(sections)
+      pointer.pattern mustBe patternFromSections
     }
 
     "map to string" in {
@@ -104,8 +106,10 @@ class PointerSpec extends UnitSpec {
     }
 
     "parse Pattern" in {
-      PointerPattern("a.$1.c") mustBe PointerPattern(List("a", "$1", "c"))
-      PointerPattern("a.$.c") mustBe PointerPattern(List("a", "$", "c"))
+      val patternFromSections = PointerPattern(List("a", "$1", "c").map(PointerPatternSection.apply))
+      val patternFromSections1 = PointerPattern(List("a", "$", "c").map(PointerPatternSection.apply))
+      PointerPattern("a.$1.c") mustBe patternFromSections
+      PointerPattern("a.$.c") mustBe patternFromSections1
     }
 
     "map to string" in {

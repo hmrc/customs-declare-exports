@@ -18,7 +18,6 @@ package uk.gov.hmrc.exports.controllers.testonly
 
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
-import org.mockito.BDDMockito.`given`
 import org.mockito.invocation.InvocationOnMock
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{status, _}
@@ -30,9 +29,11 @@ import uk.gov.hmrc.exports.models.declaration.notifications.ParsedNotification
 import uk.gov.hmrc.exports.models.declaration.submissions.Submission
 import uk.gov.hmrc.exports.repositories.{DeclarationRepository, ParsedNotificationRepository, SubmissionRepository}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
-
+import org.mockito.Mockito.{times, verify, when}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers._
 
 class GenerateSubmittedDecControllerSpec extends UnitSpec with ExportsDeclarationBuilder {
 
@@ -54,17 +55,17 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with ExportsDeclaratio
 
     "insert all required entities with correct correlating values" in {
       val captorDeclaration: ArgumentCaptor[ExportsDeclaration] = ArgumentCaptor.forClass(classOf[ExportsDeclaration])
-      when(declarationRepository.create(captorDeclaration.capture())).thenAnswer { invocation: InvocationOnMock =>
+      when(declarationRepository.create(captorDeclaration.capture())).thenAnswer { (invocation: InvocationOnMock) =>
         Future.successful(invocation.getArguments.head.asInstanceOf[ExportsDeclaration])
       }
 
       val captorSubmission: ArgumentCaptor[Submission] = ArgumentCaptor.forClass(classOf[Submission])
-      when(submissionRepository.create(captorSubmission.capture())).thenAnswer { invocation: InvocationOnMock =>
+      when(submissionRepository.create(captorSubmission.capture())).thenAnswer { (invocation: InvocationOnMock) =>
         Future.successful(invocation.getArguments.head.asInstanceOf[Submission])
       }
 
       val captorParsedNotification: ArgumentCaptor[ParsedNotification] = ArgumentCaptor.forClass(classOf[ParsedNotification])
-      when(parsedNotificationRepository.create(captorParsedNotification.capture())).thenAnswer { invocation: InvocationOnMock =>
+      when(parsedNotificationRepository.create(captorParsedNotification.capture())).thenAnswer { (invocation: InvocationOnMock) =>
         Future.successful(invocation.getArguments.head.asInstanceOf[ParsedNotification])
       }
 
@@ -88,9 +89,9 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with ExportsDeclaratio
     val submission = Submission("declaration.id", "declaration.eori", "lrn", None, "ducr", latestDecId = Some("declaration.Id"))
 
     "insert only one ACCEPT notification if first two digits of MRN are an odd number" in {
-      given(declarationRepository.create(any())).willReturn(Future.successful(aDeclaration(withConsignmentReferences(mrn = Some("11GB1234567890")))))
-      given(submissionRepository.create(any())).willReturn(Future.successful(submission))
-      given(parsedNotificationRepository.create(any())).willReturn(Future.successful(notification))
+      when(declarationRepository.create(any())).thenReturn(Future.successful(aDeclaration(withConsignmentReferences(mrn = Some("11GB1234567890")))))
+      when(submissionRepository.create(any())).thenReturn(Future.successful(submission))
+      when(parsedNotificationRepository.create(any())).thenReturn(Future.successful(notification))
 
       val body = CreateSubmitDecDocumentsRequest(eoriSpecified, None, None, None)
       val result = controller.createSubmittedDecDocuments(postRequest.withBody(body))
@@ -101,9 +102,9 @@ class GenerateSubmittedDecControllerSpec extends UnitSpec with ExportsDeclaratio
     }
 
     "insert an additional DMSDOC notification if first two digits of MRN are an even number" in {
-      given(declarationRepository.create(any())).willReturn(Future.successful(aDeclaration(withConsignmentReferences(mrn = Some("10GB1234567890")))))
-      given(submissionRepository.create(any())).willReturn(Future.successful(submission))
-      given(parsedNotificationRepository.create(any())).willReturn(Future.successful(notification))
+      when(declarationRepository.create(any())).thenReturn(Future.successful(aDeclaration(withConsignmentReferences(mrn = Some("10GB1234567890")))))
+      when(submissionRepository.create(any())).thenReturn(Future.successful(submission))
+      when(parsedNotificationRepository.create(any())).thenReturn(Future.successful(notification))
 
       val body = CreateSubmitDecDocumentsRequest(eoriSpecified, None, None, None)
       val result = controller.createSubmittedDecDocuments(postRequest.withBody(body))

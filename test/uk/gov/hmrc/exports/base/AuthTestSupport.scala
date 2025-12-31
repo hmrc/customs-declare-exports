@@ -17,12 +17,14 @@
 package uk.gov.hmrc.exports.base
 
 import org.mockito.ArgumentMatchers.any
-import org.mockito.{ArgumentMatcher, ArgumentMatchers, MockitoSugar}
+import org.mockito.{ArgumentMatcher, ArgumentMatchers}
+import org.mockito.Mockito.{reset, times, verify, when}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.allEnrolments
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Name}
 import uk.gov.hmrc.exports.models.{Eori, SignedInUser}
+import org.scalatestplus.mockito.MockitoSugar
 
 import scala.concurrent.Future
 

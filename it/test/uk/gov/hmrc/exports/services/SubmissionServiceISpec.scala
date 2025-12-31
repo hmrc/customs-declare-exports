@@ -29,9 +29,12 @@ import uk.gov.hmrc.exports.repositories.{DeclarationRepository, SubmissionReposi
 import uk.gov.hmrc.exports.services.mapping._
 import uk.gov.hmrc.http.HeaderCarrier
 import wco.datamodel.wco.documentmetadata_dms._2.MetaData
-
+import org.mockito.Mockito.{times, verify, when}
 import scala.concurrent.ExecutionContext.global
 import scala.concurrent.Future
+import org.mockito.Mockito._
+import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.ArgumentMatchers._
 
 class SubmissionServiceISpec extends IntegrationTestSpec with MockMetrics {
 

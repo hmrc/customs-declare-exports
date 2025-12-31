@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.exports.controllers
 
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{eq => eqTo}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -25,9 +26,11 @@ import uk.gov.hmrc.exports.connectors.CustomsDataStoreConnector
 import uk.gov.hmrc.exports.controllers.actions.Authenticator
 import uk.gov.hmrc.exports.models.emails.Email
 import uk.gov.hmrc.http.UpstreamErrorResponse
-
+import org.mockito.Mockito.{times, verify, when}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
+import org.mockito.Mockito._
+import org.scalatestplus.mockito.MockitoSugar
 
 class EmailByEoriControllerUnitSpec extends UnitSpec with AuthTestSupport {
 
@@ -80,14 +83,14 @@ class EmailByEoriControllerUnitSpec extends UnitSpec with AuthTestSupport {
     }
 
     "return 500(INTERNAL_SERVER_ERROR) status for any 4xx returned by the downstream service, let apart 404" in {
-      when(connector.getEmailAddress(any[String])(any[ExecutionContext])).thenAnswer(upstreamErrorResponse(BAD_REQUEST))
+      when(connector.getEmailAddress(any[String])(any[ExecutionContext])).thenReturn(upstreamErrorResponse(BAD_REQUEST))
 
       val response = controller.getEmail(fakeRequest)
       status(response) mustBe INTERNAL_SERVER_ERROR
     }
 
     "return 500(INTERNAL_SERVER_ERROR) status for any 5xx http error code returned by the downstream service" in {
-      when(connector.getEmailAddress(any[String])(any[ExecutionContext])).thenAnswer(upstreamErrorResponse(BAD_GATEWAY))
+      when(connector.getEmailAddress(any[String])(any[ExecutionContext])).thenReturn(upstreamErrorResponse(BAD_GATEWAY))
 
       val response = controller.getEmail(fakeRequest)
       status(response) mustBe INTERNAL_SERVER_ERROR

@@ -21,7 +21,7 @@ import uk.gov.hmrc.exports.base.IntegrationTestSpec
 import uk.gov.hmrc.exports.models._
 import uk.gov.hmrc.exports.models.declaration.DeclarationStatus.DRAFT
 import uk.gov.hmrc.exports.models.declaration.{DeclarationStatus, ExportsDeclaration}
-
+import org.mongodb.scala.SingleObservableFuture
 import java.time.{LocalDate, ZoneOffset}
 import scala.concurrent.Future
 

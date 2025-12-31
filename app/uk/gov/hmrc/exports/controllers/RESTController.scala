@@ -30,7 +30,7 @@ abstract class RESTController(override val controllerComponents: ControllerCompo
   def parsingJson[T](implicit rds: Reads[T], exc: ExecutionContext): BodyParser[T] = parse.json.validate { json =>
     json.validate[T] match {
       case JsSuccess(value, _) => Right(value)
-      case JsError(errors) =>
+      case JsError(errors)     =>
         val payload = Json.toJson(
           ErrorResponse(
             "Bad Request",

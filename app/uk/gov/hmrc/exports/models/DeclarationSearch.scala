@@ -24,7 +24,7 @@ case class DeclarationSearch(eori: Eori, statuses: Seq[DeclarationStatus] = List
 object DeclarationSearch {
   // This serializes to a Mongo Query. If the query needs to be more advanced we will need to write a custom writes/reads
   implicit val writes: Writes[DeclarationSearch] = Writes[DeclarationSearch] {
-    case DeclarationSearch(eori, Seq()) => Json.obj("eori" -> Json.toJson(eori))
+    case DeclarationSearch(eori, Seq())    => Json.obj("eori" -> Json.toJson(eori))
     case DeclarationSearch(eori, statuses) =>
       Json.obj("eori" -> Json.toJson(eori), "declarationMeta.status" -> Json.obj("$in" -> Json.toJson(statuses)))
   }

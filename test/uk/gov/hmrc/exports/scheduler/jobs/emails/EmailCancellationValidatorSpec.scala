@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
-import org.mockito.ArgumentMatchersSugar.any
+import org.mockito.ArgumentMatchers.any
 import testdata.ExportsTestData.{actionId, actionId_2, mrn}
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, ParsedNotification}
@@ -24,11 +24,13 @@ import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus._
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.exports.repositories.ParsedNotificationRepository
-
+import org.mockito.Mockito.{times, verify, when}
 import java.time.{ZoneId, ZonedDateTime}
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.mockito.Mockito._
+import org.scalatestplus.mockito.MockitoSugar
 
 class EmailCancellationValidatorSpec extends UnitSpec {
 
@@ -105,8 +107,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
       }
     }
 
-    "return true" when {
-
+    "return true" when
       statusesStoppingEmailSending.foreach { status =>
         s"there is newer Notification with status $status" in {
           val newerNotification = createNotification(firstDate.plusHours(1), status)
@@ -134,6 +135,5 @@ class EmailCancellationValidatorSpec extends UnitSpec {
           emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe true
         }
       }
-    }
   }
 }

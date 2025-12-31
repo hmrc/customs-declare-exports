@@ -17,7 +17,9 @@
 package uk.gov.hmrc.exports.services
 
 import org.mockito.ArgumentMatchers._
-import org.mockito.BDDMockito._
+import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers.eq as eqTo
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models._
@@ -26,7 +28,7 @@ import uk.gov.hmrc.exports.models.declaration.submissions.EnhancedStatus.ERRORS
 import uk.gov.hmrc.exports.repositories.DeclarationRepository
 import uk.gov.hmrc.exports.services.DeclarationService.{CREATED, FOUND}
 import uk.gov.hmrc.exports.util.ExportsDeclarationBuilder
-
+import org.mockito.Mockito.{times, verify, when}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -46,7 +48,7 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
     "delegate to the repository" in {
       val declaration = aDeclaration()
       val persistedDeclaration = mock[ExportsDeclaration]
-      given(declarationRepository.create(any())).willReturn(Future.successful(persistedDeclaration))
+      when(declarationRepository.create(any())).thenReturn(Future.successful(persistedDeclaration))
 
       service.create(declaration).futureValue mustBe persistedDeclaration
 
@@ -57,8 +59,8 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
   "Update" should {
     "delegate to the repository" in {
       val persistedDeclaration = mock[ExportsDeclaration]
-      given(declarationRepository.findOneAndReplace(any[JsValue], any[ExportsDeclaration], any[Boolean], any[Boolean]))
-        .willReturn(Future.successful(Some(persistedDeclaration)))
+      when(declarationRepository.findOneAndReplace(any[JsValue], any[ExportsDeclaration], any[Boolean], eqTo(any[Boolean])))
+        .thenReturn(Future.successful(Some(persistedDeclaration)))
 
       service.update(aDeclaration()).futureValue mustBe Some(persistedDeclaration)
     }
@@ -66,7 +68,7 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
 
   "Delete" should {
     "delegate to the repository" in {
-      given(declarationRepository.removeOne(any[JsValue])).willReturn(Future.successful(true))
+      when(declarationRepository.removeOne(any[JsValue])).thenReturn(Future.successful(true))
 
       service.deleteOne(mock[ExportsDeclaration]).futureValue
 
@@ -77,7 +79,7 @@ class DeclarationServiceSpec extends UnitSpec with ExportsDeclarationBuilder {
   "Find by ID & EORI" should {
     "delegate to the repository" in {
       val declaration = mock[ExportsDeclaration]
-      given(declarationRepository.findOne(eori, "id")).willReturn(Future.successful(Some(declaration)))
+      when(declarationRepository.findOne(eori, "id")).thenReturn(Future.successful(Some(declaration)))
 
       service.findOne(eori, "id").futureValue mustBe Some(declaration)
     }

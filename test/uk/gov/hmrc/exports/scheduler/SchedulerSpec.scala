@@ -18,8 +18,8 @@ package uk.gov.hmrc.exports.scheduler
 
 import org.apache.pekko.actor.{ActorSystem, Cancellable}
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchersSugar.any
-import org.mockito.BDDMockito.given
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.{times, verify, when}
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import play.api.inject.ApplicationLifecycle
@@ -27,10 +27,12 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.scheduler.jobs.ScheduledJob
 
-import java.time._
+import java.time.*
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
+import org.mockito.Mockito.*
+import org.scalatestplus.mockito.MockitoSugar
 
 class SchedulerSpec extends UnitSpec {
 
@@ -48,12 +50,12 @@ class SchedulerSpec extends UnitSpec {
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    given(appConfig.clock) willReturn clock
-    given(actorSystem.scheduler) willReturn internalScheduler
-    given(
+    when(appConfig.clock) thenReturn clock
+    when(actorSystem.scheduler) thenReturn internalScheduler
+    when(
       internalScheduler.scheduleWithFixedDelay(any[FiniteDuration], any[FiniteDuration])(any[Runnable])(any[ExecutionContext])
-    ) will runTheJobImmediately
-    given(job.execute()) willReturn Future.successful(())
+    ) thenAnswer runTheJobImmediately
+    when(job.execute()) thenReturn Future.successful(())
   }
 
   override protected def afterEach(): Unit = {
@@ -64,11 +66,11 @@ class SchedulerSpec extends UnitSpec {
   "Scheduler" should {
 
     "Run job with valid schedule" in {
-      // Given
-      given(job.interval) willReturn 60.seconds
-      given(job.firstRunTime) willReturn Some(LocalTime.parse("12:00"))
-      given(job.name) willReturn "name"
-      given(util.nextRun(any[LocalTime], any[FiniteDuration])) willReturn instant("2018-12-25T12:00:30")
+      // when
+      when(job.interval) thenReturn 60.seconds
+      when(job.firstRunTime) thenReturn Some(LocalTime.parse("12:00"))
+      when(job.name) thenReturn "name"
+      when(util.nextRun(any[LocalTime], any[FiniteDuration])) thenReturn instant("2018-12-25T12:00:30")
 
       // When
       whenTheSchedulerStarts()
@@ -82,10 +84,10 @@ class SchedulerSpec extends UnitSpec {
     }
 
     "Run job immediately" in {
-      // Given
-      given(job.interval) willReturn 60.seconds
-      given(job.firstRunTime) willReturn None
-      given(job.name) willReturn "name"
+      // when
+      when(job.interval) thenReturn 60.seconds
+      when(job.firstRunTime) thenReturn None
+      when(job.name) thenReturn "name"
 
       // When
       whenTheSchedulerStarts()
@@ -98,12 +100,12 @@ class SchedulerSpec extends UnitSpec {
       verify(job).execute()
     }
 
-    "Delay to schedule job given a run date in the past" in {
-      // Given
-      given(job.interval) willReturn 3.seconds
-      given(job.firstRunTime) willReturn Some(LocalTime.parse("12:00"))
-      given(job.name) willReturn "name"
-      given(util.nextRun(any[LocalTime], any[FiniteDuration])) willReturn instant("2018-12-25T11:59:59")
+    "Delay to schedule job when a run date in the past" in {
+      // when
+      when(job.interval) thenReturn 3.seconds
+      when(job.firstRunTime) thenReturn Some(LocalTime.parse("12:00"))
+      when(job.name) thenReturn "name"
+      when(util.nextRun(any[LocalTime], any[FiniteDuration])) thenReturn instant("2018-12-25T11:59:59")
 
       // When
       whenTheSchedulerStarts()

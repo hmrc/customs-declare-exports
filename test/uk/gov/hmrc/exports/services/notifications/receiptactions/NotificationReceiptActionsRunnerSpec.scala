@@ -18,7 +18,8 @@ package uk.gov.hmrc.exports.services.notifications.receiptactions
 
 import org.bson.types.ObjectId
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.eq as eqTo
 import testdata.WorkItemTestData
 import testdata.notifications.NotificationTestData.notificationUnparsed
 import uk.gov.hmrc.exports.base.UnitSpec
@@ -28,6 +29,9 @@ import uk.gov.hmrc.exports.repositories.UnparsedNotificationWorkItemRepository
 import uk.gov.hmrc.exports.util.TimeUtils.instant
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Cancelled, Failed, InProgress, Succeeded}
 import uk.gov.hmrc.mongo.workitem.{ResultStatus, WorkItem}
+import org.mockito.Mockito.{times, verify, when}
+import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers._
 
 import java.time.{Instant, LocalDateTime, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -100,7 +104,7 @@ class NotificationReceiptActionsRunnerSpec extends UnitSpec {
 
         notificationReceiptActionsRunner.runNow().futureValue
 
-        verifyZeroInteractions(notificationReceiptActionsExecutor)
+        verifyNoInteractions(notificationReceiptActionsExecutor)
       }
 
       "not call UnparsedNotificationWorkItemRepository again (should be called only once)" in {

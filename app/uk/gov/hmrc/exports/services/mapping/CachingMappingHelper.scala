@@ -47,7 +47,7 @@ class CachingMappingHelper {
     commodity.classifications.nonEmpty || commodity.dangerousGoods.nonEmpty || commodity.description.nonEmpty
 
   def mapGoodsMeasure(data: CommodityMeasure): Option[Commodity] = data match {
-    case CommodityMeasure(None, _, None, None) => None
+    case CommodityMeasure(None, _, None, None)                       => None
     case CommodityMeasure(supplementaryUnits, _, netMass, grossMass) =>
       Some(
         Commodity(goodsMeasure = Some(GoodsMeasure(grossMass.map(createMeasure), netMass.map(createMeasure), supplementaryUnits.map(createMeasure))))

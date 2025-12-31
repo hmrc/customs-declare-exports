@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.services.notifications
 
 import org.mockito.ArgumentMatchers.any
-import org.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import testdata.ExportsTestData.mrn
 import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
@@ -25,8 +25,10 @@ import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.NotificationDetails
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 import uk.gov.hmrc.exports.services.mapping.WcoToExportsMappingHelper
-
+import org.mockito.Mockito.{times, verify, when}
 import java.time.ZonedDateTime
+import org.mockito.Mockito._
+import org.scalatestplus.mockito.MockitoSugar
 
 class NotificationParserSpec extends UnitSpec with BeforeAndAfterEach with MockitoSugar {
 

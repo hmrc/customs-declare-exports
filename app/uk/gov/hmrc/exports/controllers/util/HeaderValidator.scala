@@ -46,7 +46,7 @@ class HeaderValidator extends Logging {
   private def extractHeader(headerName: String, headers: Map[String, String]): Option[String] =
     headers.get(headerName) match {
       case Some(header) if !header.isEmpty => Some(header)
-      case _ =>
+      case _                               =>
         logger.error(s"Error Extracting $headerName")
         None
     }
@@ -58,7 +58,7 @@ class HeaderValidator extends Logging {
 
     result match {
       case Some(request) => Right(request)
-      case None =>
+      case None          =>
         logger.error("Error during validating and extracting submission headers")
         Left(ErrorResponse.errorInvalidHeaders)
     }
@@ -71,7 +71,7 @@ class HeaderValidator extends Logging {
 
     result match {
       case Some(request) => Right(request)
-      case _ =>
+      case _             =>
         logger.error("Error during validating and extracting cancellation headers")
         Left(ErrorResponse.errorInvalidHeaders)
     }
@@ -85,7 +85,7 @@ class HeaderValidator extends Logging {
 
     result match {
       case Some(request) => Right(request)
-      case _ =>
+      case _             =>
         logger.error("Error during validating and extracting submission notification headers")
         Left(ErrorResponse.errorInvalidHeaders)
     }

@@ -21,7 +21,7 @@ import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection}
 import uk.gov.hmrc.exports.util.TimeUtils
-
+import scala.xml.NodeSeq
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatter.ofPattern
 import java.time.{ZoneId, ZonedDateTime}
@@ -122,7 +122,7 @@ object ExampleXmlAndNotificationDetailsPair {
             <DateTimeString formatCode="304">{dateTime}</DateTimeString>
           </IssueDateTime>
           <Error>
-            {if (withErrorDescription) <Description>{errorDescription.get}</Description>}
+            {if (withErrorDescription) <Description>{errorDescription.get}</Description> else NodeSeq.Empty}
             <ValidationCode>CDS10020</ValidationCode>
             <Pointer>
               <DocumentSectionCode>42A</DocumentSectionCode>

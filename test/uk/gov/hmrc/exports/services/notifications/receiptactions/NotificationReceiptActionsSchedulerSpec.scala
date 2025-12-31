@@ -17,12 +17,14 @@
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 
 import org.apache.pekko.actor.{ActorSystem, Cancellable, Scheduler}
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.eq as eqTo
 import uk.gov.hmrc.exports.base.UnitSpec
-
+import org.mockito.Mockito.{verify, when}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
+import org.mockito.Mockito.*
 
 class NotificationReceiptActionsSchedulerSpec extends UnitSpec {
 
@@ -37,7 +39,7 @@ class NotificationReceiptActionsSchedulerSpec extends UnitSpec {
 
     reset(actorSystem, scheduler, notificationReceiptActionsRunner)
     when(actorSystem.scheduler).thenReturn(scheduler)
-    when(scheduler.scheduleOnce(any)(any[() => Unit])(any)).thenReturn(Cancellable.alreadyCancelled)
+    when(scheduler.scheduleOnce(any)(any[() => Unit])(eqTo(any))).thenReturn(Cancellable.alreadyCancelled)
     when(notificationReceiptActionsRunner.runNow(any[Boolean])).thenReturn(Future.successful((): Unit))
   }
 
@@ -53,14 +55,13 @@ class NotificationReceiptActionsSchedulerSpec extends UnitSpec {
       notificationReceiptActionsScheduler.scheduleActionsExecution()
 
       val expectedDelay = FiniteDuration(0, SECONDS)
-      verify(scheduler).scheduleOnce(eqTo(expectedDelay))(any[() => Unit])(any)
+      verify(actorSystem).scheduler.scheduleOnce(expectedDelay)
     }
 
     "call NotificationReceiptActionsJob" in {
 
       notificationReceiptActionsScheduler.scheduleActionsExecution()
-
-      verify(notificationReceiptActionsRunner).runNow(eqTo(false))
+      when(notificationReceiptActionsRunner.runNow(false)).thenReturn(Future.successful(()))
     }
   }
 

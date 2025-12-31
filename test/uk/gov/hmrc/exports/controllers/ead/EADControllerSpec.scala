@@ -52,7 +52,7 @@ class EADControllerSpec extends UnitSpec with AuthTestSupport {
     "return 200" when {
       "request is valid" in {
         withAuthorizedUser()
-        given(connector.fetchMrnStatus(any())(any(), any())).willReturn(Future.successful(Some(MrnStatusSpec.completeMrnStatus)))
+        when(connector.fetchMrnStatus(any())(any(), any())).thenReturn(Future.successful(Some(MrnStatusSpec.completeMrnStatus)))
 
         val result = controller.findByMrn(mrn)(getRequest)
 
@@ -65,7 +65,7 @@ class EADControllerSpec extends UnitSpec with AuthTestSupport {
     "return 404" when {
       "unknown ID" in {
         withAuthorizedUser()
-        given(connector.fetchMrnStatus(any())(any(), any())).willReturn(Future.successful(None))
+        when(connector.fetchMrnStatus(any())(any(), any())).thenReturn(Future.successful(None))
 
         val result = controller.findByMrn(mrn)(getRequest)
 

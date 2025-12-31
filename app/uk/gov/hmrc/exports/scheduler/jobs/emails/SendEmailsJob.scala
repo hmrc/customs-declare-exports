@@ -76,7 +76,7 @@ class SendEmailsJob @Inject() (
           .isEmailSendingCancelled(workItem.item)
           .flatMap {
             case false => sendEmail(workItem)
-            case true =>
+            case true  =>
               logger.info(s"Email for Notification with MRN: ${workItem.item.mrn} has been cancelled.")
               sendEmailWorkItemRepository.complete(workItem.id, Cancelled)
           }

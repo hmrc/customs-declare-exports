@@ -19,6 +19,8 @@ package uk.gov.hmrc.exports.connectors
 import play.api.libs.json.{Json, Writes}
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
+import play.api.libs.ws.DefaultBodyWritables.writeableOf_String
+import play.api.libs.ws.writeableOf_JsValue
 
 import scala.concurrent.{ExecutionContext, Future}
 

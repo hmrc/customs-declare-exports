@@ -94,8 +94,7 @@ class AgentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
         agent.getFunctionCode.getValue must be("2")
       }
 
-      "no RepresentativeDetails are supplied and" when {
-
+      "no RepresentativeDetails are supplied and" when
         Seq(YesNo.yes, YesNo.no).foreach { repOtherAgent =>
           s"representingAnotherAgent is set to ${repOtherAgent}" in {
             val model =
@@ -120,7 +119,6 @@ class AgentBuilderSpec extends UnitSpec with ExportsDeclarationBuilder {
             agent.getFunctionCode.getValue must be(RepresentativeDetails.DirectRepresentative)
           }
         }
-      }
     }
   }
 }

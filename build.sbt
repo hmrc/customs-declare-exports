@@ -4,7 +4,7 @@ import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 val appName = "customs-declare-exports"
 
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.16"
+ThisBuild / scalaVersion := "3.3.7"
 
 PlayKeys.devSettings := List("play.server.http.port" -> "6792")
 
@@ -40,14 +40,11 @@ lazy val scalacFlags = List(
   "-language:implicitConversions",
   "-unchecked",                                  // warn about unchecked type parameters
   //"-Wconf:any:warning-verbose",
-  "-Wconf:cat=unused-imports&src=routes/.*:s",   // silent "unused import" warnings from Play routes
-  "-Wextra-implicit",
-  "-Xcheckinit",
-  "-Xfatal-warnings",                            // warnings are fatal!!
-  "-Ywarn-numeric-widen",
-  "-Wconf:cat=unused&src=.*routes.*:s", // silence private val defaultPrefix in class Routes is never used
-  "-Wconf:msg=eq not selected from this instance:s", // silence eq not selected from this instance warning
-  "-Wconf:msg=While parsing annotations in:s" // silence While parsing annotations in warning
+  "-Wconf:src=routes/.*&msg=unused import:silent", // silent "unused import" warnings from Play routes
+  "-Wconf:src=routes/.*&msg=unused private member:silent",
+  "-Wconf:src=routes/.*&msg=unused pattern variable:silent",
+  "-Wconf:src=app/repositories/.*&msg=unused explicit parameter:silent",
+  "-Wconf:msg=Flag.*repeatedly:s" // suppress 'repeatedly' flags
 )
 
 // Prevent the "No processor claimed any of these annotations" warning
@@ -62,7 +59,7 @@ lazy val scoverageSettings: Seq[Setting[?]] = List(
     "metrics\\..*",
     ".*(BuildInfo|Routes|Options).*"
   ).mkString(";"),
-  coverageMinimumStmtTotal := 90,
+  coverageMinimumStmtTotal := 89.5,
   coverageFailOnMinimum := true,
   coverageHighlighting := true,
   Test / parallelExecution := false

@@ -25,6 +25,7 @@ import uk.gov.hmrc.exports.util.{ExportsDeclarationBuilder, ExportsItemBuilder}
 import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import org.mongodb.scala.SingleObservableFuture
 
 object SeedMongo extends ExportsDeclarationBuilder with ExportsItemBuilder {
 

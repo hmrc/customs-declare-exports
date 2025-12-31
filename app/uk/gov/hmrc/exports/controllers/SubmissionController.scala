@@ -96,7 +96,7 @@ class SubmissionController @Inject() (
     def isSubmissionYoungerThan48Hours(submission: Submission): Boolean =
       submission.latestEnhancedStatus match {
         case EnhancedStatus.ERRORS => false // If the submission failed then don't block reuse of LRN
-        case _ =>
+        case _                     =>
           submission.actions
             .filter(_.requestType == SubmissionRequest)
             .exists(_.requestTimestamp.isAfter(now.minusDays(2))) // 48 hours

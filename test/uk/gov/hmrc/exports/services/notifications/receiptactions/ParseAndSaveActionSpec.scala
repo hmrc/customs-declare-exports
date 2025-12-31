@@ -17,7 +17,8 @@
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.eq as eqTo
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.invocation.InvocationOnMock
 import org.mongodb.scala.bson.conversions.Bson
@@ -39,9 +40,12 @@ import uk.gov.hmrc.exports.services.audit.AuditService
 import uk.gov.hmrc.exports.services.notifications.NotificationFactory
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.mongo.MongoComponent
-
+import org.mockito.Mockito.{times, verify, when}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers._
+import org.mongodb.scala.SingleObservableFuture
 
 class ParseAndSaveActionSpec extends UnitSpec {
 
@@ -94,17 +98,19 @@ class ParseAndSaveActionSpec extends UnitSpec {
 
     "provided with multiple ParsedNotifications with stored Submission documents" should {
       "return a list with multiple Submission documents" in {
-        val withResult = (invocation: InvocationOnMock) => {
-          val actionId = invocation.getArguments.head.asInstanceOf[String]
-          val submission = if (actionId == notification_2.actionId) submission_2 else submission_3
-          submission
-        }
-        val toFuture: Submission => Future[Submission] = Future.successful
-        val toOptionFuture: Submission => Future[Option[Submission]] = sub => Future.successful(Some(sub))
 
         val captor = ArgumentCaptor.forClass(classOf[String])
-        when(submissionRepository.findOne(any[String], captor.capture())).thenAnswer(withResult andThen toOptionFuture)
-        when(updateSubmissionOps.updateSubmissionAndNotifications(captor.capture(), any)).thenAnswer(withResult andThen toFuture)
+        when(submissionRepository.findOne(any[String], captor.capture())).thenAnswer { (invocation: InvocationOnMock) =>
+          val actionId = invocation.getArguments.head.asInstanceOf[String]
+          val submission = if (actionId == notification_2.actionId) submission_2 else submission_3
+          Future.successful(Some(submission))
+        }
+
+        when(updateSubmissionOps.updateSubmissionAndNotifications(captor.capture(), any)).thenAnswer { (invocation: InvocationOnMock) =>
+          val actionId = invocation.getArguments.head.asInstanceOf[String]
+          val submission = if (actionId == notification_2.actionId) submission_2 else submission_3
+          Future.successful(submission)
+        }
 
         parseAndSaveAction.save(List(notification_2, notification_3)).futureValue._1 must contain theSameElementsAs (List(submission_2, submission_3))
 
