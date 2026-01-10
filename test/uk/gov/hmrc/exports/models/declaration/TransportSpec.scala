@@ -30,6 +30,7 @@ class TransportSpec extends UnitSpec {
       "containers" -> Json.arr(
         Json.obj("sequenceId" -> 1, "id" -> "container-id", "seals" -> Json.arr(Json.obj("sequenceId" -> 1, "id" -> "seal-id")))
       ),
+      "goodsInContainerDeclared" -> "yes",
       "borderModeOfTransportCode" -> Json.obj("code" -> "3"),
       "meansOfTransportOnDepartureType" -> "means-of-transport-on-departure",
       "meansOfTransportOnDepartureIDNumber" -> "means-of-transport-on-departure-id-number",
@@ -42,6 +43,7 @@ class TransportSpec extends UnitSpec {
       expressConsignment = Some(YesNoAnswer.yes),
       transportPayment = Some(TransportPayment(paymentMethod = "payment-method")),
       containers = Some(Seq(Container(1, "container-id", Seq(Seal(1, "seal-id"))))),
+      goodsInContainerDeclared = Some("yes"),
       borderModeOfTransportCode = Some(TransportLeavingTheBorder(Some(ModeOfTransportCode.Road))),
       meansOfTransportOnDepartureType = Some("means-of-transport-on-departure"),
       meansOfTransportOnDepartureIDNumber = Some("means-of-transport-on-departure-id-number"),
