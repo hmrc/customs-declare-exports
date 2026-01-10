@@ -104,6 +104,7 @@ object AmendmentMetaDataBuilderISpec {
       None,
       Some(TransportPayment("H")),
       Some(List(Container(1, "123456", List()))),
+      goodsInContainerDeclared = None,
       Some(TransportLeavingTheBorder(Some(Maritime))),
       Some("30"),
       Some("Unknown"),
