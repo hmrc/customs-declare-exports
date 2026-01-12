@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.exports.services.mapping.governmentagencygoodsitem
 
+import org.mockito.Mockito.when
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.util.ExportsItemBuilder
