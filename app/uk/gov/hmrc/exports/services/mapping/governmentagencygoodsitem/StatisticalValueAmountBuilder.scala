@@ -36,7 +36,7 @@ class StatisticalValueAmountBuilder @Inject() (appConfig: AppConfig) extends Mod
             createWCODecStatisticalValueAmount(statisticalValue.statisticalValue, defaultCurrencyCode)
           )
         }
-        //Else case also to be removed when feature flag removed
+        // Else case also to be removed when feature flag removed
       } else {
         wcoGovernmentAgencyGoodsItem.setStatisticalValueAmount(
           createWCODecStatisticalValueAmount(statisticalValue.statisticalValue, defaultCurrencyCode)
