@@ -37,7 +37,7 @@ class StatisticalValueAmountBuilderSpec extends UnitSpec with ExportsItemBuilder
           dcoItem.getStatisticalValueAmount.getValue
         }
 
-        exception.getMessage startsWith "[Cannot invoke \"wco.datamodel.wco.declaration_ds.dms._2.GovernmentAgencyGoodsItemStatisticalValueAmountType.getValue()\""
+        exception.getMessage startsWith "[Cannot invoke \"wco.datamodel.wco.declaration_ds.dms._2.GovernmentAgencyGoodsItemStatisticalValueAmount"
       }
 
       "populated item type" in {
