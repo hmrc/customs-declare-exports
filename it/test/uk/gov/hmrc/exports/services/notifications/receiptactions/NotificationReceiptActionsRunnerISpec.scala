@@ -53,7 +53,7 @@ class NotificationReceiptActionsRunnerISpec extends IntegrationTestSpec with Exp
     "check the retry limit set in config" when {
       "work item has failed to parse notification" which {
         "updates status to cancelled" when {
-          "over the limit" in {
+          "over the limit" in
             whenReady {
               for {
                 _ <- unparsedNotificationRepository.insertOne(workItem(limit + 1))
@@ -63,8 +63,7 @@ class NotificationReceiptActionsRunnerISpec extends IntegrationTestSpec with Exp
             } { unparsed =>
               unparsed.head.status mustBe Cancelled
             }
-          }
-          "equals limit" in {
+          "equals limit" in
             whenReady {
               for {
                 _ <- unparsedNotificationRepository.insertOne(workItem(limit))
@@ -74,9 +73,8 @@ class NotificationReceiptActionsRunnerISpec extends IntegrationTestSpec with Exp
             } { unparsed =>
               unparsed.head.status mustBe Cancelled
             }
-          }
           "one below limit" which {
-            "allows for the actual failure comes before the check, but the iteration comes after" in {
+            "allows for the actual failure comes before the check, but the iteration comes after" in
               whenReady {
                 for {
                   _ <- unparsedNotificationRepository.insertOne(workItem(limit - 1))
@@ -86,11 +84,10 @@ class NotificationReceiptActionsRunnerISpec extends IntegrationTestSpec with Exp
               } { unparsed =>
                 unparsed.head.status mustBe Cancelled
               }
-            }
           }
         }
         "increases failed count but leaves status as failed" when {
-          "below limit" in {
+          "below limit" in
             whenReady {
               for {
                 _ <- unparsedNotificationRepository.insertOne(workItem(limit - 2))
@@ -100,7 +97,6 @@ class NotificationReceiptActionsRunnerISpec extends IntegrationTestSpec with Exp
             } { unparsed =>
               unparsed.head.status mustBe Failed
             }
-          }
         }
       }
     }
