@@ -23,7 +23,8 @@ case class ConsignmentReferences(
   lrn: Option[String],
   personalUcr: Option[String] = None,
   eidrDateStamp: Option[String] = None,
-  mrn: Option[String] = None
+  mrn: Option[String] = None,
+  hasDucr: Option[String] = None
 )
 
 object ConsignmentReferences {
