@@ -142,7 +142,7 @@ case class Parties(
   carrierDetails: Option[CarrierDetails] = None,
   isEntryIntoDeclarantsRecords: Option[YesNoAnswer] = None,
   personPresentingGoodsDetails: Option[PersonPresentingGoodsDetails] = None,
-  hasThirdPartyGoodsTransportation: Option[YesNoAnswer] = None,
+  hasThirdPartyGoodsTransportation: Option[YesNoAnswer] = None
 )
 
 object Parties {
