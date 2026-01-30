@@ -141,7 +141,8 @@ case class Parties(
   authorisationProcedureCodeChoice: Option[AuthorisationProcedureCodeChoice] = None,
   carrierDetails: Option[CarrierDetails] = None,
   isEntryIntoDeclarantsRecords: Option[YesNoAnswer] = None,
-  personPresentingGoodsDetails: Option[PersonPresentingGoodsDetails] = None
+  personPresentingGoodsDetails: Option[PersonPresentingGoodsDetails] = None,
+  hasThirdPartyGoodsTransportation: Option[YesNoAnswer] = None,
 )
 
 object Parties {

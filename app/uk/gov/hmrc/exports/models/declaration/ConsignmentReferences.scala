@@ -24,7 +24,8 @@ case class ConsignmentReferences(
   personalUcr: Option[String] = None,
   eidrDateStamp: Option[String] = None,
   mrn: Option[String] = None,
-  hasDucr: Option[String] = None
+  hasDucr: Option[String] = None,
+  confirmDucr: Option[Boolean] = None
 )
 
 object ConsignmentReferences {

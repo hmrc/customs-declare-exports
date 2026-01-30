@@ -23,7 +23,8 @@ case class TotalNumberOfItems(
   totalAmountInvoicedCurrency: Option[String] = None,
   agreedExchangeRate: Option[String] = None,
   exchangeRate: Option[String] = None,
-  totalPackage: Option[String] = None
+  totalPackage: Option[String] = None,
+  confirmInvoiceAndExchangeRateChoice: Option[String] = None
 )
 
 object TotalNumberOfItems {
