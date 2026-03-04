@@ -17,23 +17,26 @@
 package uk.gov.hmrc.exports.services.notifications
 
 import org.mockito.ArgumentMatchers.any
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import testdata.ExportsTestData.mrn
-import testdata.notifications.ExampleXmlAndNotificationDetailsPair._
+import testdata.notifications.ExampleXmlAndNotificationDetailsPair.*
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.models.declaration.notifications.NotificationDetails
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType}
 import uk.gov.hmrc.exports.services.mapping.WcoToExportsMappingHelper
-import org.mockito.Mockito.{times, verify, when}
+import org.mockito.Mockito.when
+
 import java.time.ZonedDateTime
-import org.mockito.Mockito._
+import org.mockito.Mockito.*
 import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.exports.config.AppConfig
 
 class NotificationParserSpec extends UnitSpec with BeforeAndAfterEach with MockitoSugar {
 
   private val wcoToExportsPointerMappings = mock[WcoToExportsMappingHelper]
-  private val notificationParser = new NotificationParser(wcoToExportsPointerMappings)
+  private val appConfig = mock[AppConfig]
+
+  private val notificationParser = new NotificationParser(wcoToExportsPointerMappings, appConfig)
 
   private def compareNotificationSequences(actual: Seq[NotificationDetails], expected: Seq[NotificationDetails]): Unit = {
     actual.size mustBe expected.size
@@ -157,6 +160,17 @@ class NotificationParserSpec extends UnitSpec with BeforeAndAfterEach with Mocki
         val testNotification = exampleUnparsableNotification(mrn)
 
         an[Exception] mustBe thrownBy(notificationParser.parse(testNotification.asXml))
+      }
+    }
+
+    "provided with notification containing AdditionalInformation element" should {
+      "parse the StatementDescription" in {
+        val testNotification = exampleNotificationWithAdditionalInformationResponse(mrn)
+        when(appConfig.detainedDescription).thenReturn("detained")
+
+        val result = notificationParser.parse(testNotification.asXml)
+
+        compareNotificationSequences(result, testNotification.asDomainModel)
       }
     }
 

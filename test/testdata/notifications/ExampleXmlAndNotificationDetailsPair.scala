@@ -233,6 +233,45 @@ object ExampleXmlAndNotificationDetailsPair {
     )
   )
 
+  def exampleNotificationWithAdditionalInformationResponse(
+    mrn: String,
+    dateTime_detained: String = TimeUtils.now().format(formatter304)
+  ): ExampleXmlAndNotificationDetailsPair = ExampleXmlAndNotificationDetailsPair(
+    asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
+      <WCODataModelVersionCode>3.6</WCODataModelVersionCode>
+      <WCOTypeName>RES</WCOTypeName>
+      <ResponsibleCountryCode/>
+      <ResponsibleAgencyName/>
+      <AgencyAssignedCustomizationCode/>
+      <AgencyAssignedCustomizationVersionCode/>
+      <Response>
+        <FunctionCode>52</FunctionCode>
+        <FunctionalReferenceID>1234555</FunctionalReferenceID>
+        <IssueDateTime>
+          <DateTimeString formatCode="304">{dateTime_detained}</DateTimeString>
+        </IssueDateTime>
+        <AdditionalInformation>
+          <StatementCode>Q01</StatementCode>
+          <StatementDescription>detained</StatementDescription>
+          <StatementTypeCode>DET</StatementTypeCode>
+        </AdditionalInformation>
+        <Declaration>
+          <ID>{mrn}</ID>
+          <VersionID>1</VersionID>
+        </Declaration>
+      </Response>
+    </MetaData>,
+    asDomainModel = Seq(
+      NotificationDetails(
+        mrn = mrn,
+        dateTimeIssued = ZonedDateTime.parse(dateTime_detained, formatter304),
+        status = SubmissionStatus.DETAINED,
+        version = Some(1),
+        errors = Seq.empty
+      )
+    )
+  )
+
   def exampleEmptyNotification(mrn: String): ExampleXmlAndNotificationDetailsPair =
     ExampleXmlAndNotificationDetailsPair(
       asXml = <MetaData xmlns="urn:wco:datamodel:WCO:DocumentMetaData-DMS:2">
