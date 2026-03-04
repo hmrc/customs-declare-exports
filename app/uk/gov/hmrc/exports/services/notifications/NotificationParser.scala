@@ -17,6 +17,7 @@
 package uk.gov.hmrc.exports.services.notifications
 
 import play.api.Logging
+import uk.gov.hmrc.exports.config.AppConfig
 import uk.gov.hmrc.exports.models.declaration.notifications.{NotificationDetails, NotificationError}
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.models.{Pointer, PointerSection, PointerSectionType, StringOption}
@@ -29,7 +30,7 @@ import javax.inject.{Inject, Singleton}
 import scala.xml.{Node, NodeSeq}
 
 @Singleton
-class NotificationParser @Inject() (wcoToExportsMappingHelper: WcoToExportsMappingHelper) extends Logging {
+class NotificationParser @Inject() (wcoToExportsMappingHelper: WcoToExportsMappingHelper, appConfig: AppConfig) extends Logging {
 
   private val formatter304 = DateTimeFormatter.ofPattern("yyyyMMddHHmmssX")
 
@@ -41,7 +42,7 @@ class NotificationParser @Inject() (wcoToExportsMappingHelper: WcoToExportsMappi
       val version = (singleResponseXml \ "Declaration" \ "VersionID").headOption.map(_.text.toInt)
       val dateTimeIssued = ZonedDateTime.parse((singleResponseXml \ "IssueDateTime" \ "DateTimeString").text, formatter304)
       val functionCode = (singleResponseXml \ "FunctionCode").text
-
+      val statementDescription = buildStatementDescription(StringOption((singleResponseXml \ "AdditionalInformation" \ "StatementDescription").text))
       val nameCode = StringOption((singleResponseXml \ "Status" \ "NameCode").text)
 
       val errors = buildErrors(singleResponseXml)
@@ -49,7 +50,7 @@ class NotificationParser @Inject() (wcoToExportsMappingHelper: WcoToExportsMappi
       NotificationDetails(
         mrn = mrn,
         dateTimeIssued = dateTimeIssued.withZoneSameInstant(defaultTimeZone),
-        status = SubmissionStatus.retrieve(functionCode, nameCode),
+        status = SubmissionStatus.retrieve(functionCode, nameCode, statementDescription),
         version,
         errors = errors
       )
@@ -107,4 +108,11 @@ class NotificationParser @Inject() (wcoToExportsMappingHelper: WcoToExportsMappi
 
     if (exportsPointer.toString == "Some(suppressed)") None else exportsPointer
   }
+
+  private def buildStatementDescription(statementDescription: Option[String]): Option[String] =
+    statementDescription match {
+      case Some(appConfig.undetainedDescription) => Some("undetained")
+      case Some(appConfig.detainedDescription)   => Some("detained")
+      case _                                     => None
+    }
 }

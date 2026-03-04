@@ -26,7 +26,7 @@ object SubmissionStatus extends Enumeration {
 
   val PENDING, REQUESTED_CANCELLATION, ACCEPTED, RECEIVED, REJECTED, UNDERGOING_PHYSICAL_CHECK, ADDITIONAL_DOCUMENTS_REQUIRED, AMENDED, RELEASED,
     CLEARED, CANCELLED, CUSTOMS_POSITION_GRANTED, CUSTOMS_POSITION_DENIED, GOODS_HAVE_EXITED_THE_COMMUNITY, DECLARATION_HANDLED_EXTERNALLY,
-    AWAITING_EXIT_RESULTS, QUERY_NOTIFICATION_MESSAGE, UNKNOWN = Value
+    AWAITING_EXIT_RESULTS, QUERY_NOTIFICATION_MESSAGE, DETAINED, UNDETAINED, UNKNOWN = Value
 
   val codesMap: Map[String, SubmissionStatus] = Map(
     "Pending" -> PENDING,
@@ -49,13 +49,15 @@ object SubmissionStatus extends Enumeration {
     "18" -> AWAITING_EXIT_RESULTS, // DMSGER
     // DMSALV (50)
     "51" -> QUERY_NOTIFICATION_MESSAGE, // DMSQRY
+    "52detained" -> DETAINED, // DMSDET
+    "52undetained" -> UNDETAINED, // DMSDET
     "UnknownStatus" -> UNKNOWN
   )
 
   val statusMap = codesMap.map(_.swap)
 
-  def retrieve(functionCode: String, nameCode: Option[String] = None): SubmissionStatus =
-    getStatusOrUnknown(buildSearchKey(functionCode, nameCode))
+  def retrieve(functionCode: String, nameCode: Option[String] = None, statementDescription: Option[String] = None): SubmissionStatus =
+    getStatusOrUnknown(buildSearchKey(functionCode, nameCode, statementDescription))
 
   private def getStatusOrUnknown(searchKey: String): SubmissionStatus =
     codesMap.get(searchKey) match {
@@ -63,6 +65,10 @@ object SubmissionStatus extends Enumeration {
       case None         => UNKNOWN
     }
 
-  private def buildSearchKey(functionCode: String, nameCode: Option[String]): String =
-    if (functionCode == "11") functionCode + nameCode.getOrElse("") else functionCode
+  private def buildSearchKey(functionCode: String, nameCode: Option[String], statementDescription: Option[String]): String =
+    functionCode match {
+      case "52" => functionCode + statementDescription.getOrElse("")
+      case "11" => functionCode + nameCode.getOrElse("")
+      case _    => functionCode
+    }
 }

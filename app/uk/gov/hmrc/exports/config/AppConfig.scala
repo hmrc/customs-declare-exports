@@ -106,6 +106,9 @@ class AppConfig @Inject() (val configuration: Configuration, servicesConfig: Ser
 
   // Features
   lazy val isOptionalFieldsEnabled: Boolean = servicesConfig.getBoolean("features.optionalFields")
+
+  lazy val detainedDescription: String = servicesConfig.getString("submissionStatus.detainedDescription")
+  lazy val undetainedDescription: String = servicesConfig.getString("submissionStatus.undetainedDescription")
 }
 
 object AppConfig {
