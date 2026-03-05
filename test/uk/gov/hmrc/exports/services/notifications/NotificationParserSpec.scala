@@ -34,9 +34,8 @@ import uk.gov.hmrc.exports.config.AppConfig
 class NotificationParserSpec extends UnitSpec with BeforeAndAfterEach with MockitoSugar {
 
   private val wcoToExportsPointerMappings = mock[WcoToExportsMappingHelper]
-  private val appConfig = mock[AppConfig]
 
-  private val notificationParser = new NotificationParser(wcoToExportsPointerMappings, appConfig)
+  private val notificationParser = new NotificationParser(wcoToExportsPointerMappings)
 
   private def compareNotificationSequences(actual: Seq[NotificationDetails], expected: Seq[NotificationDetails]): Unit = {
     actual.size mustBe expected.size
@@ -163,10 +162,9 @@ class NotificationParserSpec extends UnitSpec with BeforeAndAfterEach with Mocki
       }
     }
 
-    "provided with notification containing AdditionalInformation element" should {
-      "parse the StatementDescription" in {
+    "provided with notification containing DMSDET status" should {
+      "parse the Detained Notification" in {
         val testNotification = exampleNotificationWithAdditionalInformationResponse(mrn)
-        when(appConfig.detainedDescription).thenReturn("detained")
 
         val result = notificationParser.parse(testNotification.asXml)
 
