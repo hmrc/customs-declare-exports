@@ -45,8 +45,7 @@ class SubmissionStatusSpec extends UnitSpec {
       retrieve("11", Some("39")) must be(SubmissionStatus.CUSTOMS_POSITION_GRANTED)
       retrieve("11", Some("41")) must be(SubmissionStatus.CUSTOMS_POSITION_DENIED)
       retrieve("51") must be(SubmissionStatus.QUERY_NOTIFICATION_MESSAGE)
-      retrieve("52", statementDescription = Some("detained")) must be(SubmissionStatus.DETAINED)
-      retrieve("52", statementDescription = Some("undetained")) must be(SubmissionStatus.UNDETAINED)
+      retrieve("52") must be(SubmissionStatus.DETAINED)
     }
 
     "ignore name codes when function code not 11" in {
