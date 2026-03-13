@@ -18,7 +18,7 @@ package uk.gov.hmrc.exports.scheduler.jobs.emails
 
 import org.bson.types.ObjectId
 import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.{eq => eqTo}
+import org.mockito.ArgumentMatchers.eq as eqTo
 import testdata.WorkItemTestData.buildTestSendEmailWorkItem
 import uk.gov.hmrc.exports.base.UnitSpec
 import uk.gov.hmrc.exports.config.AppConfig
@@ -28,14 +28,14 @@ import uk.gov.hmrc.exports.repositories.SendEmailWorkItemRepository
 import uk.gov.hmrc.exports.services.email.EmailSender
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Cancelled, Failed, InProgress, Succeeded}
 import uk.gov.hmrc.mongo.workitem.{ResultStatus, WorkItem}
-import org.mockito.Mockito.{times, verify, when}
-import java.time._
+
+import java.time.*
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
-import org.mockito.Mockito.{times, verify, when}
-import org.mockito.Mockito._
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.Mockito.*
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.SubmissionStatus
 
 class SendEmailsJobSpec extends UnitSpec {
 
@@ -124,10 +124,10 @@ class SendEmailsJobSpec extends UnitSpec {
         when(sendEmailWorkItemRepository.complete(any[ObjectId], any[ResultStatus]))
           .thenReturn(Future.successful(true))
 
-        when(emailCancellationValidator.isEmailSendingCancelled(any[SendEmailDetails])(any)).thenReturn(Future.successful(true))
+        when(emailCancellationValidator.isValidEmailSendingStatus(any[SendEmailDetails])(any)).thenReturn(Future.successful(None))
 
         sendEmailsJob.execute().futureValue
-        verify(emailCancellationValidator).isEmailSendingCancelled(eqTo(testWorkItem.item))(any)
+        verify(emailCancellationValidator).isValidEmailSendingStatus(eqTo(testWorkItem.item))(any)
       }
     }
 
@@ -140,7 +140,7 @@ class SendEmailsJobSpec extends UnitSpec {
           when(sendEmailWorkItemRepository.complete(any[ObjectId], any[ResultStatus]))
             .thenReturn(Future.successful(true))
 
-          when(emailCancellationValidator.isEmailSendingCancelled(any[SendEmailDetails])(any)).thenReturn(Future.successful(true))
+          when(emailCancellationValidator.isValidEmailSendingStatus(any[SendEmailDetails])(any)).thenReturn(Future.successful(None))
         }
 
         "not call EmailSender" in {
@@ -168,13 +168,14 @@ class SendEmailsJobSpec extends UnitSpec {
 
           def prepareTestScenario(): Unit = {
             whenThereIsWorkItemAvailable()
-            when(emailSender.sendEmailForDmsDocNotification(any[SendEmailDetails])(any[ExecutionContext]))
+            when(emailSender.sendEmailForDmsNotification(any[SendEmailDetails], any[SubmissionStatus])(any[ExecutionContext]))
               .thenReturn(Future.successful(EmailAccepted))
 
             when(sendEmailWorkItemRepository.complete(any[ObjectId], any[ResultStatus]))
               .thenReturn(Future.successful(true))
 
-            when(emailCancellationValidator.isEmailSendingCancelled(any[SendEmailDetails])(any)).thenReturn(Future.successful(false))
+            when(emailCancellationValidator.isValidEmailSendingStatus(any[SendEmailDetails])(any))
+              .thenReturn(Future.successful(Some(SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED)))
           }
 
           "call SendEmailWorkItemRepository to complete the WorkItem" in {
@@ -197,13 +198,14 @@ class SendEmailsJobSpec extends UnitSpec {
             val workItem = testWorkItem.copy(failureCount = retries)
             whenThereIsWorkItemAvailable(workItem)
             when(appConfig.parsingWorkItemsRetryLimit).thenReturn(10)
-            when(emailSender.sendEmailForDmsDocNotification(any[SendEmailDetails])(any[ExecutionContext]))
+            when(emailSender.sendEmailForDmsNotification(any[SendEmailDetails], any[SubmissionStatus])(any[ExecutionContext]))
               .thenReturn(Future.successful(BadEmailRequest("Test BadEmailRequest message")))
 
             when(sendEmailWorkItemRepository.markAs(any[ObjectId], any[ResultStatus], any[Option[Instant]]))
               .thenReturn(Future.successful(true))
 
-            when(emailCancellationValidator.isEmailSendingCancelled(any[SendEmailDetails])(any)).thenReturn(Future.successful(false))
+            when(emailCancellationValidator.isValidEmailSendingStatus(any[SendEmailDetails])(any))
+              .thenReturn(Future.successful(Some(SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED)))
             workItem
           }
 
@@ -233,12 +235,14 @@ class SendEmailsJobSpec extends UnitSpec {
             val workItem = testWorkItem.copy(failureCount = retries)
             whenThereIsWorkItemAvailable(workItem)
             when(appConfig.parsingWorkItemsRetryLimit).thenReturn(10)
-            when(emailSender.sendEmailForDmsDocNotification(any[SendEmailDetails])(any[ExecutionContext])).thenReturn(Future.successful(MissingData))
+            when(emailSender.sendEmailForDmsNotification(any[SendEmailDetails], any[SubmissionStatus])(any[ExecutionContext]))
+              .thenReturn(Future.successful(MissingData))
 
             when(sendEmailWorkItemRepository.markAs(any[ObjectId], any[ResultStatus], any[Option[Instant]]))
               .thenReturn(Future.successful(true))
 
-            when(emailCancellationValidator.isEmailSendingCancelled(any[SendEmailDetails])(any)).thenReturn(Future.successful(false))
+            when(emailCancellationValidator.isValidEmailSendingStatus(any[SendEmailDetails])(any))
+              .thenReturn(Future.successful(Some(SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED)))
             workItem
           }
 
@@ -268,11 +272,12 @@ class SendEmailsJobSpec extends UnitSpec {
             val workItem = testWorkItem.copy(failureCount = retries)
             whenThereIsWorkItemAvailable(workItem)
             when(appConfig.parsingWorkItemsRetryLimit).thenReturn(10)
-            when(emailSender.sendEmailForDmsDocNotification(any[SendEmailDetails])(any[ExecutionContext]))
+            when(emailSender.sendEmailForDmsNotification(any[SendEmailDetails], any[SubmissionStatus])(any[ExecutionContext]))
               .thenReturn(Future.successful(InternalEmailServiceError("Test InternalEmailServiceError message")))
             when(sendEmailWorkItemRepository.markAs(any[ObjectId], any[ResultStatus], any[Option[Instant]]))
               .thenReturn(Future.successful(true))
-            when(emailCancellationValidator.isEmailSendingCancelled(any[SendEmailDetails])(any)).thenReturn(Future.successful(false))
+            when(emailCancellationValidator.isValidEmailSendingStatus(any[SendEmailDetails])(any))
+              .thenReturn(Future.successful(Some(SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED)))
             workItem
           }
 

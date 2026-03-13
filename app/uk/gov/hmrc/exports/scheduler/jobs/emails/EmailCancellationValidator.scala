@@ -17,7 +17,7 @@
 package uk.gov.hmrc.exports.scheduler.jobs.emails
 
 import play.api.Logging
-import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.{CANCELLED, CLEARED, REJECTED}
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.{CANCELLED, CLEARED, REJECTED, SubmissionStatus}
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.exports.repositories.ParsedNotificationRepository
 
@@ -29,19 +29,23 @@ private[emails] class EmailCancellationValidator @Inject() (notificationReposito
 
   private val statusesCancellingEmailSending = Set(REJECTED, CLEARED, CANCELLED)
 
-  def isEmailSendingCancelled(sendEmailDetails: SendEmailDetails)(implicit ec: ExecutionContext): Future[Boolean] =
+  def isValidEmailSendingStatus(sendEmailDetails: SendEmailDetails)(implicit ec: ExecutionContext): Future[Option[SubmissionStatus]] =
     notificationRepository.findAll("actionId", sendEmailDetails.actionId).map { notifications =>
       notifications
         .find(_._id == sendEmailDetails.notificationId)
-        .map { currentDmsDocNotification =>
-          val notificationsAfterCurrentDmsDocNotification =
-            notifications.filter(_.details.dateTimeIssued.isAfter(currentDmsDocNotification.details.dateTimeIssued))
+        .map { currentDmsNotification =>
+          val notificationsAfterCurrentDmsNotification =
+            notifications.filter(_.details.dateTimeIssued.isAfter(currentDmsNotification.details.dateTimeIssued))
 
-          notificationsAfterCurrentDmsDocNotification.exists(n => statusesCancellingEmailSending.contains(n.details.status))
+          if (notificationsAfterCurrentDmsNotification.exists(n => statusesCancellingEmailSending.contains(n.details.status))) {
+            None
+          } else {
+            Some(currentDmsNotification.details.status)
+          }
         }
         .getOrElse {
-          logger.warn(s"Cannot find DMSDOC Notification with id: [${sendEmailDetails.notificationId}]")
-          false
+          logger.warn(s"Cannot find DMS Notification with id: [${sendEmailDetails.notificationId}]")
+          None
         }
     }
 }

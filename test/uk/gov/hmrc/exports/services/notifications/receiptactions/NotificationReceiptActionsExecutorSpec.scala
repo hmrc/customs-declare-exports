@@ -24,14 +24,12 @@ import uk.gov.hmrc.exports.models.declaration.notifications.UnparsedNotification
 import org.mockito.ArgumentMatchers.eq as eqTo
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import org.mockito.Mockito.{times, verify, when}
 import org.mockito.Mockito._
-import org.scalatestplus.mockito.MockitoSugar
 
 class NotificationReceiptActionsExecutorSpec extends UnitSpec {
 
   private val parseAndSaveAction: ParseAndSaveAction = mock[ParseAndSaveAction]
-  private val sendEmailForDmsDocAction: SendEmailForDmsDocAction = mock[SendEmailForDmsDocAction]
+  private val sendEmailForDmsDocAction: SendEmailForDmsNotificationsAction = mock[SendEmailForDmsNotificationsAction]
 
   private val notificationReceiptActionsExecutor = new NotificationReceiptActionsExecutor(parseAndSaveAction, sendEmailForDmsDocAction)
 

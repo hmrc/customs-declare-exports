@@ -24,4 +24,5 @@ object TemplateId {
   implicit val writes: Writes[TemplateId] = Writes(templateId => JsString(templateId.name))
 
   case object DMSDOC_NOTIFICATION extends TemplateId("dmsdoc_notification")
+  case object DMSDET_NOTIFICATION extends TemplateId("dmsdet_notification")
 }

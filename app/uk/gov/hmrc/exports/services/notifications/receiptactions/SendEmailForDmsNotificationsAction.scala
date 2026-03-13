@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.exports.services.notifications.receiptactions
 
-import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.{ADDITIONAL_DOCUMENTS_REQUIRED, DETAINED}
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.exports.repositories.{ParsedNotificationRepository, SendEmailWorkItemRepository}
 
@@ -24,19 +24,24 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SendEmailForDmsDocAction @Inject() (
+class SendEmailForDmsNotificationsAction @Inject() (
   notificationRepository: ParsedNotificationRepository,
   sendEmailWorkItemRepository: SendEmailWorkItemRepository
 )(implicit ec: ExecutionContext) {
 
+  private val validDmsNotificationStates = Set(ADDITIONAL_DOCUMENTS_REQUIRED, DETAINED)
+
   def execute(actionId: String): Future[Unit] =
     notificationRepository.findAll("actionId", actionId).map { notifications =>
       notifications.map { notification =>
-        if (notification.details.status == SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED) {
-          val sendEmailDetails = SendEmailDetails(notificationId = notification._id, actionId = notification.actionId, mrn = notification.details.mrn)
+        if (validDmsNotificationStates.contains(notification.details.status)) {
+          val sendEmailDetails =
+            SendEmailDetails(notificationId = notification._id, actionId = notification.actionId, mrn = notification.details.mrn)
           sendEmailWorkItemRepository.pushNew(sendEmailDetails)
-
-        } else Future.successful((): Unit)
+        } else {
+          Future.successful((): Unit)
+        }
       }
     }
+
 }

@@ -24,13 +24,12 @@ import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
 import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus._
 import uk.gov.hmrc.exports.models.emails.SendEmailDetails
 import uk.gov.hmrc.exports.repositories.ParsedNotificationRepository
-import org.mockito.Mockito.{times, verify, when}
+import org.mockito.Mockito.when
 import java.time.{ZoneId, ZonedDateTime}
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import org.mockito.Mockito._
-import org.scalatestplus.mockito.MockitoSugar
 
 class EmailCancellationValidatorSpec extends UnitSpec {
 
@@ -67,7 +66,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
       "there is no newer Notification" in {
         when(notificationRepository.findAll(any[String], any[String])).thenReturn(Future.successful(Seq(dmsDocNotification)))
 
-        emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe false
+        emailCancellationValidator.isValidEmailSendingStatus(sendEmailDetails).futureValue mustBe Some(ADDITIONAL_DOCUMENTS_REQUIRED)
       }
 
       statusesNotStoppingEmailSending.foreach { notStoppingStatus =>
@@ -76,7 +75,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
           when(notificationRepository.findAll(any[String], any[String]))
             .thenReturn(Future.successful(Seq(dmsDocNotification, newerNotification)))
 
-          emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe false
+          emailCancellationValidator.isValidEmailSendingStatus(sendEmailDetails).futureValue mustBe Some(ADDITIONAL_DOCUMENTS_REQUIRED)
         }
       }
 
@@ -86,7 +85,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
           when(notificationRepository.findAll(any[String], any[String]))
             .thenReturn(Future.successful(Seq(dmsDocNotification, olderNotification)))
 
-          emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe false
+          emailCancellationValidator.isValidEmailSendingStatus(sendEmailDetails).futureValue mustBe Some(ADDITIONAL_DOCUMENTS_REQUIRED)
         }
 
         s"there are older Notifications with statuses ADDITIONAL_DOCUMENTS_REQUIRED and then $status" in {
@@ -95,7 +94,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
           when(notificationRepository.findAll(any[String], any[String]))
             .thenReturn(Future.successful(Seq(dmsDocNotification, olderDmsDocNotification, olderNotification)))
 
-          emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe false
+          emailCancellationValidator.isValidEmailSendingStatus(sendEmailDetails).futureValue mustBe Some(ADDITIONAL_DOCUMENTS_REQUIRED)
         }
       }
 
@@ -103,7 +102,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
         when(notificationRepository.findAll(any[String], any[String]))
           .thenReturn(Future.successful(Seq(dmsDocNotification.copy(actionId = actionId_2))))
 
-        emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe false
+        emailCancellationValidator.isValidEmailSendingStatus(sendEmailDetails).futureValue mustBe Some(ADDITIONAL_DOCUMENTS_REQUIRED)
       }
     }
 
@@ -114,7 +113,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
           when(notificationRepository.findAll(any[String], any[String]))
             .thenReturn(Future.successful(Seq(dmsDocNotification, newerNotification)))
 
-          emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe true
+          emailCancellationValidator.isValidEmailSendingStatus(sendEmailDetails).futureValue mustBe None
         }
 
         s"there are newer Notifications with statuses $status and ADDITIONAL_DOCUMENTS_REQUIRED after" in {
@@ -123,7 +122,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
           when(notificationRepository.findAll(any[String], any[String]))
             .thenReturn(Future.successful(Seq(dmsDocNotification, newerNotification, newerDmsDocNotification)))
 
-          emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe true
+          emailCancellationValidator.isValidEmailSendingStatus(sendEmailDetails).futureValue mustBe None
         }
 
         s"there are newer Notifications with statuses ADDITIONAL_DOCUMENTS_REQUIRED and $status after" in {
@@ -132,7 +131,7 @@ class EmailCancellationValidatorSpec extends UnitSpec {
           when(notificationRepository.findAll(any[String], any[String]))
             .thenReturn(Future.successful(Seq(dmsDocNotification, newerNotification, newerDmsDocNotification)))
 
-          emailCancellationValidator.isEmailSendingCancelled(sendEmailDetails).futureValue mustBe true
+          emailCancellationValidator.isValidEmailSendingStatus(sendEmailDetails).futureValue mustBe None
         }
       }
   }
