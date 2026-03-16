@@ -69,15 +69,16 @@ class SendEmailsJob @Inject() (
 
   private def process(now: Instant): Future[Unit] = {
     val failedBefore = Duration.ofMillis(appConfig.consideredFailedBeforeWorkItem.toMillis)
+    val validEmailStatuses = Set(Option(SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED), Option(SubmissionStatus.DETAINED))
 
     sendEmailWorkItemRepository.pullOutstanding(failedBefore = now.minus(failedBefore), availableBefore = now).flatMap {
       case None => Future.successful(())
 
       case Some(workItem) =>
         emailCancellationValidator
-          .isValidEmailSendingStatus(workItem.item)
+          .getValidatedNotificationStatus(workItem.item)
           .flatMap {
-            case status @ (Some(SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED) | Some(SubmissionStatus.DETAINED)) =>
+            case status if validEmailStatuses(status) =>
               sendEmail(workItem, status.get)
             case None =>
               logger.info(s"Email for Notification with MRN: ${workItem.item.mrn} has been cancelled.")

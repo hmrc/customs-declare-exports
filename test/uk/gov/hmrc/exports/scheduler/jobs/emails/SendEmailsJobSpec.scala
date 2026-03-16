@@ -124,23 +124,23 @@ class SendEmailsJobSpec extends UnitSpec {
         when(sendEmailWorkItemRepository.complete(any[ObjectId], any[ResultStatus]))
           .thenReturn(Future.successful(true))
 
-        when(emailCancellationValidator.isValidEmailSendingStatus(any[SendEmailDetails])(any)).thenReturn(Future.successful(None))
+        when(emailCancellationValidator.getValidatedNotificationStatus(any[SendEmailDetails])(any)).thenReturn(Future.successful(None))
 
         sendEmailsJob.execute().futureValue
-        verify(emailCancellationValidator).isValidEmailSendingStatus(eqTo(testWorkItem.item))(any)
+        verify(emailCancellationValidator).getValidatedNotificationStatus(eqTo(testWorkItem.item))(any)
       }
     }
 
     "SendEmailWorkItemRepository returns WorkItem" when {
 
-      "EmailCancellationValidator.isEmailSendingCancelled returns true" should {
+      "EmailCancellationValidator.getValidatedNotificationStatus returns None" should {
 
         def prepareTestScenario(): Unit = {
           whenThereIsWorkItemAvailable()
           when(sendEmailWorkItemRepository.complete(any[ObjectId], any[ResultStatus]))
             .thenReturn(Future.successful(true))
 
-          when(emailCancellationValidator.isValidEmailSendingStatus(any[SendEmailDetails])(any)).thenReturn(Future.successful(None))
+          when(emailCancellationValidator.getValidatedNotificationStatus(any[SendEmailDetails])(any)).thenReturn(Future.successful(None))
         }
 
         "not call EmailSender" in {
@@ -162,7 +162,7 @@ class SendEmailsJobSpec extends UnitSpec {
         }
       }
 
-      "EmailCancellationValidator.isEmailSendingCancelled returns false" when {
+      "EmailCancellationValidator.getValidatedNotificationStatus returns ADDITIONAL_DOCUMENTS_REQUIRED" when {
 
         "EmailSender returns EmailAccepted" should {
 
@@ -174,8 +174,20 @@ class SendEmailsJobSpec extends UnitSpec {
             when(sendEmailWorkItemRepository.complete(any[ObjectId], any[ResultStatus]))
               .thenReturn(Future.successful(true))
 
-            when(emailCancellationValidator.isValidEmailSendingStatus(any[SendEmailDetails])(any))
+            when(emailCancellationValidator.getValidatedNotificationStatus(any[SendEmailDetails])(any))
               .thenReturn(Future.successful(Some(SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED)))
+          }
+
+          def prepareTestScenarioForDetained(): Unit = {
+            whenThereIsWorkItemAvailable()
+            when(emailSender.sendEmailForDmsNotification(any[SendEmailDetails], any[SubmissionStatus])(any[ExecutionContext]))
+              .thenReturn(Future.successful(EmailAccepted))
+
+            when(sendEmailWorkItemRepository.complete(any[ObjectId], any[ResultStatus]))
+              .thenReturn(Future.successful(true))
+
+            when(emailCancellationValidator.getValidatedNotificationStatus(any[SendEmailDetails])(any))
+              .thenReturn(Future.successful(Some(SubmissionStatus.DETAINED)))
           }
 
           "call SendEmailWorkItemRepository to complete the WorkItem" in {
@@ -186,6 +198,18 @@ class SendEmailsJobSpec extends UnitSpec {
 
           "call SendEmailWorkItemRepository again for the next WorkItem" in {
             prepareTestScenario()
+            sendEmailsJob.execute().futureValue
+            verify(sendEmailWorkItemRepository, times(2)).pullOutstanding(any[Instant], any[Instant])
+          }
+
+          "call SendEmailWorkItemRepository to complete the WorkItem for DMSDET" in {
+            prepareTestScenarioForDetained()
+            sendEmailsJob.execute().futureValue
+            verify(sendEmailWorkItemRepository).complete(eqTo(testWorkItem.id), eqTo(Succeeded))
+          }
+
+          "call SendEmailWorkItemRepository again for the next WorkItem for DMSDET" in {
+            prepareTestScenarioForDetained()
             sendEmailsJob.execute().futureValue
             verify(sendEmailWorkItemRepository, times(2)).pullOutstanding(any[Instant], any[Instant])
           }
@@ -204,7 +228,7 @@ class SendEmailsJobSpec extends UnitSpec {
             when(sendEmailWorkItemRepository.markAs(any[ObjectId], any[ResultStatus], any[Option[Instant]]))
               .thenReturn(Future.successful(true))
 
-            when(emailCancellationValidator.isValidEmailSendingStatus(any[SendEmailDetails])(any))
+            when(emailCancellationValidator.getValidatedNotificationStatus(any[SendEmailDetails])(any))
               .thenReturn(Future.successful(Some(SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED)))
             workItem
           }
@@ -241,7 +265,7 @@ class SendEmailsJobSpec extends UnitSpec {
             when(sendEmailWorkItemRepository.markAs(any[ObjectId], any[ResultStatus], any[Option[Instant]]))
               .thenReturn(Future.successful(true))
 
-            when(emailCancellationValidator.isValidEmailSendingStatus(any[SendEmailDetails])(any))
+            when(emailCancellationValidator.getValidatedNotificationStatus(any[SendEmailDetails])(any))
               .thenReturn(Future.successful(Some(SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED)))
             workItem
           }
@@ -276,7 +300,7 @@ class SendEmailsJobSpec extends UnitSpec {
               .thenReturn(Future.successful(InternalEmailServiceError("Test InternalEmailServiceError message")))
             when(sendEmailWorkItemRepository.markAs(any[ObjectId], any[ResultStatus], any[Option[Instant]]))
               .thenReturn(Future.successful(true))
-            when(emailCancellationValidator.isValidEmailSendingStatus(any[SendEmailDetails])(any))
+            when(emailCancellationValidator.getValidatedNotificationStatus(any[SendEmailDetails])(any))
               .thenReturn(Future.successful(Some(SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED)))
             workItem
           }

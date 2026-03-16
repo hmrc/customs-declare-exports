@@ -29,7 +29,7 @@ private[emails] class EmailCancellationValidator @Inject() (notificationReposito
 
   private val statusesCancellingEmailSending = Set(REJECTED, CLEARED, CANCELLED)
 
-  def isValidEmailSendingStatus(sendEmailDetails: SendEmailDetails)(implicit ec: ExecutionContext): Future[Option[SubmissionStatus]] =
+  def getValidatedNotificationStatus(sendEmailDetails: SendEmailDetails)(implicit ec: ExecutionContext): Future[Option[SubmissionStatus]] =
     notificationRepository.findAll("actionId", sendEmailDetails.actionId).map { notifications =>
       notifications
         .find(_._id == sendEmailDetails.notificationId)
