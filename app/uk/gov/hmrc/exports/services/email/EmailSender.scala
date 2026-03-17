@@ -18,8 +18,10 @@ package uk.gov.hmrc.exports.services.email
 
 import play.api.Logging
 import uk.gov.hmrc.exports.connectors.{CustomsDataStoreConnector, EmailConnector}
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.SubmissionStatus
 import uk.gov.hmrc.exports.models.emails.SendEmailResult.{BadEmailRequest, InternalEmailServiceError, MissingData}
-import uk.gov.hmrc.exports.models.emails._
+import uk.gov.hmrc.exports.models.emails.*
 import uk.gov.hmrc.exports.repositories.SubmissionRepository
 
 import javax.inject.{Inject, Singleton}
@@ -33,11 +35,13 @@ class EmailSender @Inject() (
   emailConnector: EmailConnector
 ) extends Logging {
 
-  def sendEmailForDmsDocNotification(sendEmailDetails: SendEmailDetails)(implicit ec: ExecutionContext): Future[SendEmailResult] =
+  def sendEmailForDmsNotification(sendEmailDetails: SendEmailDetails, status: SubmissionStatus)(
+    implicit ec: ExecutionContext
+  ): Future[SendEmailResult] =
     obtainEori(sendEmailDetails.actionId).flatMap {
       case Some(eori) =>
         obtainEmailAddress(eori).flatMap {
-          case Some(email) if email.deliverable => sendEmail(sendEmailDetails.mrn, eori, email)
+          case Some(email) if email.deliverable => sendEmail(sendEmailDetails, status, eori, email)
           case Some(_)                          =>
             logger.warn(s"Email address for EORI: [$eori] was not deliverable")
             Future.successful(MissingData)
@@ -56,19 +60,25 @@ class EmailSender @Inject() (
   private def obtainEmailAddress(eori: String)(implicit ec: ExecutionContext): Future[Option[Email]] =
     customsDataStoreConnector.getEmailAddress(eori)
 
-  private def sendEmail(mrn: String, eori: String, email: Email)(implicit ec: ExecutionContext): Future[SendEmailResult] = {
-    val emailParameters = EmailParameters(Map(EmailParameter.MRN -> mrn))
-    val sendEmailRequest = SendEmailRequest(List(email.address), TemplateId.DMSDOC_NOTIFICATION, emailParameters)
+  private def sendEmail(sendEmailDetails: SendEmailDetails, status: SubmissionStatus, eori: String, email: Email)(
+    implicit ec: ExecutionContext
+  ): Future[SendEmailResult] = {
+    val emailParameters = EmailParameters(Map(EmailParameter.MRN -> sendEmailDetails.mrn))
+    val templateId: TemplateId = status match {
+      case SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED => TemplateId.DMSDOC_NOTIFICATION
+      case SubmissionStatus.DETAINED                      => TemplateId.DMSDET_NOTIFICATION
+    }
+    val sendEmailRequest = SendEmailRequest(List(email.address), templateId, emailParameters)
 
     emailConnector
       .sendEmail(sendEmailRequest)
       .andThen {
-        case Success(BadEmailRequest(message))           => logSendEmailError("Bad request", message, eori, mrn)
-        case Success(InternalEmailServiceError(message)) => logSendEmailError("Email service error", message, eori, mrn)
+        case Success(BadEmailRequest(message))           => logSendEmailError("Bad request", status, message, eori, sendEmailDetails.mrn)
+        case Success(InternalEmailServiceError(message)) => logSendEmailError("Email service error", status, message, eori, sendEmailDetails.mrn)
       }
   }
 
-  private def logSendEmailError(error: String, message: String, eori: String, mrn: String): Unit =
-    logger.warn(s"$error for eori($eori) and mrn($mrn) while sending a DmsDoc notification email, error was $message")
+  private def logSendEmailError(error: String, status: SubmissionStatus, message: String, eori: String, mrn: String): Unit =
+    logger.warn(s"$error for eori($eori) and mrn($mrn) while sending a ${status.toString} notification email, error was $message")
 
 }

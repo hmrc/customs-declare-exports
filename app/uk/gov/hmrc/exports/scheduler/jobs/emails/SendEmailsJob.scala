@@ -18,7 +18,9 @@ package uk.gov.hmrc.exports.scheduler.jobs.emails
 
 import play.api.Logging
 import uk.gov.hmrc.exports.config.AppConfig
-import uk.gov.hmrc.exports.models.emails.SendEmailResult._
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus
+import uk.gov.hmrc.exports.models.declaration.submissions.SubmissionStatus.SubmissionStatus
+import uk.gov.hmrc.exports.models.emails.SendEmailResult.*
 import uk.gov.hmrc.exports.models.emails.{SendEmailDetails, SendEmailResult}
 import uk.gov.hmrc.exports.repositories.SendEmailWorkItemRepository
 import uk.gov.hmrc.exports.scheduler.jobs.ScheduledJob
@@ -67,17 +69,22 @@ class SendEmailsJob @Inject() (
 
   private def process(now: Instant): Future[Unit] = {
     val failedBefore = Duration.ofMillis(appConfig.consideredFailedBeforeWorkItem.toMillis)
+    val validEmailStatuses = Set(Option(SubmissionStatus.ADDITIONAL_DOCUMENTS_REQUIRED), Option(SubmissionStatus.DETAINED))
 
     sendEmailWorkItemRepository.pullOutstanding(failedBefore = now.minus(failedBefore), availableBefore = now).flatMap {
       case None => Future.successful(())
 
       case Some(workItem) =>
         emailCancellationValidator
-          .isEmailSendingCancelled(workItem.item)
+          .getValidatedNotificationStatus(workItem.item)
           .flatMap {
-            case false => sendEmail(workItem)
-            case true  =>
+            case status if validEmailStatuses(status) =>
+              sendEmail(workItem, status.get)
+            case None =>
               logger.info(s"Email for Notification with MRN: ${workItem.item.mrn} has been cancelled.")
+              sendEmailWorkItemRepository.complete(workItem.id, Cancelled)
+            case Some(_) =>
+              logger.info(s"Notification for MRN: ${workItem.item.mrn} status was invalid. Setting work item as cancelled")
               sendEmailWorkItemRepository.complete(workItem.id, Cancelled)
           }
           .map {
@@ -87,8 +94,8 @@ class SendEmailsJob @Inject() (
     }
   }
 
-  private def sendEmail(workItem: WorkItem[SendEmailDetails]): Future[SendEmailResult] =
-    emailSender.sendEmailForDmsDocNotification(workItem.item) andThen {
+  private def sendEmail(workItem: WorkItem[SendEmailDetails], status: SubmissionStatus): Future[SendEmailResult] =
+    emailSender.sendEmailForDmsNotification(workItem.item, status) andThen {
       case Success(EmailAccepted) =>
         logger.info(s"Email sent for MRN: ${workItem.item.mrn}")
         sendEmailWorkItemRepository.complete(workItem.id, Succeeded)

@@ -40,7 +40,7 @@ class SendEmailForDmsDocActionSpec extends UnitSpec {
   private val notificationRepository = mock[ParsedNotificationRepository]
   private val sendEmailWorkItemRepository = mock[SendEmailWorkItemRepository]
 
-  private val sendEmailForDmsDocAction = new SendEmailForDmsDocAction(notificationRepository, sendEmailWorkItemRepository)
+  private val sendEmailForDmsDocAction = new SendEmailForDmsNotificationsAction(notificationRepository, sendEmailWorkItemRepository)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
