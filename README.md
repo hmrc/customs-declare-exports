@@ -5,7 +5,6 @@ This microservice is part of Customs Exports Declaration Service (CEDS). It is d
 
 It provides functionality to manage declaration-related data before and after it has been submitted.
 
-
 ## Prerequisites
 
 This service depends on other services. The easiest way to set up required microservices is to use Service Manager and profiles from [service-manager-config](https://github.com/hmrc/service-manager-config/) repository:
@@ -107,7 +106,6 @@ Inserted 1059 - 16 for GB1713564034
 Inserted 1471 - 412 for GB1026524884
 Inserted 2094 - 623 for GB1585987871
 ```
-
 
 ## License
 
