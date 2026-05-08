@@ -24,13 +24,20 @@ import uk.gov.hmrc.exports.services.mapping.ModifyingBuilder
 import wco.datamodel.wco.dec_dms._2.Declaration.GoodsShipment.{GovernmentAgencyGoodsItem => WCOGovernmentAgencyGoodsItem}
 import wco.datamodel.wco.declaration_ds.dms._2.GovernmentAgencyGoodsItemStatisticalValueAmountType
 
-class StatisticalValueAmountBuilder @Inject() extends ModifyingBuilder[ExportItem, WCOGovernmentAgencyGoodsItem] {
+class StatisticalValueAmountBuilder @Inject() (appConfig: AppConfig) extends ModifyingBuilder[ExportItem, WCOGovernmentAgencyGoodsItem] {
 
   private val defaultCurrencyCode = "GBP"
 
   def buildThenAdd(exportItem: ExportItem, wcoGovernmentAgencyGoodsItem: WCOGovernmentAgencyGoodsItem): Unit =
     exportItem.statisticalValue.foreach { statisticalValue =>
-      if (statisticalValue.statisticalValue.trim.nonEmpty) {
+      if (appConfig.isOptionalFieldsEnabled) {
+        if (statisticalValue.statisticalValue.trim.nonEmpty) {
+          wcoGovernmentAgencyGoodsItem.setStatisticalValueAmount(
+            createWCODecStatisticalValueAmount(statisticalValue.statisticalValue, defaultCurrencyCode)
+          )
+        }
+        // Else case also to be removed when feature flag removed
+      } else {
         wcoGovernmentAgencyGoodsItem.setStatisticalValueAmount(
           createWCODecStatisticalValueAmount(statisticalValue.statisticalValue, defaultCurrencyCode)
         )
