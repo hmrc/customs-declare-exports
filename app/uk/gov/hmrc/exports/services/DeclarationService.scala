@@ -62,11 +62,11 @@ class DeclarationService @Inject() (declarationRepository: DeclarationRepository
 
           case Some(declaration) =>
             val status = s"an unexpected status(${declaration.declarationMeta.status.toString})"
-            logger.error(s"The declaration($parentId) to create a draft from was found but why it was in $status??")
+            logger.info(s"The declaration($parentId) to create a draft from was found in $status")
             Future.successful(None)
 
           case _ =>
-            logger.error(s"The declaration($parentId) to create a draft from was not found??")
+            logger.info(s"The declaration($parentId) to create a draft from was not found.")
             Future.successful(None)
         }
     }
