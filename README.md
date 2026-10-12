@@ -51,7 +51,7 @@ sbt test
 
 #### Integration Tests
 ```bash
-sbt it:test
+sbt it/test
 ```
 
 #### Pre-Push Check
