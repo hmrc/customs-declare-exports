@@ -159,7 +159,7 @@ These profiles are defined in [service-manager-config](https://github.com/hmrc/s
 
 ## Endpoints
 
-All paths are relative to the service root (`http://localhost:6792` when running locally) and need an [authenticated user with the HMRC-CUS-ORG enrolment](#enrolment-required).
+All paths are relative to the service root (`http://localhost:6792` when running locally) and need an [authenticated user with the HMRC-CUS-ORG enrolment](https://github.com/hmrc/exports-ui-acceptance-tests/#enrolment-required).
 
 | Method | Path | Purpose | Sample request | Response |
 |---|---|---|---|---|
