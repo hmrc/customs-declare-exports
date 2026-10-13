@@ -1,7 +1,7 @@
 # customs-declare-exports
 
 ## About
-This microservice is part of Customs Exports Declaration Service (CEDS). It is designed to work in tandem with [customs-declare-exports-frontend](https://github.com/hmrc/customs-declare-exports-frontend) service.
+This microservice is part of the Customs Exports Declaration Service (CEDS). It is designed to work in tandem with the [customs-declare-exports-frontend](https://github.com/hmrc/customs-declare-exports-frontend) service.
 
 It provides functionality to manage declaration-related data before and after it has been submitted.
 
@@ -18,13 +18,13 @@ It provides functionality to manage declaration-related data before and after it
 ## How to Run This Service
 
 ### Prerequisites
-Start all the services CDS Exports depends on with [Service Manager](#service-manager-profiles):
+Use [Service Manager](#service-manager-profiles) to start all the services that CDS Exports depends on:
 
 ```bash
 sm2 --start CDS_EXPORTS_DECLARATION_ALL
 ```
 
-If you want to start all services EXCEPT both declarations services:
+To start all services (_except_ both declarations services):
 
 ```bash
 sm2 --start CDS_EXPORTS_DECLARATION_DEPS
@@ -64,11 +64,11 @@ It is good practice to run it just before pushing to GitHub.
 
 #### Seed Mongo
 
-To provide high number of declarations (20 000) in system run:
+To provide a high number of declarations (20,000) in the system, run:
 ```bash
 sbt test:run testdata.SeedMongo
 ```
-Output of program looks
+The output of the program will look like this:
 ```
 Inserted 523 - 523 for GB1814503088
 Inserted 788 - 265 for GB966964885
@@ -79,8 +79,8 @@ Inserted 1471 - 412 for GB1026524884
 Inserted 2094 - 623 for GB1585987871
 ```
 
-#### Test Only Endpoints
-To enable these endpoint you must specify at startup the test-only conf file:
+#### Test-Only Endpoints
+To enable these endpoints you must specify at startup the test-only conf file:
 
 ```bash
 sbt run -Dplay.http.router=testOnlyDoNotUseInAppConf.Routes
@@ -91,7 +91,7 @@ sbt run -Dplay.http.router=testOnlyDoNotUseInAppConf.Routes
 This endpoint is designed to quickly insert all the required db documents into the collections to represent a new accepted declaration submission. It does not make any downstream requests or auth checks
 and is designed specifically to be used by QAs to populate the db collections en-masse quickly.
 
-It will randomly (50/50 chance) also insert an extra notification of type DMSDOC.
+It will randomly (50/50 chance) also insert an extra notification of type `DMSDOC`.
 
 You can call the endpoint like this:
 
@@ -99,7 +99,7 @@ You can call the endpoint like this:
 curl --location --request POST 'http://localhost:6792/test-only/create-submitted-dec-record' --header 'Content-Type: application/json' --data-raw '{"eori": "GB1234567890", "lrn" : "SOMELRN", "ducr" : "2GB123456789000-XXXABC456TIM"}'
 ```
 
-You will receive back the following response (if successful):
+You will receive the following response (if successful):
 
 ```
 "EORI:GB1234567890, LRN:7SLXFBE0CKH2WNRRRKR7NZ, MRN:36GBRJYXDBZL4F9YZ, CREATED WITH DMSDOC"`
@@ -107,8 +107,8 @@ You will receive back the following response (if successful):
 
 
 ##### /test-only/create-draft-dec-record
-This endpoint is designed to quickly create a new fully populated draft declaration with X specified number of items (see LINK TO PAYLOAD`itemCount` field of payload). It is designed specifically to be used by QAs in performance tests
-to populate the declarations collection with many item (50+ item) draft declarations ready to be submitted.
+This endpoint is designed to quickly create a new, fully-populated draft declaration that has a specified number of items (the number of items is determined by the `itemCount` field in the payload). It is designed specifically to be used by QAs in performance tests,
+to populate a draft declaration with many items (50+ items) ready to be submitted.
 
 You can call the endpoint like this:
 
@@ -124,20 +124,19 @@ You will receive back the following response (if successful):
 
 
 #### Acceptance Tests (smoke and regression)
-The acceptance tests for this service are in exports-ui-acceptance-tests, see [README](https://github.com/hmrc/exports-ui-acceptance-tests).
+The acceptance tests for this service are in [exports-ui-acceptance-tests](https://github.com/hmrc/exports-ui-acceptance-tests). For information about how to run them, and which environments they run against, see [README](https://github.com/hmrc/exports-ui-acceptance-tests#how-to-run-the-tests).
 
 #### Performance tests
-The performance tests for this service are in exports-declarations-performance-tests, see [README](https://github.com/hmrc/exports-declarations-performance-tests).
+The performance tests for this service are in [exports-declarations-performance-tests](https://github.com/hmrc/exports-declarations-performance-tests). For information about how to run them, and which environments they run against, see [README](https://github.com/hmrc/exports-declarations-performance-tests#how-to-run-the-tests).
 
 ### Manual Testing in QA and Staging
-After the successful [deployment pipeline](https://build.tax.service.gov.uk/job/BordersAndTradeLiveServices/job/CDSExports/job/customs-declare-exports-pipeline/), manual testing is performed in QA and/or Staging environment, see [Manual Service Verification in QA and Staging](https://github.com/hmrc/exports-ui-acceptance-tests#manual-service-verification-in-qa-and-staging).
-
+After the successful [deployment pipeline](https://build.tax.service.gov.uk/job/BordersAndTradeLiveServices/job/CDSExports/job/customs-declare-exports-pipeline/), manual testing is performed in the QA and/or Staging environments, see [Manual Service Verification in QA and Staging](https://github.com/hmrc/exports-ui-acceptance-tests#manual-testing-in-qa-and-staging).
 ## Service Catalogue
 - [customs-declare-exports in the MDTP Catalogue](https://catalogue.tax.service.gov.uk/repositories/customs-declare-exports)
 
 ## Jenkins Pipeline
-- [customs-declare-exports](https://build.tax.service.gov.uk/job/BordersAndTradeLiveServices/job/CDSExports/job/customs-declare-exports/)
-- [customs-declare-exports pipeline](https://build.tax.service.gov.uk/job/BordersAndTradeLiveServices/job/CDSExports/job/customs-declare-exports-pipeline/)
+- [Build pipeline](https://build.tax.service.gov.uk/job/BordersAndTradeLiveServices/job/CDSExports/job/customs-declare-exports/)
+- [Deployment pipeline](https://build.tax.service.gov.uk/job/BordersAndTradeLiveServices/job/CDSExports/job/customs-declare-exports-pipeline/)
 
 - The acceptance test Jenkins jobs (smoke and regression) are listed in the [exports-ui-acceptance-tests README](https://github.com/hmrc/exports-ui-acceptance-tests#how-to-run-tests).
 - The performance test Jenkins jobs are listed in the [exports-declarations-performance-tests README](https://github.com/hmrc/exports-declarations-performance-tests/#jenkins-builds).
@@ -148,8 +147,8 @@ These profiles are defined in [service-manager-config](https://github.com/hmrc/s
 | Profile | Use | Services started |
 |---|---|---|
 | `CDS_EXPORTS_DECLARATION_ALL` | Running and developing this service locally | `CUSTOMS_DECLARE_EXPORTS`, `CUSTOMS_DECLARE_EXPORTS_FRONTEND`, `AUTH`, `AUTH_LOGIN_API`, `CENTRALISED_AUTHORISATION_SERVER`, `AUTH_LOGIN_STUB`, `CUSTOMS_DECLARATIONS_STUB`, `CUSTOMS_DECLARATIONS_INFORMATION`, `USER_DETAILS`, `IDENTITY_VERIFICATION`, `CONTACT_FRONTEND`, `BAS_GATEWAY`, `BAS_GATEWAY_FRONTEND` |
-| `CDS_EXPORTS_DECLARATION_ATS` | Running the [acceptance tests](https://github.com/hmrc/exports-ui-acceptance-tests#how-to-run-tests) | `CUSTOMS_DECLARE_EXPORTS`, `CUSTOMS_DECLARE_EXPORTS_FRONTEND`, `AUTH`, `AUTH_LOGIN_API`, `AUTH_LOGIN_STUB`, `BAS_GATEWAY`, `BAS_GATEWAY_FRONTEND`, `CUSTOMS_DECLARATIONS_STUB`, `USER_DETAILS`, `IDENTITY_VERIFICATION` |
-| `CDS_EXPORTS_ALL` | All CDS Exports services (declarations, movements and internal) | See [service-manager-config](https://github.com/hmrc/service-manager-config) |
+| `CDS_EXPORTS_DECLARATION_ATS` | Running the [acceptance tests](https://github.com/hmrc/exports-ui-acceptance-tests#how-to-run-the-tests) | `CUSTOMS_DECLARE_EXPORTS`, `CUSTOMS_DECLARE_EXPORTS_FRONTEND`, `AUTH`, `AUTH_LOGIN_API`, `AUTH_LOGIN_STUB`, `BAS_GATEWAY`, `BAS_GATEWAY_FRONTEND`, `CUSTOMS_DECLARATIONS_STUB`, `USER_DETAILS`, `IDENTITY_VERIFICATION` |
+| `CDS_EXPORTS_ALL` | All CDS Exports services (declarations, movements and internal) | See [service-manager-config](https://github.com/hmrc/service-manager-config/blob/main/profiles.json) |
 
 | Service | Port | Repository |
 |---|---|---|
@@ -434,14 +433,6 @@ A successfully accepted notification returns:
 
 ### Feature Flags
 This service uses feature flags to enable or disable some of its features. You can change or override them in config under the `microservice.services.features.<featureName>` key.
-
-The list of feature flags and what they are responsible for:
-
-`exportsMigration=[enabled/disabled]` - If enabled, the service uses Exports Migration Tool for data migrations. Otherwise, it uses Mongock.
-
-#### To Set a Feature Flag Via System Properties:
-
-`sbt "run -Dmicroservice.features.exportsMigration=enabled"`
 
 ### Scalafmt
 The code is formatted with [sbt-scalafmt](https://scalameta.org/scalafmt/docs/installation.html#sbt), using the rules in `.scalafmt.conf`.
