@@ -103,9 +103,6 @@ class AppConfig @Inject() (val configuration: Configuration, servicesConfig: Ser
   lazy val replaceIndexesOfDeclarationRepository: Boolean = configuration.get[Boolean]("declarations.repository.replace.indexes")
 
   lazy val useTransactionalDBOps: Boolean = configuration.get[Boolean]("mongodb.transactional.operations")
-
-  // Features
-  lazy val isOptionalFieldsEnabled: Boolean = servicesConfig.getBoolean("features.optionalFields")
 }
 
 object AppConfig {
